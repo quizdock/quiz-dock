@@ -16,7 +16,7 @@ COPY packages/contracts packages/contracts
 COPY apps/backend apps/backend
 RUN pnpm --filter @roux-quizz/contracts build \
  && pnpm --filter @roux-quizz/backend build \
- && pnpm --filter @roux-quizz/backend deploy --prod /out
+ && pnpm --filter @roux-quizz/backend deploy --legacy --prod /out
 
 # ---- runtime ----
 FROM node:22-alpine AS runtime

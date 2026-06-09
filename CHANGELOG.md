@@ -21,6 +21,26 @@ Premier jalon : un squelette qui démarre de bout en bout, sans fonctionnalité 
   realm Keycloak minimal, `.env.example`.
 - **Tests** : Jest (backend) et Vitest (frontend) — verts.
 
+### Verified
+Stack vérifiée **de bout en bout** (`docker compose`), chemins **dev** et **prod** :
+- `GET /health` → `200` JSON ; OpenAPI servi sur `/api/docs-json`.
+- Frontend servi (Nginx en prod, Vite en dev) ; proxy Nginx `/api` → backend OK.
+- Tous les conteneurs `healthy` (postgres, redis, storage SeaweedFS, backend, frontend).
+
+Correctifs trouvés en vérifiant (et non par la seule validation de config) :
+- `pnpm deploy` (pnpm v10+) nécessite `--legacy` (sinon `ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE`).
+- Healthcheck backend en `127.0.0.1` (et non `localhost` → busybox tape l'IPv6, refus).
+- Healthcheck SeaweedFS sur `:9333/cluster/healthz`.
+- Dev : exécuter `nest` directement (la vérif de deps de pnpm 11 échoue sans TTY) et
+  ne jamais monter le `node_modules` de l'hôte (glibc) dans Alpine (musl).
+
+### Reporté (à finir en v0.1.x — items de fondation restants)
+- CI GitHub Actions (P1-INFRA-4), git hooks Husky/commitlint (P1-INFRA-5).
+- Pipeline Orval + check de drift OpenAPI (P1-FRONT-2).
+- Configs ESLint + scripts `lint` réels (actuellement référencés mais non configurés).
+
 ### Notes
 - `AUTH_MODE=none` par défaut : Keycloak n'est pas démarré (profil `keycloak`).
+- Ports hôte configurables (`BACKEND_PORT`, `FRONTEND_PORT`, `VITE_PORT`, …) pour éviter
+  les collisions avec d'autres stacks locales.
 - Prochains jalons : v0.2.0 Builder + Auth, v0.3.0 Jeu de base.

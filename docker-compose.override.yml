@@ -1,10 +1,14 @@
 # Override de développement (appliqué automatiquement par `docker compose up`).
-# Hot-reload : on monte les sources et on lance les serveurs de dev.
+# Hot-reload : on réutilise l'image de build (deps installées pour Alpine/musl
+# DANS l'image) et on ne monte QUE les sources — jamais le node_modules de l'hôte.
 services:
   backend:
     build:
       target: build
-    command: ["pnpm", "--filter", "@roux-quizz/backend", "start:dev"]
+    # On exécute nest directement (sans passer par `pnpm run`) pour éviter la
+    # vérification de deps de pnpm 11 qui échoue sans TTY dans un conteneur.
+    working_dir: /app/apps/backend
+    command: ["node", "node_modules/@nestjs/cli/bin/nest.js", "start", "--watch"]
     environment:
       NODE_ENV: development
       AUTH_MODE: ${AUTH_MODE:-none}
@@ -12,19 +16,20 @@ services:
       - ./apps/backend/src:/app/apps/backend/src
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - "3000:3000"
+      - "${BACKEND_PORT:-3000}:3000"
 
   frontend:
-    image: node:22-alpine
-    working_dir: /app
-    entrypoint: ["sh", "-c"]
-    command:
-      - "corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @roux-quizz/contracts build && pnpm --filter @roux-quizz/frontend dev --host"
+    build:
+      target: build
+    command: ["pnpm", "--filter", "@roux-quizz/frontend", "dev", "--host", "--port", "5173"]
     environment:
       VITE_API_URL: http://backend:3000
+      npm_config_verify_deps_before_run: "false"
     volumes:
-      - ./:/app
+      - ./apps/frontend/src:/app/apps/frontend/src
+      - ./apps/frontend/index.html:/app/apps/frontend/index.html
+      - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - "5173:5173"
+      - "${VITE_PORT:-5173}:5173"
     depends_on:
       - backend
