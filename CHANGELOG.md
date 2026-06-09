@@ -4,6 +4,24 @@ Toutes les évolutions notables de Roux-Quizz. Format inspiré de [Keep a Change
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
+## [0.1.1] - 2026-06-09 — Outillage des fondations
+
+Complète les items reportés de la 0.1.0 (qualité, hooks, CI, génération de client).
+
+### Added
+- **ESLint** (flat config, typescript-eslint) + **Prettier** ; lint/format centralisés à la racine.
+- **Husky** + **commitlint** (Conventional Commits) + **lint-staged** :
+  `pre-commit` (lint-staged), `commit-msg` (commitlint), `pre-push` (tests).
+- **Génération OpenAPI** : script backend qui écrit `openapi/openapi.json` sans démarrer de serveur.
+- **Client REST Orval** : hooks **TanStack Query** générés dans `apps/frontend/src/api/generated`
+  (client `react-query`, `httpClient: fetch`, `baseUrl: /api/v1`).
+- **CI GitHub Actions** : install → contracts → lint → format → typecheck → test → build →
+  **check de drift OpenAPI/Orval** (la CI échoue si le client n'est pas régénéré).
+
+### Notes
+- Artefacts générés (OpenAPI, client Orval) exclus de Prettier (formatés par leur générateur)
+  pour garantir un check de drift déterministe.
+
 ## [0.1.0] - 2026-06-09 — Fondations (walking skeleton)
 
 Premier jalon : un squelette qui démarre de bout en bout, sans fonctionnalité métier.
