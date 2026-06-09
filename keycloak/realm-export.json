@@ -1,0 +1,23 @@
+{
+  "realm": "roux-quizz",
+  "enabled": true,
+  "displayName": "Roux-Quizz",
+  "roles": {
+    "realm": [
+      { "name": "host", "description": "Formateur / créateur de quiz" },
+      { "name": "player", "description": "Apprenant connecté" },
+      { "name": "admin", "description": "Administrateur formation (réservé v1.1)" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "roux-quizz-frontend",
+      "name": "Roux-Quizz Frontend (SPA)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "redirectUris": ["http://localhost:8081/*", "http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:8081", "http://localhost:5173"]
+    }
+  ]
+}

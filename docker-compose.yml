@@ -1,0 +1,107 @@
+name: roux-quizz
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-roux}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-roux}
+      POSTGRES_DB: ${POSTGRES_DB:-rouxquizz}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-roux} -d ${POSTGRES_DB:-rouxquizz}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  # Stockage objet S3-compatible libre (SeaweedFS) — médias des questions
+  storage:
+    image: chrislusf/seaweedfs:latest
+    command: "server -dir=/data -s3 -s3.port=8333"
+    volumes:
+      - storagedata:/data
+    ports:
+      - "${STORAGE_S3_PORT:-8333}:8333"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8333/status || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  # Auth optionnelle : démarrée uniquement avec --profile keycloak (AUTH_MODE=keycloak)
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    profiles: ["keycloak"]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    networks: [internal, public]
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+      target: runtime
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      AUTH_MODE: ${AUTH_MODE:-none}
+      DATABASE_URL: postgres://${POSTGRES_USER:-roux}:${POSTGRES_PASSWORD:-roux}@postgres:5432/${POSTGRES_DB:-rouxquizz}
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://storage:8333
+      KEYCLOAK_URL: ${KEYCLOAK_URL:-http://keycloak:8080}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal, public]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      target: runtime
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+    networks: [public]
+
+volumes:
+  pgdata:
+  redisdata:
+  storagedata:
+
+networks:
+  internal:
+  public:

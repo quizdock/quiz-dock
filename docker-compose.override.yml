@@ -1,0 +1,30 @@
+# Override de développement (appliqué automatiquement par `docker compose up`).
+# Hot-reload : on monte les sources et on lance les serveurs de dev.
+services:
+  backend:
+    build:
+      target: build
+    command: ["pnpm", "--filter", "@roux-quizz/backend", "start:dev"]
+    environment:
+      NODE_ENV: development
+      AUTH_MODE: ${AUTH_MODE:-none}
+    volumes:
+      - ./apps/backend/src:/app/apps/backend/src
+      - ./packages/contracts/src:/app/packages/contracts/src
+    ports:
+      - "3000:3000"
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    entrypoint: ["sh", "-c"]
+    command:
+      - "corepack enable && pnpm install --no-frozen-lockfile && pnpm --filter @roux-quizz/contracts build && pnpm --filter @roux-quizz/frontend dev --host"
+    environment:
+      VITE_API_URL: http://backend:3000
+    volumes:
+      - ./:/app
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
