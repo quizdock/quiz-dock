@@ -1,0 +1,47 @@
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.join {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.join-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.join-row input {
+  font-size: 1.5rem;
+  text-align: center;
+  letter-spacing: 0.3em;
+  padding: 0.5rem;
+  width: 8rem;
+}
+
+.join-row button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+}
