@@ -1,0 +1,21 @@
+{
+  "name": "roux-quizz",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plateforme de quiz interactifs temps réel pour la formation (clone de Kahoot)",
+  "packageManager": "pnpm@11.0.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "contracts:build": "pnpm --filter @roux-quizz/contracts build"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
