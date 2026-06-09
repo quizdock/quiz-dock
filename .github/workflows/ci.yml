@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build contracts
+        run: pnpm contracts:build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Tests
+        run: pnpm -r test
+
+      - name: Build
+        run: pnpm -r build
+
+      - name: OpenAPI/Orval drift check
+        run: |
+          pnpm generate:api
+          if ! git diff --exit-code -- apps/backend/openapi/openapi.json apps/frontend/src/api/generated; then
+            echo "::error::Client REST désynchronisé de l'OpenAPI. Lance 'pnpm generate:api' et committe le résultat."
+            exit 1
+          fi
