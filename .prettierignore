@@ -1,0 +1,9 @@
+**/dist/**
+**/node_modules/**
+**/coverage/**
+pnpm-lock.yaml
+# Artefacts générés (Orval / OpenAPI) — formatés par leur générateur, pas par Prettier
+apps/backend/openapi/**
+apps/frontend/src/api/generated/**
+# Documentation rédigée à la main (tableaux ASCII / wireframes) — ne pas reformater
+**/*.md

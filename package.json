@@ -10,12 +10,28 @@
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
-    "lint": "pnpm -r lint",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "contracts:build": "pnpm --filter @roux-quizz/contracts build"
+    "contracts:build": "pnpm --filter @roux-quizz/contracts build",
+    "generate:api": "pnpm --filter @roux-quizz/backend openapi && pnpm --filter @roux-quizz/frontend orval",
+    "prepare": "husky || true"
   },
   "devDependencies": {
-    "typescript": "^5.7.3"
+    "@commitlint/cli": "^21.0.2",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.8.3",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.60.1"
   }
 }

@@ -8,7 +8,7 @@ services:
     # On exécute nest directement (sans passer par `pnpm run`) pour éviter la
     # vérification de deps de pnpm 11 qui échoue sans TTY dans un conteneur.
     working_dir: /app/apps/backend
-    command: ["node", "node_modules/@nestjs/cli/bin/nest.js", "start", "--watch"]
+    command: ['node', 'node_modules/@nestjs/cli/bin/nest.js', 'start', '--watch']
     environment:
       NODE_ENV: development
       AUTH_MODE: ${AUTH_MODE:-none}
@@ -16,20 +16,20 @@ services:
       - ./apps/backend/src:/app/apps/backend/src
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - '${BACKEND_PORT:-3000}:3000'
 
   frontend:
     build:
       target: build
-    command: ["pnpm", "--filter", "@roux-quizz/frontend", "dev", "--host", "--port", "5173"]
+    command: ['pnpm', '--filter', '@roux-quizz/frontend', 'dev', '--host', '--port', '5173']
     environment:
       VITE_API_URL: http://backend:3000
-      npm_config_verify_deps_before_run: "false"
+      npm_config_verify_deps_before_run: 'false'
     volumes:
       - ./apps/frontend/src:/app/apps/frontend/src
       - ./apps/frontend/index.html:/app/apps/frontend/index.html
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - "${VITE_PORT:-5173}:5173"
+      - '${VITE_PORT:-5173}:5173'
     depends_on:
       - backend

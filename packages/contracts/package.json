@@ -13,7 +13,9 @@
       "require": "./dist/cjs/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json",
     "dev": "tsc -p tsconfig.cjs.json --watch",
