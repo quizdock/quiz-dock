@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { buildSwaggerDocument } from './swagger';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -13,12 +14,7 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
 
   // OpenAPI auto-généré → consommé par Orval côté frontend (technique §2.3).
-  const config = new DocumentBuilder()
-    .setTitle('Roux-Quizz API')
-    .setDescription('API REST du builder de quiz et des restitutions')
-    .setVersion('0.1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
+  const document = buildSwaggerDocument(app);
   SwaggerModule.setup('api/docs', app, document, {
     jsonDocumentUrl: 'api/docs-json',
   });
