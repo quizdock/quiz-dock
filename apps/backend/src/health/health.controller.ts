@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CONTRACTS_VERSION } from '@roux-quizz/contracts';
+import { Public } from '../auth/public.decorator';
 
 export interface HealthStatus {
   status: 'ok';
@@ -13,6 +14,7 @@ export interface HealthStatus {
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
+  @Public()
   @Get()
   @ApiOkResponse({ description: 'Service en bonne santé' })
   check(): HealthStatus {

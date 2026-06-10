@@ -4,6 +4,28 @@ Toutes les évolutions notables de Roux-Quizz. Format inspiré de [Keep a Change
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
+## [Non publié] — v0.2.0 Builder + Auth (en cours)
+
+### Added
+- **Abstraction `AuthProvider`** (SPECIFICATIONS §1, P1-BACK-3) sélectionnée par `AUTH_MODE` :
+  - `NoAuthProvider` (mode `none`) : identité locale via l'en-tête `X-Local-User` (sentinel
+    `local:<slug>` déterministe), toujours rôle `host`.
+  - `KeycloakProvider` (mode `keycloak`) : validation JWT **production** via JWKS (`jose`) —
+    signature, `iss`, `exp`, `aud` (optionnel). `iss` attendu et URL JWKS configurables
+    **séparément** (`KEYCLOAK_ISSUER` ≠ `KEYCLOAK_URL`) pour le cas Docker (host interne ≠ host SPA).
+- **`AuthGuard` global** (sécurité par défaut) + décorateur `@Public()` (santé ouverte) +
+  `@CurrentUser()` ; **provisioning** utilisateur idempotent (`UsersService.upsertFromPrincipal`,
+  upsert sur `keycloakSub`).
+- **`GET /me`** : profil de l'utilisateur authentifié (exerce guard + provisioning + `@CurrentUser`).
+- **Realm Keycloak** : direct grant + utilisateur de test `formateur` (rôle `host`) pour login/dev.
+
+### Verified
+- Tests unitaires : `KeycloakProvider` validé avec un **vrai keypair RS256** (vraie vérif jose :
+  signature/`iss`/`exp`/`aud`), `NoAuthProvider`, `AuthGuard` (401, `@Public`, provisioning).
+- Runtime (mode `none`, contre Postgres) : `/me` provisionne des utilisateurs distincts par
+  `X-Local-User` (isolation), `/health` public. Mode `keycloak` : `/me` sans token → **401**.
+- Compatibilité Keycloak prouvée **sans instance live** (aucune dépendance à un Keycloak en dev).
+
 ## [0.1.2] - 2026-06-10 — Socle de données (Prisma)
 
 Complète l'item de fondation **P1-DATA-1** (schéma de données + migrations), prérequis du builder v0.2.0.

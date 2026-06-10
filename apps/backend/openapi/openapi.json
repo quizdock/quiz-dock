@@ -14,6 +14,32 @@
           "health"
         ]
       }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "MeController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "me"
+        ]
+      }
     }
   },
   "info": {
@@ -25,6 +51,48 @@
   "tags": [],
   "servers": [],
   "components": {
-    "schemas": {}
+    "schemas": {
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "Host",
+          "Player",
+          "Admin"
+        ],
+        "description": "Rôle."
+      },
+      "MeResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identifiant interne (ULID)."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Nom affiché."
+          },
+          "email": {
+            "type": "object",
+            "description": "Courriel, si connu.",
+            "nullable": true
+          },
+          "role": {
+            "description": "Rôle.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "email",
+          "role"
+        ]
+      }
+    }
   }
 }

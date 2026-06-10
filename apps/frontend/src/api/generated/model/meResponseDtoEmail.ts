@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export * from './meResponseDto';
-export * from './meResponseDtoEmail';
-export * from './userRole';
+/**
+ * Courriel, si connu.
+ * @nullable
+ */
+export type MeResponseDtoEmail = { [key: string]: unknown } | null;
