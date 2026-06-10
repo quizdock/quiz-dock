@@ -1,0 +1,309 @@
+// Schéma de données Roux-Quizz — source : specifications/SPECIFICATIONS-DONNEES.md
+// Conventions (§0) : PK/FK = ULID char(26) ; DB en snake_case (@map/@@map),
+// TS en camelCase ; horodatage timestamptz UTC ; enums Postgres natifs (§3).
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [citext]
+}
+
+// ─── Énumérations (§3) ────────────────────────────────────────────────────
+
+enum UserRole {
+  Host  @map("host")
+  Player @map("player")
+  Admin @map("admin")
+
+  @@map("user_role")
+}
+
+enum QuizStatus {
+  Draft    @map("draft")
+  Ready    @map("ready")
+  Archived @map("archived")
+
+  @@map("quiz_status")
+}
+
+enum QuizVisibility {
+  Private  @map("private")
+  Unlisted @map("unlisted")
+
+  @@map("quiz_visibility")
+}
+
+enum QuestionType {
+  SingleChoice   @map("single_choice")
+  MultipleChoice @map("multiple_choice")
+  TrueFalse      @map("true_false")
+  TextInput      @map("text_input")
+  Numeric        @map("numeric")
+  Ordering       @map("ordering")
+  Poll           @map("poll")
+
+  @@map("question_type")
+}
+
+enum PointsMode {
+  Standard @map("standard")
+  Double   @map("double")
+  None     @map("none")
+
+  @@map("points_mode")
+}
+
+enum OptionColor {
+  Red    @map("red")
+  Blue   @map("blue")
+  Yellow @map("yellow")
+  Green  @map("green")
+
+  @@map("option_color")
+}
+
+enum OptionShape {
+  Triangle @map("triangle")
+  Diamond  @map("diamond")
+  Circle   @map("circle")
+  Square   @map("square")
+
+  @@map("option_shape")
+}
+
+enum MediaKind {
+  Image @map("image")
+  Audio @map("audio")
+
+  @@map("media_kind")
+}
+
+enum SessionStatus {
+  Lobby      @map("lobby")
+  InProgress @map("in_progress")
+  Ended      @map("ended")
+  Archived   @map("archived")
+
+  @@map("session_status")
+}
+
+// ─── Tables (§2) ──────────────────────────────────────────────────────────
+
+/// §2.1 — comptes (formateurs, apprenants connectés, admins).
+model User {
+  id          String    @id @default(ulid()) @db.Char(26)
+  keycloakSub String    @unique @map("keycloak_sub")
+  displayName String    @map("display_name")
+  email       String?   @unique @db.Citext
+  role        UserRole  @default(Player)
+  locale      String    @default("fr")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  quizzes      Quiz[]
+  mediaAssets  MediaAsset[]
+  hostedSessions GameSessionLog[]
+  playerResults  PlayerResultLog[]
+
+  @@map("user")
+}
+
+/// §2.2 — quiz (banque privée du formateur).
+model Quiz {
+  id            String         @id @default(ulid()) @db.Char(26)
+  ownerId       String         @map("owner_id") @db.Char(26)
+  title         String
+  description   String?
+  coverMediaId  String?        @map("cover_media_id") @db.Char(26)
+  status        QuizStatus     @default(Draft)
+  visibility    QuizVisibility @default(Private)
+  language      String         @default("fr")
+  questionCount Int            @default(0) @map("question_count")
+  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  archivedAt    DateTime?      @map("archived_at") @db.Timestamptz(6)
+
+  owner       User             @relation(fields: [ownerId], references: [id])
+  coverMedia  MediaAsset?      @relation("QuizCover", fields: [coverMediaId], references: [id])
+  questions   Question[]
+  sessionLogs GameSessionLog[]
+
+  @@index([ownerId, status])
+  @@map("quiz")
+}
+
+/// §2.3 — question.
+model Question {
+  id               String       @id @default(ulid()) @db.Char(26)
+  quizId           String       @map("quiz_id") @db.Char(26)
+  orderIndex       Int          @map("order_index")
+  type             QuestionType
+  prompt           String
+  mediaId          String?      @map("media_id") @db.Char(26)
+  timeLimitS       Int          @default(20) @map("time_limit_s")
+  pointsMode       PointsMode   @default(Standard) @map("points_mode")
+  numericValue     Decimal?     @map("numeric_value")
+  numericTolerance Decimal?     @map("numeric_tolerance")
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  quiz            Quiz                @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  media           MediaAsset?         @relation("QuestionMedia", fields: [mediaId], references: [id])
+  options         AnswerOption[]
+  acceptedAnswers AcceptedAnswer[]
+  resultStats     QuestionResultStat[]
+  answerLogs      AnswerLog[]
+
+  @@unique([quizId, orderIndex])
+  @@index([quizId])
+  @@map("question")
+}
+
+/// §2.4 — options (QCM, V/F, ordre).
+model AnswerOption {
+  id                 String      @id @default(ulid()) @db.Char(26)
+  questionId         String      @map("question_id") @db.Char(26)
+  orderIndex         Int         @map("order_index")
+  text               String?
+  mediaId            String?     @map("media_id") @db.Char(26)
+  color              OptionColor
+  shape              OptionShape
+  isCorrect          Boolean     @default(false) @map("is_correct")
+  correctOrderIndex  Int?        @map("correct_order_index")
+
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  media    MediaAsset? @relation("OptionMedia", fields: [mediaId], references: [id])
+
+  @@unique([questionId, orderIndex])
+  @@index([questionId])
+  @@map("answer_option")
+}
+
+/// §2.5 — réponses acceptées (type text_input).
+model AcceptedAnswer {
+  id         String @id @default(ulid()) @db.Char(26)
+  questionId String @map("question_id") @db.Char(26)
+  text       String
+  normalized String
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, normalized])
+  @@map("accepted_answer")
+}
+
+/// §2.6 — médias.
+model MediaAsset {
+  id        String    @id @default(ulid()) @db.Char(26)
+  ownerId   String    @map("owner_id") @db.Char(26)
+  url       String
+  mime      String
+  sizeBytes BigInt    @map("size_bytes")
+  kind      MediaKind
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  owner          User           @relation(fields: [ownerId], references: [id])
+  coverForQuizzes Quiz[]        @relation("QuizCover")
+  questions      Question[]     @relation("QuestionMedia")
+  options        AnswerOption[] @relation("OptionMedia")
+
+  @@index([ownerId])
+  @@map("media_asset")
+}
+
+/// §2.7 — session jouée (trace durable).
+model GameSessionLog {
+  id           String        @id @default(ulid()) @db.Char(26)
+  quizId       String        @map("quiz_id") @db.Char(26)
+  hostId       String        @map("host_id") @db.Char(26)
+  pin          String        @db.Char(6)
+  status       SessionStatus @default(Ended)
+  language     String
+  playerCount  Int           @default(0) @map("player_count")
+  successRate  Decimal?      @map("success_rate")
+  fullCapture  Boolean       @default(false) @map("full_capture")
+  quizSnapshot Json?         @map("quiz_snapshot")
+  startedAt    DateTime      @map("started_at") @db.Timestamptz(6)
+  endedAt      DateTime      @map("ended_at") @db.Timestamptz(6)
+  retainUntil  DateTime      @map("retain_until") @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quiz         Quiz                 @relation(fields: [quizId], references: [id])
+  host         User                 @relation(fields: [hostId], references: [id])
+  playerResults PlayerResultLog[]
+  questionStats QuestionResultStat[]
+  answerLogs    AnswerLog[]
+
+  @@index([quizId])
+  @@index([hostId, startedAt])
+  @@index([retainUntil])
+  @@map("game_session_log")
+}
+
+/// §2.8 — résultat d'un apprenant sur une session.
+model PlayerResultLog {
+  id            String  @id @default(ulid()) @db.Char(26)
+  sessionLogId  String  @map("session_log_id") @db.Char(26)
+  userId        String? @map("user_id") @db.Char(26)
+  nickname      String
+  finalScore    Int     @default(0) @map("final_score")
+  finalRank     Int     @map("final_rank")
+  correctCount  Int     @default(0) @map("correct_count")
+  answeredCount Int     @default(0) @map("answered_count")
+  avgResponseMs Int?    @map("avg_response_ms")
+  maxStreak     Int     @default(0) @map("max_streak")
+
+  sessionLog GameSessionLog @relation(fields: [sessionLogId], references: [id], onDelete: Cascade)
+  user       User?          @relation(fields: [userId], references: [id])
+  answerLogs AnswerLog[]
+
+  @@index([sessionLogId, finalRank])
+  @@index([userId, sessionLogId])
+  @@map("player_result_log")
+}
+
+/// §2.9 — agrégat par question (restitution).
+model QuestionResultStat {
+  id            String  @id @default(ulid()) @db.Char(26)
+  sessionLogId  String  @map("session_log_id") @db.Char(26)
+  questionId    String  @map("question_id") @db.Char(26)
+  orderIndex    Int     @map("order_index")
+  correctCount  Int     @default(0) @map("correct_count")
+  answerCount   Int     @default(0) @map("answer_count")
+  successRate   Decimal @default(0) @map("success_rate")
+  avgResponseMs Int?    @map("avg_response_ms")
+  distribution  Json    @default("{}")
+
+  sessionLog GameSessionLog @relation(fields: [sessionLogId], references: [id], onDelete: Cascade)
+  question   Question       @relation(fields: [questionId], references: [id])
+
+  @@index([sessionLogId, orderIndex])
+  @@map("question_result_stat")
+}
+
+/// §2.10 — réponse individuelle (mode capture intégrale).
+model AnswerLog {
+  id                String   @id @default(ulid()) @db.Char(26)
+  sessionLogId      String   @map("session_log_id") @db.Char(26)
+  playerResultLogId String   @map("player_result_log_id") @db.Char(26)
+  questionId        String   @map("question_id") @db.Char(26)
+  orderIndex        Int      @map("order_index")
+  answerValue       Json     @map("answer_value")
+  isCorrect         Boolean  @map("is_correct")
+  pointsAwarded     Int      @default(0) @map("points_awarded")
+  responseMs        Int      @map("response_ms")
+  receivedAt        DateTime @map("received_at") @db.Timestamptz(6)
+
+  sessionLog      GameSessionLog  @relation(fields: [sessionLogId], references: [id], onDelete: Cascade)
+  playerResultLog PlayerResultLog @relation(fields: [playerResultLogId], references: [id], onDelete: Cascade)
+  question        Question        @relation(fields: [questionId], references: [id])
+
+  @@index([sessionLogId, orderIndex])
+  @@index([playerResultLogId])
+  @@map("answer_log")
+}

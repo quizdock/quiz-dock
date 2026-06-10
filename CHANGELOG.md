@@ -4,6 +4,35 @@ Toutes les évolutions notables de Roux-Quizz. Format inspiré de [Keep a Change
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
+## [0.1.2] - 2026-06-10 — Socle de données (Prisma)
+
+Complète l'item de fondation **P1-DATA-1** (schéma de données + migrations), prérequis du builder v0.2.0.
+
+### Added
+- **Schéma Prisma complet** (`apps/backend/prisma/schema.prisma`) : les 10 tables de
+  [SPECIFICATIONS-DONNEES](./specifications/SPECIFICATIONS-DONNEES.md) §2 et les 9 énumérations
+  natives Postgres §3. Conventions respectées : PK/FK **ULID** `char(26)`, DB en `snake_case`
+  (`@map`/`@@map`) / TS en camelCase, `timestamptz`, `citext` (email), relations `ON DELETE CASCADE`
+  sur les enfants directs, index de §7, et `quiz_snapshot` JSONB (§2.7).
+- **Migration initiale** + migration dédiée aux **CHECK** non exprimables en PSL
+  (`time_limit_s` 5–120, `numeric_tolerance ≥ 0`, `size_bytes > 0`).
+- **`PrismaService`** (module global NestJS) : connexion/lifecycle, injecté dans tout le backend.
+- Scripts backend `db:generate` / `db:migrate` / `db:deploy` ; `postinstall` régénère le client.
+
+### Changed
+- **Compose dev** : Postgres exposé sur l'hôte (`POSTGRES_PORT`, défaut 5432) pour la CLI Prisma ;
+  le backend applique `prisma migrate deploy` au démarrage (idempotent) → `docker compose up` turnkey.
+- **Dockerfile backend** : le schéma Prisma est copié avant l'install pour que `postinstall`
+  génère le client typé.
+
+### Notes
+- **Prisma 7** : la connexion runtime passe par un **driver adapter** (`@prisma/adapter-pg`) et
+  l'URL vit dans `prisma.config.ts` (plus dans le schéma). Le « query compiler » remplace le moteur
+  Rust — aucun binaire moteur requis au runtime.
+- ULID générés par `@default(ulid())` (couvre uniformément les écritures imbriquées) — toutes les
+  propriétés de la spec §0 (format, triable, sans coordination) sont satisfaites.
+- La borne haute de taille média reste une politique d'upload applicative (cf. P2-BACK-5).
+
 ## [0.1.1] - 2026-06-09 — Outillage des fondations
 
 Complète les items reportés de la 0.1.0 (qualité, hooks, CI, génération de client).

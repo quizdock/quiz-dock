@@ -2,13 +2,25 @@
 # Hot-reload : on réutilise l'image de build (deps installées pour Alpine/musl
 # DANS l'image) et on ne monte QUE les sources — jamais le node_modules de l'hôte.
 services:
+  # En dev, on expose Postgres sur l'hôte pour que la CLI Prisma (migrate/studio)
+  # tourne depuis la machine. La stack interne continue d'utiliser `postgres:5432`.
+  postgres:
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+
   backend:
     build:
       target: build
     # On exécute nest directement (sans passer par `pnpm run`) pour éviter la
     # vérification de deps de pnpm 11 qui échoue sans TTY dans un conteneur.
+    # Les migrations Prisma sont appliquées au démarrage (idempotent) avant Nest.
     working_dir: /app/apps/backend
-    command: ['node', 'node_modules/@nestjs/cli/bin/nest.js', 'start', '--watch']
+    command:
+      [
+        'sh',
+        '-c',
+        'node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
+      ]
     environment:
       NODE_ENV: development
       AUTH_MODE: ${AUTH_MODE:-none}

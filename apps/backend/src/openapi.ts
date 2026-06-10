@@ -9,6 +9,12 @@ import { buildSwaggerDocument } from './swagger';
  * Source de vérité du client REST régénéré par Orval (cf. `pnpm generate:api`).
  */
 async function generate(): Promise<void> {
+  // La génération du document n'a pas besoin de base : on fournit une URL de
+  // repli (sinon PrismaService refuse de s'instancier) et on coupe la connexion
+  // Prisma — la CI génère l'OpenAPI sans Postgres.
+  process.env.DATABASE_URL ??= 'postgresql://openapi:openapi@localhost:5432/openapi';
+  process.env.PRISMA_SKIP_CONNECT = '1';
+
   const app = await NestFactory.create(AppModule, { logger: false });
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
   const document = buildSwaggerDocument(app);

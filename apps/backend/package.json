@@ -10,14 +10,22 @@
     "openapi": "node dist/openapi.js",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.0.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@roux-quizz/contracts": "workspace:*",
+    "pg": "^8.21.0",
+    "prisma": "^7.8.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -27,7 +35,9 @@
     "@nestjs/testing": "^11.0.1",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.5",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
+    "dotenv": "^17.4.2",
     "jest": "^29.7.0",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
