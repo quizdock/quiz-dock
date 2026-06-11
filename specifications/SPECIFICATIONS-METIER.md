@@ -29,10 +29,12 @@ Roux-Quizz est un outil de **quiz interactif en temps réel pour la formation pr
 
 | Acteur | Description | Auth |
 |--------|-------------|------|
-| **Formateur** (créateur/hôte) | Conçoit les quiz et anime les sessions. Acteur principal. | Keycloak (`host`) ou mode local |
+| **Formateur** (créateur/hôte) | Conçoit les quiz et anime les sessions. Acteur principal. | OIDC (rôle `host`) ou mode local |
 | **Apprenant invité** | Rejoint une session par PIN + pseudo, sans compte. | Aucune |
-| **Apprenant connecté** | Apprenant identifié (SSO entreprise) : son historique est conservé. | Keycloak (`player`) |
-| **Administrateur formation** | (v1.1) Supervise les formateurs, consulte les rapports agrégés. | Keycloak (`admin`) |
+| **Apprenant connecté** | Apprenant identifié (SSO entreprise) : son historique est conservé. | OIDC (rôle `player`) |
+| **Administrateur formation** | (v1.1) Supervise les formateurs, consulte les rapports agrégés. | OIDC (rôle `admin`) |
+
+> Les rôles `host`/`player`/`admin` proviennent des rôles du token OIDC (claim configurable, défaut `realm_access.roles` pour compatibilité Keycloak).
 
 ### Personas
 - **Claire, formatrice interne** — anime des sessions d'onboarding de 20–40 personnes ; veut créer vite, projeter, et récupérer qui a participé et les scores.

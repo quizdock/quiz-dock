@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Mappe les rôles realm sur le rôle interne (le plus élevé l'emporte). */
+  /** Mappe les rôles OIDC sur le rôle interne (le plus élevé l'emporte). */
   private resolveRole(roles: string[]): UserRole {
     if (roles.includes('admin')) return UserRole.Admin;
     if (roles.includes('host')) return UserRole.Host;
@@ -16,14 +16,14 @@ export class UsersService {
 
   /**
    * Provisionne (ou met à jour) l'utilisateur à partir du principal authentifié.
-   * Idempotent : clé sur `keycloakSub` (inclut le sentinel `local:<slug>`).
+   * Idempotent : clé sur `oidcSubject` (inclut le sentinel `local:<slug>`).
    */
   async upsertFromPrincipal(principal: AuthPrincipal): Promise<User> {
     const role = this.resolveRole(principal.roles);
     return this.prisma.user.upsert({
-      where: { keycloakSub: principal.sub },
+      where: { oidcSubject: principal.sub },
       create: {
-        keycloakSub: principal.sub,
+        oidcSubject: principal.sub,
         displayName: principal.displayName,
         email: principal.email,
         role,

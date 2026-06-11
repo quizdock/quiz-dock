@@ -10,7 +10,7 @@ Acteurs / composants :
 - **API** : backend NestJS (REST + WS Gateways).
 - **Redis** : état live (source de vérité pendant la partie).
 - **PG** : PostgreSQL (persistance durable).
-- **KC** : Keycloak (OIDC, si `AUTH_MODE=keycloak`).
+- **KC** : fournisseur OIDC (Keycloak en référence, si `AUTH_MODE=oidc`).
 
 ---
 

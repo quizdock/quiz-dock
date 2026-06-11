@@ -10,21 +10,28 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Abstraction `AuthProvider`** (SPECIFICATIONS §1, P1-BACK-3) sélectionnée par `AUTH_MODE` :
   - `NoAuthProvider` (mode `none`) : identité locale via l'en-tête `X-Local-User` (sentinel
     `local:<slug>` déterministe), toujours rôle `host`.
-  - `KeycloakProvider` (mode `keycloak`) : validation JWT **production** via JWKS (`jose`) —
-    signature, `iss`, `exp`, `aud` (optionnel). `iss` attendu et URL JWKS configurables
-    **séparément** (`KEYCLOAK_ISSUER` ≠ `KEYCLOAK_URL`) pour le cas Docker (host interne ≠ host SPA).
+  - `OidcProvider` (mode `oidc`) : validation JWT **production** d'un fournisseur **OIDC quelconque**
+    via JWKS (`jose`) — signature, `iss`, `exp`, `aud` (optionnel). `iss` attendu et URI JWKS
+    configurables **séparément** (`OIDC_ISSUER` ≠ `OIDC_JWKS_URI`) pour le cas Docker (host interne ≠
+    host SPA) ; claim de rôles paramétrable (`OIDC_ROLES_CLAIM`, défaut `realm_access.roles`).
+    **Keycloak** reste l'IdP OIDC **de référence** fourni en dev (profil Compose), sans spécificité.
 - **`AuthGuard` global** (sécurité par défaut) + décorateur `@Public()` (santé ouverte) +
   `@CurrentUser()` ; **provisioning** utilisateur idempotent (`UsersService.upsertFromPrincipal`,
-  upsert sur `keycloakSub`).
+  upsert sur `oidcSubject`).
 - **`GET /me`** : profil de l'utilisateur authentifié (exerce guard + provisioning + `@CurrentUser`).
-- **Realm Keycloak** : direct grant + utilisateur de test `formateur` (rôle `host`) pour login/dev.
+- **Realm de référence** : direct grant + utilisateur de test `formateur` (rôle `host`) pour login/dev.
+
+### Changed
+- **Auth recadrée Keycloak → OIDC générique** : colonne `keycloak_sub` → **`oidc_subject`**
+  (migration de renommage), `AUTH_MODE=keycloak` → **`oidc`**, env `KEYCLOAK_*` → **`OIDC_*`**.
+  Specs reformulées en « compatibilité OIDC », Keycloak présenté comme IdP de référence.
 
 ### Verified
-- Tests unitaires : `KeycloakProvider` validé avec un **vrai keypair RS256** (vraie vérif jose :
+- Tests unitaires : `OidcProvider` validé avec un **vrai keypair RS256** (vraie vérif jose :
   signature/`iss`/`exp`/`aud`), `NoAuthProvider`, `AuthGuard` (401, `@Public`, provisioning).
 - Runtime (mode `none`, contre Postgres) : `/me` provisionne des utilisateurs distincts par
-  `X-Local-User` (isolation), `/health` public. Mode `keycloak` : `/me` sans token → **401**.
-- Compatibilité Keycloak prouvée **sans instance live** (aucune dépendance à un Keycloak en dev).
+  `X-Local-User` (isolation), `/health` public. Mode `oidc` : `/me` sans token → **401**.
+- Compatibilité OIDC prouvée **sans instance live** (aucune dépendance à un IdP en dev).
 
 ## [0.1.2] - 2026-06-10 — Socle de données (Prisma)
 

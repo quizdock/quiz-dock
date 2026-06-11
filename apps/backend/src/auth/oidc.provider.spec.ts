@@ -57,11 +57,11 @@ async function makeToken(opts: TokenOpts = {}): Promise<string> {
 async function buildProvider(audience?: string) {
   const localSet = createLocalJWKSet({ keys: [publicJwk] });
   (createRemoteJWKSet as jest.Mock).mockReturnValue(localSet);
-  if (audience) process.env.KEYCLOAK_AUDIENCE = audience;
-  else delete process.env.KEYCLOAK_AUDIENCE;
-  process.env.KEYCLOAK_ISSUER = ISSUER;
-  const { KeycloakProvider } = await import('./keycloak.provider');
-  return new KeycloakProvider();
+  if (audience) process.env.OIDC_AUDIENCE = audience;
+  else delete process.env.OIDC_AUDIENCE;
+  process.env.OIDC_ISSUER = ISSUER;
+  const { OidcProvider } = await import('./oidc.provider');
+  return new OidcProvider();
 }
 
 beforeAll(async () => {
@@ -70,7 +70,7 @@ beforeAll(async () => {
   publicJwk = { ...(await exportJWK(pair.publicKey)), kid: KID, alg: 'RS256' };
 });
 
-describe('KeycloakProvider', () => {
+describe('OidcProvider', () => {
   it('accepte un token valide et en extrait le principal', async () => {
     const provider = await buildProvider();
     const principal = await provider.authenticate(

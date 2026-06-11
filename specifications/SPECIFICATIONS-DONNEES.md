@@ -47,7 +47,7 @@ Cardinalités clés :
 | Colonne | Type | Contraintes | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | Identifiant interne |
-| `keycloak_sub` | text | UQ, NN | `sub` du token OIDC (lien Keycloak) |
+| `oidc_subject` | text | UQ, NN | claim `sub` du token OIDC (lien IdP) |
 | `display_name` | text | NN | Nom affiché |
 | `email` | citext | UQ, nullable | Courriel (si fourni par l'IdP) |
 | `role` | enum `user_role` | NN, DEF `player` | `host` \| `player` \| `admin` |
@@ -56,7 +56,7 @@ Cardinalités clés :
 | `updated_at` | timestamptz | NN | Dernière modif |
 | `deleted_at` | timestamptz | nullable | Anonymisation RGPD (cf. §6) |
 
-> En `AUTH_MODE=none`, un formateur « local » peut exister sans `keycloak_sub` (colonne alors nullable en pratique ; `keycloak_sub` porte une valeur sentinelle `local:<nom>`). Les **apprenants invités ne sont PAS** des lignes `user` (ils n'existent qu'en Redis et dans `player_result_log` sans `user_id`).
+> En `AUTH_MODE=none`, un formateur « local » peut exister sans `oidc_subject` (colonne alors nullable en pratique ; `oidc_subject` porte une valeur sentinelle `local:<nom>`). Les **apprenants invités ne sont PAS** des lignes `user` (ils n'existent qu'en Redis et dans `player_result_log` sans `user_id`).
 
 ### 2.2 `quiz` — quiz (banque privée du formateur)
 

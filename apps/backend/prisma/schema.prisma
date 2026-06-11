@@ -96,7 +96,7 @@ enum SessionStatus {
 /// §2.1 — comptes (formateurs, apprenants connectés, admins).
 model User {
   id          String    @id @default(ulid()) @db.Char(26)
-  keycloakSub String    @unique @map("keycloak_sub")
+  oidcSubject String    @unique @map("oidc_subject")
   displayName String    @map("display_name")
   email       String?   @unique @db.Citext
   role        UserRole  @default(Player)

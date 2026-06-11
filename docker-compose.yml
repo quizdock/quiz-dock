@@ -74,7 +74,12 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-roux}:${POSTGRES_PASSWORD:-roux}@postgres:5432/${POSTGRES_DB:-rouxquizz}
       REDIS_URL: redis://redis:6379
       S3_ENDPOINT: http://storage:8333
-      KEYCLOAK_URL: ${KEYCLOAK_URL:-http://keycloak:8080}
+      # Auth OIDC (utilisé seulement si AUTH_MODE=oidc). En Docker, l'issuer (host
+      # vu par le navigateur) diffère de l'URI JWKS (host interne) — d'où deux
+      # variables. Keycloak est l'IdP de référence en dev.
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:8080/realms/roux-quizz}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/roux-quizz/protocol/openid-connect/certs}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
     depends_on:
       postgres:
         condition: service_healthy

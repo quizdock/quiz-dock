@@ -18,22 +18,22 @@ Roux-Quizz est une plateforme de quiz en temps réel inspirée de Kahoot :
 
 | Rôle | Authentification | Capacités |
 |------|------------------|-----------|
-| **Créateur / Hôte** | Keycloak (OIDC) si activé, sinon mode local | Créer/éditer des quiz, lancer une partie, piloter le déroulé |
+| **Créateur / Hôte** | OIDC (JWT) si activé, sinon mode local | Créer/éditer des quiz, lancer une partie, piloter le déroulé |
 | **Joueur invité** | Aucune (PIN + pseudo) | Rejoindre une partie, répondre |
-| **Joueur connecté** | Keycloak (OIDC) optionnel | Idem invité + historique et stats persistés sur son profil |
+| **Joueur connecté** | OIDC (JWT) optionnel | Idem invité + historique et stats persistés sur son profil |
 
 > **Décision** : modèle d'auth **mixte**. Un joueur peut jouer en invité (PIN + pseudo) ou se connecter pour conserver son historique.
 
 ### Auth facultative (mode configurable)
 
-L'authentification complète est **optionnelle** : le projet doit tourner en dev/démo sans Keycloak. Variable `AUTH_MODE` :
+L'authentification complète est **optionnelle** : le projet doit tourner en dev/démo sans IdP. Variable `AUTH_MODE` :
 
 | `AUTH_MODE` | Effet | Usage |
 |-------------|-------|-------|
-| `none` | Pas de Keycloak ; l'hôte s'identifie par un simple nom local (pas de JWT), service `keycloak` non démarré | Dev, démo, déploiement léger |
-| `keycloak` | OIDC complet : hôtes via JWT Keycloak, joueurs connectés possibles | Prod / multi-utilisateurs sécurisé |
+| `none` | Mode local sans IdP ; l'hôte s'identifie par un simple nom local (pas de JWT), service `keycloak` non démarré | Dev, démo, déploiement léger |
+| `oidc` | Validation JWT via un fournisseur OIDC (Keycloak en référence) : hôtes via JWT OIDC, joueurs connectés possibles | Prod / multi-utilisateurs sécurisé |
 
-Le backend expose une **interface d'auth** (`AuthProvider`) avec deux implémentations (`NoAuthProvider`, `KeycloakProvider`) sélectionnées par `AUTH_MODE` ; le reste du code ne dépend pas du provider. Le service `keycloak` est derrière un **profil Compose** (`--profile keycloak`) pour ne pas l'imposer.
+Le backend expose une **interface d'auth** (`AuthProvider`) avec deux implémentations (`NoAuthProvider`, `OidcProvider`) sélectionnées par `AUTH_MODE` ; le reste du code ne dépend pas du provider. `OidcProvider` valide les JWT (signature via JWKS, issuer, audience) de **n'importe quel fournisseur OIDC** conforme — Keycloak est fourni comme **IdP OIDC de référence** pour le dev/démo, derrière un **profil Compose** (`--profile keycloak`) pour ne pas l'imposer.
 
 ### Hors périmètre v1
 - Mode solo / défi asynchrone.
@@ -54,7 +54,7 @@ Le backend expose une **interface d'auth** (`AuthProvider`) avec deux implément
 | Temps réel | **Socket.IO** + **adapter Redis** | Rooms synchronisées entre instances |
 | État de partie | **Redis** | Source de vérité du live (état, joueurs, réponses, scores) |
 | Persistance durable | **PostgreSQL** | Quiz, questions, résultats finaux, profils |
-| Auth | **Keycloak** (OIDC / JWT) | Hôtes via JWT si `AUTH_MODE=keycloak` ; joueurs optionnel |
+| Auth | **OIDC (JWT)** — Keycloak en IdP de référence | Hôtes via JWT si `AUTH_MODE=oidc` ; joueurs optionnel |
 | Médias | Stockage objet **S3-compatible libre** (SeaweedFS) + CDN | Images/audio des questions |
 
 ### 2.1 Frontend — stack détaillée
@@ -116,7 +116,7 @@ Hooks TanStack Query + client + types TS  ──importés par──▶ Frontend
 ### 3.1 Persistant (PostgreSQL)
 
 ```
-User            id, keycloak_sub, display_name, email, role, created_at
+User            id, oidc_subject, display_name, email, role, created_at
 Quiz            id, owner_id (User), title, description, cover_media_id,
                 visibility (private|unlisted), language, created_at, updated_at
 Question        id, quiz_id, order_index, type (enum), prompt, media_id,
@@ -317,7 +317,7 @@ points = P_max_temps * (bonnes_cochées - mauvaises_cochées) / total_bonnes   (
 
 ## 10. API REST (builder & administration)
 
-> Base `/api/v1`. JWT Keycloak requis (hôte). JSON.
+> Base `/api/v1`. JWT OIDC requis (hôte). JSON.
 
 ### Quiz
 ```
@@ -414,7 +414,7 @@ GET    /me/history                             historique (joueur connecté)
 
 ## 15. Découpage de livraison suggéré
 
-1. **M1 — Builder + Auth** : Keycloak hôte, CRUD quiz/questions (REST + Postgres), upload média.
+1. **M1 — Builder + Auth** : auth OIDC hôte, CRUD quiz/questions (REST + Postgres), upload média.
 2. **M2 — Jeu de base** : lobby PIN, QCM unique, scoring temps, machine à états, leaderboard (Redis + WS).
 3. **M3 — Robustesse** : reconnexion joueur/hôte, compensation latence, adapter Redis multi-instance.
 4. **M4 — Types avancés** : multi-réponses, saisie texte, numérique, remise en ordre, sondage.
@@ -436,7 +436,7 @@ Tout le projet est conteneurisé et démarrable en une commande : `docker compos
 | `backend` | build `./backend` (Node + Socket.IO) | REST + WebSocket | 3000 |
 | `postgres` | `postgres:16-alpine` | Persistance durable | 5432 |
 | `redis` | `redis:7-alpine` | État live + adapter Socket.IO | 6379 |
-| `keycloak` | `quay.io/keycloak/keycloak` | Auth OIDC (**profil `keycloak`**, optionnel) | 8080 |
+| `keycloak` | `quay.io/keycloak/keycloak` | IdP OIDC de référence (**profil `keycloak`**, optionnel) | 8080 |
 | `storage` | `chrislusf/seaweedfs` | Stockage médias S3-compatible **libre** | 8333 (S3) |
 
 > **Choix du stockage objet** : on évite **MinIO** dont la version communautaire (AGPL) a été amputée en 2025 (retrait de la console d'admin et de fonctionnalités → dérive open-core). On retient **SeaweedFS** (Apache-2.0, S3-compatible, léger). Alternatives acceptables : **Garage** (AGPL-3.0, réellement communautaire) ou, en déploiement minimal, un simple **volume local** servi par le backend.
@@ -456,7 +456,7 @@ frontend/Dockerfile           # multi-stage (build Vite → Nginx)
 - **Healthchecks** sur chaque service ; `depends_on: condition: service_healthy` (backend attend postgres + redis + keycloak prêts).
 - **Volumes nommés** persistants : `pgdata`, `redisdata`, `storagedata`, realm Keycloak.
 - **Réseau interne** dédié ; seuls `frontend` (et `keycloak` si activé) exposés publiquement.
-- **Auth optionnelle** : Keycloak derrière le profil Compose `keycloak` ; en `AUTH_MODE=none`, ne pas le démarrer. Realm importé automatiquement au démarrage (`./keycloak/realm-export.json`) : clients, rôles (`host`, `player`), mappers.
+- **Auth optionnelle** : le backend valide les JWT de n'importe quel fournisseur OIDC conforme via `OidcProvider` (config `OIDC_ISSUER` / `OIDC_JWKS_URI` / `OIDC_AUDIENCE` ; issuer attendu et URI JWKS peuvent différer en Docker). Keycloak est l'**IdP OIDC de référence** fourni pour le dev/démo, derrière le profil Compose `keycloak` (`KEYCLOAK_ADMIN`/`KEYCLOAK_ADMIN_PASSWORD` pour ce conteneur) ; en `AUTH_MODE=none`, ne pas le démarrer. Realm importé automatiquement au démarrage (`./keycloak/realm-export.json`) : clients, rôles (`host`, `player`), mappers.
 - **Variables d'environnement** centralisées dans `.env` (URLs, secrets, identifiants DB) ; `.env.example` documenté et versionné.
 - **Migrations** Postgres jouées au boot du backend (ou job dédié) de façon idempotente.
 - **Profils Compose** : `--profile dev`, `--profile test` pour ne lancer que le nécessaire.

@@ -28,7 +28,7 @@
 │   └──────────────────────────────────────┘    │
 │                                                │
 │   Formateur ?   [ Se connecter ]               │
-│                 (Keycloak / SSO ou mode local) │
+│                 (OIDC / SSO ou mode local)     │
 └──────────────────────────────────────────────┘
 ```
 > En `AUTH_MODE=none`, « Se connecter » ouvre une simple saisie de nom local.
@@ -291,7 +291,7 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 │  (progression dans le temps ▮▮▮▮▮▮▯▯)                      │
 └───────────────────────────────────────────────────────────┘
 ```
-> Disponible uniquement si `AUTH_MODE=keycloak` (apprenant identifié).
+> Disponible uniquement si `AUTH_MODE=oidc` (apprenant identifié).
 
 ---
 
