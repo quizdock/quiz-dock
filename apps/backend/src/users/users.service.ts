@@ -9,9 +9,9 @@ export class UsersService {
 
   /** Mappe les rôles OIDC sur le rôle interne (le plus élevé l'emporte). */
   private resolveRole(roles: string[]): UserRole {
-    if (roles.includes('admin')) return UserRole.Admin;
-    if (roles.includes('host')) return UserRole.Host;
-    return UserRole.Player;
+    if (roles.includes('admin')) return UserRole.admin;
+    if (roles.includes('host')) return UserRole.host;
+    return UserRole.player;
   }
 
   /**

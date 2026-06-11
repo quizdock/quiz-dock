@@ -14,79 +14,83 @@ datasource db {
 
 // ─── Énumérations (§3) ────────────────────────────────────────────────────
 
+// Les membres portent directement la valeur du domaine (§3) : la valeur émise par
+// le client Prisma == valeur en base == valeur sur le fil (REST/WS), cohérente avec
+// le package @roux-quizz/contracts. (@@map nomme le type Postgres.)
+
 enum UserRole {
-  Host  @map("host")
-  Player @map("player")
-  Admin @map("admin")
+  host
+  player
+  admin
 
   @@map("user_role")
 }
 
 enum QuizStatus {
-  Draft    @map("draft")
-  Ready    @map("ready")
-  Archived @map("archived")
+  draft
+  ready
+  archived
 
   @@map("quiz_status")
 }
 
 enum QuizVisibility {
-  Private  @map("private")
-  Unlisted @map("unlisted")
+  private
+  unlisted
 
   @@map("quiz_visibility")
 }
 
 enum QuestionType {
-  SingleChoice   @map("single_choice")
-  MultipleChoice @map("multiple_choice")
-  TrueFalse      @map("true_false")
-  TextInput      @map("text_input")
-  Numeric        @map("numeric")
-  Ordering       @map("ordering")
-  Poll           @map("poll")
+  single_choice
+  multiple_choice
+  true_false
+  text_input
+  numeric
+  ordering
+  poll
 
   @@map("question_type")
 }
 
 enum PointsMode {
-  Standard @map("standard")
-  Double   @map("double")
-  None     @map("none")
+  standard
+  double
+  none
 
   @@map("points_mode")
 }
 
 enum OptionColor {
-  Red    @map("red")
-  Blue   @map("blue")
-  Yellow @map("yellow")
-  Green  @map("green")
+  red
+  blue
+  yellow
+  green
 
   @@map("option_color")
 }
 
 enum OptionShape {
-  Triangle @map("triangle")
-  Diamond  @map("diamond")
-  Circle   @map("circle")
-  Square   @map("square")
+  triangle
+  diamond
+  circle
+  square
 
   @@map("option_shape")
 }
 
 enum MediaKind {
-  Image @map("image")
-  Audio @map("audio")
+  image
+  audio
 
   @@map("media_kind")
 }
 
 enum SessionStatus {
-  Lobby      @map("lobby")
-  InProgress @map("in_progress")
-  Ended      @map("ended")
-  Archived   @map("archived")
+  lobby
+  in_progress
+  ended
+  archived
 
   @@map("session_status")
 }
@@ -99,7 +103,7 @@ model User {
   oidcSubject String    @unique @map("oidc_subject")
   displayName String    @map("display_name")
   email       String?   @unique @db.Citext
-  role        UserRole  @default(Player)
+  role        UserRole  @default(player)
   locale      String    @default("fr")
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -120,8 +124,8 @@ model Quiz {
   title         String
   description   String?
   coverMediaId  String?        @map("cover_media_id") @db.Char(26)
-  status        QuizStatus     @default(Draft)
-  visibility    QuizVisibility @default(Private)
+  status        QuizStatus     @default(draft)
+  visibility    QuizVisibility @default(private)
   language      String         @default("fr")
   questionCount Int            @default(0) @map("question_count")
   createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -146,7 +150,7 @@ model Question {
   prompt           String
   mediaId          String?      @map("media_id") @db.Char(26)
   timeLimitS       Int          @default(20) @map("time_limit_s")
-  pointsMode       PointsMode   @default(Standard) @map("points_mode")
+  pointsMode       PointsMode   @default(standard) @map("points_mode")
   numericValue     Decimal?     @map("numeric_value")
   numericTolerance Decimal?     @map("numeric_tolerance")
   createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -222,7 +226,7 @@ model GameSessionLog {
   quizId       String        @map("quiz_id") @db.Char(26)
   hostId       String        @map("host_id") @db.Char(26)
   pin          String        @db.Char(6)
-  status       SessionStatus @default(Ended)
+  status       SessionStatus @default(ended)
   language     String
   playerCount  Int           @default(0) @map("player_count")
   successRate  Decimal?      @map("success_rate")

@@ -7,6 +7,13 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ## [Non publié] — v0.2.0 Builder + Auth (en cours)
 
 ### Added
+- **CRUD Quiz** (P2-BACK-2) + **cycle de vie** `draft→ready→archived` (P2-BACK-6, RG-02) :
+  `GET/POST /quizzes`, `GET/PUT/DELETE /quizzes/:id`, `PATCH /quizzes/:id/status`.
+  **Isolation par propriétaire** stricte (404 si non possédé, jamais de fuite d'existence) ;
+  transitions validées (draft→ready exige ≥ 1 question — validation par type à venir en P2-BACK-3).
+- **Pipeline de validation Zod** (`nestjs-zod`) : DTO `createZodDto` → validation runtime
+  (`ZodValidationPipe` global) **et** schémas OpenAPI (`cleanupOpenApiDoc` dans les deux bootstraps),
+  consommés par le client Orval. Conforme au choix technique « un seul langage, schémas réutilisés ».
 - **Abstraction `AuthProvider`** (SPECIFICATIONS §1, P1-BACK-3) sélectionnée par `AUTH_MODE` :
   - `NoAuthProvider` (mode `none`) : identité locale via l'en-tête `X-Local-User` (sentinel
     `local:<slug>` déterministe), toujours rôle `host`.
@@ -25,6 +32,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Auth recadrée Keycloak → OIDC générique** : colonne `keycloak_sub` → **`oidc_subject`**
   (migration de renommage), `AUTH_MODE=keycloak` → **`oidc`**, env `KEYCLOAK_*` → **`OIDC_*`**.
   Specs reformulées en « compatibilité OIDC », Keycloak présenté comme IdP de référence.
+- **Valeurs d'enum alignées sur le fil** : les membres des enums Prisma portent désormais la valeur
+  du domaine en minuscules (`draft`, `host`, `single_choice`…), si bien que l'API REST expose les
+  mêmes valeurs que la base et que `@roux-quizz/contracts` (avant : PascalCase côté client Prisma).
+  Aucune migration (valeurs en base inchangées).
 
 ### Verified
 - Tests unitaires : `OidcProvider` validé avec un **vrai keypair RS256** (vraie vérif jose :

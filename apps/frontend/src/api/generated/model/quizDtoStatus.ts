@@ -6,14 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-/**
- * Rôle.
- */
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+export type QuizDtoStatus = typeof QuizDtoStatus[keyof typeof QuizDtoStatus];
 
 
-export const UserRole = {
-  host: 'host',
-  player: 'player',
-  admin: 'admin',
+export const QuizDtoStatus = {
+  draft: 'draft',
+  ready: 'ready',
+  archived: 'archived',
 } as const;

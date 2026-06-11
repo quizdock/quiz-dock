@@ -6,6 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createQuizDto';
 export * from './meResponseDto';
 export * from './meResponseDtoEmail';
+export * from './quizDto';
+export * from './quizDtoStatus';
+export * from './quizDtoVisibility';
+export * from './transitionQuizDto';
+export * from './transitionQuizDtoStatus';
+export * from './updateQuizDto';
 export * from './userRole';

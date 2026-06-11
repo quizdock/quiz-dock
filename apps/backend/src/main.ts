@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { buildSwaggerDocument } from './swagger';
 
@@ -12,6 +13,8 @@ async function bootstrap(): Promise<void> {
 
   app.enableCors();
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  // Validation runtime des DTO Zod (createZodDto) sur toutes les routes.
+  app.useGlobalPipes(new ZodValidationPipe());
 
   // OpenAPI auto-généré → consommé par Orval côté frontend (technique §2.3).
   const document = buildSwaggerDocument(app);
