@@ -33,6 +33,12 @@ export class QuizzesController {
     return this.quizzes.create(user.id, dto);
   }
 
+  @Post(':id/duplicate')
+  @ApiCreatedResponse({ type: QuizDto })
+  duplicate(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.quizzes.duplicate(user.id, id);
+  }
+
   @Get(':id')
   @ApiOkResponse({ type: QuizDetailDto })
   get(@CurrentUser() user: User, @Param('id') id: string) {

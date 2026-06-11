@@ -57,6 +57,64 @@ export class QuizzesService {
     return quiz;
   }
 
+  /** Duplique un quiz possédé (copie profonde questions/options/réponses) en `draft`. */
+  async duplicate(ownerId: string, id: string): Promise<Quiz> {
+    const src = await this.prisma.quiz.findFirst({
+      where: { id, ownerId },
+      include: {
+        questions: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            options: { orderBy: { orderIndex: 'asc' } },
+            acceptedAnswers: true,
+          },
+        },
+      },
+    });
+    if (!src) {
+      throw new NotFoundException('Quiz introuvable.');
+    }
+    return this.prisma.quiz.create({
+      data: {
+        ownerId,
+        title: `${src.title} (copie)`,
+        description: src.description,
+        coverMediaId: src.coverMediaId,
+        language: src.language,
+        questionCount: src.questions.length,
+        questions: {
+          create: src.questions.map((q) => ({
+            orderIndex: q.orderIndex,
+            type: q.type,
+            prompt: q.prompt,
+            mediaId: q.mediaId,
+            timeLimitS: q.timeLimitS,
+            pointsMode: q.pointsMode,
+            numericValue: q.numericValue,
+            numericTolerance: q.numericTolerance,
+            options: {
+              create: q.options.map((o) => ({
+                orderIndex: o.orderIndex,
+                text: o.text,
+                mediaId: o.mediaId,
+                color: o.color,
+                shape: o.shape,
+                isCorrect: o.isCorrect,
+                correctOrderIndex: o.correctOrderIndex,
+              })),
+            },
+            acceptedAnswers: {
+              create: q.acceptedAnswers.map((a) => ({
+                text: a.text,
+                normalized: a.normalized,
+              })),
+            },
+          })),
+        },
+      },
+    });
+  }
+
   async update(ownerId: string, id: string, dto: UpdateQuizDto): Promise<Quiz> {
     await this.findOwnedOrThrow(ownerId, id);
     return this.prisma.quiz.update({

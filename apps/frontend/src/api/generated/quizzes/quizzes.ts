@@ -231,6 +231,88 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       > => {
       return useMutation(getQuizzesControllerCreateMutationOptions(options), queryClient);
     }
+    export type quizzesControllerDuplicateResponse201 = {
+  data: QuizDto
+  status: 201
+}
+
+export type quizzesControllerDuplicateResponseSuccess = (quizzesControllerDuplicateResponse201) & {
+  headers: Headers;
+};
+;
+
+export type quizzesControllerDuplicateResponse = (quizzesControllerDuplicateResponseSuccess)
+
+export const getQuizzesControllerDuplicateUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/api/v1/quizzes/${id}/duplicate`
+}
+
+export const quizzesControllerDuplicate = async (id: string, options?: RequestInit): Promise<quizzesControllerDuplicateResponse> => {
+
+  const res = await fetch(getQuizzesControllerDuplicateUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+)
+
+
+  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
+
+  const data: quizzesControllerDuplicateResponse['data'] = body ? JSON.parse(body) : {}
+  return { data, status: res.status, headers: res.headers } as quizzesControllerDuplicateResponse
+}
+
+
+
+
+export const getQuizzesControllerDuplicateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['quizzesControllerDuplicate'];
+const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, fetch: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  quizzesControllerDuplicate(id,fetchOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type QuizzesControllerDuplicateMutationResult = NonNullable<Awaited<ReturnType<typeof quizzesControllerDuplicate>>>
+
+    export type QuizzesControllerDuplicateMutationError = unknown
+
+    export const useQuizzesControllerDuplicate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof quizzesControllerDuplicate>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getQuizzesControllerDuplicateMutationOptions(options), queryClient);
+    }
     export type quizzesControllerGetResponse200 = {
   data: QuizDetailDto
   status: 200

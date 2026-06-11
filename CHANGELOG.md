@@ -16,7 +16,8 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   d'unicité) ; `GET /quizzes/:id` renvoie désormais les questions. Le passage à `ready` exige ≥ 1
   question, la validité par type étant garantie à l'écriture.
 - **CRUD Quiz** (P2-BACK-2) + **cycle de vie** `draft→ready→archived` (P2-BACK-6, RG-02) :
-  `GET/POST /quizzes`, `GET/PUT/DELETE /quizzes/:id`, `PATCH /quizzes/:id/status`.
+  `GET/POST /quizzes`, `GET/PUT/DELETE /quizzes/:id`, `PATCH /quizzes/:id/status`,
+  `POST /quizzes/:id/duplicate` (copie profonde questions/options en `draft`).
   **Isolation par propriétaire** stricte (404 si non possédé, jamais de fuite d'existence) ;
   transitions validées (draft→ready exige ≥ 1 question — validation par type à venir en P2-BACK-3).
 - **Pipeline de validation Zod** (`nestjs-zod`) : DTO `createZodDto` → validation runtime

@@ -115,4 +115,52 @@ describe('QuizzesService', () => {
       expect(data.archivedAt).toBeInstanceOf(Date);
     });
   });
+
+  describe('duplicate', () => {
+    it('renvoie 404 si non possédé', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(null);
+      await expect(service.duplicate(OWNER, 'q1')).rejects.toThrow(NotFoundException);
+      expect(prisma.quiz.create).not.toHaveBeenCalled();
+    });
+
+    it('copie en draft avec questions/options et questionCount', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(
+        makeQuiz({
+          title: 'Orig',
+          questions: [
+            {
+              orderIndex: 0,
+              type: QuizStatus.draft, // valeur quelconque, non vérifiée par le mock
+              prompt: 'Q',
+              mediaId: null,
+              timeLimitS: 20,
+              pointsMode: 'standard',
+              numericValue: null,
+              numericTolerance: null,
+              options: [
+                {
+                  orderIndex: 0,
+                  text: 'a',
+                  mediaId: null,
+                  color: 'red',
+                  shape: 'triangle',
+                  isCorrect: true,
+                  correctOrderIndex: null,
+                },
+              ],
+              acceptedAnswers: [],
+            },
+          ],
+        } as unknown as Quiz),
+      );
+      prisma.quiz.create.mockResolvedValue(makeQuiz());
+      await service.duplicate(OWNER, 'q1');
+      const data = prisma.quiz.create.mock.calls[0][0].data;
+      expect(data.ownerId).toBe(OWNER);
+      expect(data.title).toBe('Orig (copie)');
+      expect(data.questionCount).toBe(1);
+      expect(data.questions.create).toHaveLength(1);
+      expect(data.questions.create[0].options.create).toHaveLength(1);
+    });
+  });
 });
