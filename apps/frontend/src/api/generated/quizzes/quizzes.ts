@@ -26,6 +26,7 @@ import type {
 
 import type {
   CreateQuizDto,
+  QuizDetailDto,
   QuizDto,
   TransitionQuizDto,
   UpdateQuizDto
@@ -231,7 +232,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       return useMutation(getQuizzesControllerCreateMutationOptions(options), queryClient);
     }
     export type quizzesControllerGetResponse200 = {
-  data: QuizDto
+  data: QuizDetailDto
   status: 200
 }
 

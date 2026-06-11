@@ -9,6 +9,7 @@ import {
 import type { User } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateQuizDto } from './dto/create-quiz.dto';
+import { QuizDetailDto } from './dto/quiz-detail.dto';
 import { QuizDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -33,7 +34,7 @@ export class QuizzesController {
   }
 
   @Get(':id')
-  @ApiOkResponse({ type: QuizDto })
+  @ApiOkResponse({ type: QuizDetailDto })
   get(@CurrentUser() user: User, @Param('id') id: string) {
     return this.quizzes.get(user.id, id);
   }

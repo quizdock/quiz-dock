@@ -7,6 +7,14 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ## [Non publié] — v0.2.0 Builder + Auth (en cours)
 
 ### Added
+- **CRUD Questions + options + réponses** (P2-BACK-3) + **validation par type** (P2-BACK-4) :
+  `POST /quizzes/:id/questions`, `PUT/DELETE /questions/:qid`, `PATCH /quizzes/:id/questions/reorder`.
+  Validation Zod **exhaustive par type** (§4) : 2–6 options, nombre de bonnes réponses, permutation
+  `ordering`, réponses acceptées (text_input, `normalized` calculé serveur RG-06), value+tolérance
+  (numeric), sondage sans bonne réponse. Isolation via le quiz (`/questions/:qid` → 404 si non
+  possédé) ; `questionCount` maintenu atomiquement ; réordonnancement en deux phases (anti-collision
+  d'unicité) ; `GET /quizzes/:id` renvoie désormais les questions. Le passage à `ready` exige ≥ 1
+  question, la validité par type étant garantie à l'écriture.
 - **CRUD Quiz** (P2-BACK-2) + **cycle de vie** `draft→ready→archived` (P2-BACK-6, RG-02) :
   `GET/POST /quizzes`, `GET/PUT/DELETE /quizzes/:id`, `PATCH /quizzes/:id/status`.
   **Isolation par propriétaire** stricte (404 si non possédé, jamais de fuite d'existence) ;

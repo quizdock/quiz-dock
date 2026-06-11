@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(touch:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(true:*)",
+      "Bash(test:*)",
+      "Bash(kill:*)",
+      "Bash(env:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pnpm:*)",
+      "Bash(python3:*)",
+      "Bash(git:*)",
+      "Bash(docker:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)",
+      "Bash(rtk:*)",
+      "Bash(./node_modules/.bin/prisma:*)",
+      "Bash(node_modules/.bin/prisma:*)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

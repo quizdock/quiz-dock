@@ -123,7 +123,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuizDto"
+                  "$ref": "#/components/schemas/QuizDetailDto"
                 }
               }
             }
@@ -250,6 +250,170 @@
         ],
         "tags": [
           "quizzes"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{id}/questions": {
+      "post": {
+        "operationId": "QuestionsController_add",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "questions"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{id}/questions/reorder": {
+      "patch": {
+        "operationId": "QuestionsController_reorder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderQuestionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "questions"
+        ]
+      }
+    },
+    "/api/v1/questions/{qid}": {
+      "put": {
+        "operationId": "QuestionsController_update",
+        "parameters": [
+          {
+            "name": "qid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "questions"
+        ]
+      },
+      "delete": {
+        "operationId": "QuestionsController_remove",
+        "parameters": [
+          {
+            "name": "qid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "questions"
         ]
       }
     }
@@ -402,6 +566,232 @@
           "title"
         ]
       },
+      "QuizDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "coverMediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "ready",
+              "archived"
+            ]
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "unlisted"
+            ]
+          },
+          "language": {
+            "type": "string"
+          },
+          "questionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "archivedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "quizId": {
+                  "type": "string"
+                },
+                "orderIndex": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "single_choice",
+                    "multiple_choice",
+                    "true_false",
+                    "text_input",
+                    "numeric",
+                    "ordering",
+                    "poll"
+                  ]
+                },
+                "prompt": {
+                  "type": "string"
+                },
+                "mediaId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "timeLimitS": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "pointsMode": {
+                  "type": "string",
+                  "enum": [
+                    "standard",
+                    "double",
+                    "none"
+                  ]
+                },
+                "numericValue": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "numericTolerance": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "orderIndex": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "text": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "mediaId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "color": {
+                        "type": "string",
+                        "enum": [
+                          "red",
+                          "blue",
+                          "yellow",
+                          "green"
+                        ]
+                      },
+                      "shape": {
+                        "type": "string",
+                        "enum": [
+                          "triangle",
+                          "diamond",
+                          "circle",
+                          "square"
+                        ]
+                      },
+                      "isCorrect": {
+                        "type": "boolean"
+                      },
+                      "correctOrderIndex": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "nullable": true
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "orderIndex",
+                      "text",
+                      "mediaId",
+                      "color",
+                      "shape",
+                      "isCorrect",
+                      "correctOrderIndex"
+                    ]
+                  }
+                },
+                "acceptedAnswers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "text": {
+                        "type": "string"
+                      },
+                      "normalized": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "text",
+                      "normalized"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "quizId",
+                "orderIndex",
+                "type",
+                "prompt",
+                "mediaId",
+                "timeLimitS",
+                "pointsMode",
+                "numericValue",
+                "numericTolerance",
+                "options",
+                "acceptedAnswers"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "title",
+          "description",
+          "coverMediaId",
+          "status",
+          "visibility",
+          "language",
+          "questionCount",
+          "createdAt",
+          "updatedAt",
+          "archivedAt",
+          "questions"
+        ]
+      },
       "UpdateQuizDto": {
         "type": "object",
         "properties": {
@@ -442,6 +832,432 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "CreateQuestionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "true_false",
+              "text_input",
+              "numeric",
+              "ordering",
+              "poll"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "mediaId": {
+            "type": "string",
+            "minLength": 26,
+            "maxLength": 26
+          },
+          "timeLimitS": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120
+          },
+          "pointsMode": {
+            "default": "standard",
+            "type": "string",
+            "enum": [
+              "standard",
+              "double",
+              "none"
+            ]
+          },
+          "numericValue": {
+            "type": "number"
+          },
+          "numericTolerance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "options": {
+            "default": [],
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "mediaId": {
+                  "type": "string",
+                  "minLength": 26,
+                  "maxLength": 26
+                },
+                "color": {
+                  "type": "string",
+                  "enum": [
+                    "red",
+                    "blue",
+                    "yellow",
+                    "green"
+                  ]
+                },
+                "shape": {
+                  "type": "string",
+                  "enum": [
+                    "triangle",
+                    "diamond",
+                    "circle",
+                    "square"
+                  ]
+                },
+                "isCorrect": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "correctOrderIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "color",
+                "shape"
+              ]
+            }
+          },
+          "acceptedAnswers": {
+            "default": [],
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "required": [
+                "text"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "prompt"
+        ]
+      },
+      "QuestionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quizId": {
+            "type": "string"
+          },
+          "orderIndex": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "true_false",
+              "text_input",
+              "numeric",
+              "ordering",
+              "poll"
+            ]
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "mediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "timeLimitS": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "pointsMode": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "double",
+              "none"
+            ]
+          },
+          "numericValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "numericTolerance": {
+            "type": "string",
+            "nullable": true
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "orderIndex": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "text": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "mediaId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "color": {
+                  "type": "string",
+                  "enum": [
+                    "red",
+                    "blue",
+                    "yellow",
+                    "green"
+                  ]
+                },
+                "shape": {
+                  "type": "string",
+                  "enum": [
+                    "triangle",
+                    "diamond",
+                    "circle",
+                    "square"
+                  ]
+                },
+                "isCorrect": {
+                  "type": "boolean"
+                },
+                "correctOrderIndex": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "orderIndex",
+                "text",
+                "mediaId",
+                "color",
+                "shape",
+                "isCorrect",
+                "correctOrderIndex"
+              ]
+            }
+          },
+          "acceptedAnswers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "normalized": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text",
+                "normalized"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "quizId",
+          "orderIndex",
+          "type",
+          "prompt",
+          "mediaId",
+          "timeLimitS",
+          "pointsMode",
+          "numericValue",
+          "numericTolerance",
+          "options",
+          "acceptedAnswers"
+        ]
+      },
+      "ReorderQuestionsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "questionId": {
+                  "type": "string",
+                  "minLength": 26,
+                  "maxLength": 26
+                },
+                "orderIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "questionId",
+                "orderIndex"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "UpdateQuestionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "single_choice",
+              "multiple_choice",
+              "true_false",
+              "text_input",
+              "numeric",
+              "ordering",
+              "poll"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "mediaId": {
+            "type": "string",
+            "minLength": 26,
+            "maxLength": 26
+          },
+          "timeLimitS": {
+            "default": 20,
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 120
+          },
+          "pointsMode": {
+            "default": "standard",
+            "type": "string",
+            "enum": [
+              "standard",
+              "double",
+              "none"
+            ]
+          },
+          "numericValue": {
+            "type": "number"
+          },
+          "numericTolerance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "options": {
+            "default": [],
+            "maxItems": 6,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "mediaId": {
+                  "type": "string",
+                  "minLength": 26,
+                  "maxLength": 26
+                },
+                "color": {
+                  "type": "string",
+                  "enum": [
+                    "red",
+                    "blue",
+                    "yellow",
+                    "green"
+                  ]
+                },
+                "shape": {
+                  "type": "string",
+                  "enum": [
+                    "triangle",
+                    "diamond",
+                    "circle",
+                    "square"
+                  ]
+                },
+                "isCorrect": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "correctOrderIndex": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "color",
+                "shape"
+              ]
+            }
+          },
+          "acceptedAnswers": {
+            "default": [],
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200
+                }
+              },
+              "required": [
+                "text"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "prompt"
         ]
       }
     }

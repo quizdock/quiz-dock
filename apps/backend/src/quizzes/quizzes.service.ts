@@ -37,9 +37,24 @@ export class QuizzesService {
     });
   }
 
-  /** Détail d'un quiz possédé (404 sinon — on ne divulgue pas l'existence). */
-  get(ownerId: string, id: string): Promise<Quiz> {
-    return this.findOwnedOrThrow(ownerId, id);
+  /** Détail d'un quiz possédé, questions ordonnées incluses (404 sinon). */
+  async get(ownerId: string, id: string) {
+    const quiz = await this.prisma.quiz.findFirst({
+      where: { id, ownerId },
+      include: {
+        questions: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            options: { orderBy: { orderIndex: 'asc' } },
+            acceptedAnswers: true,
+          },
+        },
+      },
+    });
+    if (!quiz) {
+      throw new NotFoundException('Quiz introuvable.');
+    }
+    return quiz;
   }
 
   async update(ownerId: string, id: string, dto: UpdateQuizDto): Promise<Quiz> {

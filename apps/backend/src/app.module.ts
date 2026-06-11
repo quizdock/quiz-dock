@@ -3,11 +3,12 @@ import { AuthModule } from './auth/auth.module';
 import { HealthController } from './health/health.controller';
 import { MeController } from './me/me.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { QuestionsModule } from './questions/questions.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, QuizzesModule],
+  imports: [PrismaModule, AuthModule, UsersModule, QuizzesModule, QuestionsModule],
   controllers: [HealthController, MeController],
   providers: [],
 })

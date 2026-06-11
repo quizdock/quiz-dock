@@ -56,9 +56,9 @@ describe('QuizzesService', () => {
     it('get cherche par id ET ownerId', async () => {
       prisma.quiz.findFirst.mockResolvedValue(makeQuiz());
       await service.get(OWNER, 'q1');
-      expect(prisma.quiz.findFirst).toHaveBeenCalledWith({
-        where: { id: 'q1', ownerId: OWNER },
-      });
+      expect(prisma.quiz.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'q1', ownerId: OWNER } }),
+      );
     });
 
     it('get renvoie 404 si non possédé', async () => {
