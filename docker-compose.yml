@@ -28,25 +28,6 @@ services:
       retries: 5
     networks: [internal]
 
-  # Stockage objet S3-compatible libre (SeaweedFS) — médias des questions
-  storage:
-    image: chrislusf/seaweedfs:latest
-    command: 'server -dir=/data -s3 -s3.port=8333'
-    volumes:
-      - storagedata:/data
-    ports:
-      - '${STORAGE_S3_PORT:-8333}:8333'
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          "wget -S -q -O /dev/null http://127.0.0.1:9333/cluster/healthz 2>&1 | grep -q '200 OK'",
-        ]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    networks: [internal]
-
   # Auth optionnelle : démarrée uniquement avec --profile keycloak (AUTH_MODE=keycloak)
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
@@ -73,7 +54,9 @@ services:
       AUTH_MODE: ${AUTH_MODE:-none}
       DATABASE_URL: postgres://${POSTGRES_USER:-roux}:${POSTGRES_PASSWORD:-roux}@postgres:5432/${POSTGRES_DB:-rouxquizz}
       REDIS_URL: redis://redis:6379
-      S3_ENDPOINT: http://storage:8333
+      # Médias stockés sur un volume local et servis par le backend (proxy).
+      MEDIA_DIR: /data/media
+      MEDIA_MAX_BYTES: ${MEDIA_MAX_BYTES:-10485760}
       # Auth OIDC (utilisé seulement si AUTH_MODE=oidc). En Docker, l'issuer (host
       # vu par le navigateur) diffère de l'URI JWKS (host interne) — d'où deux
       # variables. Keycloak est l'IdP de référence en dev.
@@ -85,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - mediadata:/data/media
     ports:
       - '${BACKEND_PORT:-3000}:3000'
     healthcheck:
@@ -109,7 +94,7 @@ services:
 volumes:
   pgdata:
   redisdata:
-  storagedata:
+  mediadata:
 
 networks:
   internal:

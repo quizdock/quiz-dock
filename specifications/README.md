@@ -45,7 +45,7 @@ Lire dans cet ordre pour découvrir le projet :
 | État live | **Redis** (source de vérité pendant la partie) |
 | Persistance | **PostgreSQL 16** (ORM Prisma), clés **ULID** |
 | Auth | **OIDC (JWT)** — Keycloak en IdP de référence — `AUTH_MODE=none\|oidc` (auth facultative) |
-| Médias | **SeaweedFS** (S3-compatible libre, ≠ MinIO) |
+| Médias | **Volume local** servi par le backend (self-hosted, sans service objet) |
 | Sync front/back | OpenAPI auto (`@nestjs/swagger`) → **Orval** pour le REST ; package de contrats TS partagé pour le WebSocket |
 | Conteneurs | **Docker Compose** (front, back, postgres, redis, keycloak, storage) |
 | Tests | **Jest** (back) + **Vitest** (front) + Playwright (e2e) + k6 (charge) |

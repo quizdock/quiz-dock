@@ -132,7 +132,7 @@ CHECK applicatif/SQL selon le type :
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
 | `owner_id` | char(26) | FK→`user.id`, NN, IDX | Propriétaire |
-| `url` | text | NN | URL S3/CDN (SeaweedFS) |
+| `url` | text | NN | Route de service backend (`/api/v1/media/<id>`) ; fichier stocké sur volume local |
 | `mime` | text | NN | `image/png`, `audio/mpeg`, … |
 | `size_bytes` | bigint | NN, CHECK ≤ limite | Taille |
 | `kind` | enum `media_kind` | NN | `image` \| `audio` |

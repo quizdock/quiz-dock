@@ -55,7 +55,7 @@ Le backend expose une **interface d'auth** (`AuthProvider`) avec deux implément
 | État de partie | **Redis** | Source de vérité du live (état, joueurs, réponses, scores) |
 | Persistance durable | **PostgreSQL** | Quiz, questions, résultats finaux, profils |
 | Auth | **OIDC (JWT)** — Keycloak en IdP de référence | Hôtes via JWT si `AUTH_MODE=oidc` ; joueurs optionnel |
-| Médias | Stockage objet **S3-compatible libre** (SeaweedFS) + CDN | Images/audio des questions |
+| Médias | **Volume local** servi par le backend (proxy) | Images/audio des questions (self-hosted, sans service objet) |
 
 ### 2.1 Frontend — stack détaillée
 
@@ -437,9 +437,8 @@ Tout le projet est conteneurisé et démarrable en une commande : `docker compos
 | `postgres` | `postgres:16-alpine` | Persistance durable | 5432 |
 | `redis` | `redis:7-alpine` | État live + adapter Socket.IO | 6379 |
 | `keycloak` | `quay.io/keycloak/keycloak` | IdP OIDC de référence (**profil `keycloak`**, optionnel) | 8080 |
-| `storage` | `chrislusf/seaweedfs` | Stockage médias S3-compatible **libre** | 8333 (S3) |
 
-> **Choix du stockage objet** : on évite **MinIO** dont la version communautaire (AGPL) a été amputée en 2025 (retrait de la console d'admin et de fonctionnalités → dérive open-core). On retient **SeaweedFS** (Apache-2.0, S3-compatible, léger). Alternatives acceptables : **Garage** (AGPL-3.0, réellement communautaire) ou, en déploiement minimal, un simple **volume local** servi par le backend.
+> **Choix du stockage des médias** : pour un déploiement **self-hosted**, on évite toute brique objet (MinIO/SeaweedFS/Garage) et toute dépendance cloud. Les médias sont stockés sur un **volume local** (`MEDIA_DIR`) monté dans le backend, qui les **sert lui-même** via `GET /api/v1/media/:id` (proxy). Simple, direct, sans service supplémentaire. Le passage à un store objet S3-compatible reste possible plus tard si le multi-instance l'exige (volume partagé suffisant en attendant).
 
 ### Organisation des fichiers
 ```
@@ -454,7 +453,7 @@ frontend/Dockerfile           # multi-stage (build Vite → Nginx)
 ### Exigences
 - **Multi-stage builds** : images runtime minimales (pas de devDependencies en prod).
 - **Healthchecks** sur chaque service ; `depends_on: condition: service_healthy` (backend attend postgres + redis + keycloak prêts).
-- **Volumes nommés** persistants : `pgdata`, `redisdata`, `storagedata`, realm Keycloak.
+- **Volumes nommés** persistants : `pgdata`, `redisdata`, `mediadata`, realm Keycloak.
 - **Réseau interne** dédié ; seuls `frontend` (et `keycloak` si activé) exposés publiquement.
 - **Auth optionnelle** : le backend valide les JWT de n'importe quel fournisseur OIDC conforme via `OidcProvider` (config `OIDC_ISSUER` / `OIDC_JWKS_URI` / `OIDC_AUDIENCE` ; issuer attendu et URI JWKS peuvent différer en Docker). Keycloak est l'**IdP OIDC de référence** fourni pour le dev/démo, derrière le profil Compose `keycloak` (`KEYCLOAK_ADMIN`/`KEYCLOAK_ADMIN_PASSWORD` pour ce conteneur) ; en `AUTH_MODE=none`, ne pas le démarrer. Realm importé automatiquement au démarrage (`./keycloak/realm-export.json`) : clients, rôles (`host`, `player`), mappers.
 - **Variables d'environnement** centralisées dans `.env` (URLs, secrets, identifiants DB) ; `.env.example` documenté et versionné.

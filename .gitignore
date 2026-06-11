@@ -29,3 +29,7 @@ coverage/
 
 # Generated client (Orval) is committed; uncomment if regenerated in CI only
 # apps/frontend/src/api/generated/
+
+# Médias uploadés en dev (volume local)
+.media/
+apps/backend/.media/

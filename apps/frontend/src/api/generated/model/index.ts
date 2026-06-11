@@ -14,6 +14,8 @@ export * from './createQuestionDtoOptionsItemShape';
 export * from './createQuestionDtoPointsMode';
 export * from './createQuestionDtoType';
 export * from './createQuizDto';
+export * from './mediaControllerUploadBody';
+export * from './mediaUploadResultDto';
 export * from './meResponseDto';
 export * from './meResponseDtoEmail';
 export * from './questionDto';

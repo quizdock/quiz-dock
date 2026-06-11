@@ -7,6 +7,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ## [Non publié] — v0.2.0 Builder + Auth (en cours)
 
 ### Added
+- **Upload média** (P2-BACK-5) sur **volume local** servi par le backend : `POST /media`
+  (multipart, authentifié, validation mime image/audio + taille `MEDIA_MAX_BYTES`),
+  `GET /media/:id` (**public** — chargé aussi par les apprenants en jeu), `DELETE /media/:id`
+  (propriétaire). `media_asset.url` = route de service backend ; un fichier par id.
 - **CRUD Questions + options + réponses** (P2-BACK-3) + **validation par type** (P2-BACK-4) :
   `POST /quizzes/:id/questions`, `PUT/DELETE /questions/:qid`, `PATCH /quizzes/:id/questions/reorder`.
   Validation Zod **exhaustive par type** (§4) : 2–6 options, nombre de bonnes réponses, permutation
@@ -41,6 +45,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Auth recadrée Keycloak → OIDC générique** : colonne `keycloak_sub` → **`oidc_subject`**
   (migration de renommage), `AUTH_MODE=keycloak` → **`oidc`**, env `KEYCLOAK_*` → **`OIDC_*`**.
   Specs reformulées en « compatibilité OIDC », Keycloak présenté comme IdP de référence.
+- **Stockage des médias : SeaweedFS/S3 retiré au profit d'un volume local** servi par le backend
+  (choix self-hosted, sans brique objet ni dépendance cloud). Service `storage` + volume `storagedata`
+  + `S3_ENDPOINT` supprimés du compose (→ volume `mediadata`, `MEDIA_DIR`, `MEDIA_MAX_BYTES`) ;
+  specs §16/§2.6 mises à jour.
 - **Valeurs d'enum alignées sur le fil** : les membres des enums Prisma portent désormais la valeur
   du domaine en minuscules (`draft`, `host`, `single_choice`…), si bien que l'API REST expose les
   mêmes valeurs que la base et que `@roux-quizz/contracts` (avant : PascalCase côté client Prisma).

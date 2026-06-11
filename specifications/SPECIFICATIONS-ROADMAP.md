@@ -75,7 +75,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 | ID | Tâche |
 |----|-------|
 | P1-INFRA-1 | Monorepo **pnpm** workspaces : `apps/backend`, `apps/frontend`, `packages/contracts` (technique §2) |
-| P1-INFRA-2 | **Docker Compose** : services front, back, postgres, redis, keycloak (profil), storage SeaweedFS + healthchecks (technique §16) |
+| P1-INFRA-2 | **Docker Compose** : services front, back, postgres, redis, keycloak (profil) + healthchecks ; médias sur volume local (technique §16) |
 | P1-INFRA-3 | `.env.example`, profils Compose `dev`/`test`/`keycloak`, Makefile/scripts |
 | P1-INFRA-4 | **CI GitHub Actions** : lint, typecheck, tests, build images (technique §17.4) |
 | P1-INFRA-5 | Git hooks **Husky** (pre-commit/commit-msg/pre-push) + commitlint (technique §18) |
@@ -101,7 +101,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 | P2-BACK-2 | **CRUD Quiz** REST + DTO/OpenAPI (technique §10, RG-01/02) |
 | P2-BACK-3 | **CRUD Questions** + options + réordonnancement (RG-03) |
 | P2-BACK-4 | Gestion des **types de question** (validation par type) (technique §4) |
-| P2-BACK-5 | **Upload média** → SeaweedFS (`media_asset`) (données §2.6) |
+| P2-BACK-5 | **Upload média** → volume local servi par le backend (`media_asset`) (données §2.6) |
 | P2-BACK-6 | Cycle de vie quiz `draft→ready→archived` + validations (RG-02) |
 | P2-FRONT-1 | **Connexion** (OIDC / mode local) |
 | P2-FRONT-2 | **Tableau de bord** banque de quiz (TanStack Table/Query) (UI §2.1) |
