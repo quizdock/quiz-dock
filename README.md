@@ -57,6 +57,9 @@ docker compose up -d
 # Front : http://localhost:45173   API : http://localhost:43000   Doc API : http://localhost:43000/api/docs
 ```
 
+> En dev, seules les **sources** sont montées (jamais `node_modules`). Après tout ajout de
+> dépendance, reconstruire l'image concernée : `docker compose up -d --build <service>`.
+
 ---
 
 *Specs versionnées — voir [specifications/README.md](./specifications/README.md) pour le détail et l'ordre de lecture.*

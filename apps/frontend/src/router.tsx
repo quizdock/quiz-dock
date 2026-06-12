@@ -40,7 +40,12 @@ export const editorRoute = createRoute({
   component: EditorPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, dashboardRoute, editorRoute]);
+export const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  dashboardRoute,
+  editorRoute,
+]);
 
 export const router = createRouter({ routeTree });
 

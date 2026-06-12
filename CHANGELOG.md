@@ -14,6 +14,9 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Éditeur de quiz — shell** (P2-FRONT-3, début) : route `/quizzes/:id`, édition des métadonnées
   (TanStack **Form** : titre/description), **cycle de vie** (publier/brouillon/archiver/supprimer),
   liste des questions + suppression. (Le formulaire d'édition de question par type suit.)
+- **Tests d'intégration frontend** (harnais router mémoire + Query + auth + `fetch` mocké) :
+  tableau de bord (liste/vide/création), connexion locale + redirection, éditeur (rendu détail,
+  publication PATCH, publication désactivée si 0 question), garde de route → login.
 - **Upload média** (P2-BACK-5) sur **volume local** servi par le backend : `POST /media`
   (multipart, authentifié, validation mime image/audio + taille `MEDIA_MAX_BYTES`),
   `GET /media/:id` (**public** — chargé aussi par les apprenants en jeu), `DELETE /media/:id`
