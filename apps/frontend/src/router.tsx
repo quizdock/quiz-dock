@@ -1,5 +1,6 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
-import { getLocalUser } from './auth/auth-context';
+import { isAuthenticated } from './auth/auth-context';
+import { CallbackPage } from './routes/callback-page';
 import { DashboardPage } from './routes/dashboard-page';
 import { EditorPage } from './routes/editor-page';
 import { LandingPage } from './routes/landing-page';
@@ -8,7 +9,7 @@ import { PreviewPage } from './routes/preview-page';
 import { RootLayout } from './routes/root-layout';
 
 const requireAuth = () => {
-  if (!getLocalUser()) {
+  if (!isAuthenticated()) {
     throw redirect({ to: '/login' });
   }
 };
@@ -25,6 +26,12 @@ const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   component: LoginPage,
+});
+
+const callbackRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/callback',
+  component: CallbackPage,
 });
 
 const dashboardRoute = createRoute({
@@ -51,6 +58,7 @@ export const previewRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
+  callbackRoute,
   dashboardRoute,
   editorRoute,
   previewRoute,

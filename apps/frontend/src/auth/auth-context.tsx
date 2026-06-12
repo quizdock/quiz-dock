@@ -1,47 +1,99 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { setAuthHeaders } from '../api/http';
+import { getOidc } from './oidc';
 
 const STORAGE_KEY = 'roux.localUser';
 
-/** Applique l'identité locale aux en-têtes du client API (mode `AUTH_MODE=none`). */
-function applyLocalUser(name: string | null): void {
-  setAuthHeaders(name ? { 'X-Local-User': name } : {});
+export type AuthMode = 'none' | 'oidc';
+
+// État hors-React, lu par la garde de route (synchrone) et configuré au démarrage.
+let currentMode: AuthMode = 'none';
+let oidcAuthed = false;
+
+/** Configure le mode + l'état OIDC restauré (appelé par main.tsx avant le rendu). */
+export function configureAuth(mode: AuthMode, oidcUserAuthed = false): void {
+  currentMode = mode;
+  oidcAuthed = oidcUserAuthed;
 }
 
-/** Lu hors React (gardes de route) : l'utilisateur est-il identifié ? */
+/** Identité locale (mode none) — utilisée aussi par la garde. */
 export function getLocalUser(): string | null {
   return localStorage.getItem(STORAGE_KEY);
 }
 
+/** Garde de route synchrone : l'utilisateur est-il authentifié ? */
+export function isAuthenticated(): boolean {
+  return currentMode === 'oidc' ? oidcAuthed : !!getLocalUser();
+}
+
+function applyLocalUser(name: string | null): void {
+  setAuthHeaders(name ? { 'X-Local-User': name } : {});
+}
+
 interface AuthState {
-  localUser: string | null;
-  login: (name: string) => void;
-  logout: () => void;
+  mode: AuthMode;
+  user: string | null;
+  /** Connexion mode local (nom). */
+  loginLocal: (name: string) => void;
+  /** Connexion mode OIDC (redirection vers l'IdP). */
+  loginOidc: () => Promise<void>;
+  /** Finalise le retour de redirection OIDC (route /auth/callback). */
+  completeOidcLogin: () => Promise<void>;
+  logout: () => void | Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [localUser, setLocalUser] = useState<string | null>(() => {
+export function AuthProvider({
+  children,
+  mode = 'none',
+  initialUser = null,
+}: {
+  children: ReactNode;
+  mode?: AuthMode;
+  initialUser?: string | null;
+}) {
+  const [user, setUser] = useState<string | null>(() => {
+    if (mode === 'oidc') return initialUser;
     const stored = getLocalUser();
     applyLocalUser(stored); // synchrone, avant tout rendu enfant
     return stored;
   });
 
-  const login = useCallback((name: string) => {
+  const loginLocal = useCallback((name: string) => {
     const trimmed = name.trim();
     localStorage.setItem(STORAGE_KEY, trimmed);
     applyLocalUser(trimmed);
-    setLocalUser(trimmed);
+    setUser(trimmed);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+  const loginOidc = useCallback(async () => {
+    await getOidc().signinRedirect();
+  }, []);
+
+  const completeOidcLogin = useCallback(async () => {
+    const oidcUser = await getOidc().signinRedirectCallback();
+    setAuthHeaders({ Authorization: `Bearer ${oidcUser.access_token}` });
+    oidcAuthed = true;
+    const profile = oidcUser.profile;
+    setUser(profile.name ?? profile.preferred_username ?? profile.sub ?? 'Formateur');
+  }, []);
+
+  const logout = useCallback(async () => {
+    if (mode === 'oidc') {
+      oidcAuthed = false;
+      await getOidc().removeUser();
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
     applyLocalUser(null);
-    setLocalUser(null);
-  }, []);
+    setUser(null);
+  }, [mode]);
 
-  const value = useMemo(() => ({ localUser, login, logout }), [localUser, login, logout]);
+  const value = useMemo(
+    () => ({ mode, user, loginLocal, loginOidc, completeOidcLogin, logout }),
+    [mode, user, loginLocal, loginOidc, completeOidcLogin, logout],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

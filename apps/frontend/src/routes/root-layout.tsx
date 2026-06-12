@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '../auth/auth-context';
 
 export function RootLayout() {
-  const { localUser, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -14,18 +14,17 @@ export function RootLayout() {
           Roux-Quizz
         </Link>
         <nav className="flex items-center gap-3 text-sm">
-          {localUser ? (
+          {user ? (
             <>
               <Link to="/dashboard" className="hover:underline">
                 Mes quiz
               </Link>
-              <span className="text-muted-foreground">{localUser}</span>
+              <span className="text-muted-foreground">{user}</span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  logout();
-                  void navigate({ to: '/login' });
+                  void Promise.resolve(logout()).then(() => navigate({ to: '/login' }));
                 }}
               >
                 <LogOut className="size-4" />

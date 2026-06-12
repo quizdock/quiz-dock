@@ -7,10 +7,13 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ## [Non publié] — v0.2.0 Builder + Auth (en cours)
 
 ### Added
-- **Fondation frontend builder** (P2-FRONT-1, début) : **TanStack Router** + **Query**, contexte
-  d'**auth mode local** (`X-Local-User`, stocké localement) avec connexion par nom, garde de route,
-  et **tableau de bord** listant les quiz du formateur via le client **Orval** (liste + création).
-  Mutator `fetch` custom injectant l'en-tête d'auth. Branché de bout en bout (proxy Vite → API).
+- **Connexion frontend (P2-FRONT-1)** : **TanStack Router** + **Query**, contexte d'auth **bi-mode**
+  piloté par `GET /auth/config` — **local** (`X-Local-User`, connexion par nom) ou **OIDC**
+  (`oidc-client-ts`, Authorization Code + PKCE : bouton de connexion → redirection IdP, route
+  `/auth/callback`, `Authorization: Bearer`, restauration de session au démarrage). Garde de route,
+  mutator `fetch` injectant l'en-tête d'auth. **Tableau de bord** (liste + création via Orval).
+  Le mode local est vérifié e2e ; le flux OIDC est testé unitairement (logique mockée) — la
+  redirection contre un IdP réel n'est pas exercée ici (pas de Keycloak en dev).
 - **Éditeur de quiz** (P2-FRONT-3) : route `/quizzes/:id`, édition des métadonnées (TanStack **Form**),
   **cycle de vie** (publier/brouillon/archiver/supprimer), liste des questions.
 - **Formulaire de question par type** (TanStack Form, ajout **et** édition) : sélecteur de type +
