@@ -11,6 +11,9 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   d'**auth mode local** (`X-Local-User`, stocké localement) avec connexion par nom, garde de route,
   et **tableau de bord** listant les quiz du formateur via le client **Orval** (liste + création).
   Mutator `fetch` custom injectant l'en-tête d'auth. Branché de bout en bout (proxy Vite → API).
+- **Éditeur de quiz — shell** (P2-FRONT-3, début) : route `/quizzes/:id`, édition des métadonnées
+  (TanStack **Form** : titre/description), **cycle de vie** (publier/brouillon/archiver/supprimer),
+  liste des questions + suppression. (Le formulaire d'édition de question par type suit.)
 - **Upload média** (P2-BACK-5) sur **volume local** servi par le backend : `POST /media`
   (multipart, authentifié, validation mime image/audio + taille `MEDIA_MAX_BYTES`),
   `GET /media/:id` (**public** — chargé aussi par les apprenants en jeu), `DELETE /media/:id`

@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
@@ -48,7 +49,9 @@ export function DashboardPage() {
       <ul className="quiz-list">
         {quizzes.map((quiz) => (
           <li key={quiz.id} className="quiz-card">
-            <span className="quiz-title">{quiz.title}</span>
+            <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }} className="quiz-title">
+              {quiz.title}
+            </Link>
             <span className={`badge badge-${quiz.status}`}>
               {STATUS_LABEL[quiz.status] ?? quiz.status}
             </span>
