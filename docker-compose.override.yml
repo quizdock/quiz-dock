@@ -10,6 +10,11 @@ services:
     ports:
       - '${POSTGRES_PORT:-45432}:5432'
 
+  # Exposé en dev pour les tests d'intégration WS/Redis depuis l'hôte.
+  redis:
+    ports:
+      - '${REDIS_PORT:-46379}:6379'
+
   backend:
     build:
       target: build

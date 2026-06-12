@@ -9,4 +9,8 @@ module.exports = {
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
+  // Les tests d'intégration ouvrent des sockets/Redis ; on force la sortie après
+  // la fin des tests (le teardown best-effort peut laisser des handles ouverts).
+  forceExit: true,
+  testTimeout: 20000,
 };

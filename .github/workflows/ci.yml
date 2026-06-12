@@ -12,6 +12,30 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
+
+    # Services pour les tests d'intégration (gateway WS + Redis, accès DB).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: roux
+          POSTGRES_PASSWORD: roux
+          POSTGRES_DB: rouxquizz
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U roux -d rouxquizz"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://roux:roux@localhost:5432/rouxquizz?schema=public
+      REDIS_URL: redis://localhost:6379
+
     steps:
       - uses: actions/checkout@v4
 
@@ -38,6 +62,9 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Migrate (DB de test)
+        run: pnpm --filter @roux-quizz/backend exec prisma migrate deploy
 
       - name: Tests
         run: pnpm -r test

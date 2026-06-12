@@ -22,5 +22,6 @@ import { OidcProvider } from './oidc.provider';
     },
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
+  exports: [AUTH_PROVIDER],
 })
 export class AuthModule {}

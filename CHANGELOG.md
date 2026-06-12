@@ -4,6 +4,16 @@ Toutes les évolutions notables de Roux-Quizz. Format inspiré de [Keep a Change
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
+## [Non publié] — v0.3.0 Jeu de base (en cours)
+
+### Added
+- **Fondation temps réel** : gateway **Socket.IO** `/game` (NestJS), **auth au handshake**
+  (réutilise `AuthProvider` ; invité si pas d'auth), `ping`/`pong` (RTT). Service **Redis** (ioredis)
+  pour l'état live. **Contrat WS typé bout-en-bout** dans `@roux-quizz/contracts` : payloads §9 +
+  maps `ClientToServerEvents`/`ServerToClientEvents` (gateway et futur `socket.io-client`).
+- **Tests d'intégration socket réels** (socket.io-client → gateway) ; CI dotée de services
+  **Postgres + Redis** + `prisma migrate deploy` pour les exécuter. Redis exposé en dev (`REDIS_PORT`).
+
 ## [0.2.0] - 2026-06-12 — Builder + Auth
 
 Un formateur s'authentifie (local ou OIDC), crée des quiz multi-questions (7 types) avec médias,
