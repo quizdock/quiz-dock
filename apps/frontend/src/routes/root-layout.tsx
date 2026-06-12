@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate } from '@tanstack/react-router';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '../auth/auth-context';
 
 export function RootLayout() {
@@ -6,32 +7,37 @@ export function RootLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <Link to="/" className="brand">
+    <div className="flex min-h-screen flex-col">
+      <header className="flex items-center justify-between gap-4 border-b px-6 py-3">
+        <Link to="/" className="text-lg font-bold">
           Roux-Quizz
         </Link>
-        <nav>
+        <nav className="flex items-center gap-3 text-sm">
           {localUser ? (
             <>
-              <Link to="/dashboard">Mes quiz</Link>
-              <span className="who">{localUser}</span>
-              <button
-                type="button"
+              <Link to="/dashboard" className="hover:underline">
+                Mes quiz
+              </Link>
+              <span className="text-muted-foreground">{localUser}</span>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   logout();
                   void navigate({ to: '/login' });
                 }}
               >
                 Se déconnecter
-              </button>
+              </Button>
             </>
           ) : (
-            <Link to="/login">Espace formateur</Link>
+            <Link to="/login" className="hover:underline">
+              Espace formateur
+            </Link>
           )}
         </nav>
       </header>
-      <main className="app-main">
+      <main className="mx-auto w-full max-w-4xl flex-1 p-6">
         <Outlet />
       </main>
     </div>

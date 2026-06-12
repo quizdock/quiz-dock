@@ -1,5 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
@@ -10,6 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
   draft: 'Brouillon',
   ready: 'Prêt',
   archived: 'Archivé',
+};
+
+const STATUS_VARIANT: Record<string, 'default' | 'success' | 'muted'> = {
+  draft: 'default',
+  ready: 'success',
+  archived: 'muted',
 };
 
 export function DashboardPage() {
@@ -31,31 +39,37 @@ export function DashboardPage() {
   };
 
   return (
-    <section className="dashboard">
-      <div className="dashboard-head">
-        <h1>Mes quiz</h1>
-        <button type="button" onClick={onCreate} disabled={create.isPending}>
+    <section className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Mes quiz</h1>
+        <Button type="button" onClick={onCreate} disabled={create.isPending}>
           Nouveau quiz
-        </button>
+        </Button>
       </div>
 
-      {isLoading && <p>Chargement…</p>}
-      {error ? <p className="error">Impossible de charger les quiz.</p> : null}
+      {isLoading && <p className="text-muted-foreground">Chargement…</p>}
+      {error ? <p className="text-destructive">Impossible de charger les quiz.</p> : null}
 
       {!isLoading && !error && quizzes.length === 0 && (
-        <p className="empty">Aucun quiz pour l’instant. Créez-en un !</p>
+        <p className="text-muted-foreground">Aucun quiz pour l’instant. Créez-en un !</p>
       )}
 
-      <ul className="quiz-list">
+      <ul className="flex flex-col gap-2">
         {quizzes.map((quiz) => (
-          <li key={quiz.id} className="quiz-card">
-            <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }} className="quiz-title">
-              {quiz.title}
+          <li key={quiz.id}>
+            <Link
+              to="/quizzes/$quizId"
+              params={{ quizId: quiz.id }}
+              className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
+            >
+              <span className="flex-1 font-semibold">{quiz.title}</span>
+              <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
+                {STATUS_LABEL[quiz.status] ?? quiz.status}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                {quiz.questionCount} question(s)
+              </span>
             </Link>
-            <span className={`badge badge-${quiz.status}`}>
-              {STATUS_LABEL[quiz.status] ?? quiz.status}
-            </span>
-            <span className="quiz-count">{quiz.questionCount} question(s)</span>
           </li>
         ))}
       </ul>

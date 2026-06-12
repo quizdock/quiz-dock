@@ -2,6 +2,13 @@ import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import type { QuizDetailDto } from '../api/generated/model';
 import { QuestionForm } from './question-form';
 import {
@@ -32,8 +39,8 @@ export function EditorPage() {
   const { quizId } = editorRoute.useParams();
   const { data, isLoading, error } = useQuizzesControllerGet(quizId);
 
-  if (isLoading) return <p>Chargement…</p>;
-  if (error || !data) return <p className="error">Quiz introuvable.</p>;
+  if (isLoading) return <p className="text-muted-foreground">Chargement…</p>;
+  if (error || !data) return <p className="text-destructive">Quiz introuvable.</p>;
   return <QuizEditor quiz={data.data} />;
 }
 
@@ -108,13 +115,16 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     await invalidate();
   };
 
+  const statusVariant =
+    quiz.status === 'ready' ? 'success' : quiz.status === 'archived' ? 'muted' : 'default';
+
   return (
-    <section className="editor">
-      <div className="editor-head">
-        <h1>Éditeur de quiz</h1>
-        <span className={`badge badge-${quiz.status}`}>{quiz.status}</span>
+    <section className="flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-bold">Éditeur de quiz</h1>
+        <Badge variant={statusVariant}>{quiz.status}</Badge>
         <a
-          className="preview-link"
+          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'ml-auto')}
           href={`/quizzes/${quiz.id}/preview`}
           target="_blank"
           rel="noopener noreferrer"
@@ -124,7 +134,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       </div>
 
       <form
-        className="quiz-meta"
+        className="flex max-w-xl flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault();
           void form.handleSubmit();
@@ -132,108 +142,122 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       >
         <form.Field name="title">
           {(field) => (
-            <label>
+            <Label>
               Titre
-              <input
+              <Input
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-            </label>
+            </Label>
           )}
         </form.Field>
         <form.Field name="description">
           {(field) => (
-            <label>
+            <Label>
               Description
-              <textarea
+              <Textarea
                 value={field.state.value}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-            </label>
+            </Label>
           )}
         </form.Field>
-        <button type="submit" disabled={update.isPending}>
+        <Button type="submit" disabled={update.isPending} className="self-start">
           Enregistrer
-        </button>
+        </Button>
       </form>
 
-      <div className="lifecycle">
+      <div className="flex flex-wrap items-center gap-2 border-y py-3">
         {quiz.status === 'draft' && (
-          <button
+          <Button
             type="button"
             disabled={quiz.questionCount === 0 || transition.isPending}
             onClick={() => void changeStatus('ready')}
           >
             Publier (prêt)
-          </button>
+          </Button>
         )}
         {quiz.status === 'ready' && (
           <>
-            <button type="button" onClick={() => void changeStatus('draft')}>
+            <Button type="button" variant="outline" onClick={() => void changeStatus('draft')}>
               Repasser en brouillon
-            </button>
-            <button type="button" onClick={() => void changeStatus('archived')}>
+            </Button>
+            <Button type="button" variant="outline" onClick={() => void changeStatus('archived')}>
               Archiver
-            </button>
+            </Button>
           </>
         )}
         {quiz.status === 'archived' && (
-          <button type="button" onClick={() => void changeStatus('draft')}>
+          <Button type="button" variant="outline" onClick={() => void changeStatus('draft')}>
             Restaurer
-          </button>
+          </Button>
         )}
-        <button type="button" className="danger" onClick={() => void onDeleteQuiz()}>
+        <Button
+          type="button"
+          variant="destructive"
+          className="ml-auto"
+          onClick={() => void onDeleteQuiz()}
+        >
           Supprimer le quiz
-        </button>
+        </Button>
       </div>
 
-      <div className="questions-head">
-        <h2>Questions ({quiz.questionCount})</h2>
-        <button type="button" onClick={() => setEditing('new')} disabled={editing === 'new'}>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Questions ({quiz.questionCount})</h2>
+        <Button type="button" onClick={() => setEditing('new')} disabled={editing === 'new'}>
           Ajouter une question
-        </button>
+        </Button>
       </div>
 
       {editing === 'new' && <QuestionForm quizId={quiz.id} onClose={() => setEditing(null)} />}
 
-      <ul className="question-list">
+      <ul className="flex flex-col gap-2">
         {quiz.questions.map((q, i) =>
           editing === q.id ? (
             <li key={q.id}>
               <QuestionForm quizId={quiz.id} question={q} onClose={() => setEditing(null)} />
             </li>
           ) : (
-            <li key={q.id} className="question-row">
-              <span className="q-index">{i + 1}</span>
-              <span className="q-type">{TYPE_LABEL[q.type] ?? q.type}</span>
-              <span className="q-prompt">{q.prompt}</span>
-              <button
+            <li key={q.id} className="flex items-center gap-3 rounded-lg border p-3">
+              <span className="font-bold text-muted-foreground">{i + 1}</span>
+              <span className="text-sm text-muted-foreground">{TYPE_LABEL[q.type] ?? q.type}</span>
+              <span className="flex-1">{q.prompt}</span>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label="Monter"
                 disabled={i === 0 || reorder.isPending}
                 onClick={() => void moveQuestion(i, -1)}
               >
                 ↑
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label="Descendre"
                 disabled={i === quiz.questions.length - 1 || reorder.isPending}
                 onClick={() => void moveQuestion(i, 1)}
               >
                 ↓
-              </button>
-              <button type="button" onClick={() => setEditing(q.id)}>
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => setEditing(q.id)}>
                 Éditer
-              </button>
-              <button type="button" onClick={() => void onDeleteQuestion(q.id)}>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => void onDeleteQuestion(q.id)}
+              >
                 Supprimer
-              </button>
+              </Button>
             </li>
           ),
         )}
         {quiz.questions.length === 0 && editing !== 'new' && (
-          <li className="empty">Aucune question. Ajoutez-en une !</li>
+          <li className="text-muted-foreground">Aucune question. Ajoutez-en une !</li>
         )}
       </ul>
     </section>

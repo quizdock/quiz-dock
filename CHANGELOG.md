@@ -67,6 +67,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   expose l'erreur et que les écrans affichent les messages de validation (avant : 4xx silencieux).
 
 ### Changed
+- **Passe UI shadcn/ui + Tailwind v4** : thème (variables CSS oklch, light/dark), `cn`,
+  composants `ui/` (Button, Card, Input, Textarea, Label, Select, Badge), alias `@/`. Tous les
+  écrans du builder restylés (layout, accueil, connexion, dashboard, éditeur, formulaire, aperçu) ;
+  aperçu en grille d'options responsive. Les 22 tests front restent verts (textes/labels préservés).
 - **Ports hôte peu courants** (anti-collision) : backend `43000`, front dev `45173`, front prod
   `48081`, postgres `45432`, keycloak `48080` (mnémo « 4 » + port usuel ; ports internes inchangés).
 - **Config centralisée** : un seul `.env` racine fait foi (ports, creds Postgres, OIDC, médias).

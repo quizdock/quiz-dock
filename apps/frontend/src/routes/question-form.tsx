@@ -1,6 +1,10 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
 import { apiErrorMessage } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { MediaUpload } from './media-upload';
@@ -166,80 +170,85 @@ export function QuestionForm({
     );
   };
 
+  const optionField = 'h-9 rounded-md border border-input bg-transparent px-2 text-sm';
+
   return (
     <form
-      className="question-form"
+      className="flex flex-col gap-3 rounded-lg border border-primary/40 p-4"
       onSubmit={(e) => {
         e.preventDefault();
         void form.handleSubmit();
       }}
     >
-      <label>
+      <Label>
         Type
-        <select value={type} onChange={(e) => onTypeChange(e.target.value as QType)}>
+        <Select value={type} onChange={(e) => onTypeChange(e.target.value as QType)}>
           {TYPES.map((t) => (
             <option key={t.value} value={t.value}>
               {t.label}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </Label>
 
       <form.Field name="prompt">
         {(field) => (
-          <label>
+          <Label>
             Énoncé
-            <input
+            <Input
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
               placeholder="Votre question…"
             />
-          </label>
+          </Label>
         )}
       </form.Field>
 
       <MediaUpload value={mediaId} onChange={(id) => form.setFieldValue('mediaId', id)} />
 
-      <div className="q-row">
+      <div className="flex flex-wrap gap-4">
         <form.Field name="timeLimitS">
           {(field) => (
-            <label>
+            <Label>
               Temps (s)
-              <input
+              <Input
                 type="number"
                 min={5}
                 max={120}
+                className="w-24"
                 value={field.state.value}
                 onChange={(e) => field.handleChange(Number(e.target.value))}
               />
-            </label>
+            </Label>
           )}
         </form.Field>
         {type !== 'poll' && (
           <form.Field name="pointsMode">
             {(field) => (
-              <label>
+              <Label>
                 Points
-                <select
+                <Select
+                  className="w-32"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value as FormValues['pointsMode'])}
                 >
                   <option value="standard">Standard</option>
                   <option value="double">Double</option>
-                </select>
-              </label>
+                </Select>
+              </Label>
             )}
           </form.Field>
         )}
       </div>
 
       {OPTION_TYPES.includes(type) && (
-        <fieldset className="options-editor">
-          <legend>Options</legend>
+        <fieldset className="flex flex-col gap-2 rounded-md border p-3">
+          <legend className="px-1 text-sm font-medium">Options</legend>
           {options.map((opt, i) => (
-            <div key={i} className="option-row">
-              <input
+            <div key={i} className="flex flex-wrap items-center gap-2">
+              <Input
                 aria-label={`option ${i + 1}`}
+                className="flex-1"
                 value={opt.text}
                 onChange={(e) =>
                   setOptions(
@@ -250,6 +259,7 @@ export function QuestionForm({
               />
               <select
                 aria-label={`couleur ${i + 1}`}
+                className={optionField}
                 value={opt.color}
                 onChange={(e) =>
                   setOptions(
@@ -265,6 +275,7 @@ export function QuestionForm({
               </select>
               <select
                 aria-label={`forme ${i + 1}`}
+                className={optionField}
                 value={opt.shape}
                 onChange={(e) =>
                   setOptions(
@@ -280,10 +291,11 @@ export function QuestionForm({
               </select>
 
               {type === 'ordering' ? (
-                <input
+                <Input
                   type="number"
                   aria-label={`rang ${i + 1}`}
                   min={0}
+                  className="w-20"
                   value={opt.correctOrderIndex}
                   onChange={(e) =>
                     setOptions(
@@ -294,7 +306,7 @@ export function QuestionForm({
                   }
                 />
               ) : type === 'poll' ? null : (
-                <label className="correct-toggle">
+                <label className="flex items-center gap-1 text-sm">
                   <input
                     type={SINGLE_CORRECT.includes(type) ? 'radio' : 'checkbox'}
                     name="correct"
@@ -306,32 +318,37 @@ export function QuestionForm({
               )}
 
               {type !== 'true_false' && options.length > 2 && (
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setOptions(options.filter((_, idx) => idx !== i))}
                 >
                   ✕
-                </button>
+                </Button>
               )}
             </div>
           ))}
           {type !== 'true_false' && options.length < 6 && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
               onClick={() => setOptions([...options, newOption(options.length)])}
             >
               + Ajouter une option
-            </button>
+            </Button>
           )}
         </fieldset>
       )}
 
       {type === 'text_input' && (
-        <fieldset className="answers-editor">
-          <legend>Réponses acceptées</legend>
+        <fieldset className="flex flex-col gap-2 rounded-md border p-3">
+          <legend className="px-1 text-sm font-medium">Réponses acceptées</legend>
           {answers.map((a, i) => (
-            <div key={i} className="answer-row">
-              <input
+            <div key={i} className="flex items-center gap-2">
+              <Input
                 aria-label={`réponse ${i + 1}`}
                 value={a.text}
                 onChange={(e) =>
@@ -341,8 +358,10 @@ export function QuestionForm({
                   )
                 }
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() =>
                   form.setFieldValue(
                     'acceptedAnswers',
@@ -351,57 +370,62 @@ export function QuestionForm({
                 }
               >
                 ✕
-              </button>
+              </Button>
             </div>
           ))}
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
+            className="self-start"
             onClick={() => form.setFieldValue('acceptedAnswers', [...answers, { text: '' }])}
           >
             + Ajouter une réponse
-          </button>
+          </Button>
         </fieldset>
       )}
 
       {type === 'numeric' && (
-        <div className="q-row">
+        <div className="flex flex-wrap gap-4">
           <form.Field name="numericValue">
             {(field) => (
-              <label>
+              <Label>
                 Valeur cible
-                <input
+                <Input
                   type="number"
+                  className="w-32"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(Number(e.target.value))}
                 />
-              </label>
+              </Label>
             )}
           </form.Field>
           <form.Field name="numericTolerance">
             {(field) => (
-              <label>
+              <Label>
                 Tolérance ±
-                <input
+                <Input
                   type="number"
                   min={0}
+                  className="w-32"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(Number(e.target.value))}
                 />
-              </label>
+              </Label>
             )}
           </form.Field>
         </div>
       )}
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="form-actions">
-        <button type="submit" disabled={add.isPending || update.isPending}>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={add.isPending || update.isPending}>
           {question ? 'Enregistrer' : 'Ajouter'}
-        </button>
-        <button type="button" onClick={onClose}>
+        </Button>
+        <Button type="button" variant="ghost" onClick={onClose}>
           Annuler
-        </button>
+        </Button>
       </div>
     </form>
   );

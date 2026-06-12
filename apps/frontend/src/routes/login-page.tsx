@@ -1,5 +1,9 @@
 import { useNavigate } from '@tanstack/react-router';
 import { type FormEvent, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '../auth/auth-context';
 
 /**
@@ -19,22 +23,30 @@ export function LoginPage() {
   };
 
   return (
-    <section className="login">
-      <h1>Espace formateur</h1>
-      <form onSubmit={submit}>
-        <label htmlFor="name">Votre nom</label>
-        <input
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="ex. Marie Formatrice"
-          autoFocus
-        />
-        <button type="submit" disabled={!name.trim()}>
-          Continuer
-        </button>
-      </form>
-      <small>Mode local (démo). Aucune donnée n’est envoyée à un tiers.</small>
-    </section>
+    <Card className="mx-auto w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>Espace formateur</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <Label htmlFor="name">
+            Votre nom
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="ex. Marie Formatrice"
+              autoFocus
+            />
+          </Label>
+          <Button type="submit" disabled={!name.trim()}>
+            Continuer
+          </Button>
+          <small className="text-muted-foreground">
+            Mode local (démo). Aucune donnée n’est envoyée à un tiers.
+          </small>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
