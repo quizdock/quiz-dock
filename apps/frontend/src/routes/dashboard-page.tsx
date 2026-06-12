@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
+import { Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +44,7 @@ export function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mes quiz</h1>
         <Button type="button" onClick={onCreate} disabled={create.isPending}>
+          <Plus className="size-4" />
           Nouveau quiz
         </Button>
       </div>

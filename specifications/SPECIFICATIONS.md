@@ -48,7 +48,7 @@ Le backend expose une **interface d'auth** (`AuthProvider`) avec deux implément
 | Couche | Choix | Notes |
 |--------|-------|-------|
 | Gestionnaire de paquets | **pnpm** | Monorepo (workspaces) front + back + contrats partagés |
-| Frontend | **React + Vite + TypeScript** | UI **shadcn/ui** (Radix + Tailwind) ; **TanStack** Query/Form/Router/Table ; client REST **généré par Orval** ; `socket.io-client` pour le live |
+| Frontend | **React + Vite + TypeScript** | UI **shadcn/ui** (Radix + Tailwind) + icônes **lucide-react** ; **TanStack** Query/Form/Router/Table ; client REST **généré par Orval** ; `socket.io-client` pour le live |
 | Backend | **Node.js + TypeScript (NestJS)** + **Socket.IO** | REST builder avec **OpenAPI auto-généré** ; WS gateways pour le jeu |
 | Sync front/back | **OpenAPI → Orval** (REST) + **package de contrats partagé** (WS) | Le REST est régénéré depuis OpenAPI ; le contrat WS est typé en TS partagé |
 | Temps réel | **Socket.IO** + **adapter Redis** | Rooms synchronisées entre instances |
@@ -64,6 +64,7 @@ Monorepo **pnpm** (workspaces). Application **React + Vite + TypeScript**.
 | Brique | Rôle |
 |--------|------|
 | **shadcn/ui** (Radix UI + Tailwind CSS) | Composants accessibles, possédés dans le repo (pas une dépendance opaque) ; thème, dark mode |
+| **lucide-react** | Icônes (compagnon shadcn/ui) : actions du builder, navigation, plein écran, états |
 | **TanStack Query** | Cache & état serveur (REST builder, historiques, restitutions) ; invalidation, retry, optimistic update |
 | **TanStack Form** | Formulaires du builder (création/édition de quiz et questions), validation typée |
 | **TanStack Router** | Routage typé bout-en-bout, chargement de données par route |

@@ -39,7 +39,7 @@ Lire dans cet ordre pour découvrir le projet :
 | Couche | Choix |
 |--------|-------|
 | Monorepo | **pnpm** workspaces (front + back + `@roux-quizz/contracts`) |
-| Frontend | **React + Vite + TypeScript**, **shadcn/ui**, **TanStack** Query/Form/Router/Table, client REST généré par **Orval** |
+| Frontend | **React + Vite + TypeScript**, **shadcn/ui** + icônes **lucide-react**, **TanStack** Query/Form/Router/Table, client REST généré par **Orval** |
 | Backend | **Node.js + TypeScript (NestJS)** + **Socket.IO** |
 | Temps réel | Socket.IO + **adapter Redis** |
 | État live | **Redis** (source de vérité pendant la partie) |

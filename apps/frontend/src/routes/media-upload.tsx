@@ -1,3 +1,4 @@
+import { ImagePlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiErrorMessage } from '../api/http';
@@ -35,11 +36,13 @@ export function MediaUpload({
             className="max-h-20 rounded-md border"
           />
           <Button type="button" variant="outline" size="sm" onClick={() => onChange(null)}>
+            <Trash2 className="size-4" />
             Retirer le média
           </Button>
         </div>
       ) : (
-        <label className="inline-flex w-fit cursor-pointer items-center rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
+        <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
+          <ImagePlus className="size-4" />
           {upload.isPending ? 'Envoi…' : 'Ajouter un média (image/audio)'}
           <input
             type="file"

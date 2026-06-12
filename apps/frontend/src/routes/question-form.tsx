@@ -1,6 +1,7 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -322,9 +323,10 @@ export function QuestionForm({
                   type="button"
                   variant="ghost"
                   size="icon"
+                  aria-label={`Retirer l’option ${i + 1}`}
                   onClick={() => setOptions(options.filter((_, idx) => idx !== i))}
                 >
-                  ✕
+                  <X className="size-4" />
                 </Button>
               )}
             </div>
@@ -337,7 +339,8 @@ export function QuestionForm({
               className="self-start"
               onClick={() => setOptions([...options, newOption(options.length)])}
             >
-              + Ajouter une option
+              <Plus className="size-4" />
+              Ajouter une option
             </Button>
           )}
         </fieldset>
@@ -362,6 +365,7 @@ export function QuestionForm({
                 type="button"
                 variant="ghost"
                 size="icon"
+                aria-label={`Retirer la réponse ${i + 1}`}
                 onClick={() =>
                   form.setFieldValue(
                     'acceptedAnswers',
@@ -369,7 +373,7 @@ export function QuestionForm({
                   )
                 }
               >
-                ✕
+                <X className="size-4" />
               </Button>
             </div>
           ))}
@@ -380,7 +384,8 @@ export function QuestionForm({
             className="self-start"
             onClick={() => form.setFieldValue('acceptedAnswers', [...answers, { text: '' }])}
           >
-            + Ajouter une réponse
+            <Plus className="size-4" />
+            Ajouter une réponse
           </Button>
         </fieldset>
       )}

@@ -1,6 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
+import { ArrowDown, ArrowUp, ExternalLink, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -129,7 +130,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Aperçu ↗
+          <ExternalLink className="size-4" />
+          Aperçu
         </a>
       </div>
 
@@ -163,6 +165,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           )}
         </form.Field>
         <Button type="submit" disabled={update.isPending} className="self-start">
+          <Save className="size-4" />
           Enregistrer
         </Button>
       </form>
@@ -198,6 +201,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           className="ml-auto"
           onClick={() => void onDeleteQuiz()}
         >
+          <Trash2 className="size-4" />
           Supprimer le quiz
         </Button>
       </div>
@@ -205,6 +209,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Questions ({quiz.questionCount})</h2>
         <Button type="button" onClick={() => setEditing('new')} disabled={editing === 'new'}>
+          <Plus className="size-4" />
           Ajouter une question
         </Button>
       </div>
@@ -230,7 +235,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 disabled={i === 0 || reorder.isPending}
                 onClick={() => void moveQuestion(i, -1)}
               >
-                ↑
+                <ArrowUp className="size-4" />
               </Button>
               <Button
                 type="button"
@@ -240,9 +245,10 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 disabled={i === quiz.questions.length - 1 || reorder.isPending}
                 onClick={() => void moveQuestion(i, 1)}
               >
-                ↓
+                <ArrowDown className="size-4" />
               </Button>
               <Button type="button" variant="outline" size="sm" onClick={() => setEditing(q.id)}>
+                <Pencil className="size-4" />
                 Éditer
               </Button>
               <Button
@@ -251,6 +257,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 size="sm"
                 onClick={() => void onDeleteQuestion(q.id)}
               >
+                <Trash2 className="size-4" />
                 Supprimer
               </Button>
             </li>

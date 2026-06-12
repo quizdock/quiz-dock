@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -61,6 +62,7 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
           <strong className="text-foreground">{quiz.title}</strong>
           {supported && (
             <Button type="button" variant="outline" size="sm" onClick={() => void toggle()}>
+              {isFullscreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
               {isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
             </Button>
           )}
@@ -79,7 +81,8 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
               disabled={index === 0}
               onClick={() => setIndex((i) => i - 1)}
             >
-              ← Précédent
+              <ChevronLeft className="size-4" />
+              Précédent
             </Button>
             <span className="text-sm text-muted-foreground">
               Question {index + 1} / {total}
@@ -90,7 +93,8 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
               disabled={index >= total - 1}
               onClick={() => setIndex((i) => i + 1)}
             >
-              Suivant →
+              Suivant
+              <ChevronRight className="size-4" />
             </Button>
           </nav>
         </>

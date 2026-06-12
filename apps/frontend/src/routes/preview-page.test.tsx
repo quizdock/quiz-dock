@@ -111,7 +111,7 @@ describe('PreviewPage', () => {
     renderApp('/quizzes/q1/preview');
 
     expect(await screen.findByText('Question une')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Suivant →'));
+    fireEvent.click(screen.getByText('Suivant'));
     expect(screen.getByText('Question deux')).toBeInTheDocument();
   });
 });

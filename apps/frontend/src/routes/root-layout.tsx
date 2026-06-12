@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate } from '@tanstack/react-router';
+import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../auth/auth-context';
 
@@ -27,6 +28,7 @@ export function RootLayout() {
                   void navigate({ to: '/login' });
                 }}
               >
+                <LogOut className="size-4" />
                 Se déconnecter
               </Button>
             </>
