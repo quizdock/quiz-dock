@@ -29,7 +29,10 @@ import type {
   MediaUploadResultDto
 } from '../model';
 
+import { customFetch } from '../../http';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -50,42 +53,35 @@ export const getMediaControllerUploadUrl = () => {
 
 
 
-  return `/api/v1/api/v1/media`
+  return `/api/v1/media`
 }
 
 export const mediaControllerUpload = async (mediaControllerUploadBody: MediaControllerUploadBody, options?: RequestInit): Promise<mediaControllerUploadResponse> => {
     const formData = new FormData();
 formData.append(`file`, mediaControllerUploadBody.file);
 
-  const res = await fetch(getMediaControllerUploadUrl(),
+  return customFetch<mediaControllerUploadResponse>(getMediaControllerUploadUrl(),
   {
     ...options,
     method: 'POST'
     ,
     body: formData
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: mediaControllerUploadResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as mediaControllerUploadResponse
-}
+);}
 
 
 
 
 export const getMediaControllerUploadMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerUpload>>, TError,{data: MediaControllerUploadBody}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerUpload>>, TError,{data: MediaControllerUploadBody}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof mediaControllerUpload>>, TError,{data: MediaControllerUploadBody}, TContext> => {
 
 const mutationKey = ['mediaControllerUpload'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -93,7 +89,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaControllerUpload>>, {data: MediaControllerUploadBody}> = (props) => {
           const {data} = props ?? {};
 
-          return  mediaControllerUpload(data,fetchOptions)
+          return  mediaControllerUpload(data,requestOptions)
         }
 
 
@@ -108,7 +104,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type MediaControllerUploadMutationError = unknown
 
     export const useMediaControllerUpload = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerUpload>>, TError,{data: MediaControllerUploadBody}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerUpload>>, TError,{data: MediaControllerUploadBody}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mediaControllerUpload>>,
         TError,
@@ -134,26 +130,19 @@ export const getMediaControllerServeUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/media/${id}`
+  return `/api/v1/media/${id}`
 }
 
 export const mediaControllerServe = async (id: string, options?: RequestInit): Promise<mediaControllerServeResponse> => {
 
-  const res = await fetch(getMediaControllerServeUrl(id),
+  return customFetch<mediaControllerServeResponse>(getMediaControllerServeUrl(id),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: mediaControllerServeResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as mediaControllerServeResponse
-}
+);}
 
 
 
@@ -161,21 +150,21 @@ export const mediaControllerServe = async (id: string, options?: RequestInit): P
 
 export const getMediaControllerServeQueryKey = (id: string,) => {
     return [
-    `/api/v1/api/v1/media/${id}`
+    `/api/v1/media/${id}`
     ] as const;
     }
 
 
-export const getMediaControllerServeQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, fetch?: RequestInit}
+export const getMediaControllerServeQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getMediaControllerServeQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof mediaControllerServe>>> = ({ signal }) => mediaControllerServe(id, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mediaControllerServe>>> = ({ signal }) => mediaControllerServe(id, { signal, ...requestOptions });
 
 
 
@@ -195,7 +184,7 @@ export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaC
           TError,
           Awaited<ReturnType<typeof mediaControllerServe>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
@@ -205,16 +194,16 @@ export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaC
           TError,
           Awaited<ReturnType<typeof mediaControllerServe>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -247,40 +236,33 @@ export const getMediaControllerRemoveUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/media/${id}`
+  return `/api/v1/media/${id}`
 }
 
 export const mediaControllerRemove = async (id: string, options?: RequestInit): Promise<mediaControllerRemoveResponse> => {
 
-  const res = await fetch(getMediaControllerRemoveUrl(id),
+  return customFetch<mediaControllerRemoveResponse>(getMediaControllerRemoveUrl(id),
   {
     ...options,
     method: 'DELETE'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: mediaControllerRemoveResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as mediaControllerRemoveResponse
-}
+);}
 
 
 
 
 export const getMediaControllerRemoveMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerRemove>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof mediaControllerRemove>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['mediaControllerRemove'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -288,7 +270,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaControllerRemove>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  mediaControllerRemove(id,fetchOptions)
+          return  mediaControllerRemove(id,requestOptions)
         }
 
 
@@ -303,7 +285,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type MediaControllerRemoveMutationError = unknown
 
     export const useMediaControllerRemove = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerRemove>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof mediaControllerRemove>>,
         TError,

@@ -16,15 +16,113 @@ body {
   margin: 0;
 }
 
-.landing {
+.app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.app-header {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.app-header .brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-header nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-header .who {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+.app-main {
+  flex: 1;
   padding: 2rem;
+  max-width: 60rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.landing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
   text-align: center;
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 22rem;
+}
+
+.login form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quiz-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quiz-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 0.5rem;
+}
+
+.quiz-title {
+  font-weight: 600;
+  flex: 1;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1rem;
+  background: rgba(128, 128, 128, 0.2);
+}
+
+.badge-ready {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.badge-archived {
+  opacity: 0.6;
+}
+
+.error {
+  color: #dc2626;
 }
 
 .join {

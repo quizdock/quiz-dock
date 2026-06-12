@@ -7,6 +7,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ## [Non publié] — v0.2.0 Builder + Auth (en cours)
 
 ### Added
+- **Fondation frontend builder** (P2-FRONT-1, début) : **TanStack Router** + **Query**, contexte
+  d'**auth mode local** (`X-Local-User`, stocké localement) avec connexion par nom, garde de route,
+  et **tableau de bord** listant les quiz du formateur via le client **Orval** (liste + création).
+  Mutator `fetch` custom injectant l'en-tête d'auth. Branché de bout en bout (proxy Vite → API).
 - **Upload média** (P2-BACK-5) sur **volume local** servi par le backend : `POST /media`
   (multipart, authentifié, validation mime image/audio + taille `MEDIA_MAX_BYTES`),
   `GET /media/:id` (**public** — chargé aussi par les apprenants en jeu), `DELETE /media/:id`
@@ -40,6 +44,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   upsert sur `oidcSubject`).
 - **`GET /me`** : profil de l'utilisateur authentifié (exerce guard + provisioning + `@CurrentUser`).
 - **Realm de référence** : direct grant + utilisateur de test `formateur` (rôle `host`) pour login/dev.
+
+### Fixed
+- **Client Orval : double préfixe `/api/v1/api/v1/...`** corrigé (les chemins OpenAPI portent déjà
+  le préfixe ; `baseUrl` retiré côté Orval).
 
 ### Changed
 - **Auth recadrée Keycloak → OIDC générique** : colonne `keycloak_sub` → **`oidc_subject`**

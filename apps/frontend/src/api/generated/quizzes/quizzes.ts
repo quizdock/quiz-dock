@@ -32,7 +32,10 @@ import type {
   UpdateQuizDto
 } from '../model';
 
+import { customFetch } from '../../http';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -53,26 +56,19 @@ export const getQuizzesControllerListUrl = () => {
 
 
 
-  return `/api/v1/api/v1/quizzes`
+  return `/api/v1/quizzes`
 }
 
 export const quizzesControllerList = async ( options?: RequestInit): Promise<quizzesControllerListResponse> => {
 
-  const res = await fetch(getQuizzesControllerListUrl(),
+  return customFetch<quizzesControllerListResponse>(getQuizzesControllerListUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerListResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as quizzesControllerListResponse
-}
+);}
 
 
 
@@ -80,21 +76,21 @@ export const quizzesControllerList = async ( options?: RequestInit): Promise<qui
 
 export const getQuizzesControllerListQueryKey = () => {
     return [
-    `/api/v1/api/v1/quizzes`
+    `/api/v1/quizzes`
     ] as const;
     }
 
 
-export const getQuizzesControllerListQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerList>>, TError, TData>>, fetch?: RequestInit}
+export const getQuizzesControllerListQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getQuizzesControllerListQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerList>>> = ({ signal }) => quizzesControllerList({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerList>>> = ({ signal }) => quizzesControllerList({ signal, ...requestOptions });
 
 
 
@@ -114,7 +110,7 @@ export function useQuizzesControllerList<TData = Awaited<ReturnType<typeof quizz
           TError,
           Awaited<ReturnType<typeof quizzesControllerList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useQuizzesControllerList<TData = Awaited<ReturnType<typeof quizzesControllerList>>, TError = unknown>(
@@ -124,16 +120,16 @@ export function useQuizzesControllerList<TData = Awaited<ReturnType<typeof quizz
           TError,
           Awaited<ReturnType<typeof quizzesControllerList>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useQuizzesControllerList<TData = Awaited<ReturnType<typeof quizzesControllerList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerList>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useQuizzesControllerList<TData = Awaited<ReturnType<typeof quizzesControllerList>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerList>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -166,40 +162,33 @@ export const getQuizzesControllerCreateUrl = () => {
 
 
 
-  return `/api/v1/api/v1/quizzes`
+  return `/api/v1/quizzes`
 }
 
 export const quizzesControllerCreate = async (createQuizDto: CreateQuizDto, options?: RequestInit): Promise<quizzesControllerCreateResponse> => {
 
-  const res = await fetch(getQuizzesControllerCreateUrl(),
+  return customFetch<quizzesControllerCreateResponse>(getQuizzesControllerCreateUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(createQuizDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerCreateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as quizzesControllerCreateResponse
-}
+);}
 
 
 
 
 export const getQuizzesControllerCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerCreate>>, TError,{data: CreateQuizDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerCreate>>, TError,{data: CreateQuizDto}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerCreate>>, TError,{data: CreateQuizDto}, TContext> => {
 
 const mutationKey = ['quizzesControllerCreate'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -207,7 +196,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerCreate>>, {data: CreateQuizDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  quizzesControllerCreate(data,fetchOptions)
+          return  quizzesControllerCreate(data,requestOptions)
         }
 
 
@@ -222,7 +211,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuizzesControllerCreateMutationError = unknown
 
     export const useQuizzesControllerCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerCreate>>, TError,{data: CreateQuizDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerCreate>>, TError,{data: CreateQuizDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof quizzesControllerCreate>>,
         TError,
@@ -248,40 +237,33 @@ export const getQuizzesControllerDuplicateUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}/duplicate`
+  return `/api/v1/quizzes/${id}/duplicate`
 }
 
 export const quizzesControllerDuplicate = async (id: string, options?: RequestInit): Promise<quizzesControllerDuplicateResponse> => {
 
-  const res = await fetch(getQuizzesControllerDuplicateUrl(id),
+  return customFetch<quizzesControllerDuplicateResponse>(getQuizzesControllerDuplicateUrl(id),
   {
     ...options,
     method: 'POST'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerDuplicateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as quizzesControllerDuplicateResponse
-}
+);}
 
 
 
 
 export const getQuizzesControllerDuplicateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['quizzesControllerDuplicate'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -289,7 +271,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  quizzesControllerDuplicate(id,fetchOptions)
+          return  quizzesControllerDuplicate(id,requestOptions)
         }
 
 
@@ -304,7 +286,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuizzesControllerDuplicateMutationError = unknown
 
     export const useQuizzesControllerDuplicate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerDuplicate>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof quizzesControllerDuplicate>>,
         TError,
@@ -330,26 +312,19 @@ export const getQuizzesControllerGetUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}`
+  return `/api/v1/quizzes/${id}`
 }
 
 export const quizzesControllerGet = async (id: string, options?: RequestInit): Promise<quizzesControllerGetResponse> => {
 
-  const res = await fetch(getQuizzesControllerGetUrl(id),
+  return customFetch<quizzesControllerGetResponse>(getQuizzesControllerGetUrl(id),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerGetResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as quizzesControllerGetResponse
-}
+);}
 
 
 
@@ -357,21 +332,21 @@ export const quizzesControllerGet = async (id: string, options?: RequestInit): P
 
 export const getQuizzesControllerGetQueryKey = (id: string,) => {
     return [
-    `/api/v1/api/v1/quizzes/${id}`
+    `/api/v1/quizzes/${id}`
     ] as const;
     }
 
 
-export const getQuizzesControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerGet>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerGet>>, TError, TData>>, fetch?: RequestInit}
+export const getQuizzesControllerGetQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerGet>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getQuizzesControllerGetQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerGet>>> = ({ signal }) => quizzesControllerGet(id, { signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerGet>>> = ({ signal }) => quizzesControllerGet(id, { signal, ...requestOptions });
 
 
 
@@ -391,7 +366,7 @@ export function useQuizzesControllerGet<TData = Awaited<ReturnType<typeof quizze
           TError,
           Awaited<ReturnType<typeof quizzesControllerGet>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useQuizzesControllerGet<TData = Awaited<ReturnType<typeof quizzesControllerGet>>, TError = unknown>(
@@ -401,16 +376,16 @@ export function useQuizzesControllerGet<TData = Awaited<ReturnType<typeof quizze
           TError,
           Awaited<ReturnType<typeof quizzesControllerGet>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useQuizzesControllerGet<TData = Awaited<ReturnType<typeof quizzesControllerGet>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerGet>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useQuizzesControllerGet<TData = Awaited<ReturnType<typeof quizzesControllerGet>>, TError = unknown>(
- id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerGet>>, TError, TData>>, fetch?: RequestInit}
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerGet>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
@@ -443,41 +418,34 @@ export const getQuizzesControllerUpdateUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}`
+  return `/api/v1/quizzes/${id}`
 }
 
 export const quizzesControllerUpdate = async (id: string,
     updateQuizDto: UpdateQuizDto, options?: RequestInit): Promise<quizzesControllerUpdateResponse> => {
 
-  const res = await fetch(getQuizzesControllerUpdateUrl(id),
+  return customFetch<quizzesControllerUpdateResponse>(getQuizzesControllerUpdateUrl(id),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(updateQuizDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerUpdateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as quizzesControllerUpdateResponse
-}
+);}
 
 
 
 
 export const getQuizzesControllerUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerUpdate>>, TError,{id: string;data: UpdateQuizDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerUpdate>>, TError,{id: string;data: UpdateQuizDto}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerUpdate>>, TError,{id: string;data: UpdateQuizDto}, TContext> => {
 
 const mutationKey = ['quizzesControllerUpdate'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -485,7 +453,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerUpdate>>, {id: string;data: UpdateQuizDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  quizzesControllerUpdate(id,data,fetchOptions)
+          return  quizzesControllerUpdate(id,data,requestOptions)
         }
 
 
@@ -500,7 +468,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuizzesControllerUpdateMutationError = unknown
 
     export const useQuizzesControllerUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerUpdate>>, TError,{id: string;data: UpdateQuizDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerUpdate>>, TError,{id: string;data: UpdateQuizDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof quizzesControllerUpdate>>,
         TError,
@@ -526,40 +494,33 @@ export const getQuizzesControllerRemoveUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}`
+  return `/api/v1/quizzes/${id}`
 }
 
 export const quizzesControllerRemove = async (id: string, options?: RequestInit): Promise<quizzesControllerRemoveResponse> => {
 
-  const res = await fetch(getQuizzesControllerRemoveUrl(id),
+  return customFetch<quizzesControllerRemoveResponse>(getQuizzesControllerRemoveUrl(id),
   {
     ...options,
     method: 'DELETE'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerRemoveResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as quizzesControllerRemoveResponse
-}
+);}
 
 
 
 
 export const getQuizzesControllerRemoveMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerRemove>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerRemove>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['quizzesControllerRemove'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -567,7 +528,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerRemove>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  quizzesControllerRemove(id,fetchOptions)
+          return  quizzesControllerRemove(id,requestOptions)
         }
 
 
@@ -582,7 +543,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuizzesControllerRemoveMutationError = unknown
 
     export const useQuizzesControllerRemove = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerRemove>>, TError,{id: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof quizzesControllerRemove>>,
         TError,
@@ -608,41 +569,34 @@ export const getQuizzesControllerTransitionUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}/status`
+  return `/api/v1/quizzes/${id}/status`
 }
 
 export const quizzesControllerTransition = async (id: string,
     transitionQuizDto: TransitionQuizDto, options?: RequestInit): Promise<quizzesControllerTransitionResponse> => {
 
-  const res = await fetch(getQuizzesControllerTransitionUrl(id),
+  return customFetch<quizzesControllerTransitionResponse>(getQuizzesControllerTransitionUrl(id),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(transitionQuizDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: quizzesControllerTransitionResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as quizzesControllerTransitionResponse
-}
+);}
 
 
 
 
 export const getQuizzesControllerTransitionMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerTransition>>, TError,{id: string;data: TransitionQuizDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerTransition>>, TError,{id: string;data: TransitionQuizDto}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerTransition>>, TError,{id: string;data: TransitionQuizDto}, TContext> => {
 
 const mutationKey = ['quizzesControllerTransition'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -650,7 +604,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerTransition>>, {id: string;data: TransitionQuizDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  quizzesControllerTransition(id,data,fetchOptions)
+          return  quizzesControllerTransition(id,data,requestOptions)
         }
 
 
@@ -665,7 +619,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuizzesControllerTransitionMutationError = unknown
 
     export const useQuizzesControllerTransition = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerTransition>>, TError,{id: string;data: TransitionQuizDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerTransition>>, TError,{id: string;data: TransitionQuizDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof quizzesControllerTransition>>,
         TError,

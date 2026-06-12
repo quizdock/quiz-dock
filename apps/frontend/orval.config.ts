@@ -13,7 +13,11 @@ export default defineConfig({
       httpClient: 'fetch',
       clean: true,
       prettier: true,
-      baseUrl: '/api/v1',
+      // Pas de baseUrl : les chemins OpenAPI portent déjà le préfixe `/api/v1`.
+      // Mutator fetch custom → injection des en-têtes d'auth (cf. src/api/http.ts).
+      override: {
+        mutator: { path: './src/api/http.ts', name: 'customFetch' },
+      },
     },
   },
 });

@@ -22,7 +22,10 @@ import type {
   UpdateQuestionDto
 } from '../model';
 
+import { customFetch } from '../../http';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -43,41 +46,34 @@ export const getQuestionsControllerAddUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}/questions`
+  return `/api/v1/quizzes/${id}/questions`
 }
 
 export const questionsControllerAdd = async (id: string,
     createQuestionDto: CreateQuestionDto, options?: RequestInit): Promise<questionsControllerAddResponse> => {
 
-  const res = await fetch(getQuestionsControllerAddUrl(id),
+  return customFetch<questionsControllerAddResponse>(getQuestionsControllerAddUrl(id),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(createQuestionDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: questionsControllerAddResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as questionsControllerAddResponse
-}
+);}
 
 
 
 
 export const getQuestionsControllerAddMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerAdd>>, TError,{id: string;data: CreateQuestionDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerAdd>>, TError,{id: string;data: CreateQuestionDto}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof questionsControllerAdd>>, TError,{id: string;data: CreateQuestionDto}, TContext> => {
 
 const mutationKey = ['questionsControllerAdd'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -85,7 +81,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof questionsControllerAdd>>, {id: string;data: CreateQuestionDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  questionsControllerAdd(id,data,fetchOptions)
+          return  questionsControllerAdd(id,data,requestOptions)
         }
 
 
@@ -100,7 +96,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuestionsControllerAddMutationError = unknown
 
     export const useQuestionsControllerAdd = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerAdd>>, TError,{id: string;data: CreateQuestionDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerAdd>>, TError,{id: string;data: CreateQuestionDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof questionsControllerAdd>>,
         TError,
@@ -126,41 +122,34 @@ export const getQuestionsControllerReorderUrl = (id: string,) => {
 
 
 
-  return `/api/v1/api/v1/quizzes/${id}/questions/reorder`
+  return `/api/v1/quizzes/${id}/questions/reorder`
 }
 
 export const questionsControllerReorder = async (id: string,
     reorderQuestionsDto: ReorderQuestionsDto, options?: RequestInit): Promise<questionsControllerReorderResponse> => {
 
-  const res = await fetch(getQuestionsControllerReorderUrl(id),
+  return customFetch<questionsControllerReorderResponse>(getQuestionsControllerReorderUrl(id),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(reorderQuestionsDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: questionsControllerReorderResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as questionsControllerReorderResponse
-}
+);}
 
 
 
 
 export const getQuestionsControllerReorderMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerReorder>>, TError,{id: string;data: ReorderQuestionsDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerReorder>>, TError,{id: string;data: ReorderQuestionsDto}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof questionsControllerReorder>>, TError,{id: string;data: ReorderQuestionsDto}, TContext> => {
 
 const mutationKey = ['questionsControllerReorder'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -168,7 +157,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof questionsControllerReorder>>, {id: string;data: ReorderQuestionsDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  questionsControllerReorder(id,data,fetchOptions)
+          return  questionsControllerReorder(id,data,requestOptions)
         }
 
 
@@ -183,7 +172,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuestionsControllerReorderMutationError = unknown
 
     export const useQuestionsControllerReorder = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerReorder>>, TError,{id: string;data: ReorderQuestionsDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerReorder>>, TError,{id: string;data: ReorderQuestionsDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof questionsControllerReorder>>,
         TError,
@@ -209,41 +198,34 @@ export const getQuestionsControllerUpdateUrl = (qid: string,) => {
 
 
 
-  return `/api/v1/api/v1/questions/${qid}`
+  return `/api/v1/questions/${qid}`
 }
 
 export const questionsControllerUpdate = async (qid: string,
     updateQuestionDto: UpdateQuestionDto, options?: RequestInit): Promise<questionsControllerUpdateResponse> => {
 
-  const res = await fetch(getQuestionsControllerUpdateUrl(qid),
+  return customFetch<questionsControllerUpdateResponse>(getQuestionsControllerUpdateUrl(qid),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(updateQuestionDto)
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: questionsControllerUpdateResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as questionsControllerUpdateResponse
-}
+);}
 
 
 
 
 export const getQuestionsControllerUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerUpdate>>, TError,{qid: string;data: UpdateQuestionDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerUpdate>>, TError,{qid: string;data: UpdateQuestionDto}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof questionsControllerUpdate>>, TError,{qid: string;data: UpdateQuestionDto}, TContext> => {
 
 const mutationKey = ['questionsControllerUpdate'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -251,7 +233,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof questionsControllerUpdate>>, {qid: string;data: UpdateQuestionDto}> = (props) => {
           const {qid,data} = props ?? {};
 
-          return  questionsControllerUpdate(qid,data,fetchOptions)
+          return  questionsControllerUpdate(qid,data,requestOptions)
         }
 
 
@@ -266,7 +248,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuestionsControllerUpdateMutationError = unknown
 
     export const useQuestionsControllerUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerUpdate>>, TError,{qid: string;data: UpdateQuestionDto}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerUpdate>>, TError,{qid: string;data: UpdateQuestionDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof questionsControllerUpdate>>,
         TError,
@@ -292,40 +274,33 @@ export const getQuestionsControllerRemoveUrl = (qid: string,) => {
 
 
 
-  return `/api/v1/api/v1/questions/${qid}`
+  return `/api/v1/questions/${qid}`
 }
 
 export const questionsControllerRemove = async (qid: string, options?: RequestInit): Promise<questionsControllerRemoveResponse> => {
 
-  const res = await fetch(getQuestionsControllerRemoveUrl(qid),
+  return customFetch<questionsControllerRemoveResponse>(getQuestionsControllerRemoveUrl(qid),
   {
     ...options,
     method: 'DELETE'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: questionsControllerRemoveResponse['data'] = body ? JSON.parse(body) : undefined
-  return { data, status: res.status, headers: res.headers } as questionsControllerRemoveResponse
-}
+);}
 
 
 
 
 export const getQuestionsControllerRemoveMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerRemove>>, TError,{qid: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerRemove>>, TError,{qid: string}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof questionsControllerRemove>>, TError,{qid: string}, TContext> => {
 
 const mutationKey = ['questionsControllerRemove'];
-const {mutation: mutationOptions, fetch: fetchOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, fetch: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
 
 
@@ -333,7 +308,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof questionsControllerRemove>>, {qid: string}> = (props) => {
           const {qid} = props ?? {};
 
-          return  questionsControllerRemove(qid,fetchOptions)
+          return  questionsControllerRemove(qid,requestOptions)
         }
 
 
@@ -348,7 +323,7 @@ const {mutation: mutationOptions, fetch: fetchOptions} = options ?
     export type QuestionsControllerRemoveMutationError = unknown
 
     export const useQuestionsControllerRemove = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerRemove>>, TError,{qid: string}, TContext>, fetch?: RequestInit}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof questionsControllerRemove>>, TError,{qid: string}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof questionsControllerRemove>>,
         TError,

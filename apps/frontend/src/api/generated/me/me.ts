@@ -24,7 +24,10 @@ import type {
   MeResponseDto
 } from '../model';
 
+import { customFetch } from '../../http';
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -45,26 +48,19 @@ export const getMeControllerMeUrl = () => {
 
 
 
-  return `/api/v1/api/v1/me`
+  return `/api/v1/me`
 }
 
 export const meControllerMe = async ( options?: RequestInit): Promise<meControllerMeResponse> => {
 
-  const res = await fetch(getMeControllerMeUrl(),
+  return customFetch<meControllerMeResponse>(getMeControllerMeUrl(),
   {
     ...options,
     method: 'GET'
 
 
   }
-)
-
-
-  const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-
-  const data: meControllerMeResponse['data'] = body ? JSON.parse(body) : {}
-  return { data, status: res.status, headers: res.headers } as meControllerMeResponse
-}
+);}
 
 
 
@@ -72,21 +68,21 @@ export const meControllerMe = async ( options?: RequestInit): Promise<meControll
 
 export const getMeControllerMeQueryKey = () => {
     return [
-    `/api/v1/api/v1/me`
+    `/api/v1/me`
     ] as const;
     }
 
 
-export const getMeControllerMeQueryOptions = <TData = Awaited<ReturnType<typeof meControllerMe>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerMe>>, TError, TData>>, fetch?: RequestInit}
+export const getMeControllerMeQueryOptions = <TData = Awaited<ReturnType<typeof meControllerMe>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
-const {query: queryOptions, fetch: fetchOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getMeControllerMeQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof meControllerMe>>> = ({ signal }) => meControllerMe({ signal, ...fetchOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof meControllerMe>>> = ({ signal }) => meControllerMe({ signal, ...requestOptions });
 
 
 
@@ -106,7 +102,7 @@ export function useMeControllerMe<TData = Awaited<ReturnType<typeof meController
           TError,
           Awaited<ReturnType<typeof meControllerMe>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useMeControllerMe<TData = Awaited<ReturnType<typeof meControllerMe>>, TError = unknown>(
@@ -116,16 +112,16 @@ export function useMeControllerMe<TData = Awaited<ReturnType<typeof meController
           TError,
           Awaited<ReturnType<typeof meControllerMe>>
         > , 'initialData'
-      >, fetch?: RequestInit}
+      >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useMeControllerMe<TData = Awaited<ReturnType<typeof meControllerMe>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerMe>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useMeControllerMe<TData = Awaited<ReturnType<typeof meControllerMe>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerMe>>, TError, TData>>, fetch?: RequestInit}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerMe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
