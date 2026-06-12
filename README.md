@@ -57,8 +57,10 @@ docker compose up -d
 # Front : http://localhost:45173   API : http://localhost:43000   Doc API : http://localhost:43000/api/docs
 ```
 
-> En dev, seules les **sources** sont montées (jamais `node_modules`). Après tout ajout de
-> dépendance, reconstruire l'image concernée : `docker compose up -d --build <service>`.
+> En dev, on monte les **sources + manifestes** (jamais `node_modules` : glibc hôte ≠ musl Alpine).
+> Les conteneurs lancent `pnpm install` (frozen) au démarrage : après un `pnpm add`, un simple
+> `docker compose restart <service>` applique la dépendance — **pas de rebuild d'image** (réservé
+> aux changements de `Dockerfile`).
 
 ---
 

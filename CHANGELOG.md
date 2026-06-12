@@ -70,6 +70,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   expose l'erreur et que les écrans affichent les messages de validation (avant : 4xx silencieux).
 
 ### Changed
+- **DX dev Docker** : les conteneurs montent désormais les **manifestes + lockfile + configs** et
+  lancent `pnpm install` (frozen) au démarrage. Ajouter une dépendance puis
+  `docker compose restart <service>` suffit — fini le rebuild d'image à chaque nouvelle dépendance
+  (le `node_modules` de l'hôte n'est toujours pas monté : glibc ≠ musl).
 - **Passe UI shadcn/ui + Tailwind v4** : thème (variables CSS oklch, light/dark), `cn`,
   composants `ui/` (Button, Card, Input, Textarea, Label, Select, Badge), alias `@/`. Tous les
   écrans du builder restylés (layout, accueil, connexion, dashboard, éditeur, formulaire, aperçu) ;
