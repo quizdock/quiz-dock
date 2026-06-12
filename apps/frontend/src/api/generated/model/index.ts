@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './authConfigDto';
+export * from './authConfigDtoMode';
+export * from './authConfigDtoOidc';
 export * from './createQuestionDto';
 export * from './createQuestionDtoAcceptedAnswersItem';
 export * from './createQuestionDtoOptionsItem';

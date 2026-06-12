@@ -63,6 +63,7 @@ services:
       OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:48080/realms/roux-quizz}
       OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/roux-quizz/protocol/openid-connect/certs}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-roux-quizz-frontend}
     depends_on:
       postgres:
         condition: service_healthy

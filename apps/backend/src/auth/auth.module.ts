@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
+import { AuthConfigController } from './auth-config.controller';
 import { AUTH_PROVIDER, type AuthProvider } from './auth-provider';
 import { AuthGuard } from './auth.guard';
 import { NoAuthProvider } from './no-auth.provider';
@@ -12,6 +13,7 @@ import { OidcProvider } from './oidc.provider';
  */
 @Module({
   imports: [UsersModule],
+  controllers: [AuthConfigController],
   providers: [
     {
       provide: AUTH_PROVIDER,

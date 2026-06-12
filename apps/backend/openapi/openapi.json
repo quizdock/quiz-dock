@@ -41,6 +41,27 @@
         ]
       }
     },
+    "/api/v1/auth/config": {
+      "get": {
+        "operationId": "AuthConfigController_config",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthConfigDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/quizzes": {
       "get": {
         "operationId": "QuizzesController_list",
@@ -596,6 +617,38 @@
           "displayName",
           "email",
           "role"
+        ]
+      },
+      "AuthConfigDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "oidc"
+            ]
+          },
+          "oidc": {
+            "type": "object",
+            "properties": {
+              "authority": {
+                "type": "string"
+              },
+              "clientId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "authority",
+              "clientId"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "mode",
+          "oidc"
         ]
       },
       "QuizDto": {
