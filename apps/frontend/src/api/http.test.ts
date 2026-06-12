@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { customFetch, setAuthHeaders } from './http';
+import { ApiError, apiErrorMessage, customFetch, setAuthHeaders } from './http';
 
 describe('customFetch', () => {
   afterEach(() => {
@@ -26,5 +26,16 @@ describe('customFetch', () => {
     await customFetch('/x', { method: 'GET' });
     const headers = spy.mock.calls[0][1].headers as Record<string, string>;
     expect(headers['X-Local-User']).toBe('Marc');
+  });
+
+  it('lève ApiError (avec corps) sur un statut ≥ 400', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'Boom' }), { status: 400 })),
+    );
+    const err = await customFetch('/x', { method: 'POST' }).catch((e) => e);
+    expect(err).toBeInstanceOf(ApiError);
+    expect((err as ApiError).status).toBe(400);
+    expect(apiErrorMessage(err)).toBe('Boom');
   });
 });

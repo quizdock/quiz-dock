@@ -1,7 +1,9 @@
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
 import type { QuizDetailDto } from '../api/generated/model';
+import { QuestionForm } from './question-form';
 import {
   getQuizzesControllerGetQueryKey,
   getQuizzesControllerListQueryKey,
@@ -39,6 +41,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const transition = useQuizzesControllerTransition();
   const removeQuiz = useQuizzesControllerRemove();
   const removeQuestion = useQuestionsControllerRemove();
+  const [editing, setEditing] = useState<string | 'new' | null>(null);
 
   const invalidate = () =>
     Promise.all([
@@ -158,20 +161,37 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         </button>
       </div>
 
-      <h2>Questions ({quiz.questionCount})</h2>
+      <div className="questions-head">
+        <h2>Questions ({quiz.questionCount})</h2>
+        <button type="button" onClick={() => setEditing('new')} disabled={editing === 'new'}>
+          Ajouter une question
+        </button>
+      </div>
+
+      {editing === 'new' && <QuestionForm quizId={quiz.id} onClose={() => setEditing(null)} />}
+
       <ul className="question-list">
-        {quiz.questions.map((q, i) => (
-          <li key={q.id} className="question-row">
-            <span className="q-index">{i + 1}</span>
-            <span className="q-type">{TYPE_LABEL[q.type] ?? q.type}</span>
-            <span className="q-prompt">{q.prompt}</span>
-            <button type="button" onClick={() => void onDeleteQuestion(q.id)}>
-              Supprimer
-            </button>
-          </li>
-        ))}
-        {quiz.questions.length === 0 && (
-          <li className="empty">Aucune question (l’ajout arrive très vite).</li>
+        {quiz.questions.map((q, i) =>
+          editing === q.id ? (
+            <li key={q.id}>
+              <QuestionForm quizId={quiz.id} question={q} onClose={() => setEditing(null)} />
+            </li>
+          ) : (
+            <li key={q.id} className="question-row">
+              <span className="q-index">{i + 1}</span>
+              <span className="q-type">{TYPE_LABEL[q.type] ?? q.type}</span>
+              <span className="q-prompt">{q.prompt}</span>
+              <button type="button" onClick={() => setEditing(q.id)}>
+                Éditer
+              </button>
+              <button type="button" onClick={() => void onDeleteQuestion(q.id)}>
+                Supprimer
+              </button>
+            </li>
+          ),
+        )}
+        {quiz.questions.length === 0 && editing !== 'new' && (
+          <li className="empty">Aucune question. Ajoutez-en une !</li>
         )}
       </ul>
     </section>

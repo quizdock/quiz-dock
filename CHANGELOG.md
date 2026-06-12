@@ -11,9 +11,12 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   d'**auth mode local** (`X-Local-User`, stocké localement) avec connexion par nom, garde de route,
   et **tableau de bord** listant les quiz du formateur via le client **Orval** (liste + création).
   Mutator `fetch` custom injectant l'en-tête d'auth. Branché de bout en bout (proxy Vite → API).
-- **Éditeur de quiz — shell** (P2-FRONT-3, début) : route `/quizzes/:id`, édition des métadonnées
-  (TanStack **Form** : titre/description), **cycle de vie** (publier/brouillon/archiver/supprimer),
-  liste des questions + suppression. (Le formulaire d'édition de question par type suit.)
+- **Éditeur de quiz** (P2-FRONT-3) : route `/quizzes/:id`, édition des métadonnées (TanStack **Form**),
+  **cycle de vie** (publier/brouillon/archiver/supprimer), liste des questions.
+- **Formulaire de question par type** (TanStack Form, ajout **et** édition) : sélecteur de type +
+  champs **dynamiques** — options couleur/forme/correcte (radio si réponse unique), `correctOrderIndex`
+  (remise en ordre), réponses acceptées (texte), valeur/tolérance (numérique), sondage. Construit un
+  payload propre par type et **affiche les erreurs de validation** renvoyées par l'API (400).
 - **Tests d'intégration frontend** (harnais router mémoire + Query + auth + `fetch` mocké) :
   tableau de bord (liste/vide/création), connexion locale + redirection, éditeur (rendu détail,
   publication PATCH, publication désactivée si 0 question), garde de route → login.
@@ -54,6 +57,8 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ### Fixed
 - **Client Orval : double préfixe `/api/v1/api/v1/...`** corrigé (les chemins OpenAPI portent déjà
   le préfixe ; `baseUrl` retiré côté Orval).
+- **Mutator fetch : statuts ≥ 400 lèvent désormais** (`ApiError` avec corps), pour que TanStack Query
+  expose l'erreur et que les écrans affichent les messages de validation (avant : 4xx silencieux).
 
 ### Changed
 - **Ports hôte peu courants** (anti-collision) : backend `43000`, front dev `45173`, front prod
