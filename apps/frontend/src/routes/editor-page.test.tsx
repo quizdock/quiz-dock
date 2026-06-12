@@ -86,4 +86,47 @@ describe('EditorPage', () => {
     const publish = await screen.findByText('Publier (prêt)');
     expect(publish).toBeDisabled();
   });
+
+  it('réordonne les questions (↓ → PATCH reorder avec le nouvel ordre)', async () => {
+    const q = (id: string, prompt: string, orderIndex: number) => ({
+      id,
+      quizId: 'q1',
+      orderIndex,
+      type: 'single_choice',
+      prompt,
+      mediaId: null,
+      timeLimitS: 20,
+      pointsMode: 'standard',
+      numericValue: null,
+      numericTolerance: null,
+      options: [],
+      acceptedAnswers: [],
+    });
+    const fetchMock = mockApi([
+      {
+        method: 'GET',
+        path: '/quizzes/q1',
+        body: detail({
+          questionCount: 2,
+          questions: [q('a', 'Première', 0), q('b', 'Seconde', 1)],
+        }),
+      },
+      { method: 'PATCH', path: '/quizzes/q1/questions/reorder', body: [] },
+    ]);
+    renderApp('/quizzes/q1');
+
+    const down = await screen.findAllByLabelText('Descendre');
+    fireEvent.click(down[0]); // descend la 1re question
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(
+        ([url, opts]) => String(url).includes('/questions/reorder') && opts?.method === 'PATCH',
+      );
+      expect(call).toBeTruthy();
+      const items = JSON.parse(String((call![1] as RequestInit).body)).items;
+      expect(items).toEqual([
+        { questionId: 'b', orderIndex: 0 },
+        { questionId: 'a', orderIndex: 1 },
+      ]);
+    });
+  });
 });

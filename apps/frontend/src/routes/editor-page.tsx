@@ -12,7 +12,10 @@ import {
   useQuizzesControllerTransition,
   useQuizzesControllerUpdate,
 } from '../api/generated/quizzes/quizzes';
-import { useQuestionsControllerRemove } from '../api/generated/questions/questions';
+import {
+  useQuestionsControllerRemove,
+  useQuestionsControllerReorder,
+} from '../api/generated/questions/questions';
 import { editorRoute } from '../router';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -41,6 +44,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const transition = useQuizzesControllerTransition();
   const removeQuiz = useQuizzesControllerRemove();
   const removeQuestion = useQuestionsControllerRemove();
+  const reorder = useQuestionsControllerReorder();
   const [editing, setEditing] = useState<string | 'new' | null>(null);
 
   const invalidate = () =>
@@ -87,6 +91,20 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
   const onDeleteQuestion = async (qid: string) => {
     await removeQuestion.mutateAsync({ qid });
+    await invalidate();
+  };
+
+  const moveQuestion = async (index: number, direction: -1 | 1) => {
+    const next = [...quiz.questions];
+    const target = index + direction;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    await reorder.mutateAsync({
+      id: quiz.id,
+      data: {
+        items: next.map((q, idx) => ({ questionId: q.id, orderIndex: idx })),
+      },
+    });
     await invalidate();
   };
 
@@ -189,6 +207,22 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               <span className="q-index">{i + 1}</span>
               <span className="q-type">{TYPE_LABEL[q.type] ?? q.type}</span>
               <span className="q-prompt">{q.prompt}</span>
+              <button
+                type="button"
+                aria-label="Monter"
+                disabled={i === 0 || reorder.isPending}
+                onClick={() => void moveQuestion(i, -1)}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                aria-label="Descendre"
+                disabled={i === quiz.questions.length - 1 || reorder.isPending}
+                onClick={() => void moveQuestion(i, 1)}
+              >
+                ↓
+              </button>
               <button type="button" onClick={() => setEditing(q.id)}>
                 Éditer
               </button>
