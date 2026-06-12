@@ -6,7 +6,7 @@ services:
   # tourne depuis la machine. La stack interne continue d'utiliser `postgres:5432`.
   postgres:
     ports:
-      - '${POSTGRES_PORT:-5432}:5432'
+      - '${POSTGRES_PORT:-45432}:5432'
 
   backend:
     build:
@@ -28,7 +28,7 @@ services:
       - ./apps/backend/src:/app/apps/backend/src
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - '${BACKEND_PORT:-3000}:3000'
+      - '${BACKEND_PORT:-43000}:3000'
 
   frontend:
     build:
@@ -42,6 +42,6 @@ services:
       - ./apps/frontend/index.html:/app/apps/frontend/index.html
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - '${VITE_PORT:-5173}:5173'
+      - '${VITE_PORT:-45173}:5173'
     depends_on:
       - backend

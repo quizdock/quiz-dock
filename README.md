@@ -54,7 +54,7 @@ Le développement est incrémental à partir de **v0.1.0**, en versions `0.x` su
 ```bash
 pnpm install
 docker compose up -d
-# Front : http://localhost:5173   API : http://localhost:3000   Doc API : /api/docs
+# Front : http://localhost:45173   API : http://localhost:43000   Doc API : http://localhost:43000/api/docs
 ```
 
 ---

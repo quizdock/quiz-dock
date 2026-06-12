@@ -53,6 +53,11 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   le préfixe ; `baseUrl` retiré côté Orval).
 
 ### Changed
+- **Ports hôte peu courants** (anti-collision) : backend `43000`, front dev `45173`, front prod
+  `48081`, postgres `45432`, keycloak `48080` (mnémo « 4 » + port usuel ; ports internes inchangés).
+- **Config centralisée** : un seul `.env` racine fait foi (ports, creds Postgres, OIDC, médias).
+  `DATABASE_URL` n'est plus dupliquée mais **dérivée** de `POSTGRES_*` (+ `POSTGRES_PORT` côté hôte)
+  — par compose pour le conteneur, par `prisma.config.ts` pour la CLI. Suppression d'`apps/backend/.env`.
 - **Auth recadrée Keycloak → OIDC générique** : colonne `keycloak_sub` → **`oidc_subject`**
   (migration de renommage), `AUTH_MODE=keycloak` → **`oidc`**, env `KEYCLOAK_*` → **`OIDC_*`**.
   Specs reformulées en « compatibilité OIDC », Keycloak présenté comme IdP de référence.
