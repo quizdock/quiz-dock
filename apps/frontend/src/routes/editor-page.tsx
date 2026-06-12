@@ -95,6 +95,14 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <div className="editor-head">
         <h1>Éditeur de quiz</h1>
         <span className={`badge badge-${quiz.status}`}>{quiz.status}</span>
+        <a
+          className="preview-link"
+          href={`/quizzes/${quiz.id}/preview`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Aperçu ↗
+        </a>
       </div>
 
       <form

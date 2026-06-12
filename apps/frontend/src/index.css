@@ -276,3 +276,115 @@ a.quiz-title:hover {
   display: flex;
   gap: 0.5rem;
 }
+
+.preview-link {
+  margin-left: auto;
+  text-decoration: none;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid rgba(99, 102, 241, 0.6);
+  border-radius: 0.4rem;
+  color: inherit;
+}
+
+.preview {
+  max-width: 44rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.preview-head {
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.8;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+.preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 0.75rem;
+}
+
+.preview-type {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+.preview-prompt {
+  margin: 0;
+}
+
+.preview-media {
+  max-height: 14rem;
+  object-fit: contain;
+  align-self: center;
+}
+
+.preview-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.preview-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.preview-option .glyph {
+  font-size: 1.2rem;
+}
+
+.preview-option .opt-text {
+  flex: 1;
+}
+
+.preview-option .opt-rank {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 1rem;
+  padding: 0 0.5rem;
+}
+
+.preview-option.is-correct {
+  outline: 3px solid #16a34a;
+}
+
+.color-red {
+  background: #e11d48;
+}
+.color-blue {
+  background: #2563eb;
+}
+.color-yellow {
+  background: #d97706;
+}
+.color-green {
+  background: #16a34a;
+}
+
+.preview-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.preview-answers {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}

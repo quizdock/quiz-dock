@@ -4,6 +4,7 @@ import { DashboardPage } from './routes/dashboard-page';
 import { EditorPage } from './routes/editor-page';
 import { LandingPage } from './routes/landing-page';
 import { LoginPage } from './routes/login-page';
+import { PreviewPage } from './routes/preview-page';
 import { RootLayout } from './routes/root-layout';
 
 const requireAuth = () => {
@@ -40,11 +41,19 @@ export const editorRoute = createRoute({
   component: EditorPage,
 });
 
+export const previewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quizzes/$quizId/preview',
+  beforeLoad: requireAuth,
+  component: PreviewPage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   dashboardRoute,
   editorRoute,
+  previewRoute,
 ]);
 
 export const router = createRouter({ routeTree });

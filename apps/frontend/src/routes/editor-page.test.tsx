@@ -50,6 +50,14 @@ describe('EditorPage', () => {
     expect(screen.getByText('Capitale de la France ?')).toBeInTheDocument();
   });
 
+  it('expose un lien Aperçu ouvrant le quiz dans un nouvel onglet', async () => {
+    mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail() }]);
+    renderApp('/quizzes/q1');
+    const link = await screen.findByText('Aperçu ↗');
+    expect(link).toHaveAttribute('href', '/quizzes/q1/preview');
+    expect(link).toHaveAttribute('target', '_blank');
+  });
+
   it('publie le quiz (PATCH status) au clic', async () => {
     const fetchMock = mockApi([
       { method: 'GET', path: '/quizzes/q1', body: detail() },

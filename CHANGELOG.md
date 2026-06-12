@@ -17,6 +17,10 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   champs **dynamiques** — options couleur/forme/correcte (radio si réponse unique), `correctOrderIndex`
   (remise en ordre), réponses acceptées (texte), valeur/tolérance (numérique), sondage. Construit un
   payload propre par type et **affiche les erreurs de validation** renvoyées par l'API (400).
+- **Prévisualisation** (P2-FRONT-4) : bouton **« Aperçu ↗ »** dans l'éditeur ouvrant le quiz dans un
+  **nouvel onglet** (`/quizzes/:id/preview`), rendu **vue apprenant** (UI §2.3) — média, énoncé, ⏱,
+  options en grille couleur+forme (glyphe par forme, accessibilité), navigation question par question,
+  bonne réponse indiquée (aperçu propriétaire). Fallback SPA nginx vérifié pour le deep link.
 - **Tests d'intégration frontend** (harnais router mémoire + Query + auth + `fetch` mocké) :
   tableau de bord (liste/vide/création), connexion locale + redirection, éditeur (rendu détail,
   publication PATCH, publication désactivée si 0 question), garde de route → login.
