@@ -388,3 +388,30 @@ a.quiz-title:hover {
   font-size: 0.9rem;
   opacity: 0.85;
 }
+
+.media-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.media-pick {
+  display: inline-block;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border: 1px dashed rgba(128, 128, 128, 0.6);
+  border-radius: 0.4rem;
+  font-size: 0.9rem;
+  width: fit-content;
+}
+
+.media-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.media-preview img {
+  max-height: 5rem;
+  border-radius: 0.4rem;
+}

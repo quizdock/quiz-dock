@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { apiErrorMessage } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
+import { MediaUpload } from './media-upload';
 import {
   useQuestionsControllerAdd,
   useQuestionsControllerUpdate,
@@ -49,6 +50,7 @@ interface OptionValue {
 interface FormValues {
   type: QType;
   prompt: string;
+  mediaId: string | null;
   timeLimitS: number;
   pointsMode: 'standard' | 'double' | 'none';
   numericValue: number;
@@ -72,6 +74,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     return {
       type: 'single_choice',
       prompt: '',
+      mediaId: null,
       timeLimitS: 20,
       pointsMode: 'standard',
       numericValue: 0,
@@ -83,6 +86,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
   return {
     type: q.type as QType,
     prompt: q.prompt,
+    mediaId: q.mediaId ?? null,
     timeLimitS: q.timeLimitS,
     pointsMode: q.pointsMode as FormValues['pointsMode'],
     numericValue: q.numericValue ? Number(q.numericValue) : 0,
@@ -134,6 +138,7 @@ export function QuestionForm({
   });
 
   const type = useStore(form.store, (s) => s.values.type);
+  const mediaId = useStore(form.store, (s) => s.values.mediaId);
   const options = useStore(form.store, (s) => s.values.options);
   const answers = useStore(form.store, (s) => s.values.acceptedAnswers);
 
@@ -192,6 +197,8 @@ export function QuestionForm({
           </label>
         )}
       </form.Field>
+
+      <MediaUpload value={mediaId} onChange={(id) => form.setFieldValue('mediaId', id)} />
 
       <div className="q-row">
         <form.Field name="timeLimitS">
@@ -407,6 +414,7 @@ function buildPayload(v: FormValues) {
     prompt: v.prompt,
     timeLimitS: v.timeLimitS,
     pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
+    ...(v.mediaId ? { mediaId: v.mediaId } : {}),
   };
   if (OPTION_TYPES.includes(v.type)) {
     return {

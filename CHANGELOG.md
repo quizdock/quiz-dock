@@ -17,6 +17,8 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   champs **dynamiques** — options couleur/forme/correcte (radio si réponse unique), `correctOrderIndex`
   (remise en ordre), réponses acceptées (texte), valeur/tolérance (numérique), sondage. Construit un
   payload propre par type et **affiche les erreurs de validation** renvoyées par l'API (400).
+- **Média dans le formulaire de question** : composant d'upload (`POST /media` via le client Orval,
+  multipart) avec aperçu et retrait ; le `mediaId` est attaché à la question. Affiché dans l'aperçu.
 - **Prévisualisation** (P2-FRONT-4) : bouton **« Aperçu ↗ »** dans l'éditeur ouvrant le quiz dans un
   **nouvel onglet** (`/quizzes/:id/preview`), rendu **vue apprenant** (UI §2.3) — média, énoncé, ⏱,
   options en grille couleur+forme (glyphe par forme, accessibilité), navigation question par question,
