@@ -75,6 +75,25 @@ describe('PreviewPage', () => {
     expect(screen.getByLabelText('bonne réponse')).toBeInTheDocument();
   });
 
+  it('propose le plein écran et déclenche requestFullscreen', async () => {
+    Object.defineProperty(document, 'fullscreenEnabled', {
+      value: true,
+      configurable: true,
+    });
+    const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(HTMLElement.prototype, 'requestFullscreen', {
+      value: requestFullscreen,
+      configurable: true,
+      writable: true,
+    });
+    mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail() }]);
+    renderApp('/quizzes/q1/preview');
+
+    const btn = await screen.findByText('Plein écran');
+    fireEvent.click(btn);
+    expect(requestFullscreen).toHaveBeenCalled();
+  });
+
   it('navigue d’une question à l’autre', async () => {
     mockApi([
       {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useFullscreen } from '@/lib/use-fullscreen';
 import type { QuizDetailDto, QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { useQuizzesControllerGet } from '../api/generated/quizzes/quizzes';
 import { previewRoute } from '../router';
@@ -43,19 +44,34 @@ export function PreviewPage() {
 function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
   const [index, setIndex] = useState(0);
   const total = quiz.questions.length;
+  const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <header className="flex items-center justify-between border-b pb-2 text-muted-foreground">
+    <div
+      ref={ref}
+      className={cn(
+        'mx-auto flex w-full max-w-3xl flex-col gap-4',
+        // En plein écran : occupe tout l'écran (projeté / grand écran), contenu centré.
+        isFullscreen && 'max-w-none justify-center overflow-auto bg-background p-6 sm:p-12',
+      )}
+    >
+      <header className="flex items-center justify-between gap-2 border-b pb-2 text-muted-foreground">
         <span>Aperçu (vue apprenant)</span>
-        <strong className="text-foreground">{quiz.title}</strong>
+        <div className="flex items-center gap-3">
+          <strong className="text-foreground">{quiz.title}</strong>
+          {supported && (
+            <Button type="button" variant="outline" size="sm" onClick={() => void toggle()}>
+              {isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
+            </Button>
+          )}
+        </div>
       </header>
 
       {total === 0 ? (
         <p className="text-muted-foreground">Ce quiz n’a pas encore de question.</p>
       ) : (
         <>
-          <QuestionPreview question={quiz.questions[index]} />
+          <QuestionPreview question={quiz.questions[index]} large={isFullscreen} />
           <nav className="flex items-center justify-between">
             <Button
               type="button"
@@ -79,25 +95,40 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
           </nav>
         </>
       )}
-    </section>
+    </div>
   );
 }
 
-function QuestionPreview({ question }: { question: QuizDetailDtoQuestionsItem }) {
+function QuestionPreview({
+  question,
+  large = false,
+}: {
+  question: QuizDetailDtoQuestionsItem;
+  large?: boolean;
+}) {
   return (
-    <article className="flex flex-col gap-4 rounded-xl border p-4 sm:p-6">
+    <article
+      className={cn(
+        'flex flex-col gap-4 rounded-xl border p-4 sm:p-6',
+        large && 'mx-auto w-full max-w-5xl gap-6',
+      )}
+    >
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
         {TYPE_LABEL[question.type] ?? question.type}
       </div>
       {question.mediaId && (
         <img
-          className="max-h-56 self-center object-contain"
+          className={cn('self-center object-contain', large ? 'max-h-[40vh]' : 'max-h-56')}
           src={`/api/v1/media/${question.mediaId}`}
           alt=""
         />
       )}
-      <h2 className="text-xl font-semibold sm:text-2xl">{question.prompt}</h2>
-      <div className="text-muted-foreground">⏱ {question.timeLimitS} s</div>
+      <h2 className={cn('font-semibold', large ? 'text-3xl md:text-5xl' : 'text-xl sm:text-2xl')}>
+        {question.prompt}
+      </h2>
+      <div className={cn('text-muted-foreground', large && 'text-2xl')}>
+        ⏱ {question.timeLimitS} s
+      </div>
 
       {question.options.length > 0 && (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -105,12 +136,13 @@ function QuestionPreview({ question }: { question: QuizDetailDtoQuestionsItem })
             <li
               key={opt.id}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-4 py-3 font-semibold text-white',
+                'flex items-center gap-3 rounded-lg font-semibold text-white',
+                large ? 'px-6 py-6 text-xl md:text-2xl' : 'px-4 py-3',
                 COLOR_BG[opt.color] ?? 'bg-slate-600',
                 opt.isCorrect && 'outline outline-2 outline-offset-2 outline-success',
               )}
             >
-              <span className="text-lg" aria-hidden="true">
+              <span className={cn(large ? 'text-3xl' : 'text-lg')} aria-hidden="true">
                 {SHAPE_GLYPH[opt.shape] ?? '◆'}
               </span>
               <span className="flex-1">{opt.text ?? `Option ${opt.orderIndex + 1}`}</span>

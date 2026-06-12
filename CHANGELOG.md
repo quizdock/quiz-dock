@@ -19,6 +19,9 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   payload propre par type et **affiche les erreurs de validation** renvoyées par l'API (400).
 - **Média dans le formulaire de question** : composant d'upload (`POST /media` via le client Orval,
   multipart) avec aperçu et retrait ; le `mediaId` est attaché à la question. Affiché dans l'aperçu.
+- **Plein écran + responsive** sur l'aperçu (vue apprenant) : hook réutilisable `useFullscreen`
+  (API Fullscreen, dégrade proprement) + bouton « Plein écran » ; énoncé/options agrandis en
+  plein écran, grille d'options responsive. Fondation pour les écrans live v0.3.0 (projeté/joueur).
 - **Prévisualisation** (P2-FRONT-4) : bouton **« Aperçu ↗ »** dans l'éditeur ouvrant le quiz dans un
   **nouvel onglet** (`/quizzes/:id/preview`), rendu **vue apprenant** (UI §2.3) — média, énoncé, ⏱,
   options en grille couleur+forme (glyphe par forme, accessibilité), navigation question par question,
