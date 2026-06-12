@@ -4,7 +4,10 @@ Toutes les évolutions notables de Roux-Quizz. Format inspiré de [Keep a Change
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
-## [Non publié] — v0.2.0 Builder + Auth (en cours)
+## [0.2.0] - 2026-06-12 — Builder + Auth
+
+Un formateur s'authentifie (local ou OIDC), crée des quiz multi-questions (7 types) avec médias,
+les réordonne, prévisualise et publie. Client REST 100 % généré par Orval ; UI shadcn/ui + icônes.
 
 ### Added
 - **Connexion frontend (P2-FRONT-1)** : **TanStack Router** + **Query**, contexte d'auth **bi-mode**
