@@ -1,4 +1,4 @@
-import { useForm } from '@tanstack/react-form';
+import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import {
@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -77,6 +78,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const [livePin, setLivePin] = useState<string | null>(null);
   const [presenting, setPresenting] = useState(false);
   const [presentError, setPresentError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const invalidate = () =>
     Promise.all([
@@ -100,8 +102,12 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         },
       });
       await invalidate();
+      form.reset(value); // valeurs enregistrées = nouvelle base « propre » → bouton inactif
     },
   });
+
+  // Le bouton « Enregistrer » n'est actif que si une modification est en cours.
+  const isDirty = useStore(form.store, (s) => s.isDirty);
 
   const changeStatus = async (status: 'draft' | 'ready' | 'archived') => {
     await transition.mutateAsync({ id: quiz.id, data: { status } });
@@ -199,7 +205,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 </Label>
               )}
             </form.Field>
-            <Button type="submit" disabled={update.isPending} className="self-start">
+            <Button type="submit" disabled={!isDirty || update.isPending} className="self-start">
               <Save className="size-4" />
               Enregistrer
             </Button>
@@ -322,7 +328,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    aria-label="Supprimer"
+                    aria-label="Supprimer la question"
                     onClick={() => void onDeleteQuestion(q.id)}
                   >
                     <Trash2 className="size-4" />
@@ -341,11 +347,24 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
       {/* Zone dangereuse */}
       <div className="flex justify-end border-t pt-4">
-        <Button type="button" variant="destructive" onClick={() => void onDeleteQuiz()}>
+        <Button type="button" variant="destructive" onClick={() => setConfirmDelete(true)}>
           <Trash2 className="size-4" />
           Supprimer le quiz
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        destructive
+        title="Supprimer ce quiz ?"
+        description={`« ${quiz.title} » et ses questions seront définitivement supprimés. Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        onCancel={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          setConfirmDelete(false);
+          void onDeleteQuiz();
+        }}
+      />
     </section>
   );
 }

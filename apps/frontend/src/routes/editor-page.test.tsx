@@ -103,6 +103,39 @@ describe('EditorPage', () => {
     expect(screen.getByRole('button', { name: /invitation/i })).toBeInTheDocument();
   });
 
+  it('« Enregistrer » est inactif sans modification, actif dès qu’on édite', async () => {
+    mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail() }]);
+    renderApp('/quizzes/q1');
+
+    const save = await screen.findByRole('button', { name: /Enregistrer/ });
+    expect(save).toBeDisabled();
+
+    fireEvent.change(await screen.findByDisplayValue('Mon quiz'), {
+      target: { value: 'Mon quiz révisé' },
+    });
+    await waitFor(() => expect(save).not.toBeDisabled());
+  });
+
+  it('supprimer le quiz demande confirmation (modal) avant le DELETE', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/quizzes/q1', body: detail() },
+      { method: 'DELETE', path: '/quizzes/q1', body: {} },
+    ]);
+    renderApp('/quizzes/q1');
+
+    const deleted = () =>
+      fetchMock.mock.calls.some(
+        ([url, opts]) =>
+          String(url).includes('/quizzes/q1') && (opts as RequestInit)?.method === 'DELETE',
+      );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le quiz' }));
+    expect(deleted()).toBe(false); // la modal s'ouvre, rien n'est supprimé encore
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(deleted()).toBe(true));
+  });
+
   it('réordonne les questions (↓ → PATCH reorder avec le nouvel ordre)', async () => {
     const q = (id: string, prompt: string, orderIndex: number) => ({
       id,
