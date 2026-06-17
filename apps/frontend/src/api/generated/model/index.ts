@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './activeGameDto';
 export * from './authConfigDto';
 export * from './authConfigDtoMode';
 export * from './authConfigDtoOidc';

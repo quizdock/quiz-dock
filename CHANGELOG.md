@@ -65,7 +65,8 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   question + chrono + compteur, répartition, podium ; jamais la bonne réponse avant reveal).
   **Client apprenant** `/join/$pin` (machine à états : reprise `player:reconnect` sinon
   écran pseudo ; grille de réponse verrouillée à 1, feedback perso, podium, avis capture).
-  `/present/$pin` redirige vers `…/control`.
+  `/present/$pin` redirige vers `…/control`. **Dashboard** : panneau « parties en cours »
+  (REST `GET /games/mine` typé Orval) pour reprendre une partie sans avoir gardé l'URL (§6.2).
 - **Tests d'intégration socket réels** (boucle `create → join → start → submit → reveal →
   podium`, REVEAL une seule fois sous concurrence ; late join, spectateur, reconnexion,
   host:attach, convergence au départ, pause/reprise/fin auto hôte, index parties en cours) ;

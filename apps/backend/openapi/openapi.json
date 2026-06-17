@@ -566,6 +566,35 @@
           "media"
         ]
       }
+    },
+    "/api/v1/games/mine": {
+      "get": {
+        "operationId": "GameController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ActiveGameDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "games"
+        ]
+      }
     }
   },
   "info": {
@@ -1455,6 +1484,31 @@
         "required": [
           "mediaId",
           "url"
+        ]
+      },
+      "ActiveGameDto": {
+        "type": "object",
+        "properties": {
+          "pin": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "playerCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "pin",
+          "title",
+          "state",
+          "playerCount"
         ]
       }
     }

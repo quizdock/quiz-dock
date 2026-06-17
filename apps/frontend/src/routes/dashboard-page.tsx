@@ -1,9 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { Play, Plus } from 'lucide-react';
+import { Play, Plus, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLaunchSession } from '../game/use-launch-session';
+import { useGameControllerMine } from '../api/generated/games/games';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
@@ -27,7 +28,9 @@ export function DashboardPage() {
   const { data, isLoading, error } = useQuizzesControllerList();
   const create = useQuizzesControllerCreate();
   const { launch, isLaunching, error: launchError } = useLaunchSession();
+  const { data: gamesData } = useGameControllerMine();
   const quizzes = data?.data ?? [];
+  const activeGames = gamesData?.data ?? [];
 
   const onCreate = () => {
     create.mutate(
@@ -50,6 +53,32 @@ export function DashboardPage() {
           Nouveau quiz
         </Button>
       </div>
+
+      {activeGames.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <Radio className="size-4 text-primary" />
+            Parties en cours
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {activeGames.map((game) => (
+              <li
+                key={game.pin}
+                className="flex items-center gap-4 rounded-md bg-background px-3 py-2"
+              >
+                <span className="flex-1 font-medium">{game.title}</span>
+                <span className="font-mono tracking-widest">{game.pin}</span>
+                <span className="text-sm text-muted-foreground">{game.playerCount} joueur(s)</span>
+                <Link to="/present/$pin/control" params={{ pin: game.pin }}>
+                  <Button type="button" size="sm" variant="outline">
+                    Reprendre
+                  </Button>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {isLoading && <p className="text-muted-foreground">Chargement…</p>}
       {error ? <p className="text-destructive">Impossible de charger les quiz.</p> : null}
