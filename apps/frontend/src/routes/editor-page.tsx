@@ -232,7 +232,12 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             {quiz.status === 'ready' && (
               <>
                 {!livePin && (
-                  <Button type="button" disabled={presenting} onClick={() => void onPresent()}>
+                  <Button
+                    type="button"
+                    variant="success"
+                    disabled={presenting}
+                    onClick={() => void onPresent()}
+                  >
                     <Play className="size-4" />
                     {presenting ? 'Lancement…' : 'Présenter'}
                   </Button>
