@@ -70,6 +70,19 @@ export interface GameMeta {
   title: string;
   language: string;
   createdAt: number;
+  /** Timings serveur autoritatifs de la question courante (§6), 0 hors ANSWERING. */
+  questionStartedAt: number;
+  questionEndsAt: number;
+}
+
+/** Réponse gradée stockée au submit (Redis hash `:answers:{idx}`) — REVEAL la relit. */
+export interface AnswerRecord {
+  answer: AnswerValue;
+  isCorrect: boolean;
+  pointsAwarded: number;
+  /** Temps de réponse serveur compensé, en ms (§6). */
+  tMs: number;
+  receivedAt: number;
 }
 
 /** Résultat de notation d'une soumission (sortie de la fonction pure §5). */

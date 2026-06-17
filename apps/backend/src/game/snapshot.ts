@@ -1,5 +1,12 @@
 import { Prisma } from '@prisma/client';
-import type { OptionColor, OptionShape, PointsMode, QuestionType } from '@roux-quizz/contracts';
+import type {
+  OptionColor,
+  OptionShape,
+  PointsMode,
+  PublicOption,
+  QuestionStartPayload,
+  QuestionType,
+} from '@roux-quizz/contracts';
 import { basePointsFor } from './scoring';
 import type { QuizSnapshot, SnapshotQuestion } from './game.types';
 
@@ -56,5 +63,40 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
         })),
       }),
     ),
+  };
+}
+
+/**
+ * Construit le payload public `question:start` (contrat §9) par **allowlist stricte**
+ * (anti-triche §7) : on ne recopie QUE `{id,text,color,shape,media}` des options —
+ * jamais `isCorrect`/`correctOrderIndex`, ni la cible numérique/réponses texte.
+ * Le secret ne fuit pas par oubli de suppression : il n'est jamais ajouté.
+ */
+export function buildQuestionStart(
+  question: SnapshotQuestion,
+  questionIndex: number,
+  startedAt: number,
+  endsAt: number,
+): QuestionStartPayload {
+  const hasOptions = question.options.length > 0;
+  const options: PublicOption[] | undefined = hasOptions
+    ? question.options.map((o) => ({
+        id: o.id,
+        text: o.text,
+        color: o.color,
+        shape: o.shape,
+        media: o.media,
+      }))
+    : undefined;
+  return {
+    questionIndex,
+    type: question.type,
+    prompt: question.prompt,
+    media: question.media,
+    options,
+    timeLimitS: question.timeLimitS,
+    basePoints: question.basePoints,
+    startedAt,
+    endsAt,
   };
 }

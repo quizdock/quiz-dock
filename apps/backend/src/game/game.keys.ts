@@ -1,6 +1,12 @@
 /** Durée de vie de l'état live d'une partie (~4 h — SPECIFICATIONS-DONNEES §4). */
 export const GAME_TTL_S = 4 * 60 * 60;
 
+/** Délai de lecture de l'énoncé avant ouverture des réponses (§8, défaut 3 s). */
+export const READ_DELAY_MS = 3_000;
+
+/** Tolérance serveur : réponses reçues après `endsAt + grace` rejetées (§6). */
+export const GRACE_MS = 300;
+
 /**
  * Clés Redis de l'état live (SPECIFICATIONS-DONNEES §4). Centralisées ici pour
  * garantir la cohérence du nommage entre allocation, écriture et purge.
@@ -22,4 +28,8 @@ export const gameKeys = {
   leaderboard: (pin: string) => `game:${pin}:leaderboard`,
   /** Jeton de session joueur → { pin, playerId } (reconnexion). */
   session: (token: string) => `session:${token}`,
+  /** Verrou atomique de passage en REVEAL (1 seul gagnant, anti double-reveal). */
+  revealLock: (pin: string, questionIndex: number) => `game:${pin}:reveal-lock:${questionIndex}`,
+  /** Verrou atomique de passage à la question suivante (anti double-clic). */
+  advanceLock: (pin: string, questionIndex: number) => `game:${pin}:advance-lock:${questionIndex}`,
 };

@@ -25,6 +25,7 @@ describe('GameGateway (intégration socket)', () => {
   beforeAll(async () => {
     process.env.DATABASE_URL ??= 'postgresql://roux:roux@localhost:15432/rouxquizz?schema=public';
     process.env.REDIS_URL ??= 'redis://localhost:16379';
+    process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
     app = await NestFactory.create(AppModule, { logger: false });
     await app.listen(0);
     prisma = app.get(PrismaService);
@@ -47,6 +48,7 @@ describe('GameGateway (intégration socket)', () => {
             orderIndex: 0,
             type: 'single_choice',
             prompt: 'Capitale de la France ?',
+            timeLimitS: 5, // minimum autorisé (contrainte 5..120)
             options: {
               create: [
                 { orderIndex: 0, text: 'Paris', color: 'red', shape: 'triangle', isCorrect: true },
@@ -122,5 +124,45 @@ describe('GameGateway (intégration socket)', () => {
         .then(() => ({ code: 'accepted' as const })),
     ]);
     expect(err.code).toBe('conflict');
+  }, 15_000);
+
+  it('host:start → question:start (allowlist, sans flag correct) puis REVEAL une seule fois', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Carol' });
+
+    // Le joueur observe le démarrage de question et compte les passages REVEAL.
+    let revealCount = 0;
+    player.on('game:state', (s: { state: string }) => {
+      if (s.state === 'REVEAL') revealCount++;
+    });
+    const qStart = new Promise<Record<string, unknown>>((resolve) =>
+      player.on('question:start', resolve),
+    );
+
+    host.emit('host:start', { pin });
+    const q = (await qStart) as {
+      questionIndex: number;
+      startedAt: number;
+      endsAt: number;
+      options: Array<Record<string, unknown>>;
+    };
+
+    expect(q.questionIndex).toBe(0);
+    expect(q.endsAt - q.startedAt).toBe(5000); // timeLimitS=5
+    expect(q.startedAt).toBeGreaterThan(Date.now() - 100); // fenêtre de lecture future
+    // Anti-triche §7 : aucune option ne porte le flag correct.
+    expect(q.options).toHaveLength(2);
+    for (const o of q.options) {
+      expect(o).not.toHaveProperty('isCorrect');
+      expect(o).not.toHaveProperty('correctOrderIndex');
+      expect(o.id).toBeTruthy();
+    }
+
+    // Laisse le timer (startedAt + 5000 + grace) déclencher le REVEAL.
+    await new Promise((r) => setTimeout(r, 6000));
+    expect(revealCount).toBe(1);
   }, 15_000);
 });

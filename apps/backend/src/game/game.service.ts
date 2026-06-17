@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import { RedisService } from '../redis/redis.service';
 import { GAME_TTL_S, gameKeys } from './game.keys';
-import type { GameMeta, PlayerRecord } from './game.types';
+import type { GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
 import { QUIZ_SNAPSHOT_INCLUDE, buildSnapshot } from './snapshot';
 
 const PIN_ALLOC_ATTEMPTS = 10;
@@ -80,6 +80,8 @@ export class GameService {
       title: quiz.title,
       language: quiz.language,
       createdAt: Date.now(),
+      questionStartedAt: 0,
+      questionEndsAt: 0,
     };
 
     const pipe = this.redis.multi();
@@ -157,6 +159,12 @@ export class GameService {
     return deserializeMeta(raw);
   }
 
+  /** Lit le snapshot figé du quiz (null si partie inexistante/expirée). */
+  async getSnapshot(pin: string): Promise<QuizSnapshot | null> {
+    const raw = await this.redis.get(gameKeys.snapshot(pin));
+    return raw ? (JSON.parse(raw) as QuizSnapshot) : null;
+  }
+
   /** Alloue un PIN à 6 chiffres unique (claim atomique auto-expirant). */
   private async allocatePin(gameId: string): Promise<string> {
     for (let i = 0; i < PIN_ALLOC_ATTEMPTS; i++) {
@@ -194,6 +202,8 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     title: meta.title,
     language: meta.language,
     createdAt: String(meta.createdAt),
+    questionStartedAt: String(meta.questionStartedAt),
+    questionEndsAt: String(meta.questionEndsAt),
   };
 }
 
@@ -209,5 +219,7 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     title: raw.title,
     language: raw.language,
     createdAt: Number(raw.createdAt),
+    questionStartedAt: Number(raw.questionStartedAt ?? 0),
+    questionEndsAt: Number(raw.questionEndsAt ?? 0),
   };
 }

@@ -14,6 +14,7 @@ import type { Request } from 'express';
 import type { Server, Socket } from 'socket.io';
 import { AUTH_PROVIDER, type AuthProvider } from '../auth/auth-provider';
 import { UsersService } from '../users/users.service';
+import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { WsExceptionFilter } from './ws-exception.filter';
 
@@ -44,6 +45,7 @@ export class GameGateway implements OnGatewayInit {
     @Inject(AUTH_PROVIDER) private readonly auth: AuthProvider,
     private readonly users: UsersService,
     private readonly game: GameService,
+    private readonly engine: GameEngine,
   ) {}
 
   /**
@@ -54,6 +56,7 @@ export class GameGateway implements OnGatewayInit {
    * connexion sur une auth absente.
    */
   afterInit(server: GameServer): void {
+    this.engine.bindServer(server);
     server.use((socket, next) => {
       const auth = socket.handshake.auth ?? {};
       if (!auth.token && !auth.localUser) {
@@ -121,9 +124,27 @@ export class GameGateway implements OnGatewayInit {
     return { sessionToken: res.sessionToken, playerId: res.playerId };
   }
 
+  /** `host:start` : l'hôte propriétaire lance la 1re question (LOBBY → ANSWERING). */
+  @SubscribeMessage('host:start')
+  async hostStart(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<void> {
+    await this.engine.start(payload.pin, this.requireHostId(socket));
+  }
+
   @SubscribeMessage('ping')
   ping(@ConnectedSocket() socket: GameSocket, @MessageBody() payload: { t0: number }): void {
     socket.emit('pong', { t0: payload.t0, t1: Date.now() });
+  }
+
+  /** Exige un socket d'hôte authentifié ; renvoie son id utilisateur. */
+  private requireHostId(socket: GameSocket): string {
+    const host = socket.data.user;
+    if (!host) {
+      throw new WsException('Authentification hôte requise.');
+    }
+    return host.id;
   }
 }
 
