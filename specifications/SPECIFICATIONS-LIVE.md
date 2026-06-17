@@ -104,6 +104,10 @@ Depuis le **détail du quiz** (éditeur, quiz `ready`), le présentateur :
 > Les slugs sont en **anglais** (cohérence `/login`, `/dashboard`, `/present`,
 > `/join`). Le panneau affiche aussi le **PIN en clair + QR** (cf. partage déjà
 > livré, P3-FRONT-1) et un bouton **« Partager »**.
+>
+> **État actuel (interim)** : une seule route `/present/:pin` (lobby hôte mono-fenêtre,
+> P3-FRONT-1) existe. Le découpage **contrôle / projeté** ci-dessus est la **cible** à
+> implémenter (P3-FRONT-2/3) ; `/present/:pin` actuel deviendra `/present/$pin/control`.
 
 ### 4.2 Attachement cross-device
 
@@ -207,13 +211,13 @@ implémenter.
   bloquant, le score/place sont conservés). Aucune réponse n'est acceptée.
 
 ### 7.3 Reprise
-- Si l'hôte **revient** (`host:attach {pin}` avant expiration TTL), l'état repart de
-  là où il était : reprise en `ANSWERING` avec un `questionEndsAt` recalculé (temps
-  restant figé), ou maintien de l'écran courant (`REVEAL`/`LEADERBOARD`). Diffusion
-  d'un `game:state` de reprise.
-- Si l'hôte **ne revient pas** (TTL atteint), la partie expire silencieusement
-  (nettoyage Redis). *(Optionnel ultérieur : auto-fin avec podium sur ce qui a été
-  joué.)*
+- Si l'hôte **revient** dans la **fenêtre de reconnexion** (technique §11, défaut
+  **120 s**) via `host:attach {pin}`, l'état repart de là où il était : reprise en
+  `ANSWERING` avec un `questionEndsAt` recalculé (temps restant figé), ou maintien de
+  l'écran courant (`REVEAL`/`LEADERBOARD`). Diffusion d'un `game:state` de reprise.
+- Si l'hôte **ne revient pas** dans cette fenêtre, la partie **se termine** et les
+  résultats sont persistés en l'état (technique §11) ; `game:ended` est diffusé.
+  *(Le TTL Redis ~4 h reste le filet de sécurité absolu en cas de partie orpheline.)*
 
 ---
 

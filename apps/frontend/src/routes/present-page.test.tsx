@@ -73,9 +73,10 @@ describe('PresentPage (lobby hôte)', () => {
     });
 
     expect(share).toHaveBeenCalledTimes(1);
-    expect(share.mock.calls[0][0]).toMatchObject({
-      url: expect.stringContaining('/join/482913'),
-    });
+    const shared = share.mock.calls[0][0];
+    expect(shared.url).toContain('/join/482913'); // lien cliquable
+    expect(shared.text).toContain('482913'); // PIN présenté dans le message
+    expect(shared.text).toContain('/join/482913'); // lien direct en texte
     vi.unstubAllGlobals();
   });
 });

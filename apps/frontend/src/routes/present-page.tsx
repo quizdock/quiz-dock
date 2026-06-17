@@ -72,17 +72,25 @@ export function PresentPage() {
   };
 
   const onShare = async () => {
-    const text = `Rejoignez la partie Roux-Quizz — PIN ${pin}`;
-    const data: ShareData = { title: 'Roux-Quizz', text, url: joinUrl };
+    // Message lisible : PIN mis en avant + lien direct. `url` est repris comme
+    // lien hypertexte cliquable par les cibles de partage (mail, messagerie…).
+    const text = [
+      'Rejoignez la partie Roux-Quizz 🎮',
+      `PIN : ${pin}`,
+      `Lien direct : ${joinUrl}`,
+    ].join('\n');
+    const data: ShareData = { title: 'Rejoindre la partie Roux-Quizz', text, url: joinUrl };
     const file = await qrFile();
+    const withFile = file ? { ...data, files: [file] } : null;
     try {
-      if (file && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ ...data, files: [file] });
+      if (withFile && navigator.canShare?.(withFile)) {
+        // Texte + lien cliquable + QR en image (cible qui accepte les fichiers).
+        await navigator.share(withFile);
       } else if (navigator.share) {
         await navigator.share(data);
       } else {
-        await navigator.clipboard.writeText(`${text} ${joinUrl}`);
-        setShareNote('Lien copié dans le presse-papier.');
+        await navigator.clipboard.writeText(text);
+        setShareNote('Invitation copiée (PIN + lien) dans le presse-papier.');
       }
     } catch {
       // Partage annulé par l'utilisateur ou non supporté : on ignore.
@@ -140,7 +148,7 @@ export function PresentPage() {
       <footer className="mt-4 flex flex-col items-center gap-2 border-t pt-6">
         <Button type="button" variant="outline" onClick={() => void onShare()}>
           <Share2 className="size-4" />
-          Partager (PIN + QR code)
+          Partager
         </Button>
         {shareNote ? <p className="text-muted-foreground text-sm">{shareNote}</p> : null}
       </footer>

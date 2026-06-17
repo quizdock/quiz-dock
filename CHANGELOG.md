@@ -32,7 +32,12 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Partage de partie (front)** : bouton **« Présenter »** (éditeur + liste, quiz `ready`)
   → salle d'attente hôte **`/present/:pin`** avec **PIN en grand + QR code** et liste des
   joueurs en temps réel ; entrée joueur publique **`/join` / `/join/:pin`** (QR). Client
-  Socket.IO typé (singleton), proxy Vite `/socket.io`.
+  Socket.IO typé (singleton), proxy Vite `/socket.io`. Page d'accueil : champ PIN
+  fonctionnel → `/join/:pin`. Bouton **« Partager »** : message lisible (PIN + **lien
+  cliquable** vers la partie) + QR en image quand la cible l'accepte (Web Share), repli copie.
+- **Spécification de la partie live** ([SPECIFICATIONS-LIVE.md](specifications/SPECIFICATIONS-LIVE.md)) :
+  présentateur multi-fenêtres (projeté = socket spectateur, contrôle = hôte, cross-device),
+  late join, reconnexion/persistance navigateur, `HOST_DISCONNECTED`, matrice état→écran.
 - **Tests d'intégration socket réels** (boucle `create → join → start → submit → reveal →
   podium`, REVEAL une seule fois sous concurrence) ; CI dotée de services **Postgres + Redis**
   + `prisma migrate deploy`. Tests front : PIN/QR/compteur joueurs, échec join non bloquant.
