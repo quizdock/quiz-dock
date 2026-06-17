@@ -76,6 +76,7 @@ export const ServerEvents = {
   GameCreated: 'game:created',
   PlayerJoined: 'player:joined',
   PlayerLeft: 'player:left',
+  GameRoster: 'game:roster',
   GameState: 'game:state',
   QuestionStart: 'question:start',
   AnswerAck: 'answer:ack',
@@ -182,6 +183,8 @@ export interface ServerToClientEvents {
   notice: (p: { fullCapture: true }) => void;
   'player:joined': (p: { playerId: string; nickname: string; playerCount: number }) => void;
   'player:left': (p: { playerId: string; playerCount: number }) => void;
+  /** Instantané du lobby (joueurs connectés) renvoyé à un socket qui se (ré)attache (§6). */
+  'game:roster': (p: { players: { playerId: string; nickname: string }[] }) => void;
   'game:state': (p: GameStatePayload) => void;
   'question:start': (p: QuestionStartPayload) => void;
   'answer:ack': (p: { accepted: boolean; receivedAt: number }) => void;

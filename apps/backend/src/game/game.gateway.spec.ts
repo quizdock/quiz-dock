@@ -284,8 +284,13 @@ describe('GameGateway (intégration socket)', () => {
     await player.emitWithAck('player:join', { pin, nickname: 'Frank' });
 
     const spectator = connect();
+    // Le projeté qui s'attache après les arrivées reçoit l'instantané du lobby (§6).
+    const rosterP = new Promise<{ players: Array<{ nickname: string }> }>((resolve) =>
+      spectator.on('game:roster', (r) => resolve(r as never)),
+    );
     const specOk = await spectator.emitWithAck('spectator:join', { pin });
     expect(specOk.ok).toBe(true);
+    expect((await rosterP).players.map((p) => p.nickname)).toContain('Frank');
 
     const countP = new Promise<{ answered: number; total: number }>((resolve) =>
       player.on('answer:count', (c) => resolve(c as never)),

@@ -41,7 +41,8 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Rattachement live (SPECIFICATIONS-LIVE §3/§5/§6)** : events de contrat `host:attach`
   et `spectator:join`. **Late join** (§5) — un joueur peut rejoindre une partie déjà
   démarrée (refus seulement en `ENDED`) et reçoit l'**état courant** (`game:state` +
-  `question:start`/reveal/podium, résultat perso si joueur). **Spectateur** (§3) :
+  `question:start`/reveal/podium, **instantané de lobby `game:roster`** + `answer:count`
+  courant, résultat perso si joueur). **Spectateur** (§3) :
   `spectator:join` rejoint la room en lecture seule, sans enregistrement → n'affecte ni
   les compteurs ni la convergence. **Reconnexion joueur** (§6.1, `player:reconnect`) et
   **`host:attach`** (§4.2, rebind du propriétaire) ; index Redis `host:{userId}:games`

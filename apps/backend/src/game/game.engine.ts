@@ -319,6 +319,10 @@ export class GameEngine {
       questionIndex: meta.currentIndex,
       totalQuestions: meta.totalQuestions,
     });
+    // Instantané du lobby : sans lui, un host/projeté qui (re)charge verrait une
+    // liste de joueurs vide (les `player:joined` passés sont perdus). §6/§9.
+    socket.emit('game:roster', { players: await this.connectedRoster(pin) });
+
     const snapshot = await this.game.getSnapshot(pin);
     if (!snapshot || meta.currentIndex < 0) return;
 
@@ -333,6 +337,9 @@ export class GameEngine {
           meta.questionEndsAt,
         ),
       );
+      // Compteur courant : sinon un (re)attache mid-question afficherait « 0/N ».
+      const { answered, total } = await this.connectedProgress(pin, meta.currentIndex);
+      socket.emit('answer:count', { answered, total });
     } else if (meta.state === GameState.Reveal) {
       const index = meta.currentIndex;
       const records = await this.readAnswers(pin, index);
@@ -364,6 +371,17 @@ export class GameEngine {
    * révélerait à tort alors qu'un connecté n'a pas encore répondu. `allAnswered` est
    * vrai seulement si **aucun connecté n'est en attente**.
    */
+  /** Joueurs **connectés** (playerId + pseudo) pour l'instantané de lobby (§6/§9). */
+  private async connectedRoster(pin: string): Promise<{ playerId: string; nickname: string }[]> {
+    const players = await this.redis.hgetall(gameKeys.players(pin));
+    const roster: { playerId: string; nickname: string }[] = [];
+    for (const [playerId, json] of Object.entries(players)) {
+      const rec = JSON.parse(json) as PlayerRecord;
+      if (rec.connected) roster.push({ playerId, nickname: rec.nickname });
+    }
+    return roster;
+  }
+
   private async connectedProgress(
     pin: string,
     questionIndex: number,
