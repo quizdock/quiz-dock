@@ -1,7 +1,7 @@
 import { Link, useParams } from '@tanstack/react-router';
-import { QRCodeSVG } from 'qrcode.react';
-import { Play, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
+import { Play, Share2, Users } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { getGameSocket } from '../game/game-client';
 
@@ -20,6 +20,8 @@ export function PresentPage() {
   const socket = getGameSocket();
   const [players, setPlayers] = useState<LobbyPlayer[]>([]);
   const [started, setStarted] = useState(false);
+  const [shareNote, setShareNote] = useState<string | null>(null);
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -53,6 +55,39 @@ export function PresentPage() {
   }
 
   const joinUrl = `${window.location.origin}/join/${pin}`;
+
+  /**
+   * Partage le lien d'invitation : QR en image + texte/PIN via l'API Web Share
+   * (mobile), repli texte+URL, puis copie presse-papier si rien d'autre n'existe.
+   */
+  const qrFile = async (): Promise<File | null> => {
+    const canvas = qrCanvasRef.current;
+    if (!canvas) return null;
+    try {
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+      return blob ? new File([blob], `roux-quizz-${pin}.png`, { type: 'image/png' }) : null;
+    } catch {
+      return null; // canvas non disponible (ex. jsdom) → repli sans image
+    }
+  };
+
+  const onShare = async () => {
+    const text = `Rejoignez la partie Roux-Quizz — PIN ${pin}`;
+    const data: ShareData = { title: 'Roux-Quizz', text, url: joinUrl };
+    const file = await qrFile();
+    try {
+      if (file && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ ...data, files: [file] });
+      } else if (navigator.share) {
+        await navigator.share(data);
+      } else {
+        await navigator.clipboard.writeText(`${text} ${joinUrl}`);
+        setShareNote('Lien copié dans le presse-papier.');
+      }
+    } catch {
+      // Partage annulé par l'utilisateur ou non supporté : on ignore.
+    }
+  };
 
   return (
     <section className="flex flex-col items-center gap-8 py-8">
@@ -98,6 +133,17 @@ export function PresentPage() {
           Démarrer la partie
         </Button>
       )}
+
+      {/* QR hors-écran : sert à produire l'image PNG pour le partage. */}
+      <QRCodeCanvas value={joinUrl} size={512} ref={qrCanvasRef} className="hidden" />
+
+      <footer className="mt-4 flex flex-col items-center gap-2 border-t pt-6">
+        <Button type="button" variant="outline" onClick={() => void onShare()}>
+          <Share2 className="size-4" />
+          Partager (PIN + QR code)
+        </Button>
+        {shareNote ? <p className="text-muted-foreground text-sm">{shareNote}</p> : null}
+      </footer>
     </section>
   );
 }

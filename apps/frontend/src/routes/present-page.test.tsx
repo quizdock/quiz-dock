@@ -56,4 +56,26 @@ describe('PresentPage (lobby hôte)', () => {
 
     expect(fakeSocket.emit).toHaveBeenCalledWith('host:start', { pin: '482913' });
   });
+
+  it('le bouton « Partager » diffuse le lien de la partie (Web Share)', async () => {
+    localStorage.setItem('roux.localUser', 'Formateur');
+    // jsdom n'implémente pas canvas.toBlob → repli sans image (partage du lien).
+    HTMLCanvasElement.prototype.toBlob = function (cb: BlobCallback) {
+      cb(null);
+    };
+    const share = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...navigator, share, canShare: () => false });
+
+    renderApp('/present/482913');
+    const btn = await screen.findByRole('button', { name: /Partager/ });
+    await act(async () => {
+      btn.click();
+    });
+
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(share.mock.calls[0][0]).toMatchObject({
+      url: expect.stringContaining('/join/482913'),
+    });
+    vi.unstubAllGlobals();
+  });
 });
