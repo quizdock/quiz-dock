@@ -8,8 +8,11 @@ export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 const ACK_TIMEOUT_MS = 8_000;
 
 // Singleton (comme getOidc) : le socket survit aux navigations entre lobby et
-// futurs écrans de jeu, et n'est jamais recréé par un effet de montage.
+// écrans de jeu, et n'est jamais recréé par un effet de montage.
 let socket: GameSocket | null = null;
+// Connexion en vol : dédoublonne les appels concurrents (double-montage StrictMode)
+// pour ne jamais créer deux sockets `forceNew` dont le premier fuirait.
+let connecting: Promise<GameSocket> | null = null;
 
 /** Le socket courant (ou `null` si non connecté). */
 export function getGameSocket(): GameSocket | null {
@@ -20,6 +23,57 @@ export function getGameSocket(): GameSocket | null {
 export function disconnectGame(): void {
   socket?.disconnect();
   socket = null;
+}
+
+/**
+ * Garantit un socket unique : réutilise le singleton s'il existe (navigation /
+ * arrivée depuis `host:create` ou `player:join`), sinon connecte selon le rôle
+ * (`host` = authentifié ; `guest` = spectateur/joueur). Les appels concurrents
+ * partagent la même promesse → un seul socket.
+ */
+export function ensureGameSocket(role: 'host' | 'guest'): Promise<GameSocket> {
+  if (socket) return Promise.resolve(socket);
+  if (connecting) return connecting;
+  connecting = (role === 'host' ? connectHost() : Promise.resolve(connectPlayer())).then((s) => {
+    connecting = null;
+    return s;
+  });
+  return connecting;
+}
+
+/** Session joueur persistée pour la reconnexion (§6.1, clé `roux.session`). */
+export interface PlayerSession {
+  pin: string;
+  sessionToken: string;
+  playerId: string;
+  nickname: string;
+}
+
+const SESSION_KEY = 'roux.session';
+
+export function savePlayerSession(s: PlayerSession): void {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  } catch {
+    // stockage indisponible (mode privé strict) : la reconnexion ne sera pas offerte.
+  }
+}
+
+export function loadPlayerSession(): PlayerSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as PlayerSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPlayerSession(): void {
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
@@ -84,5 +138,11 @@ export async function joinSession(
   nickname: string,
 ): Promise<{ sessionToken: string; playerId: string }> {
   const s = connectPlayer();
-  return emitWithAckOrError(s, 'player:join', { pin, nickname });
+  const res = await emitWithAckOrError<{ sessionToken: string; playerId: string }>(
+    s,
+    'player:join',
+    { pin, nickname },
+  );
+  savePlayerSession({ pin, nickname, ...res }); // reprise après fermeture (§6.1)
+  return res;
 }
