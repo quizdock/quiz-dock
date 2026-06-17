@@ -1,11 +1,17 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { GameState } from '@roux-quizz/contracts';
-import type { AnswerValue, ServerToClientEvents } from '@roux-quizz/contracts';
+import type {
+  AnswerValue,
+  LeaderboardRow,
+  QuestionRevealPayload,
+  ServerToClientEvents,
+} from '@roux-quizz/contracts';
 import type { Server } from 'socket.io';
 import { GameService } from './game.service';
 import { GAME_TTL_S, GRACE_MS, READ_DELAY_MS, gameKeys } from './game.keys';
 import type { AnswerRecord, GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
 import { RedisService } from '../redis/redis.service';
+import { buildRevealCommon } from './reveal';
 import { scoreAnswer } from './scoring';
 import { buildQuestionStart } from './snapshot';
 
@@ -127,7 +133,135 @@ export class GameEngine {
       questionIndex: index,
       totalQuestions: meta.totalQuestions,
     });
-    // TODO (P3-BACK-7) : question:reveal (distribution + résultat perso) + leaderboard.
+
+    const snapshot = await this.game.getSnapshot(pin);
+    if (snapshot) {
+      await this.emitReveal(pin, snapshot, index);
+    }
+  }
+
+  /**
+   * Diffuse `question:reveal` (résultat **personnel** par socket — §9) puis
+   * `leaderboard`. Le reveal commun (bonnes réponses + répartition) est calculé
+   * une fois ; `yourResult`/`you` sont ciblés socket par socket.
+   */
+  private async emitReveal(pin: string, snapshot: QuizSnapshot, index: number): Promise<void> {
+    const question = snapshot.questions[index];
+    const records = await this.readAnswers(pin, index);
+    const common = buildRevealCommon(question, [...records.values()]);
+
+    const ranked = await this.rankedPlayers(pin);
+    const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
+    const top: LeaderboardRow[] = ranked
+      .slice(0, 10)
+      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+
+    const sockets = await this.server.in(pin).fetchSockets();
+    for (const socket of sockets) {
+      const playerId = (socket.data as { playerId?: string }).playerId;
+      const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
+
+      const reveal: QuestionRevealPayload = { ...common };
+      if (me) {
+        const rec = records.get(playerId!);
+        reveal.yourResult = {
+          correct: rec?.isCorrect ?? false,
+          points: rec?.pointsAwarded ?? 0,
+          totalScore: me.score,
+          rank: rankOf.get(playerId!) ?? ranked.length,
+        };
+      }
+      socket.emit('question:reveal', reveal);
+      socket.emit('leaderboard', {
+        top,
+        you: me ? { score: me.score, rank: rankOf.get(playerId!) ?? ranked.length } : undefined,
+      });
+    }
+  }
+
+  /** `host:reveal` : force le passage en REVEAL (idempotent via le verrou). */
+  async reveal(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    await this.advanceToReveal(pin, meta.currentIndex, 'host');
+  }
+
+  /**
+   * `host:next` : depuis REVEAL, passe à la question suivante ou au PODIUM (dernière).
+   * Verrou atomique `advance-lock:{index}` → un double-clic ne saute pas de question.
+   */
+  async next(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Reveal) {
+      throw new BadRequestException('Action possible seulement après le reveal.');
+    }
+    const won = await this.redis.set(
+      gameKeys.advanceLock(pin, meta.currentIndex),
+      '1',
+      'EX',
+      GAME_TTL_S,
+      'NX',
+    );
+    if (won !== 'OK') {
+      return; // suivant déjà déclenché (double-clic)
+    }
+    const nextIndex = meta.currentIndex + 1;
+    if (nextIndex >= meta.totalQuestions) {
+      await this.toPodium(pin, meta);
+      return;
+    }
+    const snapshot = await this.requireSnapshot(pin);
+    await this.beginQuestion(pin, snapshot, nextIndex);
+  }
+
+  /** Dernière question révélée → PODIUM (top 3 + rang perso). */
+  private async toPodium(pin: string, meta: GameMeta): Promise<void> {
+    await this.redis.hset(gameKeys.game(pin), { state: GameState.Podium });
+    const ranked = await this.rankedPlayers(pin);
+    const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
+    const podium: LeaderboardRow[] = ranked
+      .slice(0, 3)
+      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+
+    this.server.to(pin).emit('game:state', {
+      state: GameState.Podium,
+      questionIndex: meta.currentIndex,
+      totalQuestions: meta.totalQuestions,
+    });
+    const sockets = await this.server.in(pin).fetchSockets();
+    for (const socket of sockets) {
+      const playerId = (socket.data as { playerId?: string }).playerId;
+      const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
+      socket.emit('game:podium', {
+        podium,
+        you: me ? { score: me.score, rank: rankOf.get(playerId!) ?? ranked.length } : undefined,
+      });
+    }
+  }
+
+  /** `host:end` : termine la partie (tout état → ENDED) et invalide le PIN (§7). */
+  async end(pin: string, hostUserId: string): Promise<void> {
+    await this.requireHost(pin, hostUserId);
+    this.clearTimer(pin);
+    await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
+    await this.redis.del(gameKeys.pin(pin));
+    this.server
+      .to(pin)
+      .emit('game:state', { state: GameState.Ended, questionIndex: -1, totalQuestions: 0 });
+    this.server.to(pin).emit('game:ended', {});
+  }
+
+  /** Lit les réponses gradées d'une question (playerId → enregistrement). */
+  private async readAnswers(pin: string, index: number): Promise<Map<string, AnswerRecord>> {
+    const raw = await this.redis.hgetall(gameKeys.answers(pin, index));
+    return new Map(Object.entries(raw).map(([id, json]) => [id, JSON.parse(json) as AnswerRecord]));
+  }
+
+  /** Joueurs triés par score décroissant, départage par ordre d'arrivée (§5). */
+  private async rankedPlayers(pin: string): Promise<Array<PlayerRecord & { id: string }>> {
+    const raw = await this.redis.hgetall(gameKeys.players(pin));
+    return Object.entries(raw)
+      .map(([id, json]) => ({ id, ...(JSON.parse(json) as PlayerRecord) }))
+      .sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt);
   }
 
   /**

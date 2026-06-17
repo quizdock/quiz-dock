@@ -214,4 +214,39 @@ describe('GameGateway (intégration socket)', () => {
     await new Promise((r) => setTimeout(r, 6000));
     expect(revealCount).toBe(1);
   }, 15_000);
+
+  it('boucle complète : reveal personnel (yourResult) puis host:next → podium', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Eve' });
+
+    const revealP = new Promise<{
+      correctOptionIds?: string[];
+      yourResult?: { correct: boolean; points: number; totalScore: number; rank: number };
+    }>((resolve) => player.on('question:reveal', (r) => resolve(r as never)));
+    const podiumP = new Promise<{ you?: { rank: number; score: number } }>((resolve) =>
+      player.on('game:podium', (p) => resolve(p as never)),
+    );
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => player.on('question:start', (q) => resolve(q as never)),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    const parisId = q.options.find((o) => o.text === 'Paris')!.id;
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+    player.emit('player:submit', { pin, questionIndex: 0, answer: parisId });
+
+    const reveal = await revealP;
+    expect(reveal.correctOptionIds).toEqual([parisId]); // bonne réponse divulguée
+    expect(reveal.yourResult?.correct).toBe(true);
+    expect(reveal.yourResult?.points).toBeGreaterThan(0);
+    expect(reveal.yourResult?.rank).toBe(1);
+
+    host.emit('host:next', { pin }); // dernière question → podium
+    const podium = await podiumP;
+    expect(podium.you?.rank).toBe(1);
+    expect(podium.you?.score).toBeGreaterThan(0);
+  }, 15_000);
 });

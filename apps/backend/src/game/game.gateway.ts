@@ -161,6 +161,33 @@ export class GameGateway implements OnGatewayInit {
     socket.emit('answer:ack', ack);
   }
 
+  /** `host:reveal` : force le reveal de la question courante. */
+  @SubscribeMessage('host:reveal')
+  async hostReveal(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<void> {
+    await this.engine.reveal(payload.pin, this.requireHostId(socket));
+  }
+
+  /** `host:next` : question suivante ou podium. */
+  @SubscribeMessage('host:next')
+  async hostNext(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<void> {
+    await this.engine.next(payload.pin, this.requireHostId(socket));
+  }
+
+  /** `host:end` : termine la partie. */
+  @SubscribeMessage('host:end')
+  async hostEnd(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<void> {
+    await this.engine.end(payload.pin, this.requireHostId(socket));
+  }
+
   @SubscribeMessage('ping')
   ping(@ConnectedSocket() socket: GameSocket, @MessageBody() payload: { t0: number }): void {
     socket.emit('pong', { t0: payload.t0, t1: Date.now() });
