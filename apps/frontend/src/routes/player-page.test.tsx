@@ -100,6 +100,65 @@ describe('PlayerPage (client apprenant)', () => {
     expect(await screen.findByText(/Réponse enregistrée/)).toBeInTheDocument();
   });
 
+  it('multi-réponses : sélectionner plusieurs puis Valider (pas de submit au 1ᵉʳ clic)', async () => {
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      question: {
+        questionIndex: 0,
+        type: 'multiple_choice',
+        prompt: 'Lesquels ?',
+        options: [
+          { id: 'a', text: 'A', color: 'red', shape: 'triangle' },
+          { id: 'b', text: 'B', color: 'blue', shape: 'diamond' },
+        ],
+        timeLimitS: 5,
+        basePoints: 1000,
+        startedAt: Date.now(),
+        endsAt: Date.now() + 5000,
+      } as never,
+    });
+    renderApp('/join/771122');
+
+    fireEvent.click(await screen.findByRole('button', { name: /A/ }));
+    fireEvent.click(screen.getByRole('button', { name: /B/ }));
+    // Aucun submit tant que « Valider » n'est pas cliqué (sinon on perdrait au 1ᵉʳ clic).
+    expect(fakeSocket.emit).not.toHaveBeenCalledWith('player:submit', expect.anything());
+
+    fireEvent.click(screen.getByRole('button', { name: /Valider/ }));
+    expect(fakeSocket.emit).toHaveBeenCalledWith('player:submit', {
+      pin: '771122',
+      questionIndex: 0,
+      answer: ['a', 'b'],
+    });
+  });
+
+  it('numérique : saisie + Valider émet un nombre', async () => {
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      question: {
+        questionIndex: 0,
+        type: 'numeric',
+        prompt: 'Combien ?',
+        options: undefined,
+        timeLimitS: 5,
+        basePoints: 1000,
+        startedAt: Date.now(),
+        endsAt: Date.now() + 5000,
+      } as never,
+    });
+    renderApp('/join/771122');
+
+    fireEvent.change(await screen.findByPlaceholderText(/nombre/), { target: { value: '42' } });
+    fireEvent.click(screen.getByRole('button', { name: /Valider/ }));
+    expect(fakeSocket.emit).toHaveBeenCalledWith('player:submit', {
+      pin: '771122',
+      questionIndex: 0,
+      answer: 42,
+    });
+  });
+
   it('REVEAL : feedback personnel (juste + points + rang)', async () => {
     hookState.value = view({
       state: GameState.Reveal,

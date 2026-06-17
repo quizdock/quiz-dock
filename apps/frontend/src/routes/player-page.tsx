@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router';
-import { LogIn } from 'lucide-react';
+import { ArrowDown, ArrowUp, LogIn } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { joinSession, loadPlayerSession } from '../game/game-client';
 import { OptionGrid } from '../game/live-components';
+import { useCountdown } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
 /**
@@ -21,10 +22,25 @@ export function PlayerPage() {
   const [nickname, setNickname] = useState(() => loadPlayerSession()?.nickname ?? '');
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pickedId, setPickedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [order, setOrder] = useState<string[]>([]);
+  const [freeValue, setFreeValue] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
-  // Nouvelle question → réinitialise la sélection locale.
-  useEffect(() => setPickedId(null), [view.questionIndex]);
+  const question = view.question;
+  const isMulti = question?.type === 'multiple_choice';
+  const remaining = useCountdown(view.state === 'ANSWERING' && question ? question.endsAt : null);
+
+  // Nouvelle question → réinitialise la saisie locale.
+  useEffect(() => {
+    setSelected([]);
+    setFreeValue('');
+    setSubmitted(false);
+  }, [view.questionIndex]);
+  // L'ordre de départ suit l'arrivée de la question (remise en ordre).
+  useEffect(() => {
+    setOrder(question?.options?.map((o) => o.id) ?? []);
+  }, [question]);
 
   const onJoin = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,9 +56,127 @@ export function PlayerPage() {
     }
   };
 
+  const submit = (answer: string | string[] | number) => {
+    setSubmitted(true);
+    socket?.emit('player:submit', { pin, questionIndex: view.questionIndex, answer });
+  };
+
+  // QCM unique / V-F / sondage : le tap soumet ; multi-réponses : le tap (dé)sélectionne,
+  // la soumission attend le bouton « Valider » (sinon on perdrait au 1ᵉʳ clic — RG-06).
   const onPick = (optionId: string) => {
-    setPickedId(optionId);
-    socket?.emit('player:submit', { pin, questionIndex: view.questionIndex, answer: optionId });
+    if (isMulti) {
+      setSelected((prev) =>
+        prev.includes(optionId) ? prev.filter((x) => x !== optionId) : [...prev, optionId],
+      );
+    } else {
+      setSelected([optionId]);
+      submit(optionId);
+    }
+  };
+
+  const moveOrder = (i: number, dir: -1 | 1) =>
+    setOrder((prev) => {
+      const next = [...prev];
+      const target = i + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[i], next[target]] = [next[target], next[i]];
+      return next;
+    });
+
+  /** Widget de réponse selon le type de question (§4/§5.3). */
+  const renderAnswerInput = () => {
+    if (!question) return <p className="text-muted-foreground">En attente de la question…</p>;
+    const opts = question.options ?? [];
+
+    // Saisie libre : numérique (nombre) ou texte.
+    if (question.type === 'numeric' || question.type === 'text_input') {
+      const numeric = question.type === 'numeric';
+      const valid = numeric
+        ? freeValue.trim() !== '' && Number.isFinite(Number(freeValue))
+        : freeValue.trim() !== '';
+      return (
+        <form
+          className="flex w-full flex-col gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!valid) return;
+            submit(numeric ? Number(freeValue) : freeValue.trim());
+          }}
+        >
+          <Input
+            value={freeValue}
+            onChange={(e) => setFreeValue(e.target.value)}
+            type={numeric ? 'number' : 'text'}
+            inputMode={numeric ? 'decimal' : 'text'}
+            placeholder={numeric ? 'Ta réponse (nombre)' : 'Ta réponse'}
+            className="text-center text-lg"
+          />
+          <Button type="submit" disabled={!valid}>
+            Valider ma réponse
+          </Button>
+        </form>
+      );
+    }
+
+    // Remise en ordre : liste réordonnable (monter/descendre) puis valider.
+    if (question.type === 'ordering' && opts.length) {
+      const ordered = order.length ? order : opts.map((o) => o.id);
+      return (
+        <div className="flex w-full flex-col gap-3">
+          <ul className="flex flex-col gap-2">
+            {ordered.map((id, i) => {
+              const o = opts.find((x) => x.id === id);
+              if (!o) return null;
+              return (
+                <li key={id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                  <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+                  <span className="flex-1 text-left">{o.text ?? o.color}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Monter"
+                    disabled={i === 0}
+                    onClick={() => moveOrder(i, -1)}
+                  >
+                    <ArrowUp className="size-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Descendre"
+                    disabled={i === ordered.length - 1}
+                    onClick={() => moveOrder(i, 1)}
+                  >
+                    <ArrowDown className="size-4" />
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+          <Button type="button" onClick={() => submit(ordered)}>
+            Valider ma réponse
+          </Button>
+        </div>
+      );
+    }
+
+    // À options (QCM unique/multi, V-F, sondage).
+    if (opts.length) {
+      return (
+        <>
+          <OptionGrid options={opts} onPick={onPick} selectedIds={selected} />
+          {isMulti ? (
+            <Button type="button" disabled={selected.length === 0} onClick={() => submit(selected)}>
+              Valider ma réponse
+            </Button>
+          ) : null}
+        </>
+      );
+    }
+
+    return <p className="text-muted-foreground">Type de question non pris en charge.</p>;
   };
 
   const wrap = (children: React.ReactNode) => (
@@ -125,18 +259,27 @@ export function PlayerPage() {
     );
   }
 
-  if (view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') {
-    const answered = pickedId !== null || view.answerAccepted === true;
-    if (answered) {
-      return wrap(<p className="text-xl font-semibold">Réponse enregistrée ✓</p>);
-    }
+  if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && question) {
+    const done = submitted || view.answerAccepted === true;
     return wrap(
-      view.question?.options?.length ? (
-        <OptionGrid options={view.question.options} onPick={onPick} pickedId={pickedId} />
-      ) : (
-        <p className="text-muted-foreground">En attente de la question…</p>
-      ),
+      <div className="flex w-full flex-col items-center gap-4">
+        {remaining !== null ? (
+          <span className="text-4xl font-bold tabular-nums" aria-label="Temps restant">
+            ⏱ {remaining}
+          </span>
+        ) : null}
+        <h1 className="text-xl font-semibold">{question.prompt}</h1>
+        {done ? (
+          <p className="text-xl font-semibold">Réponse enregistrée ✓</p>
+        ) : (
+          renderAnswerInput()
+        )}
+      </div>,
     );
+  }
+
+  if (view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') {
+    return wrap(<p className="text-muted-foreground">En attente de la question…</p>);
   }
 
   // ── LOBBY / attente ──────────────────────────────────────────────────────────

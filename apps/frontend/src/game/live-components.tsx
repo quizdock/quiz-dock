@@ -1,4 +1,9 @@
-import type { LeaderboardRow, PublicOption, QuestionRevealPayload } from '@roux-quizz/contracts';
+import type {
+  LeaderboardRow,
+  PublicOption,
+  QuestionRevealPayload,
+  QuestionStartPayload,
+} from '@roux-quizz/contracts';
 import { cn } from '@/lib/utils';
 
 /** Glyphe par forme — accessibilité couleur + forme (technique §4). */
@@ -25,14 +30,15 @@ export const COLOR_BG: Record<string, string> = {
 export function OptionGrid({
   options,
   onPick,
-  pickedId,
+  selectedIds,
   correctIds,
   disabled,
   size = 'md',
 }: {
   options: PublicOption[];
   onPick?: (optionId: string) => void;
-  pickedId?: string | null;
+  /** Options mises en évidence (réponse unique = 1 id ; multi = plusieurs). */
+  selectedIds?: string[];
   correctIds?: string[];
   disabled?: boolean;
   size?: 'md' | 'lg';
@@ -41,7 +47,7 @@ export function OptionGrid({
     <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
       {options.map((o) => {
         const isCorrect = correctIds?.includes(o.id);
-        const isPicked = pickedId === o.id;
+        const isPicked = selectedIds?.includes(o.id) ?? false;
         const dimmed = correctIds && !isCorrect; // au reveal, estompe les mauvaises
         const Tag = onPick ? 'button' : 'div';
         return (
@@ -98,6 +104,15 @@ export function Distribution({
                 className={cn('h-full', COLOR_BG[o.color] ?? 'bg-slate-600')}
                 style={{ width: `${pct}%` }}
               />
+              {/* Intitulé de la réponse en surimpression de la barre. */}
+              <span
+                className={cn(
+                  'absolute inset-0 flex items-center px-3 text-sm font-medium',
+                  isCorrect && 'font-semibold',
+                )}
+              >
+                {o.text ?? o.color}
+              </span>
             </div>
             <span className="w-16 text-right text-sm tabular-nums">
               {n} {isCorrect ? '✓' : ''}
@@ -106,6 +121,29 @@ export function Distribution({
         );
       })}
     </ul>
+  );
+}
+
+/**
+ * Révélation de la réponse : répartition par option si la question en a (QCM, V/F,
+ * ordre, sondage), sinon la **bonne valeur** (numérique / saisie texte).
+ */
+export function RevealAnswer({
+  question,
+  reveal,
+}: {
+  question: QuestionStartPayload;
+  reveal: QuestionRevealPayload;
+}) {
+  if (question.options?.length) {
+    return <Distribution options={question.options} reveal={reveal} />;
+  }
+  const val = reveal.correctValue;
+  const text = Array.isArray(val) ? val.join(' → ') : (val ?? '');
+  return (
+    <p className="text-xl">
+      Bonne réponse : <strong>{String(text)}</strong>
+    </p>
   );
 }
 

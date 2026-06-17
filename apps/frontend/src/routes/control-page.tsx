@@ -3,7 +3,8 @@ import { Eye, Play, Share2, SkipForward, Square, Users } from 'lucide-react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Distribution, LeaderboardList, Podium } from '../game/live-components';
+import { LeaderboardList, Podium, RevealAnswer } from '../game/live-components';
+import { useCountdown } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
 /**
@@ -22,6 +23,16 @@ export function ControlPage() {
   const screenUrl = `${window.location.origin}/present/${pin}/screen`;
   const emit = (event: 'host:start' | 'host:reveal' | 'host:next' | 'host:end') =>
     socket?.emit(event, { pin });
+  const remaining = useCountdown(
+    view.state === 'ANSWERING' && view.question ? view.question.endsAt : null,
+  );
+  const openScreen = () => window.open(screenUrl, '_blank', 'noopener,noreferrer');
+  const screenButton = (
+    <Button type="button" variant="outline" onClick={openScreen}>
+      <Eye className="size-4" />
+      Écran de projection
+    </Button>
+  );
 
   const qrFile = async (): Promise<File | null> => {
     const canvas = qrCanvasRef.current;
@@ -115,12 +126,7 @@ export function ControlPage() {
             <Share2 className="size-4" />
             Partager
           </Button>
-          <a href={screenUrl} target="_blank" rel="noreferrer">
-            <Button type="button" variant="outline">
-              <Eye className="size-4" />
-              Ouvrir l’écran projeté
-            </Button>
-          </a>
+          {screenButton}
         </div>
         {shareNote ? <p className="text-muted-foreground text-sm">{shareNote}</p> : null}
         <QRCodeCanvas value={joinUrl} size={512} ref={qrCanvasRef} className="hidden" />
@@ -153,9 +159,12 @@ export function ControlPage() {
   if (view.state === 'REVEAL' || view.state === 'LEADERBOARD') {
     return (
       <section className="mx-auto flex w-full max-w-2xl flex-col gap-5 py-6">
-        {header}
+        <div className="flex items-center justify-between">
+          {header}
+          {screenButton}
+        </div>
         {view.question && view.reveal ? (
-          <Distribution options={view.question.options ?? []} reveal={view.reveal} />
+          <RevealAnswer question={view.question} reveal={view.reveal} />
         ) : null}
         {view.leaderboard ? (
           <div>
@@ -190,11 +199,17 @@ export function ControlPage() {
   // ── ANSWERING / QUESTION_SHOW ──────────────────────────────────────────────
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-5 py-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <span className="text-muted-foreground text-sm">
           Question {view.questionIndex + 1} / {view.totalQuestions}
         </span>
+        {remaining !== null ? (
+          <span className="text-2xl font-bold tabular-nums" aria-label="Temps restant">
+            ⏱ {remaining}
+          </span>
+        ) : null}
         {header}
+        {screenButton}
       </div>
       <h1 className="text-2xl font-semibold">{view.question?.prompt}</h1>
       <p className="text-lg">

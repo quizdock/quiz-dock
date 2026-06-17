@@ -3,7 +3,7 @@ import { Maximize, Minimize, Users } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { useFullscreen } from '@/lib/use-fullscreen';
-import { Distribution, OptionGrid, Podium } from '../game/live-components';
+import { OptionGrid, Podium, RevealAnswer } from '../game/live-components';
 import { useCountdown } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
@@ -65,9 +65,7 @@ export function ScreenPage() {
     body = (
       <div className="flex w-full max-w-3xl flex-col items-center gap-6">
         <h1 className="text-center text-3xl font-semibold">{view.question.prompt}</h1>
-        {view.reveal ? (
-          <Distribution options={view.question.options ?? []} reveal={view.reveal} />
-        ) : null}
+        {view.reveal ? <RevealAnswer question={view.question} reveal={view.reveal} /> : null}
       </div>
     );
   } else if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && view.question) {
@@ -81,7 +79,11 @@ export function ScreenPage() {
             </span>
           ) : null}
         </div>
-        <OptionGrid options={view.question.options ?? []} size="lg" />
+        {view.question.options?.length ? (
+          <OptionGrid options={view.question.options} size="lg" />
+        ) : (
+          <p className="text-muted-foreground text-2xl">Réponds sur ton téléphone 📱</p>
+        )}
         {counter}
       </div>
     );
