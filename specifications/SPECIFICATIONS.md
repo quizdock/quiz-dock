@@ -231,6 +231,9 @@ points = P_max_temps * (bonnes_cochées - mauvaises_cochées) / total_bonnes   (
 
 ## 8. Machine à états de la partie
 
+> Liaison de chaque état aux **écrans** (contrôle / projeté / joueur) et au
+> multi-fenêtres présentateur : voir **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)**.
+
 ```
         host crée
           │
@@ -370,6 +373,9 @@ GET    /me/history                             historique (joueur connecté)
 ### Hôte déconnecté
 - La partie **se met en pause** (gel des timers) et passe en état `HOST_DISCONNECTED`.
 - Fenêtre de reconnexion (défaut 120 s) ; au-delà → partie terminée et résultats persistés en l'état.
+
+> Détection (`OnGatewayDisconnect`), délai de grâce, UX joueur/projeté, ré-attachement
+> hôte (`host:attach`), late join et persistance navigateur : **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)** §6–§8.
 
 ### Pannes d'instance
 - L'état vivant étant en Redis, une autre instance reprend la room via l'adapter ; les clients se reconnectent (Socket.IO reconnection automatique).

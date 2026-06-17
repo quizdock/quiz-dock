@@ -20,6 +20,7 @@ Lire dans cet ordre pour découvrir le projet :
 | 4 | **[SPECIFICATIONS-DONNEES.md](./SPECIFICATIONS-DONNEES.md)** | Dictionnaire de données (PostgreSQL + Redis), enums, RGPD, index | Backend, data |
 | 5 | **[SPECIFICATIONS-SEQUENCES.md](./SPECIFICATIONS-SEQUENCES.md)** | Diagrammes de séquence (Mermaid) des flux clés | Backend, frontend |
 | 6 | **[SPECIFICATIONS-ROADMAP.md](./SPECIFICATIONS-ROADMAP.md)** | Jalons à partir de v0.1.0 (suite ouverte en `0.x`), tâches par phase, dépendances ; v1.0.0 **non planifiée** (par éligibilité) | Lead, product, toute l'équipe |
+| 7 | **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)** | Partie live : présentateur multi-fenêtres (projeté + contrôle, cross-device), écrans joueurs, late join, reconnexion/persistance, `HOST_DISCONNECTED`, matrice état→écran | Frontend, backend |
 
 > Les documents se renvoient mutuellement (ex. `technique §5`, `RG-13`, `données §2.10`). Toute évolution de comportement doit mettre à jour **le document concerné dans le même commit** (cf. politique « tester & documenter », technique §18).
 
@@ -71,7 +72,7 @@ docker compose up -d         # stack complète (dev)
 
 - **v1 (Must)** : builder quiz privés, tous types de questions, session live individuelle (lobby→podium), join invité/SSO, notation temps+série, restitution + export CSV.
 - **Optionnel v1** : historique apprenant connecté, archivage, **mode capture intégrale** (audit/certification, avec avis aux apprenants).
-- **Backlog** : mode équipes (v1.1), mode asynchrone/devoir (v1.2), partage/bibliothèque publique, dashboard admin agrégé.
+- **Backlog** : mode équipes (v1.1), mode asynchrone/devoir (v1.2), partage/bibliothèque publique, dashboard admin agrégé, générateur d'avatars (multiavatar).
 
 Détail : [SPECIFICATIONS-METIER.md §13](./SPECIFICATIONS-METIER.md).
 

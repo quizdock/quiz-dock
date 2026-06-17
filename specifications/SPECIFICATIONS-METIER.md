@@ -76,6 +76,7 @@ Roux-Quizz est un outil de **quiz interactif en temps réel pour la formation pr
 - **Partage** de quiz entre formateurs / bibliothèque publique → ultérieur (v1 : privé uniquement).
 - Tableau de bord **administrateur** agrégé → v1.1.
 - Génération de questions par IA, import de banques externes.
+- **Générateur d'avatars** (multiavatar) : avatar déterministe dérivé du pseudo, affiché en lobby / classement / podium — cosmétique côté client, sans impact sur le contrat live.
 
 ---
 

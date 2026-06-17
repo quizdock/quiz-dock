@@ -266,6 +266,6 @@ L'effort est donné en relatif (S/M/L) **car les dates dépendent de la capacit�
 
 Alimente les `0.x` à venir (§ « Suite ouverte »), au fil des priorités et des besoins émergents — **sans rattachement à un jalon de release** :
 
-Mode **équipes** · mode **asynchrone/devoir** · **partage**/bibliothèque publique · **dashboard admin** agrégé · **AsyncAPI** pour le WS · génération de questions par IA. Détail : métier §4 / §13.
+Mode **équipes** · mode **asynchrone/devoir** · **partage**/bibliothèque publique · **dashboard admin** agrégé · **AsyncAPI** pour le WS · génération de questions par IA · **générateur d'avatars** (multiavatar : avatar déterministe dérivé du pseudo, affiché lobby/classement/podium — cosmétique côté client, sans impact sur le contrat live). Détail : métier §4 / §13.
 
 > Cette liste n'est pas exhaustive : de nouvelles fonctionnalités apparaîtront en cours de développement et viendront s'y ajouter.
