@@ -20,6 +20,12 @@ export default defineConfig({
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',
         changeOrigin: true,
       },
+      // Temps réel : Socket.IO (handshake + upgrade WebSocket) vers le backend.
+      '/socket.io': {
+        target: process.env.VITE_API_URL ?? 'http://localhost:3000',
+        changeOrigin: true,
+        ws: true,
+      },
     },
   },
   test: {

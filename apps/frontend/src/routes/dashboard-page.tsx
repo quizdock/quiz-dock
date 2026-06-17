@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { Plus } from 'lucide-react';
+import { Play, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useLaunchSession } from '../game/use-launch-session';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
@@ -25,6 +26,7 @@ export function DashboardPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuizzesControllerList();
   const create = useQuizzesControllerCreate();
+  const { launch, isLaunching, error: launchError } = useLaunchSession();
   const quizzes = data?.data ?? [];
 
   const onCreate = () => {
@@ -51,6 +53,7 @@ export function DashboardPage() {
 
       {isLoading && <p className="text-muted-foreground">Chargement…</p>}
       {error ? <p className="text-destructive">Impossible de charger les quiz.</p> : null}
+      {launchError ? <p className="text-destructive">{launchError}</p> : null}
 
       {!isLoading && !error && quizzes.length === 0 && (
         <p className="text-muted-foreground">Aucun quiz pour l’instant. Créez-en un !</p>
@@ -58,20 +61,32 @@ export function DashboardPage() {
 
       <ul className="flex flex-col gap-2">
         {quizzes.map((quiz) => (
-          <li key={quiz.id}>
+          <li
+            key={quiz.id}
+            className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
+          >
             <Link
               to="/quizzes/$quizId"
               params={{ quizId: quiz.id }}
-              className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
+              className="flex-1 font-semibold"
             >
-              <span className="flex-1 font-semibold">{quiz.title}</span>
-              <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
-                {STATUS_LABEL[quiz.status] ?? quiz.status}
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                {quiz.questionCount} question(s)
-              </span>
+              {quiz.title}
             </Link>
+            <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
+              {STATUS_LABEL[quiz.status] ?? quiz.status}
+            </Badge>
+            <span className="text-sm text-muted-foreground">{quiz.questionCount} question(s)</span>
+            {quiz.status === 'ready' && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={isLaunching}
+                onClick={() => void launch(quiz.id)}
+              >
+                <Play className="size-4" />
+                Présenter
+              </Button>
+            )}
           </li>
         ))}
       </ul>

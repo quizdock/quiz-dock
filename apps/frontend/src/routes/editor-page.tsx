@@ -1,7 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowDown, ArrowUp, ExternalLink, Pencil, Plus, Save, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ExternalLink, Pencil, Play, Plus, Save, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useLaunchSession } from '../game/use-launch-session';
 import type { QuizDetailDto } from '../api/generated/model';
 import { QuestionForm } from './question-form';
 import {
@@ -53,6 +54,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const removeQuiz = useQuizzesControllerRemove();
   const removeQuestion = useQuestionsControllerRemove();
   const reorder = useQuestionsControllerReorder();
+  const { launch, isLaunching, error: launchError } = useLaunchSession();
   const [editing, setEditing] = useState<string | 'new' | null>(null);
 
   const invalidate = () =>
@@ -182,6 +184,10 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         )}
         {quiz.status === 'ready' && (
           <>
+            <Button type="button" disabled={isLaunching} onClick={() => void launch(quiz.id)}>
+              <Play className="size-4" />
+              Présenter
+            </Button>
             <Button type="button" variant="outline" onClick={() => void changeStatus('draft')}>
               Repasser en brouillon
             </Button>
@@ -190,6 +196,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             </Button>
           </>
         )}
+        {launchError ? <p className="text-destructive w-full text-sm">{launchError}</p> : null}
         {quiz.status === 'archived' && (
           <Button type="button" variant="outline" onClick={() => void changeStatus('draft')}>
             Restaurer

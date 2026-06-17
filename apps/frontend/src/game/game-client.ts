@@ -1,0 +1,88 @@
+import type { ClientToServerEvents, ServerToClientEvents } from '@roux-quizz/contracts';
+import { type Socket, io } from 'socket.io-client';
+import { getAccessToken, getLocalUser } from '../auth/auth-context';
+
+/** Socket typé bout-en-bout (écoute serveur→client, émet client→serveur). */
+export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
+const ACK_TIMEOUT_MS = 8_000;
+
+// Singleton (comme getOidc) : le socket survit aux navigations entre lobby et
+// futurs écrans de jeu, et n'est jamais recréé par un effet de montage.
+let socket: GameSocket | null = null;
+
+/** Le socket courant (ou `null` si non connecté). */
+export function getGameSocket(): GameSocket | null {
+  return socket;
+}
+
+/** Ferme et oublie le socket courant. */
+export function disconnectGame(): void {
+  socket?.disconnect();
+  socket = null;
+}
+
+/**
+ * Connexion **hôte** : auth dérivée du contexte (mode oidc → `token` = access
+ * token ; mode none → `localUser`). Asynchrone car le token OIDC l'est.
+ */
+export async function connectHost(): Promise<GameSocket> {
+  const token = await getAccessToken();
+  const auth = token ? { token } : { localUser: getLocalUser() ?? 'Formateur' };
+  socket = io('/game', { auth, forceNew: true });
+  return socket;
+}
+
+/** Connexion **joueur** : aucune auth (invité — le backend l'accepte tel quel). */
+export function connectPlayer(): GameSocket {
+  socket = io('/game', { forceNew: true });
+  return socket;
+}
+
+/**
+ * Émet un event à accusé de réception, mais **rejette dès l'event `error`** typé
+ * du serveur (sur échec, le backend émet `error` et n'appelle jamais l'ack → sans
+ * cette course, l'appelant resterait bloqué indéfiniment).
+ */
+export function emitWithAckOrError<T>(
+  s: GameSocket,
+  event: keyof ClientToServerEvents,
+  payload: unknown,
+  timeoutMs = ACK_TIMEOUT_MS,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const cleanup = () => {
+      clearTimeout(timer);
+      s.off('error', onError);
+    };
+    const onError = (e: { code: string; message: string }) => {
+      cleanup();
+      reject(new Error(e.message || e.code));
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Le serveur n’a pas répondu, réessayez.'));
+    }, timeoutMs);
+
+    s.once('error', onError);
+    (s.emit as (e: string, p: unknown, ack: (res: T) => void) => void)(event, payload, (res) => {
+      cleanup();
+      resolve(res);
+    });
+  });
+}
+
+/** Hôte : ouvre une partie pour `quizId`, renvoie le PIN. */
+export async function createSession(quizId: string, fullCapture = false): Promise<{ pin: string }> {
+  const s = await connectHost();
+  return emitWithAckOrError<{ pin: string }>(s, 'host:create', { quizId, fullCapture });
+}
+
+/** Joueur : rejoint la partie `pin`, renvoie le jeton de session + playerId. */
+export async function joinSession(
+  pin: string,
+  nickname: string,
+): Promise<{ sessionToken: string; playerId: string }> {
+  const s = connectPlayer();
+  return emitWithAckOrError(s, 'player:join', { pin, nickname });
+}

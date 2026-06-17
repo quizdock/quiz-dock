@@ -26,6 +26,20 @@ export function isAuthenticated(): boolean {
   return currentMode === 'oidc' ? oidcAuthed : !!getLocalUser();
 }
 
+export function getAuthMode(): AuthMode {
+  return currentMode;
+}
+
+/**
+ * Jeton d'accès OIDC courant (mode oidc), pour le handshake WebSocket. `null` en
+ * mode none (l'hôte s'y identifie par son nom local via `getLocalUser`).
+ */
+export async function getAccessToken(): Promise<string | null> {
+  if (currentMode !== 'oidc') return null;
+  const user = await getOidc().getUser();
+  return user?.access_token ?? null;
+}
+
 function applyLocalUser(name: string | null): void {
   setAuthHeaders(name ? { 'X-Local-User': name } : {});
 }

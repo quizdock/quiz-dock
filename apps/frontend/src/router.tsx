@@ -3,8 +3,10 @@ import { isAuthenticated } from './auth/auth-context';
 import { CallbackPage } from './routes/callback-page';
 import { DashboardPage } from './routes/dashboard-page';
 import { EditorPage } from './routes/editor-page';
+import { JoinPage } from './routes/join-page';
 import { LandingPage } from './routes/landing-page';
 import { LoginPage } from './routes/login-page';
+import { PresentPage } from './routes/present-page';
 import { PreviewPage } from './routes/preview-page';
 import { RootLayout } from './routes/root-layout';
 
@@ -55,6 +57,27 @@ export const previewRoute = createRoute({
   component: PreviewPage,
 });
 
+// Salle d'attente hôte (PIN + QR). Auth requise (formateur).
+export const presentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/present/$pin',
+  beforeLoad: requireAuth,
+  component: PresentPage,
+});
+
+// Entrée joueur (publique). `/join` (saisie manuelle) et `/join/$pin` (via QR).
+export const joinRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/join',
+  component: JoinPage,
+});
+
+export const joinWithPinRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/join/$pin',
+  component: JoinPage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -62,6 +85,9 @@ export const routeTree = rootRoute.addChildren([
   dashboardRoute,
   editorRoute,
   previewRoute,
+  presentRoute,
+  joinRoute,
+  joinWithPinRoute,
 ]);
 
 export const router = createRouter({ routeTree });
