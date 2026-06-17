@@ -2,6 +2,10 @@ import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockApi, renderApp } from '../test/harness';
 
+vi.mock('../game/game-client', () => ({
+  createSession: vi.fn().mockResolvedValue({ pin: '482913' }),
+}));
+
 const detail = (over: Record<string, unknown> = {}) => ({
   id: 'q1',
   ownerId: 'o',
@@ -85,6 +89,18 @@ describe('EditorPage', () => {
     renderApp('/quizzes/q1');
     const publish = await screen.findByText('Publier (prêt)');
     expect(publish).toBeDisabled();
+  });
+
+  it('« Présenter » crée la partie et révèle les 3 accès (contrôle/projection/invitation)', async () => {
+    mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail({ status: 'ready' }) }]);
+    renderApp('/quizzes/q1');
+
+    fireEvent.click(await screen.findByRole('button', { name: /Présenter/ }));
+
+    expect(await screen.findByText(/Partie en cours/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /contrôle/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /projection/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /invitation/i })).toBeInTheDocument();
   });
 
   it('réordonne les questions (↓ → PATCH reorder avec le nouvel ordre)', async () => {
