@@ -132,12 +132,17 @@ export async function createSession(quizId: string, fullCapture = false): Promis
   return emitWithAckOrError<{ pin: string }>(s, 'host:create', { quizId, fullCapture });
 }
 
-/** Joueur : rejoint la partie `pin`, renvoie le jeton de session + playerId. */
+/**
+ * Joueur : rejoint la partie `pin`, renvoie le jeton de session + playerId.
+ * **Réutilise le socket existant** (`ensureGameSocket`) — celui sur lequel le hook
+ * a posé ses listeners : sinon le `player:join` partirait sur un 2ᵉ socket et la
+ * rafale d'état (roster, `question:start`) + les `player:submit` seraient perdus.
+ */
 export async function joinSession(
   pin: string,
   nickname: string,
 ): Promise<{ sessionToken: string; playerId: string }> {
-  const s = connectPlayer();
+  const s = await ensureGameSocket('guest');
   const res = await emitWithAckOrError<{ sessionToken: string; playerId: string }>(
     s,
     'player:join',
