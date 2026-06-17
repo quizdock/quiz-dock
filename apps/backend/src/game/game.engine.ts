@@ -358,9 +358,33 @@ export class GameEngine {
   }
 
   /**
+   * Progression de la question **sur les joueurs connectés** (§8). `answered` et
+   * `total` ne comptent QUE les connectés : une réponse persiste dans le hash après
+   * le départ de son auteur, donc comparer `hlen(answers)` au nombre de connectés
+   * révélerait à tort alors qu'un connecté n'a pas encore répondu. `allAnswered` est
+   * vrai seulement si **aucun connecté n'est en attente**.
+   */
+  private async connectedProgress(
+    pin: string,
+    questionIndex: number,
+  ): Promise<{ answered: number; total: number; allAnswered: boolean }> {
+    const players = await this.redis.hgetall(gameKeys.players(pin));
+    const answeredIds = new Set(await this.redis.hkeys(gameKeys.answers(pin, questionIndex)));
+    let total = 0;
+    let answered = 0;
+    for (const [id, json] of Object.entries(players)) {
+      if (!(JSON.parse(json) as PlayerRecord).connected) continue;
+      total++;
+      if (answeredIds.has(id)) answered++;
+    }
+    return { answered, total, allAnswered: total > 0 && answered >= total };
+  }
+
+  /**
    * Déconnexion d'un joueur (§8) : `connected=false`, diffusion `player:left` avec
    * le compte des **connectés**, puis **re-vérification de la convergence** — un
-   * départ peut compléter « tous les connectés ont répondu » sans nouveau submit.
+   * départ peut compléter « tous les connectés ont répondu » sans nouveau submit
+   * (le départ ne déclenche le REVEAL que si aucun connecté restant n'est en attente).
    */
   async handlePlayerDisconnect(pin: string, playerId: string): Promise<void> {
     const record = await this.game.setConnected(pin, playerId, false);
@@ -369,9 +393,10 @@ export class GameEngine {
     this.server.to(pin).emit('player:left', { playerId, playerCount });
 
     const meta = await this.game.getMeta(pin);
-    if (meta && meta.state === GameState.Answering && playerCount > 0) {
-      const answered = await this.redis.hlen(gameKeys.answers(pin, meta.currentIndex));
-      if (answered >= playerCount) {
+    if (meta && meta.state === GameState.Answering) {
+      const { answered, total, allAnswered } = await this.connectedProgress(pin, meta.currentIndex);
+      this.server.to(pin).emit('answer:count', { answered, total }); // total a baissé
+      if (allAnswered) {
         await this.advanceToReveal(pin, meta.currentIndex, 'all');
       }
     }
@@ -623,13 +648,12 @@ export class GameEngine {
     await this.redis.hset(gameKeys.players(pin), playerId, JSON.stringify(player));
     await this.redis.zadd(gameKeys.leaderboard(pin), player.score, playerId);
 
-    const answered = await this.redis.hlen(gameKeys.answers(pin, questionIndex));
-    // §8 : convergence sur les **connectés**, pas le total jamais joint (sinon un
-    // seul départ figerait la question jusqu'au timer).
-    const total = await this.game.connectedCount(pin);
+    // §8 : convergence sur les **connectés en attente**, pas le total jamais joint
+    // (sinon un seul départ figerait la question jusqu'au timer).
+    const { answered, total, allAnswered } = await this.connectedProgress(pin, questionIndex);
     this.server.to(pin).emit('answer:count', { answered, total });
 
-    if (total > 0 && answered >= total) {
+    if (allAnswered) {
       await this.advanceToReveal(pin, questionIndex, 'all');
     }
     return { accepted: true, receivedAt };

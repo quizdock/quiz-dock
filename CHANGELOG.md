@@ -38,9 +38,28 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 - **Spécification de la partie live** ([SPECIFICATIONS-LIVE.md](specifications/SPECIFICATIONS-LIVE.md)) :
   présentateur multi-fenêtres (projeté = socket spectateur, contrôle = hôte, cross-device),
   late join, reconnexion/persistance navigateur, `HOST_DISCONNECTED`, matrice état→écran.
+- **Rattachement live (SPECIFICATIONS-LIVE §3/§5/§6)** : events de contrat `host:attach`
+  et `spectator:join`. **Late join** (§5) — un joueur peut rejoindre une partie déjà
+  démarrée (refus seulement en `ENDED`) et reçoit l'**état courant** (`game:state` +
+  `question:start`/reveal/podium, résultat perso si joueur). **Spectateur** (§3) :
+  `spectator:join` rejoint la room en lecture seule, sans enregistrement → n'affecte ni
+  les compteurs ni la convergence. **Reconnexion joueur** (§6.1, `player:reconnect`) et
+  **`host:attach`** (§4.2, rebind du propriétaire) ; index Redis `host:{userId}:games`
+  des parties en cours (§6.2).
+- **Convergence sur les connectés (§8)** : `answer:count` et la bascule REVEAL ne comptent
+  que les **joueurs connectés encore en attente** (une réponse persiste après le départ
+  de son auteur) ; re-vérifiée à la déconnexion d'un joueur (`player:left` + recompte)
+  pour ne plus figer la question jusqu'au timer.
+- **Présentateur déconnecté (§7)** : `OnGatewayDisconnect` → délai de grâce (5 s, absorbe
+  un rechargement) puis état **`HOST_DISCONNECTED`** ; en `ANSWERING`, le timer de question
+  est **mis en pause** (ms restantes figées). Fenêtre de reconnexion (120 s) au-delà de
+  laquelle la partie se termine (`game:ended`). `host:attach` **reprend** là où la partie
+  en était (`endsAt` recalculé, `question:start` re-diffusé).
 - **Tests d'intégration socket réels** (boucle `create → join → start → submit → reveal →
-  podium`, REVEAL une seule fois sous concurrence) ; CI dotée de services **Postgres + Redis**
-  + `prisma migrate deploy`. Tests front : PIN/QR/compteur joueurs, échec join non bloquant.
+  podium`, REVEAL une seule fois sous concurrence ; late join, spectateur, reconnexion,
+  host:attach, convergence au départ, pause/reprise/fin auto hôte, index parties en cours) ;
+  CI dotée de services **Postgres + Redis** + `prisma migrate deploy`. Tests front :
+  PIN/QR/compteur joueurs, échec join non bloquant.
 
 ### Changed
 - Ports hôte de dev alignés sur le schéma **`1xxxx`** (13000/15173/15432/16379/18080/18081) :

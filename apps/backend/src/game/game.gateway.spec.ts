@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { type Socket, io } from 'socket.io-client';
 import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { GameService } from './game.service';
 
 /**
  * Test d'INTÉGRATION : vraie connexion socket.io-client → gateway /game.
@@ -14,6 +15,7 @@ describe('GameGateway (intégration socket)', () => {
   let prisma: PrismaService;
   let url: string;
   let quizId: string;
+  let hostUserId: string;
   const sockets: Socket[] = [];
 
   const connect = (auth?: Record<string, string>): Socket => {
@@ -39,6 +41,7 @@ describe('GameGateway (intégration socket)', () => {
       create: { oidcSubject: 'local:formateur', displayName: 'Formateur', role: 'host' },
       update: {},
     });
+    hostUserId = host.id;
     const quiz = await prisma.quiz.create({
       data: {
         ownerId: host.id,
@@ -390,12 +393,13 @@ describe('GameGateway (intégration socket)', () => {
 
     const states: string[] = [];
     player.on('game:state', (s: { state: string }) => states.push(s.state));
-    const qStart = new Promise<{ startedAt: number }>((resolve) =>
-      player.on('question:start', (q) => resolve(q as never)),
-    );
+    const qStarts: Array<{ startedAt: number; endsAt: number }> = [];
+    player.on('question:start', (q) => qStarts.push(q as never));
 
     host.emit('host:start', { pin });
-    await qStart; // ANSWERING ouvert
+    await new Promise<void>((resolve) => {
+      const id = setInterval(() => qStarts.length >= 1 && (clearInterval(id), resolve()), 20);
+    }); // ANSWERING ouvert
 
     // L'hôte se déconnecte : après la grâce (200 ms), passage en HOST_DISCONNECTED.
     const pausedP = new Promise<void>((resolve) => {
@@ -425,6 +429,60 @@ describe('GameGateway (intégration socket)', () => {
     const attachAck = await control2.emitWithAck('host:attach', { pin });
     expect(attachAck.ok).toBe(true);
     await resumedP;
+
+    // La reprise recalcule les timings sur le temps restant (§7.3) : la fenêtre
+    // garde sa durée (timeLimitS=5 → 5000 ms) et se termine dans le futur.
+    const resumed = qStarts[qStarts.length - 1];
+    expect(resumed.endsAt - resumed.startedAt).toBeGreaterThanOrEqual(4500);
+    expect(resumed.endsAt - resumed.startedAt).toBeLessThanOrEqual(5500);
+    expect(resumed.endsAt).toBeGreaterThan(Date.now());
+  }, 15_000);
+
+  it('convergence (§8) : le départ de l’unique répondant ne révèle pas tant qu’un connecté attend', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const p1 = connect();
+    await p1.emitWithAck('player:join', { pin, nickname: 'Kim' });
+    const p2 = connect();
+    await p2.emitWithAck('player:join', { pin, nickname: 'Léo' });
+
+    let revealed = false;
+    p2.on('game:state', (s: { state: string }) => {
+      if (s.state === 'REVEAL') revealed = true;
+    });
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => p1.on('question:start', (q) => resolve(q as never)),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+
+    // p1 (le seul répondant) répond puis quitte. p2 reste connecté SANS avoir répondu :
+    // sa réponse manquante doit empêcher le REVEAL (le bug naïf hlen≥connectés révélerait).
+    p1.emit('player:submit', {
+      pin,
+      questionIndex: 0,
+      answer: q.options.find((o) => o.text === 'Paris')!.id,
+    });
+    await new Promise((r) => setTimeout(r, 150));
+    p1.disconnect();
+    await new Promise((r) => setTimeout(r, 400));
+    expect(revealed).toBe(false);
+  }, 15_000);
+
+  it('index parties en cours (§6.2) : présent après host:create, purgé après host:end', async () => {
+    const games = app.get(GameService);
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    const active = await games.listActiveHostGames(hostUserId);
+    expect(active.some((g) => g.pin === pin)).toBe(true);
+
+    host.emit('host:end', { pin });
+    await new Promise((r) => setTimeout(r, 200));
+    const after = await games.listActiveHostGames(hostUserId);
+    expect(after.some((g) => g.pin === pin)).toBe(false);
   }, 15_000);
 
   it('hôte non revenu (§7.3) : la fenêtre expire → la partie se termine (game:ended)', async () => {
