@@ -8,7 +8,11 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import type { ClientToServerEvents, ServerToClientEvents } from '@roux-quizz/contracts';
+import type {
+  AnswerValue,
+  ClientToServerEvents,
+  ServerToClientEvents,
+} from '@roux-quizz/contracts';
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import type { Server, Socket } from 'socket.io';
@@ -131,6 +135,30 @@ export class GameGateway implements OnGatewayInit {
     @MessageBody() payload: { pin: string },
   ): Promise<void> {
     await this.engine.start(payload.pin, this.requireHostId(socket));
+  }
+
+  /**
+   * `player:submit` : soumet une réponse. Le serveur réhorodate à la réception
+   * (§6) ; l'accusé `answer:ack` est renvoyé au seul socket émetteur.
+   */
+  @SubscribeMessage('player:submit')
+  async playerSubmit(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; questionIndex: number; answer: AnswerValue },
+  ): Promise<void> {
+    const receivedAt = Date.now();
+    const playerId = socket.data.playerId;
+    if (!playerId) {
+      throw new WsException('Rejoignez la partie avant de répondre.');
+    }
+    const ack = await this.engine.submit(
+      payload.pin,
+      playerId,
+      payload.questionIndex,
+      payload.answer,
+      receivedAt,
+    );
+    socket.emit('answer:ack', ack);
   }
 
   @SubscribeMessage('ping')

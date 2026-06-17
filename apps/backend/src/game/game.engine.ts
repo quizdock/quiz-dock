@@ -1,11 +1,12 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { GameState } from '@roux-quizz/contracts';
-import type { ServerToClientEvents } from '@roux-quizz/contracts';
+import type { AnswerValue, ServerToClientEvents } from '@roux-quizz/contracts';
 import type { Server } from 'socket.io';
 import { GameService } from './game.service';
 import { GAME_TTL_S, GRACE_MS, READ_DELAY_MS, gameKeys } from './game.keys';
-import type { GameMeta, QuizSnapshot } from './game.types';
+import type { AnswerRecord, GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
 import { RedisService } from '../redis/redis.service';
+import { scoreAnswer } from './scoring';
 import { buildQuestionStart } from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
@@ -127,6 +128,82 @@ export class GameEngine {
       totalQuestions: meta.totalQuestions,
     });
     // TODO (P3-BACK-7) : question:reveal (distribution + résultat perso) + leaderboard.
+  }
+
+  /**
+   * `player:submit` : note une réponse avec **timing serveur autoritatif** (§6).
+   * Rejette (accepted=false, sans scorer) si hors fenêtre [startedAt, endsAt+grace]
+   * ou si le joueur a déjà répondu (unicité atomique `HSETNX`, RG-06). Le résultat
+   * gradé est stocké (REVEAL le relit, pas de re-notation), le score + le ZSet
+   * classement sont mis à jour, et `answer:count` est diffusé. Si tous les joueurs
+   * connectés ont répondu, déclenche le REVEAL anticipé (2e chemin de convergence).
+   *
+   * @returns accusé à renvoyer au socket émetteur (answer:ack).
+   */
+  async submit(
+    pin: string,
+    playerId: string,
+    questionIndex: number,
+    answer: AnswerValue,
+    receivedAt: number,
+  ): Promise<{ accepted: boolean; receivedAt: number }> {
+    const meta = await this.game.getMeta(pin);
+    const reject = { accepted: false, receivedAt };
+    if (!meta || meta.state !== GameState.Answering || meta.currentIndex !== questionIndex) {
+      return reject; // mauvaise question / fenêtre fermée
+    }
+    if (receivedAt < meta.questionStartedAt || receivedAt > meta.questionEndsAt + GRACE_MS) {
+      return reject; // trop tôt (lecture) ou hors délai (§6)
+    }
+
+    const player = await this.getPlayer(pin, playerId);
+    const snapshot = await this.game.getSnapshot(pin);
+    if (!player || !snapshot) {
+      return reject;
+    }
+    const question = snapshot.questions[questionIndex];
+
+    // Temps serveur compensé de la latence (§6) ; latencyMs = RTT/2 (0 tant que non câblé).
+    const tMs = Math.max(0, receivedAt - meta.questionStartedAt - player.latencyMs);
+    const score = scoreAnswer({ question, answer, tMs, prevStreak: player.streak });
+    const record: AnswerRecord = {
+      answer,
+      isCorrect: score.correct,
+      pointsAwarded: score.points,
+      tMs,
+      receivedAt,
+    };
+
+    // Unicité : 1re réponse gagne (RG-06). Si déjà répondu, on ne score pas.
+    const won = await this.redis.hsetnx(
+      gameKeys.answers(pin, questionIndex),
+      playerId,
+      JSON.stringify(record),
+    );
+    if (won === 0) {
+      return reject;
+    }
+    await this.redis.expire(gameKeys.answers(pin, questionIndex), GAME_TTL_S);
+
+    // Applique le score (read-modify-write sûr : 1 seul socket par joueur).
+    player.score += score.points;
+    player.streak = score.newStreak;
+    await this.redis.hset(gameKeys.players(pin), playerId, JSON.stringify(player));
+    await this.redis.zadd(gameKeys.leaderboard(pin), player.score, playerId);
+
+    const answered = await this.redis.hlen(gameKeys.answers(pin, questionIndex));
+    const total = await this.redis.hlen(gameKeys.players(pin));
+    this.server.to(pin).emit('answer:count', { answered, total });
+
+    if (answered >= total) {
+      await this.advanceToReveal(pin, questionIndex, 'all');
+    }
+    return { accepted: true, receivedAt };
+  }
+
+  private async getPlayer(pin: string, playerId: string): Promise<PlayerRecord | null> {
+    const raw = await this.redis.hget(gameKeys.players(pin), playerId);
+    return raw ? (JSON.parse(raw) as PlayerRecord) : null;
   }
 
   /** Charge les méta en exigeant que l'appelant soit l'hôte propriétaire. */

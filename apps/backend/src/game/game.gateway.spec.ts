@@ -165,4 +165,53 @@ describe('GameGateway (intégration socket)', () => {
     await new Promise((r) => setTimeout(r, 6000));
     expect(revealCount).toBe(1);
   }, 15_000);
+
+  it('player:submit : accepté + scoré, doublon rejeté, REVEAL une seule fois (all + timer)', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Dan' });
+
+    let revealCount = 0;
+    player.on('game:state', (s: { state: string }) => {
+      if (s.state === 'REVEAL') revealCount++;
+    });
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => player.on('question:start', (q) => resolve(q as never)),
+    );
+
+    // answer:ack est un event (pas un ack Socket.IO) → on les met en file.
+    const acks: Array<{ accepted: boolean }> = [];
+    let nextAck: (() => void) | null = null;
+    player.on('answer:ack', (a) => {
+      acks.push(a as { accepted: boolean });
+      nextAck?.();
+    });
+    const waitAck = (n: number) =>
+      new Promise<void>((resolve) => {
+        nextAck = () => acks.length >= n && resolve();
+        if (acks.length >= n) resolve();
+      });
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    const parisId = q.options.find((o) => o.text === 'Paris')!.id;
+
+    // Attendre l'ouverture des réponses (startedAt) avant de soumettre.
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+
+    player.emit('player:submit', { pin, questionIndex: 0, answer: parisId });
+    await waitAck(1);
+    expect(acks[0].accepted).toBe(true);
+
+    // 2e réponse du même joueur : rejetée (unicité RG-06).
+    player.emit('player:submit', { pin, questionIndex: 0, answer: parisId });
+    await waitAck(2);
+    expect(acks[1].accepted).toBe(false);
+
+    // 1 joueur sur 1 a répondu → REVEAL anticipé ('all'). Puis le timer s'écoulera :
+    // le verrou NX doit l'absorber → toujours UN seul REVEAL.
+    await new Promise((r) => setTimeout(r, 6000));
+    expect(revealCount).toBe(1);
+  }, 15_000);
 });
