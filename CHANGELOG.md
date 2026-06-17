@@ -11,8 +11,21 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   (réutilise `AuthProvider` ; invité si pas d'auth), `ping`/`pong` (RTT). Service **Redis** (ioredis)
   pour l'état live. **Contrat WS typé bout-en-bout** dans `@roux-quizz/contracts` : payloads §9 +
   maps `ClientToServerEvents`/`ServerToClientEvents` (gateway et futur `socket.io-client`).
-- **Tests d'intégration socket réels** (socket.io-client → gateway) ; CI dotée de services
-  **Postgres + Redis** + `prisma migrate deploy` pour les exécuter. Redis exposé en dev (`REDIS_PORT`).
+- **Scoring (cœur produit §5/§6)** : fonction **pure** et déterministe — points = base
+  (1000/2000/0) pondérés par la rapidité (`1 - ratio/2`) + bonus de série (cap +500) ;
+  **grading par type** (§4 : QCM unique/multi tout-ou-rien, V/F, ordre, texte normalisé,
+  numérique ±tolérance, sondage = 0). **Golden tests, couverture 100 %**.
+- **Création de partie** (`host:create`) : snapshot serveur figé du quiz `ready` (bonnes
+  réponses côté serveur, anti-triche §7), **PIN à 6 chiffres unique** (claim atomique
+  Redis auto-expirant), état `LOBBY`.
+- **Lobby** (`player:join`) : pseudo unique atomique, joueur à 0 point, **jeton de session**
+  pour la reconnexion, notification `player:joined` à la room.
+- **Tests d'intégration socket réels** (socket.io-client → gateway : create → join → dédoublonnage
+  pseudo) ; CI dotée de services **Postgres + Redis** + `prisma migrate deploy` pour les exécuter.
+
+### Changed
+- Ports hôte de dev alignés sur le schéma **`1xxxx`** (13000/15173/15432/16379/18080/18081) :
+  `.env.example`, compose, défauts `prisma.config`/`redis.service`, realm Keycloak, README.
 
 ## [0.2.0] - 2026-06-12 — Builder + Auth
 
