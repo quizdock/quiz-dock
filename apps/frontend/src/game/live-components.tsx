@@ -135,11 +135,27 @@ export function RevealAnswer({
   question: QuestionStartPayload;
   reveal: QuestionRevealPayload;
 }) {
-  if (question.options?.length) {
-    return <Distribution options={question.options} reveal={reveal} />;
+  const opts = question.options;
+
+  // QCM / V-F / sondage : répartition par option (avec intitulés).
+  if (opts?.length && question.type !== 'ordering') {
+    return <Distribution options={opts} reveal={reveal} />;
   }
+
+  // Remise en ordre : la « bonne valeur » est une liste d'ids → on affiche les intitulés.
+  if (question.type === 'ordering' && opts?.length) {
+    const ids = Array.isArray(reveal.correctValue) ? reveal.correctValue : [];
+    const labels = ids.map((id) => opts.find((o) => o.id === id)?.text ?? id);
+    return (
+      <p className="text-xl">
+        Bon ordre : <strong>{labels.join(' → ')}</strong>
+      </p>
+    );
+  }
+
+  // Numérique / saisie texte : valeur(s) acceptée(s).
   const val = reveal.correctValue;
-  const text = Array.isArray(val) ? val.join(' → ') : (val ?? '');
+  const text = Array.isArray(val) ? val.join(' ou ') : (val ?? '');
   return (
     <p className="text-xl">
       Bonne réponse : <strong>{String(text)}</strong>
