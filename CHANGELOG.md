@@ -20,8 +20,22 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   Redis auto-expirant), état `LOBBY`.
 - **Lobby** (`player:join`) : pseudo unique atomique, joueur à 0 point, **jeton de session**
   pour la reconnexion, notification `player:joined` à la room.
-- **Tests d'intégration socket réels** (socket.io-client → gateway : create → join → dédoublonnage
-  pseudo) ; CI dotée de services **Postgres + Redis** + `prisma migrate deploy` pour les exécuter.
+- **Machine à états (§8)** : `host:start` ouvre une question (timings serveur autoritatifs,
+  `question:start` par **allowlist** sans flag correct), transition `ANSWERING → REVEAL`
+  **idempotente** (verrou atomique NX — timer écoulé / tous ont répondu / `host:reveal`
+  convergent sans double-reveal).
+- **Réponses** (`player:submit`) : **timing serveur** (§6, rejet hors fenêtre), unicité
+  `HSETNX` (RG-06), scoring branché, résultat gradé stocké, `answer:count` diffusé.
+- **Reveal & classement** : `question:reveal` **personnel par socket** (bonnes réponses +
+  répartition + résultat perso) puis `leaderboard` ; `host:next` (question suivante / podium,
+  verrou anti double-clic), `game:podium` (top 3), `host:end` (PIN invalidé §7).
+- **Partage de partie (front)** : bouton **« Présenter »** (éditeur + liste, quiz `ready`)
+  → salle d'attente hôte **`/present/:pin`** avec **PIN en grand + QR code** et liste des
+  joueurs en temps réel ; entrée joueur publique **`/join` / `/join/:pin`** (QR). Client
+  Socket.IO typé (singleton), proxy Vite `/socket.io`.
+- **Tests d'intégration socket réels** (boucle `create → join → start → submit → reveal →
+  podium`, REVEAL une seule fois sous concurrence) ; CI dotée de services **Postgres + Redis**
+  + `prisma migrate deploy`. Tests front : PIN/QR/compteur joueurs, échec join non bloquant.
 
 ### Changed
 - Ports hôte de dev alignés sur le schéma **`1xxxx`** (13000/15173/15432/16379/18080/18081) :
