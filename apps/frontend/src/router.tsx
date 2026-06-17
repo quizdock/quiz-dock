@@ -1,13 +1,15 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { isAuthenticated } from './auth/auth-context';
 import { CallbackPage } from './routes/callback-page';
+import { ControlPage } from './routes/control-page';
 import { DashboardPage } from './routes/dashboard-page';
 import { EditorPage } from './routes/editor-page';
 import { JoinPage } from './routes/join-page';
 import { LandingPage } from './routes/landing-page';
 import { LoginPage } from './routes/login-page';
-import { PresentPage } from './routes/present-page';
+import { PlayerPage } from './routes/player-page';
 import { PreviewPage } from './routes/preview-page';
+import { ScreenPage } from './routes/screen-page';
 import { RootLayout } from './routes/root-layout';
 
 const requireAuth = () => {
@@ -57,15 +59,31 @@ export const previewRoute = createRoute({
   component: PreviewPage,
 });
 
-// Salle d'attente hôte (PIN + QR). Auth requise (formateur).
-export const presentRoute = createRoute({
+// Console d'animation (hôte, §3). Auth requise (propriétaire).
+export const controlRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/present/$pin',
+  path: '/present/$pin/control',
   beforeLoad: requireAuth,
-  component: PresentPage,
+  component: ControlPage,
 });
 
-// Entrée joueur (publique). `/join` (saisie manuelle) et `/join/$pin` (via QR).
+// Écran de jeu projeté (grand écran, §4). Spectateur en lecture seule, aucune auth.
+export const screenRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/present/$pin/screen',
+  component: ScreenPage,
+});
+
+// Ancienne salle d'attente mono-fenêtre → console de contrôle (§4.1 interim).
+export const presentRedirectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/present/$pin',
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: '/present/$pin/control', params });
+  },
+});
+
+// Entrée joueur (publique). `/join` (saisie du PIN) et `/join/$pin` (machine à états).
 export const joinRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/join',
@@ -75,7 +93,7 @@ export const joinRoute = createRoute({
 export const joinWithPinRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/join/$pin',
-  component: JoinPage,
+  component: PlayerPage,
 });
 
 export const routeTree = rootRoute.addChildren([
@@ -85,7 +103,9 @@ export const routeTree = rootRoute.addChildren([
   dashboardRoute,
   editorRoute,
   previewRoute,
-  presentRoute,
+  controlRoute,
+  screenRoute,
+  presentRedirectRoute,
   joinRoute,
   joinWithPinRoute,
 ]);

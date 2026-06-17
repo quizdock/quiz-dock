@@ -18,7 +18,7 @@ export function useLaunchSession() {
       setIsLaunching(true);
       try {
         const { pin } = await createSession(quizId);
-        await navigate({ to: '/present/$pin', params: { pin } });
+        await navigate({ to: '/present/$pin/control', params: { pin } });
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Échec du lancement de la partie.');
       } finally {

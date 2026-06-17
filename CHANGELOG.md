@@ -56,6 +56,16 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   est **mis en pause** (ms restantes figées). Fenêtre de reconnexion (120 s) au-delà de
   laquelle la partie se termine (`game:ended`). `host:attach` **reprend** là où la partie
   en était (`endsAt` recalculé, `question:start` re-diffusé).
+- **Écrans live (P3-FRONT-2/3/4, §10.3)** : fondation client (`useGameSession` — vue
+  unifiée, listeners posés avant le kick, socket unique anti-StrictMode ; `useCountdown`
+  dérivé des timestamps serveur ; persistance `roux.session`). **Console d'animation**
+  `/present/$pin/control` (lobby PIN/QR/roster + démarrer ; compteur + révéler/terminer ;
+  répartition + classement + suivant ; podium) survivant au rechargement via `host:attach`.
+  **Écran projeté** `/present/$pin/screen` (spectateur lecture seule, plein écran : lobby,
+  question + chrono + compteur, répartition, podium ; jamais la bonne réponse avant reveal).
+  **Client apprenant** `/join/$pin` (machine à états : reprise `player:reconnect` sinon
+  écran pseudo ; grille de réponse verrouillée à 1, feedback perso, podium, avis capture).
+  `/present/$pin` redirige vers `…/control`.
 - **Tests d'intégration socket réels** (boucle `create → join → start → submit → reveal →
   podium`, REVEAL une seule fois sous concurrence ; late join, spectateur, reconnexion,
   host:attach, convergence au départ, pause/reprise/fin auto hôte, index parties en cours) ;
