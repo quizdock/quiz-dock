@@ -13,7 +13,7 @@ if (!process.env.DATABASE_URL) {
   const user = process.env.POSTGRES_USER ?? 'roux';
   const password = process.env.POSTGRES_PASSWORD ?? 'roux';
   const db = process.env.POSTGRES_DB ?? 'rouxquizz';
-  const port = process.env.POSTGRES_PORT ?? '45432';
+  const port = process.env.POSTGRES_PORT ?? '15432';
   process.env.DATABASE_URL = `postgresql://${user}:${password}@localhost:${port}/${db}?schema=public`;
 }
 

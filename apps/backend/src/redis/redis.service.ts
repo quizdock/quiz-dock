@@ -10,7 +10,7 @@ export class RedisService extends Redis implements OnModuleDestroy {
   private readonly log = new Logger(RedisService.name);
 
   constructor() {
-    super(process.env.REDIS_URL ?? 'redis://localhost:46379', {
+    super(process.env.REDIS_URL ?? 'redis://localhost:16379', {
       maxRetriesPerRequest: 3,
       lazyConnect: false,
     });

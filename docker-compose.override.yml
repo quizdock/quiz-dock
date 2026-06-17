@@ -8,24 +8,25 @@ services:
   # tourne depuis la machine. La stack interne continue d'utiliser `postgres:5432`.
   postgres:
     ports:
-      - '${POSTGRES_PORT:-45432}:5432'
+      - '${POSTGRES_PORT:-15432}:5432'
 
   # Exposé en dev pour les tests d'intégration WS/Redis depuis l'hôte.
   redis:
     ports:
-      - '${REDIS_PORT:-46379}:6379'
+      - '${REDIS_PORT:-16379}:6379'
 
   backend:
     build:
       target: build
     working_dir: /app/apps/backend
-    # install (deps à jour) → migrations idempotentes → nest en watch.
+    # install (deps à jour) → build du contrat (dist non monté → recompilé depuis
+    # le src monté) → migrations idempotentes → nest en watch.
     # `nest` exécuté directement pour éviter la vérif de deps de pnpm 11 sans TTY.
     command:
       [
         'sh',
         '-c',
-        'pnpm install --filter @roux-quizz/backend... --frozen-lockfile --prefer-offline && node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
+        'pnpm install --filter @roux-quizz/backend... --frozen-lockfile --prefer-offline && pnpm --filter @roux-quizz/contracts build && node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
       ]
     environment:
       NODE_ENV: development
@@ -46,7 +47,7 @@ services:
       - ./apps/backend/src:/app/apps/backend/src
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - '${BACKEND_PORT:-43000}:3000'
+      - '${BACKEND_PORT:-13000}:3000'
 
   frontend:
     build:
@@ -55,7 +56,7 @@ services:
       [
         'sh',
         '-c',
-        'pnpm install --filter @roux-quizz/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @roux-quizz/frontend dev --host --port 5173',
+        'pnpm install --filter @roux-quizz/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @roux-quizz/contracts build && pnpm --filter @roux-quizz/frontend dev --host --port 5173',
       ]
     environment:
       VITE_API_URL: http://backend:3000
@@ -76,6 +77,6 @@ services:
       - ./apps/frontend/index.html:/app/apps/frontend/index.html
       - ./packages/contracts/src:/app/packages/contracts/src
     ports:
-      - '${VITE_PORT:-45173}:5173'
+      - '${VITE_PORT:-15173}:5173'
     depends_on:
       - backend
