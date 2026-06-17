@@ -44,6 +44,34 @@ export interface QuizSnapshot {
   questions: SnapshotQuestion[];
 }
 
+/** Enregistrement d'un joueur dans l'état live (Redis hash `:players`). */
+export interface PlayerRecord {
+  nickname: string;
+  /** Compte lié si apprenant authentifié, sinon `null` (invité). */
+  userId: string | null;
+  score: number;
+  streak: number;
+  connected: boolean;
+  /** ms epoch d'arrivée (départage des égalités §5). */
+  joinedAt: number;
+  /** RTT/2 mesuré au join (compensation latence §6). */
+  latencyMs: number;
+}
+
+/** État scalaire d'une partie (Redis hash `game:{pin}`). */
+export interface GameMeta {
+  id: string;
+  quizId: string;
+  hostUserId: string;
+  state: string;
+  currentIndex: number;
+  totalQuestions: number;
+  fullCapture: boolean;
+  title: string;
+  language: string;
+  createdAt: number;
+}
+
 /** Résultat de notation d'une soumission (sortie de la fonction pure §5). */
 export interface ScoreResult {
   correct: boolean;
