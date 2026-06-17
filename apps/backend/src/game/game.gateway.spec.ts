@@ -113,12 +113,14 @@ describe('GameGateway (intégration socket)', () => {
     await p1.emitWithAck('player:join', { pin, nickname: 'Bob' });
 
     const p2 = connect();
-    // En cas d'erreur serveur (ConflictException), l'ack n'est jamais appelé →
-    // on attend l'event `exception` du filtre WS de Nest.
-    const rejected = await Promise.race([
-      new Promise<'exception'>((resolve) => p2.on('exception', () => resolve('exception'))),
-      p2.emitWithAck('player:join', { pin, nickname: 'bob' }).then(() => 'accepted' as const),
+    // En cas d'erreur serveur (ConflictException), l'ack n'est jamais appelé → le
+    // filtre WS émet l'event `error` typé du contrat ({ code, message }).
+    const err = await Promise.race([
+      new Promise<{ code: string }>((resolve) => p2.on('error', resolve)),
+      p2
+        .emitWithAck('player:join', { pin, nickname: 'bob' })
+        .then(() => ({ code: 'accepted' as const })),
     ]);
-    expect(rejected).toBe('exception');
+    expect(err.code).toBe('conflict');
   }, 15_000);
 });

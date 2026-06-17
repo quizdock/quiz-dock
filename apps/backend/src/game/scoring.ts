@@ -102,11 +102,20 @@ export interface ScoreInput {
 
 /**
  * Note une soumission : exactitude + points temps + bonus série (§5/§6).
- * Une réponse incorrecte OU hors délai rapporte 0 et remet la série à 0.
+ *
+ * - Question **sans enjeu** (sondage, ou `points_mode=none` → base 0) : 0 point et
+ *   série **neutre** (ni montée ni rupture) — « ça ne compte pas » n'influe sur rien.
+ * - Sinon, réponse incorrecte OU hors délai : 0 point et série remise à 0.
  */
 export function scoreAnswer(input: ScoreInput): ScoreResult {
   const { question, answer, tMs, prevStreak, isLate = false } = input;
   const correct = !isLate && gradeAnswer(question, answer);
+
+  const unscored = question.type === QuestionType.Poll || question.basePoints === 0;
+  if (unscored) {
+    return { correct, points: 0, newStreak: prevStreak };
+  }
+
   if (!correct) {
     return { correct: false, points: 0, newStreak: 0 };
   }

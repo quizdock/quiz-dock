@@ -1,4 +1,4 @@
-import { Inject, Logger } from '@nestjs/common';
+import { Inject, Logger, UseFilters } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -15,6 +15,7 @@ import type { Server, Socket } from 'socket.io';
 import { AUTH_PROVIDER, type AuthProvider } from '../auth/auth-provider';
 import { UsersService } from '../users/users.service';
 import { GameService } from './game.service';
+import { WsExceptionFilter } from './ws-exception.filter';
 
 /** Données attachées à chaque socket de jeu. */
 export interface GameSocketData {
@@ -31,6 +32,7 @@ type GameSocket = Socket<
   GameSocketData
 >;
 
+@UseFilters(WsExceptionFilter)
 @WebSocketGateway({ namespace: '/game', cors: { origin: true } })
 export class GameGateway implements OnGatewayInit {
   private readonly log = new Logger(GameGateway.name);

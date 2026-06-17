@@ -225,15 +225,36 @@ describe('scoreAnswer', () => {
     expect(scoreAnswer({ question: q, answer: good.id, tMs: 0, prevStreak: 0 }).points).toBe(2000);
   });
 
-  it('mode none : 0 point même correct (mais série conservée)', () => {
+  it('mode none : 0 point et série NEUTRE (inchangée), même correct', () => {
     const good = opt({ isCorrect: true });
     const q = question({
       type: QuestionType.SingleChoice,
       basePoints: 0,
       options: [good, opt()],
     });
-    const r = scoreAnswer({ question: q, answer: good.id, tMs: 0, prevStreak: 1 });
-    // P_max=0 → timePoints=0, mais bonus de série (+100) s'applique sur bonne réponse.
-    expect(r).toEqual({ correct: true, points: 100, newStreak: 2 });
+    // Question sans enjeu : ni points, ni bonus, série conservée telle quelle.
+    expect(scoreAnswer({ question: q, answer: good.id, tMs: 0, prevStreak: 3 })).toEqual({
+      correct: true,
+      points: 0,
+      newStreak: 3,
+    });
+  });
+
+  it('mode none incorrect : série NEUTRE (ne casse pas la série)', () => {
+    const q = question({ type: QuestionType.SingleChoice, basePoints: 0, options: [opt(), opt()] });
+    expect(scoreAnswer({ question: q, answer: 'inconnu', tMs: 0, prevStreak: 4 })).toEqual({
+      correct: false,
+      points: 0,
+      newStreak: 4,
+    });
+  });
+
+  it('sondage (poll) : 0 point et série NEUTRE', () => {
+    const q = question({ type: QuestionType.Poll, basePoints: 1000, options: [opt(), opt()] });
+    expect(scoreAnswer({ question: q, answer: q.options[0].id, tMs: 0, prevStreak: 2 })).toEqual({
+      correct: false,
+      points: 0,
+      newStreak: 2,
+    });
   });
 });
