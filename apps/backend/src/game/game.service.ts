@@ -259,7 +259,7 @@ export function sanitizeNickname(raw: string): string {
 
 /** Sérialise les méta pour un hash Redis (tout en string). */
 function serializeMeta(meta: GameMeta): Record<string, string> {
-  return {
+  const raw: Record<string, string> = {
     id: meta.id,
     quizId: meta.quizId,
     hostUserId: meta.hostUserId,
@@ -273,6 +273,9 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     questionStartedAt: String(meta.questionStartedAt),
     questionEndsAt: String(meta.questionEndsAt),
   };
+  if (meta.prevState !== undefined) raw.prevState = meta.prevState;
+  if (meta.pausedRemainingMs !== undefined) raw.pausedRemainingMs = String(meta.pausedRemainingMs);
+  return raw;
 }
 
 function deserializeMeta(raw: Record<string, string>): GameMeta {
@@ -289,5 +292,7 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     createdAt: Number(raw.createdAt),
     questionStartedAt: Number(raw.questionStartedAt ?? 0),
     questionEndsAt: Number(raw.questionEndsAt ?? 0),
+    prevState: raw.prevState,
+    pausedRemainingMs: raw.pausedRemainingMs ? Number(raw.pausedRemainingMs) : undefined,
   };
 }

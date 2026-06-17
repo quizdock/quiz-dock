@@ -9,7 +9,14 @@ import type {
 } from '@roux-quizz/contracts';
 import type { Server } from 'socket.io';
 import { GameService } from './game.service';
-import { GAME_TTL_S, GRACE_MS, READ_DELAY_MS, gameKeys } from './game.keys';
+import {
+  GAME_TTL_S,
+  GRACE_MS,
+  HOST_GRACE_MS,
+  HOST_RECONNECT_WINDOW_MS,
+  READ_DELAY_MS,
+  gameKeys,
+} from './game.keys';
 import type { AnswerRecord, GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
 import { RedisService } from '../redis/redis.service';
 import { buildRevealCommon } from './reveal';
@@ -46,6 +53,10 @@ export class GameEngine {
   private readonly log = new Logger(GameEngine.name);
   private server!: GameServer;
   private readonly timers = new Map<string, NodeJS.Timeout>();
+  /** Délai de grâce avant `HOST_DISCONNECTED` (§7.1) — par PIN. */
+  private readonly graceTimers = new Map<string, NodeJS.Timeout>();
+  /** Fenêtre de reconnexion hôte avant fin auto (§7.3) — par PIN. */
+  private readonly endWindowTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private readonly game: GameService,
@@ -366,10 +377,168 @@ export class GameEngine {
     }
   }
 
+  /**
+   * Déconnexion d'un socket de **contrôle hôte** (§7.1). Si plus aucune autre
+   * fenêtre de contrôle de cette partie n'est connectée, arme un délai de grâce :
+   * un simple rechargement (retour < grâce via `host:attach`) l'annule ; sinon on
+   * bascule en `HOST_DISCONNECTED`.
+   */
+  async handleHostDisconnect(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.hostUserId !== hostUserId) return;
+    if (meta.state === GameState.Ended || meta.state === GameState.HostDisconnected) return;
+    if ((await this.countHostSockets(pin, hostUserId)) > 0) return;
+
+    const graceMs = Number(process.env.GAME_HOST_GRACE_MS ?? HOST_GRACE_MS);
+    this.cancelTimer(this.graceTimers, pin);
+    const timer = setTimeout(
+      () => {
+        this.graceTimers.delete(pin);
+        this.declareHostDisconnected(pin, hostUserId).catch((err: Error) =>
+          this.log.error(`declareHostDisconnected ${pin}: ${err.message}`),
+        );
+      },
+      Math.max(0, graceMs),
+    );
+    timer.unref?.();
+    this.graceTimers.set(pin, timer);
+  }
+
+  /**
+   * Fin du délai de grâce : re-vérifie (l'hôte a pu revenir entre-temps), puis fige
+   * la partie en `HOST_DISCONNECTED` — timer de question mis en pause (ms restantes
+   * conservées), état précédent mémorisé pour la reprise — et arme la fenêtre de
+   * reconnexion (§7.3) au-delà de laquelle la partie se termine.
+   */
+  private async declareHostDisconnected(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.hostUserId !== hostUserId) return;
+    if (meta.state === GameState.Ended || meta.state === GameState.HostDisconnected) return;
+    if ((await this.countHostSockets(pin, hostUserId)) > 0) return; // revenu pendant la grâce
+
+    const patch: Record<string, string> = {
+      state: GameState.HostDisconnected,
+      prevState: meta.state,
+    };
+    if (meta.state === GameState.Answering) {
+      const remaining = Math.max(0, meta.questionEndsAt - Date.now());
+      patch.pausedRemainingMs = String(remaining);
+      this.clearTimer(pin); // gèle le décompte de la question
+    }
+    await this.redis.hset(gameKeys.game(pin), patch);
+    this.log.debug(`HOST_DISCONNECTED ${pin} (depuis ${meta.state})`);
+
+    this.server.to(pin).emit('game:state', {
+      state: GameState.HostDisconnected,
+      questionIndex: meta.currentIndex,
+      totalQuestions: meta.totalQuestions,
+    });
+
+    const windowMs = Number(process.env.GAME_HOST_WINDOW_MS ?? HOST_RECONNECT_WINDOW_MS);
+    this.cancelTimer(this.endWindowTimers, pin);
+    const timer = setTimeout(
+      () => {
+        this.endWindowTimers.delete(pin);
+        this.endOrphaned(pin, hostUserId).catch((err: Error) =>
+          this.log.error(`endOrphaned ${pin}: ${err.message}`),
+        );
+      },
+      Math.max(0, windowMs),
+    );
+    timer.unref?.();
+    this.endWindowTimers.set(pin, timer);
+  }
+
+  /** L'hôte n'est pas revenu dans la fenêtre (§7.3) → fin de partie en l'état. */
+  private async endOrphaned(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.state !== GameState.HostDisconnected) return; // repris entre-temps
+    await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
+    await this.redis.del(gameKeys.pin(pin));
+    await this.game.removeHostGame(hostUserId, pin);
+    this.server
+      .to(pin)
+      .emit('game:state', { state: GameState.Ended, questionIndex: -1, totalQuestions: 0 });
+    this.server.to(pin).emit('game:ended', {});
+  }
+
+  /**
+   * `host:attach` : l'hôte est de retour. Annule les minuteries de grâce/fin et,
+   * si la partie était figée en `HOST_DISCONNECTED`, reprend là où elle en était
+   * (§7.3) — en ANSWERING avec un `questionEndsAt` recalculé sur le temps restant.
+   */
+  async onHostAttached(pin: string): Promise<void> {
+    this.cancelTimer(this.graceTimers, pin);
+    this.cancelTimer(this.endWindowTimers, pin);
+
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.state !== GameState.HostDisconnected) return;
+    const prev = (meta.prevState as GameState) ?? GameState.Lobby;
+
+    if (prev === GameState.Answering) {
+      const remaining = meta.pausedRemainingMs ?? 0;
+      const windowLen = Math.max(0, meta.questionEndsAt - meta.questionStartedAt);
+      const elapsed = Math.max(0, windowLen - remaining);
+      const now = Date.now();
+      const startedAt = now - elapsed; // continue l'horloge (timing §6 cohérent)
+      const endsAt = now + remaining;
+      await this.redis.hset(gameKeys.game(pin), {
+        state: GameState.Answering,
+        questionStartedAt: String(startedAt),
+        questionEndsAt: String(endsAt),
+        prevState: '',
+        pausedRemainingMs: '',
+      });
+      const snapshot = await this.game.getSnapshot(pin);
+      this.server.to(pin).emit('game:state', {
+        state: GameState.Answering,
+        questionIndex: meta.currentIndex,
+        totalQuestions: meta.totalQuestions,
+      });
+      if (snapshot) {
+        const q = snapshot.questions[meta.currentIndex];
+        this.server
+          .to(pin)
+          .emit('question:start', buildQuestionStart(q, meta.currentIndex, startedAt, endsAt));
+      }
+      this.scheduleReveal(pin, meta.currentIndex, endsAt + GRACE_MS - now);
+    } else {
+      await this.redis.hset(gameKeys.game(pin), {
+        state: prev,
+        prevState: '',
+        pausedRemainingMs: '',
+      });
+      this.server.to(pin).emit('game:state', {
+        state: prev,
+        questionIndex: meta.currentIndex,
+        totalQuestions: meta.totalQuestions,
+      });
+    }
+  }
+
+  /** Compte les sockets de **contrôle hôte** encore présents dans la room (mono-instance v1). */
+  private async countHostSockets(pin: string, hostUserId: string): Promise<number> {
+    const sockets = await this.server.in(pin).fetchSockets();
+    return sockets.filter((s) => {
+      const d = s.data as { isHostControl?: boolean; user?: { id?: string } };
+      return d.isHostControl === true && d.user?.id === hostUserId;
+    }).length;
+  }
+
+  private cancelTimer(map: Map<string, NodeJS.Timeout>, pin: string): void {
+    const existing = map.get(pin);
+    if (existing) {
+      clearTimeout(existing);
+      map.delete(pin);
+    }
+  }
+
   /** `host:end` : termine la partie (tout état → ENDED) et invalide le PIN (§7). */
   async end(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     this.clearTimer(pin);
+    this.cancelTimer(this.graceTimers, pin);
+    this.cancelTimer(this.endWindowTimers, pin);
     await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(meta.hostUserId, pin);

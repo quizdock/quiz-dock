@@ -8,6 +8,18 @@ export const READ_DELAY_MS = 3_000;
 export const GRACE_MS = 300;
 
 /**
+ * Délai de grâce avant de déclarer l'hôte parti (§7.1) : absorbe un simple
+ * rechargement de la fenêtre de contrôle avant de passer en `HOST_DISCONNECTED`.
+ */
+export const HOST_GRACE_MS = 5_000;
+
+/**
+ * Fenêtre de reconnexion de l'hôte (§7.3) : passé ce délai en `HOST_DISCONNECTED`
+ * sans retour, la partie se termine (résultats persistés en l'état).
+ */
+export const HOST_RECONNECT_WINDOW_MS = 120_000;
+
+/**
  * Clés Redis de l'état live (SPECIFICATIONS-DONNEES §4). Centralisées ici pour
  * garantir la cohérence du nommage entre allocation, écriture et purge.
  */

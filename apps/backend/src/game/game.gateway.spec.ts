@@ -26,6 +26,8 @@ describe('GameGateway (intégration socket)', () => {
     process.env.DATABASE_URL ??= 'postgresql://roux:roux@localhost:15432/rouxquizz?schema=public';
     process.env.REDIS_URL ??= 'redis://localhost:16379';
     process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
+    process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
+    process.env.GAME_HOST_WINDOW_MS = '1500'; // fenêtre de reconnexion hôte courte (§7.3)
     app = await NestFactory.create(AppModule, { logger: false });
     await app.listen(0);
     prisma = app.get(PrismaService);
@@ -378,5 +380,62 @@ describe('GameGateway (intégration socket)', () => {
     p2.disconnect();
     await new Promise((r) => setTimeout(r, 400));
     expect(revealed).toBe(true);
+  }, 15_000);
+
+  it('hôte déconnecté (§7) : grâce → HOST_DISCONNECTED → host:attach reprend ANSWERING', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Iris' });
+
+    const states: string[] = [];
+    player.on('game:state', (s: { state: string }) => states.push(s.state));
+    const qStart = new Promise<{ startedAt: number }>((resolve) =>
+      player.on('question:start', (q) => resolve(q as never)),
+    );
+
+    host.emit('host:start', { pin });
+    await qStart; // ANSWERING ouvert
+
+    // L'hôte se déconnecte : après la grâce (200 ms), passage en HOST_DISCONNECTED.
+    const pausedP = new Promise<void>((resolve) => {
+      const onState = (s: { state: string }) => {
+        if (s.state === 'HOST_DISCONNECTED') {
+          player.off('game:state', onState);
+          resolve();
+        }
+      };
+      player.on('game:state', onState);
+    });
+    host.disconnect();
+    await pausedP;
+    expect(states).toContain('HOST_DISCONNECTED');
+
+    // L'hôte revient (nouvelle fenêtre de contrôle) → reprise en ANSWERING.
+    const resumedP = new Promise<void>((resolve) => {
+      const onState = (s: { state: string }) => {
+        if (s.state === 'ANSWERING') {
+          player.off('game:state', onState);
+          resolve();
+        }
+      };
+      player.on('game:state', onState);
+    });
+    const control2 = connect({ localUser: 'Formateur' });
+    const attachAck = await control2.emitWithAck('host:attach', { pin });
+    expect(attachAck.ok).toBe(true);
+    await resumedP;
+  }, 15_000);
+
+  it('hôte non revenu (§7.3) : la fenêtre expire → la partie se termine (game:ended)', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Jude' });
+
+    const endedP = new Promise<void>((resolve) => player.on('game:ended', () => resolve()));
+    host.disconnect(); // jamais de host:attach → grâce + fenêtre expirent
+
+    await endedP; // doit survenir avant le timeout (grâce 200 ms + fenêtre 1500 ms)
   }, 15_000);
 });

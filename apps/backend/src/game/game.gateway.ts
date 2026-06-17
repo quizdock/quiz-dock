@@ -158,6 +158,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     socket.data.pin = payload.pin;
     socket.data.isHostControl = true;
     await socket.join(payload.pin);
+    // L'hôte est de retour : annule la grâce/fenêtre de fin et reprend si la partie
+    // était figée en HOST_DISCONNECTED (§7.3), avant de relire l'état pour ce socket.
+    await this.engine.onHostAttached(payload.pin);
     await this.engine.sendStateTo(socket, payload.pin);
     return { ok: true };
   }
@@ -283,14 +286,20 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   /**
    * Déconnexion d'un socket. Joueur (§8) : `connected=false`, `player:left` +
-   * re-vérification de la convergence. (La détection de l'hôte parti — délai de
-   * grâce → `HOST_DISCONNECTED` — est traitée par un complément ultérieur.)
+   * re-vérification de la convergence. Contrôle hôte (§7) : si plus aucune autre
+   * fenêtre de contrôle, délai de grâce puis `HOST_DISCONNECTED`.
    */
   async handleDisconnect(socket: GameSocket): Promise<void> {
-    const { pin, playerId } = socket.data;
+    const { pin, playerId, user, isHostControl } = socket.data;
     if (pin && playerId) {
       await this.engine.handlePlayerDisconnect(pin, playerId).catch((err: Error) => {
         this.log.warn(`handlePlayerDisconnect ${pin}/${playerId}: ${err.message}`);
+      });
+      return;
+    }
+    if (pin && isHostControl && user) {
+      await this.engine.handleHostDisconnect(pin, user.id).catch((err: Error) => {
+        this.log.warn(`handleHostDisconnect ${pin}/${user.id}: ${err.message}`);
       });
     }
   }

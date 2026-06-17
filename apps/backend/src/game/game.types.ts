@@ -73,6 +73,10 @@ export interface GameMeta {
   /** Timings serveur autoritatifs de la question courante (§6), 0 hors ANSWERING. */
   questionStartedAt: number;
   questionEndsAt: number;
+  /** État figé avant `HOST_DISCONNECTED` (pour la reprise §7.3). */
+  prevState?: string;
+  /** ms de question restantes, figées à l'entrée en `HOST_DISCONNECTED` (§7.1). */
+  pausedRemainingMs?: number;
 }
 
 /** Réponse gradée stockée au submit (Redis hash `:answers:{idx}`) — REVEAL la relit. */
