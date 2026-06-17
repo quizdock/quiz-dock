@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, Logger } from '@ne
 import { GameState } from '@roux-quizz/contracts';
 import type {
   AnswerValue,
+  LeaderboardPayload,
   LeaderboardRow,
   QuestionRevealPayload,
   ServerToClientEvents,
@@ -16,6 +17,21 @@ import { scoreAnswer } from './scoring';
 import { buildQuestionStart } from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
+
+/**
+ * Cible d'émission unitaire : satisfaite à la fois par un `Socket` local (gateway)
+ * et un `RemoteSocket` (`fetchSockets()`). Permet de partager le calcul du reveal
+ * personnel entre la diffusion live et la relecture d'état (reconnexion / late join).
+ */
+interface Emitter {
+  data: { playerId?: string };
+  emit<E extends keyof ServerToClientEvents>(
+    ev: E,
+    ...args: Parameters<ServerToClientEvents[E]>
+  ): unknown;
+}
+
+type RankedPlayer = PlayerRecord & { id: string };
 
 /**
  * Machine à états de la partie (SPECIFICATIONS §8). Le timer n'est qu'un
@@ -152,31 +168,60 @@ export class GameEngine {
 
     const ranked = await this.rankedPlayers(pin);
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
-    const top: LeaderboardRow[] = ranked
-      .slice(0, 10)
-      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+    const top = this.topRows(ranked);
 
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
       const playerId = (socket.data as { playerId?: string }).playerId;
-      const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
-
-      const reveal: QuestionRevealPayload = { ...common };
-      if (me) {
-        const rec = records.get(playerId!);
-        reveal.yourResult = {
-          correct: rec?.isCorrect ?? false,
-          points: rec?.pointsAwarded ?? 0,
-          totalScore: me.score,
-          rank: rankOf.get(playerId!) ?? ranked.length,
-        };
-      }
-      socket.emit('question:reveal', reveal);
-      socket.emit('leaderboard', {
-        top,
-        you: me ? { score: me.score, rank: rankOf.get(playerId!) ?? ranked.length } : undefined,
-      });
+      socket.emit(
+        'question:reveal',
+        this.personalReveal(common, records, ranked, rankOf, playerId),
+      );
+      socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
     }
+  }
+
+  /** Top 10 du classement (lignes publiques, sans rang personnel). */
+  private topRows(ranked: RankedPlayer[]): LeaderboardRow[] {
+    return ranked
+      .slice(0, 10)
+      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+  }
+
+  /** Reveal commun + `yourResult` ciblé sur le joueur de ce socket (s'il en a un). */
+  private personalReveal(
+    common: QuestionRevealPayload,
+    records: Map<string, AnswerRecord>,
+    ranked: RankedPlayer[],
+    rankOf: Map<string, number>,
+    playerId: string | undefined,
+  ): QuestionRevealPayload {
+    const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
+    if (!me) return { ...common };
+    const rec = records.get(playerId!);
+    return {
+      ...common,
+      yourResult: {
+        correct: rec?.isCorrect ?? false,
+        points: rec?.pointsAwarded ?? 0,
+        totalScore: me.score,
+        rank: rankOf.get(playerId!) ?? ranked.length,
+      },
+    };
+  }
+
+  /** Classement public + `you` ciblé sur le joueur de ce socket (s'il en a un). */
+  private personalLeaderboard(
+    top: LeaderboardRow[],
+    ranked: RankedPlayer[],
+    rankOf: Map<string, number>,
+    playerId: string | undefined,
+  ): LeaderboardPayload {
+    const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
+    return {
+      top,
+      you: me ? { score: me.score, rank: rankOf.get(me.id) ?? ranked.length } : undefined,
+    };
   }
 
   /** `host:reveal` : force le passage en REVEAL (idempotent via le verrou). */
@@ -218,7 +263,7 @@ export class GameEngine {
     await this.redis.hset(gameKeys.game(pin), { state: GameState.Podium });
     const ranked = await this.rankedPlayers(pin);
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
-    const podium: LeaderboardRow[] = ranked
+    const podium = ranked
       .slice(0, 3)
       .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
 
@@ -230,20 +275,104 @@ export class GameEngine {
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
       const playerId = (socket.data as { playerId?: string }).playerId;
-      const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
-      socket.emit('game:podium', {
-        podium,
-        you: me ? { score: me.score, rank: rankOf.get(playerId!) ?? ranked.length } : undefined,
-      });
+      socket.emit('game:podium', this.personalPodium(podium, ranked, rankOf, playerId));
+    }
+  }
+
+  /** Podium top 3 + `you` ciblé sur le joueur de ce socket (s'il en a un). */
+  private personalPodium(
+    podium: LeaderboardRow[],
+    ranked: RankedPlayer[],
+    rankOf: Map<string, number>,
+    playerId: string | undefined,
+  ): { podium: LeaderboardRow[]; you?: { score: number; rank: number } } {
+    const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
+    return {
+      podium,
+      you: me ? { score: me.score, rank: rankOf.get(me.id) ?? ranked.length } : undefined,
+    };
+  }
+
+  /**
+   * Renvoie l'état courant à un **seul** socket (reconnexion / late join §5/§6 /
+   * spectateur §3) : `game:state` puis, selon l'état, `question:start` (ANSWERING),
+   * `question:reveal` + `leaderboard` (REVEAL) ou `game:podium` (PODIUM). Le résultat
+   * personnel n'est inclus que si le socket porte un `playerId`.
+   */
+  async sendStateTo(socket: Emitter, pin: string): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta) return;
+    const playerId = socket.data.playerId;
+    socket.emit('game:state', {
+      state: meta.state as GameState,
+      questionIndex: meta.currentIndex,
+      totalQuestions: meta.totalQuestions,
+    });
+    const snapshot = await this.game.getSnapshot(pin);
+    if (!snapshot || meta.currentIndex < 0) return;
+
+    if (meta.state === GameState.Answering) {
+      const question = snapshot.questions[meta.currentIndex];
+      socket.emit(
+        'question:start',
+        buildQuestionStart(
+          question,
+          meta.currentIndex,
+          meta.questionStartedAt,
+          meta.questionEndsAt,
+        ),
+      );
+    } else if (meta.state === GameState.Reveal) {
+      const index = meta.currentIndex;
+      const records = await this.readAnswers(pin, index);
+      const common = buildRevealCommon(snapshot.questions[index], [...records.values()]);
+      const ranked = await this.rankedPlayers(pin);
+      const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
+      socket.emit(
+        'question:reveal',
+        this.personalReveal(common, records, ranked, rankOf, playerId),
+      );
+      socket.emit(
+        'leaderboard',
+        this.personalLeaderboard(this.topRows(ranked), ranked, rankOf, playerId),
+      );
+    } else if (meta.state === GameState.Podium) {
+      const ranked = await this.rankedPlayers(pin);
+      const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
+      const podium = ranked
+        .slice(0, 3)
+        .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+      socket.emit('game:podium', this.personalPodium(podium, ranked, rankOf, playerId));
+    }
+  }
+
+  /**
+   * Déconnexion d'un joueur (§8) : `connected=false`, diffusion `player:left` avec
+   * le compte des **connectés**, puis **re-vérification de la convergence** — un
+   * départ peut compléter « tous les connectés ont répondu » sans nouveau submit.
+   */
+  async handlePlayerDisconnect(pin: string, playerId: string): Promise<void> {
+    const record = await this.game.setConnected(pin, playerId, false);
+    if (!record) return;
+    const playerCount = await this.game.connectedCount(pin);
+    this.server.to(pin).emit('player:left', { playerId, playerCount });
+
+    const meta = await this.game.getMeta(pin);
+    if (meta && meta.state === GameState.Answering && playerCount > 0) {
+      const answered = await this.redis.hlen(gameKeys.answers(pin, meta.currentIndex));
+      if (answered >= playerCount) {
+        await this.advanceToReveal(pin, meta.currentIndex, 'all');
+      }
     }
   }
 
   /** `host:end` : termine la partie (tout état → ENDED) et invalide le PIN (§7). */
   async end(pin: string, hostUserId: string): Promise<void> {
-    await this.requireHost(pin, hostUserId);
+    const meta = await this.requireHost(pin, hostUserId);
     this.clearTimer(pin);
     await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
     await this.redis.del(gameKeys.pin(pin));
+    await this.game.removeHostGame(meta.hostUserId, pin);
     this.server
       .to(pin)
       .emit('game:state', { state: GameState.Ended, questionIndex: -1, totalQuestions: 0 });
@@ -257,7 +386,7 @@ export class GameEngine {
   }
 
   /** Joueurs triés par score décroissant, départage par ordre d'arrivée (§5). */
-  private async rankedPlayers(pin: string): Promise<Array<PlayerRecord & { id: string }>> {
+  private async rankedPlayers(pin: string): Promise<RankedPlayer[]> {
     const raw = await this.redis.hgetall(gameKeys.players(pin));
     return Object.entries(raw)
       .map(([id, json]) => ({ id, ...(JSON.parse(json) as PlayerRecord) }))
@@ -326,10 +455,12 @@ export class GameEngine {
     await this.redis.zadd(gameKeys.leaderboard(pin), player.score, playerId);
 
     const answered = await this.redis.hlen(gameKeys.answers(pin, questionIndex));
-    const total = await this.redis.hlen(gameKeys.players(pin));
+    // §8 : convergence sur les **connectés**, pas le total jamais joint (sinon un
+    // seul départ figerait la question jusqu'au timer).
+    const total = await this.game.connectedCount(pin);
     this.server.to(pin).emit('answer:count', { answered, total });
 
-    if (answered >= total) {
+    if (total > 0 && answered >= total) {
       await this.advanceToReveal(pin, questionIndex, 'all');
     }
     return { accepted: true, receivedAt };

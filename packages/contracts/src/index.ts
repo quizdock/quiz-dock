@@ -59,11 +59,13 @@ export enum OptionShape {
 /** Noms des événements WebSocket (technique §9). */
 export const ClientEvents = {
   HostCreate: 'host:create',
+  HostAttach: 'host:attach',
   HostStart: 'host:start',
   HostNext: 'host:next',
   HostReveal: 'host:reveal',
   HostKick: 'host:kick',
   HostEnd: 'host:end',
+  SpectatorJoin: 'spectator:join',
   PlayerJoin: 'player:join',
   PlayerReconnect: 'player:reconnect',
   PlayerSubmit: 'player:submit',
@@ -156,11 +158,15 @@ export interface ClientToServerEvents {
     p: { quizId: string; fullCapture?: boolean },
     ack: (res: { pin: string }) => void,
   ) => void;
+  /** Rebinde un hôte authentifié propriétaire à sa partie (reconnexion / 2ᵉ fenêtre de contrôle). */
+  'host:attach': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'host:start': (p: { pin: string }) => void;
   'host:next': (p: { pin: string }) => void;
   'host:reveal': (p: { pin: string }) => void;
   'host:kick': (p: { pin: string; playerId: string }) => void;
   'host:end': (p: { pin: string }) => void;
+  /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
+  'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'player:join': (
     p: { pin: string; nickname: string; authToken?: string },
     ack: (res: { sessionToken: string; playerId: string }) => void,

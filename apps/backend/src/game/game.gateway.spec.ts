@@ -249,4 +249,134 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.rank).toBe(1);
     expect(podium.you?.score).toBeGreaterThan(0);
   }, 15_000);
+
+  it('late join (§5) : un joueur arrivé après le départ reçoit l’état ANSWERING + question:start', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    host.emit('host:start', { pin });
+    await new Promise((r) => setTimeout(r, 250)); // laisse passer la fenêtre de lecture (150 ms)
+
+    const latecomer = connect();
+    const stateP = new Promise<{ state: string }>((resolve) =>
+      latecomer.on('game:state', (s) => resolve(s as never)),
+    );
+    const qStartP = new Promise<{ questionIndex: number }>((resolve) =>
+      latecomer.on('question:start', (q) => resolve(q as never)),
+    );
+
+    const ack = await latecomer.emitWithAck('player:join', { pin, nickname: 'Late' });
+    expect(ack.playerId).toBeTruthy();
+    expect((await stateP).state).toBe('ANSWERING');
+    expect((await qStartP).questionIndex).toBe(0);
+  }, 15_000);
+
+  it('spectator:join (§3) : reçoit l’état mais n’est pas compté (answer:count.total)', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Frank' });
+
+    const spectator = connect();
+    const specOk = await spectator.emitWithAck('spectator:join', { pin });
+    expect(specOk.ok).toBe(true);
+
+    const countP = new Promise<{ answered: number; total: number }>((resolve) =>
+      player.on('answer:count', (c) => resolve(c as never)),
+    );
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => player.on('question:start', (q) => resolve(q as never)),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+    player.emit('player:submit', {
+      pin,
+      questionIndex: 0,
+      answer: q.options.find((o) => o.text === 'Paris')!.id,
+    });
+
+    // total = connectés joueurs (1), le spectateur n'est pas compté.
+    const count = await countP;
+    expect(count.total).toBe(1);
+    expect(count.answered).toBe(1);
+  }, 15_000);
+
+  it('host:attach (§4.2) : le propriétaire se rebinde et reçoit l’état ; non authentifié rejeté', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    // 2ᵉ fenêtre de contrôle (même hôte) : attach OK + état courant.
+    const control2 = connect({ localUser: 'Formateur' });
+    const stateP = new Promise<{ state: string }>((resolve) =>
+      control2.on('game:state', (s) => resolve(s as never)),
+    );
+    const attachAck = await control2.emitWithAck('host:attach', { pin });
+    expect(attachAck.ok).toBe(true);
+    expect((await stateP).state).toBe('LOBBY');
+
+    // Socket non authentifié : refus (event error typé).
+    const anon = connect();
+    const err = await Promise.race([
+      new Promise<{ code: string }>((resolve) => anon.on('error', resolve)),
+      anon.emitWithAck('host:attach', { pin }).then(() => ({ code: 'accepted' as const })),
+    ]);
+    expect(err.code).not.toBe('accepted');
+  }, 15_000);
+
+  it('player:reconnect (§6.1) : restaure la place via le jeton et renvoie l’état', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    const player = connect();
+    const { sessionToken } = await player.emitWithAck('player:join', { pin, nickname: 'Gina' });
+    player.disconnect();
+    await new Promise((r) => setTimeout(r, 100));
+
+    const back = connect();
+    const stateP = new Promise<{ state: string }>((resolve) =>
+      back.on('game:state', (s) => resolve(s as never)),
+    );
+    const ack = await back.emitWithAck('player:reconnect', { sessionToken });
+    expect(ack.ok).toBe(true);
+    expect((await stateP).state).toBe('LOBBY');
+  }, 15_000);
+
+  it('convergence sur les connectés (§8) : le départ du dernier non-répondant déclenche REVEAL', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    const p1 = connect();
+    await p1.emitWithAck('player:join', { pin, nickname: 'Hugo' });
+    const p2 = connect();
+    await p2.emitWithAck('player:join', { pin, nickname: 'Ines' });
+
+    let revealed = false;
+    p1.on('game:state', (s: { state: string }) => {
+      if (s.state === 'REVEAL') revealed = true;
+    });
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => p1.on('question:start', (q) => resolve(q as never)),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+
+    // p1 répond (1/2). Pas encore de REVEAL : p2 connecté n'a pas répondu.
+    p1.emit('player:submit', {
+      pin,
+      questionIndex: 0,
+      answer: q.options.find((o) => o.text === 'Paris')!.id,
+    });
+    await new Promise((r) => setTimeout(r, 150));
+    expect(revealed).toBe(false);
+
+    // p2 quitte → connectés=1, répondu=1 ⇒ convergence ⇒ REVEAL (sans attendre le timer 5 s).
+    p2.disconnect();
+    await new Promise((r) => setTimeout(r, 400));
+    expect(revealed).toBe(true);
+  }, 15_000);
 });

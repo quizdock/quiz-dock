@@ -87,8 +87,11 @@ export class GameService {
     const pipe = this.redis.multi();
     pipe.hset(gameKeys.game(pin), serializeMeta(meta));
     pipe.set(gameKeys.snapshot(pin), JSON.stringify(snapshot));
+    // Index des parties en cours de l'hôte (reprise depuis le dashboard §6.2).
+    pipe.sadd(gameKeys.hostGames(hostUserId), pin);
     pipe.expire(gameKeys.game(pin), GAME_TTL_S);
     pipe.expire(gameKeys.snapshot(pin), GAME_TTL_S);
+    pipe.expire(gameKeys.hostGames(hostUserId), GAME_TTL_S);
     await pipe.exec();
 
     return { pin };
@@ -107,8 +110,10 @@ export class GameService {
     if (!meta) {
       throw new NotFoundException('Partie introuvable ou terminée.');
     }
-    if (meta.state !== GameState.Lobby) {
-      throw new BadRequestException('La partie a déjà démarré.');
+    // Late join (§5) : autorisé tant que la partie n'est pas terminée. Le gateway
+    // renvoie l'état courant au socket pour qu'il se positionne immédiatement.
+    if (meta.state === GameState.Ended) {
+      throw new BadRequestException('La partie est terminée.');
     }
 
     const nickname = sanitizeNickname(rawNickname);
@@ -134,7 +139,6 @@ export class GameService {
     pipe.hset(gameKeys.players(pin), playerId, JSON.stringify(record));
     pipe.zadd(gameKeys.leaderboard(pin), 0, playerId);
     pipe.set(gameKeys.session(sessionToken), JSON.stringify({ pin, playerId }));
-    pipe.hlen(gameKeys.players(pin));
     // TTL aligné sur le reste de la famille (clés créées au 1er joueur).
     for (const key of [
       gameKeys.players(pin),
@@ -144,8 +148,9 @@ export class GameService {
     ]) {
       pipe.expire(key, GAME_TTL_S);
     }
-    const results = await pipe.exec();
-    const playerCount = Number(results?.[3]?.[1] ?? 1);
+    await pipe.exec();
+    // Compteur = joueurs **connectés** (§8), pas le total jamais joint.
+    const playerCount = await this.connectedCount(pin);
 
     return { pin, playerId, sessionToken, nickname, playerCount };
   }
@@ -163,6 +168,69 @@ export class GameService {
   async getSnapshot(pin: string): Promise<QuizSnapshot | null> {
     const raw = await this.redis.get(gameKeys.snapshot(pin));
     return raw ? (JSON.parse(raw) as QuizSnapshot) : null;
+  }
+
+  /** Nombre de joueurs **connectés** (§8 : base de la convergence et des compteurs). */
+  async connectedCount(pin: string): Promise<number> {
+    const raw = await this.redis.hgetall(gameKeys.players(pin));
+    let n = 0;
+    for (const json of Object.values(raw)) {
+      if ((JSON.parse(json) as PlayerRecord).connected) n++;
+    }
+    return n;
+  }
+
+  /**
+   * Bascule le drapeau `connected` d'un joueur (déconnexion / reconnexion §8).
+   * Renvoie l'enregistrement mis à jour, ou `null` si le joueur n'existe plus.
+   */
+  async setConnected(
+    pin: string,
+    playerId: string,
+    connected: boolean,
+  ): Promise<PlayerRecord | null> {
+    const raw = await this.redis.hget(gameKeys.players(pin), playerId);
+    if (!raw) return null;
+    const record = JSON.parse(raw) as PlayerRecord;
+    record.connected = connected;
+    await this.redis.hset(gameKeys.players(pin), playerId, JSON.stringify(record));
+    return record;
+  }
+
+  /** Résout un jeton de session → { pin, playerId } (reconnexion §6.1). */
+  async resolveSession(token: string): Promise<{ pin: string; playerId: string } | null> {
+    const raw = await this.redis.get(gameKeys.session(token));
+    return raw ? (JSON.parse(raw) as { pin: string; playerId: string }) : null;
+  }
+
+  /** Retire un PIN de l'index des parties en cours de l'hôte (fin de partie §6.2). */
+  async removeHostGame(hostUserId: string, pin: string): Promise<void> {
+    await this.redis.srem(gameKeys.hostGames(hostUserId), pin);
+  }
+
+  /**
+   * Liste les parties **encore vivantes** d'un hôte (dashboard §6.2). Purge au
+   * passage les PINs dont l'état a expiré ou est terminé (index auto-nettoyant).
+   */
+  async listActiveHostGames(
+    hostUserId: string,
+  ): Promise<Array<{ pin: string; title: string; state: string; playerCount: number }>> {
+    const pins = await this.redis.smembers(gameKeys.hostGames(hostUserId));
+    const games: Array<{ pin: string; title: string; state: string; playerCount: number }> = [];
+    for (const pin of pins) {
+      const meta = await this.getMeta(pin);
+      if (!meta || meta.state === GameState.Ended) {
+        await this.redis.srem(gameKeys.hostGames(hostUserId), pin);
+        continue;
+      }
+      games.push({
+        pin,
+        title: meta.title,
+        state: meta.state,
+        playerCount: await this.connectedCount(pin),
+      });
+    }
+    return games;
   }
 
   /** Alloue un PIN à 6 chiffres unique (claim atomique auto-expirant). */

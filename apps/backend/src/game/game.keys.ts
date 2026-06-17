@@ -28,6 +28,8 @@ export const gameKeys = {
   leaderboard: (pin: string) => `game:${pin}:leaderboard`,
   /** Jeton de session joueur → { pin, playerId } (reconnexion). */
   session: (token: string) => `session:${token}`,
+  /** Set des PINs des parties en cours d'un hôte (reprise depuis le dashboard §6.2). */
+  hostGames: (userId: string) => `host:${userId}:games`,
   /** Verrou atomique de passage en REVEAL (1 seul gagnant, anti double-reveal). */
   revealLock: (pin: string, questionIndex: number) => `game:${pin}:reveal-lock:${questionIndex}`,
   /** Verrou atomique de passage à la question suivante (anti double-clic). */

@@ -2,6 +2,7 @@ import { Inject, Logger, UseFilters } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
+  type OnGatewayDisconnect,
   type OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
@@ -27,6 +28,8 @@ export interface GameSocketData {
   user?: User; // hôte authentifié (host:* ), sinon invité
   playerId?: string;
   pin?: string;
+  /** Vrai pour une fenêtre de **contrôle** hôte (host:create / host:attach) — §7. */
+  isHostControl?: boolean;
 }
 
 type GameServer = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -39,7 +42,7 @@ type GameSocket = Socket<
 
 @UseFilters(WsExceptionFilter)
 @WebSocketGateway({ namespace: '/game', cors: { origin: true } })
-export class GameGateway implements OnGatewayInit {
+export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   private readonly log = new Logger(GameGateway.name);
 
   @WebSocketServer()
@@ -98,6 +101,7 @@ export class GameGateway implements OnGatewayInit {
     }
     const { pin } = await this.game.createSession(host.id, payload);
     socket.data.pin = pin;
+    socket.data.isHostControl = true;
     await socket.join(pin);
     socket.emit('game:created', { pin });
     if (payload.fullCapture === true) {
@@ -125,7 +129,91 @@ export class GameGateway implements OnGatewayInit {
       nickname: res.nickname,
       playerCount: res.playerCount,
     });
+    // Late join (§5) : positionne immédiatement le retardataire sur l'état courant.
+    await this.engine.sendStateTo(socket, res.pin);
     return { sessionToken: res.sessionToken, playerId: res.playerId };
+  }
+
+  /**
+   * `host:attach` : rebinde un hôte **propriétaire** à sa partie (reconnexion ou
+   * 2ᵉ fenêtre de contrôle, cross-device §4.2). L'identité hôte est la clé — aucun
+   * jeton dans l'URL. Renvoie l'état courant au socket.
+   */
+  @SubscribeMessage('host:attach')
+  async hostAttach(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<{ ok: boolean }> {
+    const host = socket.data.user;
+    if (!host) {
+      throw new WsException('Authentification hôte requise.');
+    }
+    const meta = await this.game.getMeta(payload.pin);
+    if (!meta) {
+      throw new WsException('Partie introuvable ou terminée.');
+    }
+    if (meta.hostUserId !== host.id) {
+      throw new WsException("Vous n'êtes pas l'hôte de cette partie.");
+    }
+    socket.data.pin = payload.pin;
+    socket.data.isHostControl = true;
+    await socket.join(payload.pin);
+    await this.engine.sendStateTo(socket, payload.pin);
+    return { ok: true };
+  }
+
+  /**
+   * `spectator:join` : rejoint la room en **lecture seule** (fenêtre projetée §3).
+   * Aucune auth ; le PIN suffit. N'enregistre aucun joueur → n'affecte ni les
+   * compteurs ni la convergence. Renvoie l'état courant (sans résultat personnel).
+   */
+  @SubscribeMessage('spectator:join')
+  async spectatorJoin(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<{ ok: boolean }> {
+    const meta = await this.game.getMeta(payload.pin);
+    if (!meta) {
+      throw new WsException('Partie introuvable ou terminée.');
+    }
+    socket.data.pin = payload.pin;
+    await socket.join(payload.pin);
+    await this.engine.sendStateTo(socket, payload.pin);
+    return { ok: true };
+  }
+
+  /**
+   * `player:reconnect` : restaure une place via le jeton de session (§6.1). Repasse
+   * le joueur `connected=true`, le ré-attache à la room et lui renvoie l'état courant
+   * (avec résultat personnel). Ack `{ ok:false }` si la partie est finie/expirée.
+   */
+  @SubscribeMessage('player:reconnect')
+  async playerReconnect(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { sessionToken: string },
+  ): Promise<{ ok: boolean }> {
+    const session = await this.game.resolveSession(payload.sessionToken);
+    if (!session) {
+      return { ok: false };
+    }
+    const meta = await this.game.getMeta(session.pin);
+    if (!meta || meta.state === 'ENDED') {
+      return { ok: false };
+    }
+    const record = await this.game.setConnected(session.pin, session.playerId, true);
+    if (!record) {
+      return { ok: false };
+    }
+    socket.data.pin = session.pin;
+    socket.data.playerId = session.playerId;
+    await socket.join(session.pin);
+    this.server.to(session.pin).emit('player:joined', {
+      playerId: session.playerId,
+      nickname: record.nickname,
+      playerCount: await this.game.connectedCount(session.pin),
+    });
+    await this.engine.sendStateTo(socket, session.pin);
+    return { ok: true };
   }
 
   /** `host:start` : l'hôte propriétaire lance la 1re question (LOBBY → ANSWERING). */
@@ -191,6 +279,20 @@ export class GameGateway implements OnGatewayInit {
   @SubscribeMessage('ping')
   ping(@ConnectedSocket() socket: GameSocket, @MessageBody() payload: { t0: number }): void {
     socket.emit('pong', { t0: payload.t0, t1: Date.now() });
+  }
+
+  /**
+   * Déconnexion d'un socket. Joueur (§8) : `connected=false`, `player:left` +
+   * re-vérification de la convergence. (La détection de l'hôte parti — délai de
+   * grâce → `HOST_DISCONNECTED` — est traitée par un complément ultérieur.)
+   */
+  async handleDisconnect(socket: GameSocket): Promise<void> {
+    const { pin, playerId } = socket.data;
+    if (pin && playerId) {
+      await this.engine.handlePlayerDisconnect(pin, playerId).catch((err: Error) => {
+        this.log.warn(`handlePlayerDisconnect ${pin}/${playerId}: ${err.message}`);
+      });
+    }
   }
 
   /** Exige un socket d'hôte authentifié ; renvoie son id utilisateur. */
