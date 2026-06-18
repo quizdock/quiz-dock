@@ -14,7 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
@@ -233,14 +233,16 @@ export function ControlPage() {
             <LeaderboardList rows={view.leaderboard.top} />
           </div>
         ) : null}
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-muted-foreground text-sm">
-            {view.mode === 'auto'
-              ? view.paused
-                ? 'Auto en pause — enchaînement suspendu.'
-                : 'Enchaînement automatique…'
-              : null}
-          </span>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            {view.mode === 'auto' && view.paused ? (
+              <span className="text-muted-foreground text-sm">
+                Auto en pause — enchaînement suspendu.
+              </span>
+            ) : view.mode === 'auto' && view.autoNextAt ? (
+              <AutoAdvanceCountdown deadline={view.autoNextAt} totalMs={view.autoNextMs ?? 0} />
+            ) : null}
+          </div>
           <Button type="button" onClick={() => emit('host:next')}>
             <SkipForward className="size-4" />
             Question suivante
@@ -336,6 +338,30 @@ export function ControlPage() {
         </Button>
       </div>
     </section>
+  );
+}
+
+/**
+ * Compte à rebours d'enchaînement automatique (mode auto, §8) : « suivante dans N s »
+ * + barre qui se vide. Tic local 100 ms pour une barre fluide, borné sur la deadline
+ * serveur autoritaire.
+ */
+function AutoAdvanceCountdown({ deadline, totalMs }: { deadline: number; totalMs: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 100);
+    return () => clearInterval(id);
+  }, []);
+  const remainingMs = Math.max(0, deadline - now);
+  const pct = totalMs > 0 ? (remainingMs / totalMs) * 100 : 0;
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-muted-foreground text-sm">
+        Question suivante dans <span className="tabular-nums">{Math.ceil(remainingMs / 1000)}</span>{' '}
+        s
+      </span>
+      <ProgressBar pct={pct} barClassName="bg-primary" />
+    </div>
   );
 }
 

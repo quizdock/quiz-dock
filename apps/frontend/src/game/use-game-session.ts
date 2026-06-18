@@ -55,6 +55,10 @@ export interface GameView {
   paused: boolean;
   /** Restant figé (ms) quand le chrono est gelé, sinon `null`. */
   pausedRemainingMs: number | null;
+  /** Deadline (ms epoch) de l'enchaînement auto en cours, sinon `null`. */
+  autoNextAt: number | null;
+  /** Durée totale (ms) de l'attente d'enchaînement auto, pour la barre. */
+  autoNextMs: number | null;
   /** Titre du quiz (récap console hôte), `null` tant que le sommaire n'est pas reçu. */
   quizTitle: string | null;
   /** Description du quiz (récap console hôte), `null` si absente. */
@@ -81,6 +85,8 @@ const INITIAL: GameView = {
   mode: 'manual',
   paused: false,
   pausedRemainingMs: null,
+  autoNextAt: null,
+  autoNextMs: null,
   quizTitle: null,
   quizDescription: null,
   outline: [],
@@ -129,7 +135,13 @@ export function useGameSession(pin: string, role: LiveRole) {
       }));
     const onQuestion = (p: QuestionStartPayload) => patch({ question: p });
     const onMode = (p: GameModePayload) =>
-      patch({ mode: p.mode, paused: p.paused, pausedRemainingMs: p.remainingMs ?? null });
+      patch({
+        mode: p.mode,
+        paused: p.paused,
+        pausedRemainingMs: p.remainingMs ?? null,
+        autoNextAt: p.autoNextAt ?? null,
+        autoNextMs: p.autoNextMs ?? null,
+      });
     const onOutline = (p: GameOutlinePayload) =>
       patch({ quizTitle: p.title, quizDescription: p.description, outline: p.questions });
     // Ajustement du chrono : on remplace les timings de la question courante (le

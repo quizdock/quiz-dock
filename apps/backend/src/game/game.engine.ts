@@ -178,8 +178,10 @@ export class GameEngine {
     if (snapshot) {
       await this.emitReveal(pin, snapshot, index);
     }
-    // Mode auto : enchaîne seul après le temps d'affichage du reveal (§8).
+    // Mode auto : enchaîne seul après le temps d'affichage du reveal (§8). On
+    // rediffuse game:mode pour transmettre la deadline (compte à rebours console).
     await this.scheduleAutoNextIfNeeded(pin);
+    this.server.to(pin).emit('game:mode', await this.readMode(pin));
   }
 
   /**
@@ -680,12 +682,23 @@ export class GameEngine {
     });
   }
 
-  /** Construit le payload mode/pause (restant figé inclus si le chrono est gelé). */
+  /** Construit le payload mode/pause (restant figé + deadline d'enchaînement auto). */
   private buildModePayload(meta: GameMeta): GameModePayload {
+    const autoNextActive =
+      meta.mode === 'auto' &&
+      !meta.paused &&
+      meta.state === GameState.Reveal &&
+      (meta.autoNextAt ?? 0) > 0;
     return {
       mode: meta.mode,
       paused: meta.paused,
       ...(meta.clockFrozen ? { remainingMs: meta.pausedRemainingMs ?? 0 } : {}),
+      ...(autoNextActive
+        ? {
+            autoNextAt: meta.autoNextAt,
+            autoNextMs: Number(process.env.GAME_AUTO_ADVANCE_MS ?? AUTO_ADVANCE_MS),
+          }
+        : {}),
     };
   }
 
@@ -759,6 +772,10 @@ export class GameEngine {
     if (!m || m.mode !== 'auto' || m.paused || m.state !== GameState.Reveal) return;
     this.cancelTimer(this.autoNextTimers, pin);
     const delay = Number(process.env.GAME_AUTO_ADVANCE_MS ?? AUTO_ADVANCE_MS);
+    // Deadline diffusée à la console (compte à rebours + barre de progression).
+    const autoNextAt = Date.now() + delay;
+    m.autoNextAt = autoNextAt;
+    await this.redis.hset(gameKeys.game(pin), { autoNextAt: String(autoNextAt) });
     const hostUserId = m.hostUserId;
     const index = m.currentIndex;
     const timer = setTimeout(

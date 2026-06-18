@@ -141,11 +141,18 @@ export interface GameStatePayload {
   totalQuestions: number;
 }
 
-/** Mode/pause courants. `remainingMs` n'est présent que si le chrono est gelé. */
+/**
+ * Mode/pause courants. `remainingMs` n'est présent que si le chrono est gelé.
+ * `autoNextAt`/`autoNextMs` ne sont présents que pendant l'attente d'enchaînement
+ * automatique (mode auto, sur un reveal) : deadline (ms epoch serveur) + durée
+ * totale, pour afficher un compte à rebours + une barre de progression.
+ */
 export interface GameModePayload {
   mode: GameMode;
   paused: boolean;
   remainingMs?: number;
+  autoNextAt?: number;
+  autoNextMs?: number;
 }
 
 /** Nouveau timing serveur autoritatif de la question courante (ajustement chrono). */

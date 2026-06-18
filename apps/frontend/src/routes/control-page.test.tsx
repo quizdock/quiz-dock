@@ -31,6 +31,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   mode: 'manual',
   paused: false,
   pausedRemainingMs: null,
+  autoNextAt: null,
+  autoNextMs: null,
   quizTitle: null,
   quizDescription: null,
   outline: [],

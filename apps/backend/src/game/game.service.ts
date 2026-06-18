@@ -318,6 +318,7 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     mode: meta.mode,
     paused: meta.paused ? '1' : '0',
     clockFrozen: meta.clockFrozen ? '1' : '0',
+    autoNextAt: String(meta.autoNextAt ?? 0),
   };
   if (meta.prevState !== undefined) raw.prevState = meta.prevState;
   if (meta.pausedRemainingMs !== undefined) raw.pausedRemainingMs = String(meta.pausedRemainingMs);
@@ -342,6 +343,7 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     mode: raw.mode === 'auto' ? 'auto' : 'manual',
     paused: raw.paused === '1',
     clockFrozen: raw.clockFrozen === '1',
+    autoNextAt: raw.autoNextAt ? Number(raw.autoNextAt) : 0,
     prevState: raw.prevState,
     pausedRemainingMs: raw.pausedRemainingMs ? Number(raw.pausedRemainingMs) : undefined,
   };

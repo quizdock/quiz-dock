@@ -90,6 +90,8 @@ export interface GameMeta {
    * idempotente pour que les deux puissent s'imbriquer sans s'écraser.
    */
   clockFrozen: boolean;
+  /** Deadline (ms epoch) de l'enchaînement auto en cours sur un reveal (§8), 0 sinon. */
+  autoNextAt?: number;
   /** État figé avant `HOST_DISCONNECTED` (pour la reprise §7.3). */
   prevState?: string;
   /** ms de question restantes, figées quand `clockFrozen` (pause ou §7.1). */
