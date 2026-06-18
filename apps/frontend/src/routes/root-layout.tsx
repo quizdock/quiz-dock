@@ -38,7 +38,7 @@ export function RootLayout() {
           )}
         </nav>
       </header>
-      <main className="mx-auto w-full max-w-4xl flex-1 p-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 p-6">
         <Outlet />
       </main>
     </div>

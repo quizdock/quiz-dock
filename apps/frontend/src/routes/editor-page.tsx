@@ -172,8 +172,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
       {/* Desktop : réglages/diffusion en colonne latérale, questions au centre.
           Mobile/tablette : empilement vertical (comportement inchangé). */}
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,22rem)_1fr]">
-        <aside className="flex flex-col gap-6">
+      <div className="grid items-start gap-6 lg:grid-cols-3">
+        <aside className="flex flex-col gap-6 lg:col-span-1">
           {/* Réglages du quiz */}
           <Card>
             <CardHeader>
@@ -283,7 +283,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         </aside>
 
         {/* Questions (zone de travail principale) */}
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle>Questions ({quiz.questionCount})</CardTitle>
             <Button
