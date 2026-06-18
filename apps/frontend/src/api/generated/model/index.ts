@@ -42,6 +42,8 @@ export * from './quizDetailDtoVisibility';
 export * from './quizDto';
 export * from './quizDtoStatus';
 export * from './quizDtoVisibility';
+export * from './quizFeedbackSummaryDto';
+export * from './quizFeedbackSummaryDtoItemsItem';
 export * from './reorderQuestionsDto';
 export * from './reorderQuestionsDtoItemsItem';
 export * from './transitionQuizDto';

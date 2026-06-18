@@ -57,6 +57,29 @@ export class QuizzesService {
     return quiz;
   }
 
+  /**
+   * Avis des joueurs sur un quiz (§2.11) — réservé au **propriétaire** (la garde
+   * `findFirst({ where:{ id, ownerId } })` renvoie 404 pour un non-owner). Renvoie
+   * la moyenne, le nombre et la liste (récente d'abord).
+   */
+  async feedback(ownerId: string, id: string) {
+    const quiz = await this.prisma.quiz.findFirst({
+      where: { id, ownerId },
+      select: { id: true },
+    });
+    if (!quiz) {
+      throw new NotFoundException('Quiz introuvable.');
+    }
+    const items = await this.prisma.quizFeedback.findMany({
+      where: { quizId: id },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, rating: true, comment: true, nickname: true, createdAt: true },
+    });
+    const count = items.length;
+    const average = count ? items.reduce((sum, f) => sum + f.rating, 0) / count : 0;
+    return { count, average, items };
+  }
+
   /** Duplique un quiz possédé (copie profonde questions/options/réponses) en `draft`. */
   async duplicate(ownerId: string, id: string): Promise<Quiz> {
     const src = await this.prisma.quiz.findFirst({

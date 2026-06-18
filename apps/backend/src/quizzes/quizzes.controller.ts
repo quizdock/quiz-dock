@@ -10,6 +10,7 @@ import type { User } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { QuizDetailDto } from './dto/quiz-detail.dto';
+import { QuizFeedbackSummaryDto } from './dto/quiz-feedback.dto';
 import { QuizDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -43,6 +44,12 @@ export class QuizzesController {
   @ApiOkResponse({ type: QuizDetailDto })
   get(@CurrentUser() user: User, @Param('id') id: string) {
     return this.quizzes.get(user.id, id);
+  }
+
+  @Get(':id/feedback')
+  @ApiOkResponse({ type: QuizFeedbackSummaryDto })
+  feedback(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.quizzes.feedback(user.id, id);
   }
 
   @Put(':id')

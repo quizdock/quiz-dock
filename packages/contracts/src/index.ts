@@ -79,6 +79,8 @@ export const ClientEvents = {
   PlayerJoin: 'player:join',
   PlayerReconnect: 'player:reconnect',
   PlayerSubmit: 'player:submit',
+  /** Avis du joueur en fin de partie (note Likert 5 + commentaire facultatif). */
+  PlayerRate: 'player:rate',
   Ping: 'ping',
 } as const;
 
@@ -225,6 +227,14 @@ export interface ClientToServerEvents {
   ) => void;
   'player:reconnect': (p: { sessionToken: string }, ack: (res: { ok: boolean }) => void) => void;
   'player:submit': (p: { pin: string; questionIndex: number; answer: AnswerValue }) => void;
+  /**
+   * Avis de fin de partie : note Likert 1..5 + commentaire facultatif. Recevable
+   * seulement quand la partie est terminée (PODIUM/ENDED) ; `ack.ok=false` sinon.
+   */
+  'player:rate': (
+    p: { pin: string; rating: number; comment?: string },
+    ack: (res: { ok: boolean }) => void,
+  ) => void;
   ping: (p: { t0: number }) => void;
 }
 

@@ -32,6 +32,9 @@ function makePrisma() {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    quizFeedback: {
+      findMany: jest.fn(),
+    },
   };
 }
 
@@ -72,6 +75,26 @@ describe('QuizzesService', () => {
       await expect(service.remove(OWNER, 'q1')).rejects.toThrow(NotFoundException);
       expect(prisma.quiz.update).not.toHaveBeenCalled();
       expect(prisma.quiz.delete).not.toHaveBeenCalled();
+    });
+
+    it('feedback renvoie 404 pour un non-propriétaire (et ne lit aucun avis)', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(null);
+      await expect(service.feedback('someone-else', 'q1')).rejects.toThrow(NotFoundException);
+      expect(prisma.quizFeedback.findMany).not.toHaveBeenCalled();
+    });
+
+    it('feedback agrège moyenne + nombre pour le propriétaire', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(makeQuiz());
+      prisma.quizFeedback.findMany.mockResolvedValue([
+        { id: 'f1', rating: 5, comment: 'top', nickname: 'A', createdAt: new Date() },
+        { id: 'f2', rating: 2, comment: null, nickname: 'B', createdAt: new Date() },
+      ]);
+      const res = await service.feedback(OWNER, 'q1');
+      expect(prisma.quizFeedback.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { quizId: 'q1' } }),
+      );
+      expect(res.count).toBe(2);
+      expect(res.average).toBe(3.5);
     });
   });
 

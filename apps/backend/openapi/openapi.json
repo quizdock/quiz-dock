@@ -264,6 +264,41 @@
         ]
       }
     },
+    "/api/v1/quizzes/{id}/feedback": {
+      "get": {
+        "operationId": "QuizzesController_feedback",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizFeedbackSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
     "/api/v1/quizzes/{id}/status": {
       "patch": {
         "operationId": "QuizzesController_transition",
@@ -1001,6 +1036,57 @@
           "updatedAt",
           "archivedAt",
           "questions"
+        ]
+      },
+      "QuizFeedbackSummaryDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "average": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "rating": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "comment": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "nickname": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "rating",
+                "comment",
+                "nickname",
+                "createdAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "count",
+          "average",
+          "items"
         ]
       },
       "UpdateQuizDto": {

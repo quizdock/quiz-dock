@@ -136,6 +136,7 @@ model Quiz {
   coverMedia  MediaAsset?      @relation("QuizCover", fields: [coverMediaId], references: [id])
   questions   Question[]
   sessionLogs GameSessionLog[]
+  feedback    QuizFeedback[]
 
   @@index([ownerId, status])
   @@map("quiz")
@@ -310,4 +311,24 @@ model AnswerLog {
   @@index([sessionLogId, orderIndex])
   @@index([playerResultLogId])
   @@map("answer_log")
+}
+
+/// §2.11 — avis d'un joueur en fin de partie (note Likert 5 + commentaire libre).
+/// Rattaché au quiz ; le `pin`/`playerId` (état live Redis, éphémère) servent au
+/// dédoublonnage (une note par joueur et par partie). Lisible par le seul owner.
+model QuizFeedback {
+  id        String   @id @default(ulid()) @db.Char(26)
+  quizId    String   @map("quiz_id") @db.Char(26)
+  pin       String   @db.Char(6)
+  playerId  String   @map("player_id")
+  nickname  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([pin, playerId])
+  @@index([quizId, createdAt])
+  @@map("quiz_feedback")
 }

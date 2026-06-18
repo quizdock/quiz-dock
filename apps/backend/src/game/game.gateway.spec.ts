@@ -334,6 +334,35 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.rank).toBe(1);
   }, 15_000);
 
+  it('player:rate : avis de fin de partie persisté (note + commentaire), refusé en lobby', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Wendy' });
+
+    // En LOBBY : la partie n'est pas terminée → refus.
+    const early = await player.emitWithAck('player:rate', { pin, rating: 5 });
+    expect(early.ok).toBe(false);
+
+    // On termine la partie, puis on note.
+    host.emit('host:start', { pin });
+    await new Promise((r) => setTimeout(r, 300));
+    host.emit('host:end', { pin });
+    await new Promise((r) => setTimeout(r, 200));
+
+    const ack = await player.emitWithAck('player:rate', {
+      pin,
+      rating: 4,
+      comment: '  Super quiz  ',
+    });
+    expect(ack.ok).toBe(true);
+
+    const row = await prisma.quizFeedback.findFirst({ where: { pin } });
+    expect(row?.rating).toBe(4);
+    expect(row?.comment).toBe('Super quiz'); // élagué
+    expect(row?.nickname).toBe('Wendy');
+  }, 15_000);
+
   it('late join (§5) : un joueur arrivé après le départ reçoit l’état ANSWERING + question:start', async () => {
     const host = connect({ localUser: 'Formateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

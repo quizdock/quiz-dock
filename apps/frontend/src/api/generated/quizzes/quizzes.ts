@@ -28,6 +28,7 @@ import type {
   CreateQuizDto,
   QuizDetailDto,
   QuizDto,
+  QuizFeedbackSummaryDto,
   TransitionQuizDto,
   UpdateQuizDto
 } from '../model';
@@ -552,7 +553,113 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getQuizzesControllerRemoveMutationOptions(options), queryClient);
     }
-    export type quizzesControllerTransitionResponse200 = {
+    export type quizzesControllerFeedbackResponse200 = {
+  data: QuizFeedbackSummaryDto
+  status: 200
+}
+
+export type quizzesControllerFeedbackResponseSuccess = (quizzesControllerFeedbackResponse200) & {
+  headers: Headers;
+};
+;
+
+export type quizzesControllerFeedbackResponse = (quizzesControllerFeedbackResponseSuccess)
+
+export const getQuizzesControllerFeedbackUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/quizzes/${id}/feedback`
+}
+
+export const quizzesControllerFeedback = async (id: string, options?: RequestInit): Promise<quizzesControllerFeedbackResponse> => {
+
+  return customFetch<quizzesControllerFeedbackResponse>(getQuizzesControllerFeedbackUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getQuizzesControllerFeedbackQueryKey = (id: string,) => {
+    return [
+    `/api/v1/quizzes/${id}/feedback`
+    ] as const;
+    }
+
+
+export const getQuizzesControllerFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getQuizzesControllerFeedbackQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerFeedback>>> = ({ signal }) => quizzesControllerFeedback(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type QuizzesControllerFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof quizzesControllerFeedback>>>
+export type QuizzesControllerFeedbackQueryError = unknown
+
+
+export function useQuizzesControllerFeedback<TData = Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerFeedback>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerFeedback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerFeedback<TData = Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerFeedback>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerFeedback>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerFeedback<TData = Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useQuizzesControllerFeedback<TData = Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerFeedback>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getQuizzesControllerFeedbackQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type quizzesControllerTransitionResponse200 = {
   data: QuizDto
   status: 200
 }

@@ -326,6 +326,22 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     await this.engine.adjustTime(payload.pin, this.requireHostId(socket), payload.deltaS);
   }
 
+  /**
+   * `player:rate` : avis de fin de partie (note Likert + commentaire). Le joueur est
+   * identifié par son socket (comme `player:submit`) ; le service refuse hors PODIUM/ENDED.
+   */
+  @SubscribeMessage('player:rate')
+  async playerRate(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; rating: number; comment?: string },
+  ): Promise<{ ok: boolean }> {
+    const playerId = socket.data.playerId;
+    if (!playerId) {
+      return { ok: false };
+    }
+    return this.game.recordFeedback(payload.pin, playerId, payload.rating, payload.comment);
+  }
+
   @SubscribeMessage('ping')
   ping(@ConnectedSocket() socket: GameSocket, @MessageBody() payload: { t0: number }): void {
     socket.emit('pong', { t0: payload.t0, t1: Date.now() });

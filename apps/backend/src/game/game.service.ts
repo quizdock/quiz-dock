@@ -212,6 +212,46 @@ export class GameService {
   }
 
   /**
+   * Enregistre l'avis d'un joueur en fin de partie (§2.11). N'accepte qu'une partie
+   * **terminée** (PODIUM/ENDED) et une note Likert 1..5. `upsert` sur `[pin,playerId]`
+   * → une seule note par joueur et par partie (re-noter révise, pas d'erreur d'unicité).
+   * Le commentaire est borné/élagué. Le quiz est résolu depuis l'état live (Redis).
+   */
+  async recordFeedback(
+    pin: string,
+    playerId: string,
+    rating: number,
+    comment?: string,
+  ): Promise<{ ok: boolean }> {
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return { ok: false };
+    }
+    const meta = await this.getMeta(pin);
+    if (!meta || (meta.state !== GameState.Podium && meta.state !== GameState.Ended)) {
+      return { ok: false };
+    }
+    const raw = await this.redis.hget(gameKeys.players(pin), playerId);
+    if (!raw) {
+      return { ok: false };
+    }
+    const player = JSON.parse(raw) as PlayerRecord;
+    const cleanComment = comment?.trim() ? comment.trim().slice(0, 2000) : null;
+    await this.prisma.quizFeedback.upsert({
+      where: { pin_playerId: { pin, playerId } },
+      create: {
+        quizId: meta.quizId,
+        pin,
+        playerId,
+        nickname: player.nickname,
+        rating,
+        comment: cleanComment,
+      },
+      update: { rating, comment: cleanComment },
+    });
+    return { ok: true };
+  }
+
+  /**
    * Liste les parties **encore vivantes** d'un hôte (dashboard §6.2). Purge au
    * passage les PINs dont l'état a expiré ou est terminé (index auto-nettoyant).
    */
