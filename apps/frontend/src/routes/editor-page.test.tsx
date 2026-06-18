@@ -54,6 +54,32 @@ describe('EditorPage', () => {
     expect(screen.getByText('Capitale de la France ?')).toBeInTheDocument();
   });
 
+  it('affiche les avis des joueurs (moyenne + commentaires) côté propriétaire', async () => {
+    // Le handler feedback est listé AVANT /quizzes/q1 (le matcher `includes` prend
+    // le premier qui correspond, et l'URL feedback contient aussi « /quizzes/q1 »).
+    mockApi([
+      {
+        method: 'GET',
+        path: '/quizzes/q1/feedback',
+        body: {
+          count: 2,
+          average: 4.5,
+          items: [
+            { id: 'f1', rating: 5, comment: 'Génial', nickname: 'Zoé', createdAt: '2026-01-02' },
+            { id: 'f2', rating: 4, comment: null, nickname: 'Tom', createdAt: '2026-01-01' },
+          ],
+        },
+      },
+      { method: 'GET', path: '/quizzes/q1', body: detail() },
+    ]);
+    renderApp('/quizzes/q1');
+
+    expect(await screen.findByText('Avis des joueurs')).toBeInTheDocument();
+    expect(await screen.findByText('4.5')).toBeInTheDocument();
+    expect(screen.getByText('Génial')).toBeInTheDocument();
+    expect(screen.getByText('Zoé')).toBeInTheDocument();
+  });
+
   it('expose un lien Aperçu ouvrant le quiz dans un nouvel onglet', async () => {
     mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail() }]);
     renderApp('/quizzes/q1');
