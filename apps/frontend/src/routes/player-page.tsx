@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { joinSession, loadPlayerSession } from '../game/game-client';
 import { OptionGrid } from '../game/live-components';
+import { RatingPanel } from '../game/rating-panel';
 import { useGameRemaining } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
@@ -224,20 +225,26 @@ export function PlayerPage() {
       <p className="text-xl font-semibold">Présentateur déconnecté — partie en pause.</p>,
     );
   }
-  if (view.state === 'ENDED') {
-    return wrap(<p className="text-xl font-semibold">Merci d’avoir joué ! 🎉</p>);
-  }
-
-  if (view.state === 'PODIUM') {
+  // Fin de partie (podium ou terminée) : on propose de noter le quiz. Les deux états
+  // partagent la même structure pour que le panneau d'avis (et le commentaire en
+  // cours de saisie) survive à la transition PODIUM → ENDED déclenchée par l'hôte.
+  if (view.state === 'PODIUM' || view.state === 'ENDED') {
     return wrap(
       <>
-        <h2 className="text-2xl font-bold">🏆 Podium</h2>
-        {view.podium?.you ? (
-          <p className="text-lg">
-            Ton classement : <span className="font-semibold">{view.podium.you.rank}ᵉ</span> —{' '}
-            {view.podium.you.score} pts
-          </p>
-        ) : null}
+        {view.state === 'PODIUM' ? (
+          <>
+            <h2 className="text-2xl font-bold">🏆 Podium</h2>
+            {view.podium?.you ? (
+              <p className="text-lg">
+                Ton classement : <span className="font-semibold">{view.podium.you.rank}ᵉ</span> —{' '}
+                {view.podium.you.score} pts
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-xl font-semibold">Merci d’avoir joué ! 🎉</p>
+        )}
+        <RatingPanel pin={pin} socket={socket} />
       </>,
     );
   }

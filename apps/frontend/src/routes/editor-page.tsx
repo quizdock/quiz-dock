@@ -12,6 +12,7 @@ import {
   Plus,
   Radio,
   Save,
+  Star,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ import { QuestionForm } from './question-form';
 import {
   getQuizzesControllerGetQueryKey,
   getQuizzesControllerListQueryKey,
+  useQuizzesControllerFeedback,
   useQuizzesControllerGet,
   useQuizzesControllerRemove,
   useQuizzesControllerTransition,
@@ -280,6 +282,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               {livePin ? <GameAccessPanel pin={livePin} /> : null}
             </CardContent>
           </Card>
+
+          {/* Avis des joueurs (§2.11) — visible du seul propriétaire. */}
+          <FeedbackCard quizId={quiz.id} />
         </aside>
 
         {/* Questions (zone de travail principale) */}
@@ -393,6 +398,67 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         }}
       />
     </section>
+  );
+}
+
+/** Étoiles pleines/vides pour une note `value` sur 5. */
+function StarRow({ value, size = 'size-4' }: { value: number; size?: string }) {
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value} sur 5`}>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Star
+          key={i}
+          className={cn(
+            size,
+            i < value ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40',
+          )}
+        />
+      ))}
+    </span>
+  );
+}
+
+/**
+ * Avis des joueurs sur le quiz (§2.11) — réservé au propriétaire (l'endpoint refuse
+ * les autres). Moyenne, nombre et liste des commentaires (récents d'abord).
+ */
+function FeedbackCard({ quizId }: { quizId: string }) {
+  const { data, isLoading } = useQuizzesControllerFeedback(quizId);
+  const summary = data?.data;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Avis des joueurs</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {isLoading ? <p className="text-muted-foreground text-sm">Chargement…</p> : null}
+        {summary && summary.count === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Aucun avis pour l’instant. Les joueurs peuvent noter le quiz en fin de partie.
+          </p>
+        ) : null}
+        {summary && summary.count > 0 ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold tabular-nums">{summary.average.toFixed(1)}</span>
+              <StarRow value={Math.round(summary.average)} size="size-5" />
+              <span className="text-muted-foreground text-sm">{summary.count} avis</span>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {summary.items.map((f) => (
+                <li key={f.id} className="rounded-md border p-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{f.nickname}</span>
+                    <StarRow value={f.rating} size="size-3.5" />
+                  </div>
+                  {f.comment ? <p className="text-muted-foreground mt-1">{f.comment}</p> : null}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
