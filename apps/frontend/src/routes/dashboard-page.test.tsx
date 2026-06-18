@@ -51,4 +51,27 @@ describe('DashboardPage', () => {
       expect(posted).toBe(true);
     });
   });
+
+  it('arrête une partie en cours depuis la liste (confirmation → POST end)', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/quizzes', body: [] },
+      {
+        method: 'GET',
+        path: '/games/mine',
+        body: [{ pin: '482913', title: 'Histoire', state: 'LOBBY', playerCount: 2 }],
+      },
+      { method: 'POST', path: '/games/482913/end', status: 204, body: {} },
+    ]);
+    renderApp('/dashboard');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter la partie' }));
+
+    await waitFor(() => {
+      const posted = fetchMock.mock.calls.some(
+        ([url, opts]) => String(url).includes('/games/482913/end') && opts?.method === 'POST',
+      );
+      expect(posted).toBe(true);
+    });
+  });
 });

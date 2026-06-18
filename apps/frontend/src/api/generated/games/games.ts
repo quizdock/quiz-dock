@@ -6,16 +6,20 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
@@ -137,3 +141,78 @@ export function useGameControllerMine<TData = Awaited<ReturnType<typeof gameCont
 
 
 
+export type gameControllerEndResponse204 = {
+  data: void
+  status: 204
+}
+
+export type gameControllerEndResponseSuccess = (gameControllerEndResponse204) & {
+  headers: Headers;
+};
+;
+
+export type gameControllerEndResponse = (gameControllerEndResponseSuccess)
+
+export const getGameControllerEndUrl = (pin: string,) => {
+
+
+
+
+  return `/api/v1/games/${pin}/end`
+}
+
+export const gameControllerEnd = async (pin: string, options?: RequestInit): Promise<gameControllerEndResponse> => {
+
+  return customFetch<gameControllerEndResponse>(getGameControllerEndUrl(pin),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getGameControllerEndMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerEnd>>, TError,{pin: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof gameControllerEnd>>, TError,{pin: string}, TContext> => {
+
+const mutationKey = ['gameControllerEnd'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof gameControllerEnd>>, {pin: string}> = (props) => {
+          const {pin} = props ?? {};
+
+          return  gameControllerEnd(pin,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GameControllerEndMutationResult = NonNullable<Awaited<ReturnType<typeof gameControllerEnd>>>
+
+    export type GameControllerEndMutationError = unknown
+
+    export const useGameControllerEnd = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gameControllerEnd>>, TError,{pin: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof gameControllerEnd>>,
+        TError,
+        {pin: string},
+        TContext
+      > => {
+      return useMutation(getGameControllerEndMutationOptions(options), queryClient);
+    }

@@ -1,10 +1,16 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { Pencil, Play, Plus, Radio } from 'lucide-react';
+import { Pencil, Play, Plus, Radio, Square } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useLaunchSession } from '../game/use-launch-session';
-import { useGameControllerMine } from '../api/generated/games/games';
+import {
+  getGameControllerMineQueryKey,
+  useGameControllerEnd,
+  useGameControllerMine,
+} from '../api/generated/games/games';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
@@ -29,8 +35,20 @@ export function DashboardPage() {
   const create = useQuizzesControllerCreate();
   const { launch, isLaunching, error: launchError } = useLaunchSession();
   const { data: gamesData } = useGameControllerMine();
+  const endGame = useGameControllerEnd();
+  const [endPin, setEndPin] = useState<string | null>(null);
   const quizzes = data?.data ?? [];
   const activeGames = gamesData?.data ?? [];
+
+  const onEndGame = (pin: string) => {
+    endGame.mutate(
+      { pin },
+      {
+        onSuccess: () =>
+          queryClient.invalidateQueries({ queryKey: getGameControllerMineQueryKey() }),
+      },
+    );
+  };
 
   const onCreate = () => {
     create.mutate(
@@ -74,11 +92,34 @@ export function DashboardPage() {
                     Reprendre
                   </Button>
                 </Link>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  disabled={endGame.isPending}
+                  onClick={() => setEndPin(game.pin)}
+                >
+                  <Square className="size-4" />
+                  Arrêter
+                </Button>
               </li>
             ))}
           </ul>
         </div>
       )}
+
+      <ConfirmDialog
+        open={endPin !== null}
+        destructive
+        title="Arrêter la partie ?"
+        description="La partie en cours sera définitivement terminée pour tous les joueurs connectés."
+        confirmLabel="Arrêter la partie"
+        onCancel={() => setEndPin(null)}
+        onConfirm={() => {
+          if (endPin) onEndGame(endPin);
+          setEndPin(null);
+        }}
+      />
 
       {isLoading && <p className="text-muted-foreground">Chargement…</p>}
       {error ? <p className="text-destructive">Impossible de charger les quiz.</p> : null}

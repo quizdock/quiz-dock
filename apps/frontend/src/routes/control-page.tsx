@@ -174,6 +174,10 @@ export function ControlPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <ModeToggle mode={view.mode} onChange={setMode} />
           <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => emit('host:end')}>
+              <Square className="size-4" />
+              Arrêter la partie
+            </Button>
             {screenButton}
             <Tooltip label="Attendez que le maximum de joueurs soient connectés avant de démarrer">
               <Button

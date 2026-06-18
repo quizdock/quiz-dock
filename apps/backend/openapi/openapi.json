@@ -630,6 +630,34 @@
           "games"
         ]
       }
+    },
+    "/api/v1/games/{pin}/end": {
+      "post": {
+        "operationId": "GameController_end",
+        "parameters": [
+          {
+            "name": "pin",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "games"
+        ]
+      }
     }
   },
   "info": {
