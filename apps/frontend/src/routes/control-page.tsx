@@ -175,15 +175,17 @@ export function ControlPage() {
           <ModeToggle mode={view.mode} onChange={setMode} />
           <div className="flex items-center gap-2">
             {screenButton}
-            <Button
-              type="button"
-              variant="main-action"
-              disabled={view.players.length === 0}
-              onClick={() => emit('host:start')}
-            >
-              <Play className="size-4" />
-              Démarrer la partie
-            </Button>
+            <Tooltip label="Attendez que le maximum de joueurs soient connectés avant de démarrer">
+              <Button
+                type="button"
+                variant="main-action"
+                disabled={view.players.length === 0}
+                onClick={() => emit('host:start')}
+              >
+                <Play className="size-4" />
+                Démarrer la partie
+              </Button>
+            </Tooltip>
           </div>
         </div>
         <QRCodeCanvas value={joinUrl} size={512} ref={qrCanvasRef} className="hidden" />
@@ -349,18 +351,20 @@ function ControlBar({
 /** Bascule du rythme manuel ⇄ auto (le présentateur peut reprendre la main, §8). */
 function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameMode) => void }) {
   return (
+    // Pas d'`overflow-hidden` ici : il rognerait les infobulles (positionnées en
+    // absolu) des boutons. L'arrondi est porté par les boutons d'extrémité.
     <div
       role="group"
       aria-label="Rythme de la partie"
-      className="border-input inline-flex overflow-hidden rounded-md border text-sm"
+      className="border-input inline-flex rounded-md border text-sm"
     >
-      <Tooltip label="Mode manuel : vous enchaînez vous-même les questions">
+      <Tooltip label="Mode manuel : vous passez vous-même à la question suivante">
         <button
           type="button"
           aria-pressed={mode === 'manual'}
           onClick={() => onChange('manual')}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 font-medium transition-colors',
+            'flex items-center gap-1.5 rounded-l-md px-3 py-1.5 font-medium transition-colors',
             mode === 'manual'
               ? 'bg-primary text-primary-foreground'
               : 'hover:bg-accent hover:text-accent-foreground',
@@ -370,13 +374,13 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
           Manuel
         </button>
       </Tooltip>
-      <Tooltip label="Mode auto : la partie enchaîne seule après chaque résultat (pause possible)">
+      <Tooltip label="Mode auto : passage automatique à la question suivante après chaque résultat">
         <button
           type="button"
           aria-pressed={mode === 'auto'}
           onClick={() => onChange('auto')}
           className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 font-medium transition-colors',
+            'flex items-center gap-1.5 rounded-r-md px-3 py-1.5 font-medium transition-colors',
             mode === 'auto'
               ? 'bg-primary text-primary-foreground'
               : 'hover:bg-accent hover:text-accent-foreground',

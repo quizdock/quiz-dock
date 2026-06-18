@@ -47,6 +47,7 @@ describe('GameGateway (intégration socket)', () => {
       data: {
         ownerId: host.id,
         title: 'Quiz live test',
+        description: 'Quiz de démonstration',
         status: 'ready',
         questionCount: 1,
         questions: {
@@ -332,6 +333,24 @@ describe('GameGateway (intégration socket)', () => {
 
     const podium = await podiumP; // auto-next (≈300 ms) enchaîne vers le podium
     expect(podium.you?.rank).toBe(1);
+  }, 15_000);
+
+  it('host:attach : la console reçoit game:outline (titre + description + questions)', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+
+    const outlineP = new Promise<{
+      title: string;
+      description: string | null;
+      questions: Array<{ index: number; prompt: string; timeLimitS: number }>;
+    }>((resolve) => host.on('game:outline', (o) => resolve(o as never)));
+    await host.emitWithAck('host:attach', { pin });
+    const outline = await outlineP;
+
+    expect(outline.title).toBe('Quiz live test');
+    expect(outline.description).toBe('Quiz de démonstration');
+    expect(outline.questions).toHaveLength(1);
+    expect(outline.questions[0].prompt).toBe('Capitale de la France ?');
   }, 15_000);
 
   it('player:rate : avis de fin de partie persisté (note + commentaire), refusé en lobby', async () => {
