@@ -155,12 +155,18 @@ export interface QuestionTimePayload {
   endsAt: number;
 }
 
-/** Une question du sommaire de contrôle (sans secret : pas de bonne réponse). */
+/**
+ * Une question du sommaire de contrôle. Le sommaire est **réservé à la console
+ * hôte** (jamais diffusé aux joueurs/projection), donc il peut porter la clé de
+ * correction — `correctOptionIds` permet à l'animateur de voir la bonne réponse
+ * en direct (vide pour les types sans option : numérique/texte/sondage/ordre).
+ */
 export interface OutlineQuestion {
   index: number;
   type: QuestionType;
   prompt: string;
   timeLimitS: number;
+  correctOptionIds: string[];
 }
 
 /** Sommaire du quiz pour la console hôte (récap + carrousel d'avancement). */

@@ -277,6 +277,8 @@ export function ControlPage() {
         ? 'bg-amber-500'
         : 'bg-success';
   const answeredPct = totalPlayers > 0 ? (answered / totalPlayers) * 100 : 0;
+  // Bonne réponse mise en avant pour l'animateur (clé de correction du sommaire hôte).
+  const correctIds = view.outline.find((q) => q.index === view.questionIndex)?.correctOptionIds;
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-5 py-6">
@@ -304,7 +306,7 @@ export function ControlPage() {
         <h1 className="text-2xl font-semibold sm:text-3xl">{view.question?.prompt}</h1>
 
         {view.question?.options?.length ? (
-          <OptionGrid options={view.question.options} />
+          <OptionGrid options={view.question.options} highlightIds={correctIds} />
         ) : (
           <p className="text-muted-foreground text-sm">Réponse libre (numérique ou texte).</p>
         )}

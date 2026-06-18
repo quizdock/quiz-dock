@@ -17,6 +17,7 @@ export function OptionGrid({
   onPick,
   selectedIds,
   correctIds,
+  highlightIds,
   disabled,
   size = 'md',
 }: {
@@ -25,6 +26,12 @@ export function OptionGrid({
   /** Options mises en évidence (réponse unique = 1 id ; multi = plusieurs). */
   selectedIds?: string[];
   correctIds?: string[];
+  /**
+   * Souligne en vert la/les bonne(s) réponse(s) **sans** estomper les autres —
+   * indice réservé à l'animateur (console hôte), pas un reveal. Distinct de
+   * `correctIds` (qui, lui, estompe les mauvaises au moment du reveal).
+   */
+  highlightIds?: string[];
   disabled?: boolean;
   size?: 'md' | 'lg';
 }) {
@@ -33,6 +40,7 @@ export function OptionGrid({
       {options.map((o) => {
         const isCorrect = correctIds?.includes(o.id);
         const isPicked = selectedIds?.includes(o.id) ?? false;
+        const isHinted = highlightIds?.includes(o.id); // indice animateur (outline verte)
         const dimmed = correctIds && !isCorrect; // au reveal, estompe les mauvaises
         const Tag = onPick ? 'button' : 'div';
         return (
@@ -49,6 +57,7 @@ export function OptionGrid({
               dimmed && 'opacity-40',
               isCorrect && 'ring-4 ring-white',
               isPicked && 'ring-4 ring-black/60',
+              isHinted && 'outline-success outline outline-2 outline-offset-2',
             )}
             aria-label={o.text ?? o.color}
           >

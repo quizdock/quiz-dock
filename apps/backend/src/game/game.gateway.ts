@@ -181,6 +181,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
         type: q.type,
         prompt: q.prompt,
         timeLimitS: q.timeLimitS,
+        // Clé de correction — n'est jamais envoyée qu'à la console hôte (ce socket).
+        correctOptionIds: q.options.filter((o) => o.isCorrect).map((o) => o.id),
       })),
     });
   }
