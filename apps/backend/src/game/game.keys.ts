@@ -20,6 +20,18 @@ export const HOST_GRACE_MS = 5_000;
 export const HOST_RECONNECT_WINDOW_MS = 120_000;
 
 /**
+ * Mode auto (§8) : temps d'affichage du reveal/classement avant d'enchaîner
+ * automatiquement la question suivante. La pause suspend ce minuteur.
+ */
+export const AUTO_ADVANCE_MS = 5_000;
+
+/**
+ * Plancher du chrono après un retrait de temps (`host:adjust-time`) : en deçà,
+ * la question est révélée immédiatement plutôt que de laisser un timer mort.
+ */
+export const CHRONO_FLOOR_MS = 1_000;
+
+/**
  * Clés Redis de l'état live (SPECIFICATIONS-DONNEES §4). Centralisées ici pour
  * garantir la cohérence du nommage entre allocation, écriture et purge.
  */

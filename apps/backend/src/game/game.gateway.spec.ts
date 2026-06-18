@@ -30,6 +30,7 @@ describe('GameGateway (intégration socket)', () => {
     process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
     process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
     process.env.GAME_HOST_WINDOW_MS = '1500'; // fenêtre de reconnexion hôte courte (§7.3)
+    process.env.GAME_AUTO_ADVANCE_MS = '300'; // enchaînement auto rapide (§8) en test
     app = await NestFactory.create(AppModule, { logger: false });
     await app.listen(0);
     prisma = app.get(PrismaService);
@@ -253,6 +254,84 @@ describe('GameGateway (intégration socket)', () => {
     const podium = await podiumP;
     expect(podium.you?.rank).toBe(1);
     expect(podium.you?.score).toBeGreaterThan(0);
+  }, 15_000);
+
+  it('host:adjust-time : +5 s repousse `endsAt` et diffuse `question:time`', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Tina' });
+
+    const qStart = new Promise<{ questionIndex: number; endsAt: number }>((resolve) =>
+      player.on('question:start', (q) => resolve(q as never)),
+    );
+    const timeP = new Promise<{ questionIndex: number; startedAt: number; endsAt: number }>(
+      (resolve) => player.on('question:time', (t) => resolve(t as never)),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+
+    host.emit('host:adjust-time', { pin, deltaS: 5 });
+    const t = await timeP;
+    expect(t.questionIndex).toBe(0);
+    expect(t.endsAt - q.endsAt).toBe(5000); // +5 s pile
+  }, 15_000);
+
+  it('host:pause gèle le chrono (game:mode + remainingMs) puis reprend (question:time)', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Ugo' });
+
+    const qStart = new Promise<{ startedAt: number }>((resolve) =>
+      player.on('question:start', (q) => resolve(q as never)),
+    );
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    // Attendre l'ouverture des réponses pour que du temps se soit écoulé.
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+
+    const pausedP = new Promise<{ paused: boolean; remainingMs?: number }>((resolve) =>
+      player.on('game:mode', (m) => (m as { paused: boolean }).paused && resolve(m as never)),
+    );
+    host.emit('host:pause', { pin, paused: true });
+    const paused = await pausedP;
+    expect(paused.paused).toBe(true);
+    expect(paused.remainingMs).toBeGreaterThan(0);
+    expect(paused.remainingMs).toBeLessThanOrEqual(5000);
+
+    const timeP = new Promise<{ endsAt: number }>((resolve) =>
+      player.on('question:time', (t) => resolve(t as never)),
+    );
+    host.emit('host:pause', { pin, paused: false });
+    const t = await timeP;
+    expect(t.endsAt).toBeGreaterThan(Date.now()); // chrono relancé dans le futur
+  }, 15_000);
+
+  it('mode auto : après le reveal, enchaîne seul (host:next implicite) → podium', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    host.emit('host:mode', { pin, mode: 'auto' });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Vic' });
+
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => player.on('question:start', (q) => resolve(q as never)),
+    );
+    // Le podium doit arriver SANS que l'on émette host:next (enchaînement auto §8).
+    const podiumP = new Promise<{ you?: { rank: number } }>((resolve) =>
+      player.on('game:podium', (p) => resolve(p as never)),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    const parisId = q.options.find((o) => o.text === 'Paris')!.id;
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+    player.emit('player:submit', { pin, questionIndex: 0, answer: parisId }); // → REVEAL 'all'
+
+    const podium = await podiumP; // auto-next (≈300 ms) enchaîne vers le podium
+    expect(podium.you?.rank).toBe(1);
   }, 15_000);
 
   it('late join (§5) : un joueur arrivé après le départ reçoit l’état ANSWERING + question:start', async () => {

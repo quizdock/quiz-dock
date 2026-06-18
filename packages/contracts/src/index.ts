@@ -41,6 +41,10 @@ export enum PointsMode {
   None = 'none',
 }
 
+/** Rythme de progression de la partie (§8). `manual` : l'hôte enchaîne ; `auto` :
+ * la partie avance seule après le reveal (le `pause` suspend l'auto-progression). */
+export type GameMode = 'manual' | 'auto';
+
 /** Couleurs/formes des options — accessibilité couleur + forme (technique §4). */
 export enum OptionColor {
   Red = 'red',
@@ -65,6 +69,12 @@ export const ClientEvents = {
   HostReveal: 'host:reveal',
   HostKick: 'host:kick',
   HostEnd: 'host:end',
+  /** Bascule manuel/auto en cours de partie (le présentateur reprend la main). */
+  HostMode: 'host:mode',
+  /** Suspend/reprend l'auto-progression (et gèle le chrono en ANSWERING). */
+  HostPause: 'host:pause',
+  /** Ajoute/retire du temps au chrono de la question courante (± secondes). */
+  HostAdjustTime: 'host:adjust-time',
   SpectatorJoin: 'spectator:join',
   PlayerJoin: 'player:join',
   PlayerReconnect: 'player:reconnect',
@@ -85,6 +95,12 @@ export const ServerEvents = {
   Leaderboard: 'leaderboard',
   GamePodium: 'game:podium',
   GameEnded: 'game:ended',
+  /** Mode/pause courants (diffusé à chaque changement + à l'attache). */
+  GameMode: 'game:mode',
+  /** Sommaire des questions — réservé aux fenêtres de **contrôle hôte**. */
+  GameOutline: 'game:outline',
+  /** Nouveau timing de la question courante (ajustement du chrono). */
+  QuestionTime: 'question:time',
   Notice: 'notice',
   Error: 'error',
   Pong: 'pong',
@@ -121,6 +137,34 @@ export interface GameStatePayload {
   state: GameState;
   questionIndex: number;
   totalQuestions: number;
+}
+
+/** Mode/pause courants. `remainingMs` n'est présent que si le chrono est gelé. */
+export interface GameModePayload {
+  mode: GameMode;
+  paused: boolean;
+  remainingMs?: number;
+}
+
+/** Nouveau timing serveur autoritatif de la question courante (ajustement chrono). */
+export interface QuestionTimePayload {
+  questionIndex: number;
+  startedAt: number;
+  endsAt: number;
+}
+
+/** Une question du sommaire de contrôle (sans secret : pas de bonne réponse). */
+export interface OutlineQuestion {
+  index: number;
+  type: QuestionType;
+  prompt: string;
+  timeLimitS: number;
+}
+
+/** Sommaire du quiz pour la console hôte (récap + carrousel d'avancement). */
+export interface GameOutlinePayload {
+  title: string;
+  questions: OutlineQuestion[];
 }
 
 export interface PersonalResult {
@@ -166,6 +210,12 @@ export interface ClientToServerEvents {
   'host:reveal': (p: { pin: string }) => void;
   'host:kick': (p: { pin: string; playerId: string }) => void;
   'host:end': (p: { pin: string }) => void;
+  /** Bascule le rythme manuel/auto en cours de partie (§8). */
+  'host:mode': (p: { pin: string; mode: GameMode }) => void;
+  /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
+  'host:pause': (p: { pin: string; paused: boolean }) => void;
+  /** Ajoute/retire `deltaS` secondes au chrono de la question courante. */
+  'host:adjust-time': (p: { pin: string; deltaS: number }) => void;
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
   'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'player:join': (
@@ -193,6 +243,12 @@ export interface ServerToClientEvents {
   leaderboard: (p: LeaderboardPayload) => void;
   'game:podium': (p: PodiumPayload) => void;
   'game:ended': (p: Record<string, never>) => void;
+  /** Mode/pause courants (à chaque changement et au (ré)attache). */
+  'game:mode': (p: GameModePayload) => void;
+  /** Sommaire des questions — émis aux seules fenêtres de contrôle hôte. */
+  'game:outline': (p: GameOutlinePayload) => void;
+  /** Timing recalculé de la question courante (ajustement du chrono). */
+  'question:time': (p: QuestionTimePayload) => void;
   error: (p: { code: string; message: string }) => void;
   pong: (p: { t0: number; t1: number }) => void;
 }

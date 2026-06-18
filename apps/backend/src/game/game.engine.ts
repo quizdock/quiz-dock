@@ -2,6 +2,8 @@ import { BadRequestException, ForbiddenException, Injectable, Logger } from '@ne
 import { GameState } from '@roux-quizz/contracts';
 import type {
   AnswerValue,
+  GameMode,
+  GameModePayload,
   LeaderboardPayload,
   LeaderboardRow,
   QuestionRevealPayload,
@@ -10,6 +12,8 @@ import type {
 import type { Server } from 'socket.io';
 import { GameService } from './game.service';
 import {
+  AUTO_ADVANCE_MS,
+  CHRONO_FLOOR_MS,
   GAME_TTL_S,
   GRACE_MS,
   HOST_GRACE_MS,
@@ -57,6 +61,8 @@ export class GameEngine {
   private readonly graceTimers = new Map<string, NodeJS.Timeout>();
   /** Fenêtre de reconnexion hôte avant fin auto (§7.3) — par PIN. */
   private readonly endWindowTimers = new Map<string, NodeJS.Timeout>();
+  /** Minuterie d'enchaînement automatique en mode auto (§8) — par PIN. */
+  private readonly autoNextTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private readonly game: GameService,
@@ -90,11 +96,17 @@ export class GameEngine {
     const startedAt = now + readDelay; // fenêtre de lecture côté client
     const endsAt = startedAt + question.timeLimitS * 1000;
 
+    // Nouvelle question : chrono qui tourne, ni gelé ni en pause (un enchaînement
+    // manuel pendant une pause reprend implicitement la main).
+    this.cancelTimer(this.autoNextTimers, pin);
     await this.redis.hset(gameKeys.game(pin), {
       state: GameState.Answering,
       currentIndex: String(index),
       questionStartedAt: String(startedAt),
       questionEndsAt: String(endsAt),
+      clockFrozen: '0',
+      paused: '0',
+      pausedRemainingMs: '',
     });
 
     this.server.to(pin).emit('game:state', {
@@ -105,6 +117,7 @@ export class GameEngine {
     this.server
       .to(pin)
       .emit('question:start', buildQuestionStart(question, index, startedAt, endsAt));
+    this.server.to(pin).emit('game:mode', await this.readMode(pin));
 
     this.scheduleReveal(pin, index, endsAt + GRACE_MS - now);
   }
@@ -165,6 +178,8 @@ export class GameEngine {
     if (snapshot) {
       await this.emitReveal(pin, snapshot, index);
     }
+    // Mode auto : enchaîne seul après le temps d'affichage du reveal (§8).
+    await this.scheduleAutoNextIfNeeded(pin);
   }
 
   /**
@@ -250,6 +265,7 @@ export class GameEngine {
     if (meta.state !== GameState.Reveal) {
       throw new BadRequestException('Action possible seulement après le reveal.');
     }
+    this.cancelTimer(this.autoNextTimers, pin); // un enchaînement (auto/manuel) annule l'autre
     const won = await this.redis.set(
       gameKeys.advanceLock(pin, meta.currentIndex),
       '1',
@@ -322,20 +338,22 @@ export class GameEngine {
     // Instantané du lobby : sans lui, un host/projeté qui (re)charge verrait une
     // liste de joueurs vide (les `player:joined` passés sont perdus). §6/§9.
     socket.emit('game:roster', { players: await this.connectedRoster(pin) });
+    // Mode/pause courants : un (ré)attache doit refléter auto/pause immédiatement.
+    socket.emit('game:mode', this.buildModePayload(meta));
 
     const snapshot = await this.game.getSnapshot(pin);
     if (!snapshot || meta.currentIndex < 0) return;
 
     if (meta.state === GameState.Answering) {
       const question = snapshot.questions[meta.currentIndex];
+      // Chrono gelé (pause / hôte parti) : recalcule un timing d'affichage cohérent
+      // sur le restant figé plutôt que d'envoyer un `endsAt` déjà dépassé.
+      const { startedAt, endsAt } = meta.clockFrozen
+        ? this.resumeTimings(meta, Date.now())
+        : { startedAt: meta.questionStartedAt, endsAt: meta.questionEndsAt };
       socket.emit(
         'question:start',
-        buildQuestionStart(
-          question,
-          meta.currentIndex,
-          meta.questionStartedAt,
-          meta.questionEndsAt,
-        ),
+        buildQuestionStart(question, meta.currentIndex, startedAt, endsAt),
       );
       // Compteur courant : sinon un (re)attache mid-question afficherait « 0/N ».
       const { answered, total } = await this.connectedProgress(pin, meta.currentIndex);
@@ -459,16 +477,14 @@ export class GameEngine {
     if (meta.state === GameState.Ended || meta.state === GameState.HostDisconnected) return;
     if ((await this.countHostSockets(pin, hostUserId)) > 0) return; // revenu pendant la grâce
 
-    const patch: Record<string, string> = {
+    // Gèle le chrono via la primitive partagée (idempotente : si l'hôte avait
+    // déjà mis en pause, le restant figé est préservé, pas écrasé).
+    this.cancelTimer(this.autoNextTimers, pin);
+    await this.freezeClock(pin, meta);
+    await this.redis.hset(gameKeys.game(pin), {
       state: GameState.HostDisconnected,
       prevState: meta.state,
-    };
-    if (meta.state === GameState.Answering) {
-      const remaining = Math.max(0, meta.questionEndsAt - Date.now());
-      patch.pausedRemainingMs = String(remaining);
-      this.clearTimer(pin); // gèle le décompte de la question
-    }
-    await this.redis.hset(gameKeys.game(pin), patch);
+    });
     this.log.debug(`HOST_DISCONNECTED ${pin} (depuis ${meta.state})`);
 
     this.server.to(pin).emit('game:state', {
@@ -518,45 +534,33 @@ export class GameEngine {
     if (!meta || meta.state !== GameState.HostDisconnected) return;
     const prev = (meta.prevState as GameState) ?? GameState.Lobby;
 
+    await this.redis.hset(gameKeys.game(pin), { state: prev, prevState: '' });
+    meta.state = prev;
+    this.server.to(pin).emit('game:state', {
+      state: prev,
+      questionIndex: meta.currentIndex,
+      totalQuestions: meta.totalQuestions,
+    });
+
     if (prev === GameState.Answering) {
-      const remaining = meta.pausedRemainingMs ?? 0;
-      const windowLen = Math.max(0, meta.questionEndsAt - meta.questionStartedAt);
-      const elapsed = Math.max(0, windowLen - remaining);
-      const now = Date.now();
-      const startedAt = now - elapsed; // continue l'horloge (timing §6 cohérent)
-      const endsAt = now + remaining;
-      await this.redis.hset(gameKeys.game(pin), {
-        state: GameState.Answering,
-        questionStartedAt: String(startedAt),
-        questionEndsAt: String(endsAt),
-        prevState: '',
-        pausedRemainingMs: '',
-      });
       const snapshot = await this.game.getSnapshot(pin);
-      this.server.to(pin).emit('game:state', {
-        state: GameState.Answering,
-        questionIndex: meta.currentIndex,
-        totalQuestions: meta.totalQuestions,
-      });
+      // Toujours en pause à la reprise : on garde le chrono gelé (pas de ré-arme),
+      // l'affichage du restant figé passe par `game:mode`. Sinon on dégèle.
+      const now = Date.now();
+      const { startedAt, endsAt } = meta.paused
+        ? this.resumeTimings(meta, now)
+        : ((await this.thawClock(pin, meta)) ?? this.resumeTimings(meta, now));
       if (snapshot) {
         const q = snapshot.questions[meta.currentIndex];
         this.server
           .to(pin)
           .emit('question:start', buildQuestionStart(q, meta.currentIndex, startedAt, endsAt));
       }
-      this.scheduleReveal(pin, meta.currentIndex, endsAt + GRACE_MS - now);
     } else {
-      await this.redis.hset(gameKeys.game(pin), {
-        state: prev,
-        prevState: '',
-        pausedRemainingMs: '',
-      });
-      this.server.to(pin).emit('game:state', {
-        state: prev,
-        questionIndex: meta.currentIndex,
-        totalQuestions: meta.totalQuestions,
-      });
+      // Reprise en REVEAL en mode auto : ré-arme l'enchaînement automatique.
+      await this.scheduleAutoNextIfNeeded(pin, meta);
     }
+    this.server.to(pin).emit('game:mode', this.buildModePayload(meta));
   }
 
   /** Compte les sockets de **contrôle hôte** encore présents dans la room (mono-instance v1). */
@@ -582,6 +586,7 @@ export class GameEngine {
     this.clearTimer(pin);
     this.cancelTimer(this.graceTimers, pin);
     this.cancelTimer(this.endWindowTimers, pin);
+    this.cancelTimer(this.autoNextTimers, pin);
     await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(meta.hostUserId, pin);
@@ -589,6 +594,192 @@ export class GameEngine {
       .to(pin)
       .emit('game:state', { state: GameState.Ended, questionIndex: -1, totalQuestions: 0 });
     this.server.to(pin).emit('game:ended', {});
+  }
+
+  // ── Mode / pause / chrono (§8) ─────────────────────────────────────────────
+
+  /**
+   * `host:mode` : bascule manuel ⇄ auto en cours de partie (le présentateur
+   * reprend la main). Passer en manuel annule un enchaînement auto en attente ;
+   * passer en auto ré-arme l'enchaînement si l'on est déjà sur un reveal.
+   */
+  async setMode(pin: string, hostUserId: string, mode: GameMode): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    await this.redis.hset(gameKeys.game(pin), { mode });
+    meta.mode = mode;
+    if (mode === 'manual') {
+      this.cancelTimer(this.autoNextTimers, pin);
+    } else {
+      await this.scheduleAutoNextIfNeeded(pin, meta);
+    }
+    this.server.to(pin).emit('game:mode', this.buildModePayload(meta));
+  }
+
+  /**
+   * `host:pause` : suspend/reprend l'auto-progression. En ANSWERING, gèle aussi
+   * le chrono (primitive partagée avec le `HOST_DISCONNECTED`). La reprise dégèle
+   * le chrono (nouveau timing diffusé) et ré-arme l'enchaînement auto si besoin.
+   * Idempotent : re-pauser/re-reprendre est sans effet (hors diffusion d'état).
+   */
+  async setPaused(pin: string, hostUserId: string, paused: boolean): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    await this.redis.hset(gameKeys.game(pin), { paused: paused ? '1' : '0' });
+    meta.paused = paused;
+    if (paused) {
+      this.cancelTimer(this.autoNextTimers, pin);
+      await this.freezeClock(pin, meta);
+    } else {
+      if (meta.state === GameState.Answering && meta.clockFrozen) {
+        const t = await this.thawClock(pin, meta);
+        if (t) {
+          this.server.to(pin).emit('question:time', {
+            questionIndex: meta.currentIndex,
+            startedAt: t.startedAt,
+            endsAt: t.endsAt,
+          });
+        }
+      }
+      await this.scheduleAutoNextIfNeeded(pin, meta);
+    }
+    this.server.to(pin).emit('game:mode', this.buildModePayload(meta));
+  }
+
+  /**
+   * `host:adjust-time` : ajoute/retire `deltaS` secondes au chrono de la question
+   * courante (boutons ±). Retirer au-delà du restant révèle immédiatement (pas de
+   * timer mort). Si le chrono est gelé (pause), on ajuste le restant figé.
+   */
+  async adjustTime(pin: string, hostUserId: string, deltaS: number): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Answering) {
+      throw new BadRequestException('Le chrono ne peut être ajusté que pendant une question.');
+    }
+    const deltaMs = Math.trunc(deltaS) * 1000;
+
+    if (meta.clockFrozen) {
+      const remaining = Math.max(CHRONO_FLOOR_MS, (meta.pausedRemainingMs ?? 0) + deltaMs);
+      await this.redis.hset(gameKeys.game(pin), { pausedRemainingMs: String(remaining) });
+      meta.pausedRemainingMs = remaining;
+      this.server.to(pin).emit('game:mode', this.buildModePayload(meta));
+      return;
+    }
+
+    const now = Date.now();
+    const newEndsAt = meta.questionEndsAt + deltaMs;
+    if (newEndsAt - now <= CHRONO_FLOOR_MS) {
+      await this.advanceToReveal(pin, meta.currentIndex, 'host'); // restant épuisé → reveal
+      return;
+    }
+    await this.redis.hset(gameKeys.game(pin), { questionEndsAt: String(newEndsAt) });
+    meta.questionEndsAt = newEndsAt;
+    this.scheduleReveal(pin, meta.currentIndex, newEndsAt + GRACE_MS - now);
+    this.server.to(pin).emit('question:time', {
+      questionIndex: meta.currentIndex,
+      startedAt: meta.questionStartedAt,
+      endsAt: newEndsAt,
+    });
+  }
+
+  /** Construit le payload mode/pause (restant figé inclus si le chrono est gelé). */
+  private buildModePayload(meta: GameMeta): GameModePayload {
+    return {
+      mode: meta.mode,
+      paused: meta.paused,
+      ...(meta.clockFrozen ? { remainingMs: meta.pausedRemainingMs ?? 0 } : {}),
+    };
+  }
+
+  /** Lit le mode/pause courant (fallback `manual` si la partie a disparu). */
+  private async readMode(pin: string): Promise<GameModePayload> {
+    const meta = await this.game.getMeta(pin);
+    return meta ? this.buildModePayload(meta) : { mode: 'manual', paused: false };
+  }
+
+  /**
+   * Gèle le chrono de la question (ms restantes figées). **Idempotent** : si déjà
+   * gelé (l'autre chemin — pause ou hôte parti — l'a fait), ne réécrit rien, le
+   * restant est préservé. No-op hors ANSWERING (les autres états n'ont pas d'horloge).
+   */
+  private async freezeClock(pin: string, meta: GameMeta): Promise<void> {
+    if (meta.clockFrozen || meta.state !== GameState.Answering) return;
+    const remaining = Math.max(0, meta.questionEndsAt - Date.now());
+    this.clearTimer(pin);
+    await this.redis.hset(gameKeys.game(pin), {
+      clockFrozen: '1',
+      pausedRemainingMs: String(remaining),
+    });
+    meta.clockFrozen = true;
+    meta.pausedRemainingMs = remaining;
+  }
+
+  /**
+   * Dégèle le chrono : recalcule des timings serveur sur le restant figé et ré-arme
+   * la fin de question. **Idempotent** : no-op (renvoie `null`) si non gelé.
+   */
+  private async thawClock(
+    pin: string,
+    meta: GameMeta,
+  ): Promise<{ startedAt: number; endsAt: number } | null> {
+    if (!meta.clockFrozen) return null;
+    const now = Date.now();
+    const { startedAt, endsAt } = this.resumeTimings(meta, now);
+    await this.redis.hset(gameKeys.game(pin), {
+      clockFrozen: '0',
+      pausedRemainingMs: '',
+      questionStartedAt: String(startedAt),
+      questionEndsAt: String(endsAt),
+    });
+    meta.clockFrozen = false;
+    meta.pausedRemainingMs = undefined;
+    meta.questionStartedAt = startedAt;
+    meta.questionEndsAt = endsAt;
+    this.scheduleReveal(pin, meta.currentIndex, endsAt + GRACE_MS - now);
+    return { startedAt, endsAt };
+  }
+
+  /**
+   * Timings d'affichage cohérents pour un chrono gelé : conserve le temps déjà
+   * écoulé (fenêtre − restant) en repartant de `now` (timing §6 cohérent). Pur :
+   * utilisé pour le dégel (avec persistance) comme pour l'affichage figé.
+   */
+  private resumeTimings(meta: GameMeta, now: number): { startedAt: number; endsAt: number } {
+    const remaining = meta.pausedRemainingMs ?? 0;
+    const windowLen = Math.max(0, meta.questionEndsAt - meta.questionStartedAt);
+    const elapsed = Math.max(0, windowLen - remaining);
+    return { startedAt: now - elapsed, endsAt: now + remaining };
+  }
+
+  /**
+   * Arme l'enchaînement automatique vers la question suivante si la partie est en
+   * mode auto, non en pause, et sur un reveal (§8). Plusieurs points d'entrée :
+   * fin de `advanceToReveal`, passage en auto, ou reprise — d'où l'idempotence.
+   */
+  private async scheduleAutoNextIfNeeded(pin: string, meta?: GameMeta): Promise<void> {
+    const m = meta ?? (await this.game.getMeta(pin));
+    if (!m || m.mode !== 'auto' || m.paused || m.state !== GameState.Reveal) return;
+    this.cancelTimer(this.autoNextTimers, pin);
+    const delay = Number(process.env.GAME_AUTO_ADVANCE_MS ?? AUTO_ADVANCE_MS);
+    const hostUserId = m.hostUserId;
+    const index = m.currentIndex;
+    const timer = setTimeout(
+      () => {
+        this.autoNextTimers.delete(pin);
+        this.autoAdvance(pin, hostUserId, index).catch((err: Error) =>
+          this.log.error(`autoAdvance ${pin}: ${err.message}`),
+        );
+      },
+      Math.max(0, delay),
+    );
+    timer.unref?.();
+    this.autoNextTimers.set(pin, timer);
+  }
+
+  /** Tir du minuteur auto : enchaîne si l'on est toujours sur le même reveal auto. */
+  private async autoAdvance(pin: string, hostUserId: string, index: number): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.mode !== 'auto' || meta.paused) return;
+    if (meta.state !== GameState.Reveal || meta.currentIndex !== index) return;
+    await this.next(pin, hostUserId);
   }
 
   /** Lit les réponses gradées d'une question (playerId → enregistrement). */

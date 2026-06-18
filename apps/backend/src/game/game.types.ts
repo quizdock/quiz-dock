@@ -1,4 +1,10 @@
-import type { AnswerValue, OptionColor, OptionShape, QuestionType } from '@roux-quizz/contracts';
+import type {
+  AnswerValue,
+  GameMode,
+  OptionColor,
+  OptionShape,
+  QuestionType,
+} from '@roux-quizz/contracts';
 
 /**
  * Snapshot serveur du quiz (SPECIFICATIONS §8 / mémoire gameplay-v0-3).
@@ -73,9 +79,19 @@ export interface GameMeta {
   /** Timings serveur autoritatifs de la question courante (§6), 0 hors ANSWERING. */
   questionStartedAt: number;
   questionEndsAt: number;
+  /** Rythme de progression (§8). `manual` par défaut (l'hôte enchaîne). */
+  mode: GameMode;
+  /** Auto-progression suspendue par l'hôte (et chrono gelé en ANSWERING). */
+  paused: boolean;
+  /**
+   * Chrono de la question gelé : ms restantes figées dans `pausedRemainingMs`.
+   * Primitive partagée par la pause hôte (§8) et le `HOST_DISCONNECTED` (§7.1) —
+   * idempotente pour que les deux puissent s'imbriquer sans s'écraser.
+   */
+  clockFrozen: boolean;
   /** État figé avant `HOST_DISCONNECTED` (pour la reprise §7.3). */
   prevState?: string;
-  /** ms de question restantes, figées à l'entrée en `HOST_DISCONNECTED` (§7.1). */
+  /** ms de question restantes, figées quand `clockFrozen` (pause ou §7.1). */
   pausedRemainingMs?: number;
 }
 

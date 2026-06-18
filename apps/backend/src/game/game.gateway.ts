@@ -12,6 +12,7 @@ import {
 import type {
   AnswerValue,
   ClientToServerEvents,
+  GameMode,
   ServerToClientEvents,
 } from '@roux-quizz/contracts';
 import type { User } from '@prisma/client';
@@ -162,7 +163,25 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     // était figée en HOST_DISCONNECTED (§7.3), avant de relire l'état pour ce socket.
     await this.engine.onHostAttached(payload.pin);
     await this.engine.sendStateTo(socket, payload.pin);
+    // Sommaire des questions pour la console de contrôle (carrousel d'avancement).
+    // Réservé à l'hôte propriétaire : pas de fuite anti-triche (c'est son quiz).
+    await this.emitOutline(socket, payload.pin);
     return { ok: true };
+  }
+
+  /** Émet le sommaire des questions (sans secret) à une fenêtre de contrôle hôte. */
+  private async emitOutline(socket: GameSocket, pin: string): Promise<void> {
+    const snapshot = await this.game.getSnapshot(pin);
+    if (!snapshot) return;
+    socket.emit('game:outline', {
+      title: snapshot.title,
+      questions: snapshot.questions.map((q, index) => ({
+        index,
+        type: q.type,
+        prompt: q.prompt,
+        timeLimitS: q.timeLimitS,
+      })),
+    });
   }
 
   /**
@@ -277,6 +296,33 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     @MessageBody() payload: { pin: string },
   ): Promise<void> {
     await this.engine.end(payload.pin, this.requireHostId(socket));
+  }
+
+  /** `host:mode` : bascule le rythme manuel/auto en cours de partie (§8). */
+  @SubscribeMessage('host:mode')
+  async hostMode(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; mode: GameMode },
+  ): Promise<void> {
+    await this.engine.setMode(payload.pin, this.requireHostId(socket), payload.mode);
+  }
+
+  /** `host:pause` : suspend/reprend l'auto-progression (gèle le chrono en ANSWERING). */
+  @SubscribeMessage('host:pause')
+  async hostPause(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; paused: boolean },
+  ): Promise<void> {
+    await this.engine.setPaused(payload.pin, this.requireHostId(socket), payload.paused);
+  }
+
+  /** `host:adjust-time` : ajoute/retire du temps au chrono de la question courante. */
+  @SubscribeMessage('host:adjust-time')
+  async hostAdjustTime(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; deltaS: number },
+  ): Promise<void> {
+    await this.engine.adjustTime(payload.pin, this.requireHostId(socket), payload.deltaS);
   }
 
   @SubscribeMessage('ping')

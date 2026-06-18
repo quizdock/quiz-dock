@@ -82,6 +82,9 @@ export class GameService {
       createdAt: Date.now(),
       questionStartedAt: 0,
       questionEndsAt: 0,
+      mode: 'manual', // rythme par défaut : l'hôte enchaîne les questions (§8)
+      paused: false,
+      clockFrozen: false,
     };
 
     const pipe = this.redis.multi();
@@ -272,6 +275,9 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     createdAt: String(meta.createdAt),
     questionStartedAt: String(meta.questionStartedAt),
     questionEndsAt: String(meta.questionEndsAt),
+    mode: meta.mode,
+    paused: meta.paused ? '1' : '0',
+    clockFrozen: meta.clockFrozen ? '1' : '0',
   };
   if (meta.prevState !== undefined) raw.prevState = meta.prevState;
   if (meta.pausedRemainingMs !== undefined) raw.pausedRemainingMs = String(meta.pausedRemainingMs);
@@ -292,6 +298,10 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     createdAt: Number(raw.createdAt),
     questionStartedAt: Number(raw.questionStartedAt ?? 0),
     questionEndsAt: Number(raw.questionEndsAt ?? 0),
+    // Défauts pour les parties déjà en vol avant l'ajout du mode (§8).
+    mode: raw.mode === 'auto' ? 'auto' : 'manual',
+    paused: raw.paused === '1',
+    clockFrozen: raw.clockFrozen === '1',
     prevState: raw.prevState,
     pausedRemainingMs: raw.pausedRemainingMs ? Number(raw.pausedRemainingMs) : undefined,
   };
