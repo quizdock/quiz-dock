@@ -1,27 +1,12 @@
 import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
 import { useFullscreen } from '@/lib/use-fullscreen';
 import type { QuizDetailDto, QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { useQuizzesControllerGet } from '../api/generated/quizzes/quizzes';
 import { previewRoute } from '../router';
-
-/** Glyphe par forme (accessibilité couleur + forme, technique §4). */
-const SHAPE_GLYPH: Record<string, string> = {
-  triangle: '▲',
-  diamond: '◆',
-  circle: '●',
-  square: '■',
-};
-
-/** Couleur de fond par option (vue apprenant). */
-const COLOR_BG: Record<string, string> = {
-  red: 'bg-red-600',
-  blue: 'bg-blue-600',
-  yellow: 'bg-amber-500',
-  green: 'bg-green-600',
-};
 
 const TYPE_LABEL: Record<string, string> = {
   single_choice: 'QCM (réponse unique)',
@@ -142,7 +127,7 @@ function QuestionPreview({
               className={cn(
                 'flex items-center gap-3 rounded-lg font-semibold text-white',
                 large ? 'px-6 py-6 text-xl md:text-2xl' : 'px-4 py-3',
-                COLOR_BG[opt.color] ?? 'bg-slate-600',
+                COLOR_BG[opt.color] ?? OPTION_BG_FALLBACK,
                 opt.isCorrect && 'outline outline-2 outline-offset-2 outline-success',
               )}
             >

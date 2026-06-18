@@ -247,7 +247,7 @@ export function PlayerPage() {
     return wrap(
       r ? (
         <div className="flex flex-col items-center gap-2">
-          <p className={`text-3xl font-bold ${r.correct ? 'text-green-600' : 'text-destructive'}`}>
+          <p className={`text-3xl font-bold ${r.correct ? 'text-success' : 'text-destructive'}`}>
             {r.correct ? '✓ Juste !' : '✗ Raté'}
           </p>
           <p className="text-xl">+{r.points} points</p>

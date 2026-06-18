@@ -234,7 +234,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 {!livePin && (
                   <Button
                     type="button"
-                    variant="success"
+                    variant="main-action"
                     disabled={presenting}
                     onClick={() => void onPresent()}
                   >

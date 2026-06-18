@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { Play, Plus, Radio } from 'lucide-react';
+import { Pencil, Play, Plus, Radio } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useLaunchSession } from '../game/use-launch-session';
@@ -105,10 +105,17 @@ export function DashboardPage() {
               {STATUS_LABEL[quiz.status] ?? quiz.status}
             </Badge>
             <span className="text-sm text-muted-foreground">{quiz.questionCount} question(s)</span>
+            <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }}>
+              <Button type="button" size="sm" variant="outline">
+                <Pencil className="size-4" />
+                Éditer
+              </Button>
+            </Link>
             {quiz.status === 'ready' && (
               <Button
                 type="button"
                 size="sm"
+                variant="main-action"
                 disabled={isLaunching}
                 onClick={() => void launch(quiz.id)}
               >

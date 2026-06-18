@@ -4,23 +4,8 @@ import type {
   QuestionRevealPayload,
   QuestionStartPayload,
 } from '@roux-quizz/contracts';
+import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
-
-/** Glyphe par forme — accessibilité couleur + forme (technique §4). */
-export const SHAPE_GLYPH: Record<string, string> = {
-  triangle: '▲',
-  diamond: '◆',
-  circle: '●',
-  square: '■',
-};
-
-/** Couleur de fond par option (cohérent avec l'éditeur / l'aperçu). */
-export const COLOR_BG: Record<string, string> = {
-  red: 'bg-red-600',
-  blue: 'bg-blue-600',
-  yellow: 'bg-amber-500',
-  green: 'bg-green-600',
-};
 
 /**
  * Grille d'options colorées + formes. `onPick` la rend interactive (joueur) ;
@@ -59,7 +44,7 @@ export function OptionGrid({
             className={cn(
               'flex items-center gap-3 rounded-xl px-4 font-semibold text-white shadow transition',
               size === 'lg' ? 'py-8 text-2xl' : 'py-5 text-lg',
-              COLOR_BG[o.color] ?? 'bg-slate-600',
+              COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
               onPick && !disabled && 'hover:brightness-110 active:scale-[0.98] cursor-pointer',
               dimmed && 'opacity-40',
               isCorrect && 'ring-4 ring-white',
@@ -101,7 +86,7 @@ export function Distribution({
             </span>
             <div className="bg-muted relative h-7 flex-1 overflow-hidden rounded">
               <div
-                className={cn('h-full', COLOR_BG[o.color] ?? 'bg-slate-600')}
+                className={cn('h-full', COLOR_BG[o.color] ?? OPTION_BG_FALLBACK)}
                 style={{ width: `${pct}%` }}
               />
               {/* Intitulé de la réponse en surimpression de la barre. */}

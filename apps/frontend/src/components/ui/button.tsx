@@ -9,7 +9,9 @@ export const buttonVariants = cva(
       variant: {
         default: 'bg-primary text-primary-foreground hover:bg-primary/90',
         destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        success: 'bg-green-600 text-white hover:bg-green-700',
+        // Action principale affirmative (ex. « Présenter » → mise en live). Vert
+        // dérivé du token --success, pas d'une couleur de palette en dur.
+        'main-action': 'bg-success text-success-foreground hover:bg-success/90',
         outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
