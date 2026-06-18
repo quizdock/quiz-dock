@@ -18,6 +18,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(
     () => typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === '1',
   );
@@ -29,15 +30,28 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
   const submit = () => {
     if (!rating || !socket) return;
     setSubmitting(true);
+    setError(null);
+    // Garde-fou : si le serveur ne renvoie jamais l'accusé (handler absent, socket
+    // coupé…), on ne reste pas bloqué sur « Envoi… » — on rend la main avec une erreur.
+    let settled = false;
+    const finish = (ok: boolean, message?: string) => {
+      if (settled) return;
+      settled = true;
+      setSubmitting(false);
+      if (ok) {
+        localStorage.setItem(storageKey, '1');
+        setDone(true);
+      } else {
+        setError(message ?? 'Envoi impossible. Vérifie ta connexion et réessaie.');
+      }
+    };
+    const timer = setTimeout(() => finish(false), 8000);
     socket.emit(
       'player:rate',
       { pin, rating, comment: comment.trim() || undefined },
       (res: { ok: boolean }) => {
-        setSubmitting(false);
-        if (res?.ok) {
-          localStorage.setItem(storageKey, '1');
-          setDone(true);
-        }
+        clearTimeout(timer);
+        finish(res?.ok === true, 'Avis refusé : la partie n’est peut-être pas terminée.');
       },
     );
   };
@@ -78,6 +92,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
         <Button type="button" disabled={!rating || submitting} onClick={submit}>
           {submitting ? 'Envoi…' : 'Envoyer mon avis'}
         </Button>
+        {error ? <p className="text-destructive text-sm">{error}</p> : null}
       </CardContent>
     </Card>
   );

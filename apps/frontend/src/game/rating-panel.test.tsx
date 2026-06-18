@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RatingPanel } from './rating-panel';
 
@@ -31,6 +31,23 @@ describe('RatingPanel', () => {
     const socket = { emit: vi.fn() } as never;
     render(<RatingPanel pin="000000" socket={socket} />);
     expect(screen.getByRole('button', { name: /Envoyer mon avis/ })).toBeDisabled();
+  });
+
+  it('ne reste pas bloqué sur « Envoi… » si l’accusé n’arrive jamais', () => {
+    vi.useFakeTimers();
+    try {
+      const socket = { emit: vi.fn() } as never; // n'appelle jamais l'ack
+      render(<RatingPanel pin="222222" socket={socket} />);
+      fireEvent.click(screen.getByLabelText('3 étoiles'));
+      fireEvent.click(screen.getByRole('button', { name: /Envoyer mon avis/ }));
+      expect(screen.getByRole('button', { name: /Envoi…/ })).toBeDisabled();
+
+      act(() => void vi.advanceTimersByTime(8000)); // expiration du garde-fou
+      expect(screen.getByRole('button', { name: /Envoyer mon avis/ })).toBeEnabled();
+      expect(screen.getByText(/Envoi impossible/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('ne re-sollicite pas un joueur ayant déjà noté (dédoublonnage local)', () => {

@@ -19,5 +19,13 @@
     "incremental": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"],
+  "watchOptions": {
+    // `nest start --watch` (tsc) tourne dans le conteneur sur des sources montées
+    // (bind mount) : les events inotify ne traversent pas la frontière WSL2/Docker.
+    // On force le polling pour que le hot-reload détecte bien les modifs du host.
+    "watchFile": "priorityPollingInterval",
+    "watchDirectory": "dynamicPriorityPolling",
+    "fallbackPolling": "dynamicPriority"
+  }
 }
