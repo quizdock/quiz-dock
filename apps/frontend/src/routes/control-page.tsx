@@ -18,7 +18,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { LeaderboardList, Podium, RevealAnswer } from '../game/live-components';
+import { LeaderboardList, OptionGrid, Podium, RevealAnswer } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
 
@@ -265,25 +265,64 @@ export function ControlPage() {
   }
 
   // ── ANSWERING / QUESTION_SHOW ──────────────────────────────────────────────
+  const timeLimit = view.question?.timeLimitS ?? 0;
+  const answered = view.answerCount?.answered ?? 0;
+  const totalPlayers = view.answerCount?.total ?? view.players.length;
+  const timePct = remaining != null && timeLimit > 0 ? (remaining / timeLimit) * 100 : 0;
+  const timeTone = view.paused
+    ? 'bg-muted-foreground'
+    : timePct <= 20
+      ? 'bg-destructive'
+      : timePct <= 50
+        ? 'bg-amber-500'
+        : 'bg-success';
+  const answeredPct = totalPlayers > 0 ? (answered / totalPlayers) * 100 : 0;
+
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-5 py-6">
       {controlBar}
+
+      {/* Question en cours — panneau principal agrandi (énoncé + réponses + chrono). */}
+      <article className="bg-card flex flex-col gap-4 rounded-xl border p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-muted-foreground text-sm font-medium">
+            Question {view.questionIndex + 1} / {view.totalQuestions}
+          </span>
+          <ChronoControls remaining={remaining} paused={view.paused} onAdjust={adjustTime} />
+        </div>
+
+        <ProgressBar pct={timePct} barClassName={timeTone} />
+
+        {view.question?.media?.kind === 'image' ? (
+          <img
+            src={view.question.media.url}
+            alt=""
+            className="max-h-56 self-center object-contain"
+          />
+        ) : null}
+
+        <h1 className="text-2xl font-semibold sm:text-3xl">{view.question?.prompt}</h1>
+
+        {view.question?.options?.length ? (
+          <OptionGrid options={view.question.options} />
+        ) : (
+          <p className="text-muted-foreground text-sm">Réponse libre (numérique ou texte).</p>
+        )}
+
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Réponses reçues</span>
+            <span className="font-semibold tabular-nums">
+              {answered} / {totalPlayers}
+            </span>
+          </div>
+          <ProgressBar pct={answeredPct} barClassName="bg-primary" />
+        </div>
+      </article>
+
+      {/* Déroulé du quiz (vue d'ensemble). */}
       <QuestionCarousel outline={view.outline} currentIndex={view.questionIndex} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-muted-foreground text-sm">
-          Question {view.questionIndex + 1} / {view.totalQuestions}
-        </span>
-        <ChronoControls remaining={remaining} paused={view.paused} onAdjust={adjustTime} />
-      </div>
-
-      <h1 className="text-2xl font-semibold">{view.question?.prompt}</h1>
-      <p className="text-lg">
-        Réponses reçues :{' '}
-        <span className="font-semibold tabular-nums">
-          {view.answerCount?.answered ?? 0} / {view.answerCount?.total ?? view.players.length}
-        </span>
-      </p>
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={() => emit('host:reveal')}>
           <Eye className="size-4" />
@@ -295,6 +334,24 @@ export function ControlPage() {
         </Button>
       </div>
     </section>
+  );
+}
+
+/** Barre de progression générique (piste neutre + remplissage coloré animé). */
+function ProgressBar({ pct, barClassName }: { pct: number; barClassName?: string }) {
+  return (
+    <div
+      className="bg-muted h-2.5 w-full overflow-hidden rounded-full"
+      role="progressbar"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <div
+        className={cn('h-full rounded-full transition-[width] duration-300', barClassName)}
+        style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
+      />
+    </div>
   );
 }
 
