@@ -16,6 +16,7 @@ import {
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { LeaderboardList, Podium, RevealAnswer } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
@@ -58,10 +59,12 @@ export function ControlPage() {
 
   const openScreen = () => window.open(screenUrl, '_blank', 'noopener,noreferrer');
   const screenButton = (
-    <Button type="button" variant="outline" size="sm" onClick={openScreen}>
-      <Eye className="size-4" />
-      Écran de projection
-    </Button>
+    <Tooltip label="Ouvre le grand écran à vidéoprojeter (vue spectateur)">
+      <Button type="button" variant="outline" size="sm" onClick={openScreen}>
+        <Eye className="size-4" />
+        Écran de projection
+      </Button>
+    </Tooltip>
   );
 
   const qrFile = async (): Promise<File | null> => {
@@ -132,15 +135,19 @@ export function ControlPage() {
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Inviter les joueurs</h2>
-            <Button type="button" variant="outline" size="sm" onClick={() => void onShare()}>
-              <Share2 className="size-4" />
-              Partager
-            </Button>
+            <Tooltip label="Partager l'invitation (PIN + lien) par le système de partage ou le presse-papier">
+              <Button type="button" variant="outline" size="sm" onClick={() => void onShare()}>
+                <Share2 className="size-4" />
+                Partager
+              </Button>
+            </Tooltip>
           </div>
           <div className="flex items-center gap-4">
-            <div className="rounded-md border bg-white p-2">
-              <QRCodeSVG value={joinUrl} size={88} aria-label="QR code pour rejoindre" />
-            </div>
+            <Tooltip label="Ouvrir l'écran de projection pour partager le QRcode" side="bottom">
+              <div className="rounded-md border bg-white p-2">
+                <QRCodeSVG value={joinUrl} size={88} aria-label="QR code pour rejoindre" />
+              </div>
+            </Tooltip>
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs uppercase tracking-widest">
                 {window.location.host}/join
@@ -299,8 +306,11 @@ function PlayersBadge({ count }: { count: number }) {
 /** Récap compact du quiz (titre + PIN) — en-tête du tableau de bord. */
 function RecapHeader({ view, pin }: { view: GameView; pin: string }) {
   return (
-    <div className="flex flex-col">
-      <span className="text-lg font-semibold">{view.quizTitle ?? 'Partie en cours'}</span>
+    <div className="flex flex-col gap-0.5">
+      <h1 className="text-xl font-bold">{view.quizTitle ?? 'Partie en cours'}</h1>
+      {view.quizDescription ? (
+        <p className="text-muted-foreground max-w-prose text-sm">{view.quizDescription}</p>
+      ) : null}
       <span className="text-muted-foreground text-sm">
         PIN <span className="font-mono tracking-widest">{pin}</span>
         {view.outline.length > 0 ? ` · ${view.outline.length} question(s)` : null}
@@ -344,34 +354,38 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
       aria-label="Rythme de la partie"
       className="border-input inline-flex overflow-hidden rounded-md border text-sm"
     >
-      <button
-        type="button"
-        aria-pressed={mode === 'manual'}
-        onClick={() => onChange('manual')}
-        className={cn(
-          'flex items-center gap-1.5 px-3 py-1.5 font-medium transition-colors',
-          mode === 'manual'
-            ? 'bg-primary text-primary-foreground'
-            : 'hover:bg-accent hover:text-accent-foreground',
-        )}
-      >
-        <Hand className="size-4" />
-        Manuel
-      </button>
-      <button
-        type="button"
-        aria-pressed={mode === 'auto'}
-        onClick={() => onChange('auto')}
-        className={cn(
-          'flex items-center gap-1.5 px-3 py-1.5 font-medium transition-colors',
-          mode === 'auto'
-            ? 'bg-primary text-primary-foreground'
-            : 'hover:bg-accent hover:text-accent-foreground',
-        )}
-      >
-        <Gauge className="size-4" />
-        Auto
-      </button>
+      <Tooltip label="Mode manuel : vous enchaînez vous-même les questions">
+        <button
+          type="button"
+          aria-pressed={mode === 'manual'}
+          onClick={() => onChange('manual')}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 font-medium transition-colors',
+            mode === 'manual'
+              ? 'bg-primary text-primary-foreground'
+              : 'hover:bg-accent hover:text-accent-foreground',
+          )}
+        >
+          <Hand className="size-4" />
+          Manuel
+        </button>
+      </Tooltip>
+      <Tooltip label="Mode auto : la partie enchaîne seule après chaque résultat (pause possible)">
+        <button
+          type="button"
+          aria-pressed={mode === 'auto'}
+          onClick={() => onChange('auto')}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 font-medium transition-colors',
+            mode === 'auto'
+              ? 'bg-primary text-primary-foreground'
+              : 'hover:bg-accent hover:text-accent-foreground',
+          )}
+        >
+          <Gauge className="size-4" />
+          Auto
+        </button>
+      </Tooltip>
     </div>
   );
 }

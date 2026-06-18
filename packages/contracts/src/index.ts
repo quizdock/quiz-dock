@@ -164,6 +164,7 @@ export interface OutlineQuestion {
 /** Sommaire du quiz pour la console hôte (récap + carrousel d'avancement). */
 export interface GameOutlinePayload {
   title: string;
+  description: string | null;
   questions: OutlineQuestion[];
 }
 

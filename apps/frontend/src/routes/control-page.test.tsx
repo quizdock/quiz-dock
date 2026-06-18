@@ -32,6 +32,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   paused: false,
   pausedRemainingMs: null,
   quizTitle: null,
+  quizDescription: null,
   outline: [],
   ...partial,
 });

@@ -46,6 +46,7 @@ export interface SnapshotQuestion {
 export interface QuizSnapshot {
   quizId: string;
   title: string;
+  description: string | null;
   language: string;
   questions: SnapshotQuestion[];
 }
