@@ -1,10 +1,15 @@
 import type {
+  GameMode,
+  GameModePayload,
+  GameOutlinePayload,
   GameState,
   LeaderboardPayload,
+  OutlineQuestion,
   PersonalResult,
   PodiumPayload,
   QuestionRevealPayload,
   QuestionStartPayload,
+  QuestionTimePayload,
 } from '@roux-quizz/contracts';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -44,6 +49,16 @@ export interface GameView {
   players: RosterPlayer[];
   answerAccepted: boolean | null;
   fullCapture: boolean;
+  /** Rythme courant (§8) — `manual` par défaut. */
+  mode: GameMode;
+  /** Auto-progression suspendue par l'hôte (chrono gelé en ANSWERING). */
+  paused: boolean;
+  /** Restant figé (ms) quand le chrono est gelé, sinon `null`. */
+  pausedRemainingMs: number | null;
+  /** Titre du quiz (récap console hôte), `null` tant que le sommaire n'est pas reçu. */
+  quizTitle: string | null;
+  /** Sommaire des questions (console hôte uniquement). */
+  outline: OutlineQuestion[];
 }
 
 const INITIAL: GameView = {
@@ -61,6 +76,11 @@ const INITIAL: GameView = {
   players: [],
   answerAccepted: null,
   fullCapture: false,
+  mode: 'manual',
+  paused: false,
+  pausedRemainingMs: null,
+  quizTitle: null,
+  outline: [],
 };
 
 /**
@@ -105,6 +125,18 @@ export function useGameSession(pin: string, role: LiveRole) {
         players: prev.players.filter((x) => x.playerId !== p.playerId),
       }));
     const onQuestion = (p: QuestionStartPayload) => patch({ question: p });
+    const onMode = (p: GameModePayload) =>
+      patch({ mode: p.mode, paused: p.paused, pausedRemainingMs: p.remainingMs ?? null });
+    const onOutline = (p: GameOutlinePayload) =>
+      patch({ quizTitle: p.title, outline: p.questions });
+    // Ajustement du chrono : on remplace les timings de la question courante (le
+    // décompte est dérivé de `endsAt`), sans toucher au reste de son contenu.
+    const onTime = (p: QuestionTimePayload) =>
+      setView((prev) =>
+        prev.question && prev.question.questionIndex === p.questionIndex
+          ? { ...prev, question: { ...prev.question, startedAt: p.startedAt, endsAt: p.endsAt } }
+          : prev,
+      );
     const onCount = (p: { answered: number; total: number }) => patch({ answerCount: p });
     const onAck = (p: { accepted: boolean }) => patch({ answerAccepted: p.accepted });
     const onReveal = (p: QuestionRevealPayload) =>
@@ -124,6 +156,9 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('player:joined', onJoined);
       sock.on('player:left', onLeft);
       sock.on('question:start', onQuestion);
+      sock.on('game:mode', onMode);
+      sock.on('game:outline', onOutline);
+      sock.on('question:time', onTime);
       sock.on('answer:count', onCount);
       sock.on('answer:ack', onAck);
       sock.on('question:reveal', onReveal);
@@ -171,6 +206,9 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('player:joined', onJoined);
       s.off('player:left', onLeft);
       s.off('question:start', onQuestion);
+      s.off('game:mode', onMode);
+      s.off('game:outline', onOutline);
+      s.off('question:time', onTime);
       s.off('answer:count', onCount);
       s.off('answer:ack', onAck);
       s.off('question:reveal', onReveal);
