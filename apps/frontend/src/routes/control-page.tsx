@@ -18,7 +18,7 @@ import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { LeaderboardList, Podium, RevealAnswer } from '../game/live-components';
-import { useCountdown } from '../game/use-countdown';
+import { useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
 
 const TYPE_LABEL: Record<string, string> = {
@@ -54,14 +54,7 @@ export function ControlPage() {
   const setPaused = (paused: boolean) => socket?.emit('host:pause', { pin, paused });
   const adjustTime = (deltaS: number) => socket?.emit('host:adjust-time', { pin, deltaS });
 
-  const liveRemaining = useCountdown(
-    view.state === 'ANSWERING' && !view.paused ? (view.question?.endsAt ?? null) : null,
-  );
-  // Chrono gelé (pause) : on fige l'affichage sur le restant renvoyé par le serveur.
-  const remaining =
-    view.paused && view.pausedRemainingMs != null
-      ? Math.ceil(view.pausedRemainingMs / 1000)
-      : liveRemaining;
+  const remaining = useGameRemaining(view);
 
   const openScreen = () => window.open(screenUrl, '_blank', 'noopener,noreferrer');
   const screenButton = (

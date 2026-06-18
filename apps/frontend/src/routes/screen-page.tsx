@@ -2,9 +2,10 @@ import { useParams } from '@tanstack/react-router';
 import { Maximize, Minimize, Users } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { useFullscreen } from '@/lib/use-fullscreen';
 import { OptionGrid, Podium, RevealAnswer } from '../game/live-components';
-import { useCountdown } from '../game/use-countdown';
+import { useGameRemaining } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
 /**
@@ -17,9 +18,7 @@ export function ScreenPage() {
   const { pin } = useParams({ from: '/present/$pin/screen' });
   const { view } = useGameSession(pin, 'spectator');
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
-  const remaining = useCountdown(
-    view.state === 'ANSWERING' && view.question ? view.question.endsAt : null,
-  );
+  const remaining = useGameRemaining(view);
 
   const joinUrl = `${window.location.origin}/join/${pin}`;
 
@@ -74,8 +73,11 @@ export function ScreenPage() {
         <div className="flex w-full items-start justify-between gap-4">
           <h1 className="text-3xl font-semibold">{view.question.prompt}</h1>
           {remaining !== null ? (
-            <span className="text-4xl font-bold tabular-nums" aria-label="Temps restant">
-              ⏱ {remaining}
+            <span
+              className={cn('text-4xl font-bold tabular-nums', view.paused && 'opacity-50')}
+              aria-label="Temps restant"
+            >
+              {view.paused ? '⏸' : '⏱'} {remaining}
             </span>
           ) : null}
         </div>

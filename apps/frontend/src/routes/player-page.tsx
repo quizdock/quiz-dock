@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { joinSession, loadPlayerSession } from '../game/game-client';
 import { OptionGrid } from '../game/live-components';
-import { useCountdown } from '../game/use-countdown';
+import { useGameRemaining } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
 /**
@@ -29,7 +29,7 @@ export function PlayerPage() {
 
   const question = view.question;
   const isMulti = question?.type === 'multiple_choice';
-  const remaining = useCountdown(view.state === 'ANSWERING' && question ? question.endsAt : null);
+  const remaining = useGameRemaining(view);
 
   // Nouvelle question → réinitialise la saisie locale.
   useEffect(() => {
