@@ -16,6 +16,7 @@ import {
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { LeaderboardList, OptionGrid, Podium, RevealAnswer } from '../game/live-components';
@@ -174,10 +175,7 @@ export function ControlPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <ModeToggle mode={view.mode} onChange={setMode} />
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={() => emit('host:end')}>
-              <Square className="size-4" />
-              Arrêter la partie
-            </Button>
+            <EndGameButton label="Arrêter la partie" onConfirm={() => emit('host:end')} />
             {screenButton}
             <Tooltip label="Attendez que le maximum de joueurs soient connectés avant de démarrer">
               <Button
@@ -258,10 +256,7 @@ export function ControlPage() {
       <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 py-8">
         <h2 className="text-2xl font-bold">🏆 Podium</h2>
         {view.podium ? <Podium rows={view.podium.podium} /> : null}
-        <Button type="button" variant="outline" onClick={() => emit('host:end')}>
-          <Square className="size-4" />
-          Terminer la partie
-        </Button>
+        <EndGameButton label="Terminer la partie" onConfirm={() => emit('host:end')} />
       </section>
     );
   }
@@ -332,10 +327,7 @@ export function ControlPage() {
           <Eye className="size-4" />
           Révéler maintenant
         </Button>
-        <Button type="button" variant="outline" onClick={() => emit('host:end')}>
-          <Square className="size-4" />
-          Terminer la partie
-        </Button>
+        <EndGameButton label="Terminer la partie" onConfirm={() => emit('host:end')} />
       </div>
     </section>
   );
@@ -430,7 +422,11 @@ function ControlBar({
       <div className="flex flex-wrap items-center gap-2">
         <PlayersBadge count={view.players.length} />
         <ModeToggle mode={view.mode} onChange={onMode} />
-        {view.mode === 'auto' ? <PauseButton paused={view.paused} onToggle={onPause} /> : null}
+        {/* Pause utile dès qu'il y a quelque chose à figer : le chrono d'une question
+            en cours (ANSWERING, tous modes) ou l'enchaînement auto (mode auto). */}
+        {view.mode === 'auto' || view.state === 'ANSWERING' ? (
+          <PauseButton paused={view.paused} onToggle={onPause} />
+        ) : null}
         {screenButton}
       </div>
     </header>
@@ -480,6 +476,38 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
         </button>
       </Tooltip>
     </div>
+  );
+}
+
+/**
+ * Fin de partie (§7) : action **destructive** — gardée par une infobulle d'avertissement
+ * et une modale de confirmation. À la confirmation, la partie est détruite (PIN invalidé,
+ * joueurs déconnectés). Les résultats ne sont pas conservés (archivage à venir, cf. §2.x).
+ */
+function EndGameButton({ label, onConfirm }: { label: string; onConfirm: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Tooltip label="Attention : la partie sera détruite (PIN invalidé, joueurs déconnectés) et les résultats ne sont pas conservés.">
+        <Button type="button" variant="outline" onClick={() => setOpen(true)}>
+          <Square className="size-4" />
+          {label}
+        </Button>
+      </Tooltip>
+      <ConfirmDialog
+        open={open}
+        destructive
+        title={`${label} ?`}
+        description="La partie sera définitivement terminée : le PIN est invalidé, les joueurs sont déconnectés et les résultats ne sont pas conservés. Cette action est irréversible."
+        confirmLabel={label}
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          setOpen(false);
+          onConfirm();
+        }}
+        onCancel={() => setOpen(false)}
+      />
+    </>
   );
 }
 
