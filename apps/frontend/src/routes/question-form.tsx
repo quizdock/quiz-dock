@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { apiErrorMessage } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { MediaUpload } from './media-upload';
@@ -196,7 +197,8 @@ export function QuestionForm({
         {(field) => (
           <Label>
             Énoncé
-            <Input
+            <Textarea
+              rows={4}
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
               placeholder="Votre question…"

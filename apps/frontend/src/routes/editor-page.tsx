@@ -161,8 +161,18 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <header className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">Éditeur de quiz</h1>
         <Badge variant={statusVariant}>{STATUS_LABEL[quiz.status] ?? quiz.status}</Badge>
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          className="ml-auto"
+          onClick={() => setConfirmDelete(true)}
+        >
+          <Trash2 className="size-4" />
+          Supprimer
+        </Button>
         <a
-          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'ml-auto')}
+          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
           href={`/quizzes/${quiz.id}/preview`}
           target="_blank"
           rel="noopener noreferrer"
@@ -175,9 +185,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       {/* Desktop : réglages/diffusion en colonne latérale, questions au centre.
           Mobile/tablette : empilement vertical (comportement inchangé). */}
       <div className="grid items-start gap-6 lg:grid-cols-3">
-        <aside className="flex flex-col gap-6 lg:col-span-1">
+        {/* Petit mobile : tout empilé. Tablette : Diffusion + Avis côte à côte (2 col).
+            Desktop : colonne latérale unique (col-span-1). */}
+        <aside className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:col-span-1 lg:grid-cols-1">
           {/* Réglages du quiz */}
-          <Card>
+          <Card className="sm:col-span-2 lg:col-span-1">
             <CardHeader>
               <CardTitle>Réglages</CardTitle>
             </CardHeader>
@@ -205,6 +217,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     <Label>
                       Description
                       <Textarea
+                        rows={4}
+                        className="lg:min-h-48"
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                       />
@@ -377,14 +391,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         </Card>
       </div>
 
-      {/* Zone dangereuse */}
-      <div className="flex justify-end border-t pt-4">
-        <Button type="button" variant="destructive" onClick={() => setConfirmDelete(true)}>
-          <Trash2 className="size-4" />
-          Supprimer le quiz
-        </Button>
-      </div>
-
       <ConfirmDialog
         open={confirmDelete}
         destructive
@@ -444,7 +450,7 @@ function FeedbackCard({ quizId }: { quizId: string }) {
               <StarRow value={Math.round(summary.average)} size="size-5" />
               <span className="text-muted-foreground text-sm">{summary.count} avis</span>
             </div>
-            <ul className="flex flex-col gap-2">
+            <ul className="flex max-h-60 flex-col gap-2 overflow-auto">
               {summary.items.map((f) => (
                 <li key={f.id} className="rounded-md border p-2 text-sm">
                   <div className="flex items-center justify-between gap-2">
