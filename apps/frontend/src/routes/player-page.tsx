@@ -233,7 +233,10 @@ export function PlayerPage() {
       <>
         {view.state === 'PODIUM' ? (
           <>
-            <h2 className="text-2xl font-bold">🏆 Podium</h2>
+            <span className="text-7xl leading-none" aria-hidden>
+              🏆
+            </span>
+            <h2 className="text-2xl font-bold">Podium</h2>
             {view.podium?.you ? (
               <p className="text-lg">
                 Ton classement : <span className="font-semibold">{view.podium.you.rank}ᵉ</span> —{' '}
@@ -242,7 +245,12 @@ export function PlayerPage() {
             ) : null}
           </>
         ) : (
-          <p className="text-xl font-semibold">Merci d’avoir joué ! 🎉</p>
+          <>
+            <span className="text-7xl leading-none" aria-hidden>
+              🎉
+            </span>
+            <p className="text-xl font-semibold">Merci d’avoir joué !</p>
+          </>
         )}
         <RatingPanel pin={pin} socket={socket} />
       </>,
@@ -254,8 +262,14 @@ export function PlayerPage() {
     return wrap(
       r ? (
         <div className="flex flex-col items-center gap-2">
+          <span
+            className={`text-7xl leading-none ${r.correct ? 'text-success' : 'text-destructive'}`}
+            aria-hidden
+          >
+            {r.correct ? '✓' : '✗'}
+          </span>
           <p className={`text-3xl font-bold ${r.correct ? 'text-success' : 'text-destructive'}`}>
-            {r.correct ? '✓ Juste !' : '✗ Raté'}
+            {r.correct ? 'Juste !' : 'Raté'}
           </p>
           <p className="text-xl">+{r.points} points</p>
           <p className="text-muted-foreground">Rang : {r.rank}ᵉ</p>
@@ -268,20 +282,30 @@ export function PlayerPage() {
 
   if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && question) {
     const done = submitted || view.answerAccepted === true;
-    return wrap(
-      <div className="flex w-full flex-col items-center gap-4">
+    // Layout en 3 zones, identique d'une question à l'autre (UX first) : le chrono
+    // reste en haut, l'énoncé occupe le centre et **défile** s'il est long, la zone
+    // de réponse est ancrée en bas (position constante, jamais repoussée hors écran).
+    return (
+      <section className="mx-auto flex h-full w-full max-w-sm flex-col gap-3 text-center">
         {remaining !== null ? (
-          <span className="text-4xl font-bold tabular-nums" aria-label="Temps restant">
+          <span
+            className="shrink-0 pt-2 text-4xl font-bold tabular-nums"
+            aria-label="Temps restant"
+          >
             ⏱ {remaining}
           </span>
         ) : null}
-        <h1 className="text-xl font-semibold">{question.prompt}</h1>
-        {done ? (
-          <p className="text-xl font-semibold">Réponse enregistrée ✓</p>
-        ) : (
-          renderAnswerInput()
-        )}
-      </div>,
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <h1 className="text-xl font-semibold text-balance">{question.prompt}</h1>
+        </div>
+        <div className="flex w-full shrink-0 flex-col items-center gap-3 pb-2">
+          {done ? (
+            <p className="text-xl font-semibold">Réponse enregistrée ✓</p>
+          ) : (
+            renderAnswerInput()
+          )}
+        </div>
+      </section>
     );
   }
 
