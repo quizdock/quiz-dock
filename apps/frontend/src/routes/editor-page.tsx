@@ -169,7 +169,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           onClick={() => setConfirmDelete(true)}
         >
           <Trash2 className="size-4" />
-          Supprimer
+          Supprimer le quiz
         </Button>
         <a
           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
@@ -182,127 +182,120 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         </a>
       </header>
 
-      {/* Desktop : réglages/diffusion en colonne latérale, questions au centre.
-          Mobile/tablette : empilement vertical (comportement inchangé). */}
-      <div className="grid items-start gap-6 lg:grid-cols-3">
-        {/* Petit mobile : tout empilé. Tablette : Diffusion + Avis côte à côte (2 col).
-            Desktop : colonne latérale unique (col-span-1). */}
-        <aside className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:col-span-1 lg:grid-cols-1">
-          {/* Réglages du quiz */}
-          <Card className="sm:col-span-2 lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Réglages</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form
-                className="flex flex-col gap-4"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void form.handleSubmit();
-                }}
-              >
-                <form.Field name="title">
-                  {(field) => (
-                    <Label>
-                      Titre
-                      <Input
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
-                    </Label>
-                  )}
-                </form.Field>
-                <form.Field name="description">
-                  {(field) => (
-                    <Label>
-                      Description
-                      <Textarea
-                        rows={4}
-                        className="lg:min-h-48"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
-                    </Label>
-                  )}
-                </form.Field>
-                <Button
-                  type="submit"
-                  disabled={!isDirty || update.isPending}
-                  className="self-start"
-                >
-                  <Save className="size-4" />
-                  Enregistrer
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+      {/* Mise en page responsive (grille unique, `order-*` pour le placement mobile) :
+          • mobile (1 col)   : Réglages → Questions → Diffusion → Avis
+          • tablette (2 col) : Réglages pleine largeur, Questions pleine largeur,
+                               puis Diffusion + Avis côte à côte
+          • desktop (3 col)  : colonne latérale Réglages/Diffusion/Avis + Questions à droite
+          `min-w-0` sur chaque cellule : un contenu large ne déborde plus horizontalement. */}
+      <div className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Réglages du quiz */}
+        <Card className="order-1 min-w-0 sm:col-span-2 lg:col-start-1 lg:row-start-1">
+          <CardHeader>
+            <CardTitle>Réglages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void form.handleSubmit();
+              }}
+            >
+              <form.Field name="title">
+                {(field) => (
+                  <Label>
+                    Titre
+                    <Input
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                  </Label>
+                )}
+              </form.Field>
+              <form.Field name="description">
+                {(field) => (
+                  <Label>
+                    Description
+                    <Textarea
+                      rows={4}
+                      className="lg:min-h-48"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                  </Label>
+                )}
+              </form.Field>
+              <Button type="submit" disabled={!isDirty || update.isPending} className="self-start">
+                <Save className="size-4" />
+                Enregistrer
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-          {/* Diffusion */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Diffusion</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              <div className="flex flex-wrap items-center gap-2">
-                {quiz.status === 'draft' && (
-                  <Button
-                    type="button"
-                    disabled={quiz.questionCount === 0 || transition.isPending}
-                    onClick={() => void changeStatus('ready')}
-                  >
-                    Publier (prêt)
-                  </Button>
-                )}
-                {quiz.status === 'ready' && (
-                  <>
-                    {!livePin && (
-                      <Button
-                        type="button"
-                        variant="main-action"
-                        disabled={presenting}
-                        onClick={() => void onPresent()}
-                      >
-                        <Play className="size-4" />
-                        {presenting ? 'Lancement…' : 'Présenter'}
-                      </Button>
-                    )}
+        {/* Diffusion */}
+        <Card className="order-3 min-w-0 lg:col-start-1 lg:row-start-2">
+          <CardHeader>
+            <CardTitle>Diffusion</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              {quiz.status === 'draft' && (
+                <Button
+                  type="button"
+                  disabled={quiz.questionCount === 0 || transition.isPending}
+                  onClick={() => void changeStatus('ready')}
+                >
+                  Publier (prêt)
+                </Button>
+              )}
+              {quiz.status === 'ready' && (
+                <>
+                  {!livePin && (
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={() => void changeStatus('draft')}
+                      variant="main-action"
+                      disabled={presenting}
+                      onClick={() => void onPresent()}
                     >
-                      Repasser en brouillon
+                      <Play className="size-4" />
+                      {presenting ? 'Lancement…' : 'Présenter'}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => void changeStatus('archived')}
-                    >
-                      Archiver
-                    </Button>
-                  </>
-                )}
-                {quiz.status === 'archived' && (
+                  )}
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => void changeStatus('draft')}
                   >
-                    Restaurer
+                    Repasser en brouillon
                   </Button>
-                )}
-              </div>
-              {presentError ? <p className="text-destructive text-sm">{presentError}</p> : null}
-              {livePin ? <GameAccessPanel pin={livePin} /> : null}
-            </CardContent>
-          </Card>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void changeStatus('archived')}
+                  >
+                    Archiver
+                  </Button>
+                </>
+              )}
+              {quiz.status === 'archived' && (
+                <Button type="button" variant="outline" onClick={() => void changeStatus('draft')}>
+                  Restaurer
+                </Button>
+              )}
+            </div>
+            {presentError ? <p className="text-destructive text-sm">{presentError}</p> : null}
+            {livePin ? <GameAccessPanel pin={livePin} /> : null}
+          </CardContent>
+        </Card>
 
-          {/* Avis des joueurs (§2.11) — visible du seul propriétaire. */}
-          <FeedbackCard quizId={quiz.id} />
-        </aside>
+        {/* Avis des joueurs (§2.11) — visible du seul propriétaire. */}
+        <FeedbackCard quizId={quiz.id} className="order-4 min-w-0 lg:col-start-1 lg:row-start-3" />
 
-        {/* Questions (zone de travail principale) */}
-        <Card className="lg:col-span-2">
+        {/* Questions (zone de travail principale) — remontée au-dessus de
+            Diffusion/Avis sur mobile et tablette via `order-2`. */}
+        <Card className="order-2 min-w-0 sm:col-span-2 lg:col-span-2 lg:col-start-2 lg:row-span-3 lg:row-start-1">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
             <CardTitle>Questions ({quiz.questionCount})</CardTitle>
             <Button
@@ -329,7 +322,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 ) : (
                   <li
                     key={q.id}
-                    className="bg-card flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/40"
+                    className="bg-card flex flex-wrap items-center gap-2 rounded-lg border p-3 transition-colors hover:bg-accent/40 sm:flex-nowrap sm:gap-3"
                   >
                     <span className="bg-muted text-muted-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold">
                       {i + 1}
@@ -428,11 +421,11 @@ function StarRow({ value, size = 'size-4' }: { value: number; size?: string }) {
  * Avis des joueurs sur le quiz (§2.11) — réservé au propriétaire (l'endpoint refuse
  * les autres). Moyenne, nombre et liste des commentaires (récents d'abord).
  */
-function FeedbackCard({ quizId }: { quizId: string }) {
+function FeedbackCard({ quizId, className }: { quizId: string; className?: string }) {
   const { data, isLoading } = useQuizzesControllerFeedback(quizId);
   const summary = data?.data;
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>Avis des joueurs</CardTitle>
       </CardHeader>
