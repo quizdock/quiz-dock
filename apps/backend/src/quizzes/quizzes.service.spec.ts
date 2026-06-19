@@ -220,6 +220,24 @@ describe('QuizzesService', () => {
               ],
             },
             { orderIndex: 1, prompt: 'Combien ?', type: 'numeric', options: [] },
+            {
+              orderIndex: 2,
+              prompt: 'Lesquels ?',
+              type: 'multiple_choice',
+              options: [
+                { id: 'optC', text: 'Bleu' },
+                { id: 'optD', text: 'Vert' },
+              ],
+            },
+            {
+              orderIndex: 3,
+              prompt: 'Dans l’ordre ?',
+              type: 'ordering',
+              options: [
+                { id: 'o1', text: 'Un' },
+                { id: 'o2', text: 'Deux' },
+              ],
+            },
           ],
         },
         playerResults: [
@@ -243,10 +261,26 @@ describe('QuizzesService', () => {
             responseMs: 1200,
           },
           { orderIndex: 1, answerValue: 42, isCorrect: false, pointsAwarded: 0, responseMs: 3000 },
+          {
+            orderIndex: 2,
+            answerValue: ['optC', 'optD'],
+            isCorrect: true,
+            pointsAwarded: 500,
+            responseMs: 2000,
+          },
+          {
+            orderIndex: 3,
+            answerValue: ['o2', 'o1'],
+            isCorrect: false,
+            pointsAwarded: 0,
+            responseMs: 2500,
+          },
         ],
       });
       const res = await service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1');
       expect(res.fullCapture).toBe(true);
+      expect(res.answers[2].answer).toBe('Bleu, Vert'); // multi-choix : jointure « , »
+      expect(res.answers[3].answer).toBe('Deux → Un'); // ordre : jointure « → »
       expect(res.answers[0]).toMatchObject({
         prompt: 'Capitale ?',
         answer: 'Paris',
