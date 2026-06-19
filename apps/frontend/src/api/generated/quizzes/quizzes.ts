@@ -29,6 +29,8 @@ import type {
   QuizDetailDto,
   QuizDto,
   QuizFeedbackSummaryDto,
+  SessionDetailDto,
+  SessionListDto,
   TransitionQuizDto,
   UpdateQuizDto
 } from '../model';
@@ -648,6 +650,226 @@ export function useQuizzesControllerFeedback<TData = Awaited<ReturnType<typeof q
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getQuizzesControllerFeedbackQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type quizzesControllerSessionsResponse200 = {
+  data: SessionListDto
+  status: 200
+}
+
+export type quizzesControllerSessionsResponseSuccess = (quizzesControllerSessionsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type quizzesControllerSessionsResponse = (quizzesControllerSessionsResponseSuccess)
+
+export const getQuizzesControllerSessionsUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/quizzes/${id}/sessions`
+}
+
+export const quizzesControllerSessions = async (id: string, options?: RequestInit): Promise<quizzesControllerSessionsResponse> => {
+
+  return customFetch<quizzesControllerSessionsResponse>(getQuizzesControllerSessionsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getQuizzesControllerSessionsQueryKey = (id: string,) => {
+    return [
+    `/api/v1/quizzes/${id}/sessions`
+    ] as const;
+    }
+
+
+export const getQuizzesControllerSessionsQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerSessions>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getQuizzesControllerSessionsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerSessions>>> = ({ signal }) => quizzesControllerSessions(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type QuizzesControllerSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof quizzesControllerSessions>>>
+export type QuizzesControllerSessionsQueryError = unknown
+
+
+export function useQuizzesControllerSessions<TData = Awaited<ReturnType<typeof quizzesControllerSessions>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessions>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerSessions>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerSessions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerSessions<TData = Awaited<ReturnType<typeof quizzesControllerSessions>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessions>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerSessions>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerSessions>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerSessions<TData = Awaited<ReturnType<typeof quizzesControllerSessions>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useQuizzesControllerSessions<TData = Awaited<ReturnType<typeof quizzesControllerSessions>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getQuizzesControllerSessionsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type quizzesControllerSessionDetailResponse200 = {
+  data: SessionDetailDto
+  status: 200
+}
+
+export type quizzesControllerSessionDetailResponseSuccess = (quizzesControllerSessionDetailResponse200) & {
+  headers: Headers;
+};
+;
+
+export type quizzesControllerSessionDetailResponse = (quizzesControllerSessionDetailResponseSuccess)
+
+export const getQuizzesControllerSessionDetailUrl = (id: string,
+    sessionId: string,) => {
+
+
+
+
+  return `/api/v1/quizzes/${id}/sessions/${sessionId}`
+}
+
+export const quizzesControllerSessionDetail = async (id: string,
+    sessionId: string, options?: RequestInit): Promise<quizzesControllerSessionDetailResponse> => {
+
+  return customFetch<quizzesControllerSessionDetailResponse>(getQuizzesControllerSessionDetailUrl(id,sessionId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getQuizzesControllerSessionDetailQueryKey = (id: string,
+    sessionId: string,) => {
+    return [
+    `/api/v1/quizzes/${id}/sessions/${sessionId}`
+    ] as const;
+    }
+
+
+export const getQuizzesControllerSessionDetailQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError = unknown>(id: string,
+    sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getQuizzesControllerSessionDetailQueryKey(id,sessionId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>> = ({ signal }) => quizzesControllerSessionDetail(id,sessionId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type QuizzesControllerSessionDetailQueryResult = NonNullable<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>>
+export type QuizzesControllerSessionDetailQueryError = unknown
+
+
+export function useQuizzesControllerSessionDetail<TData = Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError = unknown>(
+ id: string,
+    sessionId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerSessionDetail>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerSessionDetail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerSessionDetail<TData = Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError = unknown>(
+ id: string,
+    sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerSessionDetail>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerSessionDetail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerSessionDetail<TData = Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError = unknown>(
+ id: string,
+    sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useQuizzesControllerSessionDetail<TData = Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError = unknown>(
+ id: string,
+    sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerSessionDetail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getQuizzesControllerSessionDetailQueryOptions(id,sessionId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

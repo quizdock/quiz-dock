@@ -299,6 +299,84 @@
         ]
       }
     },
+    "/api/v1/quizzes/{id}/sessions": {
+      "get": {
+        "operationId": "QuizzesController_sessions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{id}/sessions/{sessionId}": {
+      "get": {
+        "operationId": "QuizzesController_sessionDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
     "/api/v1/quizzes/{id}/status": {
       "patch": {
         "operationId": "QuizzesController_transition",
@@ -1115,6 +1193,229 @@
           "count",
           "average",
           "items"
+        ]
+      },
+      "SessionListDto": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "pin": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "lobby",
+                    "in_progress",
+                    "ended",
+                    "interrupted",
+                    "archived"
+                  ]
+                },
+                "playerCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "successRate": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "fullCapture": {
+                  "type": "boolean"
+                },
+                "startedAt": {
+                  "type": "string"
+                },
+                "endedAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "pin",
+                "status",
+                "playerCount",
+                "successRate",
+                "fullCapture",
+                "startedAt",
+                "endedAt"
+              ]
+            }
+          }
+        },
+        "required": [
+          "sessions"
+        ]
+      },
+      "SessionDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "pin": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "lobby",
+              "in_progress",
+              "ended",
+              "interrupted",
+              "archived"
+            ]
+          },
+          "playerCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "successRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "fullCapture": {
+            "type": "boolean"
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "endedAt": {
+            "type": "string"
+          },
+          "quizTitle": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "totalQuestions": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderIndex": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "prompt": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "answerCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "correctCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "successRate": {
+                  "type": "number"
+                },
+                "avgResponseMs": {
+                  "type": "number",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "orderIndex",
+                "prompt",
+                "type",
+                "answerCount",
+                "correctCount",
+                "successRate",
+                "avgResponseMs"
+              ]
+            }
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "nickname": {
+                  "type": "string"
+                },
+                "finalRank": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "finalScore": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "correctCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "answeredCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "avgResponseMs": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "maxStreak": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "nickname",
+                "finalRank",
+                "finalScore",
+                "correctCount",
+                "answeredCount",
+                "avgResponseMs",
+                "maxStreak"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "pin",
+          "status",
+          "playerCount",
+          "successRate",
+          "fullCapture",
+          "startedAt",
+          "endedAt",
+          "quizTitle",
+          "language",
+          "totalQuestions",
+          "questions",
+          "players"
         ]
       },
       "UpdateQuizDto": {

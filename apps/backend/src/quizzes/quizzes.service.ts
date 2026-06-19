@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { type Quiz, QuizStatus } from '@prisma/client';
+import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateQuizDto } from './dto/create-quiz.dto';
 import type { TransitionQuizDto } from './dto/transition-quiz.dto';
@@ -78,6 +78,72 @@ export class QuizzesService {
     const count = items.length;
     const average = count ? items.reduce((sum, f) => sum + f.rating, 0) / count : 0;
     return { count, average, items };
+  }
+
+  /**
+   * Historique des parties archivées d'un quiz possédé (§2.7), récentes d'abord.
+   * Réservé au propriétaire (la garde `findFirst({ id, ownerId })` → 404 sinon).
+   */
+  async sessions(ownerId: string, id: string) {
+    const quiz = await this.prisma.quiz.findFirst({ where: { id, ownerId }, select: { id: true } });
+    if (!quiz) {
+      throw new NotFoundException('Quiz introuvable.');
+    }
+    const rows = await this.prisma.gameSessionLog.findMany({
+      where: { quizId: id },
+      orderBy: { startedAt: 'desc' },
+      select: SESSION_SUMMARY_SELECT,
+    });
+    return { sessions: rows.map(toSessionSummary) };
+  }
+
+  /**
+   * Détail d'une session archivée (§2.8/2.9) : résumé + agrégats par question +
+   * résultats par participant. L'appartenance passe par le quiz (`quiz: { ownerId }`) —
+   * 404 si la session n'existe pas ou n'appartient pas à ce quiz possédé.
+   */
+  async sessionDetail(ownerId: string, id: string, sessionId: string) {
+    const row = await this.prisma.gameSessionLog.findFirst({
+      where: { id: sessionId, quizId: id, quiz: { ownerId } },
+      include: {
+        questionStats: { orderBy: { orderIndex: 'asc' } },
+        playerResults: { orderBy: { finalRank: 'asc' } },
+      },
+    });
+    if (!row) {
+      throw new NotFoundException('Session introuvable.');
+    }
+    // Énoncés/types lus depuis le snapshot figé (les questions vivantes ont pu changer).
+    const snap = (row.quizSnapshot ?? {}) as {
+      title?: string;
+      questions?: Array<{ orderIndex: number; prompt: string; type: string }>;
+    };
+    const byIndex = new Map((snap.questions ?? []).map((q) => [q.orderIndex, q]));
+    return {
+      ...toSessionSummary(row),
+      quizTitle: snap.title ?? '',
+      language: row.language,
+      totalQuestions: row.questionStats.length,
+      questions: row.questionStats.map((s) => ({
+        orderIndex: s.orderIndex,
+        prompt: byIndex.get(s.orderIndex)?.prompt ?? `Question ${s.orderIndex + 1}`,
+        type: byIndex.get(s.orderIndex)?.type ?? 'unknown',
+        answerCount: s.answerCount,
+        correctCount: s.correctCount,
+        successRate: Number(s.successRate),
+        avgResponseMs: s.avgResponseMs,
+      })),
+      players: row.playerResults.map((p) => ({
+        id: p.id,
+        nickname: p.nickname,
+        finalRank: p.finalRank,
+        finalScore: p.finalScore,
+        correctCount: p.correctCount,
+        answeredCount: p.answeredCount,
+        avgResponseMs: p.avgResponseMs,
+        maxStreak: p.maxStreak,
+      })),
+    };
   }
 
   /** Duplique un quiz possédé (copie profonde questions/options/réponses) en `draft`. */
@@ -195,4 +261,39 @@ export class QuizzesService {
     }
     return quiz;
   }
+}
+
+/** Colonnes du résumé de session (liste + base du détail). */
+const SESSION_SUMMARY_SELECT = {
+  id: true,
+  pin: true,
+  status: true,
+  playerCount: true,
+  successRate: true,
+  fullCapture: true,
+  startedAt: true,
+  endedAt: true,
+} satisfies Prisma.GameSessionLogSelect;
+
+/** Projette une ligne `GameSessionLog` en résumé sérialisable (Decimal→number, Date→ISO). */
+function toSessionSummary(row: {
+  id: string;
+  pin: string;
+  status: string;
+  playerCount: number;
+  successRate: Prisma.Decimal | null;
+  fullCapture: boolean;
+  startedAt: Date;
+  endedAt: Date;
+}) {
+  return {
+    id: row.id,
+    pin: row.pin,
+    status: row.status,
+    playerCount: row.playerCount,
+    successRate: row.successRate === null ? null : Number(row.successRate),
+    fullCapture: row.fullCapture,
+    startedAt: row.startedAt.toISOString(),
+    endedAt: row.endedAt.toISOString(),
+  };
 }

@@ -35,6 +35,10 @@ function makePrisma() {
     quizFeedback: {
       findMany: jest.fn(),
     },
+    gameSessionLog: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+    },
   };
 }
 
@@ -95,6 +99,98 @@ describe('QuizzesService', () => {
       );
       expect(res.count).toBe(2);
       expect(res.average).toBe(3.5);
+    });
+  });
+
+  describe('historique des sessions (§2.7-2.9)', () => {
+    it('sessions renvoie 404 pour un non-propriétaire (et ne lit aucune session)', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(null);
+      await expect(service.sessions('someone-else', 'q1')).rejects.toThrow(NotFoundException);
+      expect(prisma.gameSessionLog.findMany).not.toHaveBeenCalled();
+    });
+
+    it('sessions projette Decimal→number et Date→ISO (récentes d’abord)', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(makeQuiz());
+      const started = new Date('2026-06-19T10:00:00.000Z');
+      const ended = new Date('2026-06-19T10:20:00.000Z');
+      prisma.gameSessionLog.findMany.mockResolvedValue([
+        {
+          id: 's1',
+          pin: '123456',
+          status: 'ended',
+          playerCount: 3,
+          successRate: { toString: () => '0.5' }, // simule un Prisma.Decimal
+          fullCapture: true,
+          startedAt: started,
+          endedAt: ended,
+        },
+      ]);
+      const res = await service.sessions(OWNER, 'q1');
+      expect(prisma.gameSessionLog.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { quizId: 'q1' }, orderBy: { startedAt: 'desc' } }),
+      );
+      expect(res.sessions[0]).toMatchObject({
+        id: 's1',
+        successRate: 0.5,
+        startedAt: started.toISOString(),
+        endedAt: ended.toISOString(),
+      });
+    });
+
+    it('sessionDetail renvoie 404 si la session n’appartient pas à un quiz possédé', async () => {
+      prisma.gameSessionLog.findFirst.mockResolvedValue(null);
+      await expect(service.sessionDetail(OWNER, 'q1', 's1')).rejects.toThrow(NotFoundException);
+      expect(prisma.gameSessionLog.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 's1', quizId: 'q1', quiz: { ownerId: OWNER } } }),
+      );
+    });
+
+    it('sessionDetail joint les énoncés du snapshot aux agrégats par question', async () => {
+      prisma.gameSessionLog.findFirst.mockResolvedValue({
+        id: 's1',
+        pin: '123456',
+        status: 'interrupted',
+        language: 'fr',
+        playerCount: 1,
+        successRate: { toString: () => '1' },
+        fullCapture: false,
+        startedAt: new Date('2026-06-19T10:00:00.000Z'),
+        endedAt: new Date('2026-06-19T10:05:00.000Z'),
+        quizSnapshot: {
+          title: 'Mon quiz',
+          questions: [{ orderIndex: 0, prompt: 'Capitale ?', type: 'single_choice' }],
+        },
+        questionStats: [
+          {
+            orderIndex: 0,
+            answerCount: 1,
+            correctCount: 1,
+            successRate: { toString: () => '1' },
+            avgResponseMs: 1200,
+          },
+        ],
+        playerResults: [
+          {
+            id: 'pr1',
+            nickname: 'Zoe',
+            finalRank: 1,
+            finalScore: 1000,
+            correctCount: 1,
+            answeredCount: 1,
+            avgResponseMs: 1200,
+            maxStreak: 1,
+          },
+        ],
+      });
+      const res = await service.sessionDetail(OWNER, 'q1', 's1');
+      expect(res.quizTitle).toBe('Mon quiz');
+      expect(res.status).toBe('interrupted');
+      expect(res.questions[0]).toMatchObject({
+        prompt: 'Capitale ?',
+        successRate: 1,
+        answerCount: 1,
+      });
+      expect(res.players[0]).toMatchObject({ nickname: 'Zoe', finalRank: 1, finalScore: 1000 });
     });
   });
 

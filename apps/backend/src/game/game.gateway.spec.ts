@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { type Socket, io } from 'socket.io-client';
 import { AppModule } from '../app.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { QuizzesService } from '../quizzes/quizzes.service';
 import { GameService } from './game.service';
 
 /**
@@ -314,6 +315,24 @@ describe('GameGateway (intégration socket)', () => {
     // Capture intégrale : la réponse individuelle est conservée.
     expect(s.answerLogs).toHaveLength(1);
     expect(s.answerLogs[0]).toMatchObject({ orderIndex: 0, isCorrect: true, answerValue: parisId });
+
+    // API de consultation (Phase 2) contre la vraie base : liste + détail owner-only.
+    const quizzes = app.get(QuizzesService);
+    const list = await quizzes.sessions(hostUserId, quizId);
+    expect(list.sessions.find((x) => x.id === s.id)).toMatchObject({
+      playerCount: 1,
+      successRate: 1,
+      status: 'ended',
+    });
+    const detail = await quizzes.sessionDetail(hostUserId, quizId, s.id);
+    expect(detail.quizTitle).toBe('Quiz live test');
+    expect(detail.questions[0]).toMatchObject({
+      prompt: 'Capitale de la France ?',
+      successRate: 1,
+    });
+    expect(detail.players[0]).toMatchObject({ nickname: 'Zoe', finalRank: 1 });
+    // Isolation : un autre propriétaire ne voit pas la session.
+    await expect(quizzes.sessionDetail('someone-else', quizId, s.id)).rejects.toThrow();
 
     // Nettoyage (cascade) pour ne pas bloquer la suppression du quiz en afterAll.
     await prisma.gameSessionLog.deleteMany({ where: { quizId } });

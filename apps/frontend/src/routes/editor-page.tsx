@@ -6,6 +6,7 @@ import {
   ArrowUp,
   ExternalLink,
   Eye,
+  History,
   MonitorPlay,
   Pencil,
   Play,
@@ -164,11 +165,18 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <header className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">Éditeur de quiz</h1>
         <Badge variant={statusVariant}>{STATUS_LABEL[quiz.status] ?? quiz.status}</Badge>
+        <Link
+          to="/quizzes/$quizId/sessions"
+          params={{ quizId: quiz.id }}
+          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'ml-auto')}
+        >
+          <History className="size-4" />
+          Historique
+        </Link>
         <Button
           type="button"
           variant="destructive"
           size="sm"
-          className="ml-auto"
           onClick={() => setConfirmDelete(true)}
         >
           <Trash2 className="size-4" />

@@ -11,6 +11,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { QuizDetailDto } from './dto/quiz-detail.dto';
 import { QuizFeedbackSummaryDto } from './dto/quiz-feedback.dto';
+import { SessionDetailDto, SessionListDto } from './dto/quiz-session.dto';
 import { QuizDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -50,6 +51,22 @@ export class QuizzesController {
   @ApiOkResponse({ type: QuizFeedbackSummaryDto })
   feedback(@CurrentUser() user: User, @Param('id') id: string) {
     return this.quizzes.feedback(user.id, id);
+  }
+
+  @Get(':id/sessions')
+  @ApiOkResponse({ type: SessionListDto })
+  sessions(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.quizzes.sessions(user.id, id);
+  }
+
+  @Get(':id/sessions/:sessionId')
+  @ApiOkResponse({ type: SessionDetailDto })
+  sessionDetail(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return this.quizzes.sessionDetail(user.id, id, sessionId);
   }
 
   @Put(':id')
