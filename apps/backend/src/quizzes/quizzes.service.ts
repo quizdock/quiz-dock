@@ -146,6 +146,67 @@ export class QuizzesService {
     };
   }
 
+  /**
+   * « Le quiz vu par un participant » (§2.10) : son résultat + ses réponses question
+   * par question (capture intégrale uniquement — `answers` vide sinon). Appartenance
+   * via le quiz ; 404 si la session ou le participant n'existe pas pour ce propriétaire.
+   */
+  async sessionPlayerDetail(
+    ownerId: string,
+    id: string,
+    sessionId: string,
+    playerResultId: string,
+  ) {
+    const row = await this.prisma.gameSessionLog.findFirst({
+      where: { id: sessionId, quizId: id, quiz: { ownerId } },
+      select: {
+        fullCapture: true,
+        quizSnapshot: true,
+        playerResults: { where: { id: playerResultId } },
+        answerLogs: {
+          where: { playerResultLogId: playerResultId },
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+    });
+    if (!row || row.playerResults.length === 0) {
+      throw new NotFoundException('Participant introuvable.');
+    }
+    const p = row.playerResults[0];
+    const snap = (row.quizSnapshot ?? {}) as {
+      questions?: Array<{
+        orderIndex: number;
+        prompt: string;
+        type: string;
+        options?: Array<{ id: string; text: string | null }>;
+      }>;
+    };
+    const byIndex = new Map((snap.questions ?? []).map((q) => [q.orderIndex, q]));
+    return {
+      id: p.id,
+      nickname: p.nickname,
+      finalRank: p.finalRank,
+      finalScore: p.finalScore,
+      correctCount: p.correctCount,
+      answeredCount: p.answeredCount,
+      avgResponseMs: p.avgResponseMs,
+      maxStreak: p.maxStreak,
+      fullCapture: row.fullCapture,
+      answers: row.answerLogs.map((a) => {
+        const q = byIndex.get(a.orderIndex);
+        return {
+          orderIndex: a.orderIndex,
+          prompt: q?.prompt ?? `Question ${a.orderIndex + 1}`,
+          type: q?.type ?? 'unknown',
+          answer: renderAnswer(q, a.answerValue),
+          isCorrect: a.isCorrect,
+          pointsAwarded: a.pointsAwarded,
+          responseMs: a.responseMs,
+        };
+      }),
+    };
+  }
+
   /** Duplique un quiz possédé (copie profonde questions/options/réponses) en `draft`. */
   async duplicate(ownerId: string, id: string): Promise<Quiz> {
     const src = await this.prisma.quiz.findFirst({
@@ -274,6 +335,27 @@ const SESSION_SUMMARY_SELECT = {
   startedAt: true,
   endedAt: true,
 } satisfies Prisma.GameSessionLogSelect;
+
+/**
+ * Rend une réponse stockée (`AnswerLog.answerValue`) lisible : texte d'option pour les
+ * QCM/ordre, valeur brute pour le libre (texte/numérique). Tombe sur l'id ou la valeur
+ * brute si le snapshot ne porte pas l'option (robustesse).
+ */
+function renderAnswer(
+  question: { type?: string; options?: Array<{ id: string; text: string | null }> } | undefined,
+  value: unknown,
+): string {
+  const optText = (id: string) => question?.options?.find((o) => o.id === id)?.text ?? id;
+  if (Array.isArray(value)) {
+    const sep = question?.type === 'ordering' ? ' → ' : ', ';
+    return value.map((v) => (typeof v === 'string' ? optText(v) : String(v))).join(sep);
+  }
+  if (typeof value === 'string') {
+    const opt = question?.options?.find((o) => o.id === value);
+    return opt ? (opt.text ?? value) : value; // id d'option connu → texte ; sinon saisie libre
+  }
+  return String(value);
+}
 
 /** Projette une ligne `GameSessionLog` en résumé sérialisable (Decimal→number, Date→ISO). */
 function toSessionSummary(row: {

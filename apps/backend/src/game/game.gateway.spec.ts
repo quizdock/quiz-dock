@@ -331,6 +331,15 @@ describe('GameGateway (intégration socket)', () => {
       successRate: 1,
     });
     expect(detail.players[0]).toMatchObject({ nickname: 'Zoe', finalRank: 1 });
+    // Drill-down participant (Phase 3) : réponse rendue lisible depuis le snapshot.
+    const playerDetail = await quizzes.sessionPlayerDetail(
+      hostUserId,
+      quizId,
+      s.id,
+      detail.players[0].id,
+    );
+    expect(playerDetail.fullCapture).toBe(true);
+    expect(playerDetail.answers[0]).toMatchObject({ answer: 'Paris', isCorrect: true });
     // Isolation : un autre propriétaire ne voit pas la session.
     await expect(quizzes.sessionDetail('someone-else', quizId, s.id)).rejects.toThrow();
 

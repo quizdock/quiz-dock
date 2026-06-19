@@ -60,3 +60,25 @@ export const sessionDetailSchema = sessionSummarySchema.extend({
   players: z.array(sessionPlayerResultSchema),
 });
 export class SessionDetailDto extends createZodDto(sessionDetailSchema) {}
+
+/** Réponse d'un participant à une question (capture intégrale, §2.10). */
+export const sessionPlayerAnswerSchema = z.object({
+  orderIndex: z.number().int(),
+  prompt: z.string(),
+  type: z.string(),
+  /** Réponse rendue lisible (texte d'option, valeur libre, ordre…). */
+  answer: z.string(),
+  isCorrect: z.boolean(),
+  pointsAwarded: z.number().int(),
+  responseMs: z.number().int(),
+});
+
+/**
+ * « Le quiz vu par un participant » : son résultat + ses réponses question par
+ * question. `answers` n'est rempli qu'en capture intégrale (`fullCapture`).
+ */
+export const sessionPlayerDetailSchema = sessionPlayerResultSchema.extend({
+  fullCapture: z.boolean(),
+  answers: z.array(sessionPlayerAnswerSchema),
+});
+export class SessionPlayerDetailDto extends createZodDto(sessionPlayerDetailSchema) {}

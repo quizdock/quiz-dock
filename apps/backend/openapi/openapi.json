@@ -377,6 +377,57 @@
         ]
       }
     },
+    "/api/v1/quizzes/{id}/sessions/{sessionId}/players/{playerResultId}": {
+      "get": {
+        "operationId": "QuizzesController_sessionPlayer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "playerResultId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionPlayerDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
     "/api/v1/quizzes/{id}/status": {
       "patch": {
         "operationId": "QuizzesController_transition",
@@ -1416,6 +1467,105 @@
           "totalQuestions",
           "questions",
           "players"
+        ]
+      },
+      "SessionPlayerDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "nickname": {
+            "type": "string"
+          },
+          "finalRank": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "finalScore": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "correctCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "answeredCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "avgResponseMs": {
+            "type": "number",
+            "nullable": true
+          },
+          "maxStreak": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "fullCapture": {
+            "type": "boolean"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderIndex": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "prompt": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "answer": {
+                  "type": "string"
+                },
+                "isCorrect": {
+                  "type": "boolean"
+                },
+                "pointsAwarded": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "responseMs": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "orderIndex",
+                "prompt",
+                "type",
+                "answer",
+                "isCorrect",
+                "pointsAwarded",
+                "responseMs"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "nickname",
+          "finalRank",
+          "finalScore",
+          "correctCount",
+          "answeredCount",
+          "avgResponseMs",
+          "maxStreak",
+          "fullCapture",
+          "answers"
         ]
       },
       "UpdateQuizDto": {

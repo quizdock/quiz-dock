@@ -10,7 +10,7 @@ import { LoginPage } from './routes/login-page';
 import { PlayerPage } from './routes/player-page';
 import { PreviewPage } from './routes/preview-page';
 import { ScreenPage } from './routes/screen-page';
-import { SessionDetailPage, SessionsPage } from './routes/sessions-page';
+import { SessionDetailPage, SessionPlayerPage, SessionsPage } from './routes/sessions-page';
 import { RootLayout } from './routes/root-layout';
 
 const requireAuth = () => {
@@ -75,6 +75,14 @@ export const sessionDetailRoute = createRoute({
   component: SessionDetailPage,
 });
 
+// « Le quiz vu par un participant » (§2.10) : réponses question par question.
+export const sessionPlayerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/quizzes/$quizId/sessions/$sessionId/players/$playerResultId',
+  beforeLoad: requireAuth,
+  component: SessionPlayerPage,
+});
+
 // Console d'animation (hôte, §3). Auth requise (propriétaire).
 export const controlRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -121,6 +129,7 @@ export const routeTree = rootRoute.addChildren([
   previewRoute,
   sessionsRoute,
   sessionDetailRoute,
+  sessionPlayerRoute,
   controlRoute,
   screenRoute,
   presentRedirectRoute,

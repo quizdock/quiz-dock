@@ -192,6 +192,91 @@ describe('QuizzesService', () => {
       });
       expect(res.players[0]).toMatchObject({ nickname: 'Zoe', finalRank: 1, finalScore: 1000 });
     });
+
+    it('sessionPlayerDetail renvoie 404 si le participant n’existe pas (session vide)', async () => {
+      prisma.gameSessionLog.findFirst.mockResolvedValue({
+        fullCapture: true,
+        quizSnapshot: {},
+        playerResults: [],
+        answerLogs: [],
+      });
+      await expect(service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('sessionPlayerDetail rend les réponses lisibles depuis le snapshot (option → texte)', async () => {
+      prisma.gameSessionLog.findFirst.mockResolvedValue({
+        fullCapture: true,
+        quizSnapshot: {
+          questions: [
+            {
+              orderIndex: 0,
+              prompt: 'Capitale ?',
+              type: 'single_choice',
+              options: [
+                { id: 'optA', text: 'Paris' },
+                { id: 'optB', text: 'Lyon' },
+              ],
+            },
+            { orderIndex: 1, prompt: 'Combien ?', type: 'numeric', options: [] },
+          ],
+        },
+        playerResults: [
+          {
+            id: 'pr1',
+            nickname: 'Zoe',
+            finalRank: 1,
+            finalScore: 1000,
+            correctCount: 1,
+            answeredCount: 2,
+            avgResponseMs: 1200,
+            maxStreak: 1,
+          },
+        ],
+        answerLogs: [
+          {
+            orderIndex: 0,
+            answerValue: 'optA',
+            isCorrect: true,
+            pointsAwarded: 1000,
+            responseMs: 1200,
+          },
+          { orderIndex: 1, answerValue: 42, isCorrect: false, pointsAwarded: 0, responseMs: 3000 },
+        ],
+      });
+      const res = await service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1');
+      expect(res.fullCapture).toBe(true);
+      expect(res.answers[0]).toMatchObject({
+        prompt: 'Capitale ?',
+        answer: 'Paris',
+        isCorrect: true,
+      });
+      expect(res.answers[1]).toMatchObject({ answer: '42', isCorrect: false }); // valeur libre brute
+    });
+
+    it('sessionPlayerDetail expose fullCapture=false avec une liste de réponses vide', async () => {
+      prisma.gameSessionLog.findFirst.mockResolvedValue({
+        fullCapture: false,
+        quizSnapshot: { questions: [] },
+        playerResults: [
+          {
+            id: 'pr1',
+            nickname: 'Bob',
+            finalRank: 2,
+            finalScore: 0,
+            correctCount: 0,
+            answeredCount: 0,
+            avgResponseMs: null,
+            maxStreak: 0,
+          },
+        ],
+        answerLogs: [],
+      });
+      const res = await service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1');
+      expect(res.fullCapture).toBe(false);
+      expect(res.answers).toEqual([]);
+    });
   });
 
   describe('cycle de vie (RG-02)', () => {

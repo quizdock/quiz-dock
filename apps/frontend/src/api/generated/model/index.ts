@@ -53,6 +53,8 @@ export * from './sessionDetailDtoStatus';
 export * from './sessionListDto';
 export * from './sessionListDtoSessionsItem';
 export * from './sessionListDtoSessionsItemStatus';
+export * from './sessionPlayerDetailDto';
+export * from './sessionPlayerDetailDtoAnswersItem';
 export * from './transitionQuizDto';
 export * from './transitionQuizDtoStatus';
 export * from './updateQuestionDto';
