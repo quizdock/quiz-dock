@@ -25,6 +25,7 @@ import type { AnswerRecord, GameMeta, PlayerRecord, QuizSnapshot } from './game.
 import { RedisService } from '../redis/redis.service';
 import { buildRevealCommon } from './reveal';
 import { scoreAnswer } from './scoring';
+import { SessionArchiveService } from './session-archive.service';
 import { buildQuestionStart } from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
@@ -67,6 +68,7 @@ export class GameEngine {
   constructor(
     private readonly game: GameService,
     private readonly redis: RedisService,
+    private readonly archive: SessionArchiveService,
   ) {}
 
   /** Lié par le gateway dans `afterInit` (le serveur Socket.IO porte les rooms). */
@@ -332,6 +334,9 @@ export class GameEngine {
     const meta = await this.game.getMeta(pin);
     if (!meta) return;
     const playerId = socket.data.playerId;
+    // Consentement capture intégrale (§2.10) : tout (ré)attaché — dont les joueurs
+    // arrivés après le host:create — doit voir l'avis « réponses conservées ».
+    if (meta.fullCapture) socket.emit('notice', { fullCapture: true });
     socket.emit('game:state', {
       state: meta.state as GameState,
       questionIndex: meta.currentIndex,
@@ -514,6 +519,9 @@ export class GameEngine {
   private async endOrphaned(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.game.getMeta(pin);
     if (!meta || meta.state !== GameState.HostDisconnected) return; // repris entre-temps
+    // Fin subie : on archive ce qui a été joué, marqué « interrompu » (§7.3). Best-effort —
+    // l'hôte est absent, un échec ne doit pas bloquer la fin (journalisé, avalé).
+    await this.archive.archive(pin, meta, { interrupted: true, bestEffort: true });
     await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(hostUserId, pin);
@@ -583,8 +591,13 @@ export class GameEngine {
   }
 
   /** `host:end` : termine la partie (tout état → ENDED) et invalide le PIN (§7). */
-  async end(pin: string, hostUserId: string): Promise<void> {
+  async end(pin: string, hostUserId: string, archive = false): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state === GameState.Ended) return; // déjà terminée (ré-entrée / double-clic) → pas de double archive
+    // Archivage explicite choisi par l'hôte (§2.7). Volontairement NON best-effort :
+    // si la persistance échoue, on laisse remonter et on ne détruit PAS la partie
+    // (le PIN reste valide, l'hôte peut réessayer) — pas de perte silencieuse.
+    if (archive) await this.archive.archive(pin, meta, { interrupted: false });
     this.clearTimer(pin);
     this.cancelTimer(this.graceTimers, pin);
     this.cancelTimer(this.endWindowTimers, pin);

@@ -50,8 +50,8 @@ export function ControlPage() {
 
   const joinUrl = `${window.location.origin}/join/${pin}`;
   const screenUrl = `${window.location.origin}/present/${pin}/screen`;
-  const emit = (event: 'host:start' | 'host:reveal' | 'host:next' | 'host:end') =>
-    socket?.emit(event, { pin });
+  const emit = (event: 'host:start' | 'host:reveal' | 'host:next') => socket?.emit(event, { pin });
+  const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
   const setPaused = (paused: boolean) => socket?.emit('host:pause', { pin, paused });
   const adjustTime = (deltaS: number) => socket?.emit('host:adjust-time', { pin, deltaS });
@@ -175,7 +175,7 @@ export function ControlPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <ModeToggle mode={view.mode} onChange={setMode} />
           <div className="flex items-center gap-2">
-            <EndGameButton label="Arrêter la partie" onConfirm={() => emit('host:end')} />
+            <EndGameButton label="Arrêter la partie" onConfirm={endGame} />
             {screenButton}
             <Tooltip label="Attendez que le maximum de joueurs soient connectés avant de démarrer">
               <Button
@@ -256,7 +256,7 @@ export function ControlPage() {
       <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 py-8">
         <h2 className="text-2xl font-bold">🏆 Podium</h2>
         {view.podium ? <Podium rows={view.podium.podium} /> : null}
-        <EndGameButton label="Terminer la partie" onConfirm={() => emit('host:end')} />
+        <EndGameButton label="Terminer la partie" offerArchive onConfirm={endGame} />
       </section>
     );
   }
@@ -327,7 +327,7 @@ export function ControlPage() {
           <Eye className="size-4" />
           Révéler maintenant
         </Button>
-        <EndGameButton label="Terminer la partie" onConfirm={() => emit('host:end')} />
+        <EndGameButton label="Terminer la partie" offerArchive onConfirm={endGame} />
       </div>
     </section>
   );
@@ -484,11 +484,21 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
  * et une modale de confirmation. À la confirmation, la partie est détruite (PIN invalidé,
  * joueurs déconnectés). Les résultats ne sont pas conservés (archivage à venir, cf. §2.x).
  */
-function EndGameButton({ label, onConfirm }: { label: string; onConfirm: () => void }) {
+function EndGameButton({
+  label,
+  offerArchive,
+  onConfirm,
+}: {
+  label: string;
+  /** Propose d'archiver les résultats (pertinent dès qu'une partie a été jouée). */
+  offerArchive?: boolean;
+  onConfirm: (archive: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
+  const [archive, setArchive] = useState(true);
   return (
     <>
-      <Tooltip label="Attention : la partie sera détruite (PIN invalidé, joueurs déconnectés) et les résultats ne sont pas conservés.">
+      <Tooltip label="Attention : la partie sera détruite (PIN invalidé, joueurs déconnectés). Action irréversible.">
         <Button type="button" variant="outline" onClick={() => setOpen(true)}>
           <Square className="size-4" />
           {label}
@@ -498,15 +508,32 @@ function EndGameButton({ label, onConfirm }: { label: string; onConfirm: () => v
         open={open}
         destructive
         title={`${label} ?`}
-        description="La partie sera définitivement terminée : le PIN est invalidé, les joueurs sont déconnectés et les résultats ne sont pas conservés. Cette action est irréversible."
+        description="La partie sera définitivement terminée : le PIN est invalidé et les joueurs sont déconnectés. Cette action est irréversible."
         confirmLabel={label}
         cancelLabel="Annuler"
         onConfirm={() => {
           setOpen(false);
-          onConfirm();
+          onConfirm(offerArchive ? archive : false);
         }}
         onCancel={() => setOpen(false)}
-      />
+      >
+        {offerArchive ? (
+          <label className="flex items-start gap-2 rounded-md border p-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={archive}
+              onChange={(e) => setArchive(e.target.checked)}
+            />
+            <span>
+              <span className="font-medium">Archiver les résultats de cette partie</span>
+              <span className="text-muted-foreground block">
+                Classement et statistiques resteront consultables après la partie.
+              </span>
+            </span>
+          </label>
+        ) : null}
+      </ConfirmDialog>
     </>
   );
 }

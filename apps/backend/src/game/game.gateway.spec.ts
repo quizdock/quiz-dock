@@ -257,6 +257,68 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.score).toBeGreaterThan(0);
   }, 15_000);
 
+  it('archivage (§2.7) : capture intégrale → host:end{archive} persiste les tables, idempotent', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId, fullCapture: true });
+    const player = connect();
+
+    // Consentement : le joueur reçoit l'avis « réponses conservées » au join (§2.10).
+    const noticeP = new Promise<{ fullCapture: boolean }>((resolve) =>
+      player.on('notice', (n) => resolve(n as never)),
+    );
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => player.on('question:start', (q) => resolve(q as never)),
+    );
+    const revealP = new Promise((resolve) => player.on('question:reveal', resolve));
+    await player.emitWithAck('player:join', { pin, nickname: 'Zoe' });
+    expect((await noticeP).fullCapture).toBe(true);
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    const parisId = q.options.find((o) => o.text === 'Paris')!.id;
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+    player.emit('player:submit', { pin, questionIndex: 0, answer: parisId });
+    await revealP;
+
+    const ended = new Promise((resolve) => player.on('game:ended', resolve));
+    host.emit('host:end', { pin, archive: true });
+    await ended;
+
+    // Ré-entrée : un second host:end ne doit pas créer un 2ᵉ enregistrement (garde d'état).
+    host.emit('host:end', { pin, archive: true });
+    await new Promise((r) => setTimeout(r, 300));
+
+    const sessions = await prisma.gameSessionLog.findMany({
+      where: { quizId },
+      include: { playerResults: true, questionStats: true, answerLogs: true },
+    });
+    expect(sessions).toHaveLength(1); // idempotent malgré le double host:end
+    const s = sessions[0];
+    expect(s.status).toBe('ended');
+    expect(s.playerCount).toBe(1);
+    expect(s.fullCapture).toBe(true);
+    expect(Number(s.successRate)).toBeCloseTo(1);
+
+    expect(s.playerResults).toHaveLength(1);
+    expect(s.playerResults[0]).toMatchObject({
+      nickname: 'Zoe',
+      finalRank: 1,
+      correctCount: 1,
+      answeredCount: 1,
+    });
+
+    expect(s.questionStats).toHaveLength(1);
+    expect(s.questionStats[0]).toMatchObject({ orderIndex: 0, correctCount: 1, answerCount: 1 });
+    expect((s.questionStats[0].distribution as Record<string, number>)[parisId]).toBe(1);
+
+    // Capture intégrale : la réponse individuelle est conservée.
+    expect(s.answerLogs).toHaveLength(1);
+    expect(s.answerLogs[0]).toMatchObject({ orderIndex: 0, isCorrect: true, answerValue: parisId });
+
+    // Nettoyage (cascade) pour ne pas bloquer la suppression du quiz en afterAll.
+    await prisma.gameSessionLog.deleteMany({ where: { quizId } });
+  }, 15_000);
+
   it('host:adjust-time : +5 s repousse `endsAt` et diffuse `question:time`', async () => {
     const host = connect({ localUser: 'Formateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

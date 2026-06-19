@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 import { Button } from './button';
 
 /**
@@ -13,6 +13,7 @@ export function ConfirmDialog({
   confirmLabel = 'Confirmer',
   cancelLabel = 'Annuler',
   destructive,
+  children,
   onConfirm,
   onCancel,
 }: {
@@ -22,6 +23,8 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /** Contenu additionnel (ex. case à cocher) inséré entre le texte et les actions. */
+  children?: ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -56,6 +59,7 @@ export function ConfirmDialog({
       <div className="flex flex-col gap-4 p-6">
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
+        {children}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             {cancelLabel}

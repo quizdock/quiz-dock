@@ -296,9 +296,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('host:end')
   async hostEnd(
     @ConnectedSocket() socket: GameSocket,
-    @MessageBody() payload: { pin: string },
+    @MessageBody() payload: { pin: string; archive?: boolean },
   ): Promise<void> {
-    await this.engine.end(payload.pin, this.requireHostId(socket));
+    await this.engine.end(payload.pin, this.requireHostId(socket), payload.archive === true);
   }
 
   /** `host:mode` : bascule le rythme manuel/auto en cours de partie (§8). */

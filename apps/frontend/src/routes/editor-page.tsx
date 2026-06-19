@@ -81,6 +81,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const [presenting, setPresenting] = useState(false);
   const [presentError, setPresentError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Capture intégrale (§2.10) : conserve le détail des réponses par participant.
+  // Décidée avant le lancement de la partie (fige le snapshot côté serveur).
+  const [fullCapture, setFullCapture] = useState(false);
 
   const invalidate = () =>
     Promise.all([
@@ -120,7 +123,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     setPresentError(null);
     setPresenting(true);
     try {
-      const { pin } = await createSession(quiz.id);
+      const { pin } = await createSession(quiz.id, fullCapture);
       setLivePin(pin);
     } catch (e) {
       setPresentError(e instanceof Error ? e.message : 'Échec du lancement de la partie.');
@@ -240,6 +243,23 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             <CardTitle>Diffusion</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
+            {quiz.status === 'ready' && !livePin ? (
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={fullCapture}
+                  onChange={(e) => setFullCapture(e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium">Capture intégrale des réponses</span>
+                  <span className="text-muted-foreground block">
+                    Conserve le détail des réponses de chaque participant (suivi de formation). À
+                    activer avant de présenter.
+                  </span>
+                </span>
+              </label>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               {quiz.status === 'draft' && (
                 <Button

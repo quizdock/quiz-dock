@@ -225,7 +225,8 @@ export interface ClientToServerEvents {
   'host:next': (p: { pin: string }) => void;
   'host:reveal': (p: { pin: string }) => void;
   'host:kick': (p: { pin: string; playerId: string }) => void;
-  'host:end': (p: { pin: string }) => void;
+  /** Termine la partie. `archive:true` → persiste les résultats avant destruction. */
+  'host:end': (p: { pin: string; archive?: boolean }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */

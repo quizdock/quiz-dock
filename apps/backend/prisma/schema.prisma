@@ -90,6 +90,7 @@ enum SessionStatus {
   lobby
   in_progress
   ended
+  interrupted
   archived
 
   @@map("session_status")
