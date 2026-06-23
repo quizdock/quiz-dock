@@ -200,8 +200,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           • desktop (3 col)  : colonne latérale Réglages/Diffusion/Avis + Questions à droite
           `min-w-0` sur chaque cellule : un contenu large ne déborde plus horizontalement. */}
       <div className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Réglages du quiz */}
-        <Card className="order-1 min-w-0 sm:col-span-2 lg:col-start-1 lg:row-start-1">
+        {/* Réglages du quiz — `lg:col-span-1` annule le `sm:col-span-2` (sinon il
+            déborderait sur la colonne des Questions au desktop). */}
+        <Card className="order-1 min-w-0 sm:col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-1">
           <CardHeader>
             <CardTitle>Réglages</CardTitle>
           </CardHeader>
