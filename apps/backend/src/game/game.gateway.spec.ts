@@ -425,6 +425,35 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.rank).toBe(1);
   }, 15_000);
 
+  it('REVEAL anticipé quand TOUS répondent FAUX (convergence indépendante de la justesse)', async () => {
+    const host = connect({ localUser: 'Formateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const p1 = connect();
+    const p2 = connect();
+    await p1.emitWithAck('player:join', { pin, nickname: 'Zoe' });
+    await p2.emitWithAck('player:join', { pin, nickname: 'Yann' });
+
+    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      (resolve) => p1.on('question:start', (q) => resolve(q as never)),
+    );
+    // Le REVEAL ne doit PAS attendre le timer (5 s) : il converge dès que les 2 ont répondu.
+    const revealP = new Promise<void>((resolve) =>
+      p1.on('game:state', (s) => {
+        if ((s as { state: string }).state === 'REVEAL') resolve();
+      }),
+    );
+
+    host.emit('host:start', { pin });
+    const q = await qStart;
+    const lyonId = q.options.find((o) => o.text === 'Lyon')!.id; // mauvaise réponse pour tous
+    await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+    p1.emit('player:submit', { pin, questionIndex: 0, answer: lyonId });
+    p2.emit('player:submit', { pin, questionIndex: 0, answer: lyonId });
+
+    // Doit révéler car les 2 connectés ont répondu — peu importe que ce soit faux.
+    await revealP;
+  }, 15_000);
+
   it('host:attach : la console reçoit game:outline (titre + description + questions)', async () => {
     const host = connect({ localUser: 'Formateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
