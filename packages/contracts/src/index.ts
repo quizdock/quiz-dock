@@ -69,6 +69,8 @@ export const ClientEvents = {
   HostReveal: 'host:reveal',
   HostKick: 'host:kick',
   HostEnd: 'host:end',
+  /** Bannit un joueur pour une durée donnée (exclusion immédiate, RG-12). */
+  HostBan: 'host:ban',
   /** (Dé)active la capture intégrale depuis le lobby, avant le démarrage (RG-13). */
   HostCapture: 'host:capture',
   /** Bascule manuel/auto en cours de partie (le présentateur reprend la main). */
@@ -227,6 +229,11 @@ export interface ClientToServerEvents {
   'host:next': (p: { pin: string }) => void;
   'host:reveal': (p: { pin: string }) => void;
   'host:kick': (p: { pin: string; playerId: string }) => void;
+  /**
+   * Bannit un joueur pour `minutes` minutes : exclusion immédiate (déconnecté +
+   * retiré du classement) et re-join refusé tant que le ban court (RG-12).
+   */
+  'host:ban': (p: { pin: string; playerId: string; minutes: number }) => void;
   /** Termine la partie. `archive:true` → persiste les résultats avant destruction. */
   'host:end': (p: { pin: string; archive?: boolean }) => void;
   /**
@@ -266,6 +273,8 @@ export interface ServerToClientEvents {
   notice: (p: { fullCapture: boolean }) => void;
   'player:joined': (p: { playerId: string; nickname: string; playerCount: number }) => void;
   'player:left': (p: { playerId: string; playerCount: number }) => void;
+  /** Le joueur a été banni par l'hôte : son client affiche l'exclusion (durée en minutes). */
+  kicked: (p: { minutes: number }) => void;
   /** Instantané du lobby (joueurs connectés) renvoyé à un socket qui se (ré)attache (§6). */
   'game:roster': (p: { players: { playerId: string; nickname: string }[] }) => void;
   'game:state': (p: GameStatePayload) => void;

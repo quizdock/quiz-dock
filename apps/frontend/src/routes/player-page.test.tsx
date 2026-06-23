@@ -35,6 +35,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   players: [],
   answerAccepted: null,
   fullCapture: false,
+  kicked: null,
   mode: 'manual',
   paused: false,
   pausedRemainingMs: null,

@@ -49,6 +49,8 @@ export interface GameView {
   players: RosterPlayer[];
   answerAccepted: boolean | null;
   fullCapture: boolean;
+  /** Renseigné si l'hôte a banni ce joueur (durée en minutes) — son client l'affiche. */
+  kicked: { minutes: number } | null;
   /** Rythme courant (§8) — `manual` par défaut. */
   mode: GameMode;
   /** Auto-progression suspendue par l'hôte (chrono gelé en ANSWERING). */
@@ -82,6 +84,7 @@ const INITIAL: GameView = {
   players: [],
   answerAccepted: null,
   fullCapture: false,
+  kicked: null,
   mode: 'manual',
   paused: false,
   pausedRemainingMs: null,
@@ -160,6 +163,12 @@ export function useGameSession(pin: string, role: LiveRole) {
     const onPodium = (p: PodiumPayload) => patch({ podium: p, state: 'PODIUM' as GameState });
     const onEnded = () => patch({ state: 'ENDED' as GameState });
     const onNotice = (p: { fullCapture: boolean }) => patch({ fullCapture: p.fullCapture });
+    // Banni par l'hôte : on purge la session locale (pas d'auto-reconnexion) et on
+    // bascule la vue en écran d'exclusion.
+    const onKicked = (p: { minutes: number }) => {
+      clearPlayerSession();
+      patch({ kicked: p });
+    };
 
     void ensureGameSocket(role === 'host' ? 'host' : 'guest').then((sock) => {
       if (!active) return;
@@ -181,6 +190,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('game:podium', onPodium);
       sock.on('game:ended', onEnded);
       sock.on('notice', onNotice);
+      sock.on('kicked', onKicked);
 
       // Kick — listeners déjà en place : la rafale `sendStateTo` ne peut être ratée.
       if (role === 'host') {
@@ -231,6 +241,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('game:podium', onPodium);
       s.off('game:ended', onEnded);
       s.off('notice', onNotice);
+      s.off('kicked', onKicked);
     };
   }, [pin, role]);
 

@@ -450,6 +450,38 @@ export class GameEngine {
   }
 
   /**
+   * `host:ban` : exclut un joueur pour `minutes` minutes (RG-12). Retire son état
+   * (service : ban TTL + purge record/pseudo/classement), déconnecte ses sockets
+   * avec un `kicked`, diffuse le roster, puis — en ANSWERING — re-vérifie la
+   * convergence (bannir le dernier non-répondant ne doit pas figer la question).
+   */
+  async banPlayer(
+    pin: string,
+    hostUserId: string,
+    playerId: string,
+    minutes: number,
+  ): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    const nickname = await this.game.banPlayer(pin, playerId, minutes);
+    if (!nickname) return; // déjà parti / inconnu
+    const sockets = await this.server.in(pin).fetchSockets();
+    for (const s of sockets) {
+      if ((s.data as { playerId?: string }).playerId === playerId) {
+        s.emit('kicked', { minutes });
+        await s.leave(pin);
+      }
+    }
+    this.server
+      .to(pin)
+      .emit('player:left', { playerId, playerCount: await this.game.connectedCount(pin) });
+    if (meta.state === GameState.Answering) {
+      const { answered, total, allAnswered } = await this.connectedProgress(pin, meta.currentIndex);
+      this.server.to(pin).emit('answer:count', { answered, total });
+      if (allAnswered) await this.advanceToReveal(pin, meta.currentIndex, 'all');
+    }
+  }
+
+  /**
    * Déconnexion d'un joueur (§8) : `connected=false`, diffusion `player:left` avec
    * le compte des **connectés**, puis **re-vérification de la convergence** — un
    * départ peut compléter « tous les connectés ont répondu » sans nouveau submit

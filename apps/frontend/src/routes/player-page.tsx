@@ -220,6 +220,22 @@ export function PlayerPage() {
     return wrap(<p className="text-muted-foreground">Connexion à la partie…</p>);
   }
 
+  // Exclu par l'hôte : écran terminal (la session locale a été purgée, pas de reprise).
+  if (view.kicked) {
+    return wrap(
+      <>
+        <span className="text-7xl leading-none" aria-hidden>
+          🚫
+        </span>
+        <p className="text-xl font-semibold">Tu as été exclu de la partie.</p>
+        <p className="text-muted-foreground">
+          L’animateur t’a banni pour {view.kicked.minutes} minute
+          {view.kicked.minutes > 1 ? 's' : ''}.
+        </p>
+      </>,
+    );
+  }
+
   // ── États de jeu ───────────────────────────────────────────────────────────
   if (view.state === 'HOST_DISCONNECTED') {
     return wrap(

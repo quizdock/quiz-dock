@@ -310,6 +310,20 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     await this.engine.setCapture(payload.pin, this.requireHostId(socket), payload.fullCapture);
   }
 
+  /** `host:ban` : exclut un joueur pour une durée donnée (minutes). */
+  @SubscribeMessage('host:ban')
+  async hostBan(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; playerId: string; minutes: number },
+  ): Promise<void> {
+    await this.engine.banPlayer(
+      payload.pin,
+      this.requireHostId(socket),
+      payload.playerId,
+      payload.minutes,
+    );
+  }
+
   /** `host:mode` : bascule le rythme manuel/auto en cours de partie (§8). */
   @SubscribeMessage('host:mode')
   async hostMode(

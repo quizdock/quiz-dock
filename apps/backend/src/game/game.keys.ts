@@ -46,6 +46,8 @@ export const gameKeys = {
   players: (pin: string) => `game:${pin}:players`,
   /** Set des pseudos normalisés (dédoublonnage atomique). */
   nicknames: (pin: string) => `game:${pin}:nicknames`,
+  /** Bannissement d'un pseudo normalisé (clé auto-expirante = durée du ban, RG-12). */
+  ban: (pin: string, normalized: string) => `game:${pin}:ban:${normalized}`,
   /** Hash playerId → réponse (HSETNX = 1re réponse gagne, RG-06). */
   answers: (pin: string, questionIndex: number) => `game:${pin}:answers:${questionIndex}`,
   /** ZSet playerId scoré par score (classement). */

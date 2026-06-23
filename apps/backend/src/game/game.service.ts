@@ -2,6 +2,7 @@ import { randomBytes, randomInt } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
@@ -121,6 +122,10 @@ export class GameService {
 
     const nickname = sanitizeNickname(rawNickname);
     const normalized = normalizeAnswer(nickname);
+    // Exclusion (RG-12) : pseudo banni tant que la clé court (durée fixée par l'hôte).
+    if (await this.redis.exists(gameKeys.ban(pin, normalized))) {
+      throw new ForbiddenException('Tu as été exclu de cette partie par l’animateur.');
+    }
     const claimed = await this.redis.sadd(gameKeys.nicknames(pin), normalized);
     if (claimed === 0) {
       throw new ConflictException('Ce pseudo est déjà pris dans cette partie.');
@@ -198,6 +203,28 @@ export class GameService {
     record.connected = connected;
     await this.redis.hset(gameKeys.players(pin), playerId, JSON.stringify(record));
     return record;
+  }
+
+  /**
+   * Bannit un joueur (RG-12) : pose une clé ban auto-expirante sur son pseudo
+   * normalisé (durée = `minutes`), puis le retire du hash joueurs, du set des
+   * pseudos et du classement. Renvoie son pseudo (ou `null` s'il n'est plus là).
+   * La reconnexion échoue ensuite d'elle-même (record absent → `setConnected` null),
+   * et le re-join est refusé par la clé ban.
+   */
+  async banPlayer(pin: string, playerId: string, minutes: number): Promise<string | null> {
+    const raw = await this.redis.hget(gameKeys.players(pin), playerId);
+    if (!raw) return null;
+    const record = JSON.parse(raw) as PlayerRecord;
+    const normalized = normalizeAnswer(record.nickname);
+    const ttlS = Math.max(1, Math.round(minutes * 60));
+    const pipe = this.redis.multi();
+    pipe.set(gameKeys.ban(pin, normalized), '1', 'EX', ttlS);
+    pipe.hdel(gameKeys.players(pin), playerId);
+    pipe.srem(gameKeys.nicknames(pin), normalized);
+    pipe.zrem(gameKeys.leaderboard(pin), playerId);
+    await pipe.exec();
+    return record.nickname;
   }
 
   /** Résout un jeton de session → { pin, playerId } (reconnexion §6.1). */

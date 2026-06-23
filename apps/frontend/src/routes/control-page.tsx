@@ -1,6 +1,7 @@
 import type { GameMode, OutlineQuestion } from '@roux-quizz/contracts';
 import { Link, useParams } from '@tanstack/react-router';
 import {
+  Ban,
   Check,
   Eye,
   Gauge,
@@ -55,6 +56,8 @@ export function ControlPage() {
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
   const setCapture = (fullCapture: boolean) => socket?.emit('host:capture', { pin, fullCapture });
+  const banPlayer = (playerId: string, minutes: number) =>
+    socket?.emit('host:ban', { pin, playerId, minutes });
   const setPaused = (paused: boolean) => socket?.emit('host:pause', { pin, paused });
   const adjustTime = (deltaS: number) => socket?.emit('host:adjust-time', { pin, deltaS });
 
@@ -124,6 +127,7 @@ export function ControlPage() {
       pin={pin}
       onMode={setMode}
       onPause={setPaused}
+      onBan={banPlayer}
       screenButton={screenButton}
     />
   );
@@ -165,17 +169,7 @@ export function ControlPage() {
 
         <div className="flex flex-col gap-2">
           <PlayersBadge count={view.players.length} />
-          <ul className="flex flex-wrap gap-2">
-            {view.players.map((p) => (
-              <li
-                key={p.playerId}
-                className="flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm"
-              >
-                <Avatar name={p.nickname} size={24} />
-                {p.nickname}
-              </li>
-            ))}
-          </ul>
+          <ParticipantsList players={view.players} onBan={banPlayer} />
         </div>
 
         {/* Capture intégrale (§3.1 / RG-13) : choix avant le démarrage, verrouillé une
@@ -435,19 +429,21 @@ function ControlBar({
   pin,
   onMode,
   onPause,
+  onBan,
   screenButton,
 }: {
   view: GameView;
   pin: string;
   onMode: (mode: GameMode) => void;
   onPause: (paused: boolean) => void;
+  onBan: (playerId: string, minutes: number) => void;
   screenButton: React.ReactNode;
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
       <RecapHeader view={view} pin={pin} />
       <div className="flex flex-wrap items-center gap-2">
-        <PlayersBadge count={view.players.length} />
+        <ParticipantsControl players={view.players} onBan={onBan} />
         <ModeToggle mode={view.mode} onChange={onMode} />
         {/* Pause utile dès qu'il y a quelque chose à figer : le chrono d'une question
             en cours (ANSWERING, tous modes) ou l'enchaînement auto (mode auto). */}
@@ -511,6 +507,106 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
  * et une modale de confirmation. À la confirmation, la partie est détruite (PIN invalidé,
  * joueurs déconnectés). Les résultats ne sont pas conservés (archivage à venir, cf. §2.x).
  */
+/** Liste des participants avec action de bannissement (lobby + console en jeu). */
+function ParticipantsList({
+  players,
+  onBan,
+}: {
+  players: { playerId: string; nickname: string }[];
+  onBan: (playerId: string, minutes: number) => void;
+}) {
+  if (players.length === 0) {
+    return <p className="text-muted-foreground text-sm">Aucun joueur connecté.</p>;
+  }
+  return (
+    <ul className="flex flex-col gap-1">
+      {players.map((p) => (
+        <li
+          key={p.playerId}
+          className="flex items-center gap-2 rounded-md border px-2 py-1 text-sm"
+        >
+          <Avatar name={p.nickname} size={24} />
+          <span className="min-w-0 flex-1 truncate text-left">{p.nickname}</span>
+          <BanButton nickname={p.nickname} onBan={(m) => onBan(p.playerId, m)} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Bouton + `<dialog>` de confirmation pour bannir un joueur (durée en minutes, RG-12). */
+function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: number) => void }) {
+  const [open, setOpen] = useState(false);
+  const [minutes, setMinutes] = useState(5);
+  return (
+    <>
+      <Tooltip label={`Exclure ${nickname}`}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={`Bannir ${nickname}`}
+          onClick={() => setOpen(true)}
+        >
+          <Ban className="text-destructive size-4" />
+        </Button>
+      </Tooltip>
+      <ConfirmDialog
+        open={open}
+        destructive
+        title={`Bannir ${nickname} ?`}
+        description="Le joueur est exclu immédiatement et ne pourra pas revenir avec ce pseudo pendant la durée choisie."
+        confirmLabel="Bannir"
+        cancelLabel="Annuler"
+        onConfirm={() => {
+          setOpen(false);
+          onBan(minutes);
+        }}
+        onCancel={() => setOpen(false)}
+      >
+        <label className="flex items-center gap-2 text-sm">
+          <span className="font-medium">Durée du ban</span>
+          <input
+            type="number"
+            min={1}
+            max={1440}
+            value={minutes}
+            onChange={(e) => setMinutes(Math.min(1440, Math.max(1, Number(e.target.value) || 1)))}
+            className="border-input w-20 rounded-md border px-2 py-1"
+          />
+          <span className="text-muted-foreground">minutes</span>
+        </label>
+      </ConfirmDialog>
+    </>
+  );
+}
+
+/** Accès aux participants depuis la barre de contrôle : permet de bannir en cours de partie. */
+function ParticipantsControl({
+  players,
+  onBan,
+}: {
+  players: { playerId: string; nickname: string }[];
+  onBan: (playerId: string, minutes: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <Tooltip label="Participants (exclure un joueur)">
+        <Button type="button" variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>
+          <Users className="size-4" />
+          {players.length}
+        </Button>
+      </Tooltip>
+      {open ? (
+        <div className="bg-background absolute right-0 z-20 mt-1 max-h-80 w-64 overflow-y-auto rounded-md border p-2 shadow-lg">
+          <ParticipantsList players={players} onBan={onBan} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function EndGameButton({
   label,
   offerArchive,
