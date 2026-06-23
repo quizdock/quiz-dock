@@ -22,6 +22,23 @@ export function ScreenPage() {
 
   const joinUrl = `${window.location.origin}/join/${pin}`;
 
+  // Rappel d'invitation (QR + PIN) ancré en bas de l'écran projeté : permet aux
+  // retardataires de rejoindre en cours de question (notamment quand l'énoncé n'a
+  // pas d'options affichées à l'écran, cf. « Réponds sur ton téléphone »).
+  const joinBar = (
+    <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-4 border-t bg-background/80 p-4 backdrop-blur">
+      <div className="rounded-md bg-white p-1.5 shadow">
+        <QRCodeSVG value={joinUrl} size={80} aria-label="QR code pour rejoindre" />
+      </div>
+      <div className="flex flex-col items-start">
+        <span className="text-muted-foreground text-sm uppercase tracking-widest">
+          {window.location.host}/join
+        </span>
+        <span className="font-mono text-4xl font-bold tracking-[0.2em]">{pin}</span>
+      </div>
+    </div>
+  );
+
   const fullscreenBtn = supported ? (
     <Button
       type="button"
@@ -84,7 +101,10 @@ export function ScreenPage() {
         {view.question.options?.length ? (
           <OptionGrid options={view.question.options} size="lg" />
         ) : (
-          <p className="text-muted-foreground text-2xl">Réponds sur ton téléphone 📱</p>
+          <>
+            <p className="text-muted-foreground text-2xl">Réponds sur ton téléphone 📱</p>
+            {joinBar}
+          </>
         )}
         {counter}
       </div>
