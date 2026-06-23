@@ -397,12 +397,13 @@ export function PlayerPage() {
           </Button>
           <Button
             type="button"
-            size="sm"
+            size="icon"
             onClick={commitAvatar}
             disabled={avatarSeed === syncedSeed}
+            aria-label="Enregistrer l’avatar"
+            title="Enregistrer l’avatar"
           >
             <Check className="size-4" />
-            Enregistrer l’avatar
           </Button>
         </div>
         <p className="text-muted-foreground">En attente du formateur…</p>
