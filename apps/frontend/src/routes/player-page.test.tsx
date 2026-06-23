@@ -18,6 +18,8 @@ vi.mock('../game/use-game-session', () => ({
 vi.mock('../game/game-client', () => ({
   joinSession: (...a: unknown[]) => joinSession(...a),
   loadPlayerSession: () => loadPlayerSession(),
+  loadAvatarSeed: () => null,
+  saveAvatarSeed: () => undefined,
 }));
 
 const view = (partial: Partial<GameView>): GameView => ({
@@ -65,7 +67,7 @@ describe('PlayerPage (client apprenant)', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /C'est parti/ }));
 
-    await waitFor(() => expect(joinSession).toHaveBeenCalledWith('771122', 'Alice'));
+    await waitFor(() => expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined));
     await waitFor(() => expect(markJoined).toHaveBeenCalled());
   });
 

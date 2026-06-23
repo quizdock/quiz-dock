@@ -19,6 +19,8 @@ import { QUIZ_SNAPSHOT_INCLUDE, buildSnapshot } from './snapshot';
 const PIN_ALLOC_ATTEMPTS = 10;
 const NICKNAME_MIN = 2;
 const NICKNAME_MAX = 20;
+/** Borne de la graine d'avatar (client-fournie, stockée Redis + diffusée). */
+const AVATAR_SEED_MAX = 64;
 
 export interface CreateSessionResult {
   pin: string;
@@ -29,6 +31,7 @@ export interface JoinSessionResult {
   playerId: string;
   sessionToken: string;
   nickname: string;
+  avatar: string;
   playerCount: number;
 }
 
@@ -109,6 +112,7 @@ export class GameService {
     pin: string,
     rawNickname: string,
     userId: string | null,
+    rawAvatar?: string,
   ): Promise<JoinSessionResult> {
     const meta = await this.getMeta(pin);
     if (!meta) {
@@ -133,8 +137,11 @@ export class GameService {
 
     const playerId = randomBytes(16).toString('hex');
     const sessionToken = randomBytes(24).toString('base64url');
+    // Graine d'avatar : bornée (client-fournie, stockée + diffusée), défaut = pseudo.
+    const avatar = (rawAvatar ?? '').trim().slice(0, AVATAR_SEED_MAX) || nickname;
     const record: PlayerRecord = {
       nickname,
+      avatar,
       userId,
       score: 0,
       streak: 0,
@@ -160,7 +167,23 @@ export class GameService {
     // Compteur = joueurs **connectés** (§8), pas le total jamais joint.
     const playerCount = await this.connectedCount(pin);
 
-    return { pin, playerId, sessionToken, nickname, playerCount };
+    return { pin, playerId, sessionToken, nickname, avatar, playerCount };
+  }
+
+  /**
+   * Change la graine d'avatar d'un joueur (cosmétique) — uniquement en LOBBY.
+   * Renvoie l'enregistrement mis à jour (avec le nouvel avatar), ou `null` si la
+   * partie a démarré / le joueur n'existe plus. La valeur est bornée.
+   */
+  async setAvatar(pin: string, playerId: string, rawAvatar: string): Promise<PlayerRecord | null> {
+    const meta = await this.getMeta(pin);
+    if (!meta || meta.state !== GameState.Lobby) return null;
+    const raw = await this.redis.hget(gameKeys.players(pin), playerId);
+    if (!raw) return null;
+    const record = JSON.parse(raw) as PlayerRecord;
+    record.avatar = (rawAvatar ?? '').trim().slice(0, AVATAR_SEED_MAX) || record.nickname;
+    await this.redis.hset(gameKeys.players(pin), playerId, JSON.stringify(record));
+    return record;
   }
 
   /** Lit l'état scalaire d'une partie (null si inexistante/expirée). */

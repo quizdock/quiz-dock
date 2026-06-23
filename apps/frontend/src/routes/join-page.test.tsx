@@ -11,7 +11,12 @@ vi.mock('../game/use-game-session', () => ({
     markJoined: vi.fn(),
   }),
 }));
-vi.mock('../game/game-client', () => ({ joinSession: vi.fn(), loadPlayerSession: () => null }));
+vi.mock('../game/game-client', () => ({
+  joinSession: vi.fn(),
+  loadPlayerSession: () => null,
+  loadAvatarSeed: () => null,
+  saveAvatarSeed: () => undefined,
+}));
 
 describe('JoinPage (saisie du PIN)', () => {
   it('navigue vers /join/$pin après saisie du PIN', async () => {

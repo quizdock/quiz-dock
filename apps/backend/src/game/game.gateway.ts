@@ -118,10 +118,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('player:join')
   async playerJoin(
     @ConnectedSocket() socket: GameSocket,
-    @MessageBody() payload: { pin: string; nickname: string },
+    @MessageBody() payload: { pin: string; nickname: string; avatar?: string },
   ): Promise<{ sessionToken: string; playerId: string }> {
     const userId = socket.data.user?.id ?? null;
-    const res = await this.game.joinSession(payload.pin, payload.nickname, userId);
+    const res = await this.game.joinSession(payload.pin, payload.nickname, userId, payload.avatar);
     socket.data.pin = res.pin;
     socket.data.playerId = res.playerId;
     await socket.join(res.pin);
@@ -129,6 +129,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       playerId: res.playerId,
       nickname: res.nickname,
       playerCount: res.playerCount,
+      avatar: res.avatar,
     });
     // Late join (§5) : positionne immédiatement le retardataire sur l'état courant.
     await this.engine.sendStateTo(socket, res.pin);
@@ -236,9 +237,21 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       playerId: session.playerId,
       nickname: record.nickname,
       playerCount: await this.game.connectedCount(session.pin),
+      avatar: record.avatar,
     });
     await this.engine.sendStateTo(socket, session.pin);
     return { ok: true };
+  }
+
+  /** `player:avatar` : change la graine d'avatar du joueur (cosmétique), avant le démarrage. */
+  @SubscribeMessage('player:avatar')
+  async playerAvatar(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; avatar: string },
+  ): Promise<void> {
+    const playerId = socket.data.playerId;
+    if (!playerId) return;
+    await this.engine.setAvatar(payload.pin, playerId, payload.avatar);
   }
 
   /** `host:start` : l'hôte propriétaire lance la 1re question (LOBBY → ANSWERING). */

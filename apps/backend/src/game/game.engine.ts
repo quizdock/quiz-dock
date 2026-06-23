@@ -232,7 +232,7 @@ export class GameEngine {
   private topRows(ranked: RankedPlayer[]): LeaderboardRow[] {
     return ranked
       .slice(0, 10)
-      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1, avatar: p.avatar }));
   }
 
   /** Reveal commun + `yourResult` ciblé sur le joueur de ce socket (s'il en a un). */
@@ -313,7 +313,7 @@ export class GameEngine {
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
     const podium = ranked
       .slice(0, 3)
-      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
+      .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1, avatar: p.avatar }));
 
     this.server.to(pin).emit('game:state', {
       state: GameState.Podium,
@@ -422,15 +422,28 @@ export class GameEngine {
    * révélerait à tort alors qu'un connecté n'a pas encore répondu. `allAnswered` est
    * vrai seulement si **aucun connecté n'est en attente**.
    */
-  /** Joueurs **connectés** (playerId + pseudo) pour l'instantané de lobby (§6/§9). */
-  private async connectedRoster(pin: string): Promise<{ playerId: string; nickname: string }[]> {
+  /** Joueurs **connectés** (playerId + pseudo + avatar) pour l'instantané de lobby (§6/§9). */
+  private async connectedRoster(
+    pin: string,
+  ): Promise<{ playerId: string; nickname: string; avatar: string }[]> {
     const players = await this.redis.hgetall(gameKeys.players(pin));
-    const roster: { playerId: string; nickname: string }[] = [];
+    const roster: { playerId: string; nickname: string; avatar: string }[] = [];
     for (const [playerId, json] of Object.entries(players)) {
       const rec = JSON.parse(json) as PlayerRecord;
-      if (rec.connected) roster.push({ playerId, nickname: rec.nickname });
+      if (rec.connected) roster.push({ playerId, nickname: rec.nickname, avatar: rec.avatar });
     }
     return roster;
+  }
+
+  /**
+   * `player:avatar` : change la graine d'avatar d'un joueur (cosmétique) avant le
+   * démarrage, puis re-diffuse le roster pour que l'hôte et l'écran projeté
+   * reflètent le nouvel avatar immédiatement.
+   */
+  async setAvatar(pin: string, playerId: string, avatar: string): Promise<void> {
+    const record = await this.game.setAvatar(pin, playerId, avatar);
+    if (!record) return; // partie démarrée / joueur inconnu
+    this.server.to(pin).emit('game:roster', { players: await this.connectedRoster(pin) });
   }
 
   private async connectedProgress(

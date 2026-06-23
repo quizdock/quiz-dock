@@ -141,13 +141,37 @@ export async function createSession(quizId: string, fullCapture = false): Promis
 export async function joinSession(
   pin: string,
   nickname: string,
+  avatar?: string,
 ): Promise<{ sessionToken: string; playerId: string }> {
   const s = await ensureGameSocket('guest');
   const res = await emitWithAckOrError<{ sessionToken: string; playerId: string }>(
     s,
     'player:join',
-    { pin, nickname },
+    { pin, nickname, avatar },
   );
   savePlayerSession({ pin, nickname, ...res }); // reprise après fermeture (§6.1)
   return res;
+}
+
+/**
+ * Graine d'avatar persistée **séparément** de la session (clé propre) : un ban
+ * efface la session mais pas l'avatar, qui est ainsi réinjecté dans les parties
+ * suivantes. Cosmétique côté client (METIER §79).
+ */
+const AVATAR_KEY = 'roux.avatar';
+
+export function loadAvatarSeed(): string | null {
+  try {
+    return localStorage.getItem(AVATAR_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveAvatarSeed(seed: string): void {
+  try {
+    localStorage.setItem(AVATAR_KEY, seed);
+  } catch {
+    /* stockage indisponible : l'avatar ne sera pas mémorisé */
+  }
 }

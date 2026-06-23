@@ -180,7 +180,7 @@ export function LeaderboardList({
         >
           <span className="flex items-center gap-2">
             <span className="text-muted-foreground tabular-nums">{r.rank}.</span>
-            <Avatar name={r.nickname} size={28} />
+            <Avatar name={r.avatar || r.nickname} size={28} />
             {r.nickname}
           </span>
           <span className="tabular-nums">{r.score}</span>
@@ -199,7 +199,7 @@ export function Podium({ rows }: { rows: LeaderboardRow[] }) {
       {order.map((r, i) =>
         r ? (
           <div key={r.rank} className="flex w-24 flex-col items-center gap-1">
-            <Avatar name={r.nickname} size={48} />
+            <Avatar name={r.avatar || r.nickname} size={48} />
             <span className="font-semibold">{r.nickname}</span>
             <span className="text-muted-foreground text-sm tabular-nums">{r.score}</span>
             <div

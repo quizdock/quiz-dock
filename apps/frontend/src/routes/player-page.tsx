@@ -1,12 +1,17 @@
 import { useParams } from '@tanstack/react-router';
-import { ArrowDown, ArrowUp, LogIn } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, LogIn, Shuffle } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar } from '../game/avatar';
-import { joinSession, loadPlayerSession } from '../game/game-client';
+import {
+  joinSession,
+  loadAvatarSeed,
+  loadPlayerSession,
+  saveAvatarSeed,
+} from '../game/game-client';
 import { OptionGrid } from '../game/live-components';
 import { RatingPanel } from '../game/rating-panel';
 import { useGameRemaining } from '../game/use-countdown';
@@ -28,10 +33,34 @@ export function PlayerPage() {
   const [order, setOrder] = useState<string[]>([]);
   const [freeValue, setFreeValue] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  // Graine d'avatar persistée localement (réinjectée d'une partie à l'autre).
+  const [avatarSeed, setAvatarSeed] = useState(() => loadAvatarSeed() ?? '');
 
   const question = view.question;
   const isMulti = question?.type === 'multiple_choice';
   const remaining = useGameRemaining(view);
+  // Avatar affiché : graine choisie, sinon dérivée du pseudo.
+  const avatarName = avatarSeed || nickname || '?';
+
+  // Graine déjà synchronisée vers le serveur (pour n'émettre que sur changement réel).
+  const [syncedSeed, setSyncedSeed] = useState(avatarSeed);
+
+  /**
+   * Randomise l'avatar **localement** uniquement (aperçu + mémorisation) : pas
+   * d'émission réseau ici, pour éviter d'inonder le serveur/formateur à chaque clic.
+   * La synchronisation se fait explicitement via « Enregistrer l'avatar ».
+   */
+  const randomizeAvatar = () => {
+    const seed = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    setAvatarSeed(seed);
+    saveAvatarSeed(seed);
+  };
+
+  /** Synchronise l'avatar choisi vers la room (refusé côté serveur après le démarrage). */
+  const commitAvatar = () => {
+    socket?.emit('player:avatar', { pin, avatar: avatarName });
+    setSyncedSeed(avatarSeed);
+  };
 
   // Nouvelle question → réinitialise la saisie locale.
   useEffect(() => {
@@ -49,7 +78,7 @@ export function PlayerPage() {
     setError(null);
     setJoining(true);
     try {
-      await joinSession(pin, nickname.trim());
+      await joinSession(pin, nickname.trim(), avatarSeed || undefined);
       markJoined();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Impossible de rejoindre la partie.');
@@ -196,6 +225,13 @@ export function PlayerPage() {
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4 text-left" onSubmit={(e) => void onJoin(e)}>
+            <div className="flex flex-col items-center gap-2">
+              <Avatar name={avatarName} size={88} />
+              <Button type="button" variant="outline" size="sm" onClick={randomizeAvatar}>
+                <Shuffle className="size-4" />
+                Avatar aléatoire
+              </Button>
+            </div>
             <Label>
               Pseudo
               <Input
@@ -253,7 +289,7 @@ export function PlayerPage() {
             <span className="text-7xl leading-none" aria-hidden>
               🏆
             </span>
-            {nickname ? <Avatar name={nickname} size={72} /> : null}
+            <Avatar name={avatarName} size={72} />
             <h2 className="text-2xl font-bold">Podium</h2>
             {view.podium?.you ? (
               <p className="text-lg">
@@ -350,12 +386,25 @@ export function PlayerPage() {
         <CardTitle>Tu es dans la partie !</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-2">
-        {nickname ? (
-          <>
-            <Avatar name={nickname} size={72} />
-            <p className="text-lg font-semibold">« {nickname} »</p>
-          </>
-        ) : null}
+        <Avatar name={avatarName} size={72} />
+        {nickname ? <p className="text-lg font-semibold">« {nickname} »</p> : null}
+        {/* Avatar modifiable tant que la partie n'a pas démarré : on randomise en local
+            puis on synchronise explicitement (évite d'inonder le serveur à chaque clic). */}
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={randomizeAvatar}>
+            <Shuffle className="size-4" />
+            Avatar aléatoire
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={commitAvatar}
+            disabled={avatarSeed === syncedSeed}
+          >
+            <Check className="size-4" />
+            Enregistrer l’avatar
+          </Button>
+        </div>
         <p className="text-muted-foreground">En attente du formateur…</p>
         {view.fullCapture ? (
           <p className="text-muted-foreground border-t pt-2 text-sm">

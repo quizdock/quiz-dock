@@ -82,6 +82,8 @@ export const ClientEvents = {
   SpectatorJoin: 'spectator:join',
   PlayerJoin: 'player:join',
   PlayerReconnect: 'player:reconnect',
+  /** Change la graine d'avatar avant le démarrage (cosmétique). */
+  PlayerAvatar: 'player:avatar',
   PlayerSubmit: 'player:submit',
   /** Avis du joueur en fin de partie (note Likert 5 + commentaire facultatif). */
   PlayerRate: 'player:rate',
@@ -205,6 +207,8 @@ export interface LeaderboardRow {
   nickname: string;
   score: number;
   rank: number;
+  /** Graine d'avatar (multiavatar) — cosmétique ; défaut = pseudo si absent. */
+  avatar?: string;
 }
 
 export interface LeaderboardPayload {
@@ -251,10 +255,12 @@ export interface ClientToServerEvents {
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
   'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'player:join': (
-    p: { pin: string; nickname: string; authToken?: string },
+    p: { pin: string; nickname: string; authToken?: string; avatar?: string },
     ack: (res: { sessionToken: string; playerId: string }) => void,
   ) => void;
   'player:reconnect': (p: { sessionToken: string }, ack: (res: { ok: boolean }) => void) => void;
+  /** Change la graine d'avatar (cosmétique) — accepté uniquement avant le démarrage. */
+  'player:avatar': (p: { pin: string; avatar: string }) => void;
   'player:submit': (p: { pin: string; questionIndex: number; answer: AnswerValue }) => void;
   /**
    * Avis de fin de partie : note Likert 1..5 + commentaire facultatif. Recevable
@@ -271,12 +277,19 @@ export interface ClientToServerEvents {
 export interface ServerToClientEvents {
   'game:created': (p: { pin: string }) => void;
   notice: (p: { fullCapture: boolean }) => void;
-  'player:joined': (p: { playerId: string; nickname: string; playerCount: number }) => void;
+  'player:joined': (p: {
+    playerId: string;
+    nickname: string;
+    playerCount: number;
+    avatar?: string;
+  }) => void;
   'player:left': (p: { playerId: string; playerCount: number }) => void;
   /** Le joueur a été banni par l'hôte : son client affiche l'exclusion (durée en minutes). */
   kicked: (p: { minutes: number }) => void;
   /** Instantané du lobby (joueurs connectés) renvoyé à un socket qui se (ré)attache (§6). */
-  'game:roster': (p: { players: { playerId: string; nickname: string }[] }) => void;
+  'game:roster': (p: {
+    players: { playerId: string; nickname: string; avatar?: string }[];
+  }) => void;
   'game:state': (p: GameStatePayload) => void;
   'question:start': (p: QuestionStartPayload) => void;
   'answer:ack': (p: { accepted: boolean; receivedAt: number }) => void;

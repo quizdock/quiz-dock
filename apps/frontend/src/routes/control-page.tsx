@@ -512,21 +512,21 @@ function ParticipantsList({
   players,
   onBan,
 }: {
-  players: { playerId: string; nickname: string }[];
+  players: { playerId: string; nickname: string; avatar?: string }[];
   onBan: (playerId: string, minutes: number) => void;
 }) {
   if (players.length === 0) {
     return <p className="text-muted-foreground text-sm">Aucun joueur connecté.</p>;
   }
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-wrap gap-2">
       {players.map((p) => (
         <li
           key={p.playerId}
-          className="flex items-center gap-2 rounded-md border px-2 py-1 text-sm"
+          className="flex items-center gap-1.5 rounded-full border py-0.5 pl-1 pr-1 text-sm"
         >
-          <Avatar name={p.nickname} size={24} />
-          <span className="min-w-0 flex-1 truncate text-left">{p.nickname}</span>
+          <Avatar name={p.avatar || p.nickname} size={24} />
+          <span className="max-w-[8rem] truncate">{p.nickname}</span>
           <BanButton nickname={p.nickname} onBan={(m) => onBan(p.playerId, m)} />
         </li>
       ))}
@@ -547,8 +547,9 @@ function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: num
           size="icon"
           aria-label={`Bannir ${nickname}`}
           onClick={() => setOpen(true)}
+          className="size-6 rounded-full"
         >
-          <Ban className="text-destructive size-4" />
+          <Ban className="text-destructive size-3.5" />
         </Button>
       </Tooltip>
       <ConfirmDialog
@@ -586,7 +587,7 @@ function ParticipantsControl({
   players,
   onBan,
 }: {
-  players: { playerId: string; nickname: string }[];
+  players: { playerId: string; nickname: string; avatar?: string }[];
   onBan: (playerId: string, minutes: number) => void;
 }) {
   const [open, setOpen] = useState(false);

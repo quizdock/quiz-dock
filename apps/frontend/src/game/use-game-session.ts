@@ -31,6 +31,8 @@ export type LiveStatus = 'connecting' | 'ready' | 'no-session' | 'error';
 export interface RosterPlayer {
   playerId: string;
   nickname: string;
+  /** Graine d'avatar (multiavatar) — défaut côté rendu = pseudo si absent. */
+  avatar?: string;
 }
 
 /** Vue unifiée de la partie live, consommée par les trois surfaces (§9). */
@@ -125,11 +127,17 @@ export function useGameSession(pin: string, role: LiveRole) {
         ...(p.state === 'ANSWERING' ? { reveal: null, result: null, answerAccepted: null } : {}),
       });
     const onRoster = (p: { players: RosterPlayer[] }) => patch({ players: p.players });
-    const onJoined = (p: { playerId: string; nickname: string }) =>
+    const onJoined = (p: { playerId: string; nickname: string; avatar?: string }) =>
       setView((prev) =>
         prev.players.some((x) => x.playerId === p.playerId)
           ? prev
-          : { ...prev, players: [...prev.players, { playerId: p.playerId, nickname: p.nickname }] },
+          : {
+              ...prev,
+              players: [
+                ...prev.players,
+                { playerId: p.playerId, nickname: p.nickname, avatar: p.avatar },
+              ],
+            },
       );
     const onLeft = (p: { playerId: string }) =>
       setView((prev) => ({

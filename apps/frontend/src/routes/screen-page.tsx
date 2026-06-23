@@ -144,7 +144,7 @@ export function ScreenPage() {
               key={p.playerId}
               className="flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-lg"
             >
-              <Avatar name={p.nickname} size={32} />
+              <Avatar name={p.avatar || p.nickname} size={32} />
               {p.nickname}
             </li>
           ))}

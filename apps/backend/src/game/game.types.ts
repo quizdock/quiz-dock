@@ -54,6 +54,8 @@ export interface QuizSnapshot {
 /** Enregistrement d'un joueur dans l'état live (Redis hash `:players`). */
 export interface PlayerRecord {
   nickname: string;
+  /** Graine d'avatar (multiavatar) — cosmétique ; défaut = pseudo. */
+  avatar: string;
   /** Compte lié si apprenant authentifié, sinon `null` (invité). */
   userId: string | null;
   score: number;
