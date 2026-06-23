@@ -6,6 +6,7 @@ import type {
 } from '@roux-quizz/contracts';
 import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
+import { Avatar } from './avatar';
 
 /**
  * Grille d'options colorées + formes. `onPick` la rend interactive (joueur) ;
@@ -177,8 +178,9 @@ export function LeaderboardList({
             r.rank === highlightRank ? 'bg-primary/15 font-semibold' : 'bg-muted/50',
           )}
         >
-          <span>
-            <span className="text-muted-foreground mr-2 tabular-nums">{r.rank}.</span>
+          <span className="flex items-center gap-2">
+            <span className="text-muted-foreground tabular-nums">{r.rank}.</span>
+            <Avatar name={r.nickname} size={28} />
             {r.nickname}
           </span>
           <span className="tabular-nums">{r.score}</span>
@@ -197,6 +199,7 @@ export function Podium({ rows }: { rows: LeaderboardRow[] }) {
       {order.map((r, i) =>
         r ? (
           <div key={r.rank} className="flex w-24 flex-col items-center gap-1">
+            <Avatar name={r.nickname} size={48} />
             <span className="font-semibold">{r.nickname}</span>
             <span className="text-muted-foreground text-sm tabular-nums">{r.score}</span>
             <div

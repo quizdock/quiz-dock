@@ -320,10 +320,14 @@ export class GameEngine {
       questionIndex: meta.currentIndex,
       totalQuestions: meta.totalQuestions,
     });
+    const top = this.topRows(ranked);
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
       const playerId = (socket.data as { playerId?: string }).playerId;
       socket.emit('game:podium', this.personalPodium(podium, ranked, rankOf, playerId));
+      // Classement général (top 10) aussi au podium : alimente l'écran projeté et
+      // survit à un rechargement (sendStateTo le ré-émet en PODIUM).
+      socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
     }
   }
 
@@ -403,6 +407,11 @@ export class GameEngine {
         .slice(0, 3)
         .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1 }));
       socket.emit('game:podium', this.personalPodium(podium, ranked, rankOf, playerId));
+      // Classement général : un projecteur qui (re)charge au podium doit le revoir.
+      socket.emit(
+        'leaderboard',
+        this.personalLeaderboard(this.topRows(ranked), ranked, rankOf, playerId),
+      );
     }
   }
 

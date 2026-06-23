@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar } from '../game/avatar';
 import { joinSession, loadPlayerSession } from '../game/game-client';
 import { OptionGrid } from '../game/live-components';
 import { RatingPanel } from '../game/rating-panel';
@@ -236,6 +237,7 @@ export function PlayerPage() {
             <span className="text-7xl leading-none" aria-hidden>
               🏆
             </span>
+            {nickname ? <Avatar name={nickname} size={72} /> : null}
             <h2 className="text-2xl font-bold">Podium</h2>
             {view.podium?.you ? (
               <p className="text-lg">
@@ -259,24 +261,36 @@ export function PlayerPage() {
 
   if (view.state === 'REVEAL' || view.state === 'LEADERBOARD') {
     const r = view.result;
+    // Classement perso : `you` (du leaderboard) est toujours présent au reveal, même
+    // si le joueur n'a pas répondu (pas de `result`). On l'affiche systématiquement.
+    const you = view.leaderboard?.you;
     return wrap(
-      r ? (
-        <div className="flex flex-col items-center gap-2">
-          <span
-            className={`text-7xl leading-none ${r.correct ? 'text-success' : 'text-destructive'}`}
-            aria-hidden
-          >
-            {r.correct ? '✓' : '✗'}
-          </span>
-          <p className={`text-3xl font-bold ${r.correct ? 'text-success' : 'text-destructive'}`}>
-            {r.correct ? 'Juste !' : 'Raté'}
+      <div className="flex flex-col items-center gap-3">
+        {r ? (
+          <>
+            <span
+              className={`text-7xl leading-none ${r.correct ? 'text-success' : 'text-destructive'}`}
+              aria-hidden
+            >
+              {r.correct ? '✓' : '✗'}
+            </span>
+            <p className={`text-3xl font-bold ${r.correct ? 'text-success' : 'text-destructive'}`}>
+              {r.correct ? 'Juste !' : 'Raté'}
+            </p>
+            <p className="text-xl">+{r.points} points</p>
+          </>
+        ) : (
+          <p className="text-muted-foreground">Réponses révélées…</p>
+        )}
+        {you ? (
+          <p className="border-t pt-3 text-2xl">
+            Ton classement : <span className="font-bold">{you.rank}ᵉ</span>
+            <span className="text-muted-foreground"> — {you.score} pts</span>
           </p>
-          <p className="text-xl">+{r.points} points</p>
+        ) : r ? (
           <p className="text-muted-foreground">Rang : {r.rank}ᵉ</p>
-        </div>
-      ) : (
-        <p className="text-muted-foreground">Réponses révélées…</p>
-      ),
+        ) : null}
+      </div>,
     );
   }
 
@@ -319,8 +333,13 @@ export function PlayerPage() {
       <CardHeader>
         <CardTitle>Tu es dans la partie !</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        {nickname ? <p className="text-lg font-semibold">« {nickname} »</p> : null}
+      <CardContent className="flex flex-col items-center gap-2">
+        {nickname ? (
+          <>
+            <Avatar name={nickname} size={72} />
+            <p className="text-lg font-semibold">« {nickname} »</p>
+          </>
+        ) : null}
         <p className="text-muted-foreground">En attente du formateur…</p>
         {view.fullCapture ? (
           <p className="text-muted-foreground border-t pt-2 text-sm">

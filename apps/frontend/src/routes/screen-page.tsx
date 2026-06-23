@@ -4,7 +4,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useFullscreen } from '@/lib/use-fullscreen';
-import { OptionGrid, Podium, RevealAnswer } from '../game/live-components';
+import { Avatar } from '../game/avatar';
+import { LeaderboardList, OptionGrid, Podium, RevealAnswer } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
@@ -72,9 +73,15 @@ export function ScreenPage() {
     body = <p className="text-3xl font-semibold">Merci d’avoir joué ! 🎉</p>;
   } else if (view.state === 'PODIUM' && view.podium) {
     body = (
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex w-full max-w-md flex-col items-center gap-6">
         <h2 className="text-3xl font-bold">🏆 Podium</h2>
         <Podium rows={view.podium.podium} />
+        {view.leaderboard && view.leaderboard.top.length > 3 ? (
+          <div className="flex w-full flex-col gap-2">
+            <h3 className="text-muted-foreground text-xl font-semibold">Classement général</h3>
+            <LeaderboardList rows={view.leaderboard.top} />
+          </div>
+        ) : null}
       </div>
     );
   } else if ((view.state === 'REVEAL' || view.state === 'LEADERBOARD') && view.question) {
@@ -82,6 +89,12 @@ export function ScreenPage() {
       <div className="flex w-full max-w-3xl flex-col items-center gap-6">
         <h1 className="text-center text-3xl font-semibold">{view.question.prompt}</h1>
         {view.reveal ? <RevealAnswer question={view.question} reveal={view.reveal} /> : null}
+        {view.leaderboard ? (
+          <div className="flex w-full max-w-md flex-col gap-2 text-lg">
+            <h3 className="text-muted-foreground font-semibold">Classement</h3>
+            <LeaderboardList rows={view.leaderboard.top} />
+          </div>
+        ) : null}
       </div>
     );
   } else if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && view.question) {
@@ -127,7 +140,11 @@ export function ScreenPage() {
         </div>
         <ul className="flex max-w-3xl flex-wrap justify-center gap-2">
           {view.players.map((p) => (
-            <li key={p.playerId} className="rounded-full border px-3 py-1 text-lg">
+            <li
+              key={p.playerId}
+              className="flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-lg"
+            >
+              <Avatar name={p.nickname} size={32} />
               {p.nickname}
             </li>
           ))}

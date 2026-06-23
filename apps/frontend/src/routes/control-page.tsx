@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { Avatar } from '../game/avatar';
 import { LeaderboardList, OptionGrid, Podium, RevealAnswer } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
@@ -166,7 +167,11 @@ export function ControlPage() {
           <PlayersBadge count={view.players.length} />
           <ul className="flex flex-wrap gap-2">
             {view.players.map((p) => (
-              <li key={p.playerId} className="rounded-full border px-3 py-1 text-sm">
+              <li
+                key={p.playerId}
+                className="flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm"
+              >
+                <Avatar name={p.nickname} size={24} />
                 {p.nickname}
               </li>
             ))}
