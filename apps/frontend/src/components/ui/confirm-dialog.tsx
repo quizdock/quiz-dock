@@ -54,7 +54,7 @@ export function ConfirmDialog({
       onClick={(e) => {
         if (e.target === ref.current) onCancel(); // clic sur le backdrop
       }}
-      className="bg-background text-foreground w-[90vw] max-w-md rounded-lg border p-0 shadow-lg backdrop:bg-black/50"
+      className="bg-background text-foreground m-auto w-[90vw] max-w-md rounded-lg border p-0 shadow-lg backdrop:bg-black/50"
     >
       <div className="flex flex-col gap-4 p-6">
         <h2 className="text-lg font-semibold">{title}</h2>
