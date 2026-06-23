@@ -69,6 +69,8 @@ export const ClientEvents = {
   HostReveal: 'host:reveal',
   HostKick: 'host:kick',
   HostEnd: 'host:end',
+  /** (Dé)active la capture intégrale depuis le lobby, avant le démarrage (RG-13). */
+  HostCapture: 'host:capture',
   /** Bascule manuel/auto en cours de partie (le présentateur reprend la main). */
   HostMode: 'host:mode',
   /** Suspend/reprend l'auto-progression (et gèle le chrono en ANSWERING). */
@@ -227,6 +229,12 @@ export interface ClientToServerEvents {
   'host:kick': (p: { pin: string; playerId: string }) => void;
   /** Termine la partie. `archive:true` → persiste les résultats avant destruction. */
   'host:end': (p: { pin: string; archive?: boolean }) => void;
+  /**
+   * (Dé)active la capture intégrale des réponses depuis le lobby, **avant** le
+   * démarrage (RG-13). Refusé une fois la partie lancée. Les joueurs connectés en
+   * sont informés en direct via `notice`.
+   */
+  'host:capture': (p: { pin: string; fullCapture: boolean }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
@@ -255,7 +263,7 @@ export interface ClientToServerEvents {
 /** Map des events serveur → client. */
 export interface ServerToClientEvents {
   'game:created': (p: { pin: string }) => void;
-  notice: (p: { fullCapture: true }) => void;
+  notice: (p: { fullCapture: boolean }) => void;
   'player:joined': (p: { playerId: string; nickname: string; playerCount: number }) => void;
   'player:left': (p: { playerId: string; playerCount: number }) => void;
   /** Instantané du lobby (joueurs connectés) renvoyé à un socket qui se (ré)attache (§6). */

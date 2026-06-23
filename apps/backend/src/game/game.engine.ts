@@ -87,6 +87,23 @@ export class GameEngine {
   }
 
   /**
+   * `host:capture` : (dé)active la capture intégrale **avant** le démarrage (RG-13).
+   * Refusé une fois la partie lancée (la décision est figée au start). Met à jour la
+   * meta Redis et informe en direct la room (le host reflète l'état, les joueurs déjà
+   * connectés voient/retirent l'avis de consentement §2.10).
+   */
+  async setCapture(pin: string, hostUserId: string, fullCapture: boolean): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Lobby) {
+      throw new BadRequestException(
+        'La capture intégrale ne peut être modifiée qu’avant le démarrage.',
+      );
+    }
+    await this.redis.hset(gameKeys.game(pin), { fullCapture: fullCapture ? '1' : '0' });
+    this.server.to(pin).emit('notice', { fullCapture });
+  }
+
+  /**
    * Ouvre la question `index` : fixe les timings serveur autoritatifs, diffuse
    * `game:state` (ANSWERING) + `question:start` (allowlist), arme le timer de fin.
    */

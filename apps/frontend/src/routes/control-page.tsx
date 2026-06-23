@@ -53,6 +53,7 @@ export function ControlPage() {
   const emit = (event: 'host:start' | 'host:reveal' | 'host:next') => socket?.emit(event, { pin });
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
+  const setCapture = (fullCapture: boolean) => socket?.emit('host:capture', { pin, fullCapture });
   const setPaused = (paused: boolean) => socket?.emit('host:pause', { pin, paused });
   const adjustTime = (deltaS: number) => socket?.emit('host:adjust-time', { pin, deltaS });
 
@@ -171,6 +172,27 @@ export function ControlPage() {
             ))}
           </ul>
         </div>
+
+        {/* Capture intégrale (§3.1 / RG-13) : choix avant le démarrage, verrouillé une
+            fois la partie lancée (cette vue lobby disparaît au start). Les joueurs déjà
+            connectés sont informés en direct (avis de consentement §2.10). */}
+        <label className="flex items-start gap-2 rounded-lg border p-4 text-sm">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={view.fullCapture}
+            onChange={(e) => setCapture(e.target.checked)}
+          />
+          <span>
+            <span className="font-medium">
+              Enregistrer toutes les réponses (audit / certification)
+            </span>
+            <span className="text-muted-foreground block">
+              ⓘ Les apprenants en seront informés au démarrage. Conserve le détail des réponses de
+              chaque participant pour le suivi de formation.
+            </span>
+          </span>
+        </label>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <ModeToggle mode={view.mode} onChange={setMode} />

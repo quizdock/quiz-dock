@@ -159,7 +159,7 @@ export function useGameSession(pin: string, role: LiveRole) {
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
     const onPodium = (p: PodiumPayload) => patch({ podium: p, state: 'PODIUM' as GameState });
     const onEnded = () => patch({ state: 'ENDED' as GameState });
-    const onNotice = (p: { fullCapture: true }) => patch({ fullCapture: p.fullCapture });
+    const onNotice = (p: { fullCapture: boolean }) => patch({ fullCapture: p.fullCapture });
 
     void ensureGameSocket(role === 'host' ? 'host' : 'guest').then((sock) => {
       if (!active) return;

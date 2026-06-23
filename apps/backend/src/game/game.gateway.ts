@@ -301,6 +301,15 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     await this.engine.end(payload.pin, this.requireHostId(socket), payload.archive === true);
   }
 
+  /** `host:capture` : (dé)active la capture intégrale depuis le lobby, avant le démarrage. */
+  @SubscribeMessage('host:capture')
+  async hostCapture(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; fullCapture: boolean },
+  ): Promise<void> {
+    await this.engine.setCapture(payload.pin, this.requireHostId(socket), payload.fullCapture);
+  }
+
   /** `host:mode` : bascule le rythme manuel/auto en cours de partie (§8). */
   @SubscribeMessage('host:mode')
   async hostMode(
