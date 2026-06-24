@@ -1,1 +1,18 @@
-{}
+{
+  "title": "Mes quiz",
+  "newQuiz": "Nouveau quiz",
+  "activeSessions": "Sessions en cours",
+  "playerCount_one": "{{count}} participant",
+  "playerCount_other": "{{count}} participants",
+  "resume": "Reprendre",
+  "stop": "Arrêter",
+  "stopConfirmTitle": "Arrêter la session ?",
+  "stopConfirmDescription": "La session en cours sera définitivement terminée pour tous les participants connectés.",
+  "stopConfirmLabel": "Arrêter la session",
+  "loadError": "Impossible de charger les quiz.",
+  "empty": "Aucun quiz pour l’instant. Créez-en un !",
+  "questionCount_one": "{{count}} question",
+  "questionCount_other": "{{count}} questions",
+  "edit": "Éditer",
+  "present": "Présenter"
+}

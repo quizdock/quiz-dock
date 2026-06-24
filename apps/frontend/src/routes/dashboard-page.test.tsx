@@ -52,7 +52,7 @@ describe('DashboardPage', () => {
     });
   });
 
-  it('arrête une partie en cours depuis la liste (confirmation → POST end)', async () => {
+  it('arrête une session en cours depuis la liste (confirmation → POST end)', async () => {
     const fetchMock = mockApi([
       { method: 'GET', path: '/quizzes', body: [] },
       {
@@ -65,7 +65,7 @@ describe('DashboardPage', () => {
     renderApp('/dashboard');
 
     fireEvent.click(await screen.findByRole('button', { name: 'Arrêter' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter la partie' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter la session' }));
 
     await waitFor(() => {
       const posted = fetchMock.mock.calls.some(

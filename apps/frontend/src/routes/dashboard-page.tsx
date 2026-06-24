@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { Pencil, Play, Plus, Radio, Square } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -17,12 +18,6 @@ import {
   useQuizzesControllerList,
 } from '../api/generated/quizzes/quizzes';
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: 'Brouillon',
-  ready: 'Prêt',
-  archived: 'Archivé',
-};
-
 const STATUS_VARIANT: Record<string, 'default' | 'success' | 'muted'> = {
   draft: 'default',
   ready: 'success',
@@ -30,6 +25,7 @@ const STATUS_VARIANT: Record<string, 'default' | 'success' | 'muted'> = {
 };
 
 export function DashboardPage() {
+  const { t } = useTranslation(['dashboard', 'common']);
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuizzesControllerList();
   const create = useQuizzesControllerCreate();
@@ -52,7 +48,7 @@ export function DashboardPage() {
 
   const onCreate = () => {
     create.mutate(
-      { data: { title: 'Nouveau quiz', language: 'fr' } },
+      { data: { title: t('newQuiz'), language: 'fr' } },
       {
         onSuccess: () =>
           queryClient.invalidateQueries({
@@ -65,10 +61,10 @@ export function DashboardPage() {
   return (
     <section className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mes quiz</h1>
+        <h1 className="text-2xl font-bold">{t('title')}</h1>
         <Button type="button" onClick={onCreate} disabled={create.isPending}>
           <Plus className="size-4" />
-          Nouveau quiz
+          {t('newQuiz')}
         </Button>
       </div>
 
@@ -76,7 +72,7 @@ export function DashboardPage() {
         <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
           <h2 className="flex items-center gap-2 font-semibold">
             <Radio className="size-4 text-primary" />
-            Parties en cours
+            {t('activeSessions')}
           </h2>
           <ul className="flex flex-col gap-2">
             {activeGames.map((game) => (
@@ -86,10 +82,12 @@ export function DashboardPage() {
               >
                 <span className="flex-1 font-medium">{game.title}</span>
                 <span className="font-mono tracking-widest">{game.pin}</span>
-                <span className="text-sm text-muted-foreground">{game.playerCount} joueur(s)</span>
+                <span className="text-sm text-muted-foreground">
+                  {t('playerCount', { count: game.playerCount })}
+                </span>
                 <Link to="/present/$pin/control" params={{ pin: game.pin }}>
                   <Button type="button" size="sm" variant="outline">
-                    Reprendre
+                    {t('resume')}
                   </Button>
                 </Link>
                 <Button
@@ -100,7 +98,7 @@ export function DashboardPage() {
                   onClick={() => setEndPin(game.pin)}
                 >
                   <Square className="size-4" />
-                  Arrêter
+                  {t('stop')}
                 </Button>
               </li>
             ))}
@@ -111,9 +109,9 @@ export function DashboardPage() {
       <ConfirmDialog
         open={endPin !== null}
         destructive
-        title="Arrêter la partie ?"
-        description="La partie en cours sera définitivement terminée pour tous les joueurs connectés."
-        confirmLabel="Arrêter la partie"
+        title={t('stopConfirmTitle')}
+        description={t('stopConfirmDescription')}
+        confirmLabel={t('stopConfirmLabel')}
         onCancel={() => setEndPin(null)}
         onConfirm={() => {
           if (endPin) onEndGame(endPin);
@@ -121,12 +119,12 @@ export function DashboardPage() {
         }}
       />
 
-      {isLoading && <p className="text-muted-foreground">Chargement…</p>}
-      {error ? <p className="text-destructive">Impossible de charger les quiz.</p> : null}
+      {isLoading && <p className="text-muted-foreground">{t('common:loading')}</p>}
+      {error ? <p className="text-destructive">{t('loadError')}</p> : null}
       {launchError ? <p className="text-destructive">{launchError}</p> : null}
 
       {!isLoading && !error && quizzes.length === 0 && (
-        <p className="text-muted-foreground">Aucun quiz pour l’instant. Créez-en un !</p>
+        <p className="text-muted-foreground">{t('empty')}</p>
       )}
 
       <ul className="flex flex-col gap-2">
@@ -143,13 +141,15 @@ export function DashboardPage() {
               {quiz.title}
             </Link>
             <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
-              {STATUS_LABEL[quiz.status] ?? quiz.status}
+              {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
             </Badge>
-            <span className="text-sm text-muted-foreground">{quiz.questionCount} question(s)</span>
+            <span className="text-sm text-muted-foreground">
+              {t('questionCount', { count: quiz.questionCount })}
+            </span>
             <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }}>
               <Button type="button" size="sm" variant="outline">
                 <Pencil className="size-4" />
-                Éditer
+                {t('edit')}
               </Button>
             </Link>
             {quiz.status === 'ready' && (
@@ -161,7 +161,7 @@ export function DashboardPage() {
                 onClick={() => void launch(quiz.id)}
               >
                 <Play className="size-4" />
-                Présenter
+                {t('present')}
               </Button>
             )}
           </li>

@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './button';
 
 /**
@@ -10,8 +11,8 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Confirmer',
-  cancelLabel = 'Annuler',
+  confirmLabel,
+  cancelLabel,
   destructive,
   children,
   onConfirm,
@@ -28,6 +29,7 @@ export function ConfirmDialog({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation('common');
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -62,14 +64,14 @@ export function ConfirmDialog({
         {children}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            {cancelLabel}
+            {cancelLabel ?? t('cancel')}
           </Button>
           <Button
             type="button"
             variant={destructive ? 'destructive' : 'default'}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel ?? t('confirm')}
           </Button>
         </div>
       </div>

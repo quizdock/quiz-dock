@@ -1,1 +1,10 @@
-{}
+{
+  "loading": "Chargement…",
+  "confirm": "Confirmer",
+  "cancel": "Annuler",
+  "quizStatus": {
+    "draft": "Brouillon",
+    "ready": "Prêt",
+    "archived": "Archivé"
+  }
+}
