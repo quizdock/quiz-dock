@@ -32,6 +32,10 @@ Le nom de marque est **white-label runtime** : une instance peut afficher tout a
 
 ## Hébergement du site — GitHub Pages
 
+> ✅ **En ligne : <https://quizdock.github.io>** — org `quizdock` créée, repo
+> [`quizdock/quizdock.github.io`](https://github.com/quizdock/quizdock.github.io) (landing statique
+> + workflow Pages `upload-pages-artifact` → `deploy-pages`, source *GitHub Actions*).
+
 Objectif visé : **`https://quizdock.github.io`**. Cette URL exige une **organisation (ou un
 compte) GitHub nommé littéralement `quizdock`**, propriétaire d'un repo `quizdock.github.io`.
 Le compte actuel étant `fchaussin`, la voie par défaut donnerait `fchaussin.github.io`.
@@ -54,7 +58,10 @@ URL moins propre, mais disponible tout de suite et sans org.
 
 ## Reste à faire
 
-- [ ] **Réserver l'org GitHub `quizdock`** (action manuelle navigateur — voir lien ci-dessus).
-- [ ] Une fois l'org créée : échafauder le repo `quizdock.github.io` (landing + workflow Pages).
-- [ ] Décider du transfert du repo de code sous l'org.
+- [x] **Réserver l'org GitHub `quizdock`** (compte perso, plan Free).
+- [x] Échafauder le repo `quizdock.github.io` (landing + workflow Pages) → site en ligne.
+- [ ] Décider du transfert du repo de code `fchaussin/quiz-dock` → `quizdock/quiz-dock`
+      (puis mettre à jour les liens du site + le remote local).
+- [ ] Ajouter une licence au repo de code (et le badge sur le site).
 - [ ] (Optionnel) Réserver domaine(s) + npm + Docker Hub avant la 1ʳᵉ publication publique.
+- [ ] (Optionnel) Domaine custom (`quizdock.io` / `.fr`) via `CNAME` + DNS.
