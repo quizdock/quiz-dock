@@ -39,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: quizdock-app
+    image: fchaussin/quizdock:${QUIZDOCK_TAG:-latest}
     command: ['node_modules/prisma/build/index.js', 'migrate', 'deploy']
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
@@ -54,7 +54,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: quizdock-app
+    image: fchaussin/quizdock:${QUIZDOCK_TAG:-latest}
     environment:
       NODE_ENV: production
       PORT: '3000'
@@ -82,8 +82,9 @@ services:
         condition: service_completed_successfully
     volumes:
       - mediadata:/data/media
-      # Override logo + CSS sans rebuild (remplace le branding bundlé du SPA).
-      - ./branding:/app/client/branding:ro
+      # White-label des assets (optionnel) : décommente pour remplacer logo + CSS
+      # par un dossier `./branding/` local. Laissé commenté → logo par défaut bundlé.
+      # - ./branding:/app/client/branding:ro
     ports:
       - '${HTTP_PORT:-18080}:3000'
     healthcheck:

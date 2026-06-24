@@ -42,18 +42,32 @@ the results never leave your servers.
 
 ## 🚀 Quick start (self-host)
 
-QuizDock ships as **one image** (NestJS serves the API, the WebSocket and the SPA);
+QuizDock ships as **one image** — [`fchaussin/quizdock`](https://hub.docker.com/r/fchaussin/quizdock)
+on Docker Hub (multi-arch `amd64` / `arm64`). NestJS serves the API, the WebSocket and the SPA;
 PostgreSQL and Redis run alongside, and a one-shot `migrate` service applies migrations.
+
+### Option A — Docker Hub image (recommended)
+
+Pull the published image and run the stack — no build, no source checkout:
+
+```bash
+docker pull fchaussin/quizdock:latest
+curl -O https://raw.githubusercontent.com/quizdock/quiz-dock/main/docker-compose.prod.yml
+docker compose -f docker-compose.prod.yml up -d
+# then open the app
+open http://localhost:18080
+```
+
+Pin a version with `QUIZDOCK_TAG=0.3.0 docker compose -f docker-compose.prod.yml up -d`.
+
+### Option B — build from source
 
 ```bash
 git clone https://github.com/quizdock/quiz-dock.git
 cd quiz-dock
 docker compose -f docker-compose.prod.yml up -d --build
-# then open the app
 open http://localhost:18080
 ```
-
-> A published image (`docker pull …`) is on the way; for now the prod compose builds it locally.
 
 ## ⚙️ Configuration
 
