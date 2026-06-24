@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- build ----
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 RUN corepack enable
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN pnpm --filter @quiz-dock/contracts build \
  && (cd /out && node_modules/.bin/prisma generate --schema prisma/schema.prisma)
 
 # ---- runtime ----
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
