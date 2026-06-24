@@ -1,0 +1,116 @@
+# Déploiement de production — IMAGE UNIQUE QuizDock (front+back).
+# `docker compose -f docker-compose.prod.yml up -d`.
+# L'image `quizdock` sert l'app sur :3000 ; Postgres + Redis sont externes ;
+# le service `migrate` (one-shot, même image) applique les migrations au démarrage.
+name: quizdock
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-live}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-live}
+      POSTGRES_DB: ${POSTGRES_DB:-quizdock}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-live} -d ${POSTGRES_DB:-quizdock}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [internal]
+
+  # Migrations idempotentes (Prisma). One-shot : applique puis sort. L'app attend
+  # sa complétion. Même image que `quizdock`, commande surchargée (l'ENTRYPOINT
+  # distroless est déjà `node`, donc on passe le chemin du CLI Prisma).
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quizdock-app
+    command: ['node_modules/prisma/build/index.js', 'migrate', 'deploy']
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    tmpfs: ['/tmp']
+    restart: 'no'
+    networks: [internal]
+
+  quizdock:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quizdock-app
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      AUTH_MODE: ${AUTH_MODE:-none}
+      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
+      REDIS_URL: redis://redis:6379
+      MEDIA_DIR: /data/media
+      MEDIA_MAX_BYTES: ${MEDIA_MAX_BYTES:-10485760}
+      # White-label : nom d'app + langue de l'instance (servis via /config.js).
+      APP_NAME: ${APP_NAME:-QuizDock}
+      APP_LANG: ${APP_LANG:-en}
+      CLIENT_DIR: /app/client
+      # Auth OIDC (si AUTH_MODE=oidc).
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-quiz-dock-frontend}
+      OIDC_ROLES_CLAIM: ${OIDC_ROLES_CLAIM:-realm_access.roles}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - mediadata:/data/media
+      # Override logo + CSS sans rebuild (remplace le branding bundlé du SPA).
+      - ./branding:/app/client/branding:ro
+    ports:
+      - '${HTTP_PORT:-18080}:3000'
+    healthcheck:
+      # distroless : pas de shell/wget → healthcheck via node (fetch global, Node 24).
+      test:
+        [
+          'CMD',
+          '/nodejs/bin/node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Durcissement (cf. ADR / docker-compose.yml) : non-root via l'image, FS en
+    # lecture seule, aucune capability, pas d'escalade. Médias = volume ; /tmp = tmpfs.
+    security_opt: ['no-new-privileges:true']
+    cap_drop: ['ALL']
+    read_only: true
+    tmpfs: ['/tmp']
+    networks: [internal, public]
+
+volumes:
+  pgdata:
+  redisdata:
+  mediadata:
+
+networks:
+  internal:
+  public:

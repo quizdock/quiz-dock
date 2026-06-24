@@ -13,7 +13,7 @@ async function bootstrap(): Promise<void> {
   });
 
   app.enableCors();
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  app.setGlobalPrefix('api/v1', { exclude: ['health', 'config.js'] });
   // Validation runtime des DTO Zod (createZodDto) sur toutes les routes.
   app.useGlobalPipes(new ZodValidationPipe());
   // Sérialise les erreurs en corps tokenisé { code, params? } (ADR 0001).
