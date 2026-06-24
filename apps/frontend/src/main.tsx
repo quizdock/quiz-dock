@@ -7,6 +7,7 @@ import { setAuthHeaders } from './api/http';
 import { type AuthMode, AuthProvider, configureAuth } from './auth/auth-context';
 import { getOidc, initOidc } from './auth/oidc';
 import { router } from './router';
+import './i18n';
 import './index.css';
 
 const queryClient = new QueryClient();
