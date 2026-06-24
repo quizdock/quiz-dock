@@ -78,6 +78,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # --- Durcissement (non destructif, niveau runtime) ---
+    security_opt: ['no-new-privileges:true']
+    cap_drop: ['ALL'] # node écoute sur 3000 (>1024) : aucune capability requise
+    read_only: true # FS racine en lecture seule…
+    tmpfs: ['/tmp'] # …sauf /tmp (uploads temporaires) ; les médias vont sur le volume
     networks: [internal, public]
 
   frontend:
@@ -96,6 +101,10 @@ services:
     volumes:
       # Override logo + CSS sans rebuild (remplace les fichiers servis).
       - ./branding:/usr/share/nginx/html/branding:ro
+    # --- Durcissement : nginx:alpine bind :80 en root → on garde no-new-privileges
+    # seul (un cap_drop ALL casserait le bind <1024 / le setuid des workers). Pour
+    # un non-root complet, basculer sur nginxinc/nginx-unprivileged (port 8080).
+    security_opt: ['no-new-privileges:true']
     networks: [public]
 
 volumes:

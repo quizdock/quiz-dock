@@ -18,6 +18,9 @@ services:
   backend:
     build:
       target: build
+    # Le durcissement prod (read_only) du compose de base casserait le `pnpm install`
+    # de dev (écriture dans /app/node_modules). On le neutralise ici uniquement.
+    read_only: false
     working_dir: /app/apps/backend
     # install (deps à jour) → build du contrat (dist non monté → recompilé depuis
     # le src monté) → migrations idempotentes → nest en watch.
