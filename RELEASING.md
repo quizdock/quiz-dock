@@ -15,6 +15,19 @@ Two images, pushed under the `quizdock` Docker Hub namespace:
 
 **Multi-arch**: build `linux/amd64` + `linux/arm64` (many self-hosters run ARM).
 
+### Where (registry & namespace)
+
+- **Docker Hub** — target namespace `quizdock` (`quizdock/quiz-dock-backend`,
+  `quizdock/quiz-dock-frontend`). ⚠️ Docker Hub accounts are **separate from
+  GitHub**: the `quizdock` namespace is still free and must be **created on
+  hub.docker.com** (free org/account, browser action) before the first push.
+- **GHCR (alternative, no extra account)** — `ghcr.io/quizdock/quiz-dock-backend`
+  and `…-frontend`. Owned via the existing GitHub org `quizdock`, authenticated
+  with `GITHUB_TOKEN`, free for public images. In the CI workflow below, swap the
+  `images:` value and replace the Docker Hub login with
+  `uses: docker/login-action@v3` against `ghcr.io` using `${{ github.actor }}` /
+  `${{ secrets.GITHUB_TOKEN }}`.
+
 ## Versioning & tags
 
 SemVer, pre-1.0 (`0.MINOR.PATCH`), driven by a git tag `vX.Y.Z`. Each release pushes:
