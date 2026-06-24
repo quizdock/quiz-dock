@@ -28,7 +28,7 @@ async function bootstrap(): Promise<void> {
       if (oidcUser && !oidcUser.expired) {
         setAuthHeaders({ Authorization: `Bearer ${oidcUser.access_token}` });
         const p = oidcUser.profile;
-        initialUser = p.name ?? p.preferred_username ?? p.sub ?? 'Formateur';
+        initialUser = p.name ?? p.preferred_username ?? p.sub ?? 'Animateur';
       }
       configureAuth('oidc', initialUser !== null);
     } else {

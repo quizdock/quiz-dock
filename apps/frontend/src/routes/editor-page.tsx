@@ -18,6 +18,7 @@ import {
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,32 +45,18 @@ import {
 } from '../api/generated/questions/questions';
 import { editorRoute } from '../router';
 
-const TYPE_LABEL: Record<string, string> = {
-  single_choice: 'QCM (réponse unique)',
-  multiple_choice: 'QCM (multi-réponses)',
-  true_false: 'Vrai / Faux',
-  text_input: 'Saisie texte',
-  numeric: 'Numérique',
-  ordering: 'Remise en ordre',
-  poll: 'Sondage',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  draft: 'Brouillon',
-  ready: 'Prêt',
-  archived: 'Archivé',
-};
-
 export function EditorPage() {
+  const { t } = useTranslation(['editor', 'common']);
   const { quizId } = editorRoute.useParams();
   const { data, isLoading, error } = useQuizzesControllerGet(quizId);
 
-  if (isLoading) return <p className="text-muted-foreground">Chargement…</p>;
-  if (error || !data) return <p className="text-destructive">Quiz introuvable.</p>;
+  if (isLoading) return <p className="text-muted-foreground">{t('common:loading')}</p>;
+  if (error || !data) return <p className="text-destructive">{t('notFound')}</p>;
   return <QuizEditor quiz={data.data} />;
 }
 
 function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
+  const { t } = useTranslation(['editor', 'common']);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const update = useQuizzesControllerUpdate();
@@ -127,7 +114,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       const { pin } = await createSession(quiz.id, fullCapture);
       setLivePin(pin);
     } catch (e) {
-      setPresentError(e instanceof Error ? e.message : 'Échec du lancement de la partie.');
+      setPresentError(e instanceof Error ? e.message : t('broadcast.presentError'));
     } finally {
       setPresenting(false);
     }
@@ -163,15 +150,17 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     <section className="mx-auto flex w-full max-w-6xl flex-col gap-6">
       {/* En-tête */}
       <header className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">Éditeur de quiz</h1>
-        <Badge variant={statusVariant}>{STATUS_LABEL[quiz.status] ?? quiz.status}</Badge>
+        <h1 className="text-2xl font-bold">{t('header.title')}</h1>
+        <Badge variant={statusVariant}>
+          {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
+        </Badge>
         <Link
           to="/quizzes/$quizId/sessions"
           params={{ quizId: quiz.id }}
           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'ml-auto')}
         >
           <History className="size-4" />
-          Historique
+          {t('header.history')}
         </Link>
         <Button
           type="button"
@@ -180,7 +169,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           onClick={() => setConfirmDelete(true)}
         >
           <Trash2 className="size-4" />
-          Supprimer le quiz
+          {t('header.deleteQuiz')}
         </Button>
         <a
           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
@@ -189,7 +178,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           rel="noopener noreferrer"
         >
           <ExternalLink className="size-4" />
-          Aperçu
+          {t('header.preview')}
         </a>
       </header>
 
@@ -204,7 +193,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             déborderait sur la colonne des Questions au desktop). */}
         <Card className="order-1 min-w-0 sm:col-span-2 lg:col-span-1 lg:col-start-1 lg:row-start-1">
           <CardHeader>
-            <CardTitle>Réglages</CardTitle>
+            <CardTitle>{t('settings.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <form
@@ -217,7 +206,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               <form.Field name="title">
                 {(field) => (
                   <Label>
-                    Titre
+                    {t('settings.titleLabel')}
                     <Input
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
@@ -228,7 +217,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               <form.Field name="description">
                 {(field) => (
                   <Label>
-                    Description
+                    {t('settings.descriptionLabel')}
                     <Textarea
                       rows={4}
                       className="lg:min-h-48"
@@ -240,7 +229,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               </form.Field>
               <Button type="submit" disabled={!isDirty || update.isPending} className="self-start">
                 <Save className="size-4" />
-                Enregistrer
+                {t('settings.save')}
               </Button>
             </form>
           </CardContent>
@@ -249,7 +238,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         {/* Diffusion */}
         <Card className="order-3 min-w-0 lg:col-start-1 lg:row-start-2">
           <CardHeader>
-            <CardTitle>Diffusion</CardTitle>
+            <CardTitle>{t('broadcast.title')}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {quiz.status === 'ready' && !livePin ? (
@@ -261,10 +250,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   onChange={(e) => setFullCapture(e.target.checked)}
                 />
                 <span>
-                  <span className="font-medium">Capture intégrale des réponses</span>
+                  <span className="font-medium">{t('broadcast.fullCaptureLabel')}</span>
                   <span className="text-muted-foreground block">
-                    Conserve le détail des réponses de chaque participant (suivi de formation). À
-                    activer avant de présenter.
+                    {t('broadcast.fullCaptureHelp')}
                   </span>
                 </span>
               </label>
@@ -276,7 +264,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   disabled={quiz.questionCount === 0 || transition.isPending}
                   onClick={() => void changeStatus('ready')}
                 >
-                  Publier (prêt)
+                  {t('broadcast.publish')}
                 </Button>
               )}
               {quiz.status === 'ready' && (
@@ -289,7 +277,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                       onClick={() => void onPresent()}
                     >
                       <Play className="size-4" />
-                      {presenting ? 'Lancement…' : 'Présenter'}
+                      {presenting ? t('broadcast.presenting') : t('broadcast.present')}
                     </Button>
                   )}
                   <Button
@@ -297,20 +285,20 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     variant="outline"
                     onClick={() => void changeStatus('draft')}
                   >
-                    Repasser en brouillon
+                    {t('broadcast.backToDraft')}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => void changeStatus('archived')}
                   >
-                    Archiver
+                    {t('broadcast.archive')}
                   </Button>
                 </>
               )}
               {quiz.status === 'archived' && (
                 <Button type="button" variant="outline" onClick={() => void changeStatus('draft')}>
-                  Restaurer
+                  {t('broadcast.restore')}
                 </Button>
               )}
             </div>
@@ -326,7 +314,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             Diffusion/Avis sur mobile et tablette via `order-2`. */}
         <Card className="order-2 min-w-0 sm:col-span-2 lg:col-span-2 lg:col-start-2 lg:row-span-3 lg:row-start-1">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-            <CardTitle>Questions ({quiz.questionCount})</CardTitle>
+            <CardTitle>{t('questions.title', { count: quiz.questionCount })}</CardTitle>
             <Button
               type="button"
               size="sm"
@@ -334,7 +322,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               disabled={editing === 'new'}
             >
               <Plus className="size-4" />
-              Ajouter
+              {t('questions.add')}
             </Button>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
@@ -359,14 +347,14 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{q.prompt}</p>
                       <p className="text-muted-foreground text-xs">
-                        {TYPE_LABEL[q.type] ?? q.type}
+                        {t(`questionType.${q.type}`, { defaultValue: q.type })}
                       </p>
                     </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label="Monter"
+                      aria-label={t('questions.moveUp')}
                       disabled={i === 0 || reorder.isPending}
                       onClick={() => void moveQuestion(i, -1)}
                     >
@@ -376,7 +364,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label="Descendre"
+                      aria-label={t('questions.moveDown')}
                       disabled={i === quiz.questions.length - 1 || reorder.isPending}
                       onClick={() => void moveQuestion(i, 1)}
                     >
@@ -389,13 +377,13 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                       onClick={() => setEditing(q.id)}
                     >
                       <Pencil className="size-4" />
-                      Éditer
+                      {t('questions.edit')}
                     </Button>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label="Supprimer la question"
+                      aria-label={t('questions.deleteQuestion')}
                       onClick={() => void onDeleteQuestion(q.id)}
                     >
                       <Trash2 className="size-4" />
@@ -405,7 +393,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               )}
               {quiz.questions.length === 0 && editing !== 'new' && (
                 <li className="text-muted-foreground py-4 text-center text-sm">
-                  Aucune question. Ajoutez-en une !
+                  {t('questions.empty')}
                 </li>
               )}
             </ul>
@@ -416,9 +404,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <ConfirmDialog
         open={confirmDelete}
         destructive
-        title="Supprimer ce quiz ?"
-        description={`« ${quiz.title} » et ses questions seront définitivement supprimés. Cette action est irréversible.`}
-        confirmLabel="Supprimer"
+        title={t('deleteConfirm.title')}
+        description={t('deleteConfirm.description', { title: quiz.title })}
+        confirmLabel={t('deleteConfirm.confirmLabel')}
         onCancel={() => setConfirmDelete(false)}
         onConfirm={() => {
           setConfirmDelete(false);
@@ -431,8 +419,12 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
 /** Étoiles pleines/vides pour une note `value` sur 5. */
 function StarRow({ value, size = 'size-4' }: { value: number; size?: string }) {
+  const { t } = useTranslation('editor');
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`${value} sur 5`}>
+    <span
+      className="inline-flex items-center gap-0.5"
+      aria-label={t('feedback.starsAriaLabel', { value })}
+    >
       {[0, 1, 2, 3, 4].map((i) => (
         <Star
           key={i}
@@ -451,26 +443,27 @@ function StarRow({ value, size = 'size-4' }: { value: number; size?: string }) {
  * les autres). Moyenne, nombre et liste des commentaires (récents d'abord).
  */
 function FeedbackCard({ quizId, className }: { quizId: string; className?: string }) {
+  const { t } = useTranslation(['editor', 'common']);
   const { data, isLoading } = useQuizzesControllerFeedback(quizId);
   const summary = data?.data;
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Avis des joueurs</CardTitle>
+        <CardTitle>{t('feedback.title')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
-        {isLoading ? <p className="text-muted-foreground text-sm">Chargement…</p> : null}
+        {isLoading ? <p className="text-muted-foreground text-sm">{t('common:loading')}</p> : null}
         {summary && summary.count === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            Aucun avis pour l’instant. Les joueurs peuvent noter le quiz en fin de partie.
-          </p>
+          <p className="text-muted-foreground text-sm">{t('feedback.empty')}</p>
         ) : null}
         {summary && summary.count > 0 ? (
           <>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold tabular-nums">{summary.average.toFixed(1)}</span>
               <StarRow value={Math.round(summary.average)} size="size-5" />
-              <span className="text-muted-foreground text-sm">{summary.count} avis</span>
+              <span className="text-muted-foreground text-sm">
+                {t('feedback.count', { count: summary.count })}
+              </span>
             </div>
             <ul className="flex max-h-60 flex-col gap-2 overflow-auto">
               {summary.items.map((f) => (
@@ -496,13 +489,14 @@ function FeedbackCard({ quizId, className }: { quizId: string; className?: strin
  * nouvelles fenêtres (grand écran / lien participants).
  */
 function GameAccessPanel({ pin }: { pin: string }) {
+  const { t } = useTranslation('editor');
   const open = (path: string) => window.open(path, '_blank', 'noopener,noreferrer');
   return (
     <div className="border-primary/30 bg-primary/5 flex flex-col gap-3 rounded-lg border p-4">
       <div className="flex items-center gap-2">
         <Radio className="text-primary size-4" />
         <span>
-          Partie en cours — PIN <strong className="font-mono tracking-widest">{pin}</strong>
+          {t('gameAccess.label')} <strong className="font-mono tracking-widest">{pin}</strong>
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -512,7 +506,7 @@ function GameAccessPanel({ pin }: { pin: string }) {
           className={cn(buttonVariants({ size: 'sm' }))}
         >
           <MonitorPlay className="size-4" />
-          Écran de contrôle
+          {t('gameAccess.controlScreen')}
         </Link>
         <Button
           type="button"
@@ -521,11 +515,11 @@ function GameAccessPanel({ pin }: { pin: string }) {
           onClick={() => open(`/present/${pin}/screen`)}
         >
           <Eye className="size-4" />
-          Écran de projection
+          {t('gameAccess.projectionScreen')}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => open(`/join/${pin}`)}>
           <Users className="size-4" />
-          Écran d’invitation
+          {t('gameAccess.invitationScreen')}
         </Button>
       </div>
     </div>

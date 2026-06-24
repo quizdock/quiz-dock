@@ -1,9 +1,11 @@
 import { Link, Outlet, useNavigate } from '@tanstack/react-router';
 import { LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../auth/auth-context';
 
 export function RootLayout() {
+  const { t } = useTranslation(['auth', 'common']);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -17,7 +19,7 @@ export function RootLayout() {
           {user ? (
             <>
               <Link to="/dashboard" className="hover:underline">
-                Mes quiz
+                {t('nav.myQuizzes')}
               </Link>
               <span className="text-muted-foreground">{user}</span>
               <Button
@@ -28,12 +30,12 @@ export function RootLayout() {
                 }}
               >
                 <LogOut className="size-4" />
-                Se déconnecter
+                {t('nav.logout')}
               </Button>
             </>
           ) : (
             <Link to="/login" className="hover:underline">
-              Espace formateur
+              {t('nav.loginLink')}
             </Link>
           )}
         </nav>

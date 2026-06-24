@@ -1,1 +1,7 @@
-{}
+{
+  "title": "Rejoindre une session",
+  "pinCardTitle": "Votre code PIN",
+  "pinLabel": "Code PIN",
+  "pinPlaceholder": "123456",
+  "continue": "Continuer"
+}

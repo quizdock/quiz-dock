@@ -90,7 +90,7 @@ export function AuthProvider({
     setAuthHeaders({ Authorization: `Bearer ${oidcUser.access_token}` });
     oidcAuthed = true;
     const profile = oidcUser.profile;
-    setUser(profile.name ?? profile.preferred_username ?? profile.sub ?? 'Formateur');
+    setUser(profile.name ?? profile.preferred_username ?? profile.sub ?? 'Animateur');
   }, []);
 
   const logout = useCallback(async () => {

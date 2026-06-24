@@ -4,6 +4,7 @@ import type {
   QuestionRevealPayload,
   QuestionStartPayload,
 } from '@roux-quizz/contracts';
+import { useTranslation } from 'react-i18next';
 import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
 import { Avatar } from './avatar';
@@ -130,6 +131,7 @@ export function RevealAnswer({
   question: QuestionStartPayload;
   reveal: QuestionRevealPayload;
 }) {
+  const { t } = useTranslation('live');
   const opts = question.options;
 
   // QCM / V-F / sondage : répartition par option (avec intitulés).
@@ -143,7 +145,7 @@ export function RevealAnswer({
     const labels = ids.map((id) => opts.find((o) => o.id === id)?.text ?? id);
     return (
       <p className="text-xl">
-        Bon ordre : <strong>{labels.join(' → ')}</strong>
+        {t('reveal.goodOrder')} <strong>{labels.join(' → ')}</strong>
       </p>
     );
   }
@@ -153,7 +155,7 @@ export function RevealAnswer({
   const text = Array.isArray(val) ? val.join(' ou ') : (val ?? '');
   return (
     <p className="text-xl">
-      Bonne réponse : <strong>{String(text)}</strong>
+      {t('reveal.goodAnswer')} <strong>{String(text)}</strong>
     </p>
   );
 }

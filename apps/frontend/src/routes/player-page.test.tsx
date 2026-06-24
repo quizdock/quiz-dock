@@ -81,7 +81,7 @@ describe('PlayerPage (client apprenant)', () => {
     hookState.value = view({ state: GameState.Lobby });
     renderApp('/join/771122');
 
-    expect(await screen.findByText(/Tu es dans la partie/)).toBeInTheDocument();
+    expect(await screen.findByText(/Tu es dans la session/)).toBeInTheDocument();
     expect(screen.getByText(/« Bob »/)).toBeInTheDocument();
   });
 

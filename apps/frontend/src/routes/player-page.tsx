@@ -1,6 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 import { ArrowDown, ArrowUp, Check, LogIn, Shuffle } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,6 +25,7 @@ import { useGameSession } from '../game/use-game-session';
  * réponse → feedback → podium), grille verrouillée à 1 réponse (RG-06).
  */
 export function PlayerPage() {
+  const { t } = useTranslation('live');
   const { pin } = useParams({ from: '/join/$pin' });
   const { view, socket, markJoined } = useGameSession(pin, 'player');
   const [nickname, setNickname] = useState(() => loadPlayerSession()?.nickname ?? '');
@@ -86,7 +88,7 @@ export function PlayerPage() {
       await joinSession(pin, nickname.trim(), avatarSeed || undefined);
       markJoined();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de rejoindre la partie.');
+      setError(err instanceof Error ? err.message : t('player.joinFailed'));
     } finally {
       setJoining(false);
     }
@@ -121,7 +123,7 @@ export function PlayerPage() {
 
   /** Widget de réponse selon le type de question (§4/§5.3). */
   const renderAnswerInput = () => {
-    if (!question) return <p className="text-muted-foreground">En attente de la question…</p>;
+    if (!question) return <p className="text-muted-foreground">{t('player.waitingQuestion')}</p>;
     const opts = question.options ?? [];
 
     // Saisie libre : numérique (nombre) ou texte.
@@ -144,11 +146,13 @@ export function PlayerPage() {
             onChange={(e) => setFreeValue(e.target.value)}
             type={numeric ? 'number' : 'text'}
             inputMode={numeric ? 'decimal' : 'text'}
-            placeholder={numeric ? 'Ta réponse (nombre)' : 'Ta réponse'}
+            placeholder={
+              numeric ? t('player.answerNumberPlaceholder') : t('player.answerPlaceholder')
+            }
             className="text-center text-lg"
           />
           <Button type="submit" disabled={!valid}>
-            Valider ma réponse
+            {t('player.submitAnswer')}
           </Button>
         </form>
       );
@@ -171,7 +175,7 @@ export function PlayerPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    aria-label="Monter"
+                    aria-label={t('player.moveUp')}
                     disabled={i === 0}
                     onClick={() => moveOrder(i, -1)}
                   >
@@ -181,7 +185,7 @@ export function PlayerPage() {
                     type="button"
                     variant="outline"
                     size="icon"
-                    aria-label="Descendre"
+                    aria-label={t('player.moveDown')}
                     disabled={i === ordered.length - 1}
                     onClick={() => moveOrder(i, 1)}
                   >
@@ -192,7 +196,7 @@ export function PlayerPage() {
             })}
           </ul>
           <Button type="button" onClick={() => submit(ordered)}>
-            Valider ma réponse
+            {t('player.submitAnswer')}
           </Button>
         </div>
       );
@@ -205,14 +209,14 @@ export function PlayerPage() {
           <OptionGrid options={opts} onPick={onPick} selectedIds={selected} />
           {isMulti ? (
             <Button type="button" disabled={selected.length === 0} onClick={() => submit(selected)}>
-              Valider ma réponse
+              {t('player.submitAnswer')}
             </Button>
           ) : null}
         </>
       );
     }
 
-    return <p className="text-muted-foreground">Type de question non pris en charge.</p>;
+    return <p className="text-muted-foreground">{t('player.unsupportedType')}</p>;
   };
 
   const wrap = (children: React.ReactNode) => (
@@ -226,7 +230,7 @@ export function PlayerPage() {
     return wrap(
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Ton pseudo</CardTitle>
+          <CardTitle>{t('player.yourNickname')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-4 text-left" onSubmit={(e) => void onJoin(e)}>
@@ -234,22 +238,22 @@ export function PlayerPage() {
               <Avatar name={avatarName} size={88} />
               <Button type="button" variant="outline" size="sm" onClick={randomizeAvatar}>
                 <Shuffle className="size-4" />
-                Avatar aléatoire
+                {t('player.randomAvatar')}
               </Button>
             </div>
             <Label>
-              Pseudo
+              {t('player.nickname')}
               <Input
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="Votre pseudo"
+                placeholder={t('player.nicknamePlaceholder')}
                 required
               />
             </Label>
             {error ? <p className="text-destructive text-sm">{error}</p> : null}
             <Button type="submit" disabled={joining || !nickname.trim()}>
               <LogIn className="size-4" />
-              {joining ? 'Connexion…' : "C'est parti !"}
+              {joining ? t('player.connecting') : t('player.letsGo')}
             </Button>
           </form>
         </CardContent>
@@ -258,7 +262,7 @@ export function PlayerPage() {
   }
 
   if (view.status === 'connecting') {
-    return wrap(<p className="text-muted-foreground">Connexion à la partie…</p>);
+    return wrap(<p className="text-muted-foreground">{t('player.connectingToSession')}</p>);
   }
 
   // Exclu par l'hôte : écran terminal (la session locale a été purgée, pas de reprise).
@@ -268,10 +272,9 @@ export function PlayerPage() {
         <span className="text-7xl leading-none" aria-hidden>
           🚫
         </span>
-        <p className="text-xl font-semibold">Tu as été exclu de la partie.</p>
+        <p className="text-xl font-semibold">{t('player.kickedTitle')}</p>
         <p className="text-muted-foreground">
-          L’animateur t’a banni pour {view.kicked.minutes} minute
-          {view.kicked.minutes > 1 ? 's' : ''}.
+          {t('player.kickedDescription', { count: view.kicked.minutes })}
         </p>
       </>,
     );
@@ -279,9 +282,7 @@ export function PlayerPage() {
 
   // ── États de jeu ───────────────────────────────────────────────────────────
   if (view.state === 'HOST_DISCONNECTED') {
-    return wrap(
-      <p className="text-xl font-semibold">Présentateur déconnecté — partie en pause.</p>,
-    );
+    return wrap(<p className="text-xl font-semibold">{t('player.hostDisconnected')}</p>);
   }
   // Fin de partie (podium ou terminée) : on propose de noter le quiz. Les deux états
   // partagent la même structure pour que le panneau d'avis (et le commentaire en
@@ -295,11 +296,14 @@ export function PlayerPage() {
               🏆
             </span>
             <Avatar name={avatarName} size={72} />
-            <h2 className="text-2xl font-bold">Podium</h2>
+            <h2 className="text-2xl font-bold">{t('player.podium')}</h2>
             {view.podium?.you ? (
               <p className="text-lg">
-                Ton classement : <span className="font-semibold">{view.podium.you.rank}ᵉ</span> —{' '}
-                {view.podium.you.score} pts
+                {t('player.yourRank')}{' '}
+                <span className="font-semibold">
+                  {t('player.rankValue', { rank: view.podium.you.rank })}
+                </span>{' '}
+                {t('player.podiumScore', { score: view.podium.you.score })}
               </p>
             ) : null}
           </>
@@ -308,7 +312,7 @@ export function PlayerPage() {
             <span className="text-7xl leading-none" aria-hidden>
               🎉
             </span>
-            <p className="text-xl font-semibold">Merci d’avoir joué !</p>
+            <p className="text-xl font-semibold">{t('player.thanks')}</p>
           </>
         )}
         <RatingPanel pin={pin} socket={socket} />
@@ -332,20 +336,23 @@ export function PlayerPage() {
               {r.correct ? '✓' : '✗'}
             </span>
             <p className={`text-3xl font-bold ${r.correct ? 'text-success' : 'text-destructive'}`}>
-              {r.correct ? 'Juste !' : 'Raté'}
+              {r.correct ? t('player.correct') : t('player.wrong')}
             </p>
-            <p className="text-xl">+{r.points} points</p>
+            <p className="text-xl">{t('player.points', { points: r.points })}</p>
           </>
         ) : (
-          <p className="text-muted-foreground">Réponses révélées…</p>
+          <p className="text-muted-foreground">{t('player.answersRevealed')}</p>
         )}
         {you ? (
           <p className="border-t pt-3 text-2xl">
-            Ton classement : <span className="font-bold">{you.rank}ᵉ</span>
-            <span className="text-muted-foreground"> — {you.score} pts</span>
+            {t('player.yourRankShort')}{' '}
+            <span className="font-bold">{t('player.rankValue', { rank: you.rank })}</span>
+            <span className="text-muted-foreground">
+              {t('player.scoreValue', { score: you.score })}
+            </span>
           </p>
         ) : r ? (
-          <p className="text-muted-foreground">Rang : {r.rank}ᵉ</p>
+          <p className="text-muted-foreground">{t('player.rank', { rank: r.rank })}</p>
         ) : null}
       </div>,
     );
@@ -361,7 +368,7 @@ export function PlayerPage() {
         {remaining !== null ? (
           <span
             className="shrink-0 pt-2 text-4xl font-bold tabular-nums"
-            aria-label="Temps restant"
+            aria-label={t('player.timeRemaining')}
           >
             ⏱ {remaining}
           </span>
@@ -372,10 +379,10 @@ export function PlayerPage() {
         <div className="flex w-full shrink-0 flex-col items-center gap-3 pb-2">
           {reading ? (
             <p className="text-muted-foreground text-lg font-medium">
-              📖 Lis bien la question… <span className="tabular-nums">{readingLeft}</span>
+              {t('player.readQuestion')} <span className="tabular-nums">{readingLeft}</span>
             </p>
           ) : done ? (
-            <p className="text-xl font-semibold">Réponse enregistrée ✓</p>
+            <p className="text-xl font-semibold">{t('player.answerSaved')}</p>
           ) : (
             renderAnswerInput()
           )}
@@ -385,14 +392,14 @@ export function PlayerPage() {
   }
 
   if (view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') {
-    return wrap(<p className="text-muted-foreground">En attente de la question…</p>);
+    return wrap(<p className="text-muted-foreground">{t('player.waitingQuestion')}</p>);
   }
 
   // ── LOBBY / attente ──────────────────────────────────────────────────────────
   return wrap(
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Tu es dans la partie !</CardTitle>
+        <CardTitle>{t('player.inSession')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-2">
         <Avatar name={avatarName} size={72} />
@@ -402,25 +409,22 @@ export function PlayerPage() {
         <div className="flex flex-wrap items-center justify-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={randomizeAvatar}>
             <Shuffle className="size-4" />
-            Avatar aléatoire
+            {t('player.randomAvatar')}
           </Button>
           <Button
             type="button"
             size="icon"
             onClick={commitAvatar}
             disabled={avatarSeed === syncedSeed}
-            aria-label="Enregistrer l’avatar"
-            title="Enregistrer l’avatar"
+            aria-label={t('player.saveAvatar')}
+            title={t('player.saveAvatar')}
           >
             <Check className="size-4" />
           </Button>
         </div>
-        <p className="text-muted-foreground">En attente du formateur…</p>
+        <p className="text-muted-foreground">{t('player.waitingHost')}</p>
         {view.fullCapture ? (
-          <p className="text-muted-foreground border-t pt-2 text-sm">
-            ⓘ Session enregistrée : tes réponses individuelles seront conservées pour le suivi de
-            formation.
-          </p>
+          <p className="text-muted-foreground border-t pt-2 text-sm">{t('player.captureNotice')}</p>
         ) : null}
       </CardContent>
     </Card>,

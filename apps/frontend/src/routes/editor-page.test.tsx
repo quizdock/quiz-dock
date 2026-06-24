@@ -74,7 +74,7 @@ describe('EditorPage', () => {
     ]);
     renderApp('/quizzes/q1');
 
-    expect(await screen.findByText('Avis des joueurs')).toBeInTheDocument();
+    expect(await screen.findByText('Avis des participants')).toBeInTheDocument();
     expect(await screen.findByText('4.5')).toBeInTheDocument();
     expect(screen.getByText('Génial')).toBeInTheDocument();
     expect(screen.getByText('Zoé')).toBeInTheDocument();
@@ -123,7 +123,7 @@ describe('EditorPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: /Présenter/ }));
 
-    expect(await screen.findByText(/Partie en cours/)).toBeInTheDocument();
+    expect(await screen.findByText(/Session en cours/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /contrôle/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /projection/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /invitation/i })).toBeInTheDocument();

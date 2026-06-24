@@ -1,1 +1,83 @@
-{}
+{
+  "status": {
+    "ended": "Terminée",
+    "interrupted": "Interrompue",
+    "archived": "Archivée",
+    "lobby": "Lobby",
+    "in_progress": "En cours"
+  },
+  "duration": {
+    "minutesSeconds": "{{minutes}} min {{seconds}}s",
+    "seconds": "{{seconds}}s"
+  },
+  "list": {
+    "title": "Historique des sessions",
+    "backToEditor": "Retour à l’éditeur",
+    "loadError": "Historique indisponible.",
+    "empty": "Aucune session archivée pour ce quiz. À la fin d’une session, choisissez « Archiver les résultats » pour la retrouver ici.",
+    "capture": "Capture",
+    "participantCount_one": "{{count}} participant",
+    "participantCount_other": "{{count}} participants",
+    "successRate": "Réussite {{rate}}"
+  },
+  "detail": {
+    "notFound": "Session introuvable.",
+    "fallbackTitle": "Session",
+    "exportCsv": "Exporter (CSV)",
+    "history": "Historique",
+    "statParticipants": "Participants",
+    "statSuccessRate": "Réussite globale",
+    "statQuestions": "Questions",
+    "questionResultsTitle": "Résultats par question",
+    "thNumber": "#",
+    "thQuestion": "Question",
+    "thAnswers": "Réponses",
+    "thSuccessRate": "Réussite",
+    "thAvgTime": "Temps moy.",
+    "participantsTitle": "Participants",
+    "thRank": "Rang",
+    "thNickname": "Pseudo",
+    "thScore": "Score",
+    "thCorrect": "Bonnes",
+    "thStreak": "Série",
+    "participantDetailAria": "Détail de {{nickname}}",
+    "csvGlobal": {
+      "rank": "Rang",
+      "nickname": "Pseudo",
+      "score": "Score",
+      "correct": "Bonnes",
+      "answered": "Répondues",
+      "maxStreak": "Série max",
+      "avgTime": "Temps moyen (s)",
+      "filenameFallback": "session"
+    }
+  },
+  "player": {
+    "notFound": "Participant introuvable.",
+    "summary": "{{rank}}ᵉ · {{score}} pts · {{correct}}/{{answered}} bonnes",
+    "exportCsv": "Exporter (CSV)",
+    "session": "Session",
+    "captureUnavailable": "Le détail des réponses n’est pas disponible : la capture intégrale n’était pas activée pour cette session. Seuls les résultats agrégés sont conservés.",
+    "answersTitle": "Réponses",
+    "thNumber": "#",
+    "thQuestion": "Question",
+    "thAnswer": "Réponse",
+    "thCorrect": "Correct",
+    "thPoints": "Points",
+    "thTime": "Temps",
+    "correctAria": "correct",
+    "incorrectAria": "incorrect",
+    "noAnswers": "Aucune réponse enregistrée.",
+    "csvPlayer": {
+      "number": "#",
+      "question": "Question",
+      "answer": "Réponse",
+      "correct": "Correct",
+      "points": "Points",
+      "time": "Temps (s)",
+      "yes": "oui",
+      "no": "non",
+      "filenameLabel": "participant"
+    }
+  }
+}

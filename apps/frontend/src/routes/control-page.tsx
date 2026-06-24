@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -24,16 +25,6 @@ import { Avatar } from '../game/avatar';
 import { LeaderboardList, OptionGrid, Podium, RevealAnswer } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
-
-const TYPE_LABEL: Record<string, string> = {
-  single_choice: 'QCM',
-  multiple_choice: 'QCM multi',
-  true_false: 'Vrai / Faux',
-  text_input: 'Saisie',
-  numeric: 'Numérique',
-  ordering: 'Ordre',
-  poll: 'Sondage',
-};
 
 /** Boutons d'ajustement du chrono (§8) : retire/ajoute des secondes en direct. */
 const CHRONO_STEPS = [-5, -1, 1, 5] as const;
@@ -45,6 +36,7 @@ const CHRONO_STEPS = [-5, -1, 1, 5] as const;
  * le QR d'invitation y reste discret (simple info), pour ne pas confondre les deux.
  */
 export function ControlPage() {
+  const { t } = useTranslation(['live', 'common']);
   const { pin } = useParams({ from: '/present/$pin/control' });
   const { view, socket } = useGameSession(pin, 'host');
   const [shareNote, setShareNote] = useState<string | null>(null);
@@ -65,10 +57,10 @@ export function ControlPage() {
 
   const openScreen = () => window.open(screenUrl, '_blank', 'noopener,noreferrer');
   const screenButton = (
-    <Tooltip label="Ouvre le grand écran à vidéoprojeter (vue spectateur)">
+    <Tooltip label={t('control.screenButtonTooltip')}>
       <Button type="button" variant="outline" size="sm" onClick={openScreen}>
         <Eye className="size-4" />
-        Écran de projection
+        {t('control.screenButton')}
       </Button>
     </Tooltip>
   );
@@ -86,11 +78,11 @@ export function ControlPage() {
 
   const onShare = async () => {
     const text = [
-      'Rejoignez la partie Roux-Quizz 🎮',
-      `PIN : ${pin}`,
-      `Lien direct : ${joinUrl}`,
+      t('control.shareText'),
+      t('control.sharePin', { pin }),
+      t('control.shareLink', { url: joinUrl }),
     ].join('\n');
-    const data: ShareData = { title: 'Rejoindre la partie Roux-Quizz', text, url: joinUrl };
+    const data: ShareData = { title: t('control.shareTitle'), text, url: joinUrl };
     const file = await qrFile();
     const withFile = file ? { ...data, files: [file] } : null;
     try {
@@ -100,7 +92,7 @@ export function ControlPage() {
         await navigator.share(data);
       } else {
         await navigator.clipboard.writeText(text);
-        setShareNote('Invitation copiée (PIN + lien) dans le presse-papier.');
+        setShareNote(t('control.shareCopied'));
       }
     } catch {
       /* partage annulé / non supporté */
@@ -108,14 +100,14 @@ export function ControlPage() {
   };
 
   if (view.status === 'connecting') {
-    return <p className="text-muted-foreground py-16 text-center">Connexion à la partie…</p>;
+    return <p className="text-muted-foreground py-16 text-center">{t('control.connecting')}</p>;
   }
   if (view.status === 'error') {
     return (
       <section className="flex flex-col items-center gap-4 py-16 text-center">
-        <p className="text-muted-foreground">{view.error ?? 'Partie indisponible.'}</p>
+        <p className="text-muted-foreground">{view.error ?? t('control.sessionUnavailable')}</p>
         <Link to="/dashboard" className="underline">
-          Retour à mes quiz
+          {t('control.backToQuizzes')}
         </Link>
       </section>
     );
@@ -141,25 +133,28 @@ export function ControlPage() {
         {/* Invitation discrète : simple info, pas le grand écran de projection. */}
         <div className="flex flex-col gap-3 rounded-lg border p-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold">Inviter les joueurs</h2>
-            <Tooltip label="Partager l'invitation (PIN + lien) par le système de partage ou le presse-papier">
+            <h2 className="font-semibold">{t('control.inviteParticipants')}</h2>
+            <Tooltip label={t('control.shareTooltip')}>
               <Button type="button" variant="outline" size="sm" onClick={() => void onShare()}>
                 <Share2 className="size-4" />
-                Partager
+                {t('control.share')}
               </Button>
             </Tooltip>
           </div>
           <div className="flex items-center gap-4">
-            <Tooltip label="Ouvrir l'écran de projection pour partager le QRcode" side="bottom">
+            <Tooltip label={t('control.shareScreenTooltip')} side="bottom">
               <div className="rounded-md border bg-white p-2">
-                <QRCodeSVG value={joinUrl} size={88} aria-label="QR code pour rejoindre" />
+                <QRCodeSVG value={joinUrl} size={88} aria-label={t('control.qrLabel')} />
               </div>
             </Tooltip>
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs uppercase tracking-widest">
                 {window.location.host}/join
               </span>
-              <span className="font-mono text-3xl font-bold tracking-[0.2em]" aria-label="Code PIN">
+              <span
+                className="font-mono text-3xl font-bold tracking-[0.2em]"
+                aria-label={t('control.pinLabel')}
+              >
                 {pin}
               </span>
             </div>
@@ -183,22 +178,17 @@ export function ControlPage() {
             onChange={(e) => setCapture(e.target.checked)}
           />
           <span>
-            <span className="font-medium">
-              Enregistrer toutes les réponses (audit / certification)
-            </span>
-            <span className="text-muted-foreground block">
-              ⓘ Les apprenants en seront informés au démarrage. Conserve le détail des réponses de
-              chaque participant pour le suivi de formation.
-            </span>
+            <span className="font-medium">{t('control.captureLabel')}</span>
+            <span className="text-muted-foreground block">{t('control.captureHint')}</span>
           </span>
         </label>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
           <ModeToggle mode={view.mode} onChange={setMode} />
           <div className="flex items-center gap-2">
-            <EndGameButton label="Arrêter la partie" onConfirm={endGame} />
+            <EndGameButton label={t('control.stopSession')} onConfirm={endGame} />
             {screenButton}
-            <Tooltip label="Attendez que le maximum de joueurs soient connectés avant de démarrer">
+            <Tooltip label={t('control.startTooltip')}>
               <Button
                 type="button"
                 variant="main-action"
@@ -206,7 +196,7 @@ export function ControlPage() {
                 onClick={() => emit('host:start')}
               >
                 <Play className="size-4" />
-                Démarrer la partie
+                {t('control.start')}
               </Button>
             </Tooltip>
           </div>
@@ -219,9 +209,7 @@ export function ControlPage() {
   // ── HOST_DISCONNECTED ─────────────────────────────────────────────────────
   if (view.state === 'HOST_DISCONNECTED') {
     return (
-      <p className="text-muted-foreground py-16 text-center">
-        Partie en pause — présentateur déconnecté.
-      </p>
+      <p className="text-muted-foreground py-16 text-center">{t('control.hostDisconnected')}</p>
     );
   }
 
@@ -229,9 +217,9 @@ export function ControlPage() {
   if (view.state === 'ENDED') {
     return (
       <section className="flex flex-col items-center gap-4 py-16 text-center">
-        <p className="text-xl font-semibold">Partie terminée.</p>
+        <p className="text-xl font-semibold">{t('control.sessionEnded')}</p>
         <Link to="/dashboard" className="underline">
-          Retour à mes quiz
+          {t('control.backToQuizzes')}
         </Link>
       </section>
     );
@@ -248,23 +236,21 @@ export function ControlPage() {
         ) : null}
         {view.leaderboard ? (
           <div>
-            <h2 className="mb-2 font-semibold">Classement</h2>
+            <h2 className="mb-2 font-semibold">{t('control.leaderboard')}</h2>
             <LeaderboardList rows={view.leaderboard.top} />
           </div>
         ) : null}
         <div className="flex items-end justify-between gap-3">
           <div className="min-w-0 flex-1">
             {view.mode === 'auto' && view.paused ? (
-              <span className="text-muted-foreground text-sm">
-                Auto en pause — enchaînement suspendu.
-              </span>
+              <span className="text-muted-foreground text-sm">{t('control.autoPaused')}</span>
             ) : view.mode === 'auto' && view.autoNextAt ? (
               <AutoAdvanceCountdown deadline={view.autoNextAt} totalMs={view.autoNextMs ?? 0} />
             ) : null}
           </div>
           <Button type="button" onClick={() => emit('host:next')}>
             <SkipForward className="size-4" />
-            Question suivante
+            {t('control.nextQuestion')}
           </Button>
         </div>
       </section>
@@ -275,9 +261,9 @@ export function ControlPage() {
   if (view.state === 'PODIUM') {
     return (
       <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 py-8">
-        <h2 className="text-2xl font-bold">🏆 Podium</h2>
+        <h2 className="text-2xl font-bold">{t('control.podium')}</h2>
         {view.podium ? <Podium rows={view.podium.podium} /> : null}
-        <EndGameButton label="Terminer la partie" offerArchive onConfirm={endGame} />
+        <EndGameButton label={t('control.endSession')} offerArchive onConfirm={endGame} />
       </section>
     );
   }
@@ -306,7 +292,10 @@ export function ControlPage() {
       <article className="bg-card flex flex-col gap-4 rounded-xl border p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-muted-foreground text-sm font-medium">
-            Question {view.questionIndex + 1} / {view.totalQuestions}
+            {t('control.questionProgress', {
+              current: view.questionIndex + 1,
+              total: view.totalQuestions,
+            })}
           </span>
           <ChronoControls remaining={remaining} paused={view.paused} onAdjust={adjustTime} />
         </div>
@@ -326,12 +315,12 @@ export function ControlPage() {
         {view.question?.options?.length ? (
           <OptionGrid options={view.question.options} highlightIds={correctIds} />
         ) : (
-          <p className="text-muted-foreground text-sm">Réponse libre (numérique ou texte).</p>
+          <p className="text-muted-foreground text-sm">{t('control.freeAnswer')}</p>
         )}
 
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Réponses reçues</span>
+            <span className="text-muted-foreground">{t('control.answersReceived')}</span>
             <span className="font-semibold tabular-nums">
               {answered} / {totalPlayers}
             </span>
@@ -346,9 +335,9 @@ export function ControlPage() {
       <div className="flex flex-wrap gap-2">
         <Button type="button" onClick={() => emit('host:reveal')}>
           <Eye className="size-4" />
-          Révéler maintenant
+          {t('control.revealNow')}
         </Button>
-        <EndGameButton label="Terminer la partie" offerArchive onConfirm={endGame} />
+        <EndGameButton label={t('control.endSession')} offerArchive onConfirm={endGame} />
       </div>
     </section>
   );
@@ -360,6 +349,7 @@ export function ControlPage() {
  * serveur autoritaire.
  */
 function AutoAdvanceCountdown({ deadline, totalMs }: { deadline: number; totalMs: number }) {
+  const { t } = useTranslation('live');
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 100);
@@ -370,8 +360,8 @@ function AutoAdvanceCountdown({ deadline, totalMs }: { deadline: number; totalMs
   return (
     <div className="flex flex-col gap-1">
       <span className="text-muted-foreground text-sm">
-        Question suivante dans <span className="tabular-nums">{Math.ceil(remainingMs / 1000)}</span>{' '}
-        s
+        {t('control.autoNextIn')}{' '}
+        <span className="tabular-nums">{Math.ceil(remainingMs / 1000)}</span> {t('control.seconds')}
       </span>
       <ProgressBar pct={pct} barClassName="bg-primary" />
     </div>
@@ -398,26 +388,30 @@ function ProgressBar({ pct, barClassName }: { pct: number; barClassName?: string
 
 /** Compteur de joueurs connectés (testid stable pour les tests/diagnostics). */
 function PlayersBadge({ count }: { count: number }) {
+  const { t } = useTranslation('live');
   return (
     <span className="text-muted-foreground flex items-center gap-2 text-sm">
       <Users className="size-4" />
       <span data-testid="player-count">{count}</span>
-      <span>joueur(s) connecté(s)</span>
+      <span>{t('control.participantsConnected', { count })}</span>
     </span>
   );
 }
 
 /** Récap compact du quiz (titre + PIN) — en-tête du tableau de bord. */
 function RecapHeader({ view, pin }: { view: GameView; pin: string }) {
+  const { t } = useTranslation('live');
   return (
     <div className="flex flex-col gap-0.5">
-      <h1 className="text-xl font-bold">{view.quizTitle ?? 'Partie en cours'}</h1>
+      <h1 className="text-xl font-bold">{view.quizTitle ?? t('control.sessionInProgress')}</h1>
       {view.quizDescription ? (
         <p className="text-muted-foreground max-w-prose text-sm">{view.quizDescription}</p>
       ) : null}
       <span className="text-muted-foreground text-sm">
         PIN <span className="font-mono tracking-widest">{pin}</span>
-        {view.outline.length > 0 ? ` · ${view.outline.length} question(s)` : null}
+        {view.outline.length > 0
+          ? ` · ${t('control.outlineQuestionCount', { count: view.outline.length })}`
+          : null}
       </span>
     </div>
   );
@@ -458,15 +452,16 @@ function ControlBar({
 
 /** Bascule du rythme manuel ⇄ auto (le présentateur peut reprendre la main, §8). */
 function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameMode) => void }) {
+  const { t } = useTranslation('live');
   return (
     // Pas d'`overflow-hidden` ici : il rognerait les infobulles (positionnées en
     // absolu) des boutons. L'arrondi est porté par les boutons d'extrémité.
     <div
       role="group"
-      aria-label="Rythme de la partie"
+      aria-label={t('control.rhythmGroup')}
       className="border-input inline-flex rounded-md border text-sm"
     >
-      <Tooltip label="Mode manuel : vous passez vous-même à la question suivante">
+      <Tooltip label={t('control.modeManualTooltip')}>
         <button
           type="button"
           aria-pressed={mode === 'manual'}
@@ -479,10 +474,10 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
           )}
         >
           <Hand className="size-4" />
-          Manuel
+          {t('control.modeManual')}
         </button>
       </Tooltip>
-      <Tooltip label="Mode auto : passage automatique à la question suivante après chaque résultat">
+      <Tooltip label={t('control.modeAutoTooltip')}>
         <button
           type="button"
           aria-pressed={mode === 'auto'}
@@ -495,7 +490,7 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
           )}
         >
           <Gauge className="size-4" />
-          Auto
+          {t('control.modeAuto')}
         </button>
       </Tooltip>
     </div>
@@ -515,8 +510,9 @@ function ParticipantsList({
   players: { playerId: string; nickname: string; avatar?: string }[];
   onBan: (playerId: string, minutes: number) => void;
 }) {
+  const { t } = useTranslation('live');
   if (players.length === 0) {
-    return <p className="text-muted-foreground text-sm">Aucun joueur connecté.</p>;
+    return <p className="text-muted-foreground text-sm">{t('control.noParticipants')}</p>;
   }
   return (
     <ul className="flex flex-wrap gap-2">
@@ -536,16 +532,17 @@ function ParticipantsList({
 
 /** Bouton + `<dialog>` de confirmation pour bannir un joueur (durée en minutes, RG-12). */
 function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: number) => void }) {
+  const { t } = useTranslation(['live', 'common']);
   const [open, setOpen] = useState(false);
   const [minutes, setMinutes] = useState(5);
   return (
     <>
-      <Tooltip label={`Exclure ${nickname}`}>
+      <Tooltip label={t('control.banTooltip', { nickname })}>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          aria-label={`Bannir ${nickname}`}
+          aria-label={t('control.banAria', { nickname })}
           onClick={() => setOpen(true)}
           className="size-6 rounded-full"
         >
@@ -555,10 +552,10 @@ function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: num
       <ConfirmDialog
         open={open}
         destructive
-        title={`Bannir ${nickname} ?`}
-        description="Le joueur est exclu immédiatement et ne pourra pas revenir avec ce pseudo pendant la durée choisie."
-        confirmLabel="Bannir"
-        cancelLabel="Annuler"
+        title={t('control.banConfirmTitle', { nickname })}
+        description={t('control.banConfirmDescription')}
+        confirmLabel={t('control.banConfirm')}
+        cancelLabel={t('common:cancel')}
         onConfirm={() => {
           setOpen(false);
           onBan(minutes);
@@ -566,7 +563,7 @@ function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: num
         onCancel={() => setOpen(false)}
       >
         <label className="flex items-center gap-2 text-sm">
-          <span className="font-medium">Durée du ban</span>
+          <span className="font-medium">{t('control.banDuration')}</span>
           <input
             type="number"
             min={1}
@@ -575,7 +572,7 @@ function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: num
             onChange={(e) => setMinutes(Math.min(1440, Math.max(1, Number(e.target.value) || 1)))}
             className="border-input w-20 rounded-md border px-2 py-1"
           />
-          <span className="text-muted-foreground">minutes</span>
+          <span className="text-muted-foreground">{t('control.banMinutes')}</span>
         </label>
       </ConfirmDialog>
     </>
@@ -590,10 +587,11 @@ function ParticipantsControl({
   players: { playerId: string; nickname: string; avatar?: string }[];
   onBan: (playerId: string, minutes: number) => void;
 }) {
+  const { t } = useTranslation('live');
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      <Tooltip label="Participants (exclure un joueur)">
+      <Tooltip label={t('control.participantsTooltip')}>
         <Button type="button" variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>
           <Users className="size-4" />
           {players.length}
@@ -618,11 +616,12 @@ function EndGameButton({
   offerArchive?: boolean;
   onConfirm: (archive: boolean) => void;
 }) {
+  const { t } = useTranslation(['live', 'common']);
   const [open, setOpen] = useState(false);
   const [archive, setArchive] = useState(true);
   return (
     <>
-      <Tooltip label="Attention : la partie sera détruite (PIN invalidé, joueurs déconnectés). Action irréversible.">
+      <Tooltip label={t('control.endTooltip')}>
         <Button type="button" variant="outline" onClick={() => setOpen(true)}>
           <Square className="size-4" />
           {label}
@@ -631,10 +630,10 @@ function EndGameButton({
       <ConfirmDialog
         open={open}
         destructive
-        title={`${label} ?`}
-        description="La partie sera définitivement terminée : le PIN est invalidé et les joueurs sont déconnectés. Cette action est irréversible."
+        title={t('control.endConfirmTitle', { label })}
+        description={t('control.endConfirmDescription')}
         confirmLabel={label}
-        cancelLabel="Annuler"
+        cancelLabel={t('common:cancel')}
         onConfirm={() => {
           setOpen(false);
           onConfirm(offerArchive ? archive : false);
@@ -650,10 +649,8 @@ function EndGameButton({
               onChange={(e) => setArchive(e.target.checked)}
             />
             <span>
-              <span className="font-medium">Archiver les résultats de cette partie</span>
-              <span className="text-muted-foreground block">
-                Classement et statistiques resteront consultables après la partie.
-              </span>
+              <span className="font-medium">{t('control.archiveLabel')}</span>
+              <span className="text-muted-foreground block">{t('control.archiveHint')}</span>
             </span>
           </label>
         ) : null}
@@ -670,6 +667,7 @@ function PauseButton({
   paused: boolean;
   onToggle: (paused: boolean) => void;
 }) {
+  const { t } = useTranslation('live');
   return (
     <Button
       type="button"
@@ -679,7 +677,7 @@ function PauseButton({
       onClick={() => onToggle(!paused)}
     >
       {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
-      {paused ? 'Reprendre' : 'Pause'}
+      {paused ? t('control.resume') : t('control.pause')}
     </Button>
   );
 }
@@ -694,6 +692,7 @@ function ChronoControls({
   paused: boolean;
   onAdjust: (deltaS: number) => void;
 }) {
+  const { t } = useTranslation('live');
   return (
     <div className="flex items-center gap-1.5">
       {CHRONO_STEPS.filter((s) => s < 0).map((s) => (
@@ -706,7 +705,7 @@ function ChronoControls({
           'min-w-14 text-center text-2xl font-bold tabular-nums',
           paused && 'opacity-60',
         )}
-        aria-label="Temps restant"
+        aria-label={t('control.timeRemaining')}
       >
         ⏱ {remaining ?? '—'}
       </span>
@@ -731,10 +730,11 @@ function QuestionCarousel({
   outline: OutlineQuestion[];
   currentIndex: number;
 }) {
+  const { t } = useTranslation('live');
   if (outline.length === 0) return null;
   return (
     <div className="flex flex-col gap-2">
-      <h2 className="text-muted-foreground text-sm font-semibold">Déroulé du quiz</h2>
+      <h2 className="text-muted-foreground text-sm font-semibold">{t('control.outline')}</h2>
       <ol className="flex snap-x gap-2 overflow-x-auto pb-2">
         {outline.map((q) => {
           const done = q.index < currentIndex;
@@ -752,14 +752,17 @@ function QuestionCarousel({
               <div className="flex items-center justify-between">
                 <span className="font-semibold">Q{q.index + 1}</span>
                 {done ? (
-                  <Check className="text-success size-4" aria-label="terminée" />
+                  <Check className="text-success size-4" aria-label={t('control.questionDone')} />
                 ) : current ? (
-                  <Radio className="text-primary size-4" aria-label="en cours" />
+                  <Radio
+                    className="text-primary size-4"
+                    aria-label={t('control.questionCurrent')}
+                  />
                 ) : null}
               </div>
               <p className="line-clamp-2">{q.prompt}</p>
               <span className="text-muted-foreground text-xs">
-                ⏱ {q.timeLimitS}s · {TYPE_LABEL[q.type] ?? q.type}
+                ⏱ {q.timeLimitS}s · {t(`control.types.${q.type}`, { defaultValue: q.type })}
               </span>
             </li>
           );

@@ -1,4 +1,5 @@
 import type { ClientToServerEvents, ServerToClientEvents } from '@roux-quizz/contracts';
+import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
 import { getAccessToken, getLocalUser } from '../auth/auth-context';
 
@@ -82,7 +83,7 @@ export function clearPlayerSession(): void {
  */
 export async function connectHost(): Promise<GameSocket> {
   const token = await getAccessToken();
-  const auth = token ? { token } : { localUser: getLocalUser() ?? 'Formateur' };
+  const auth = token ? { token } : { localUser: getLocalUser() ?? i18next.t('live:fallbackHost') };
   socket = io('/game', { auth, forceNew: true });
   return socket;
 }
@@ -115,7 +116,7 @@ export function emitWithAckOrError<T>(
     };
     const timer = setTimeout(() => {
       cleanup();
-      reject(new Error('Le serveur n’a pas répondu, réessayez.'));
+      reject(new Error(i18next.t('live:errors.noResponse')));
     }, timeoutMs);
 
     s.once('error', onError);

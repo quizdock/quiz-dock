@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +14,7 @@ import type { GameSocket } from './game-client';
  * le serveur fait par ailleurs un upsert par joueur/partie.
  */
 export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket | null }) {
+  const { t } = useTranslation('live');
   const storageKey = `roux.rated.${pin}`;
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -24,7 +26,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
   );
 
   if (done) {
-    return <p className="text-muted-foreground text-sm">Merci pour ton avis 🙏</p>;
+    return <p className="text-muted-foreground text-sm">{t('rating.thanks')}</p>;
   }
 
   const submit = () => {
@@ -42,7 +44,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
         localStorage.setItem(storageKey, '1');
         setDone(true);
       } else {
-        setError(message ?? 'Envoi impossible. Vérifie ta connexion et réessaie.');
+        setError(message ?? t('rating.sendFailed'));
       }
     };
     const timer = setTimeout(() => finish(false), 8000);
@@ -51,7 +53,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
       { pin, rating, comment: comment.trim() || undefined },
       (res: { ok: boolean }) => {
         clearTimeout(timer);
-        finish(res?.ok === true, 'Avis refusé : la partie n’est peut-être pas terminée.');
+        finish(res?.ok === true, t('rating.rejected'));
       },
     );
   };
@@ -60,7 +62,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Ton avis sur ce quiz</CardTitle>
+        <CardTitle>{t('rating.title')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex justify-center gap-1" onMouseLeave={() => setHover(0)}>
@@ -68,7 +70,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
             <button
               key={n}
               type="button"
-              aria-label={`${n} étoile${n > 1 ? 's' : ''}`}
+              aria-label={t('rating.starLabel', { count: n })}
               aria-pressed={rating === n}
               onMouseEnter={() => setHover(n)}
               onClick={() => setRating(n)}
@@ -86,11 +88,11 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
         <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="Un commentaire ? (facultatif)"
+          placeholder={t('rating.commentPlaceholder')}
           rows={3}
         />
         <Button type="button" disabled={!rating || submitting} onClick={submit}>
-          {submitting ? 'Envoi…' : 'Envoyer mon avis'}
+          {submitting ? t('rating.sending') : t('rating.send')}
         </Button>
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
       </CardContent>

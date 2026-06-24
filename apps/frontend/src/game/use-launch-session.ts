@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createSession } from './game-client';
 
 /**
@@ -8,6 +9,7 @@ import { createSession } from './game-client';
  * éviter le double-déclenchement (StrictMode) → deux PIN orphelins.
  */
 export function useLaunchSession() {
+  const { t } = useTranslation('live');
   const navigate = useNavigate();
   const [isLaunching, setIsLaunching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +22,12 @@ export function useLaunchSession() {
         const { pin } = await createSession(quizId);
         await navigate({ to: '/present/$pin/control', params: { pin } });
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Échec du lancement de la partie.');
+        setError(e instanceof Error ? e.message : t('errors.launchFailed'));
       } finally {
         setIsLaunching(false);
       }
     },
-    [navigate],
+    [navigate, t],
   );
 
   return { launch, isLaunching, error };

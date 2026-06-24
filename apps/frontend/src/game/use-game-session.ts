@@ -12,6 +12,7 @@ import type {
   QuestionTimePayload,
 } from '@roux-quizz/contracts';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   type GameSocket,
   clearPlayerSession,
@@ -108,6 +109,7 @@ const INITIAL: GameView = {
  * → écran Rejoindre) ; `markJoined` est appelé par le formulaire après un join réussi.
  */
 export function useGameSession(pin: string, role: LiveRole) {
+  const { t } = useTranslation('live');
   const [view, setView] = useState<GameView>(INITIAL);
   const socketRef = useRef<GameSocket | null>(null);
 
@@ -203,13 +205,11 @@ export function useGameSession(pin: string, role: LiveRole) {
       // Kick — listeners déjà en place : la rafale `sendStateTo` ne peut être ratée.
       if (role === 'host') {
         sock.emit('host:attach', { pin }, (res: { ok: boolean }) => {
-          if (active && !res.ok)
-            patch({ status: 'error', error: 'Partie introuvable ou terminée.' });
+          if (active && !res.ok) patch({ status: 'error', error: t('errors.sessionNotFound') });
         });
       } else if (role === 'spectator') {
         sock.emit('spectator:join', { pin }, (res: { ok: boolean }) => {
-          if (active && !res.ok)
-            patch({ status: 'error', error: 'Partie introuvable ou terminée.' });
+          if (active && !res.ok) patch({ status: 'error', error: t('errors.sessionNotFound') });
         });
       } else {
         const session = loadPlayerSession();
@@ -251,7 +251,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('notice', onNotice);
       s.off('kicked', onKicked);
     };
-  }, [pin, role]);
+  }, [pin, role, t]);
 
   /** Joueur : à appeler après un `player:join` réussi pour quitter `no-session`. */
   const markJoined = () => setView((prev) => ({ ...prev, status: 'ready' }));

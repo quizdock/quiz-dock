@@ -1,6 +1,7 @@
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,14 +26,14 @@ type QType =
   | 'ordering'
   | 'poll';
 
-const TYPES: { value: QType; label: string }[] = [
-  { value: 'single_choice', label: 'QCM (réponse unique)' },
-  { value: 'multiple_choice', label: 'QCM (multi-réponses)' },
-  { value: 'true_false', label: 'Vrai / Faux' },
-  { value: 'text_input', label: 'Saisie texte' },
-  { value: 'numeric', label: 'Numérique' },
-  { value: 'ordering', label: 'Remise en ordre' },
-  { value: 'poll', label: 'Sondage' },
+const TYPES: QType[] = [
+  'single_choice',
+  'multiple_choice',
+  'true_false',
+  'text_input',
+  'numeric',
+  'ordering',
+  'poll',
 ];
 
 const COLORS = ['red', 'blue', 'yellow', 'green'] as const;
@@ -117,6 +118,7 @@ export function QuestionForm({
   question?: QuizDetailDtoQuestionsItem;
   onClose: () => void;
 }) {
+  const { t } = useTranslation(['editor', 'common']);
   const queryClient = useQueryClient();
   const add = useQuestionsControllerAdd();
   const update = useQuestionsControllerUpdate();
@@ -138,7 +140,7 @@ export function QuestionForm({
         });
         onClose();
       } catch (err) {
-        setError(apiErrorMessage(err, 'Question invalide.'));
+        setError(apiErrorMessage(err, t('questionForm.invalidError')));
       }
     },
   });
@@ -183,11 +185,11 @@ export function QuestionForm({
       }}
     >
       <Label>
-        Type
+        {t('questionForm.typeLabel')}
         <Select value={type} onChange={(e) => onTypeChange(e.target.value as QType)}>
-          {TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
+          {TYPES.map((value) => (
+            <option key={value} value={value}>
+              {t(`questionType.${value}`)}
             </option>
           ))}
         </Select>
@@ -196,12 +198,12 @@ export function QuestionForm({
       <form.Field name="prompt">
         {(field) => (
           <Label>
-            Énoncé
+            {t('questionForm.promptLabel')}
             <Textarea
               rows={4}
               value={field.state.value}
               onChange={(e) => field.handleChange(e.target.value)}
-              placeholder="Votre question…"
+              placeholder={t('questionForm.promptPlaceholder')}
             />
           </Label>
         )}
@@ -213,7 +215,7 @@ export function QuestionForm({
         <form.Field name="timeLimitS">
           {(field) => (
             <Label>
-              Temps (s)
+              {t('questionForm.timeLimitLabel')}
               <Input
                 type="number"
                 min={5}
@@ -229,14 +231,14 @@ export function QuestionForm({
           <form.Field name="pointsMode">
             {(field) => (
               <Label>
-                Points
+                {t('questionForm.pointsLabel')}
                 <Select
                   className="w-32"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value as FormValues['pointsMode'])}
                 >
-                  <option value="standard">Standard</option>
-                  <option value="double">Double</option>
+                  <option value="standard">{t('questionForm.pointsMode.standard')}</option>
+                  <option value="double">{t('questionForm.pointsMode.double')}</option>
                 </Select>
               </Label>
             )}
@@ -246,11 +248,11 @@ export function QuestionForm({
 
       {OPTION_TYPES.includes(type) && (
         <fieldset className="flex flex-col gap-2 rounded-md border p-3">
-          <legend className="px-1 text-sm font-medium">Options</legend>
+          <legend className="px-1 text-sm font-medium">{t('questionForm.optionsLegend')}</legend>
           {options.map((opt, i) => (
             <div key={i} className="flex flex-wrap items-center gap-2">
               <Input
-                aria-label={`option ${i + 1}`}
+                aria-label={t('questionForm.optionAriaLabel', { index: i + 1 })}
                 className="flex-1"
                 value={opt.text}
                 onChange={(e) =>
@@ -258,10 +260,10 @@ export function QuestionForm({
                     options.map((o, idx) => (idx === i ? { ...o, text: e.target.value } : o)),
                   )
                 }
-                placeholder={`Option ${i + 1}`}
+                placeholder={t('questionForm.optionPlaceholder', { index: i + 1 })}
               />
               <select
-                aria-label={`couleur ${i + 1}`}
+                aria-label={t('questionForm.colorAriaLabel', { index: i + 1 })}
                 className={optionField}
                 value={opt.color}
                 onChange={(e) =>
@@ -277,7 +279,7 @@ export function QuestionForm({
                 ))}
               </select>
               <select
-                aria-label={`forme ${i + 1}`}
+                aria-label={t('questionForm.shapeAriaLabel', { index: i + 1 })}
                 className={optionField}
                 value={opt.shape}
                 onChange={(e) =>
@@ -296,7 +298,7 @@ export function QuestionForm({
               {type === 'ordering' ? (
                 <Input
                   type="number"
-                  aria-label={`rang ${i + 1}`}
+                  aria-label={t('questionForm.orderAriaLabel', { index: i + 1 })}
                   min={0}
                   className="w-20"
                   value={opt.correctOrderIndex}
@@ -316,7 +318,7 @@ export function QuestionForm({
                     checked={opt.isCorrect}
                     onChange={(e) => setCorrect(i, e.target.checked)}
                   />
-                  correcte
+                  {t('questionForm.correct')}
                 </label>
               )}
 
@@ -325,7 +327,7 @@ export function QuestionForm({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  aria-label={`Retirer l’option ${i + 1}`}
+                  aria-label={t('questionForm.removeOption', { index: i + 1 })}
                   onClick={() => setOptions(options.filter((_, idx) => idx !== i))}
                 >
                   <X className="size-4" />
@@ -342,7 +344,7 @@ export function QuestionForm({
               onClick={() => setOptions([...options, newOption(options.length)])}
             >
               <Plus className="size-4" />
-              Ajouter une option
+              {t('questionForm.addOption')}
             </Button>
           )}
         </fieldset>
@@ -350,11 +352,13 @@ export function QuestionForm({
 
       {type === 'text_input' && (
         <fieldset className="flex flex-col gap-2 rounded-md border p-3">
-          <legend className="px-1 text-sm font-medium">Réponses acceptées</legend>
+          <legend className="px-1 text-sm font-medium">
+            {t('questionForm.acceptedAnswersLegend')}
+          </legend>
           {answers.map((a, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input
-                aria-label={`réponse ${i + 1}`}
+                aria-label={t('questionForm.answerAriaLabel', { index: i + 1 })}
                 value={a.text}
                 onChange={(e) =>
                   form.setFieldValue(
@@ -367,7 +371,7 @@ export function QuestionForm({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Retirer la réponse ${i + 1}`}
+                aria-label={t('questionForm.removeAnswer', { index: i + 1 })}
                 onClick={() =>
                   form.setFieldValue(
                     'acceptedAnswers',
@@ -387,7 +391,7 @@ export function QuestionForm({
             onClick={() => form.setFieldValue('acceptedAnswers', [...answers, { text: '' }])}
           >
             <Plus className="size-4" />
-            Ajouter une réponse
+            {t('questionForm.addAnswer')}
           </Button>
         </fieldset>
       )}
@@ -397,7 +401,7 @@ export function QuestionForm({
           <form.Field name="numericValue">
             {(field) => (
               <Label>
-                Valeur cible
+                {t('questionForm.numericValueLabel')}
                 <Input
                   type="number"
                   className="w-32"
@@ -410,7 +414,7 @@ export function QuestionForm({
           <form.Field name="numericTolerance">
             {(field) => (
               <Label>
-                Tolérance ±
+                {t('questionForm.numericToleranceLabel')}
                 <Input
                   type="number"
                   min={0}
@@ -428,10 +432,10 @@ export function QuestionForm({
 
       <div className="flex gap-2">
         <Button type="submit" disabled={add.isPending || update.isPending}>
-          {question ? 'Enregistrer' : 'Ajouter'}
+          {question ? t('questionForm.submitUpdate') : t('questionForm.submitAdd')}
         </Button>
         <Button type="button" variant="ghost" onClick={onClose}>
-          Annuler
+          {t('common:cancel')}
         </Button>
       </div>
     </form>
