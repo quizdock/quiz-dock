@@ -14,7 +14,7 @@ import {
 } from '../game/game-client';
 import { OptionGrid } from '../game/live-components';
 import { RatingPanel } from '../game/rating-panel';
-import { useGameRemaining } from '../game/use-countdown';
+import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
 /**
@@ -39,6 +39,11 @@ export function PlayerPage() {
   const question = view.question;
   const isMulti = question?.type === 'multiple_choice';
   const remaining = useGameRemaining(view);
+  // Délai de lecture (§6/§8) : la fenêtre de réponse n'ouvre qu'à `startedAt`. Avant,
+  // une réponse serait rejetée par le serveur (« trop tôt ») sans être comptée — on
+  // bloque donc la saisie pendant la lecture pour ne jamais perdre de réponse.
+  const readingLeft = useCountdown(question ? question.startedAt : null);
+  const reading = readingLeft !== null && readingLeft > 0;
   // Avatar affiché : graine choisie, sinon dérivée du pseudo.
   const avatarName = avatarSeed || nickname || '?';
 
@@ -365,7 +370,11 @@ export function PlayerPage() {
           <h1 className="text-xl font-semibold text-balance">{question.prompt}</h1>
         </div>
         <div className="flex w-full shrink-0 flex-col items-center gap-3 pb-2">
-          {done ? (
+          {reading ? (
+            <p className="text-muted-foreground text-lg font-medium">
+              📖 Lis bien la question… <span className="tabular-nums">{readingLeft}</span>
+            </p>
+          ) : done ? (
             <p className="text-xl font-semibold">Réponse enregistrée ✓</p>
           ) : (
             renderAnswerInput()
