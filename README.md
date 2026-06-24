@@ -61,6 +61,7 @@ the results never leave your servers.
 - 🖥️ **Projector-ready** — bright, high-contrast light screens built for the big screen, with separate projection and control windows.
 - 🧩 **Quiz builder** — seven question types (single/multi choice, true-false, text, numeric, reorder, poll) with image & audio media.
 - 🏆 **Live scoring & podium** — time-weighted points with streak bonuses, leaderboard between questions, final podium; manual or auto pacing.
+- ⭐ **Player feedback** — players rate the quiz (stars + optional comment) at the end; hosts see the aggregated ratings.
 - 💾 **Answer capture** — optionally record every player's individual answers for audit, certification or individual follow-up.
 - 🔎 **History & exploration** — browse archived sessions: per-question success rates, average times, and per-player answer sheets.
 - 📤 **CSV export** — export overall results and per-player answer sheets.
@@ -86,6 +87,14 @@ the results never leave your servers.
   <tr>
     <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/present-lobby.png" alt="Lobby" /><br /><sub><b>Lobby</b> — join by PIN / QR code</sub></td>
     <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/preview.png" alt="Preview" /><br /><sub><b>Preview</b> — player view of a question</sub></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join-avatar.png" alt="Join with avatar" /><br /><sub><b>Join</b> — nickname &amp; Multiavatar avatar</sub></td>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/player-review.png" alt="Player feedback" /><br /><sub><b>Player feedback</b> — rate the quiz at the end</sub></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/podium.png" alt="Podium" /><br /><sub><b>Podium</b> — final results on the big screen</sub></td>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join.png" alt="Join by PIN" /><br /><sub><b>Join</b> — by PIN code or QR</sub></td>
   </tr>
 </table>
 
