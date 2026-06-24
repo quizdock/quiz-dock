@@ -4,7 +4,7 @@
  * le format de réponse attendu par le code généré (`{ data, status, headers }`).
  */
 
-import { errorText } from './error-text';
+import { errorText, validationFieldErrors } from './error-text';
 
 let authHeaders: Record<string, string> = {};
 
@@ -31,7 +31,15 @@ export class ApiError extends Error {
  */
 export function apiErrorText(err: unknown, fallback?: string): string {
   if (err instanceof ApiError && err.data && typeof err.data === 'object') {
-    const d = err.data as { code?: unknown; params?: Record<string, unknown> };
+    const d = err.data as {
+      code?: unknown;
+      params?: Record<string, unknown>;
+      errors?: { field: string; code: string }[];
+    };
+    // Validation : on traduit chaque code de champ (ADR 0001), agrégés en une ligne.
+    if (d.code === 'validation' && Array.isArray(d.errors) && d.errors.length > 0) {
+      return [...new Set(validationFieldErrors(d.errors).map((e) => e.message))].join(' ');
+    }
     if (typeof d.code === 'string') return errorText(d.code, d.params);
   }
   return fallback ?? errorText('error');

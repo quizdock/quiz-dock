@@ -84,7 +84,11 @@
 - Remplacer chaque `throw new XxxException('texte FR')` par un **code** stable
   (ex. `quiz.not_found`, `session.finished`, `nickname.taken`, `quiz.transition_forbidden` + `params`).
 - **ValidationPipe custom** : `exceptionFactory` renvoyant `{ code, errors: [{ field, code, params }] }`.
-- Front : namespace `errors` + `validation` mappant chaque code → texte FR.
+- Front : namespace `errors` (codes domaine, **niché** pour matcher les codes pointés) +
+  `validation` (codes Zod génériques). `apiErrorText` résout `code`/`params` ; pour
+  `{ code: 'validation', errors }` il traduit **chaque** `{ field, code }` via `validation`.
+- **Source de vérité** : les codes émis par le backend font foi ; `errors.json`/`validation.json`
+  doivent rester en phase avec eux (pas de garde automatique — un code sans clé renvoie la clé brute).
 - Hors scope : descriptions Swagger/OpenAPI (doc **dev**, pas UX).
 
 ### Phase ultérieure (séparée) — non planifiée ici

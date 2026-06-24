@@ -42,4 +42,24 @@ describe('customFetch', () => {
     expect((err as ApiError).status).toBe(404);
     expect(apiErrorText(err)).toBe('Quiz introuvable.');
   });
+
+  it('traduit chaque code de validation par champ (envelope { code, errors })', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            code: 'validation',
+            errors: [
+              { field: 'title', code: 'too_small' },
+              { field: 'language', code: 'invalid_enum_value' },
+            ],
+          }),
+          { status: 400 },
+        ),
+      ),
+    );
+    const err = await customFetch('/x', { method: 'POST' }).catch((e) => e);
+    expect(apiErrorText(err)).toBe('Valeur trop petite ou trop courte. Valeur non autorisée.');
+  });
 });
