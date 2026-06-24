@@ -1,4 +1,5 @@
 import { Controller, Get, Header } from '@nestjs/common';
+import { ApiExcludeEndpoint } from '@nestjs/swagger';
 
 /**
  * Sert `/config.js` (white-label runtime) quand le backend héberge aussi le SPA
@@ -11,6 +12,7 @@ import { Controller, Get, Header } from '@nestjs/common';
 @Controller()
 export class AppConfigController {
   @Get('config.js')
+  @ApiExcludeEndpoint() // asset JS (chargé via <script>), pas un endpoint d'API → hors OpenAPI
   @Header('Content-Type', 'application/javascript; charset=utf-8')
   @Header('Cache-Control', 'no-store')
   configJs(): string {
