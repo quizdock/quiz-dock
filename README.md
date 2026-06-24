@@ -104,7 +104,20 @@ QuizDock ships as **one image** — [`fchaussin/quizdock`](https://hub.docker.co
 on Docker Hub (multi-arch `amd64` / `arm64`). NestJS serves the API, the WebSocket and the SPA;
 PostgreSQL and Redis run alongside, and a one-shot `migrate` service applies migrations.
 
-### Option A — Docker Hub image (recommended)
+### Easiest — one container (great for a first try / Docker Desktop)
+
+App **and** database in a single image — nothing else to install:
+
+```bash
+docker run -p 18080:3000 -v quizdock:/data fchaussin/quizdock:standalone
+# open http://localhost:18080
+```
+
+Bundles PostgreSQL + Redis; data persists in the `quizdock` volume across restarts.
+Perfect for a demo or beginners — for production, prefer the multi-service setup below
+(external, dedicated database).
+
+### Option A — Docker Hub image (recommended for production)
 
 Pull the published image and run the stack — no build, no source checkout:
 
@@ -141,6 +154,8 @@ Copy `.env.example` to `.env` and adjust. Common settings:
 Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.svg` + `override.css`
 into the mounted `branding/` folder. The runtime is hardened (non-root, read-only root FS,
 all Linux capabilities dropped, `no-new-privileges`).
+
+📖 **Self-hosting guide** — every variable, white-labeling and OIDC setup: [`docs/self-hosting/`](docs/self-hosting/).
 
 ## 🧱 Tech stack
 

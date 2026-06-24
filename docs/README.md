@@ -1,5 +1,9 @@
 # Documentation (vivante)
 
+> 👤 **Vous hébergez / configurez QuizDock ?** La doc **utilisateur / intégrateur**
+> (installation, configuration, branding, OIDC) est dans
+> [`self-hosting/`](self-hosting/README.md). Ce dossier-ci est pour les **contributeurs**.
+
 Ce dossier contient la **documentation de développement**, tenue à jour **au fil du code** — par opposition au dossier [`../specifications/`](../specifications/README.md) qui fige la conception de référence par version.
 
 > Règle (cf. specs technique §18) : à **chaque itération**, on **teste** et on **documente**. Toute évolution de comportement met à jour la doc concernée **dans le même commit/PR**.

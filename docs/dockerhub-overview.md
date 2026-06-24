@@ -11,12 +11,23 @@ leaderboard. One image, your servers, your data.
 
 ## Supported tags
 
-`latest`, `0.3.0`, `0.3` — multi-arch: **linux/amd64**, **linux/arm64**.
+- `latest`, `0.3.0`, `0.3` — the app image (API + WebSocket + SPA). Needs **PostgreSQL** + **Redis** alongside.
+- `standalone`, `standalone-0.3.0` — **all-in-one**: Postgres + Redis bundled, for one-command use.
 
-This single image bundles the **API + WebSocket + SPA** (NestJS serves everything).
-It needs **PostgreSQL** and **Redis** alongside, plus a one-shot **migrate** step.
+All multi-arch: **linux/amd64**, **linux/arm64**.
 
-## Quick start
+## Quick start — one container (easiest)
+
+Everything bundled — great for a demo or on Docker Desktop:
+
+```bash
+docker run -p 18080:3000 -v quizdock:/data fchaussin/quizdock:standalone
+# then open http://localhost:18080
+```
+
+Data persists in the `quizdock` volume. For production, use the multi-service setup below.
+
+## Quick start — production (app + your own DB)
 
 ```bash
 docker pull fchaussin/quizdock:latest
