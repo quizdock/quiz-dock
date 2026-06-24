@@ -1,0 +1,115 @@
+{
+  "loading": "Cargando…",
+  "notFound": "Quiz no encontrado.",
+  "questionType": {
+    "single_choice": "Opción múltiple (una respuesta)",
+    "multiple_choice": "Opción múltiple (varias respuestas)",
+    "true_false": "Verdadero / Falso",
+    "text_input": "Entrada de texto",
+    "numeric": "Numérica",
+    "ordering": "Ordenar",
+    "poll": "Encuesta"
+  },
+  "header": {
+    "title": "Editor de quiz",
+    "history": "Historial",
+    "deleteQuiz": "Eliminar quiz",
+    "preview": "Vista previa"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "titleLabel": "Título",
+    "descriptionLabel": "Descripción",
+    "save": "Guardar"
+  },
+  "broadcast": {
+    "title": "Difusión",
+    "fullCaptureLabel": "Captura completa de respuestas",
+    "fullCaptureHelp": "Conserva el detalle de las respuestas de cada jugador (seguimiento individual). Actívalo antes de presentar.",
+    "publish": "Publicar (listo)",
+    "presenting": "Iniciando…",
+    "present": "Presentar",
+    "backToDraft": "Volver a borrador",
+    "archive": "Archivar",
+    "restore": "Restaurar",
+    "presentError": "No se pudo iniciar la sesión."
+  },
+  "feedback": {
+    "title": "Opiniones de los jugadores",
+    "empty": "Aún no hay opiniones. Los jugadores pueden valorar el quiz al final de la sesión.",
+    "starsAriaLabel": "{{value}} de 5",
+    "count_one": "{{count}} opinión",
+    "count_other": "{{count}} opiniones"
+  },
+  "questions": {
+    "title": "Preguntas ({{count}})",
+    "add": "Añadir",
+    "moveUp": "Subir",
+    "moveDown": "Bajar",
+    "edit": "Editar",
+    "deleteQuestion": "Eliminar la pregunta",
+    "empty": "No hay preguntas. ¡Añade una!"
+  },
+  "deleteConfirm": {
+    "title": "¿Eliminar este quiz?",
+    "description": "«{{title}}» y sus preguntas se eliminarán definitivamente. Esta acción es irreversible.",
+    "confirmLabel": "Eliminar"
+  },
+  "gameAccess": {
+    "label": "Sesión en curso — PIN",
+    "controlScreen": "Pantalla de control",
+    "projectionScreen": "Pantalla de proyección",
+    "invitationScreen": "Pantalla de invitación"
+  },
+  "questionForm": {
+    "typeLabel": "Tipo",
+    "promptLabel": "Enunciado",
+    "promptPlaceholder": "Tu pregunta…",
+    "timeLimitLabel": "Tiempo (s)",
+    "pointsLabel": "Puntos",
+    "pointsMode": {
+      "standard": "Estándar",
+      "double": "Doble"
+    },
+    "optionsLegend": "Opciones",
+    "optionAriaLabel": "opción {{index}}",
+    "optionPlaceholder": "Opción {{index}}",
+    "colorAriaLabel": "color {{index}}",
+    "shapeAriaLabel": "forma {{index}}",
+    "orderAriaLabel": "posición {{index}}",
+    "correct": "correcta",
+    "removeOption": "Quitar la opción {{index}}",
+    "addOption": "Añadir una opción",
+    "acceptedAnswersLegend": "Respuestas aceptadas",
+    "answerAriaLabel": "respuesta {{index}}",
+    "removeAnswer": "Quitar la respuesta {{index}}",
+    "addAnswer": "Añadir una respuesta",
+    "numericValueLabel": "Valor objetivo",
+    "numericToleranceLabel": "Tolerancia ±",
+    "submitUpdate": "Guardar",
+    "submitAdd": "Añadir",
+    "cancel": "Cancelar",
+    "invalidError": "Pregunta no válida."
+  },
+  "preview": {
+    "view": "Vista previa (vista del jugador)",
+    "exitFullscreen": "Salir de pantalla completa",
+    "fullscreen": "Pantalla completa",
+    "noQuestions": "Este quiz aún no tiene preguntas.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "questionPosition": "Pregunta {{index}} / {{total}}",
+    "correctAnswer": "respuesta correcta",
+    "optionFallback": "Opción {{index}}",
+    "acceptedAnswers": "Respuestas aceptadas: {{answers}}",
+    "numericTarget": "Objetivo: {{value}} (± {{tolerance}})"
+  },
+  "media": {
+    "alt": "medio de la pregunta",
+    "remove": "Quitar el medio",
+    "uploading": "Subiendo…",
+    "add": "Añadir un medio (imagen/audio)",
+    "fileInputLabel": "Archivo multimedia",
+    "uploadError": "Error al subir."
+  }
+}

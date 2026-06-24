@@ -12,12 +12,15 @@ export interface AppConfig {
   logoUrl: string;
   /** Feuille de style d'override (fichier remplaçable par volume). */
   overrideCssUrl: string;
+  /** Langue de l'UI pour cette instance (`APP_LANG`). Une seule par déploiement. */
+  lang: string;
 }
 
 const DEFAULTS: AppConfig = {
   appName: 'QuizDock',
   logoUrl: '/branding/logo.svg',
   overrideCssUrl: '/branding/override.css',
+  lang: 'en',
 };
 
 declare global {

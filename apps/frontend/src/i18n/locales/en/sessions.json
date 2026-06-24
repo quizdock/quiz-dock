@@ -1,0 +1,83 @@
+{
+  "status": {
+    "ended": "Ended",
+    "interrupted": "Interrupted",
+    "archived": "Archived",
+    "lobby": "Lobby",
+    "in_progress": "In progress"
+  },
+  "duration": {
+    "minutesSeconds": "{{minutes}} min {{seconds}}s",
+    "seconds": "{{seconds}}s"
+  },
+  "list": {
+    "title": "Session history",
+    "backToEditor": "Back to editor",
+    "loadError": "History unavailable.",
+    "empty": "No archived session for this quiz. At the end of a session, choose “Archive results” to find it here.",
+    "capture": "Capture",
+    "participantCount_one": "{{count}} player",
+    "participantCount_other": "{{count}} players",
+    "successRate": "Success {{rate}}"
+  },
+  "detail": {
+    "notFound": "Session not found.",
+    "fallbackTitle": "Session",
+    "exportCsv": "Export (CSV)",
+    "history": "History",
+    "statParticipants": "Players",
+    "statSuccessRate": "Overall success",
+    "statQuestions": "Questions",
+    "questionResultsTitle": "Results by question",
+    "thNumber": "#",
+    "thQuestion": "Question",
+    "thAnswers": "Answers",
+    "thSuccessRate": "Success",
+    "thAvgTime": "Avg. time",
+    "participantsTitle": "Players",
+    "thRank": "Rank",
+    "thNickname": "Nickname",
+    "thScore": "Score",
+    "thCorrect": "Correct",
+    "thStreak": "Streak",
+    "participantDetailAria": "Details for {{nickname}}",
+    "csvGlobal": {
+      "rank": "Rank",
+      "nickname": "Nickname",
+      "score": "Score",
+      "correct": "Correct",
+      "answered": "Answered",
+      "maxStreak": "Max streak",
+      "avgTime": "Average time (s)",
+      "filenameFallback": "session"
+    }
+  },
+  "player": {
+    "notFound": "Player not found.",
+    "summary": "#{{rank}} · {{score}} pts · {{correct}}/{{answered}} correct",
+    "exportCsv": "Export (CSV)",
+    "session": "Session",
+    "captureUnavailable": "Answer details are not available: full capture was not enabled for this session. Only aggregated results are kept.",
+    "answersTitle": "Answers",
+    "thNumber": "#",
+    "thQuestion": "Question",
+    "thAnswer": "Answer",
+    "thCorrect": "Correct",
+    "thPoints": "Points",
+    "thTime": "Time",
+    "correctAria": "correct",
+    "incorrectAria": "incorrect",
+    "noAnswers": "No recorded answers.",
+    "csvPlayer": {
+      "number": "#",
+      "question": "Question",
+      "answer": "Answer",
+      "correct": "Correct",
+      "points": "Points",
+      "time": "Time (s)",
+      "yes": "yes",
+      "no": "no",
+      "filenameLabel": "player"
+    }
+  }
+}

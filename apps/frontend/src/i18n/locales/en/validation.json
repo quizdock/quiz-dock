@@ -1,0 +1,11 @@
+{
+  "invalid_type": "Invalid value type.",
+  "too_small": "Value is too small or too short.",
+  "too_big": "Value is too large or too long.",
+  "invalid_string": "Invalid format.",
+  "invalid_format": "Invalid format.",
+  "invalid_enum_value": "Value not allowed.",
+  "unrecognized_keys": "Unrecognized field.",
+  "custom": "Invalid value.",
+  "_default": "Invalid field."
+}

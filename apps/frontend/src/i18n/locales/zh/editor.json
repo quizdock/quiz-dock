@@ -1,0 +1,115 @@
+{
+  "loading": "加载中…",
+  "notFound": "未找到测验。",
+  "questionType": {
+    "single_choice": "单选题",
+    "multiple_choice": "多选题",
+    "true_false": "判断题（对/错）",
+    "text_input": "文本输入",
+    "numeric": "数字",
+    "ordering": "排序",
+    "poll": "投票"
+  },
+  "header": {
+    "title": "测验编辑器",
+    "history": "历史",
+    "deleteQuiz": "删除测验",
+    "preview": "预览"
+  },
+  "settings": {
+    "title": "设置",
+    "titleLabel": "标题",
+    "descriptionLabel": "描述",
+    "save": "保存"
+  },
+  "broadcast": {
+    "title": "广播",
+    "fullCaptureLabel": "完整记录回答",
+    "fullCaptureHelp": "保留每位玩家的回答详情（个人追踪）。请在演示前启用。",
+    "publish": "发布（就绪）",
+    "presenting": "正在启动…",
+    "present": "演示",
+    "backToDraft": "退回草稿",
+    "archive": "归档",
+    "restore": "恢复",
+    "presentError": "启动会话失败。"
+  },
+  "feedback": {
+    "title": "玩家评价",
+    "empty": "暂无评价。玩家可在会话结束时为测验评分。",
+    "starsAriaLabel": "5 星中的 {{value}} 星",
+    "count_one": "{{count}} 条评价",
+    "count_other": "{{count}} 条评价"
+  },
+  "questions": {
+    "title": "题目（{{count}}）",
+    "add": "添加",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "edit": "编辑",
+    "deleteQuestion": "删除题目",
+    "empty": "还没有题目。添加一道吧！"
+  },
+  "deleteConfirm": {
+    "title": "删除此测验？",
+    "description": "“{{title}}”及其题目将被永久删除。此操作不可撤销。",
+    "confirmLabel": "删除"
+  },
+  "gameAccess": {
+    "label": "进行中的会话 — PIN",
+    "controlScreen": "控制屏幕",
+    "projectionScreen": "投影屏幕",
+    "invitationScreen": "邀请屏幕"
+  },
+  "questionForm": {
+    "typeLabel": "类型",
+    "promptLabel": "题干",
+    "promptPlaceholder": "您的题目…",
+    "timeLimitLabel": "时间（秒）",
+    "pointsLabel": "分数",
+    "pointsMode": {
+      "standard": "标准",
+      "double": "双倍"
+    },
+    "optionsLegend": "选项",
+    "optionAriaLabel": "选项 {{index}}",
+    "optionPlaceholder": "选项 {{index}}",
+    "colorAriaLabel": "颜色 {{index}}",
+    "shapeAriaLabel": "形状 {{index}}",
+    "orderAriaLabel": "位置 {{index}}",
+    "correct": "正确",
+    "removeOption": "移除选项 {{index}}",
+    "addOption": "添加选项",
+    "acceptedAnswersLegend": "可接受的答案",
+    "answerAriaLabel": "答案 {{index}}",
+    "removeAnswer": "移除答案 {{index}}",
+    "addAnswer": "添加答案",
+    "numericValueLabel": "目标值",
+    "numericToleranceLabel": "容差 ±",
+    "submitUpdate": "保存",
+    "submitAdd": "添加",
+    "cancel": "取消",
+    "invalidError": "题目无效。"
+  },
+  "preview": {
+    "view": "预览（玩家视图）",
+    "exitFullscreen": "退出全屏",
+    "fullscreen": "全屏",
+    "noQuestions": "该测验还没有题目。",
+    "previous": "上一题",
+    "next": "下一题",
+    "questionPosition": "第 {{index}} / {{total}} 题",
+    "correctAnswer": "正确答案",
+    "optionFallback": "选项 {{index}}",
+    "acceptedAnswers": "可接受的答案：{{answers}}",
+    "numericTarget": "目标：{{value}}（± {{tolerance}}）"
+  },
+  "media": {
+    "alt": "题目媒体",
+    "remove": "移除媒体",
+    "uploading": "上传中…",
+    "add": "添加媒体（图片/音频）",
+    "fileInputLabel": "媒体文件",
+    "uploadError": "上传失败。"
+  }
+}

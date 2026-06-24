@@ -1,0 +1,52 @@
+{
+  "auth": {
+    "required": "Authentication required."
+  },
+  "host": {
+    "auth_required": "Host authentication required.",
+    "forbidden": "You are not the host of this session."
+  },
+  "quiz": {
+    "not_found": "Quiz not found.",
+    "not_ready": "The quiz must be “ready” to start a session (RG-02).",
+    "empty": "The quiz has no questions.",
+    "requires_question": "A quiz must have at least one question to become “ready” (RG-02).",
+    "transition_forbidden": "Forbidden state transition: {{from}} → {{target}}."
+  },
+  "session": {
+    "not_found": "Session not found or ended.",
+    "ended": "The session has ended.",
+    "banned": "You have been removed from this session by the host.",
+    "join_required": "Join the session before answering.",
+    "already_started": "The session has already started.",
+    "reveal_required": "Action only possible after the reveal.",
+    "timer_not_adjustable": "The timer can only be adjusted during a question.",
+    "snapshot_not_found": "Session snapshot not found.",
+    "capture_locked": "Full capture can only be changed before the session starts."
+  },
+  "participant": {
+    "not_found": "Player not found."
+  },
+  "nickname": {
+    "taken": "This nickname is already taken in this session.",
+    "invalid_length": "The nickname must be between {{min}} and {{max}} characters."
+  },
+  "pin": {
+    "unavailable": "Could not allocate a PIN, please try again."
+  },
+  "media": {
+    "unsupported_type": "Unsupported media type (image/audio).",
+    "file_missing": "Missing file (“file” field).",
+    "file_too_large": "File too large (max {{max}} bytes).",
+    "not_found": "Media not found."
+  },
+  "question": {
+    "not_in_quiz": "Question not part of the quiz.",
+    "invalid_permutation": "Positions must form a permutation 0..n-1.",
+    "reorder_incomplete": "Reordering must list all questions of the quiz.",
+    "not_found": "Question not found."
+  },
+  "validation": "Some fields are invalid.",
+  "internal": "Internal error.",
+  "error": "An error occurred."
+}

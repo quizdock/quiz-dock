@@ -1,0 +1,10 @@
+{
+  "loading": "Loading…",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "quizStatus": {
+    "draft": "Draft",
+    "ready": "Ready",
+    "archived": "Archived"
+  }
+}

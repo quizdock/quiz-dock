@@ -1,0 +1,18 @@
+{
+  "title": "我的测验",
+  "newQuiz": "新建测验",
+  "activeSessions": "进行中的会话",
+  "playerCount_one": "{{count}} 名玩家",
+  "playerCount_other": "{{count}} 名玩家",
+  "resume": "继续",
+  "stop": "停止",
+  "stopConfirmTitle": "停止会话？",
+  "stopConfirmDescription": "当前会话将对所有已连接的玩家永久结束。",
+  "stopConfirmLabel": "停止会话",
+  "loadError": "无法加载测验。",
+  "empty": "还没有测验。创建一个吧！",
+  "questionCount_one": "{{count}} 道题",
+  "questionCount_other": "{{count}} 道题",
+  "edit": "编辑",
+  "present": "演示"
+}

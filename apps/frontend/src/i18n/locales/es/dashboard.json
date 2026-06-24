@@ -1,0 +1,18 @@
+{
+  "title": "Mis quizzes",
+  "newQuiz": "Nuevo quiz",
+  "activeSessions": "Sesiones activas",
+  "playerCount_one": "{{count}} jugador",
+  "playerCount_other": "{{count}} jugadores",
+  "resume": "Reanudar",
+  "stop": "Detener",
+  "stopConfirmTitle": "¿Detener la sesión?",
+  "stopConfirmDescription": "La sesión en curso finalizará definitivamente para todos los jugadores conectados.",
+  "stopConfirmLabel": "Detener la sesión",
+  "loadError": "No se pudieron cargar los quizzes.",
+  "empty": "Aún no hay quizzes. ¡Crea uno!",
+  "questionCount_one": "{{count}} pregunta",
+  "questionCount_other": "{{count}} preguntas",
+  "edit": "Editar",
+  "present": "Presentar"
+}

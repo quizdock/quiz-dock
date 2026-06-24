@@ -1,0 +1,83 @@
+{
+  "status": {
+    "ended": "已结束",
+    "interrupted": "已中断",
+    "archived": "已归档",
+    "lobby": "等候厅",
+    "in_progress": "进行中"
+  },
+  "duration": {
+    "minutesSeconds": "{{minutes}} 分 {{seconds}} 秒",
+    "seconds": "{{seconds}} 秒"
+  },
+  "list": {
+    "title": "会话历史",
+    "backToEditor": "返回编辑器",
+    "loadError": "历史记录不可用。",
+    "empty": "该测验没有已归档的会话。会话结束时，选择“归档结果”即可在此找到。",
+    "capture": "记录",
+    "participantCount_one": "{{count}} 名玩家",
+    "participantCount_other": "{{count}} 名玩家",
+    "successRate": "正确率 {{rate}}"
+  },
+  "detail": {
+    "notFound": "未找到会话。",
+    "fallbackTitle": "会话",
+    "exportCsv": "导出（CSV）",
+    "history": "历史",
+    "statParticipants": "玩家",
+    "statSuccessRate": "总体正确率",
+    "statQuestions": "题目",
+    "questionResultsTitle": "各题结果",
+    "thNumber": "#",
+    "thQuestion": "题目",
+    "thAnswers": "回答",
+    "thSuccessRate": "正确率",
+    "thAvgTime": "平均用时",
+    "participantsTitle": "玩家",
+    "thRank": "名次",
+    "thNickname": "昵称",
+    "thScore": "分数",
+    "thCorrect": "正确数",
+    "thStreak": "连胜",
+    "participantDetailAria": "{{nickname}} 的详情",
+    "csvGlobal": {
+      "rank": "名次",
+      "nickname": "昵称",
+      "score": "分数",
+      "correct": "正确数",
+      "answered": "已答",
+      "maxStreak": "最高连胜",
+      "avgTime": "平均用时（秒）",
+      "filenameFallback": "session"
+    }
+  },
+  "player": {
+    "notFound": "未找到玩家。",
+    "summary": "第 {{rank}} 名 · {{score}} 分 · {{correct}}/{{answered}} 正确",
+    "exportCsv": "导出（CSV）",
+    "session": "会话",
+    "captureUnavailable": "答题详情不可用：本会话未启用完整记录。仅保留汇总结果。",
+    "answersTitle": "回答",
+    "thNumber": "#",
+    "thQuestion": "题目",
+    "thAnswer": "回答",
+    "thCorrect": "正确",
+    "thPoints": "得分",
+    "thTime": "用时",
+    "correctAria": "正确",
+    "incorrectAria": "错误",
+    "noAnswers": "没有记录到回答。",
+    "csvPlayer": {
+      "number": "#",
+      "question": "题目",
+      "answer": "回答",
+      "correct": "正确",
+      "points": "得分",
+      "time": "用时（秒）",
+      "yes": "是",
+      "no": "否",
+      "filenameLabel": "player"
+    }
+  }
+}

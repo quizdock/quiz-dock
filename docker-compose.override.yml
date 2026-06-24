@@ -59,12 +59,13 @@ services:
       [
         'sh',
         '-c',
-        'printf "%s" "window.__APP_CONFIG__ = { appName: \"${APP_NAME:-QuizDock}\" };" > apps/frontend/public/config.js && pnpm install --filter @quiz-dock/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @quiz-dock/contracts build && pnpm --filter @quiz-dock/frontend dev --host --port 5173',
+        'printf "%s" "window.__APP_CONFIG__ = { appName: \"${APP_NAME:-QuizDock}\", lang: \"${APP_LANG:-en}\" };" > apps/frontend/public/config.js && pnpm install --filter @quiz-dock/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @quiz-dock/contracts build && pnpm --filter @quiz-dock/frontend dev --host --port 5173',
       ]
     environment:
       VITE_API_URL: http://backend:3000
-      # White-label : nom d'app injecté dans public/config.js au démarrage (sans rebuild).
+      # White-label : nom d'app + langue injectés dans public/config.js au démarrage (sans rebuild).
       APP_NAME: ${APP_NAME:-QuizDock}
+      APP_LANG: ${APP_LANG:-en}
       npm_config_verify_deps_before_run: 'false'
     volumes:
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro

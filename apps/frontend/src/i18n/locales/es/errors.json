@@ -1,0 +1,52 @@
+{
+  "auth": {
+    "required": "Autenticación requerida."
+  },
+  "host": {
+    "auth_required": "Se requiere autenticación del anfitrión.",
+    "forbidden": "No eres el anfitrión de esta sesión."
+  },
+  "quiz": {
+    "not_found": "Quiz no encontrado.",
+    "not_ready": "El quiz debe estar «listo» para iniciar una sesión (RG-02).",
+    "empty": "El quiz no tiene preguntas.",
+    "requires_question": "Un quiz debe tener al menos una pregunta para pasar a «listo» (RG-02).",
+    "transition_forbidden": "Transición de estado no permitida: {{from}} → {{target}}."
+  },
+  "session": {
+    "not_found": "Sesión no encontrada o finalizada.",
+    "ended": "La sesión ha finalizado.",
+    "banned": "El anfitrión te ha expulsado de esta sesión.",
+    "join_required": "Únete a la sesión antes de responder.",
+    "already_started": "La sesión ya ha comenzado.",
+    "reveal_required": "Acción solo posible tras la revelación.",
+    "timer_not_adjustable": "El temporizador solo se puede ajustar durante una pregunta.",
+    "snapshot_not_found": "Instantánea de sesión no encontrada.",
+    "capture_locked": "La captura completa solo se puede cambiar antes de iniciar la sesión."
+  },
+  "participant": {
+    "not_found": "Jugador no encontrado."
+  },
+  "nickname": {
+    "taken": "Este apodo ya está en uso en esta sesión.",
+    "invalid_length": "El apodo debe tener entre {{min}} y {{max}} caracteres."
+  },
+  "pin": {
+    "unavailable": "No se pudo asignar un PIN, inténtalo de nuevo."
+  },
+  "media": {
+    "unsupported_type": "Tipo de medio no compatible (imagen/audio).",
+    "file_missing": "Falta el archivo (campo «file»).",
+    "file_too_large": "Archivo demasiado grande (máx. {{max}} bytes).",
+    "not_found": "Medio no encontrado."
+  },
+  "question": {
+    "not_in_quiz": "La pregunta no pertenece al quiz.",
+    "invalid_permutation": "Las posiciones deben formar una permutación 0..n-1.",
+    "reorder_incomplete": "La reordenación debe incluir todas las preguntas del quiz.",
+    "not_found": "Pregunta no encontrada."
+  },
+  "validation": "Algunos campos no son válidos.",
+  "internal": "Error interno.",
+  "error": "Se ha producido un error."
+}

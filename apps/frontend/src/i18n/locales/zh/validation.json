@@ -1,0 +1,11 @@
+{
+  "invalid_type": "值的类型无效。",
+  "too_small": "值太小或太短。",
+  "too_big": "值太大或太长。",
+  "invalid_string": "格式无效。",
+  "invalid_format": "格式无效。",
+  "invalid_enum_value": "不允许的值。",
+  "unrecognized_keys": "无法识别的字段。",
+  "custom": "无效的值。",
+  "_default": "字段无效。"
+}

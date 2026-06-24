@@ -1,0 +1,52 @@
+{
+  "auth": {
+    "required": "需要身份验证。"
+  },
+  "host": {
+    "auth_required": "需要主持人身份验证。",
+    "forbidden": "您不是本会话的主持人。"
+  },
+  "quiz": {
+    "not_found": "未找到测验。",
+    "not_ready": "测验必须处于“就绪”状态才能开始会话（RG-02）。",
+    "empty": "测验没有任何题目。",
+    "requires_question": "测验至少需要一道题目才能变为“就绪”（RG-02）。",
+    "transition_forbidden": "禁止的状态转换：{{from}} → {{target}}。"
+  },
+  "session": {
+    "not_found": "未找到会话或会话已结束。",
+    "ended": "会话已结束。",
+    "banned": "您已被主持人移出本会话。",
+    "join_required": "请先加入会话再作答。",
+    "already_started": "会话已经开始。",
+    "reveal_required": "仅在揭晓答案后才能执行该操作。",
+    "timer_not_adjustable": "仅在答题进行中才能调整计时器。",
+    "snapshot_not_found": "未找到会话快照。",
+    "capture_locked": "完整记录仅可在会话开始前更改。"
+  },
+  "participant": {
+    "not_found": "未找到玩家。"
+  },
+  "nickname": {
+    "taken": "该昵称在本会话中已被占用。",
+    "invalid_length": "昵称长度必须在 {{min}} 到 {{max}} 个字符之间。"
+  },
+  "pin": {
+    "unavailable": "无法分配 PIN，请重试。"
+  },
+  "media": {
+    "unsupported_type": "不支持的媒体类型（图片/音频）。",
+    "file_missing": "缺少文件（“file”字段）。",
+    "file_too_large": "文件过大（最大 {{max}} 字节）。",
+    "not_found": "未找到媒体。"
+  },
+  "question": {
+    "not_in_quiz": "该题目不属于本测验。",
+    "invalid_permutation": "位置必须构成 0..n-1 的排列。",
+    "reorder_incomplete": "重新排序必须包含测验的所有题目。",
+    "not_found": "未找到题目。"
+  },
+  "validation": "部分字段无效。",
+  "internal": "内部错误。",
+  "error": "发生了错误。"
+}

@@ -1,0 +1,10 @@
+{
+  "loading": "加载中…",
+  "confirm": "确认",
+  "cancel": "取消",
+  "quizStatus": {
+    "draft": "草稿",
+    "ready": "就绪",
+    "archived": "已归档"
+  }
+}

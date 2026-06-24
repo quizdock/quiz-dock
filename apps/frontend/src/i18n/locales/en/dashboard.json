@@ -1,0 +1,18 @@
+{
+  "title": "My quizzes",
+  "newQuiz": "New quiz",
+  "activeSessions": "Active sessions",
+  "playerCount_one": "{{count}} player",
+  "playerCount_other": "{{count}} players",
+  "resume": "Resume",
+  "stop": "Stop",
+  "stopConfirmTitle": "Stop the session?",
+  "stopConfirmDescription": "The current session will be permanently ended for all connected players.",
+  "stopConfirmLabel": "Stop the session",
+  "loadError": "Could not load quizzes.",
+  "empty": "No quizzes yet. Create one!",
+  "questionCount_one": "{{count}} question",
+  "questionCount_other": "{{count}} questions",
+  "edit": "Edit",
+  "present": "Present"
+}

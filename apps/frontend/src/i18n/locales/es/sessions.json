@@ -1,0 +1,83 @@
+{
+  "status": {
+    "ended": "Finalizada",
+    "interrupted": "Interrumpida",
+    "archived": "Archivada",
+    "lobby": "Sala de espera",
+    "in_progress": "En curso"
+  },
+  "duration": {
+    "minutesSeconds": "{{minutes}} min {{seconds}}s",
+    "seconds": "{{seconds}}s"
+  },
+  "list": {
+    "title": "Historial de sesiones",
+    "backToEditor": "Volver al editor",
+    "loadError": "Historial no disponible.",
+    "empty": "No hay sesiones archivadas para este quiz. Al finalizar una sesión, elige «Archivar resultados» para encontrarla aquí.",
+    "capture": "Captura",
+    "participantCount_one": "{{count}} jugador",
+    "participantCount_other": "{{count}} jugadores",
+    "successRate": "Acierto {{rate}}"
+  },
+  "detail": {
+    "notFound": "Sesión no encontrada.",
+    "fallbackTitle": "Sesión",
+    "exportCsv": "Exportar (CSV)",
+    "history": "Historial",
+    "statParticipants": "Jugadores",
+    "statSuccessRate": "Acierto global",
+    "statQuestions": "Preguntas",
+    "questionResultsTitle": "Resultados por pregunta",
+    "thNumber": "#",
+    "thQuestion": "Pregunta",
+    "thAnswers": "Respuestas",
+    "thSuccessRate": "Acierto",
+    "thAvgTime": "Tiempo medio",
+    "participantsTitle": "Jugadores",
+    "thRank": "Puesto",
+    "thNickname": "Apodo",
+    "thScore": "Puntuación",
+    "thCorrect": "Correctas",
+    "thStreak": "Racha",
+    "participantDetailAria": "Detalle de {{nickname}}",
+    "csvGlobal": {
+      "rank": "Puesto",
+      "nickname": "Apodo",
+      "score": "Puntuación",
+      "correct": "Correctas",
+      "answered": "Respondidas",
+      "maxStreak": "Racha máx.",
+      "avgTime": "Tiempo medio (s)",
+      "filenameFallback": "sesion"
+    }
+  },
+  "player": {
+    "notFound": "Jugador no encontrado.",
+    "summary": "#{{rank}} · {{score}} pts · {{correct}}/{{answered}} correctas",
+    "exportCsv": "Exportar (CSV)",
+    "session": "Sesión",
+    "captureUnavailable": "El detalle de las respuestas no está disponible: la captura completa no estaba activada para esta sesión. Solo se conservan los resultados agregados.",
+    "answersTitle": "Respuestas",
+    "thNumber": "#",
+    "thQuestion": "Pregunta",
+    "thAnswer": "Respuesta",
+    "thCorrect": "Correcta",
+    "thPoints": "Puntos",
+    "thTime": "Tiempo",
+    "correctAria": "correcta",
+    "incorrectAria": "incorrecta",
+    "noAnswers": "No hay respuestas registradas.",
+    "csvPlayer": {
+      "number": "#",
+      "question": "Pregunta",
+      "answer": "Respuesta",
+      "correct": "Correcta",
+      "points": "Puntos",
+      "time": "Tiempo (s)",
+      "yes": "sí",
+      "no": "no",
+      "filenameLabel": "jugador"
+    }
+  }
+}

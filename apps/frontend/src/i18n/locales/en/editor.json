@@ -1,0 +1,115 @@
+{
+  "loading": "Loading…",
+  "notFound": "Quiz not found.",
+  "questionType": {
+    "single_choice": "Multiple choice (single answer)",
+    "multiple_choice": "Multiple choice (multiple answers)",
+    "true_false": "True / False",
+    "text_input": "Text input",
+    "numeric": "Numeric",
+    "ordering": "Reorder",
+    "poll": "Poll"
+  },
+  "header": {
+    "title": "Quiz editor",
+    "history": "History",
+    "deleteQuiz": "Delete quiz",
+    "preview": "Preview"
+  },
+  "settings": {
+    "title": "Settings",
+    "titleLabel": "Title",
+    "descriptionLabel": "Description",
+    "save": "Save"
+  },
+  "broadcast": {
+    "title": "Broadcast",
+    "fullCaptureLabel": "Full answer capture",
+    "fullCaptureHelp": "Keeps each player's answer details (individual tracking). Enable before presenting.",
+    "publish": "Publish (ready)",
+    "presenting": "Starting…",
+    "present": "Present",
+    "backToDraft": "Back to draft",
+    "archive": "Archive",
+    "restore": "Restore",
+    "presentError": "Failed to start the session."
+  },
+  "feedback": {
+    "title": "Player feedback",
+    "empty": "No feedback yet. Players can rate the quiz at the end of a session.",
+    "starsAriaLabel": "{{value}} out of 5",
+    "count_one": "{{count}} review",
+    "count_other": "{{count}} reviews"
+  },
+  "questions": {
+    "title": "Questions ({{count}})",
+    "add": "Add",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "edit": "Edit",
+    "deleteQuestion": "Delete question",
+    "empty": "No questions. Add one!"
+  },
+  "deleteConfirm": {
+    "title": "Delete this quiz?",
+    "description": "“{{title}}” and its questions will be permanently deleted. This action cannot be undone.",
+    "confirmLabel": "Delete"
+  },
+  "gameAccess": {
+    "label": "Active session — PIN",
+    "controlScreen": "Control screen",
+    "projectionScreen": "Projection screen",
+    "invitationScreen": "Invitation screen"
+  },
+  "questionForm": {
+    "typeLabel": "Type",
+    "promptLabel": "Prompt",
+    "promptPlaceholder": "Your question…",
+    "timeLimitLabel": "Time (s)",
+    "pointsLabel": "Points",
+    "pointsMode": {
+      "standard": "Standard",
+      "double": "Double"
+    },
+    "optionsLegend": "Options",
+    "optionAriaLabel": "option {{index}}",
+    "optionPlaceholder": "Option {{index}}",
+    "colorAriaLabel": "color {{index}}",
+    "shapeAriaLabel": "shape {{index}}",
+    "orderAriaLabel": "rank {{index}}",
+    "correct": "correct",
+    "removeOption": "Remove option {{index}}",
+    "addOption": "Add an option",
+    "acceptedAnswersLegend": "Accepted answers",
+    "answerAriaLabel": "answer {{index}}",
+    "removeAnswer": "Remove answer {{index}}",
+    "addAnswer": "Add an answer",
+    "numericValueLabel": "Target value",
+    "numericToleranceLabel": "Tolerance ±",
+    "submitUpdate": "Save",
+    "submitAdd": "Add",
+    "cancel": "Cancel",
+    "invalidError": "Invalid question."
+  },
+  "preview": {
+    "view": "Preview (player view)",
+    "exitFullscreen": "Exit fullscreen",
+    "fullscreen": "Fullscreen",
+    "noQuestions": "This quiz has no questions yet.",
+    "previous": "Previous",
+    "next": "Next",
+    "questionPosition": "Question {{index}} / {{total}}",
+    "correctAnswer": "correct answer",
+    "optionFallback": "Option {{index}}",
+    "acceptedAnswers": "Accepted answers: {{answers}}",
+    "numericTarget": "Target: {{value}} (± {{tolerance}})"
+  },
+  "media": {
+    "alt": "question media",
+    "remove": "Remove media",
+    "uploading": "Uploading…",
+    "add": "Add media (image/audio)",
+    "fileInputLabel": "Media file",
+    "uploadError": "Upload failed."
+  }
+}
