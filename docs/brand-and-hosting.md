@@ -12,7 +12,8 @@
 | Slug / package / repo | `quiz-dock` |
 | DB / namespace Docker Hub | `quizdock` |
 | Scope npm | `@quiz-dock/*` |
-| Repo de code | `github.com/fchaussin/quiz-dock` |
+| Repo de code | `github.com/quizdock/quiz-dock` |
+| Licence | **MIT** |
 
 Le nom de marque est **white-label runtime** : une instance peut afficher tout autre nom via
 `APP_NAME` + le dossier `branding/` sans rebuild (cf. [ADR 0002](adr/0002-rename-live-quizz-et-white-label.md)).
@@ -60,8 +61,7 @@ URL moins propre, mais disponible tout de suite et sans org.
 
 - [x] **Réserver l'org GitHub `quizdock`** (compte perso, plan Free).
 - [x] Échafauder le repo `quizdock.github.io` (landing + workflow Pages) → site en ligne.
-- [ ] Décider du transfert du repo de code `fchaussin/quiz-dock` → `quizdock/quiz-dock`
-      (puis mettre à jour les liens du site + le remote local).
-- [ ] Ajouter une licence au repo de code (et le badge sur le site).
-- [ ] (Optionnel) Réserver domaine(s) + npm + Docker Hub avant la 1ʳᵉ publication publique.
-- [ ] (Optionnel) Domaine custom (`quizdock.io` / `.fr`) via `CNAME` + DNS.
+- [x] Transfert du repo de code `fchaussin/quiz-dock` → **`quizdock/quiz-dock`** (remote local + liens du site mis à jour).
+- [x] Licence **MIT** ajoutée (`LICENSE` + champ `license` des `package.json` + section README).
+- [ ] (Optionnel) Réserver npm + Docker Hub avant la 1ʳᵉ publication publique.
+- [x] Domaine custom : abandonné — on reste sur `quizdock.github.io`.

@@ -1,6 +1,7 @@
 {
   "name": "@quiz-dock/backend",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "API QuizDock : REST (builder) + WebSocket (jeu) — NestJS + Socket.IO",
   "scripts": {

@@ -1,6 +1,7 @@
 {
   "name": "quiz-dock",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Plateforme de quiz interactifs temps réel (clone de Kahoot)",
   "packageManager": "pnpm@11.0.9",

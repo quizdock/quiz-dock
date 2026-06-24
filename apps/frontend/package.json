@@ -1,6 +1,7 @@
 {
   "name": "@quiz-dock/frontend",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Frontend QuizDock : React + Vite + shadcn/ui + TanStack",
   "type": "module",

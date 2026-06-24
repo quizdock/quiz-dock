@@ -1,6 +1,7 @@
 {
   "name": "@quiz-dock/contracts",
   "version": "0.1.0",
+  "license": "MIT",
   "private": true,
   "description": "Types partagés front/back : contrat WebSocket et énumérations du domaine",
   "main": "./dist/cjs/index.js",

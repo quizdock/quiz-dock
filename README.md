@@ -64,4 +64,11 @@ docker compose up -d
 
 ---
 
+## 📄 Licence
+
+Distribué sous licence **[MIT](./LICENSE)** — usage, modification et redistribution libres, y
+compris en self-hosting interne, sous réserve de conserver la notice de copyright.
+
+---
+
 *Specs versionnées — voir [specifications/README.md](./specifications/README.md) pour le détail et l'ordre de lecture.*
