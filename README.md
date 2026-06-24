@@ -13,6 +13,7 @@
   <a href="https://github.com/quizdock/quiz-dock/releases"><img alt="Release" src="https://img.shields.io/github/v/release/quizdock/quiz-dock?logo=github&color=6f42c1" /></a>
   <a href="https://github.com/quizdock/quiz-dock/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/quizdock/quiz-dock?color=blue" /></a>
   <a href="https://github.com/quizdock/quiz-dock/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/quizdock/quiz-dock/ci.yml?branch=main&logo=github&label=CI" /></a>
+  <a href="https://github.com/quizdock/quiz-dock/actions/workflows/security.yml"><img alt="Security" src="https://img.shields.io/github/actions/workflow/status/quizdock/quiz-dock/security.yml?branch=main&logo=github&label=security" /></a>
   <a href="https://github.com/quizdock/quiz-dock/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/quizdock/quiz-dock?logo=github" /></a>
   <a href="https://github.com/quizdock/quiz-dock/issues"><img alt="Issues" src="https://img.shields.io/github/issues/quizdock/quiz-dock?logo=github" /></a>
   <img alt="Last commit" src="https://img.shields.io/github/last-commit/quizdock/quiz-dock?logo=git&logoColor=white&color=informational" />
@@ -39,6 +40,7 @@
 <p align="center">
   <img alt="Self-hosted" src="https://img.shields.io/badge/self--hosted-✓-success" />
   <img alt="No tracking" src="https://img.shields.io/badge/tracking-none-success" />
+  <a href="docs/security/"><img alt="Scanned by Trivy" src="https://img.shields.io/badge/scanned%20by-Trivy-1904DA?logo=aqua&logoColor=white" /></a>
   <img alt="i18n" src="https://img.shields.io/badge/i18n-en%20·%20fr%20·%20es%20·%20zh-6f42c1" />
   <a href="https://quizdock.github.io"><img alt="Website" src="https://img.shields.io/badge/website-quizdock.github.io-22d3ee" /></a>
   <img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen" />
@@ -176,6 +178,14 @@ docker compose up -d
 
 Design references live in [`specifications/`](./specifications/README.md); ongoing notes and
 decisions in [`docs/`](./docs/README.md) (see the [ADRs](./docs/adr)).
+
+## 🔒 Security
+
+Dependencies and images are scanned on every push, every PR and weekly
+([`Security` workflow](.github/workflows/security.yml)): `pnpm audit` gates app CVEs, Trivy
+scans the filesystem and the published image (results in the **Security** tab). The runtime
+is hardened (non-root, read-only root FS, dropped capabilities). Point-in-time audits live
+in [`docs/security/`](docs/security/); report a vulnerability via [`SECURITY.md`](SECURITY.md).
 
 ## 📄 License
 
