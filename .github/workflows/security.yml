@@ -46,7 +46,7 @@ jobs:
         run: pnpm audit --prod --audit-level high
 
       - name: Trivy — système de fichiers (deps + config)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
           scan-type: fs
           scanners: vuln,misconfig,secret
@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trivy — image publiée (:latest)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         continue-on-error: true # CVE OS sans patch ne doivent pas casser la CI
         with:
           image-ref: fchaussin/quizdock:latest
