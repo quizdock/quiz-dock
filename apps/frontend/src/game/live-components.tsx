@@ -158,7 +158,11 @@ export function RevealAnswer({
   );
 }
 
-/** Classement (lignes nickname/score) — surligne le joueur courant si fourni. */
+/**
+ * Classement en liste (une ligne par participant, top `max`) avec **barre de
+ * progression** proportionnelle au score du leader. Surligne le joueur courant si
+ * `highlightRank` est fourni. Utilisé à l'affichage de la réponse (entre questions).
+ */
 export function LeaderboardList({
   rows,
   highlightRank,
@@ -168,24 +172,34 @@ export function LeaderboardList({
   highlightRank?: number;
   max?: number;
 }) {
+  const shown = rows.slice(0, max);
+  const topScore = Math.max(0, ...shown.map((r) => r.score));
   return (
-    <ol className="flex w-full flex-col gap-1">
-      {rows.slice(0, max).map((r) => (
-        <li
-          key={`${r.rank}-${r.nickname}`}
-          className={cn(
-            'flex items-center justify-between rounded px-3 py-1.5',
-            r.rank === highlightRank ? 'bg-primary/15 font-semibold' : 'bg-muted/50',
-          )}
-        >
-          <span className="flex items-center gap-2">
-            <span className="text-muted-foreground tabular-nums">{r.rank}.</span>
+    <ol className="flex w-full flex-col gap-1.5">
+      {shown.map((r) => {
+        const pct = topScore > 0 ? Math.round((r.score / topScore) * 100) : 0;
+        const me = r.rank === highlightRank;
+        return (
+          <li
+            key={`${r.rank}-${r.nickname}`}
+            className={cn(
+              'relative flex items-center gap-2 overflow-hidden rounded px-3 py-1.5',
+              me ? 'ring-primary font-semibold ring-2' : '',
+            )}
+          >
+            {/* Barre de progression (fond) : largeur ∝ score / score du leader. */}
+            <div
+              className={cn('absolute inset-y-0 left-0', me ? 'bg-primary/25' : 'bg-primary/15')}
+              style={{ width: `${pct}%` }}
+              aria-hidden
+            />
+            <span className="text-muted-foreground relative tabular-nums">{r.rank}.</span>
             <Avatar name={r.avatar || r.nickname} size={28} />
-            {r.nickname}
-          </span>
-          <span className="tabular-nums">{r.score}</span>
-        </li>
-      ))}
+            <span className="relative min-w-0 flex-1 truncate text-left">{r.nickname}</span>
+            <span className="relative tabular-nums">{r.score}</span>
+          </li>
+        );
+      })}
     </ol>
   );
 }
