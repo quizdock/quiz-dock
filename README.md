@@ -1,74 +1,95 @@
-# QuizDock
+<p align="center">
+  <img src="https://quizdock.github.io/logo.svg" width="220" alt="QuizDock" />
+</p>
 
-**Plateforme de quiz interactifs en temps réel** — un clone de Kahoot : un animateur anime une session live, les participants répondent depuis leur appareil, et la rapidité comme l'exactitude rapportent des points.
+<h1 align="center">QuizDock</h1>
 
-> 🚧 **Statut : conception.** Le code n'est pas encore écrit ; le dépôt contient les spécifications qui font foi et la doc de développement à venir.
+<p align="center">
+  <strong>Open-source, self-hosted live quiz platform.</strong><br />
+  Real-time multiplayer · projector-ready · your data stays on your servers.
+</p>
 
----
-
-## ✨ Ce que fait QuizDock
-
-- 🎯 **Quiz chronométrés** avec notation au temps de réponse (réponse rapide = plus de points) + bonus de série.
-- 👥 **Multijoueur temps réel** : 10 à 200 participants par session, via un simple **PIN**.
-- 🧩 **Builder de quiz** : QCM, vrai/faux, saisie, numérique, remise en ordre, sondage.
-- 🏆 **Classement live** entre les questions et **podium** final.
-- 📊 **Restitution** de session pour le animateur (participation, scores, notions à retravailler) + export CSV.
-- 🔐 **Auth entreprise** (Keycloak/SSO) — facultative : on peut jouer en invité.
-
-Contexte cible : **session en entreprise** (onboarding, montée en compétences, évaluation formative).
-
----
-
-## 🧱 Stack (en bref)
-
-**pnpm** monorepo · **React + Vite + shadcn/ui + TanStack** (front) · **NestJS + Socket.IO** (back) · **Redis** (live) · **PostgreSQL** (durable, ULID) · **Keycloak** (auth) · **SeaweedFS** (médias) · **Docker Compose** · **GitHub Actions**.
-
-Synchro front/back : OpenAPI auto → **Orval** (REST) + package de contrats TS partagé (WebSocket).
+<p align="center">
+  <a href="https://github.com/quizdock/quiz-dock/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/self--hosted-Docker-2496ED.svg" alt="Self-hosted" />
+  <img src="https://img.shields.io/badge/i18n-en%20·%20fr%20·%20es%20·%20zh-6f42c1.svg" alt="Languages" />
+  <a href="https://quizdock.github.io"><img src="https://img.shields.io/badge/site-quizdock.github.io-22d3ee.svg" alt="Website" /></a>
+</p>
 
 ---
 
-## 📁 Organisation du dépôt
+QuizDock is a Kahoot-style live quiz you run yourself. A host presents a quiz, players
+join from any device with a **PIN or QR code** (no account), and answers — weighted by
+speed and correctness — feed a live leaderboard projected on the big screen. Everything
+runs on **your** infrastructure as a single Docker image; the questions, the answers and
+the results never leave your servers.
 
+🌐 **Website:** https://quizdock.github.io
+
+## ✨ Features
+
+- ⚡ **Real-time multiplayer** — Socket.IO engine with authoritative server timing; players join by 6-digit PIN or QR code.
+- 🖥️ **Projector-ready** — bright, high-contrast light screens built for the big screen, with separate projection and control windows.
+- 🧩 **Quiz builder** — seven question types (single/multi choice, true-false, text, numeric, reorder, poll) with image & audio media.
+- 🏆 **Live scoring & podium** — time-weighted points with streak bonuses, leaderboard between questions, final podium; manual or auto pacing.
+- 💾 **Answer capture** — optionally record every player's individual answers for audit, certification or individual follow-up.
+- 🔎 **History & exploration** — browse archived sessions: per-question success rates, average times, and per-player answer sheets.
+- 📤 **CSV export** — export overall results and per-player answer sheets.
+- 🌍 **Multilingual** — interface in English, French, Spanish and Simplified Chinese (one language per instance).
+- 🏠 **Self-hosted & private** — runs on your own infra with Docker; no SaaS, no tracking, no ads; players need no account, hosts can plug in OIDC.
+- 🎨 **White-label** — rebrand name, logo and CSS via env + a mounted folder, no rebuild.
+
+## 🚀 Quick start (self-host)
+
+QuizDock ships as **one image** (NestJS serves the API, the WebSocket and the SPA);
+PostgreSQL and Redis run alongside, and a one-shot `migrate` service applies migrations.
+
+```bash
+git clone https://github.com/quizdock/quiz-dock.git
+cd quiz-dock
+docker compose -f docker-compose.prod.yml up -d --build
+# then open the app
+open http://localhost:18080
 ```
-.
-├── README.md            ← vous êtes ici (présentation générale)
-├── specifications/      ← spécifications de référence (figées par version)
-│   └── README.md        ← index des specs (point d'entrée détaillé)
-└── docs/                ← documentation vivante, tenue à jour pendant le dev
-    └── README.md
-```
 
-- 📐 **[specifications/](./specifications/README.md)** — la conception qui fait foi (métier, UI, technique, données, séquences, roadmap). À lire pour comprendre *ce qu'on construit et pourquoi*.
-- 📖 **[docs/](./docs/README.md)** — la doc opérationnelle qui évolue au fil du code (décisions, guides, exploitation). À tenir à jour *à chaque itération*.
+> A published image (`docker pull …`) is on the way; for now the prod compose builds it locally.
 
----
+## ⚙️ Configuration
 
-## 🗺️ Avancement
+Copy `.env.example` to `.env` and adjust. Common settings:
 
-Le développement est incrémental à partir de **v0.1.0**, en versions `0.x` successives (la v1.0.0 n'est pas planifiée : elle ne sera envisagée que par éligibilité). Voir la **[feuille de route](./specifications/SPECIFICATIONS-ROADMAP.md)**.
+| Variable | Default | Purpose |
+|---|---|---|
+| `APP_NAME` | `QuizDock` | App name shown in the UI (white-label) |
+| `APP_LANG` | `en` | Instance language: `en` · `fr` · `es` · `zh` |
+| `AUTH_MODE` | `none` | `none` (local/demo) or `oidc` (bring your own IdP) |
+| `HTTP_PORT` | `18080` | Host port for the app |
 
----
+Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.svg` + `override.css`
+into the mounted `branding/` folder. The runtime is hardened (non-root, read-only root FS,
+all Linux capabilities dropped, `no-new-privileges`).
 
-## 🚀 Démarrage (cible, une fois le code en place)
+## 🧱 Tech stack
+
+**Backend** NestJS + Socket.IO · Prisma 7 / PostgreSQL · Redis (live state) ·
+**Frontend** React + Vite + shadcn/ui + TanStack · i18next ·
+**Packaging** single distroless image · Docker Compose. Front/back are kept in sync via an
+auto-generated OpenAPI client (Orval) and a shared TypeScript WebSocket contract.
+
+## 🛠️ Development
+
+Dev runs backend (NestJS, hot-reload) and frontend (Vite) as separate services:
 
 ```bash
 pnpm install
 docker compose up -d
-# Front : http://localhost:15173   API : http://localhost:13000   Doc API : http://localhost:13000/api/docs
+# Front: http://localhost:15173   ·   API: http://localhost:13000   ·   API docs: http://localhost:13000/api/docs
 ```
 
-> En dev, on monte les **sources + manifestes** (jamais `node_modules` : glibc hôte ≠ musl Alpine).
-> Les conteneurs lancent `pnpm install` (frozen) au démarrage : après un `pnpm add`, un simple
-> `docker compose restart <service>` applique la dépendance — **pas de rebuild d'image** (réservé
-> aux changements de `Dockerfile`).
+Design references live in [`specifications/`](./specifications/README.md); ongoing notes and
+decisions in [`docs/`](./docs/README.md) (see the [ADRs](./docs/adr)).
 
----
+## 📄 License
 
-## 📄 Licence
-
-Distribué sous licence **[MIT](./LICENSE)** — usage, modification et redistribution libres, y
-compris en self-hosting interne, sous réserve de conserver la notice de copyright.
-
----
-
-*Specs versionnées — voir [specifications/README.md](./specifications/README.md) pour le détail et l'ordre de lecture.*
+[MIT](https://github.com/quizdock/quiz-dock/blob/main/LICENSE) — free to use, modify and
+redistribute, including for internal self-hosting, provided the copyright notice is kept.
