@@ -10,10 +10,38 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/quizdock/quiz-dock/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license" /></a>
-  <img src="https://img.shields.io/badge/self--hosted-Docker-2496ED.svg" alt="Self-hosted" />
-  <img src="https://img.shields.io/badge/i18n-en%20·%20fr%20·%20es%20·%20zh-6f42c1.svg" alt="Languages" />
-  <a href="https://quizdock.github.io"><img src="https://img.shields.io/badge/site-quizdock.github.io-22d3ee.svg" alt="Website" /></a>
+  <a href="https://github.com/quizdock/quiz-dock/releases"><img alt="Release" src="https://img.shields.io/github/v/release/quizdock/quiz-dock?logo=github&color=6f42c1" /></a>
+  <a href="https://github.com/quizdock/quiz-dock/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/quizdock/quiz-dock?color=blue" /></a>
+  <a href="https://github.com/quizdock/quiz-dock/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/quizdock/quiz-dock/ci.yml?branch=main&logo=github&label=CI" /></a>
+  <a href="https://github.com/quizdock/quiz-dock/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/quizdock/quiz-dock?logo=github" /></a>
+  <a href="https://github.com/quizdock/quiz-dock/issues"><img alt="Issues" src="https://img.shields.io/github/issues/quizdock/quiz-dock?logo=github" /></a>
+  <img alt="Last commit" src="https://img.shields.io/github/last-commit/quizdock/quiz-dock?logo=git&logoColor=white&color=informational" />
+</p>
+
+<p align="center">
+  <a href="https://hub.docker.com/r/fchaussin/quizdock"><img alt="Docker pulls" src="https://img.shields.io/docker/pulls/fchaussin/quizdock?logo=docker&logoColor=white&label=pulls" /></a>
+  <a href="https://hub.docker.com/r/fchaussin/quizdock/tags"><img alt="Image version" src="https://img.shields.io/docker/v/fchaussin/quizdock?sort=semver&logo=docker&logoColor=white&label=image" /></a>
+  <a href="https://hub.docker.com/r/fchaussin/quizdock/tags"><img alt="Image size" src="https://img.shields.io/docker/image-size/fchaussin/quizdock/latest?logo=docker&logoColor=white&label=size" /></a>
+  <img alt="Architectures" src="https://img.shields.io/badge/arch-amd64%20·%20arm64-2496ED?logo=docker&logoColor=white" />
+</p>
+
+<p align="center">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" />
+  <img alt="NestJS" src="https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white" />
+  <img alt="React" src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB" />
+  <img alt="Vite" src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white" />
+  <img alt="Socket.IO" src="https://img.shields.io/badge/Socket.IO-010101?logo=socketdotio&logoColor=white" />
+  <img alt="Prisma" src="https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white" />
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" />
+  <img alt="Redis" src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white" />
+</p>
+
+<p align="center">
+  <img alt="Self-hosted" src="https://img.shields.io/badge/self--hosted-✓-success" />
+  <img alt="No tracking" src="https://img.shields.io/badge/tracking-none-success" />
+  <img alt="i18n" src="https://img.shields.io/badge/i18n-en%20·%20fr%20·%20es%20·%20zh-6f42c1" />
+  <a href="https://quizdock.github.io"><img alt="Website" src="https://img.shields.io/badge/website-quizdock.github.io-22d3ee" /></a>
+  <img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen" />
 </p>
 
 ---
