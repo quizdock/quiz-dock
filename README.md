@@ -68,6 +68,27 @@ the results never leave your servers.
 - 🏠 **Self-hosted & private** — runs on your own infra with Docker; no SaaS, no tracking, no ads; players need no account, hosts can plug in OIDC.
 - 🎨 **White-label** — rebrand name, logo and CSS via env + a mounted folder, no rebuild.
 
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/live-projector.png" alt="Projector — live question" /><br /><sub><b>Projector</b> — live question, Kahoot-style</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/live-player.png" alt="Player view" /><br /><sub><b>Player</b> — answer from any device</sub></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/host-control.png" alt="Host control" /><br /><sub><b>Host control</b> during a question</sub></td>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/leaderboard.png" alt="Leaderboard" /><br /><sub><b>Live leaderboard</b></sub></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/editor.png" alt="Quiz editor" /><br /><sub><b>Quiz builder</b> — 7 question types</sub></td>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/dashboard.png" alt="Dashboard" /><br /><sub><b>Dashboard</b> — your quizzes</sub></td>
+  </tr>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/present-lobby.png" alt="Lobby" /><br /><sub><b>Lobby</b> — join by PIN / QR code</sub></td>
+    <td><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/preview.png" alt="Preview" /><br /><sub><b>Preview</b> — player view of a question</sub></td>
+  </tr>
+</table>
+
 ## 🚀 Quick start (self-host)
 
 QuizDock ships as **one image** — [`fchaussin/quizdock`](https://hub.docker.com/r/fchaussin/quizdock)
