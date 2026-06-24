@@ -1,4 +1,4 @@
-# Live-Quizz
+# QuizDock
 
 **Plateforme de quiz interactifs en temps réel** — un clone de Kahoot : un formateur anime une session live, les apprenants répondent depuis leur appareil, et la rapidité comme l'exactitude rapportent des points.
 
@@ -6,7 +6,7 @@
 
 ---
 
-## ✨ Ce que fait Live-Quizz
+## ✨ Ce que fait QuizDock
 
 - 🎯 **Quiz chronométrés** avec notation au temps de réponse (réponse rapide = plus de points) + bonus de série.
 - 👥 **Multijoueur temps réel** : 10 à 200 apprenants par session, via un simple **PIN**.

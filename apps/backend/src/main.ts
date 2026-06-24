@@ -27,7 +27,7 @@ async function bootstrap(): Promise<void> {
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, '0.0.0.0');
-  Logger.log(`Live-Quizz API démarrée sur le port ${port}`, 'Bootstrap');
+  Logger.log(`QuizDock API démarrée sur le port ${port}`, 'Bootstrap');
 }
 
 void bootstrap();

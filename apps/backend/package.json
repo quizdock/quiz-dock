@@ -1,8 +1,8 @@
 {
-  "name": "@live-quizz/backend",
+  "name": "@quiz-dock/backend",
   "version": "0.1.0",
   "private": true,
-  "description": "API Live-Quizz : REST (builder) + WebSocket (jeu) — NestJS + Socket.IO",
+  "description": "API QuizDock : REST (builder) + WebSocket (jeu) — NestJS + Socket.IO",
   "scripts": {
     "build": "nest build",
     "start": "node dist/main.js",
@@ -25,7 +25,7 @@
     "@nestjs/websockets": "^11.1.26",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "@live-quizz/contracts": "workspace:*",
+    "@quiz-dock/contracts": "workspace:*",
     "ioredis": "^5.11.1",
     "jose": "^5.10.0",
     "nestjs-zod": "^5.4.0",

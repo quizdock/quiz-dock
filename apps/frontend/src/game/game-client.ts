@@ -1,4 +1,4 @@
-import type { ClientToServerEvents, ServerToClientEvents } from '@live-quizz/contracts';
+import type { ClientToServerEvents, ServerToClientEvents } from '@quiz-dock/contracts';
 import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
 import { errorText } from '../api/error-text';

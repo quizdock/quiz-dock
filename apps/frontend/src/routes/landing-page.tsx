@@ -1,4 +1,4 @@
-import { CONTRACTS_VERSION } from '@live-quizz/contracts';
+import { CONTRACTS_VERSION } from '@quiz-dock/contracts';
 import { useNavigate } from '@tanstack/react-router';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';

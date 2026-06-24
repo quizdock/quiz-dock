@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { CONTRACTS_VERSION } from '@live-quizz/contracts';
+import { CONTRACTS_VERSION } from '@quiz-dock/contracts';
 import { HealthController } from './health.controller';
 
 describe('HealthController', () => {
@@ -15,7 +15,7 @@ describe('HealthController', () => {
   it('renvoie un statut ok', () => {
     const result = controller.check();
     expect(result.status).toBe('ok');
-    expect(result.service).toBe('live-quizz-backend');
+    expect(result.service).toBe('quiz-dock-backend');
   });
 
   it('expose la version du contrat partagé', () => {

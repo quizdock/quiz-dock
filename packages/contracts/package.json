@@ -1,5 +1,5 @@
 {
-  "name": "@live-quizz/contracts",
+  "name": "@quiz-dock/contracts",
   "version": "0.1.0",
   "private": true,
   "description": "Types partagés front/back : contrat WebSocket et énumérations du domaine",

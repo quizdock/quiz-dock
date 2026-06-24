@@ -47,7 +47,7 @@ importers:
 
   apps/backend:
     dependencies:
-      '@live-quizz/contracts':
+      '@quiz-dock/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       '@nestjs/common':
@@ -150,7 +150,7 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@live-quizz/contracts':
+      '@quiz-dock/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
       '@multiavatar/multiavatar':

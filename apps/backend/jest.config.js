@@ -5,7 +5,7 @@ module.exports = {
   rootDir: 'src',
   testRegex: '.*\\.spec\\.ts$',
   moduleNameMapper: {
-    '^@live-quizz/contracts$': '<rootDir>/../../../packages/contracts/src/index.ts',
+    '^@quiz-dock/contracts$': '<rootDir>/../../../packages/contracts/src/index.ts',
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',

@@ -1,5 +1,5 @@
 {
-  "name": "live-quizz",
+  "name": "quiz-dock",
   "version": "0.1.0",
   "private": true,
   "description": "Plateforme de quiz interactifs temps réel (clone de Kahoot)",
@@ -16,8 +16,8 @@
     "format:fix": "prettier --write .",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "contracts:build": "pnpm --filter @live-quizz/contracts build",
-    "generate:api": "pnpm --filter @live-quizz/backend openapi && pnpm --filter @live-quizz/frontend orval",
+    "contracts:build": "pnpm --filter @quiz-dock/contracts build",
+    "generate:api": "pnpm --filter @quiz-dock/backend openapi && pnpm --filter @quiz-dock/frontend orval",
     "prepare": "husky || true"
   },
   "devDependencies": {

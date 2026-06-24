@@ -6,7 +6,7 @@ import type {
   PublicOption,
   QuestionStartPayload,
   QuestionType,
-} from '@live-quizz/contracts';
+} from '@quiz-dock/contracts';
 import { basePointsFor } from './scoring';
 import type { QuizSnapshot, SnapshotQuestion } from './game.types';
 

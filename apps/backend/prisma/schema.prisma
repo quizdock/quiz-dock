@@ -1,4 +1,4 @@
-// Schéma de données Live-Quizz — source : specifications/SPECIFICATIONS-DONNEES.md
+// Schéma de données QuizDock — source : specifications/SPECIFICATIONS-DONNEES.md
 // Conventions (§0) : PK/FK = ULID char(26) ; DB en snake_case (@map/@@map),
 // TS en camelCase ; horodatage timestamptz UTC ; enums Postgres natifs (§3).
 
@@ -16,7 +16,7 @@ datasource db {
 
 // Les membres portent directement la valeur du domaine (§3) : la valeur émise par
 // le client Prisma == valeur en base == valeur sur le fil (REST/WS), cohérente avec
-// le package @live-quizz/contracts. (@@map nomme le type Postgres.)
+// le package @quiz-dock/contracts. (@@map nomme le type Postgres.)
 
 enum UserRole {
   host

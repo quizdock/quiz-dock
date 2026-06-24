@@ -4,7 +4,7 @@ import type {
   OptionColor,
   OptionShape,
   QuestionType,
-} from '@live-quizz/contracts';
+} from '@quiz-dock/contracts';
 
 /**
  * Snapshot serveur du quiz (SPECIFICATIONS §8 / mémoire gameplay-v0-3).

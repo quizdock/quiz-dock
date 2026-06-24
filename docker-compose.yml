@@ -1,4 +1,4 @@
-name: live-quizz
+name: quiz-dock
 
 services:
   postgres:
@@ -6,11 +6,11 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-live}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-live}
-      POSTGRES_DB: ${POSTGRES_DB:-livequizz}
+      POSTGRES_DB: ${POSTGRES_DB:-quizdock}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-live} -d ${POSTGRES_DB:-livequizz}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-live} -d ${POSTGRES_DB:-quizdock}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,7 +52,7 @@ services:
       NODE_ENV: production
       PORT: '3000'
       AUTH_MODE: ${AUTH_MODE:-none}
-      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-livequizz}
+      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
       REDIS_URL: redis://redis:6379
       # Médias stockés sur un volume local et servis par le backend (proxy).
       MEDIA_DIR: /data/media
@@ -60,10 +60,10 @@ services:
       # Auth OIDC (utilisé seulement si AUTH_MODE=oidc). En Docker, l'issuer (host
       # vu par le navigateur) diffère de l'URI JWKS (host interne) — d'où deux
       # variables. Keycloak est l'IdP de référence en dev.
-      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:48080/realms/live-quizz}
-      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/live-quizz/protocol/openid-connect/certs}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:48080/realms/quiz-dock}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/quiz-dock/protocol/openid-connect/certs}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
-      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-live-quizz-frontend}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-quiz-dock-frontend}
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
       target: runtime
     environment:
       # White-label : nom d'app injecté au runtime dans /config.js (sans rebuild).
-      APP_NAME: ${APP_NAME:-Live-Quizz}
+      APP_NAME: ${APP_NAME:-QuizDock}
     depends_on:
       backend:
         condition: service_healthy

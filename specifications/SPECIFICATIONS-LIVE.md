@@ -1,4 +1,4 @@
-# Live-Quizz — Spécifications de la partie live
+# QuizDock — Spécifications de la partie live
 
 > Cadrage **détaillé** de l'animation temps réel : architecture multi-fenêtres du
 > présentateur, écrans joueurs, attachement/reconnexion, et liaison de chaque
@@ -263,7 +263,7 @@ Les wireframes (UI §3–§5) donnent le *look* ; cette matrice donne la *liaiso
 
 ## 10. Extensions nécessaires (à implémenter après cette spec)
 
-### 10.1 Contrat WebSocket (technique §9 + package `@live-quizz/contracts`)
+### 10.1 Contrat WebSocket (technique §9 + package `@quiz-dock/contracts`)
 Nouveaux events à ajouter (typés bout-en-bout) :
 
 | Event | Sens | Payload | Effet |

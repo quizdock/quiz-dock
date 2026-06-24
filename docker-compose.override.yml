@@ -26,7 +26,7 @@ services:
       [
         'sh',
         '-c',
-        'pnpm install --filter @live-quizz/backend... --frozen-lockfile --prefer-offline && pnpm --filter @live-quizz/contracts build && node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
+        'pnpm install --filter @quiz-dock/backend... --frozen-lockfile --prefer-offline && pnpm --filter @quiz-dock/contracts build && node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
       ]
     environment:
       NODE_ENV: development
@@ -56,12 +56,12 @@ services:
       [
         'sh',
         '-c',
-        'printf "%s" "window.__APP_CONFIG__ = { appName: \"${APP_NAME:-Live-Quizz}\" };" > apps/frontend/public/config.js && pnpm install --filter @live-quizz/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @live-quizz/contracts build && pnpm --filter @live-quizz/frontend dev --host --port 5173',
+        'printf "%s" "window.__APP_CONFIG__ = { appName: \"${APP_NAME:-QuizDock}\" };" > apps/frontend/public/config.js && pnpm install --filter @quiz-dock/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @quiz-dock/contracts build && pnpm --filter @quiz-dock/frontend dev --host --port 5173',
       ]
     environment:
       VITE_API_URL: http://backend:3000
       # White-label : nom d'app injecté dans public/config.js au démarrage (sans rebuild).
-      APP_NAME: ${APP_NAME:-Live-Quizz}
+      APP_NAME: ${APP_NAME:-QuizDock}
       npm_config_verify_deps_before_run: 'false'
     volumes:
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro

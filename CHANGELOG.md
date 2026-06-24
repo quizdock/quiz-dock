@@ -1,10 +1,21 @@
 # Changelog
 
-Toutes les évolutions notables de Live-Quizz. Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/),
+Toutes les évolutions notables de QuizDock. Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/),
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
 ## [Non publié] — v0.3.0 Jeu de base (en cours)
+
+### Changed
+- **Renommage de marque `live-quizz` → `QuizDock`** : le nom `Live-Quizz` entrait en
+  collision (nom + créneau identiques, antériorité) avec [Live Quiz](https://live-quiz.forge.apps.education.fr),
+  outil de l'Éducation nationale. `QuizDock` repositionne sur le **self-hosted interne**
+  (« dock » ⇒ déploiement conteneur) et libère npm / domaine / Docker Hub. Scope npm
+  (`@quiz-dock/*`), projet/réseaux Docker, DB (`quizdock`), realm Keycloak (`quiz-dock`),
+  client OIDC (`quiz-dock-frontend`), titres OpenAPI, code Orval régénéré, `APP_NAME` par
+  défaut. Les identifiants **protocole** (events WS `/game`, `GameState`, modèles Prisma) et
+  le mot **`live`** descriptif (clés `localStorage live.*`, i18n `live.json`) restent inchangés.
+  Cf. [ADR 0003](docs/adr/0003-rename-quizdock.md).
 
 ### Added
 - **Fondation temps réel** : gateway **Socket.IO** `/game` (NestJS), **auth au handshake**

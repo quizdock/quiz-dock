@@ -1,12 +1,12 @@
 import { type ArgumentsHost, Catch, Logger } from '@nestjs/common';
 import { BaseWsExceptionFilter } from '@nestjs/websockets';
-import type { ServerToClientEvents } from '@live-quizz/contracts';
+import type { ServerToClientEvents } from '@quiz-dock/contracts';
 import type { Socket } from 'socket.io';
 import { toErrorResponse } from '../common/error-response';
 
 /**
  * Convertit toute exception levée dans un handler WS en event **`error` typé**
- * (`{ code, params? }`, conforme à `@live-quizz/contracts`) plutôt que l'event
+ * (`{ code, params? }`, conforme à `@quiz-dock/contracts`) plutôt que l'event
  * générique `exception` de Nest. **Token uniquement** : on émet le code domaine
  * (ex. `session.not_found`), jamais de texte — le client résout via i18n (ADR 0001).
  */

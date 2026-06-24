@@ -8,12 +8,12 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc tsconfig.base.json ./
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/frontend/package.json apps/frontend/
-RUN pnpm install --filter @live-quizz/frontend... --no-frozen-lockfile
+RUN pnpm install --filter @quiz-dock/frontend... --no-frozen-lockfile
 
 COPY packages/contracts packages/contracts
 COPY apps/frontend apps/frontend
-RUN pnpm --filter @live-quizz/contracts build \
- && pnpm --filter @live-quizz/frontend build
+RUN pnpm --filter @quiz-dock/contracts build \
+ && pnpm --filter @quiz-dock/frontend build
 
 # ---- runtime (Nginx statique) ----
 FROM nginx:alpine AS runtime

@@ -1,4 +1,4 @@
-import { GameState } from '@live-quizz/contracts';
+import { GameState } from '@quiz-dock/contracts';
 import { act, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameView } from '../game/use-game-session';

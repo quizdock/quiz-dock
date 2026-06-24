@@ -18,7 +18,7 @@ import {
   SignJWT,
 } from 'jose';
 
-const ISSUER = 'http://localhost:8080/realms/live-quizz';
+const ISSUER = 'http://localhost:8080/realms/quiz-dock';
 const KID = 'test-key';
 
 let privateKey: Awaited<ReturnType<typeof generateKeyPair>>['privateKey'];
@@ -114,8 +114,8 @@ describe('OidcProvider', () => {
   });
 
   it('vérifie l’audience quand elle est configurée', async () => {
-    const provider = await buildProvider('live-quizz-api');
-    const ok = await provider.authenticate(bearer(await makeToken({ audience: 'live-quizz-api' })));
+    const provider = await buildProvider('quiz-dock-api');
+    const ok = await provider.authenticate(bearer(await makeToken({ audience: 'quiz-dock-api' })));
     expect(ok?.sub).toBe('kc-sub-123');
     const ko = await provider.authenticate(bearer(await makeToken({ audience: 'account' })));
     expect(ko).toBeNull();

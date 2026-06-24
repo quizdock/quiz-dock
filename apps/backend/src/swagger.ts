@@ -12,7 +12,7 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
  */
 export function buildSwaggerDocument(app: INestApplication): OpenAPIObject {
   const config = new DocumentBuilder()
-    .setTitle('Live-Quizz API')
+    .setTitle('QuizDock API')
     .setDescription('API REST du builder de quiz et des restitutions')
     .setVersion('0.1.0')
     .build();

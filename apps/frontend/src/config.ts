@@ -15,7 +15,7 @@ export interface AppConfig {
 }
 
 const DEFAULTS: AppConfig = {
-  appName: 'Live-Quizz',
+  appName: 'QuizDock',
   logoUrl: '/branding/logo.svg',
   overrideCssUrl: '/branding/override.css',
 };

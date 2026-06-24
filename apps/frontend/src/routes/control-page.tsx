@@ -1,4 +1,4 @@
-import type { GameMode, OutlineQuestion } from '@live-quizz/contracts';
+import type { GameMode, OutlineQuestion } from '@quiz-dock/contracts';
 import { Link, useParams } from '@tanstack/react-router';
 import {
   Ban,
@@ -71,7 +71,7 @@ export function ControlPage() {
     if (!canvas) return null;
     try {
       const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-      return blob ? new File([blob], `live-quizz-${pin}.png`, { type: 'image/png' }) : null;
+      return blob ? new File([blob], `quiz-dock-${pin}.png`, { type: 'image/png' }) : null;
     } catch {
       return null;
     }

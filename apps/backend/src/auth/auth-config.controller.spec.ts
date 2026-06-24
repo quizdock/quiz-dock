@@ -17,14 +17,14 @@ describe('AuthConfigController', () => {
     process.env = {
       ...env,
       AUTH_MODE: 'oidc',
-      OIDC_ISSUER: 'http://localhost:18080/realms/live-quizz',
-      OIDC_CLIENT_ID: 'live-quizz-frontend',
+      OIDC_ISSUER: 'http://localhost:18080/realms/quiz-dock',
+      OIDC_CLIENT_ID: 'quiz-dock-frontend',
     };
     expect(controller.config()).toEqual({
       mode: 'oidc',
       oidc: {
-        authority: 'http://localhost:18080/realms/live-quizz',
-        clientId: 'live-quizz-frontend',
+        authority: 'http://localhost:18080/realms/quiz-dock',
+        clientId: 'quiz-dock-frontend',
       },
     });
   });

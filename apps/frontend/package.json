@@ -1,8 +1,8 @@
 {
-  "name": "@live-quizz/frontend",
+  "name": "@quiz-dock/frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "Frontend Live-Quizz : React + Vite + shadcn/ui + TanStack",
+  "description": "Frontend QuizDock : React + Vite + shadcn/ui + TanStack",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@multiavatar/multiavatar": "^1.0.7",
-    "@live-quizz/contracts": "workspace:*",
+    "@quiz-dock/contracts": "workspace:*",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-form": "^1.33.0",
     "@tanstack/react-query": "^5.101.0",

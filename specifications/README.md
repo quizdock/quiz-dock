@@ -1,4 +1,4 @@
-# Live-Quizz — Spécifications (index)
+# QuizDock — Spécifications (index)
 
 > Hub des **spécifications de référence** du projet. Pour une présentation générale, voir le **[README racine](../README.md)**. La doc de développement vivante est dans **[../docs/](../docs/README.md)**.
 
@@ -39,7 +39,7 @@ Lire dans cet ordre pour découvrir le projet :
 
 | Couche | Choix |
 |--------|-------|
-| Monorepo | **pnpm** workspaces (front + back + `@live-quizz/contracts`) |
+| Monorepo | **pnpm** workspaces (front + back + `@quiz-dock/contracts`) |
 | Frontend | **React + Vite + TypeScript**, **shadcn/ui** + icônes **lucide-react**, **TanStack** Query/Form/Router/Table, client REST généré par **Orval** |
 | Backend | **Node.js + TypeScript (NestJS)** + **Socket.IO** |
 | Temps réel | Socket.IO + **adapter Redis** |

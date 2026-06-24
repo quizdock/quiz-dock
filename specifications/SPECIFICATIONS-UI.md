@@ -1,4 +1,4 @@
-# Live-Quizz — Maquettes & écrans (wireframes)
+# QuizDock — Maquettes & écrans (wireframes)
 
 > Vue **IHM / parcours écran**, basse fidélité (ASCII). Complète `SPECIFICATIONS-METIER.md`.
 > Périmètre v1 : formation entreprise, mode individuel, quiz privés.
@@ -19,7 +19,7 @@
 ### 1.1 Accueil (non connecté)
 ```
 ┌──────────────────────────────────────────────┐
-│                 LIVE-QUIZZ                     │
+│                 QUIZDOCK                     │
 │                Quizz interactif                │
 │                                                │
 │   ┌──────────────────────────────────────┐    │
@@ -40,7 +40,7 @@
 ### 2.1 Tableau de bord — Ma banque de quiz
 ```
 ┌───────────────────────────────────────────────────────────┐
-│ LIVE-QUIZZ   Mes quiz │ Historique           Claire ▾      │
+│ QUIZDOCK   Mes quiz │ Historique           Claire ▾      │
 ├───────────────────────────────────────────────────────────┤
 │ [ + Nouveau quiz ]        Rechercher [____________]  🔍     │
 │                                                            │
@@ -147,7 +147,7 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 ### 4.1 Lobby projeté
 ```
 ┌───────────────────────────────────────────────────────────┐
-│        Rejoignez sur  live-quizz.app   —   PIN : 482917     │
+│        Rejoignez sur  quiz-dock.app   —   PIN : 482917     │
 │                                                            │
 │      marc   sophie   leo   nadia   karim   inès   ...       │
 │                         23 joueurs                         │

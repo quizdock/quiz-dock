@@ -4,7 +4,7 @@
 # Déposé dans /docker-entrypoint.d/ → exécuté par l'entrypoint nginx avant le start.
 set -e
 
-: "${APP_NAME:=Live-Quizz}"
+: "${APP_NAME:=QuizDock}"
 # Échappe les guillemets doubles pour rester un littéral JS valide.
 escaped=$(printf '%s' "$APP_NAME" | sed 's/"/\\"/g')
 

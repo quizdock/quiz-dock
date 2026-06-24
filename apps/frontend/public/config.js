@@ -2,5 +2,5 @@
 // en conteneur, ce fichier est régénéré depuis l'env (APP_NAME) au démarrage.
 // Voir apps/frontend/src/config.ts.
 window.__APP_CONFIG__ = {
-  appName: 'Live-Quizz',
+  appName: 'QuizDock',
 };
