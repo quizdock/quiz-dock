@@ -1,0 +1,53 @@
+#
+# QuizDock ALL-IN-ONE (:standalone) — PostgreSQL + Redis + app in a single
+# container, for one-command demo / beginner use on Docker Desktop:
+#
+#   docker run -p 18080:3000 -v quizdock:/data fchaussin/quizdock:standalone
+#
+# Reuses the EXACT app artifact from the hardened :latest image (zero drift) and
+# only adds the databases + a tiny supervisor. NOT hardened (Postgres/Redis need
+# to write) and NOT for serious production — use the multi-service compose there.
+
+# Exact app build, already produced by the main image.
+FROM fchaussin/quizdock:latest AS app
+
+FROM node:24-bookworm-slim AS runtime
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      postgresql postgresql-contrib redis-server tini ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# Non-root runtime user that owns /data. A NAMED volume mounted at /data inherits
+# this ownership on first init (so Postgres can write its cluster there).
+RUN useradd -u 65532 -m -d /home/quizdock quizdock \
+ && mkdir -p /data/postgres /data/media \
+ && chown -R quizdock:quizdock /data
+
+# App artifact (dist, node_modules, prisma schema/config, built SPA, prisma client).
+COPY --from=app --chown=quizdock:quizdock /app /app
+COPY --chown=quizdock:quizdock docker/standalone-entrypoint.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    CLIENT_DIR=/app/client \
+    MEDIA_DIR=/data/media \
+    PGDATA=/data/postgres \
+    DATABASE_URL=postgresql://quizdock@127.0.0.1:5432/quizdock \
+    REDIS_URL=redis://127.0.0.1:6379 \
+    APP_NAME=QuizDock \
+    APP_LANG=en \
+    AUTH_MODE=none
+
+WORKDIR /app
+USER quizdock
+EXPOSE 3000
+VOLUME ["/data"]
+
+# node is on PATH here (not distroless) → node-based healthcheck. Generous
+# start-period: first boot runs initdb + migrations.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=8 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/start.sh"]
