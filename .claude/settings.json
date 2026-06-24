@@ -37,5 +37,8 @@
       "Bash(node_modules/.bin/prisma:*)",
       "Read(//tmp/**)"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
   }
 }
