@@ -29,6 +29,7 @@ the results never leave your servers.
 ## ✨ Features
 
 - ⚡ **Real-time multiplayer** — Socket.IO engine with authoritative server timing; players join by 6-digit PIN or QR code.
+- 🦄 **Player avatars** — every player gets a unique, generated [Multiavatar](https://multiavatar.com) avatar — no upload, no account.
 - 🖥️ **Projector-ready** — bright, high-contrast light screens built for the big screen, with separate projection and control windows.
 - 🧩 **Quiz builder** — seven question types (single/multi choice, true-false, text, numeric, reorder, poll) with image & audio media.
 - 🏆 **Live scoring & podium** — time-weighted points with streak bonuses, leaderboard between questions, final podium; manual or auto pacing.
