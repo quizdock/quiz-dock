@@ -1,14 +1,14 @@
 # QuizDock — Maquettes & écrans (wireframes)
 
 > Vue **IHM / parcours écran**, basse fidélité (ASCII). Complète `SPECIFICATIONS-METIER.md`.
-> Périmètre v1 : formation entreprise, mode individuel, quiz privés.
+> Périmètre v1 : session entreprise, mode individuel, quiz privés.
 > Version 1.0 — 2026-06-09. Les wireframes fixent le **contenu et la hiérarchie**, pas le style graphique.
 
 ---
 
 ## 0. Conventions
 
-- 3 surfaces : **Console formateur** (desktop), **Écran de jeu projeté** (grand écran/vidéoproj), **Client apprenant** (mobile).
+- 3 surfaces : **Console animateur** (desktop), **Écran de jeu projeté** (grand écran/vidéoproj), **Client participant** (mobile).
 - `[ Bouton ]` action · `( ) / (•)` choix · `▣` zone média · `▮▮▮` barre/jauge · `⏱` chrono.
 - Couleurs de réponse Kahoot-like, **chaque réponse = couleur + forme** (▲ ◆ ● ■) pour l'accessibilité.
 
@@ -27,7 +27,7 @@
 │   │   PIN : [ _ _ _ _ _ _ ]   [ Rejoindre ]│   │
 │   └──────────────────────────────────────┘    │
 │                                                │
-│   Formateur ?   [ Se connecter ]               │
+│   Animateur ?   [ Se connecter ]               │
 │                 (OIDC / SSO ou mode local)     │
 └──────────────────────────────────────────────┘
 ```
@@ -35,7 +35,7 @@
 
 ---
 
-## 2. Console formateur (desktop)
+## 2. Console animateur (desktop)
 
 ### 2.1 Tableau de bord — Ma banque de quiz
 ```
@@ -83,7 +83,7 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 ### 2.3 Prévisualisation d'une question
 ```
 ┌───────────────────────────────────────────────────────────┐
-│  Aperçu (vue apprenant)                        [ Fermer ]  │
+│  Aperçu (vue participant)                        [ Fermer ]  │
 │  ▣ média                                                   │
 │  « Quel comportement signale un e-mail de phishing ? »     │
 │  ⏱ 20 s                                                    │
@@ -94,26 +94,26 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 
 ---
 
-## 3. Animation de session — console formateur
+## 3. Animation de session — console animateur
 
-### 3.1 Lobby (côté formateur)
+### 3.1 Lobby (côté animateur)
 ```
 ┌───────────────────────────────────────────────────────────┐
 │  Session : Onboarding sécurité                             │
 │  PIN : 4 8 2 9 1 7        [ Afficher en grand ]            │
-│  Apprenants connectés : 23                                 │
+│  Participants connectés : 23                                 │
 │                                                            │
 │  marc · sophie · leo · nadia · ... (liste, clic = exclure) │
 │                                                            │
 │  ☐ Enregistrer toutes les réponses (audit / certification) │
-│     ⓘ Les apprenants en seront informés au démarrage.      │
+│     ⓘ Les participants en seront informés au démarrage.      │
 │                                                            │
 │  [ Démarrer la session ]                  [ Annuler ]      │
 └───────────────────────────────────────────────────────────┘
 ```
 > La case « Enregistrer toutes les réponses » active le **mode capture intégrale** (RG-13). Verrouillée une fois la session démarrée.
 
-### 3.2 Pendant une question (côté formateur)
+### 3.2 Pendant une question (côté animateur)
 ```
 ┌───────────────────────────────────────────────────────────┐
 │  Question 3 / 12                              ⏱ 12 s       │
@@ -125,7 +125,7 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 └───────────────────────────────────────────────────────────┘
 ```
 
-### 3.3 Révélation + classement (côté formateur)
+### 3.3 Révélation + classement (côté animateur)
 ```
 ┌───────────────────────────────────────────────────────────┐
 │  Bonne réponse : ◆ « Expéditeur inconnu + lien urgent »    │
@@ -172,7 +172,7 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 
 ---
 
-## 5. Client apprenant (mobile)
+## 5. Client participant (mobile)
 
 ### 5.1 Rejoindre
 ```
@@ -190,18 +190,18 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 │      partie !      │
 │      « marc »      │
 │  En attente du     │
-│  formateur…        │
+│  animateur…        │
 └───────────────────┘
 ```
 
 ### 5.2 bis Avis de capture intégrale (si activé)
-Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enregistrement complet :
+Affiché au join **avant** toute collecte, lorsque le animateur a activé l'enregistrement complet :
 ```
 ┌───────────────────────────────┐
 │  ⓘ Session enregistrée         │
 │  Tes réponses individuelles    │
 │  seront conservées pour le     │
-│  suivi de formation.           │
+│  suivi de session.           │
 │            [ J'ai compris ]    │
 └───────────────────────────────┘
 ```
@@ -234,7 +234,7 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 └───────────────────┘    └───────────────────┘
 ```
 
-### 5.5 Podium final (apprenant + projeté)
+### 5.5 Podium final (participant + projeté)
 ```
 ┌───────────────────────────────┐
 │            🏆 Podium           │
@@ -250,7 +250,7 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 
 ---
 
-## 6. Restitution de session (formateur)
+## 6. Restitution de session (animateur)
 
 ### 6.1 Synthèse
 ```
@@ -281,7 +281,7 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 
 ---
 
-## 7. Historique apprenant (connecté)
+## 7. Historique participant (connecté)
 ```
 ┌───────────────────────────────────────────────────────────┐
 │  Mes sessions                                              │
@@ -291,7 +291,7 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 │  (progression dans le temps ▮▮▮▮▮▮▯▯)                      │
 └───────────────────────────────────────────────────────────┘
 ```
-> Disponible uniquement si `AUTH_MODE=oidc` (apprenant identifié).
+> Disponible uniquement si `AUTH_MODE=oidc` (participant identifié).
 
 ---
 
@@ -301,9 +301,9 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 |-----------|-----------------|
 | PIN invalide / session close | « Aucune session pour ce PIN. » |
 | Pseudo déjà pris | « Ce pseudo est déjà utilisé, choisis-en un autre. » |
-| Déconnexion apprenant | Bandeau « Reconnexion… » → reprise auto (technique §11) |
-| Hôte déconnecté | « Le formateur s'est déconnecté, la partie est en pause. » |
-| Apprenant exclu | « Tu as été retiré de la session par le formateur. » |
+| Déconnexion participant | Bandeau « Reconnexion… » → reprise auto (technique §11) |
+| Hôte déconnecté | « Le animateur s'est déconnecté, la partie est en pause. » |
+| Participant exclu | « Tu as été retiré de la session par le animateur. » |
 | Réponse hors délai | « Temps écoulé — réponse non comptée. » |
 | Session enregistrée (capture) | Avis « Tes réponses seront conservées » → [ J'ai compris ] (RG-13) |
 | Fin de session | Podium → écran de remerciement |
@@ -312,9 +312,9 @@ Affiché au join **avant** toute collecte, lorsque le formateur a activé l'enre
 
 ## 9. Principes d'ergonomie (v1)
 
-- **Mobile-first** côté apprenant : grandes cibles tactiles, une action par écran.
+- **Mobile-first** côté participant : grandes cibles tactiles, une action par écran.
 - **Lisibilité projetée** : énoncé sur le grand écran, choix minimal sur le mobile (le mobile peut n'afficher que les couleurs/formes).
 - **Feedback immédiat** systématique (juste/faux + points + rang).
-- **Accessibilité** : couleur **+** forme, contraste AA, navigation clavier (console formateur), tailles tactiles ≥ 44 px.
+- **Accessibilité** : couleur **+** forme, contraste AA, navigation clavier (console animateur), tailles tactiles ≥ 44 px.
 - **i18n** FR/EN ; libellés externalisés.
-- **Charge cognitive minimale** pour l'apprenant pendant le chrono.
+- **Charge cognitive minimale** pour l'participant pendant le chrono.

@@ -206,7 +206,7 @@ export function LeaderboardList({
   );
 }
 
-/** Podium top 3 (apprenant + projeté, §5.5). */
+/** Podium top 3 (participant + projeté, §5.5). */
 export function Podium({ rows }: { rows: LeaderboardRow[] }) {
   const order = [rows[1], rows[0], rows[2]]; // 2 · 1 · 3
   const heights = ['h-24', 'h-32', 'h-20'];

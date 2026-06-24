@@ -74,7 +74,7 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   répartition + classement + suivant ; podium) survivant au rechargement via `host:attach`.
   **Écran projeté** `/present/$pin/screen` (spectateur lecture seule, plein écran : lobby,
   question + chrono + compteur, répartition, podium ; jamais la bonne réponse avant reveal).
-  **Client apprenant** `/join/$pin` (machine à états : reprise `player:reconnect` sinon
+  **Client participant** `/join/$pin` (machine à états : reprise `player:reconnect` sinon
   écran pseudo ; grille de réponse verrouillée à 1, feedback perso, podium, avis capture).
   `/present/$pin` redirige vers `…/control`. **Dashboard** : panneau « parties en cours »
   (REST `GET /games/mine` typé Orval) pour reprendre une partie sans avoir gardé l'URL (§6.2).
@@ -90,7 +90,7 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 
 ## [0.2.0] - 2026-06-12 — Builder + Auth
 
-Un formateur s'authentifie (local ou OIDC), crée des quiz multi-questions (7 types) avec médias,
+Un animateur s'authentifie (local ou OIDC), crée des quiz multi-questions (7 types) avec médias,
 les réordonne, prévisualise et publie. Client REST 100 % généré par Orval ; UI shadcn/ui + icônes.
 
 ### Added
@@ -109,11 +109,11 @@ les réordonne, prévisualise et publie. Client REST 100 % généré par Orval ;
   payload propre par type et **affiche les erreurs de validation** renvoyées par l'API (400).
 - **Média dans le formulaire de question** : composant d'upload (`POST /media` via le client Orval,
   multipart) avec aperçu et retrait ; le `mediaId` est attaché à la question. Affiché dans l'aperçu.
-- **Plein écran + responsive** sur l'aperçu (vue apprenant) : hook réutilisable `useFullscreen`
+- **Plein écran + responsive** sur l'aperçu (vue participant) : hook réutilisable `useFullscreen`
   (API Fullscreen, dégrade proprement) + bouton « Plein écran » ; énoncé/options agrandis en
   plein écran, grille d'options responsive. Fondation pour les écrans live v0.3.0 (projeté/joueur).
 - **Prévisualisation** (P2-FRONT-4) : bouton **« Aperçu ↗ »** dans l'éditeur ouvrant le quiz dans un
-  **nouvel onglet** (`/quizzes/:id/preview`), rendu **vue apprenant** (UI §2.3) — média, énoncé, ⏱,
+  **nouvel onglet** (`/quizzes/:id/preview`), rendu **vue participant** (UI §2.3) — média, énoncé, ⏱,
   options en grille couleur+forme (glyphe par forme, accessibilité), navigation question par question,
   bonne réponse indiquée (aperçu propriétaire). Fallback SPA nginx vérifié pour le deep link.
 - **Tests d'intégration frontend** (harnais router mémoire + Query + auth + `fetch` mocké) :
@@ -121,7 +121,7 @@ les réordonne, prévisualise et publie. Client REST 100 % généré par Orval ;
   publication PATCH, publication désactivée si 0 question), garde de route → login.
 - **Upload média** (P2-BACK-5) sur **volume local** servi par le backend : `POST /media`
   (multipart, authentifié, validation mime image/audio + taille `MEDIA_MAX_BYTES`),
-  `GET /media/:id` (**public** — chargé aussi par les apprenants en jeu), `DELETE /media/:id`
+  `GET /media/:id` (**public** — chargé aussi par les participants en jeu), `DELETE /media/:id`
   (propriétaire). `media_asset.url` = route de service backend ; un fichier par id.
 - **CRUD Questions + options + réponses** (P2-BACK-3) + **validation par type** (P2-BACK-4) :
   `POST /quizzes/:id/questions`, `PUT/DELETE /questions/:qid`, `PATCH /quizzes/:id/questions/reorder`.
@@ -151,7 +151,7 @@ les réordonne, prévisualise et publie. Client REST 100 % généré par Orval ;
   `@CurrentUser()` ; **provisioning** utilisateur idempotent (`UsersService.upsertFromPrincipal`,
   upsert sur `oidcSubject`).
 - **`GET /me`** : profil de l'utilisateur authentifié (exerce guard + provisioning + `@CurrentUser`).
-- **Realm de référence** : direct grant + utilisateur de test `formateur` (rôle `host`) pour login/dev.
+- **Realm de référence** : direct grant + utilisateur de test `animateur` (rôle `host`) pour login/dev.
 
 ### Fixed
 - **Client Orval : double préfixe `/api/v1/api/v1/...`** corrigé (les chemins OpenAPI portent déjà

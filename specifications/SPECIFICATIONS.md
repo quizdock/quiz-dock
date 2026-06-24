@@ -399,7 +399,7 @@ GET    /me/history                             historique (joueur connecté)
 | **Scalabilité** | Horizontale via instances Node + adapter Redis sans état local |
 | **Disponibilité** | Reprise de partie après crash d'une instance |
 | **Sécurité** | TLS partout ; JWT validés (signature, exp, audience) ; CORS strict ; rate-limit |
-| **RGPD** | Pseudos = données perso si joueur connecté ; suppression de compte → anonymisation des logs ; invités non identifiables ; **capture intégrale** opt-in par session avec **avis aux apprenants avant collecte** (cf. données §2.10) |
+| **RGPD** | Pseudos = données perso si joueur connecté ; suppression de compte → anonymisation des logs ; invités non identifiables ; **capture intégrale** opt-in par session avec **avis aux participants avant collecte** (cf. données §2.10) |
 | **Accessibilité** | Couleur **+** forme ; contraste AA ; navigation clavier ; tailles tactiles |
 | **i18n** | FR/EN dès la v1 ; `language` au niveau du quiz |
 | **Observabilité** | Logs structurés, métriques (parties actives, sockets, latence), traces |

@@ -51,7 +51,7 @@ const view = (partial: Partial<GameView>): GameView => ({
 
 const PARIS = { id: 'opt-paris', text: 'Paris', color: 'red', shape: 'triangle' } as const;
 
-describe('PlayerPage (client apprenant)', () => {
+describe('PlayerPage (client participant)', () => {
   afterEach(() => {
     vi.clearAllMocks();
     loadPlayerSession.mockReturnValue(null);

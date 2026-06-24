@@ -33,8 +33,8 @@ describe('NoAuthProvider', () => {
 
   it('utilise un utilisateur par défaut sans en-tête', async () => {
     const principal = await provider.authenticate(reqWith({}));
-    expect(principal.sub).toBe('local:formateur-local');
-    expect(principal.displayName).toBe('Formateur local');
+    expect(principal.sub).toBe('local:animateur-local');
+    expect(principal.displayName).toBe('Animateur local');
   });
 
   it('isole deux noms distincts par des sub différents', async () => {

@@ -75,7 +75,7 @@ export class SessionArchiveService {
       await this.prisma.$transaction(async (tx) => {
         const created = await tx.gameSessionLog.create({ data: session });
 
-        // Résultats par apprenant : créés un à un pour récupérer les id (rattachement
+        // Résultats par participant : créés un à un pour récupérer les id (rattachement
         // des réponses individuelles en capture intégrale).
         const resultIdByPlayer = new Map<string, string>();
         for (const agg of playerAgg) {
@@ -171,7 +171,7 @@ export class SessionArchiveService {
     });
   }
 
-  /** Résultats par apprenant : score/rang final + compteurs et streak max (ordre des questions). */
+  /** Résultats par participant : score/rang final + compteurs et streak max (ordre des questions). */
   private aggregatePlayers(
     ranked: RankedPlayer[],
     snapshot: QuizSnapshot,
@@ -219,7 +219,7 @@ export class SessionArchiveService {
     });
   }
 
-  /** Réponses individuelles (capture intégrale) rattachées au résultat de l'apprenant. */
+  /** Réponses individuelles (capture intégrale) rattachées au résultat de l'participant. */
   private buildAnswerLogs(
     sessionLogId: string,
     resultIdByPlayer: Map<string, string>,

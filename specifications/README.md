@@ -2,7 +2,7 @@
 
 > Hub des **spécifications de référence** du projet. Pour une présentation générale, voir le **[README racine](../README.md)**. La doc de développement vivante est dans **[../docs/](../docs/README.md)**.
 
-> **Clone de Kahoot** : quiz interactifs en temps réel, chronométrés, avec notation au temps de réponse. 10–200 apprenants par session.
+> **Clone de Kahoot** : quiz interactifs en temps réel, chronométrés, avec notation au temps de réponse. 10–200 participants par session.
 
 🚧 **Statut : phase de spécifications** (pas encore de code). Ces documents de conception font foi pour le développement.
 
@@ -14,8 +14,8 @@ Lire dans cet ordre pour découvrir le projet :
 
 | # | Document | Contenu | Pour qui |
 |---|----------|---------|----------|
-| 1 | **[SPECIFICATIONS-METIER.md](./SPECIFICATIONS-METIER.md)** | Vision, acteurs, parcours, règles de gestion (RG-xx), reporting, priorisation MoSCoW | Product, formateurs, toute l'équipe |
-| 2 | **[SPECIFICATIONS-UI.md](./SPECIFICATIONS-UI.md)** | Wireframes des écrans (console formateur, projeté, mobile apprenant), ergonomie | Design, frontend |
+| 1 | **[SPECIFICATIONS-METIER.md](./SPECIFICATIONS-METIER.md)** | Vision, acteurs, parcours, règles de gestion (RG-xx), reporting, priorisation MoSCoW | Product, animateurs, toute l'équipe |
+| 2 | **[SPECIFICATIONS-UI.md](./SPECIFICATIONS-UI.md)** | Wireframes des écrans (console animateur, projeté, mobile participant), ergonomie | Design, frontend |
 | 3 | **[SPECIFICATIONS.md](./SPECIFICATIONS.md)** | Architecture, stack, scoring, timing, contrat WebSocket, REST, Docker, tests, CI | Backend, frontend, DevOps |
 | 4 | **[SPECIFICATIONS-DONNEES.md](./SPECIFICATIONS-DONNEES.md)** | Dictionnaire de données (PostgreSQL + Redis), enums, RGPD, index | Backend, data |
 | 5 | **[SPECIFICATIONS-SEQUENCES.md](./SPECIFICATIONS-SEQUENCES.md)** | Diagrammes de séquence (Mermaid) des flux clés | Backend, frontend |
@@ -28,7 +28,7 @@ Lire dans cet ordre pour découvrir le projet :
 
 ## 🎯 En bref
 
-- **Contexte** : entreprise / formation. **Mode v1** : classique individuel. **Quiz** : privés (banque du formateur).
+- **Contexte** : entreprise / session. **Mode v1** : classique individuel. **Quiz** : privés (banque du animateur).
 - **Notation** : exactitude **+** rapidité (réponse instantanée = points max ; au temps limite = la moitié) + bonus de série. Timing **autoritatif serveur**.
 - **Participation** : invité (PIN + pseudo) **ou** connecté (SSO) — auth mixte.
 - **Anti-triche** : la bonne réponse n'est **jamais** envoyée au client avant la révélation.
@@ -71,7 +71,7 @@ docker compose up -d         # stack complète (dev)
 ## 🗺️ Périmètre v1 & au-delà
 
 - **v1 (Must)** : builder quiz privés, tous types de questions, session live individuelle (lobby→podium), join invité/SSO, notation temps+série, restitution + export CSV.
-- **Optionnel v1** : historique apprenant connecté, archivage, **mode capture intégrale** (audit/certification, avec avis aux apprenants).
+- **Optionnel v1** : historique participant connecté, archivage, **mode capture intégrale** (audit/certification, avec avis aux participants).
 - **Backlog** : mode équipes (v1.1), mode asynchrone/devoir (v1.2), partage/bibliothèque publique, dashboard admin agrégé, générateur d'avatars (multiavatar).
 
 Détail : [SPECIFICATIONS-METIER.md §13](./SPECIFICATIONS-METIER.md).

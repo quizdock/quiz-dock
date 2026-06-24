@@ -7,7 +7,7 @@ import type { GameMeta } from './game.types';
 
 /**
  * Vérifie la projection de l'état live (Redis) vers les tables durables : résumé,
- * résultats par apprenant, agrégats par question et réponses individuelles (capture
+ * résultats par participant, agrégats par question et réponses individuelles (capture
  * intégrale). Tout est moqué — pas de base ni de Redis réels.
  */
 describe('SessionArchiveService', () => {

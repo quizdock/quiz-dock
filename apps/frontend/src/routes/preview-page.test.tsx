@@ -63,7 +63,7 @@ describe('PreviewPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('rend la question en vue apprenant (énoncé, options, temps, bonne réponse)', async () => {
+  it('rend la question en vue participant (énoncé, options, temps, bonne réponse)', async () => {
     mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail() }]);
     renderApp('/quizzes/q1/preview');
 

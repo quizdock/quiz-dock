@@ -23,7 +23,7 @@ export class NoAuthProvider implements AuthProvider {
   async authenticate(req: Request): Promise<AuthPrincipal> {
     const header = req.headers['x-local-user'];
     const raw = (Array.isArray(header) ? header[0] : header)?.trim();
-    const displayName = raw && raw.length > 0 ? raw : 'Formateur local';
+    const displayName = raw && raw.length > 0 ? raw : 'Animateur local';
     return {
       sub: `local:${localSlug(displayName)}`,
       displayName,

@@ -44,7 +44,7 @@ S'y ajoutent deux gaps identifiés à la revue et traités ici :
 |---|---|---|---|---|---|
 | **Contrôle** (dashboard) | présentateur | **requise** (hôte) | hôte (attaché à la partie) | **oui** | compteur de réponses, répartition, classement, boutons (révéler / suivant / pause / terminer / exclure) |
 | **Projeté** (grand écran) | présentateur (ou poste dédié) | **non** | **spectateur** (room en lecture seule) | non | énoncé, options (sans bonne réponse), chrono, compteur, classement, podium |
-| **Joueur** | apprenant | optionnelle (invité ou SSO) | joueur | non | énoncé minimal, grille de réponses, feedback perso, rang |
+| **Joueur** | participant | optionnelle (invité ou SSO) | joueur | non | énoncé minimal, grille de réponses, feedback perso, rang |
 
 > **Une seule partie, plusieurs fenêtres.** La partie est identifiée par son **PIN**
 > côté Redis (état §technique 8). Chaque fenêtre est un **socket distinct** qui

@@ -36,11 +36,11 @@ describe('GameGateway (intégration socket)', () => {
     await app.listen(0);
     prisma = app.get(PrismaService);
 
-    // Seed : un hôte dont l'oidcSubject == slug local ('local:formateur'),
+    // Seed : un hôte dont l'oidcSubject == slug local ('local:animateur'),
     // propriétaire d'un quiz « ready » avec une question valide.
     const host = await prisma.user.upsert({
-      where: { oidcSubject: 'local:formateur' },
-      create: { oidcSubject: 'local:formateur', displayName: 'Formateur', role: 'host' },
+      where: { oidcSubject: 'local:animateur' },
+      create: { oidcSubject: 'local:animateur', displayName: 'Animateur', role: 'host' },
       update: {},
     });
     hostUserId = host.id;
@@ -92,7 +92,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('host:create → PIN à 6 chiffres + game:created ; player:join → lobby notifié', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const created = new Promise<{ pin: string }>((resolve) => host.on('game:created', resolve));
 
     const createAck = await host.emitWithAck('host:create', { quizId });
@@ -116,7 +116,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('player:join refuse un pseudo dupliqué (même partie)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const p1 = connect();
@@ -135,7 +135,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('host:start → question:start (allowlist, sans flag correct) puis REVEAL une seule fois', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const player = connect();
@@ -175,7 +175,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('player:submit : accepté + scoré, doublon rejeté, REVEAL une seule fois (all + timer)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Dan' });
@@ -224,7 +224,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('boucle complète : reveal personnel (yourResult) puis host:next → podium', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Eve' });
@@ -259,7 +259,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('archivage (§2.7) : capture intégrale → host:end{archive} persiste les tables, idempotent', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId, fullCapture: true });
     const player = connect();
 
@@ -348,7 +348,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('host:adjust-time : +5 s repousse `endsAt` et diffuse `question:time`', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Tina' });
@@ -370,7 +370,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('host:pause gèle le chrono (game:mode + remainingMs) puis reprend (question:time)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Ugo' });
@@ -401,7 +401,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('mode auto : après le reveal, enchaîne seul (host:next implicite) → podium', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     host.emit('host:mode', { pin, mode: 'auto' });
     const player = connect();
@@ -426,7 +426,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('REVEAL anticipé quand TOUS répondent FAUX (convergence indépendante de la justesse)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const p1 = connect();
     const p2 = connect();
@@ -455,7 +455,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('host:attach : la console reçoit game:outline (titre + description + questions)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const outlineP = new Promise<{
@@ -473,7 +473,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('player:rate : avis de fin de partie persisté (note + commentaire), refusé en lobby', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Wendy' });
@@ -502,7 +502,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('late join (§5) : un joueur arrivé après le départ reçoit l’état ANSWERING + question:start', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     host.emit('host:start', { pin });
@@ -523,7 +523,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('spectator:join (§3) : reçoit l’état mais n’est pas compté (answer:count.total)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const player = connect();
@@ -561,11 +561,11 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('host:attach (§4.2) : le propriétaire se rebinde et reçoit l’état ; non authentifié rejeté', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     // 2ᵉ fenêtre de contrôle (même hôte) : attach OK + état courant.
-    const control2 = connect({ localUser: 'Formateur' });
+    const control2 = connect({ localUser: 'Animateur' });
     const stateP = new Promise<{ state: string }>((resolve) =>
       control2.on('game:state', (s) => resolve(s as never)),
     );
@@ -583,7 +583,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('player:reconnect (§6.1) : restaure la place via le jeton et renvoie l’état', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const player = connect();
@@ -601,7 +601,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('convergence sur les connectés (§8) : le départ du dernier non-répondant déclenche REVEAL', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const p1 = connect();
@@ -637,7 +637,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('hôte déconnecté (§7) : grâce → HOST_DISCONNECTED → host:attach reprend ANSWERING', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Iris' });
@@ -676,7 +676,7 @@ describe('GameGateway (intégration socket)', () => {
       };
       player.on('game:state', onState);
     });
-    const control2 = connect({ localUser: 'Formateur' });
+    const control2 = connect({ localUser: 'Animateur' });
     const attachAck = await control2.emitWithAck('host:attach', { pin });
     expect(attachAck.ok).toBe(true);
     await resumedP;
@@ -690,7 +690,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('convergence (§8) : le départ de l’unique répondant ne révèle pas tant qu’un connecté attend', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const p1 = connect();
     await p1.emitWithAck('player:join', { pin, nickname: 'Kim' });
@@ -724,7 +724,7 @@ describe('GameGateway (intégration socket)', () => {
 
   it('index parties en cours (§6.2) : présent après host:create, purgé après host:end', async () => {
     const games = app.get(GameService);
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
     const active = await games.listActiveHostGames(hostUserId);
@@ -737,7 +737,7 @@ describe('GameGateway (intégration socket)', () => {
   }, 15_000);
 
   it('hôte non revenu (§7.3) : la fenêtre expire → la partie se termine (game:ended)', async () => {
-    const host = connect({ localUser: 'Formateur' });
+    const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Jude' });

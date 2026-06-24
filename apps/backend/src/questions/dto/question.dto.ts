@@ -1,7 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-// ⚠️ DTO **builder** (formateur, propriétaire) : expose `isCorrect` /
+// ⚠️ DTO **builder** (animateur, propriétaire) : expose `isCorrect` /
 // `correctOrderIndex`. NE PAS réutiliser tel quel pour le payload joueur
 // `question:start` (v0.3.0) — anti-triche §7 : la bonne réponse n'est jamais
 // transmise avant le reveal.

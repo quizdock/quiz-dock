@@ -25,7 +25,7 @@ describe('DashboardPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('affiche les quiz du formateur', async () => {
+  it('affiche les quiz du animateur', async () => {
     mockApi([{ method: 'GET', path: '/quizzes', body: [quiz({ title: 'Histoire' })] }]);
     renderApp('/dashboard');
     expect(await screen.findByText('Histoire')).toBeInTheDocument();

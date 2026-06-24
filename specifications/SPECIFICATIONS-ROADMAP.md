@@ -39,10 +39,10 @@ Tag git par jalon (`v0.1.0`, `v0.2.0`, …). CHANGELOG mis à jour à chaque it�
 |---------|-------|----------|-----------|-------------------|
 | **v0.1.0** | Fondations (walking skeleton) | Monorepo, Docker Compose, CI, schéma BD, squelette auth — bout-en-bout vide qui tourne | — | M |
 | **v0.2.0** | Builder + Auth | CRUD quiz/questions (REST+OpenAPI+Orval), auth OIDC hôte, upload média, UI builder | v0.1.0 | L |
-| **v0.3.0** | Jeu de base | Lobby PIN, QCM unique, scoring temps, machine à états, leaderboard (Redis+WS), clients apprenant/projeté | v0.2.0 | L |
+| **v0.3.0** | Jeu de base | Lobby PIN, QCM unique, scoring temps, machine à états, leaderboard (Redis+WS), clients participant/projeté | v0.2.0 | L |
 | **v0.4.0** | Robustesse temps réel | Reconnexion joueur/hôte, compensation latence, adapter Redis multi-instance, tests de charge 200 users | v0.3.0 | M |
 | **v0.5.0** | Types de questions | Multi-réponses, vrai/faux, saisie texte, numérique, remise en ordre, sondage | v0.3.0 | M |
-| **v0.6.0** | Restitution & reporting | Podium, stats par question, restitution + export CSV, historique apprenant, **capture intégrale** | v0.5.0 | M |
+| **v0.6.0** | Restitution & reporting | Podium, stats par question, restitution + export CSV, historique participant, **capture intégrale** | v0.5.0 | M |
 | **v0.7.0** | Finitions | i18n FR/EN, accessibilité, observabilité, modération, polish UX | v0.6.0 | M |
 | **v0.8.0** | Durcissement & stabilisation | Revue sécurité, perf, non-régression complète, doc/runbook | v0.7.0 | M |
 | **v0.9.0 → 0.x** | *Suite ouverte* | **Features émergentes** + stabilisation continue (non planifiées ici) | v0.8.0 | — |
@@ -93,7 +93,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 ---
 
 ### Phase 2 — v0.2.0 · Builder + Auth
-**But** : un formateur s'authentifie et crée des quiz complets.
+**But** : un animateur s'authentifie et crée des quiz complets.
 
 | ID | Tâche |
 |----|-------|
@@ -109,7 +109,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 | P2-FRONT-4 | **Prévisualisation** de question (UI §2.3) |
 | P2-QA-1 | Tests : CRUD, auth (accès refusé/isolation propriétaire), validations par type (technique §17) |
 
-**Critère de sortie** : un formateur se connecte, crée un quiz multi-questions avec médias, le passe `ready`. Client REST 100 % généré par Orval.
+**Critère de sortie** : un animateur se connecte, crée un quiz multi-questions avec médias, le passe `ready`. Client REST 100 % généré par Orval.
 
 ---
 
@@ -126,7 +126,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 | P3-BACK-6 | **Soumission + timing serveur** + verrouillage (technique §6, RG-06) |
 | P3-BACK-7 | **Scoring** temps + série (technique §5) — *100 % testé* |
 | P3-BACK-8 | **Leaderboard** Redis (ZSet) + `reveal`/`leaderboard` events |
-| P3-FRONT-1 | **Client apprenant mobile** : rejoindre, attendre, répondre, feedback (UI §5) |
+| P3-FRONT-1 | **Client participant mobile** : rejoindre, attendre, répondre, feedback (UI §5) |
 | P3-FRONT-2 | **Écran projeté** : lobby + question (UI §4) |
 | P3-FRONT-3 | **Console d'animation** : lobby, pilotage, compteur réponses, classement (UI §3) |
 | P3-FRONT-4 | Chrono visuel dérivé des **timestamps serveur** (UI §5.3) |
@@ -141,7 +141,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 
 | ID | Tâche |
 |----|-------|
-| P4-BACK-1 | **Reconnexion apprenant** (`player:reconnect`, place+score) (séquences §4, technique §11) |
+| P4-BACK-1 | **Reconnexion participant** (`player:reconnect`, place+score) (séquences §4, technique §11) |
 | P4-BACK-2 | **Hôte déconnecté** → pause `HOST_DISCONNECTED` → reprise/fin (séquences §5) |
 | P4-BACK-3 | **Compensation de latence** (ping/pong, `latencyMs/2`) (technique §6) |
 | P4-BACK-4 | **Adapter Redis multi-instance** validé (rooms synchronisées) (technique §2) |
@@ -173,7 +173,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 ---
 
 ### Phase 6 — v0.6.0 · Restitution & reporting
-**But** : restituer et tracer les résultats (cœur formation).
+**But** : restituer et tracer les résultats (cœur session).
 
 | ID | Tâche |
 |----|-------|
@@ -181,12 +181,12 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 | P6-BACK-2 | **`player_result_log`** + classement final + départage (RG-08/09) |
 | P6-BACK-3 | **`question_result_stat`** (taux, distribution, temps) (données §2.9) |
 | P6-BACK-4 | **Export CSV** des résultats (technique §10) |
-| P6-BACK-5 | **Historique apprenant** connecté (`/me/history`) |
+| P6-BACK-5 | **Historique participant** connecté (`/me/history`) |
 | P6-BACK-6 | **Mode capture intégrale** : `full_capture`, `answer_log`, event `notice` (données §2.10, RG-13) |
-| P6-FRONT-1 | **Podium** (apprenant + projeté) (UI §5.5) |
-| P6-FRONT-2 | **Restitution** formateur : synthèse + analyse par question (UI §6) |
+| P6-FRONT-1 | **Podium** (participant + projeté) (UI §5.5) |
+| P6-FRONT-2 | **Restitution** animateur : synthèse + analyse par question (UI §6) |
 | P6-FRONT-3 | **Avis capture intégrale** + case au lancement (UI §3.1, §5.2 bis) |
-| P6-FRONT-4 | **Historique apprenant** (UI §7) |
+| P6-FRONT-4 | **Historique participant** (UI §7) |
 | P6-QA-1 | Tests consolidation, export, capture intégrale (présence/absence `answer_log`) |
 
 **Critère de sortie** : fin de session → restitution exploitable + export CSV ; capture intégrale opérationnelle avec avis.
@@ -218,7 +218,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 | P8-QA-2 | **Non-régression complète** + couverture ≥ seuils ; tests de contrat figés |
 | P8-INFRA-1 | Build images **prod** (multi-stage), `docker-compose.yml` prod-like, secrets |
 | P8-INFRA-2 | Stratégie de **migrations** + sauvegarde/purge (rétention RG-11) |
-| P8-DOC-1 | Doc d'exploitation : runbook, OpenAPI publiée, guide formateur |
+| P8-DOC-1 | Doc d'exploitation : runbook, OpenAPI publiée, guide animateur |
 | P8-QA-3 | Recette globale sur tous les parcours (métier §6) |
 
 **Critère de sortie** : base durcie, audité, documentée, taggée **v0.8.0**.

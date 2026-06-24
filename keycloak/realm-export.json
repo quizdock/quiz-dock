@@ -4,8 +4,8 @@
   "displayName": "QuizDock",
   "roles": {
     "realm": [
-      { "name": "host", "description": "Formateur / créateur de quiz" },
-      { "name": "player", "description": "Apprenant connecté" },
+      { "name": "host", "description": "Animateur / créateur de quiz" },
+      { "name": "player", "description": "Participant connecté" },
       { "name": "admin", "description": "Administrateur (réservé v1.1)" }
     ]
   },
@@ -23,13 +23,13 @@
   ],
   "users": [
     {
-      "username": "formateur",
+      "username": "animateur",
       "enabled": true,
-      "email": "formateur@quiz-dock.test",
+      "email": "animateur@quiz-dock.test",
       "emailVerified": true,
-      "firstName": "Formateur",
+      "firstName": "Animateur",
       "lastName": "Démo",
-      "credentials": [{ "type": "password", "value": "formateur", "temporary": false }],
+      "credentials": [{ "type": "password", "value": "animateur", "temporary": false }],
       "realmRoles": ["host"]
     }
   ]

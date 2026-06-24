@@ -98,7 +98,7 @@ enum SessionStatus {
 
 // ─── Tables (§2) ──────────────────────────────────────────────────────────
 
-/// §2.1 — comptes (formateurs, apprenants connectés, admins).
+/// §2.1 — comptes (animateurs, participants connectés, admins).
 model User {
   id          String    @id @default(ulid()) @db.Char(26)
   oidcSubject String    @unique @map("oidc_subject")
@@ -118,7 +118,7 @@ model User {
   @@map("user")
 }
 
-/// §2.2 — quiz (banque privée du formateur).
+/// §2.2 — quiz (banque privée du animateur).
 model Quiz {
   id            String         @id @default(ulid()) @db.Char(26)
   ownerId       String         @map("owner_id") @db.Char(26)
@@ -251,7 +251,7 @@ model GameSessionLog {
   @@map("game_session_log")
 }
 
-/// §2.8 — résultat d'un apprenant sur une session.
+/// §2.8 — résultat d'un participant sur une session.
 model PlayerResultLog {
   id            String  @id @default(ulid()) @db.Char(26)
   sessionLogId  String  @map("session_log_id") @db.Char(26)

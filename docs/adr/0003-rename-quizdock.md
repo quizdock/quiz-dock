@@ -26,7 +26,12 @@
    surchargeable). Les **identifiants protocole** (events WS `host:*`/`player:*`, `GameState`,
    modèles Prisma) restent inchangés — cf. [[0001-i18n-et-glossaire]].
 4. **ADR historiques non réécrits** : `0001` et `0002` gardent le nom `live-quizz` (ils actent des
-   décisions passées). De même les entrées CHANGELOG déjà publiées.
+   décisions passées).
+5. **Dé-spécialisation éducation → générique** : le vocabulaire `formateur`/`apprenant`/`formation`
+   devient `animateur`/`participant`/`session` partout — prose (README, specs, CHANGELOG vivant),
+   commentaires + seeds de tests, et **Keycloak** (descriptions des rôles + user de démo `animateur`).
+   Les **rôles techniques** restent `host`/`player`. Remplacement à frontière de mot (`\b`) pour
+   préserver `information`/`transformation`/`plateforme`.
 
 ## Conséquences
 
@@ -39,6 +44,5 @@
 
 ## Reste à faire (non planifié)
 
-- Dé-spécialisation **éducation → entreprise** de la prose README/specs (« formateur/apprenant »
-  encore présents) — séparé, hors périmètre de ce simple renommage.
-- Renommage éventuel du **dépôt / dossier de travail** (`projects/roux-quizz`) — hors périmètre.
+- Renommage du **dépôt GitHub** `live-quizz` → `quiz-dock` : fait. Le **dossier de travail local**
+  reste `projects/roux-quizz` (choix délibéré : continuité de l'historique / mémoire de session).

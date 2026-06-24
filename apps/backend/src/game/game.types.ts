@@ -56,7 +56,7 @@ export interface PlayerRecord {
   nickname: string;
   /** Graine d'avatar (multiavatar) — cosmétique ; défaut = pseudo. */
   avatar: string;
-  /** Compte lié si apprenant authentifié, sinon `null` (invité). */
+  /** Compte lié si participant authentifié, sinon `null` (invité). */
   userId: string | null;
   score: number;
   streak: number;

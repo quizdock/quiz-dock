@@ -16,7 +16,7 @@ const ALLOWED_TRANSITIONS: Record<QuizStatus, QuizStatus[]> = {
 export class QuizzesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /** Quiz du formateur (banque privée), les plus récents d'abord. */
+  /** Quiz du animateur (banque privée), les plus récents d'abord. */
   list(ownerId: string): Promise<Quiz[]> {
     return this.prisma.quiz.findMany({
       where: { ownerId },
@@ -315,7 +315,7 @@ export class QuizzesService {
     });
   }
 
-  /** Récupère un quiz en garantissant l'appartenance au formateur (sinon 404). */
+  /** Récupère un quiz en garantissant l'appartenance au animateur (sinon 404). */
   private async findOwnedOrThrow(ownerId: string, id: string): Promise<Quiz> {
     const quiz = await this.prisma.quiz.findFirst({ where: { id, ownerId } });
     if (!quiz) {

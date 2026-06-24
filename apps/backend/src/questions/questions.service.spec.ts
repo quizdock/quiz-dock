@@ -44,7 +44,7 @@ describe('QuestionsService', () => {
   });
 
   describe('isolation par propriétaire', () => {
-    it('add : 404 si le quiz n’appartient pas au formateur', async () => {
+    it('add : 404 si le quiz n’appartient pas au animateur', async () => {
       prisma.quiz.findFirst.mockResolvedValue(null);
       await expect(service.add(OWNER, 'quiz-x', content())).rejects.toThrow(NotFoundException);
       expect(prisma.question.create).not.toHaveBeenCalled();

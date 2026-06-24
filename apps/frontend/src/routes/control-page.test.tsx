@@ -47,7 +47,7 @@ describe('ControlPage (console hôte)', () => {
   });
 
   it('LOBBY : PIN + QR + roster ; « Démarrer » émet host:start', async () => {
-    localStorage.setItem('live.localUser', 'Formateur'); // passe requireAuth
+    localStorage.setItem('live.localUser', 'Animateur'); // passe requireAuth
     hookState.value = view({ players: [{ playerId: 'p1', nickname: 'Alice' }] });
     const { container } = renderApp('/present/482913/control');
 
@@ -61,7 +61,7 @@ describe('ControlPage (console hôte)', () => {
   });
 
   it('ANSWERING : compteur + « Révéler » émet host:reveal', async () => {
-    localStorage.setItem('live.localUser', 'Formateur');
+    localStorage.setItem('live.localUser', 'Animateur');
     hookState.value = view({
       state: GameState.Answering,
       questionIndex: 0,
@@ -79,7 +79,7 @@ describe('ControlPage (console hôte)', () => {
   });
 
   it('le bouton « Partager » diffuse le lien de la partie (Web Share)', async () => {
-    localStorage.setItem('live.localUser', 'Formateur');
+    localStorage.setItem('live.localUser', 'Animateur');
     hookState.value = view({});
     HTMLCanvasElement.prototype.toBlob = function (cb: BlobCallback) {
       cb(null);

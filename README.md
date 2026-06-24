@@ -1,6 +1,6 @@
 # QuizDock
 
-**Plateforme de quiz interactifs en temps réel** — un clone de Kahoot : un formateur anime une session live, les apprenants répondent depuis leur appareil, et la rapidité comme l'exactitude rapportent des points.
+**Plateforme de quiz interactifs en temps réel** — un clone de Kahoot : un animateur anime une session live, les participants répondent depuis leur appareil, et la rapidité comme l'exactitude rapportent des points.
 
 > 🚧 **Statut : conception.** Le code n'est pas encore écrit ; le dépôt contient les spécifications qui font foi et la doc de développement à venir.
 
@@ -9,13 +9,13 @@
 ## ✨ Ce que fait QuizDock
 
 - 🎯 **Quiz chronométrés** avec notation au temps de réponse (réponse rapide = plus de points) + bonus de série.
-- 👥 **Multijoueur temps réel** : 10 à 200 apprenants par session, via un simple **PIN**.
+- 👥 **Multijoueur temps réel** : 10 à 200 participants par session, via un simple **PIN**.
 - 🧩 **Builder de quiz** : QCM, vrai/faux, saisie, numérique, remise en ordre, sondage.
 - 🏆 **Classement live** entre les questions et **podium** final.
-- 📊 **Restitution** de session pour le formateur (participation, scores, notions à retravailler) + export CSV.
+- 📊 **Restitution** de session pour le animateur (participation, scores, notions à retravailler) + export CSV.
 - 🔐 **Auth entreprise** (Keycloak/SSO) — facultative : on peut jouer en invité.
 
-Contexte cible : **formation en entreprise** (onboarding, montée en compétences, évaluation formative).
+Contexte cible : **session en entreprise** (onboarding, montée en compétences, évaluation formative).
 
 ---
 

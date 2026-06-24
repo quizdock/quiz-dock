@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '../auth/auth-context';
 
-/** Connexion formateur : mode local (nom) ou redirection OIDC selon `AUTH_MODE`. */
+/** Connexion animateur : mode local (nom) ou redirection OIDC selon `AUTH_MODE`. */
 export function LoginPage() {
   const { t } = useTranslation(['auth', 'common']);
   const { mode, loginLocal, loginOidc } = useAuth();

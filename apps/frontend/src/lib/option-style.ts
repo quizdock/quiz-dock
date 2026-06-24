@@ -1,6 +1,6 @@
 /**
  * Présentation des options de réponse (couleur + forme), partagée entre l'aperçu
- * formateur (`preview-page`) et les écrans live (`live-components`).
+ * animateur (`preview-page`) et les écrans live (`live-components`).
  *
  * Ce sont des couleurs *métier* (l'identité d'une réponse, façon quadrant Kahoot),
  * pilotées par la donnée `option.color` — pas des états d'UI. Elles restent donc

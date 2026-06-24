@@ -4,8 +4,8 @@
 > Version 1.0 — 2026-06-09.
 
 Acteurs / composants :
-- **Apprenant** : client mobile (`socket.io-client`).
-- **Formateur** : console desktop (REST + WS).
+- **Participant** : client mobile (`socket.io-client`).
+- **Animateur** : console desktop (REST + WS).
 - **Projeté** : écran de jeu (lecture seule WS).
 - **API** : backend NestJS (REST + WS Gateways).
 - **Redis** : état live (source de vérité pendant la partie).
@@ -19,7 +19,7 @@ Acteurs / composants :
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Formateur
+    participant F as Animateur
     participant API as API (NestJS)
     participant PG as PostgreSQL
     F->>API: POST /api/v1/quizzes (JWT)
@@ -41,10 +41,10 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Formateur
+    participant F as Animateur
     participant API as API (WS Gateway)
     participant R as Redis
-    participant A as Apprenant
+    participant A as Participant
     participant P as Projeté
 
     F->>API: ws host:create { quizId }
@@ -54,7 +54,7 @@ sequenceDiagram
     F->>P: affiche PIN (écran projeté)
 
     A->>API: ws player:join { pin, nickname, authToken? }
-    alt apprenant connecté
+    alt participant connecté
         API->>API: vérifie JWT (KC) → userId
     else invité
         API->>API: userId = null
@@ -76,10 +76,10 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Formateur
+    participant F as Animateur
     participant API as API (WS Gateway)
     participant R as Redis
-    participant A as Apprenant
+    participant A as Participant
     participant P as Projeté
 
     Note over A,API: au join, RTT mesuré (ping/pong) → latencyMs/2 (compensation)
@@ -115,12 +115,12 @@ sequenceDiagram
 
 ---
 
-## 4. Reconnexion d'un apprenant
+## 4. Reconnexion d'un participant
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant A as Apprenant
+    participant A as Participant
     participant API as API (WS Gateway)
     participant R as Redis
 
@@ -147,14 +147,14 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Formateur
+    participant F as Animateur
     participant API as API (WS Gateway)
     participant R as Redis
-    participant A as Apprenant
+    participant A as Participant
 
     Note over API: disconnect socket hôte détecté
     API->>R: HSET game:{pin} state=HOST_DISCONNECTED (gèle les timers)
-    API-->>A: game:state { state: HOST_DISCONNECTED }  (« formateur déconnecté, partie en pause »)
+    API-->>A: game:state { state: HOST_DISCONNECTED }  (« animateur déconnecté, partie en pause »)
     alt reconnexion < 120 s
         F->>API: player:reconnect / host re-auth { pin }
         API->>R: HSET game:{pin} state=<état gelé>
@@ -173,7 +173,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Formateur
+    participant F as Animateur
     participant API as API
     participant R as Redis
     participant PG as PostgreSQL
@@ -182,7 +182,7 @@ sequenceDiagram
     API->>R: HGETALL game:{pin}:players / :leaderboard / :answers:*
     API->>API: calcule classement final, stats par question, success_rate
     API->>PG: INSERT game_session_log (+ quiz_snapshot JSONB)
-    API->>PG: INSERT player_result_log (1/apprenant, user_id si connecté)
+    API->>PG: INSERT player_result_log (1/participant, user_id si connecté)
     API->>PG: INSERT question_result_stat (1/question : taux, distribution)
     alt full_capture = true
         API->>PG: INSERT answer_log (1/réponse individuelle)
@@ -199,8 +199,8 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Formateur
-    participant A as Apprenant
+    participant F as Animateur
+    participant A as Participant
     participant API as API
     participant R as Redis
     participant PG as PG
@@ -227,4 +227,4 @@ sequenceDiagram
 - **Anti-triche** : `question:start` ne contient **jamais** la bonne réponse ; seul `question:reveal` la divulgue (technique §7).
 - **Idempotence réponse** : une seule réponse comptée par `(playerId, questionIndex)` (RG-06).
 - **Source de vérité** : Redis pendant la partie ; PostgreSQL après consolidation. Aucune écriture PG par réponse (sauf `answer_log` en fin de partie si capture intégrale).
-- **Avis capture intégrale** : envoyé à l'apprenant au join si `fullCapture=true`, avant toute collecte.
+- **Avis capture intégrale** : envoyé à l'participant au join si `fullCapture=true`, avant toute collecte.

@@ -19,7 +19,7 @@ import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { useGameSession } from '../game/use-game-session';
 
 /**
- * Client apprenant (mobile, §5). Machine à états pilotée par `useGameSession` :
+ * Client participant (mobile, §5). Machine à états pilotée par `useGameSession` :
  * une session locale relance la partie (`player:reconnect`), sinon l'écran de join
  * (pseudo) s'affiche (§6.1). Après le join, on suit l'état serveur (attente →
  * réponse → feedback → podium), grille verrouillée à 1 réponse (RG-06).
@@ -54,7 +54,7 @@ export function PlayerPage() {
 
   /**
    * Randomise l'avatar **localement** uniquement (aperçu + mémorisation) : pas
-   * d'émission réseau ici, pour éviter d'inonder le serveur/formateur à chaque clic.
+   * d'émission réseau ici, pour éviter d'inonder le serveur/animateur à chaque clic.
    * La synchronisation se fait explicitement via « Enregistrer l'avatar ».
    */
   const randomizeAvatar = () => {

@@ -112,7 +112,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   /**
-   * Joueur (invité ou apprenant authentifié) : rejoint le lobby d'une partie.
+   * Joueur (invité ou participant authentifié) : rejoint le lobby d'une partie.
    * Renvoie son `playerId` + un `sessionToken` de reconnexion, et notifie la room.
    */
   @SubscribeMessage('player:join')

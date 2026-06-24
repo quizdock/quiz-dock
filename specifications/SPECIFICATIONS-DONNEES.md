@@ -28,21 +28,21 @@ user 1───* quiz 1───* question 1───* answer_option
                           │
 quiz 1───* game_session_log 1───* player_result_log 1───* answer_log  (si full_capture)
                           │       1───* question_result_stat
-user 0/1 ──────────────── player_result_log   (apprenant connecté, nullable)
+user 0/1 ──────────────── player_result_log   (participant connecté, nullable)
 media_asset *───0/1 quiz | question | answer_option   (cover/illustration)
 ```
 
 Cardinalités clés :
-- Un **quiz** appartient à **un** `user` (formateur). *(RG-01)*
+- Un **quiz** appartient à **un** `user` (animateur). *(RG-01)*
 - Une **question** appartient à **un** quiz ; ordre via `order_index`.
 - Une **answer_option** appartient à **une** question.
-- Un **game_session_log** référence le quiz joué et l'hôte ; il agrège `player_result_log` (1/apprenant) et `question_result_stat` (1/question).
+- Un **game_session_log** référence le quiz joué et l'hôte ; il agrège `player_result_log` (1/participant) et `question_result_stat` (1/question).
 
 ---
 
 ## 2. Tables (PostgreSQL)
 
-### 2.1 `user` — comptes (formateurs, apprenants connectés, admins)
+### 2.1 `user` — comptes (animateurs, participants connectés, admins)
 
 | Colonne | Type | Contraintes | Description |
 |---------|------|-------------|-------------|
@@ -56,14 +56,14 @@ Cardinalités clés :
 | `updated_at` | timestamptz | NN | Dernière modif |
 | `deleted_at` | timestamptz | nullable | Anonymisation RGPD (cf. §6) |
 
-> En `AUTH_MODE=none`, un formateur « local » peut exister sans `oidc_subject` (colonne alors nullable en pratique ; `oidc_subject` porte une valeur sentinelle `local:<nom>`). Les **apprenants invités ne sont PAS** des lignes `user` (ils n'existent qu'en Redis et dans `player_result_log` sans `user_id`).
+> En `AUTH_MODE=none`, un animateur « local » peut exister sans `oidc_subject` (colonne alors nullable en pratique ; `oidc_subject` porte une valeur sentinelle `local:<nom>`). Les **participants invités ne sont PAS** des lignes `user` (ils n'existent qu'en Redis et dans `player_result_log` sans `user_id`).
 
-### 2.2 `quiz` — quiz (banque privée du formateur)
+### 2.2 `quiz` — quiz (banque privée du animateur)
 
 | Colonne | Type | Contraintes | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
-| `owner_id` | char(26) | FK→`user.id`, NN, IDX | Propriétaire (formateur) *(RG-01)* |
+| `owner_id` | char(26) | FK→`user.id`, NN, IDX | Propriétaire (animateur) *(RG-01)* |
 | `title` | text | NN | Titre |
 | `description` | text | nullable | Description |
 | `cover_media_id` | char(26) | FK→`media_asset.id`, nullable | Visuel de couverture |
@@ -144,13 +144,13 @@ CHECK applicatif/SQL selon le type :
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
 | `quiz_id` | char(26) | FK→`quiz.id`, NN, IDX | Quiz joué (snapshot conseillé, cf. note) |
-| `host_id` | char(26) | FK→`user.id`, NN, IDX | Formateur animateur |
+| `host_id` | char(26) | FK→`user.id`, NN, IDX | Animateur animateur |
 | `pin` | char(6) | NN | PIN utilisé (historique ; non unique dans le temps) |
 | `status` | enum `session_status` | NN, DEF `ended` | `ended` \| `archived` (le live `lobby`/`in_progress` vit en Redis) |
 | `language` | text | NN | Langue de la session |
-| `player_count` | int | NN, DEF 0 | Nb d'apprenants ayant joué |
+| `player_count` | int | NN, DEF 0 | Nb d'participants ayant joué |
 | `success_rate` | numeric | nullable | Taux de réussite moyen (%) |
-| `full_capture` | boolean | NN, DEF false | **Mode capture intégrale** : si vrai, chaque réponse individuelle est persistée (`answer_log`). Décidé à la création de la session ; **apprenants informés en début de session** (avis affiché, cf. §6) |
+| `full_capture` | boolean | NN, DEF false | **Mode capture intégrale** : si vrai, chaque réponse individuelle est persistée (`answer_log`). Décidé à la création de la session ; **participants informés en début de session** (avis affiché, cf. §6) |
 | `started_at` | timestamptz | NN | Début effectif |
 | `ended_at` | timestamptz | NN | Fin |
 | `retain_until` | timestamptz | NN | Échéance de conservation *(RG-11, DEF +24 mois)* |
@@ -158,13 +158,13 @@ CHECK applicatif/SQL selon le type :
 
 > **Snapshot recommandé** : pour que la restitution reste fidèle même si le quiz est ensuite modifié/supprimé, stocker un instantané du quiz/questions (JSONB `quiz_snapshot`) au moment de la session. Sinon, une suppression de quiz fausserait l'historique.
 
-### 2.8 `player_result_log` — résultat d'un apprenant sur une session
+### 2.8 `player_result_log` — résultat d'un participant sur une session
 
 | Colonne | Type | Contraintes | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
 | `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | Session |
-| `user_id` | char(26) | FK→`user.id`, **nullable**, IDX | Apprenant connecté ; NULL si invité |
+| `user_id` | char(26) | FK→`user.id`, **nullable**, IDX | Participant connecté ; NULL si invité |
 | `nickname` | text | NN | Pseudo affiché |
 | `final_score` | int | NN, DEF 0 | Score final |
 | `final_rank` | int | NN | Rang final (1 = meilleur) |
@@ -199,7 +199,7 @@ Index : `(session_log_id, final_rank)` ; `(user_id, session_log_id)` pour l'hist
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK (ULID, ordonnant) | |
 | `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | Session |
-| `player_result_log_id` | char(26) | FK→`player_result_log.id` ON DELETE CASCADE, NN, IDX | Apprenant (résultat) |
+| `player_result_log_id` | char(26) | FK→`player_result_log.id` ON DELETE CASCADE, NN, IDX | Participant (résultat) |
 | `question_id` | char(26) | FK→`question.id`, NN | Question (ou index dans le snapshot) |
 | `order_index` | int | NN | Position dans la session |
 | `answer_value` | jsonb | NN | Réponse brute (`optionId` \| `[optionIds]` \| texte \| nombre \| `[ordre]`) |
@@ -239,7 +239,7 @@ Index : `(session_log_id, order_index)` ; `(player_result_log_id)`.
 |-------|------|-------------|
 | `state` | string | `LOBBY`\|`QUESTION_SHOW`\|`ANSWERING`\|`REVEAL`\|`LEADERBOARD`\|`PODIUM`\|`ENDED`\|`HOST_DISCONNECTED` |
 | `quizId` | string | Quiz joué |
-| `hostId` | string | Formateur |
+| `hostId` | string | Animateur |
 | `hostSocketId` | string | Socket courante de l'hôte |
 | `currentQuestionIndex` | int | Index 0-based |
 | `questionStartedAt` | int (ms epoch) | Horloge **serveur** (fairness, technique §6) |
@@ -325,7 +325,7 @@ interface SubmitAnswerPayload {             // client → serveur
 | **Conservation** | `game_session_log.retain_until` (DEF +24 mois, RG-11). Purge planifiée au-delà. |
 | **Suppression de quiz** | Refusée si des `game_session_log` non purgés y référent **sans snapshot** ; recommandé : snapshot JSONB pour découpler (cf. §2.7). |
 | **Réponses brutes** | Par défaut non persistées individuellement (agrégées en `question_result_stat`) → minimisation des données. |
-| **Mode capture intégrale** | Si `full_capture = true`, chaque réponse est persistée (`answer_log`). **Activé à la création de la session par le formateur** ; **les apprenants en sont informés par un avis affiché en début de session** (transparence/consentement) avant toute collecte. Réservé aux besoins d'audit/certification. |
+| **Mode capture intégrale** | Si `full_capture = true`, chaque réponse est persistée (`answer_log`). **Activé à la création de la session par le animateur** ; **les participants en sont informés par un avis affiché en début de session** (transparence/consentement) avant toute collecte. Réservé aux besoins d'audit/certification. |
 | **Intégrité référentielle** | CASCADE sur les enfants directs (question, option) ; restriction/snapshot pour préserver l'historique de session. |
 
 ---
@@ -334,7 +334,7 @@ interface SubmitAnswerPayload {             // client → serveur
 
 | Table | Index | But |
 |-------|-------|-----|
-| `quiz` | `(owner_id, status)` | Tableau de bord formateur |
+| `quiz` | `(owner_id, status)` | Tableau de bord animateur |
 | `question` | `(quiz_id, order_index)` UQ | Ordre, intégrité |
 | `answer_option` | `(question_id, order_index)` UQ | Ordre |
 | `accepted_answer` | `(question_id, normalized)` | Comparaison réponse texte |
