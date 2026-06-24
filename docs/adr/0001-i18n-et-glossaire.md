@@ -1,6 +1,7 @@
 # ADR 0001 — i18n front + glossaire de vocabulaire canonique
 
-- **Statut** : accepté (planifié, non implémenté) — glossaire ratifié 2026-06-24
+- **Statut** : implémenté (Phases 1–3 livrées le 2026-06-24) — glossaire ratifié 2026-06-24.
+  Phase ultérieure (rename projet/identifiants code) toujours en attente.
 - **Date** : 2026-06-24
 - **Contexte** : le vocabulaire métier est incohérent entre le README (registre « formation » :
   formateur / apprenant / session) et le code (registre « jeu » : joueur / partie / game). En

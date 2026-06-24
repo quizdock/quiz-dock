@@ -2,7 +2,7 @@ import { ImagePlus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { apiErrorMessage } from '../api/http';
+import { apiErrorText } from '../api/http';
 import { useMediaControllerUpload } from '../api/generated/media/media';
 
 /** Upload d'un média (image/audio) → renvoie le mediaId au parent. */
@@ -24,7 +24,7 @@ export function MediaUpload({
       const res = await upload.mutateAsync({ data: { file } });
       onChange(res.data.mediaId);
     } catch (err) {
-      setError(apiErrorMessage(err, t('media.uploadError')));
+      setError(apiErrorText(err, t('media.uploadError')));
     }
   };
 

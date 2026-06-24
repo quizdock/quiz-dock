@@ -4,6 +4,8 @@
  * le format de réponse attendu par le code généré (`{ data, status, headers }`).
  */
 
+import { errorText } from './error-text';
+
 let authHeaders: Record<string, string> = {};
 
 /** Mis à jour par le contexte d'auth (login/logout). */
@@ -22,14 +24,17 @@ export class ApiError extends Error {
   }
 }
 
-/** Message lisible extrait d'une ApiError (format ZodValidationPipe NestJS). */
-export function apiErrorMessage(err: unknown, fallback = 'Erreur.'): string {
+/**
+ * Texte lisible d'une ApiError : le backend ne renvoie qu'un **code** tokenisé
+ * (`{ code, params? }`, ADR 0001), résolu ici via le dictionnaire i18n `errors`.
+ * `fallback` est utilisé si le corps ne porte aucun code (ex. erreur réseau).
+ */
+export function apiErrorText(err: unknown, fallback?: string): string {
   if (err instanceof ApiError && err.data && typeof err.data === 'object') {
-    const d = err.data as { message?: unknown };
-    if (typeof d.message === 'string') return d.message;
-    if (Array.isArray(d.message)) return d.message.join(', ');
+    const d = err.data as { code?: unknown; params?: Record<string, unknown> };
+    if (typeof d.code === 'string') return errorText(d.code, d.params);
   }
-  return fallback;
+  return fallback ?? errorText('error');
 }
 
 export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {

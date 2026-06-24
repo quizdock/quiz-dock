@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, apiErrorMessage, customFetch, setAuthHeaders } from './http';
+import { ApiError, apiErrorText, customFetch, setAuthHeaders } from './http';
 
 describe('customFetch', () => {
   afterEach(() => {
@@ -28,14 +28,18 @@ describe('customFetch', () => {
     expect(headers['X-Local-User']).toBe('Marc');
   });
 
-  it('lève ApiError (avec corps) sur un statut ≥ 400', async () => {
+  it('lève ApiError et résout le code tokenisé en texte i18n (statut ≥ 400)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: 'Boom' }), { status: 400 })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ code: 'quiz.not_found' }), { status: 404 }),
+        ),
     );
     const err = await customFetch('/x', { method: 'POST' }).catch((e) => e);
     expect(err).toBeInstanceOf(ApiError);
-    expect((err as ApiError).status).toBe(400);
-    expect(apiErrorMessage(err)).toBe('Boom');
+    expect((err as ApiError).status).toBe(404);
+    expect(apiErrorText(err)).toBe('Quiz introuvable.');
   });
 });

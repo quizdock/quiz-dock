@@ -1,6 +1,7 @@
 import type { ClientToServerEvents, ServerToClientEvents } from '@roux-quizz/contracts';
 import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
+import { errorText } from '../api/error-text';
 import { getAccessToken, getLocalUser } from '../auth/auth-context';
 
 /** Socket typé bout-en-bout (écoute serveur→client, émet client→serveur). */
@@ -110,9 +111,9 @@ export function emitWithAckOrError<T>(
       clearTimeout(timer);
       s.off('error', onError);
     };
-    const onError = (e: { code: string; message: string }) => {
+    const onError = (e: { code: string; params?: Record<string, string | number> }) => {
       cleanup();
-      reject(new Error(e.message || e.code));
+      reject(new Error(errorText(e.code, e.params)));
     };
     const timer = setTimeout(() => {
       cleanup();

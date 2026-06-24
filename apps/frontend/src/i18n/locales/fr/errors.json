@@ -1,1 +1,52 @@
-{}
+{
+  "auth": {
+    "required": "Authentification requise."
+  },
+  "host": {
+    "auth_required": "Authentification animateur requise.",
+    "forbidden": "Vous n’êtes pas l’animateur de cette session."
+  },
+  "quiz": {
+    "not_found": "Quiz introuvable.",
+    "not_ready": "Le quiz doit être « prêt » pour lancer une session (RG-02).",
+    "empty": "Le quiz ne comporte aucune question.",
+    "requires_question": "Un quiz doit comporter au moins une question pour passer à « prêt » (RG-02).",
+    "transition_forbidden": "Transition d’état interdite : {{from}} → {{target}}."
+  },
+  "session": {
+    "not_found": "Session introuvable ou terminée.",
+    "ended": "La session est terminée.",
+    "banned": "Tu as été exclu de cette session par l’animateur.",
+    "join_required": "Rejoignez la session avant de répondre.",
+    "already_started": "La session a déjà démarré.",
+    "reveal_required": "Action possible seulement après le reveal.",
+    "timer_not_adjustable": "Le chrono ne peut être ajusté que pendant une question.",
+    "snapshot_not_found": "Snapshot de session introuvable.",
+    "capture_locked": "La capture intégrale ne peut être modifiée qu’avant le démarrage."
+  },
+  "participant": {
+    "not_found": "Participant introuvable."
+  },
+  "nickname": {
+    "taken": "Ce pseudo est déjà pris dans cette session.",
+    "invalid_length": "Le pseudo doit faire entre {{min}} et {{max}} caractères."
+  },
+  "pin": {
+    "unavailable": "Impossible d’allouer un PIN, réessayez."
+  },
+  "media": {
+    "unsupported_type": "Type de média non supporté (image/audio).",
+    "file_missing": "Fichier manquant (champ « file »).",
+    "file_too_large": "Fichier trop volumineux (max {{max}} octets).",
+    "not_found": "Média introuvable."
+  },
+  "question": {
+    "not_in_quiz": "Question hors du quiz.",
+    "invalid_permutation": "Les positions doivent former une permutation 0..n-1.",
+    "reorder_incomplete": "Le réordonnancement doit lister toutes les questions du quiz.",
+    "not_found": "Question introuvable."
+  },
+  "validation": "Certains champs sont invalides.",
+  "internal": "Erreur interne.",
+  "error": "Une erreur est survenue."
+}

@@ -1,1 +1,11 @@
-{}
+{
+  "invalid_type": "Type de valeur invalide.",
+  "too_small": "Valeur trop petite ou trop courte.",
+  "too_big": "Valeur trop grande ou trop longue.",
+  "invalid_string": "Format invalide.",
+  "invalid_format": "Format invalide.",
+  "invalid_enum_value": "Valeur non autorisée.",
+  "unrecognized_keys": "Champ non reconnu.",
+  "custom": "Valeur invalide.",
+  "_default": "Champ invalide."
+}

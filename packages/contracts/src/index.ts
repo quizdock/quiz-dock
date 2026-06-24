@@ -9,7 +9,7 @@
  * (maps `ClientToServerEvents`/`ServerToClientEvents`) du contrat temps réel.
  */
 
-export const CONTRACTS_VERSION = '0.1.0' as const;
+export const CONTRACTS_VERSION = '0.2.0' as const;
 
 /** États de la partie (machine à états — technique §8). */
 export enum GameState {
@@ -304,6 +304,11 @@ export interface ServerToClientEvents {
   'game:outline': (p: GameOutlinePayload) => void;
   /** Timing recalculé de la question courante (ajustement du chrono). */
   'question:time': (p: QuestionTimePayload) => void;
-  error: (p: { code: string; message: string }) => void;
+  /**
+   * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
+   * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le
+   * texte lisible est résolu côté client via le dictionnaire i18n (ADR 0001).
+   */
+  error: (p: { code: string; params?: Record<string, string | number> }) => void;
   pong: (p: { t0: number; t1: number }) => void;
 }

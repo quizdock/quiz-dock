@@ -98,7 +98,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   ): Promise<{ pin: string }> {
     const host = socket.data.user;
     if (!host) {
-      throw new WsException('Authentification hôte requise.');
+      throw new WsException('host.auth_required');
     }
     const { pin } = await this.game.createSession(host.id, payload);
     socket.data.pin = pin;
@@ -148,14 +148,14 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   ): Promise<{ ok: boolean }> {
     const host = socket.data.user;
     if (!host) {
-      throw new WsException('Authentification hôte requise.');
+      throw new WsException('host.auth_required');
     }
     const meta = await this.game.getMeta(payload.pin);
     if (!meta) {
-      throw new WsException('Partie introuvable ou terminée.');
+      throw new WsException('session.not_found');
     }
     if (meta.hostUserId !== host.id) {
-      throw new WsException("Vous n'êtes pas l'hôte de cette partie.");
+      throw new WsException('host.forbidden');
     }
     socket.data.pin = payload.pin;
     socket.data.isHostControl = true;
@@ -200,7 +200,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   ): Promise<{ ok: boolean }> {
     const meta = await this.game.getMeta(payload.pin);
     if (!meta) {
-      throw new WsException('Partie introuvable ou terminée.');
+      throw new WsException('session.not_found');
     }
     socket.data.pin = payload.pin;
     await socket.join(payload.pin);
@@ -275,7 +275,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     const receivedAt = Date.now();
     const playerId = socket.data.playerId;
     if (!playerId) {
-      throw new WsException('Rejoignez la partie avant de répondre.');
+      throw new WsException('session.join_required');
     }
     const ack = await this.engine.submit(
       payload.pin,
@@ -409,7 +409,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   private requireHostId(socket: GameSocket): string {
     const host = socket.data.user;
     if (!host) {
-      throw new WsException('Authentification hôte requise.');
+      throw new WsException('host.auth_required');
     }
     return host.id;
   }

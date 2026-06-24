@@ -78,21 +78,19 @@ export class QuestionsService {
     const ownedIds = new Set(owned.map((q) => q.id));
     const { items } = dto;
     if (items.length !== ownedIds.size) {
-      throw new BadRequestException(
-        'Le réordonnancement doit lister toutes les questions du quiz.',
-      );
+      throw new BadRequestException('question.reorder_incomplete');
     }
     const indices = new Set<number>();
     for (const it of items) {
       if (!ownedIds.has(it.questionId)) {
-        throw new BadRequestException('Question hors du quiz.');
+        throw new BadRequestException('question.not_in_quiz');
       }
       indices.add(it.orderIndex);
     }
     const isPermutation =
       indices.size === items.length && [...indices].every((i) => i >= 0 && i < items.length);
     if (!isPermutation) {
-      throw new BadRequestException('Les positions doivent former une permutation 0..n-1.');
+      throw new BadRequestException('question.invalid_permutation');
     }
     // Deux phases : on décale d'abord (valeurs uniques hors plage finale) puis on
     // pose les positions finales — évite toute collision d'unicité immédiate.
@@ -156,7 +154,7 @@ export class QuestionsService {
       select: { id: true },
     });
     if (!quiz) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
   }
 
@@ -167,7 +165,7 @@ export class QuestionsService {
       select: { id: true, quizId: true },
     });
     if (!question) {
-      throw new NotFoundException('Question introuvable.');
+      throw new NotFoundException('question.not_found');
     }
     return question;
   }

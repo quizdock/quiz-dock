@@ -70,13 +70,13 @@ describe('QuestionForm', () => {
     expect(screen.getByLabelText('Tolérance ±')).toBeInTheDocument();
   });
 
-  it('affiche l’erreur de validation renvoyée par l’API (400)', async () => {
+  it('résout le code d’erreur tokenisé renvoyé par l’API (400) en texte i18n', async () => {
     mockApi([
       {
         method: 'POST',
         path: '/quizzes/q1/questions',
         status: 400,
-        body: { message: 'Exactement une option correcte requise.' },
+        body: { code: 'validation' },
       },
     ]);
     renderForm();
@@ -84,6 +84,6 @@ describe('QuestionForm', () => {
       target: { value: 'X' },
     });
     fireEvent.click(screen.getByText('Ajouter'));
-    expect(await screen.findByText('Exactement une option correcte requise.')).toBeInTheDocument();
+    expect(await screen.findByText('Certains champs sont invalides.')).toBeInTheDocument();
   });
 });

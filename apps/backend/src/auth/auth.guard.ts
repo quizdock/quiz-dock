@@ -36,7 +36,7 @@ export class AuthGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<Request & { user?: User }>();
     const principal = await this.provider.authenticate(req);
     if (!principal) {
-      throw new UnauthorizedException('Authentification requise.');
+      throw new UnauthorizedException('auth.required');
     }
     req.user = await this.users.upsertFromPrincipal(principal);
     return true;

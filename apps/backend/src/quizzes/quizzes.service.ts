@@ -52,7 +52,7 @@ export class QuizzesService {
       },
     });
     if (!quiz) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
     return quiz;
   }
@@ -68,7 +68,7 @@ export class QuizzesService {
       select: { id: true },
     });
     if (!quiz) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
     const items = await this.prisma.quizFeedback.findMany({
       where: { quizId: id },
@@ -87,7 +87,7 @@ export class QuizzesService {
   async sessions(ownerId: string, id: string) {
     const quiz = await this.prisma.quiz.findFirst({ where: { id, ownerId }, select: { id: true } });
     if (!quiz) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
     const rows = await this.prisma.gameSessionLog.findMany({
       where: { quizId: id },
@@ -111,7 +111,7 @@ export class QuizzesService {
       },
     });
     if (!row) {
-      throw new NotFoundException('Session introuvable.');
+      throw new NotFoundException('session.not_found');
     }
     // Énoncés/types lus depuis le snapshot figé (les questions vivantes ont pu changer).
     const snap = (row.quizSnapshot ?? {}) as {
@@ -170,7 +170,7 @@ export class QuizzesService {
       },
     });
     if (!row || row.playerResults.length === 0) {
-      throw new NotFoundException('Participant introuvable.');
+      throw new NotFoundException('participant.not_found');
     }
     const p = row.playerResults[0];
     const snap = (row.quizSnapshot ?? {}) as {
@@ -222,7 +222,7 @@ export class QuizzesService {
       },
     });
     if (!src) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
     return this.prisma.quiz.create({
       data: {
@@ -291,12 +291,13 @@ export class QuizzesService {
       return quiz;
     }
     if (!ALLOWED_TRANSITIONS[quiz.status].includes(target)) {
-      throw new BadRequestException(`Transition d'état interdite : ${quiz.status} → ${target}.`);
+      throw new BadRequestException({
+        code: 'quiz.transition_forbidden',
+        params: { from: quiz.status, target },
+      });
     }
     if (target === QuizStatus.ready && quiz.questionCount < 1) {
-      throw new BadRequestException(
-        'Un quiz doit comporter au moins une question pour passer à "ready" (RG-02).',
-      );
+      throw new BadRequestException('quiz.requires_question');
     }
     // TODO (P2-BACK-3) : refuser aussi le passage à "ready" si une question est
     // invalide selon son type (nb d'options, réponse correcte, etc.).
@@ -318,7 +319,7 @@ export class QuizzesService {
   private async findOwnedOrThrow(ownerId: string, id: string): Promise<Quiz> {
     const quiz = await this.prisma.quiz.findFirst({ where: { id, ownerId } });
     if (!quiz) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
     return quiz;
   }

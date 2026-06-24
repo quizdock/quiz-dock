@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { apiErrorMessage } from '../api/http';
+import { apiErrorText } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { MediaUpload } from './media-upload';
 import {
@@ -140,7 +140,7 @@ export function QuestionForm({
         });
         onClose();
       } catch (err) {
-        setError(apiErrorMessage(err, t('questionForm.invalidError')));
+        setError(apiErrorText(err, t('questionForm.invalidError')));
       }
     },
   });

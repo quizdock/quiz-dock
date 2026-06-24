@@ -60,13 +60,13 @@ export class GameService {
       include: QUIZ_SNAPSHOT_INCLUDE,
     });
     if (!quiz) {
-      throw new NotFoundException('Quiz introuvable.');
+      throw new NotFoundException('quiz.not_found');
     }
     if (quiz.status !== QuizStatus.ready) {
-      throw new BadRequestException('Le quiz doit être « prêt » pour lancer une partie (RG-02).');
+      throw new BadRequestException('quiz.not_ready');
     }
     if (quiz.questions.length < 1) {
-      throw new BadRequestException('Le quiz ne comporte aucune question.');
+      throw new BadRequestException('quiz.empty');
     }
 
     const snapshot = buildSnapshot(quiz);
@@ -116,23 +116,23 @@ export class GameService {
   ): Promise<JoinSessionResult> {
     const meta = await this.getMeta(pin);
     if (!meta) {
-      throw new NotFoundException('Partie introuvable ou terminée.');
+      throw new NotFoundException('session.not_found');
     }
     // Late join (§5) : autorisé tant que la partie n'est pas terminée. Le gateway
     // renvoie l'état courant au socket pour qu'il se positionne immédiatement.
     if (meta.state === GameState.Ended) {
-      throw new BadRequestException('La partie est terminée.');
+      throw new BadRequestException('session.ended');
     }
 
     const nickname = sanitizeNickname(rawNickname);
     const normalized = normalizeAnswer(nickname);
     // Exclusion (RG-12) : pseudo banni tant que la clé court (durée fixée par l'hôte).
     if (await this.redis.exists(gameKeys.ban(pin, normalized))) {
-      throw new ForbiddenException('Tu as été exclu de cette partie par l’animateur.');
+      throw new ForbiddenException('session.banned');
     }
     const claimed = await this.redis.sadd(gameKeys.nicknames(pin), normalized);
     if (claimed === 0) {
-      throw new ConflictException('Ce pseudo est déjà pris dans cette partie.');
+      throw new ConflictException('nickname.taken');
     }
 
     const playerId = randomBytes(16).toString('hex');
@@ -335,7 +335,7 @@ export class GameService {
         return pin;
       }
     }
-    throw new ServiceUnavailableException('Impossible d’allouer un PIN, réessayez.');
+    throw new ServiceUnavailableException('pin.unavailable');
   }
 }
 
@@ -343,9 +343,10 @@ export class GameService {
 export function sanitizeNickname(raw: string): string {
   const nickname = (raw ?? '').trim().replace(/\s+/g, ' ');
   if (nickname.length < NICKNAME_MIN || nickname.length > NICKNAME_MAX) {
-    throw new BadRequestException(
-      `Le pseudo doit faire entre ${NICKNAME_MIN} et ${NICKNAME_MAX} caractères.`,
-    );
+    throw new BadRequestException({
+      code: 'nickname.invalid_length',
+      params: { min: NICKNAME_MIN, max: NICKNAME_MAX },
+    });
   }
   return nickname;
 }

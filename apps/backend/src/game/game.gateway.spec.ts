@@ -131,7 +131,7 @@ describe('GameGateway (intégration socket)', () => {
         .emitWithAck('player:join', { pin, nickname: 'bob' })
         .then(() => ({ code: 'accepted' as const })),
     ]);
-    expect(err.code).toBe('conflict');
+    expect(err.code).toBe('nickname.taken');
   }, 15_000);
 
   it('host:start → question:start (allowlist, sans flag correct) puis REVEAL une seule fois', async () => {

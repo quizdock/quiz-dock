@@ -38,7 +38,7 @@ export class MediaService implements OnModuleInit {
   private kindFor(mime: string): MediaKind {
     if (mime.startsWith('image/')) return MediaKind.image;
     if (mime.startsWith('audio/')) return MediaKind.audio;
-    throw new BadRequestException('Type de média non supporté (image/audio).');
+    throw new BadRequestException('media.unsupported_type');
   }
 
   /** Enregistre un média uploadé (ligne + fichier) et renvoie son URL servie. */
@@ -47,10 +47,13 @@ export class MediaService implements OnModuleInit {
     file: UploadFile | undefined,
   ): Promise<{ mediaId: string; url: string }> {
     if (!file) {
-      throw new BadRequestException('Fichier manquant (champ "file").');
+      throw new BadRequestException('media.file_missing');
     }
     if (file.size > this.maxBytes) {
-      throw new PayloadTooLargeException(`Fichier trop volumineux (max ${this.maxBytes} octets).`);
+      throw new PayloadTooLargeException({
+        code: 'media.file_too_large',
+        params: { max: this.maxBytes },
+      });
     }
     const kind = this.kindFor(file.mimetype);
     const asset = await this.prisma.mediaAsset.create({
@@ -77,7 +80,7 @@ export class MediaService implements OnModuleInit {
   async openStream(id: string): Promise<{ stream: ReadStream; mime: string; sizeBytes: number }> {
     const asset = await this.prisma.mediaAsset.findUnique({ where: { id } });
     if (!asset) {
-      throw new NotFoundException('Média introuvable.');
+      throw new NotFoundException('media.not_found');
     }
     const path = join(this.dir, id);
     const stream = createReadStream(path);
@@ -94,7 +97,7 @@ export class MediaService implements OnModuleInit {
       where: { id, ownerId },
     });
     if (!asset) {
-      throw new NotFoundException('Média introuvable.');
+      throw new NotFoundException('media.not_found');
     }
     await this.prisma.mediaAsset.delete({ where: { id } });
     await unlink(join(this.dir, id)).catch(() => undefined);

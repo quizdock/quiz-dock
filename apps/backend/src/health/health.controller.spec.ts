@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { CONTRACTS_VERSION } from '@roux-quizz/contracts';
 import { HealthController } from './health.controller';
 
 describe('HealthController', () => {
@@ -18,7 +19,7 @@ describe('HealthController', () => {
   });
 
   it('expose la version du contrat partagé', () => {
-    expect(controller.check().contracts).toBe('0.1.0');
+    expect(controller.check().contracts).toBe(CONTRACTS_VERSION);
   });
 
   it("reflète AUTH_MODE par défaut 'none'", () => {

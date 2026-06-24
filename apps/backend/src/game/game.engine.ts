@@ -80,7 +80,7 @@ export class GameEngine {
   async start(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) {
-      throw new BadRequestException('La partie a déjà démarré.');
+      throw new BadRequestException('session.already_started');
     }
     const snapshot = await this.requireSnapshot(pin);
     await this.beginQuestion(pin, snapshot, 0);
@@ -95,9 +95,7 @@ export class GameEngine {
   async setCapture(pin: string, hostUserId: string, fullCapture: boolean): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) {
-      throw new BadRequestException(
-        'La capture intégrale ne peut être modifiée qu’avant le démarrage.',
-      );
+      throw new BadRequestException('session.capture_locked');
     }
     await this.redis.hset(gameKeys.game(pin), { fullCapture: fullCapture ? '1' : '0' });
     this.server.to(pin).emit('notice', { fullCapture });
@@ -284,7 +282,7 @@ export class GameEngine {
   async next(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Reveal) {
-      throw new BadRequestException('Action possible seulement après le reveal.');
+      throw new BadRequestException('session.reveal_required');
     }
     this.cancelTimer(this.autoNextTimers, pin); // un enchaînement (auto/manuel) annule l'autre
     const won = await this.redis.set(
@@ -738,7 +736,7 @@ export class GameEngine {
   async adjustTime(pin: string, hostUserId: string, deltaS: number): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Answering) {
-      throw new BadRequestException('Le chrono ne peut être ajusté que pendant une question.');
+      throw new BadRequestException('session.timer_not_adjustable');
     }
     const deltaMs = Math.trunc(deltaS) * 1000;
 
@@ -978,10 +976,10 @@ export class GameEngine {
   private async requireHost(pin: string, hostUserId: string): Promise<GameMeta> {
     const meta = await this.game.getMeta(pin);
     if (!meta) {
-      throw new BadRequestException('Partie introuvable ou terminée.');
+      throw new BadRequestException('session.not_found');
     }
     if (meta.hostUserId !== hostUserId) {
-      throw new ForbiddenException("Vous n'êtes pas l'hôte de cette partie.");
+      throw new ForbiddenException('host.forbidden');
     }
     return meta;
   }
@@ -989,7 +987,7 @@ export class GameEngine {
   private async requireSnapshot(pin: string): Promise<QuizSnapshot> {
     const snapshot = await this.game.getSnapshot(pin);
     if (!snapshot) {
-      throw new BadRequestException('Snapshot de partie introuvable.');
+      throw new BadRequestException('session.snapshot_not_found');
     }
     return snapshot;
   }
