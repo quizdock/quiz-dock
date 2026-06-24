@@ -1,8 +1,8 @@
 {
-  "name": "@roux-quizz/frontend",
+  "name": "@live-quizz/frontend",
   "version": "0.1.0",
   "private": true,
-  "description": "Frontend Roux-Quizz : React + Vite + shadcn/ui + TanStack",
+  "description": "Frontend Live-Quizz : React + Vite + shadcn/ui + TanStack",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@multiavatar/multiavatar": "^1.0.7",
-    "@roux-quizz/contracts": "workspace:*",
+    "@live-quizz/contracts": "workspace:*",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-form": "^1.33.0",
     "@tanstack/react-query": "^5.101.0",

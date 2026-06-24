@@ -1,4 +1,4 @@
-# Roux-Quizz — Maquettes & écrans (wireframes)
+# Live-Quizz — Maquettes & écrans (wireframes)
 
 > Vue **IHM / parcours écran**, basse fidélité (ASCII). Complète `SPECIFICATIONS-METIER.md`.
 > Périmètre v1 : formation entreprise, mode individuel, quiz privés.
@@ -19,8 +19,8 @@
 ### 1.1 Accueil (non connecté)
 ```
 ┌──────────────────────────────────────────────┐
-│                 ROUX-QUIZZ                     │
-│        Quiz interactifs pour la formation      │
+│                 LIVE-QUIZZ                     │
+│                Quizz interactif                │
 │                                                │
 │   ┌──────────────────────────────────────┐    │
 │   │  Rejoindre une session                │    │
@@ -40,7 +40,7 @@
 ### 2.1 Tableau de bord — Ma banque de quiz
 ```
 ┌───────────────────────────────────────────────────────────┐
-│ ROUX-QUIZZ   Mes quiz │ Historique           Claire ▾      │
+│ LIVE-QUIZZ   Mes quiz │ Historique           Claire ▾      │
 ├───────────────────────────────────────────────────────────┤
 │ [ + Nouveau quiz ]        Rechercher [____________]  🔍     │
 │                                                            │
@@ -147,7 +147,7 @@ Menu `⋯` : Éditer · Dupliquer · Archiver · Supprimer · Voir les sessions 
 ### 4.1 Lobby projeté
 ```
 ┌───────────────────────────────────────────────────────────┐
-│        Rejoignez sur  roux-quizz.app   —   PIN : 482917     │
+│        Rejoignez sur  live-quizz.app   —   PIN : 482917     │
 │                                                            │
 │      marc   sophie   leo   nadia   karim   inès   ...       │
 │                         23 joueurs                         │

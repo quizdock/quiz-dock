@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '../auth/auth-context';
+import { APP_NAME, appConfig } from '../config';
 
 export function RootLayout() {
   const { t } = useTranslation(['auth', 'common']);
@@ -12,8 +13,9 @@ export function RootLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between gap-4 border-b px-6 py-3">
-        <Link to="/" className="text-lg font-bold">
-          Roux-Quizz
+        <Link to="/" className="flex items-center gap-2 text-lg font-bold">
+          <img src={appConfig.logoUrl} alt={APP_NAME} className="h-7 w-auto text-primary" />
+          <span className="sr-only">{APP_NAME}</span>
         </Link>
         <nav className="flex items-center gap-3 text-sm">
           {user ? (

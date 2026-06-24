@@ -26,7 +26,7 @@ services:
       [
         'sh',
         '-c',
-        'pnpm install --filter @roux-quizz/backend... --frozen-lockfile --prefer-offline && pnpm --filter @roux-quizz/contracts build && node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
+        'pnpm install --filter @live-quizz/backend... --frozen-lockfile --prefer-offline && pnpm --filter @live-quizz/contracts build && node_modules/.bin/prisma migrate deploy && node node_modules/@nestjs/cli/bin/nest.js start --watch',
       ]
     environment:
       NODE_ENV: development
@@ -56,10 +56,12 @@ services:
       [
         'sh',
         '-c',
-        'pnpm install --filter @roux-quizz/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @roux-quizz/contracts build && pnpm --filter @roux-quizz/frontend dev --host --port 5173',
+        'printf "%s" "window.__APP_CONFIG__ = { appName: \"${APP_NAME:-Live-Quizz}\" };" > apps/frontend/public/config.js && pnpm install --filter @live-quizz/frontend... --frozen-lockfile --prefer-offline && pnpm --filter @live-quizz/contracts build && pnpm --filter @live-quizz/frontend dev --host --port 5173',
       ]
     environment:
       VITE_API_URL: http://backend:3000
+      # White-label : nom d'app injecté dans public/config.js au démarrage (sans rebuild).
+      APP_NAME: ${APP_NAME:-Live-Quizz}
       npm_config_verify_deps_before_run: 'false'
     volumes:
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
@@ -76,6 +78,8 @@ services:
       - ./apps/frontend/src:/app/apps/frontend/src
       - ./apps/frontend/index.html:/app/apps/frontend/index.html
       - ./packages/contracts/src:/app/packages/contracts/src
+      # White-label : override logo + CSS à chaud (sans rebuild).
+      - ./branding:/app/apps/frontend/public/branding:ro
     ports:
       - '${VITE_PORT:-15173}:5173'
     depends_on:

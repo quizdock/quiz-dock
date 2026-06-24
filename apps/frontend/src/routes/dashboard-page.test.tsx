@@ -19,7 +19,7 @@ const quiz = (over: Record<string, unknown> = {}) => ({
 });
 
 describe('DashboardPage', () => {
-  beforeEach(() => localStorage.setItem('roux.localUser', 'Marc'));
+  beforeEach(() => localStorage.setItem('live.localUser', 'Marc'));
   afterEach(() => {
     localStorage.clear();
     vi.unstubAllGlobals();

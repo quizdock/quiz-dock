@@ -1,7 +1,7 @@
 {
-  "realm": "roux-quizz",
+  "realm": "live-quizz",
   "enabled": true,
-  "displayName": "Roux-Quizz",
+  "displayName": "Live-Quizz",
   "roles": {
     "realm": [
       { "name": "host", "description": "Formateur / créateur de quiz" },
@@ -11,8 +11,8 @@
   },
   "clients": [
     {
-      "clientId": "roux-quizz-frontend",
-      "name": "Roux-Quizz Frontend (SPA)",
+      "clientId": "live-quizz-frontend",
+      "name": "Live-Quizz Frontend (SPA)",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
@@ -25,7 +25,7 @@
     {
       "username": "formateur",
       "enabled": true,
-      "email": "formateur@roux-quizz.test",
+      "email": "formateur@live-quizz.test",
       "emailVerified": true,
       "firstName": "Formateur",
       "lastName": "Démo",

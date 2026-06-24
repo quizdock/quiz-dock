@@ -47,6 +47,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@live-quizz/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.26(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -71,9 +74,6 @@ importers:
       '@prisma/client':
         specifier: ^7.8.0
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3))(typescript@5.9.3)
-      '@roux-quizz/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       ioredis:
         specifier: ^5.11.1
         version: 5.11.1
@@ -150,12 +150,12 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@live-quizz/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@multiavatar/multiavatar':
         specifier: ^1.0.7
         version: 1.0.7
-      '@roux-quizz/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       '@tailwindcss/vite':
         specifier: ^4.3.0
         version: 4.3.0(vite@6.4.3(@types/node@22.19.20)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))

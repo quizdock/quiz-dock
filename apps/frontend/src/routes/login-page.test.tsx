@@ -17,7 +17,7 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByText('Continuer'));
 
     // l'identité locale est mémorisée
-    expect(localStorage.getItem('roux.localUser')).toBe('Marie');
+    expect(localStorage.getItem('live.localUser')).toBe('Marie');
     // navigation effective vers le tableau de bord (rendu après login)
     expect(await screen.findByText('Mes quiz')).toBeInTheDocument();
   });

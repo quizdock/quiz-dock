@@ -2,7 +2,7 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 import { setAuthHeaders } from '../api/http';
 import { getOidc } from './oidc';
 
-const STORAGE_KEY = 'roux.localUser';
+const STORAGE_KEY = 'live.localUser';
 
 export type AuthMode = 'none' | 'oidc';
 

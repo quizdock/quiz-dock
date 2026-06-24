@@ -1,4 +1,4 @@
-import { OptionColor, OptionShape, QuestionType } from '@roux-quizz/contracts';
+import { OptionColor, OptionShape, QuestionType } from '@live-quizz/contracts';
 import type { AnswerRecord, SnapshotOption, SnapshotQuestion } from './game.types';
 import { buildRevealCommon } from './reveal';
 

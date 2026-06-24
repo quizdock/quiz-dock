@@ -1,12 +1,12 @@
-# Roux-Quizz
+# Live-Quizz
 
-**Plateforme de quiz interactifs en temps réel pour la formation professionnelle** — un clone de Kahoot : un formateur anime une session live, les apprenants répondent depuis leur appareil, et la rapidité comme l'exactitude rapportent des points.
+**Plateforme de quiz interactifs en temps réel** — un clone de Kahoot : un formateur anime une session live, les apprenants répondent depuis leur appareil, et la rapidité comme l'exactitude rapportent des points.
 
 > 🚧 **Statut : conception.** Le code n'est pas encore écrit ; le dépôt contient les spécifications qui font foi et la doc de développement à venir.
 
 ---
 
-## ✨ Ce que fait Roux-Quizz
+## ✨ Ce que fait Live-Quizz
 
 - 🎯 **Quiz chronométrés** avec notation au temps de réponse (réponse rapide = plus de points) + bonus de série.
 - 👥 **Multijoueur temps réel** : 10 à 200 apprenants par session, via un simple **PIN**.

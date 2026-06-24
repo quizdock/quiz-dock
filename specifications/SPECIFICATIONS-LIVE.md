@@ -1,4 +1,4 @@
-# Roux-Quizz — Spécifications de la partie live
+# Live-Quizz — Spécifications de la partie live
 
 > Cadrage **détaillé** de l'animation temps réel : architecture multi-fenêtres du
 > présentateur, écrans joueurs, attachement/reconnexion, et liaison de chaque
@@ -163,7 +163,7 @@ partie existante.
 
 ### 6.1 Côté joueur
 - Au join, le client **persiste** `{ pin, sessionToken, playerId, nickname }` dans
-  `localStorage` (clé `roux.session`).
+  `localStorage` (clé `live.session`).
 - À l'ouverture, si une session locale existe **et** que la partie est encore vivante,
   le client émet **`player:reconnect {sessionToken}`** (déjà au contrat §9) → le
   serveur restaure place + score, repasse `connected=true`, et renvoie l'**état courant**
@@ -263,7 +263,7 @@ Les wireframes (UI §3–§5) donnent le *look* ; cette matrice donne la *liaiso
 
 ## 10. Extensions nécessaires (à implémenter après cette spec)
 
-### 10.1 Contrat WebSocket (technique §9 + package `@roux-quizz/contracts`)
+### 10.1 Contrat WebSocket (technique §9 + package `@live-quizz/contracts`)
 Nouveaux events à ajouter (typés bout-en-bout) :
 
 | Event | Sens | Payload | Effet |
@@ -287,7 +287,7 @@ Ajustements d'events existants :
 ### 10.3 Frontend (`P3-FRONT-2/3/4`)
 - Routes : `/present/$pin/control`, `/present/$pin/screen`, écrans joueur par état.
 - Hook machine d'état client (s'abonne à `game:state` + events, rend selon §9).
-- Reprise : `localStorage roux.session` (joueur) ; panneau « parties en cours » (hôte).
+- Reprise : `localStorage live.session` (joueur) ; panneau « parties en cours » (hôte).
 - Avatars (cosmétique §11) en lobby/classement/podium.
 
 ---

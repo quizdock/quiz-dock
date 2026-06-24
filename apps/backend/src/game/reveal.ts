@@ -1,4 +1,4 @@
-import { QuestionType } from '@roux-quizz/contracts';
+import { QuestionType } from '@live-quizz/contracts';
 import type { AnswerRecord, SnapshotQuestion } from './game.types';
 
 /** Partie **commune** d'un reveal (identique pour tous) — sans le résultat perso. */

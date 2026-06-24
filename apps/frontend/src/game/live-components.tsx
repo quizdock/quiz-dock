@@ -3,7 +3,7 @@ import type {
   PublicOption,
   QuestionRevealPayload,
   QuestionStartPayload,
-} from '@roux-quizz/contracts';
+} from '@live-quizz/contracts';
 import { useTranslation } from 'react-i18next';
 import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';

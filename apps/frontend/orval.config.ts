@@ -3,7 +3,7 @@ import { defineConfig } from 'orval';
 // Génère le client REST (hooks TanStack Query) à partir de l'OpenAPI du backend.
 // Régénéré via `pnpm generate:api` ; un drift fait échouer la CI (technique §2.3, §17.3).
 export default defineConfig({
-  rouxquizz: {
+  livequizz: {
     input: '../backend/openapi/openapi.json',
     output: {
       mode: 'tags-split',

@@ -1,4 +1,4 @@
-import type { GameMode, OutlineQuestion } from '@roux-quizz/contracts';
+import type { GameMode, OutlineQuestion } from '@live-quizz/contracts';
 import { Link, useParams } from '@tanstack/react-router';
 import {
   Ban,
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { APP_NAME } from '../config';
 import { Avatar } from '../game/avatar';
 import { LeaderboardList, OptionGrid, Podium, RevealAnswer } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
@@ -70,7 +71,7 @@ export function ControlPage() {
     if (!canvas) return null;
     try {
       const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-      return blob ? new File([blob], `roux-quizz-${pin}.png`, { type: 'image/png' }) : null;
+      return blob ? new File([blob], `live-quizz-${pin}.png`, { type: 'image/png' }) : null;
     } catch {
       return null;
     }
@@ -78,11 +79,15 @@ export function ControlPage() {
 
   const onShare = async () => {
     const text = [
-      t('control.shareText'),
+      t('control.shareText', { appName: APP_NAME }),
       t('control.sharePin', { pin }),
       t('control.shareLink', { url: joinUrl }),
     ].join('\n');
-    const data: ShareData = { title: t('control.shareTitle'), text, url: joinUrl };
+    const data: ShareData = {
+      title: t('control.shareTitle', { appName: APP_NAME }),
+      text,
+      url: joinUrl,
+    };
     const file = await qrFile();
     const withFile = file ? { ...data, files: [file] } : null;
     try {

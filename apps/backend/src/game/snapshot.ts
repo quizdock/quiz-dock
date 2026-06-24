@@ -6,7 +6,7 @@ import type {
   PublicOption,
   QuestionStartPayload,
   QuestionType,
-} from '@roux-quizz/contracts';
+} from '@live-quizz/contracts';
 import { basePointsFor } from './scoring';
 import type { QuizSnapshot, SnapshotQuestion } from './game.types';
 

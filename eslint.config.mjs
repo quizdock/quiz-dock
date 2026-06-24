@@ -12,6 +12,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/coverage/**',
       'apps/frontend/src/api/generated/**',
+      'apps/frontend/public/**',
     ],
   },
   js.configs.recommended,

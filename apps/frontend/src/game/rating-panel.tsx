@@ -15,7 +15,7 @@ import type { GameSocket } from './game-client';
  */
 export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket | null }) {
   const { t } = useTranslation('live');
-  const storageKey = `roux.rated.${pin}`;
+  const storageKey = `live.rated.${pin}`;
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState('');

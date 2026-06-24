@@ -10,7 +10,7 @@ import type {
   QuestionRevealPayload,
   QuestionStartPayload,
   QuestionTimePayload,
-} from '@roux-quizz/contracts';
+} from '@live-quizz/contracts';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {

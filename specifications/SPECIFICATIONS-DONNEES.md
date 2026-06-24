@@ -1,4 +1,4 @@
-# Roux-Quizz — Dictionnaire de données
+# Live-Quizz — Dictionnaire de données
 
 > Détail **niveau colonne** des données persistantes (PostgreSQL) et des structures temps réel (Redis).
 > Complète `SPECIFICATIONS.md` §3 (modèle) et `SPECIFICATIONS-METIER.md` §12 (règles de gestion).
@@ -289,7 +289,7 @@ Index : `(session_log_id, order_index)` ; `(player_result_log_id)`.
 
 ## 5. Contrat partagé (TypeScript)
 
-> Hors base : types du **package `@roux-quizz/contracts`** (technique §2.3), source de vérité du WebSocket. Alignés sur les enums §3. Exemple de structures de payload (référence, pas exhaustif) :
+> Hors base : types du **package `@live-quizz/contracts`** (technique §2.3), source de vérité du WebSocket. Alignés sur les enums §3. Exemple de structures de payload (référence, pas exhaustif) :
 
 ```ts
 type QuestionType = 'single_choice' | 'multiple_choice' | 'true_false'

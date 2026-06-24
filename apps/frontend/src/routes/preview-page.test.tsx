@@ -57,7 +57,7 @@ const detail = (over: Record<string, unknown> = {}) => ({
 });
 
 describe('PreviewPage', () => {
-  beforeEach(() => localStorage.setItem('roux.localUser', 'Marc'));
+  beforeEach(() => localStorage.setItem('live.localUser', 'Marc'));
   afterEach(() => {
     localStorage.clear();
     vi.unstubAllGlobals();

@@ -1,4 +1,4 @@
-import { PointsMode, QuestionType } from '@roux-quizz/contracts';
+import { PointsMode, QuestionType } from '@live-quizz/contracts';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import type { AnswerValue, ScoreResult, SnapshotQuestion } from './game.types';
 

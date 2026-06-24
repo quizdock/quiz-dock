@@ -1,4 +1,4 @@
-# Roux-Quizz — Spécifications métier (fonctionnel)
+# Live-Quizz — Spécifications métier (fonctionnel)
 
 > Vue **domaine / fonctionnelle** de l'application. Complète `SPECIFICATIONS.md` (technique).
 > Contexte retenu : **entreprise / formation**. Mode v1 : **classique individuel**. Quiz **privés**.
@@ -8,7 +8,7 @@
 
 ## 1. Contexte & objectifs métier
 
-Roux-Quizz est un outil de **quiz interactif en temps réel pour la formation professionnelle** : un formateur anime une session live, les apprenants répondent depuis leur appareil, et la rapidité comme l'exactitude sont récompensées. L'objectif est de **dynamiser la formation**, **mesurer l'acquisition de connaissances** et **restituer des résultats exploitables** au formateur et à l'organisation.
+Live-Quizz est un outil de **quiz interactif en temps réel** : un formateur anime une session live, les apprenants répondent depuis leur appareil, et la rapidité comme l'exactitude sont récompensées. L'objectif est de **dynamiser la formation**, **mesurer l'acquisition de connaissances** et **restituer des résultats exploitables** au formateur et à l'organisation.
 
 ### Objectifs métier
 - **Engager** les apprenants (gamification, classement, rythme).

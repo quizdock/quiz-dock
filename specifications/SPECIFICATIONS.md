@@ -1,4 +1,4 @@
-# Roux-Quizz — Spécifications
+# Live-Quizz — Spécifications
 
 > Clone de Kahoot : quiz chronométrés multijoueurs, notation au temps de réponse.
 > Document de référence pour le développement. Version 1.0 — 2026-06-09.
@@ -7,7 +7,7 @@
 
 ## 1. Vision & périmètre
 
-Roux-Quizz est une plateforme de quiz en temps réel inspirée de Kahoot :
+Live-Quizz est une plateforme de quiz en temps réel inspirée de Kahoot :
 
 - Un **hôte** crée des quiz (builder) et lance des **parties** (game sessions).
 - Des **joueurs** (10 à 200 par partie) rejoignent via un **PIN** et répondent à des questions chronométrées depuis leur appareil.
@@ -77,7 +77,7 @@ Monorepo **pnpm** (workspaces). Application **React + Vite + TypeScript**.
 
 **Décision : Node.js + TypeScript (NestJS).** Pour ce projet « WebSocket réactif », Node l'emporte :
 
-- **End-to-end TypeScript** : le contrat WebSocket (events §9) est défini une fois en TS et **partagé** front/back via un package du monorepo (`@roux-quizz/contracts`) — impossible à obtenir avec un backend Python (Orval ne couvrant pas le WS, on perdrait le typage du live).
+- **End-to-end TypeScript** : le contrat WebSocket (events §9) est défini une fois en TS et **partagé** front/back via un package du monorepo (`@live-quizz/contracts`) — impossible à obtenir avec un backend Python (Orval ne couvrant pas le WS, on perdrait le typage du live).
 - **Socket.IO est natif côté Node** : adapter Redis, rooms, reconnexion, namespaces — exactement la stack temps réel déjà spécifiée (§9, §11). `python-socketio` existe mais est secondaire.
 - **NestJS** apporte les deux besoins clés dans un seul cadre :
   - **REST avec OpenAPI auto-généré** via `@nestjs/swagger` (décorateurs sur DTO → spec OpenAPI servie sur `/api/docs-json`).
@@ -101,7 +101,7 @@ Hooks TanStack Query + client + types TS  ──importés par──▶ Frontend
 ```
 
 - **REST (builder, restitutions, historique)** : 100 % généré par **Orval** depuis l'OpenAPI ; aucune écriture manuelle d'appels HTTP côté front. Régénération en CI ; **drift détecté** si le client généré diffère du committé (test de non-régression de contrat, cf. §17.3).
-- **WebSocket (gameplay)** : **non couvert par OpenAPI/Orval**. Le contrat (§9) vit dans le package partagé `@roux-quizz/contracts` (types d'events + schemas de validation), importé par le backend (gateways) et le frontend (`socket.io-client`) → typage de bout en bout sans génération.
+- **WebSocket (gameplay)** : **non couvert par OpenAPI/Orval**. Le contrat (§9) vit dans le package partagé `@live-quizz/contracts` (types d'events + schemas de validation), importé par le backend (gateways) et le frontend (`socket.io-client`) → typage de bout en bout sans génération.
 - **AsyncAPI** (optionnel, v1.1) : documenter le contrat WS au format AsyncAPI pour une doc générée symétrique à l'OpenAPI.
 
 ### Pourquoi Redis pour l'état live

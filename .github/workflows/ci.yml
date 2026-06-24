@@ -18,12 +18,12 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: roux
-          POSTGRES_PASSWORD: roux
-          POSTGRES_DB: rouxquizz
+          POSTGRES_USER: live
+          POSTGRES_PASSWORD: live
+          POSTGRES_DB: livequizz
         ports: ['5432:5432']
         options: >-
-          --health-cmd "pg_isready -U roux -d rouxquizz"
+          --health-cmd "pg_isready -U live -d livequizz"
           --health-interval 10s --health-timeout 5s --health-retries 5
       redis:
         image: redis:7-alpine
@@ -33,7 +33,7 @@ jobs:
           --health-interval 10s --health-timeout 5s --health-retries 5
 
     env:
-      DATABASE_URL: postgresql://roux:roux@localhost:5432/rouxquizz?schema=public
+      DATABASE_URL: postgresql://live:live@localhost:5432/livequizz?schema=public
       REDIS_URL: redis://localhost:6379
 
     steps:
@@ -64,7 +64,7 @@ jobs:
         run: pnpm typecheck
 
       - name: Migrate (DB de test)
-        run: pnpm --filter @roux-quizz/backend exec prisma migrate deploy
+        run: pnpm --filter @live-quizz/backend exec prisma migrate deploy
 
       - name: Tests
         run: pnpm -r test

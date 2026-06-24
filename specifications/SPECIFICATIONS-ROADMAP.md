@@ -1,4 +1,4 @@
-# Roux-Quizz — Feuille de route (jalons, tâches, phases)
+# Live-Quizz — Feuille de route (jalons, tâches, phases)
 
 > Plan de livraison incrémental, de **v0.1.0** à **v1.0.0**. Chaque jalon = une version livrable et démontrable (`docker compose up`).
 > Complète `SPECIFICATIONS.md §15` (découpage) et §18 (Definition of Done). Version 1.0 — 2026-06-09.
@@ -118,7 +118,7 @@ Un jalon `v0.x.0` est atteint quand **toutes** ses tâches sont :
 
 | ID | Tâche |
 |----|-------|
-| P3-BACK-1 | **WS Gateway** Socket.IO `/game` + contrat partagé `@roux-quizz/contracts` (technique §9) |
+| P3-BACK-1 | **WS Gateway** Socket.IO `/game` + contrat partagé `@live-quizz/contracts` (technique §9) |
 | P3-BACK-2 | **Création de session** + génération PIN unique (RG-04) (séquences §2) |
 | P3-BACK-3 | **Join** invité/connecté + lobby + `sessionToken` (séquences §2) |
 | P3-BACK-4 | **Machine à états** LOBBY→…→PODIUM (technique §8) |

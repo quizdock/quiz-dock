@@ -21,7 +21,7 @@
    sélection de langue, pluriels ICU). Aucune traduction supplémentaire dans cette passe.
 5. **Validation** : erreurs class-validator renvoyées en **codes structurés** `{ field, code }`,
    traduites côté front (ValidationPipe custom).
-6. **Hors scope (phases ultérieures)** : renommage projet `roux-quizz` → `live-quizz` ; renommage
+6. **Hors scope (phases ultérieures)** : renommage du projet en `live-quizz` ; renommage
    des identifiants code `game` → `session` (contrat WS, enum, modèles). « Chaque chose en son temps. »
 
 ## Glossaire canonique
@@ -80,7 +80,7 @@
     les `params` n'ont nulle part où aller → les erreurs interpolées (`transition_forbidden`)
     perdraient leurs paramètres ou garderaient du FR. C'est la moitié silencieuse de « backend = tokens ».
   - **WS** : `WsExceptionFilter` — faire évoluer l'event `error` de `{ code, message }` vers
-    `{ code, params? }` dans `@roux-quizz/contracts` (le `message` FR disparaît ; fallback dev EN seulement).
+    `{ code, params? }` dans `@live-quizz/contracts` (le `message` FR disparaît ; fallback dev EN seulement).
 - Remplacer chaque `throw new XxxException('texte FR')` par un **code** stable
   (ex. `quiz.not_found`, `session.finished`, `nickname.taken`, `quiz.transition_forbidden` + `params`).
 - **ValidationPipe custom** : `exceptionFactory` renvoyant `{ code, errors: [{ field, code, params }] }`.
@@ -92,7 +92,7 @@
 - Hors scope : descriptions Swagger/OpenAPI (doc **dev**, pas UX).
 
 ### Phase ultérieure (séparée) — non planifiée ici
-- Rename projet `roux-quizz` → `live-quizz` (packages, scopes npm, images Docker, README).
+- Rename projet vers `live-quizz` (packages, scopes npm, images Docker, README).
 - Rename identifiants code `game` → `session` (events WS, `GameState`, modèles Prisma, Orval régénéré,
   migrations). Gros blast-radius — à traiter avec le rename projet.
 

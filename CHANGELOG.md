@@ -1,6 +1,6 @@
 # Changelog
 
-Toutes les évolutions notables de Roux-Quizz. Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/),
+Toutes les évolutions notables de Live-Quizz. Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/),
 versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`). Voir
 [specifications/SPECIFICATIONS-ROADMAP.md](./specifications/SPECIFICATIONS-ROADMAP.md).
 
@@ -9,7 +9,7 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
 ### Added
 - **Fondation temps réel** : gateway **Socket.IO** `/game` (NestJS), **auth au handshake**
   (réutilise `AuthProvider` ; invité si pas d'auth), `ping`/`pong` (RTT). Service **Redis** (ioredis)
-  pour l'état live. **Contrat WS typé bout-en-bout** dans `@roux-quizz/contracts` : payloads §9 +
+  pour l'état live. **Contrat WS typé bout-en-bout** dans `@live-quizz/contracts` : payloads §9 +
   maps `ClientToServerEvents`/`ServerToClientEvents` (gateway et futur `socket.io-client`).
 - **Scoring (cœur produit §5/§6)** : fonction **pure** et déterministe — points = base
   (1000/2000/0) pondérés par la rapidité (`1 - ratio/2`) + bonus de série (cap +500) ;
@@ -58,7 +58,7 @@ versionnement [SemVer](https://semver.org/lang/fr/) (pré-1.0 : `0.MINOR.PATCH`)
   en était (`endsAt` recalculé, `question:start` re-diffusé).
 - **Écrans live (P3-FRONT-2/3/4, §10.3)** : fondation client (`useGameSession` — vue
   unifiée, listeners posés avant le kick, socket unique anti-StrictMode ; `useCountdown`
-  dérivé des timestamps serveur ; persistance `roux.session`). **Console d'animation**
+  dérivé des timestamps serveur ; persistance `live.session`). **Console d'animation**
   `/present/$pin/control` (lobby PIN/QR/roster + démarrer ; compteur + révéler/terminer ;
   répartition + classement + suivant ; podium) survivant au rechargement via `host:attach`.
   **Écran projeté** `/present/$pin/screen` (spectateur lecture seule, plein écran : lobby,
@@ -174,7 +174,7 @@ les réordonne, prévisualise et publie. Client REST 100 % généré par Orval ;
   specs §16/§2.6 mises à jour.
 - **Valeurs d'enum alignées sur le fil** : les membres des enums Prisma portent désormais la valeur
   du domaine en minuscules (`draft`, `host`, `single_choice`…), si bien que l'API REST expose les
-  mêmes valeurs que la base et que `@roux-quizz/contracts` (avant : PascalCase côté client Prisma).
+  mêmes valeurs que la base et que `@live-quizz/contracts` (avant : PascalCase côté client Prisma).
   Aucune migration (valeurs en base inchangées).
 
 ### Verified
@@ -237,7 +237,7 @@ Premier jalon : un squelette qui démarre de bout en bout, sans fonctionnalité 
 
 ### Added
 - **Monorepo pnpm** (workspaces) : `apps/backend`, `apps/frontend`, `packages/contracts`.
-- **Package de contrats partagé** (`@roux-quizz/contracts`) : énumérations du domaine
+- **Package de contrats partagé** (`@live-quizz/contracts`) : énumérations du domaine
   (états de partie, types de question, points, couleurs/formes) et noms d'événements
   WebSocket — build dual ESM/CJS.
 - **Backend NestJS** : squelette + endpoint `GET /health`, OpenAPI auto sur `/api/docs`

@@ -8,15 +8,18 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc tsconfig.base.json ./
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/frontend/package.json apps/frontend/
-RUN pnpm install --filter @roux-quizz/frontend... --no-frozen-lockfile
+RUN pnpm install --filter @live-quizz/frontend... --no-frozen-lockfile
 
 COPY packages/contracts packages/contracts
 COPY apps/frontend apps/frontend
-RUN pnpm --filter @roux-quizz/contracts build \
- && pnpm --filter @roux-quizz/frontend build
+RUN pnpm --filter @live-quizz/contracts build \
+ && pnpm --filter @live-quizz/frontend build
 
 # ---- runtime (Nginx statique) ----
 FROM nginx:alpine AS runtime
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/apps/frontend/dist /usr/share/nginx/html
+# White-label : régénère /config.js depuis $APP_NAME au démarrage (avant nginx).
+COPY apps/frontend/docker-entrypoint.sh /docker-entrypoint.d/40-generate-config.sh
+RUN chmod +x /docker-entrypoint.d/40-generate-config.sh
 EXPOSE 80

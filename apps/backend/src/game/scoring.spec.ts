@@ -1,4 +1,4 @@
-import { OptionColor, OptionShape, PointsMode, QuestionType } from '@roux-quizz/contracts';
+import { OptionColor, OptionShape, PointsMode, QuestionType } from '@live-quizz/contracts';
 import type { SnapshotOption, SnapshotQuestion } from './game.types';
 import { basePointsFor, gradeAnswer, scoreAnswer, streakBonus, timePoints } from './scoring';
 

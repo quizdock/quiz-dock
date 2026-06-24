@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { GameState } from '@roux-quizz/contracts';
+import { GameState } from '@live-quizz/contracts';
 import type {
   AnswerValue,
   GameMode,
@@ -8,7 +8,7 @@ import type {
   LeaderboardRow,
   QuestionRevealPayload,
   ServerToClientEvents,
-} from '@roux-quizz/contracts';
+} from '@live-quizz/contracts';
 import type { Server } from 'socket.io';
 import { GameService } from './game.service';
 import {

@@ -790,7 +790,7 @@
     }
   },
   "info": {
-    "title": "Roux-Quizz API",
+    "title": "Live-Quizz API",
     "description": "API REST du builder de quiz et des restitutions",
     "version": "0.1.0",
     "contact": {}

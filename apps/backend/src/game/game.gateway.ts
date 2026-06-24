@@ -14,7 +14,7 @@ import type {
   ClientToServerEvents,
   GameMode,
   ServerToClientEvents,
-} from '@roux-quizz/contracts';
+} from '@live-quizz/contracts';
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import type { Server, Socket } from 'socket.io';

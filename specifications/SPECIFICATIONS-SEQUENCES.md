@@ -1,4 +1,4 @@
-# Roux-Quizz — Diagrammes de séquence
+# Live-Quizz — Diagrammes de séquence
 
 > Déroulé **dynamique** des interactions (Mermaid). Complète `SPECIFICATIONS.md` (§8 machine à états, §9 events WS, §6 timing, §11 reconnexion) et `SPECIFICATIONS-DONNEES.md`.
 > Version 1.0 — 2026-06-09.

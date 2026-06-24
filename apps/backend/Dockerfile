@@ -13,14 +13,14 @@ COPY apps/backend/package.json apps/backend/
 # lance `prisma generate` (génère le client typé consommé par le code).
 COPY apps/backend/prisma apps/backend/prisma
 COPY apps/backend/prisma.config.ts apps/backend/
-RUN pnpm install --filter @roux-quizz/backend... --no-frozen-lockfile
+RUN pnpm install --filter @live-quizz/backend... --no-frozen-lockfile
 
 # Sources + build + déploiement prod auto-suffisant
 COPY packages/contracts packages/contracts
 COPY apps/backend apps/backend
-RUN pnpm --filter @roux-quizz/contracts build \
- && pnpm --filter @roux-quizz/backend build \
- && pnpm --filter @roux-quizz/backend deploy --legacy --prod /out \
+RUN pnpm --filter @live-quizz/contracts build \
+ && pnpm --filter @live-quizz/backend build \
+ && pnpm --filter @live-quizz/backend deploy --legacy --prod /out \
  # `pnpm deploy` reconstruit node_modules depuis le store et n'emporte PAS le
  # client Prisma généré (dossier `.prisma`). On le régénère DANS /out pour qu'il
  # atterrisse dans le node_modules embarqué (--schema → pas besoin du config TS).

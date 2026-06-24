@@ -18,7 +18,7 @@ export class AuthConfigController {
         mode === 'oidc'
           ? {
               authority: process.env.OIDC_ISSUER ?? '',
-              clientId: process.env.OIDC_CLIENT_ID ?? 'roux-quizz-frontend',
+              clientId: process.env.OIDC_CLIENT_ID ?? 'live-quizz-frontend',
             }
           : null,
     };

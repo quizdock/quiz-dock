@@ -24,7 +24,7 @@ describe('RatingPanel', () => {
     );
     // L'ack ok:true bascule sur le remerciement (et mémorise localement).
     expect(screen.getByText(/Merci pour ton avis/)).toBeInTheDocument();
-    expect(localStorage.getItem('roux.rated.482913')).toBe('1');
+    expect(localStorage.getItem('live.rated.482913')).toBe('1');
   });
 
   it('désactive l’envoi tant qu’aucune étoile n’est choisie', () => {
@@ -51,7 +51,7 @@ describe('RatingPanel', () => {
   });
 
   it('ne re-sollicite pas un joueur ayant déjà noté (dédoublonnage local)', () => {
-    localStorage.setItem('roux.rated.111111', '1');
+    localStorage.setItem('live.rated.111111', '1');
     const socket = { emit: vi.fn() } as never;
     render(<RatingPanel pin="111111" socket={socket} />);
     expect(screen.queryByRole('button', { name: /Envoyer mon avis/ })).not.toBeInTheDocument();

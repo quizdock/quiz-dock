@@ -1,5 +1,5 @@
 /**
- * @roux-quizz/contracts
+ * @live-quizz/contracts
  *
  * Source de vérité partagée front/back pour le contrat temps réel (WebSocket)
  * et les énumérations du domaine. Voir specifications/SPECIFICATIONS.md §9

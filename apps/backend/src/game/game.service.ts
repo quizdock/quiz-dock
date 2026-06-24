@@ -7,7 +7,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { GameState } from '@roux-quizz/contracts';
+import { GameState } from '@live-quizz/contracts';
 import { QuizStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';

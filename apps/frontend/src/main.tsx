@@ -6,9 +6,12 @@ import { authConfigControllerConfig } from './api/generated/auth/auth';
 import { setAuthHeaders } from './api/http';
 import { type AuthMode, AuthProvider, configureAuth } from './auth/auth-context';
 import { getOidc, initOidc } from './auth/oidc';
+import { APP_NAME } from './config';
 import { router } from './router';
 import './i18n';
 import './index.css';
+
+document.title = APP_NAME; // marque runtime (white-label)
 
 const queryClient = new QueryClient();
 

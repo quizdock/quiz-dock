@@ -1,4 +1,4 @@
-import type { ClientToServerEvents, ServerToClientEvents } from '@roux-quizz/contracts';
+import type { ClientToServerEvents, ServerToClientEvents } from '@live-quizz/contracts';
 import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
 import { errorText } from '../api/error-text';
@@ -43,7 +43,7 @@ export function ensureGameSocket(role: 'host' | 'guest'): Promise<GameSocket> {
   return connecting;
 }
 
-/** Session joueur persistée pour la reconnexion (§6.1, clé `roux.session`). */
+/** Session joueur persistée pour la reconnexion (§6.1, clé `live.session`). */
 export interface PlayerSession {
   pin: string;
   sessionToken: string;
@@ -51,7 +51,7 @@ export interface PlayerSession {
   nickname: string;
 }
 
-const SESSION_KEY = 'roux.session';
+const SESSION_KEY = 'live.session';
 
 export function savePlayerSession(s: PlayerSession): void {
   try {
@@ -160,7 +160,7 @@ export async function joinSession(
  * efface la session mais pas l'avatar, qui est ainsi réinjecté dans les parties
  * suivantes. Cosmétique côté client (METIER §79).
  */
-const AVATAR_KEY = 'roux.avatar';
+const AVATAR_KEY = 'live.avatar';
 
 export function loadAvatarSeed(): string | null {
   try {

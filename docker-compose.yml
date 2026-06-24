@@ -1,16 +1,16 @@
-name: roux-quizz
+name: live-quizz
 
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-roux}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-roux}
-      POSTGRES_DB: ${POSTGRES_DB:-rouxquizz}
+      POSTGRES_USER: ${POSTGRES_USER:-live}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-live}
+      POSTGRES_DB: ${POSTGRES_DB:-livequizz}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-roux} -d ${POSTGRES_DB:-rouxquizz}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-live} -d ${POSTGRES_DB:-livequizz}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,7 +52,7 @@ services:
       NODE_ENV: production
       PORT: '3000'
       AUTH_MODE: ${AUTH_MODE:-none}
-      DATABASE_URL: postgres://${POSTGRES_USER:-roux}:${POSTGRES_PASSWORD:-roux}@postgres:5432/${POSTGRES_DB:-rouxquizz}
+      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-livequizz}
       REDIS_URL: redis://redis:6379
       # Médias stockés sur un volume local et servis par le backend (proxy).
       MEDIA_DIR: /data/media
@@ -60,10 +60,10 @@ services:
       # Auth OIDC (utilisé seulement si AUTH_MODE=oidc). En Docker, l'issuer (host
       # vu par le navigateur) diffère de l'URI JWKS (host interne) — d'où deux
       # variables. Keycloak est l'IdP de référence en dev.
-      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:48080/realms/roux-quizz}
-      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/roux-quizz/protocol/openid-connect/certs}
+      OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:48080/realms/live-quizz}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/live-quizz/protocol/openid-connect/certs}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
-      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-roux-quizz-frontend}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-live-quizz-frontend}
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,11 +85,17 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile
       target: runtime
+    environment:
+      # White-label : nom d'app injecté au runtime dans /config.js (sans rebuild).
+      APP_NAME: ${APP_NAME:-Live-Quizz}
     depends_on:
       backend:
         condition: service_healthy
     ports:
       - '${FRONTEND_PORT:-18081}:80'
+    volumes:
+      # Override logo + CSS sans rebuild (remplace les fichiers servis).
+      - ./branding:/usr/share/nginx/html/branding:ro
     networks: [public]
 
 volumes:

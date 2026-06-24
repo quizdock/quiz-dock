@@ -10,9 +10,9 @@ loadEnv({ path: '../../.env' });
 // DATABASE_URL (postgres:5432 interne) et garde donc la priorité. Les valeurs par
 // défaut sont alignées sur docker-compose.
 if (!process.env.DATABASE_URL) {
-  const user = process.env.POSTGRES_USER ?? 'roux';
-  const password = process.env.POSTGRES_PASSWORD ?? 'roux';
-  const db = process.env.POSTGRES_DB ?? 'rouxquizz';
+  const user = process.env.POSTGRES_USER ?? 'live';
+  const password = process.env.POSTGRES_PASSWORD ?? 'live';
+  const db = process.env.POSTGRES_DB ?? 'livequizz';
   const port = process.env.POSTGRES_PORT ?? '15432';
   process.env.DATABASE_URL = `postgresql://${user}:${password}@localhost:${port}/${db}?schema=public`;
 }

@@ -1,8 +1,8 @@
-# Roux-Quizz — Spécifications (index)
+# Live-Quizz — Spécifications (index)
 
 > Hub des **spécifications de référence** du projet. Pour une présentation générale, voir le **[README racine](../README.md)**. La doc de développement vivante est dans **[../docs/](../docs/README.md)**.
 
-> **Clone de Kahoot pour la formation professionnelle** : quiz interactifs en temps réel, chronométrés, avec notation au temps de réponse. 10–200 apprenants par session.
+> **Clone de Kahoot** : quiz interactifs en temps réel, chronométrés, avec notation au temps de réponse. 10–200 apprenants par session.
 
 🚧 **Statut : phase de spécifications** (pas encore de code). Ces documents de conception font foi pour le développement.
 
@@ -39,7 +39,7 @@ Lire dans cet ordre pour découvrir le projet :
 
 | Couche | Choix |
 |--------|-------|
-| Monorepo | **pnpm** workspaces (front + back + `@roux-quizz/contracts`) |
+| Monorepo | **pnpm** workspaces (front + back + `@live-quizz/contracts`) |
 | Frontend | **React + Vite + TypeScript**, **shadcn/ui** + icônes **lucide-react**, **TanStack** Query/Form/Router/Table, client REST généré par **Orval** |
 | Backend | **Node.js + TypeScript (NestJS)** + **Socket.IO** |
 | Temps réel | Socket.IO + **adapter Redis** |

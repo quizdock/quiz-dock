@@ -26,7 +26,7 @@ describe('GameGateway (intégration socket)', () => {
   };
 
   beforeAll(async () => {
-    process.env.DATABASE_URL ??= 'postgresql://roux:roux@localhost:15432/rouxquizz?schema=public';
+    process.env.DATABASE_URL ??= 'postgresql://live:live@localhost:15432/livequizz?schema=public';
     process.env.REDIS_URL ??= 'redis://localhost:16379';
     process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
     process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
