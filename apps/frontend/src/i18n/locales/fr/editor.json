@@ -25,7 +25,7 @@
   "broadcast": {
     "title": "Diffusion",
     "fullCaptureLabel": "Capture intégrale des réponses",
-    "fullCaptureHelp": "Conserve le détail des réponses de chaque participant (suivi de formation). À activer avant de présenter.",
+    "fullCaptureHelp": "Conserve le détail des réponses de chaque participant (suivi individuel). À activer avant de présenter.",
     "publish": "Publier (prêt)",
     "presenting": "Lancement…",
     "present": "Présenter",

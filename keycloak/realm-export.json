@@ -6,7 +6,7 @@
     "realm": [
       { "name": "host", "description": "Formateur / créateur de quiz" },
       { "name": "player", "description": "Apprenant connecté" },
-      { "name": "admin", "description": "Administrateur formation (réservé v1.1)" }
+      { "name": "admin", "description": "Administrateur (réservé v1.1)" }
     ]
   },
   "clients": [

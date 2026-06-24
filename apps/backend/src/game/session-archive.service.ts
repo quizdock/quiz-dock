@@ -7,7 +7,7 @@ import { buildRevealCommon } from './reveal';
 import type { AnswerRecord, GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
 
 /**
- * Rétention par défaut d'une session archivée (suivi de formation). Valeur de départ
+ * Rétention par défaut d'une session archivée (suivi individuel). Valeur de départ
  * — à ajuster selon la politique RGPD retenue (champ `retainUntil`, purge ultérieure).
  */
 const SESSION_RETENTION_DAYS = 365;

@@ -1,8 +1,8 @@
 {
-  "name": "roux-quizz",
+  "name": "live-quizz",
   "version": "0.1.0",
   "private": true,
-  "description": "Plateforme de quiz interactifs temps réel pour la formation (clone de Kahoot)",
+  "description": "Plateforme de quiz interactifs temps réel (clone de Kahoot)",
   "packageManager": "pnpm@11.0.9",
   "engines": {
     "node": ">=22"
@@ -16,8 +16,8 @@
     "format:fix": "prettier --write .",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
-    "contracts:build": "pnpm --filter @roux-quizz/contracts build",
-    "generate:api": "pnpm --filter @roux-quizz/backend openapi && pnpm --filter @roux-quizz/frontend orval",
+    "contracts:build": "pnpm --filter @live-quizz/contracts build",
+    "generate:api": "pnpm --filter @live-quizz/backend openapi && pnpm --filter @live-quizz/frontend orval",
     "prepare": "husky || true"
   },
   "devDependencies": {
