@@ -30,7 +30,7 @@ jobs:
 
       # Source de vérité d'abord : la Release est garantie même si le commit échoue.
       - name: Create / update GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.6.2
         with:
           generate_release_notes: true # notes natives GitHub depuis commits/PRs
           make_latest: true
@@ -50,7 +50,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add CHANGELOG.md
-            git commit -m "docs(changelog): ${{ github.ref_name }} [skip ci]"
+            git commit -m "chore(release): changelog ${{ github.ref_name }} [skip ci]"
             git push origin HEAD:main
           fi
 
