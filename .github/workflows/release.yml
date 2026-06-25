@@ -1,6 +1,8 @@
-name: Release image
+name: Release
 
-# Pousse l'image unique sur Docker Hub quand on tague une version (vX.Y.Z).
+# Taguer une version (vX.Y.Z) est l'unique geste de release :
+#   1. GitHub Release (source de vérité, canonique) — job `github-release`.
+#   2. Images Docker Hub qui en découlent — jobs `publish` + `standalone`.
 # Secrets requis (repo → Settings → Secrets and variables → Actions) :
 #   DOCKERHUB_USERNAME = fchaussin
 #   DOCKERHUB_TOKEN    = access token Docker Hub (Read & Write)
@@ -13,6 +15,25 @@ permissions:
   contents: read
 
 jobs:
+  # ---- Source de vérité : la Release GitHub (créée pour chaque tag vX.Y.Z) ----
+  github-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # créer/éditer la Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # historique complet pour des notes auto pertinentes
+
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true # notes auto depuis commits/PRs
+          make_latest: true
+          name: QuizDock ${{ github.ref_name }}
+
   publish:
     runs-on: ubuntu-latest
     steps:
