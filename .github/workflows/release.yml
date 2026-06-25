@@ -3,6 +3,7 @@ name: Release
 # Taguer une version (vX.Y.Z) est l'unique geste de release :
 #   1. GitHub Release (source de vérité, canonique) — job `github-release`.
 #   2. Images Docker Hub qui en découlent — jobs `publish` + `standalone`.
+#   3. Overview Docker Hub synchronisée depuis README.md — job `dockerhub-readme`.
 # Secrets requis (repo → Settings → Secrets and variables → Actions) :
 #   DOCKERHUB_USERNAME = fchaussin
 #   DOCKERHUB_TOKEN    = access token Docker Hub (Read & Write)
@@ -93,6 +94,24 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Sync README.md → Docker Hub repo overview (no more manual copy-paste).
+  # NB: the description endpoint usually needs the account password or a PAT;
+  # a plain read/write access token may be rejected — use a dedicated secret then.
+  dockerhub-readme:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Push README to Docker Hub overview
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: fchaussin/quizdock
+          readme-filepath: ./README.md
 
   # All-in-one image (Postgres + Redis + app) for one-command beginner use.
   # Reuses the :latest artifact published above (COPY --from), so it runs after.

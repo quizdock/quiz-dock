@@ -104,5 +104,7 @@ and the mounted `branding/` folder.
 - [ ] CHANGELOG updated, version bumped.
 - [ ] Tag `vX.Y.Z` pushed.
 - [ ] Image built multi-arch and pushed (`:X.Y.Z`, `:X.Y`, `:latest`).
-- [ ] Docker Hub repo has a description (the README) + link to GitHub.
 - [ ] README + landing page updated with `docker pull` instructions.
+
+> The Docker Hub repo overview is synced automatically from `README.md` by the
+> `dockerhub-readme` job in `release.yml` — no manual copy-paste.
