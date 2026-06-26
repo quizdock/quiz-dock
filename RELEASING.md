@@ -26,6 +26,19 @@ yet** — this is the prepared plan, to trigger when we decide to ship.
 SemVer, pre-1.0 (`0.MINOR.PATCH`), driven by a git tag `vX.Y.Z`. Each release
 pushes `:X.Y.Z` (immutable), `:X.Y`, and `:latest`.
 
+The number is **chosen by hand** at tag time (git-cliff only groups commits into
+the CHANGELOG, it does not pick the bump). Apply this rule, not a counter:
+
+| Bump | When | Conventional commits |
+|---|---|---|
+| **minor** `0.X.0` | a new user-facing capability ships (screen, game mode, gameplay feature) | `feat:` |
+| **patch** `0.x.Y` | bug fix or adjustment, no new capability | `fix:` |
+| **no release** | pure CI/tooling/docs that leaves the published image unchanged | `ci:` `chore:` `docs:` |
+
+Pre-1.0, a minor (`0.4.0`) is *not* an arbitrary milestone — it requires at least
+one real `feat:`. If a cycle only carried CI/tooling commits, the image did not
+change: don't tag at all, wait until there is a `fix:`/`feat:` worth shipping.
+
 ## Prerequisites (one-time)
 
 1. Docker Hub repo `fchaussin/quizdock` (or let the first push create it; public).
