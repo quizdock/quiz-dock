@@ -17,16 +17,16 @@
     "codeBlock": "程式碼區塊",
     "image": "插入圖片",
     "uploading": "上傳中…",
-    "bulletList": "項目符號清單",
-    "orderedList": "編號清單"
+    "bulletList": "無序清單",
+    "orderedList": "有序清單"
   },
   "captureConfirm": {
-    "title": "開啟完整作答紀錄？",
-    "description": "將儲存每位參與者的每個答案及其暱稱：這屬於個人資料（GDPR — 請告知參與者並於事後清除）。會話歸檔也會佔用大得多的資料庫空間。僅在需要個人追蹤（評量、認證）時使用。",
-    "confirmLabel": "開啟"
+    "title": "啟用完整作答紀錄？",
+    "description": "將儲存每位參與者的每個答案及其匿稱：這屬於個人資料（GDPR - 請告知參與者並於事後清除）。會話歸檔也會佔用較多的資料庫空間。僅在需要個人追蹤（評量、認證）時使用。",
+    "confirmLabel": "啟用"
   },
   "draft": {
-    "restored": "已還原草稿 — 找回了你未儲存的修改。",
+    "restored": "已還原草稿 - 找回了你未儲存的修改。",
     "discard": "放棄草稿"
   },
   "titles": {
@@ -34,7 +34,7 @@
     "dashboard": "我的測驗",
     "editor": "編輯器",
     "preview": "預覽",
-    "feedback": "評價",
+    "feedback": "回饋",
     "sessions": "歷史",
     "session": "會話",
     "player": "參與者",

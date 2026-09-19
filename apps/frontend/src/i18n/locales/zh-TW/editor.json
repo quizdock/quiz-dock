@@ -6,9 +6,9 @@
     "multiple_choice": "多選題",
     "true_false": "是非題",
     "text_input": "文字輸入",
-    "numeric": "數字",
-    "ordering": "排序",
-    "poll": "投票"
+    "numeric": "數字輸入",
+    "ordering": "排序題",
+    "poll": "投票題"
   },
   "header": {
     "title": "測驗編輯器",
@@ -20,13 +20,13 @@
     "title": "設定",
     "titleLabel": "標題",
     "descriptionLabel": "簡介",
-    "descriptionPlaceholder": "描述（可選）…",
+    "descriptionPlaceholder": "簡介（可選）…",
     "save": "儲存"
   },
   "broadcast": {
     "title": "廣播",
     "fullCaptureLabel": "完整記錄回答",
-    "fullCaptureHelp": "保留每位玩家的回答詳情（個人追蹤）。請在示範前啟用。",
+    "fullCaptureHelp": "保留每位玩家的回答詳細資訊（個人追蹤）。請在示範前啟用。",
     "publish": "發布（就緒）",
     "presenting": "正在啟動…",
     "present": "示範",
@@ -38,21 +38,21 @@
     "archiveHelp": "歸檔的測驗會從主清單中隱藏，可以隨時還原。"
   },
   "feedback": {
-    "enableLabel": "允許參與者評價",
-    "enableHelp": "每場結束時向參與者提供評分面板。",
-    "title": "玩家評價",
-    "empty": "暫無評價。玩家可在會話結束時為測驗評分。",
+    "enableLabel": "允許參與者提供回饋",
+    "enableHelp": "每場結束時向參與者提供回饋界面。",
+    "title": "玩家回饋",
+    "empty": "暫無回饋。玩家可在會話結束時為測驗提供回饋。",
     "starsAriaLabel": "{{value}} / 5 星",
-    "seeAll_one": "檢視評價",
-    "seeAll_other": "檢視全部 {{count}} 則評價",
+    "seeAll_one": "檢視回饋",
+    "seeAll_other": "檢視全部 {{count}} 則回饋",
     "backToEditor": "返回編輯器",
-    "loadError": "無法載入評價。",
-    "noneForFilter": "沒有此評分的評價。",
+    "loadError": "無法載入回饋。",
+    "noneForFilter": "沒有此評分的回饋。",
     "previous": "上一頁",
     "next": "下一頁",
     "pagePosition": "第 {{page}} / {{pages}} 頁",
-    "count_one": "{{count}} 條評價",
-    "count_other": "{{count}} 條評價"
+    "count_one": "{{count}} 條回饋",
+    "count_other": "{{count}} 條回饋"
   },
   "questions": {
     "title": "題目（{{count}}）",
@@ -66,22 +66,22 @@
     "itemsCount_other": "{{count}} 個項目",
     "formTitle": "題目",
     "empty": "還沒有題目。新增一道吧！",
-    "collapseList": "收合清單",
+    "collapseList": "收起清單",
     "expandList": "展開清單"
   },
   "slides": {
-    "formTitle": "投影片",
-    "add": "新增投影片",
-    "kind": "投影片",
-    "deleteSlide": "刪除投影片",
+    "formTitle": "簡報",
+    "add": "新增簡報",
+    "kind": "簡報",
+    "deleteSlide": "刪除簡報",
     "durationManual": "手動"
   },
   "slideForm": {
     "bodyPlaceholder": "要顯示的文字…",
     "contrastLegend": "文字對比度",
     "tone": {
-      "light": "淺色文字，圖片壓暗",
-      "dark": "深色文字，圖片提亮"
+      "light": "淺色文字，較暗圖片",
+      "dark": "深色文字，較亮圖片"
     },
     "outline": "描邊（光暈，如字幕）",
     "displayLegend": "自動切換（自動模式）",
@@ -92,7 +92,7 @@
       "custom": "自訂時長…"
     },
     "displayHint": "手動模式下，一律由主持人手動進入下一步。",
-    "invalidError": "投影片需要標題、內容或媒體。",
+    "invalidError": "簡報需要標題、內容或媒體。",
     "submitAdd": "新增",
     "submitUpdate": "儲存",
     "blocksLegend": "內容",
@@ -117,9 +117,9 @@
       "full": "全寬"
     },
     "align": {
-      "left": "左",
+      "left": "置左",
       "center": "置中",
-      "right": "右"
+      "right": "置右"
     },
     "ratio": "分欄比例",
     "textAlign": "文字對齊",
@@ -140,7 +140,7 @@
   },
   "emptyPane": {
     "emptyTitle": "這個測驗還是空的",
-    "emptyHint": "先新增一道題，或一張開場投影片。",
+    "emptyHint": "先新增一道題，或一張開場簡報。",
     "selectTitle": "尚未選取任何項目",
     "selectHint": "在清單中選取一個項目進行編輯。"
   },
@@ -152,16 +152,16 @@
     "zoneTitle": "危險區域"
   },
   "gameAccess": {
-    "label": "進行中的會話 — PIN",
-    "controlScreen": "控制螢幕",
-    "projectionScreen": "投影螢幕",
-    "invitationScreen": "邀請螢幕"
+    "label": "進行中的會話 - PIN",
+    "controlScreen": "控制畫面",
+    "projectionScreen": "投影畫面",
+    "invitationScreen": "邀請畫面"
   },
   "questionForm": {
     "typeLabel": "類型",
     "promptLabel": "題目",
     "promptPlaceholder": "您的題目…",
-    "answerExplanationLabel": "答案解析（揭曉後顯示）",
+    "answerExplanationLabel": "答案詳解（揭曉後顯示）",
     "answerExplanationPlaceholder": "為什麼這是正確答案…（可選）",
     "timeLimitLabel": "時間（秒）",
     "revealDelayLabel": "揭曉停留（秒）",
@@ -227,13 +227,13 @@
     "angle": "角度"
   },
   "status": {
-    "draft": "草稿 — 發布後即可開始演示。",
+    "draft": "草稿 - 發布後即可開始演示。",
     "ready": "可以開始演示。",
-    "archived": "已歸檔 — 還原後可編輯或演示。"
+    "archived": "已歸檔 - 還原後可編輯或演示。"
   },
   "deleteItemConfirm": {
-    "questionTitle": "刪除這道題？",
-    "slideTitle": "刪除這張投影片？",
+    "questionTitle": "刪除這道題目？",
+    "slideTitle": "刪除這張簡報？",
     "description": "「{{label}}」將被永久刪除。",
     "confirmLabel": "刪除"
   },

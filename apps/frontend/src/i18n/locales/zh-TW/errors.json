@@ -17,7 +17,7 @@
   "session": {
     "not_found": "未找到會話或會話已結束。",
     "ended": "會話已結束。",
-    "banned": "您已被主持人移出本會話。",
+    "banned": "您已被主持人踢出本會話。",
     "join_required": "請先加入會話再作答。",
     "already_started": "會話已經開始。",
     "reveal_required": "僅在揭曉答案後才能執行該操作。",
@@ -29,8 +29,8 @@
     "not_found": "未找到玩家。"
   },
   "nickname": {
-    "taken": "該暱稱在本會話中已被占用。",
-    "invalid_length": "暱稱長度必須在 {{min}} 到 {{max}} 個字元之間。"
+    "taken": "該匿稱在本會話中已被使用。",
+    "invalid_length": "匿稱長度必須在 {{min}} 到 {{max}} 個字元之間。"
   },
   "pin": {
     "unavailable": "無法分配 PIN，請重試。"
