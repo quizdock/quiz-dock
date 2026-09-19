@@ -82,7 +82,7 @@ function initialValues(s?: QuizDetailDtoSlidesItem): FormValues {
     mediaId: s?.mediaId ?? null,
     gradient: (s?.gradient as SlideGradient | null | undefined) ?? null,
     textTone: (s?.textTone as SlideTextTone | undefined) ?? 'light',
-    textOutline: s?.textOutline ?? false,
+    textOutline: s?.textOutline ?? true,
     displayDelayS: s?.displayDelayS ?? null,
   };
 }

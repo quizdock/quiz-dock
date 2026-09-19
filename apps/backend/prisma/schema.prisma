@@ -183,7 +183,7 @@ model Question {
   backgroundMediaId  String?       @map("background_media_id") @db.Char(26)
   backgroundGradient Json?         @map("background_gradient")
   textTone           SlideTextTone @default(light) @map("text_tone")
-  textOutline        Boolean       @default(false) @map("text_outline")
+  textOutline        Boolean       @default(true) @map("text_outline")
   timeLimitS         Int           @default(20) @map("time_limit_s")
   /// Auto-mode delay on this question's REVEAL, seconds (#6); null = engine default.
   revealDelayS       Int?          @map("reveal_delay_s")
@@ -266,7 +266,7 @@ model Slide {
   displayDelayS    Int?          @map("display_delay_s")
   textTone         SlideTextTone @default(light) @map("text_tone")
   /// Subtitle-like halo around the text to keep it readable over any background.
-  textOutline      Boolean       @default(false) @map("text_outline")
+  textOutline      Boolean       @default(true) @map("text_outline")
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
 

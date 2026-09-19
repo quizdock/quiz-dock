@@ -53,7 +53,7 @@ export const slideContentSchema = z
     mediaId: z.string().length(26).nullable().optional(),
     gradient: gradientSchema.nullable().optional(),
     textTone: z.enum(['light', 'dark']).default('light'),
-    textOutline: z.boolean().default(false),
+    textOutline: z.boolean().default(true),
     // Auto-mode display time: null = engine default, 0 = manual override, else seconds.
     displayDelayS: z.number().int().min(0).max(600).nullable().optional(),
   })

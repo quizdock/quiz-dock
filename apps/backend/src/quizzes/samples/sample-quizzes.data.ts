@@ -19,7 +19,7 @@ const q = (input: Partial<QuestionContent> & Pick<QuestionContent, 'type' | 'pro
     timeLimitS: 20,
     pointsMode: 'standard',
     textTone: 'light',
-    textOutline: false,
+    textOutline: true,
     options: [],
     acceptedAnswers: [],
     ...input,
@@ -44,7 +44,7 @@ const intro = (heading: string, md: string, colors: string[]): SlideContent => (
   ],
   gradient: { angle: 135, colors },
   textTone: 'light',
-  textOutline: false,
+  textOutline: true,
   displayDelayS: 8,
 });
 

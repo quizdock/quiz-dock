@@ -19,7 +19,7 @@ export const NO_BACKGROUND: BackgroundValue = {
   mediaId: null,
   gradient: null,
   textTone: 'light',
-  textOutline: false,
+  textOutline: true,
 };
 
 const DEFAULT_GRADIENT: SlideGradient = { angle: 135, colors: ['#1e3a8a', '#7c3aed'] };

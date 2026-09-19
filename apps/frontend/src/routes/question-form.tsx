@@ -146,7 +146,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
       mediaId: q.backgroundMediaId ?? null,
       gradient: (q.backgroundGradient as SlideGradient | null | undefined) ?? null,
       textTone: (q.textTone as SlideTextTone | undefined) ?? 'light',
-      textOutline: q.textOutline ?? false,
+      textOutline: q.textOutline ?? true,
     },
     timeLimitS: q.timeLimitS,
     revealDelayS: q.revealDelayS ?? null,

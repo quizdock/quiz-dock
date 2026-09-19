@@ -14,7 +14,7 @@ export const backgroundFields = {
   backgroundMediaId: z.string().length(26).nullable().optional(),
   backgroundGradient: gradientSchema.nullable().optional(),
   textTone: z.enum(['light', 'dark']).default('light'),
-  textOutline: z.boolean().default(false),
+  textOutline: z.boolean().default(true),
 };
 
 export const backgroundOutputFields = {

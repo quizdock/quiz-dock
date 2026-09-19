@@ -26,6 +26,19 @@ describe('normalizeAnswer (RG-06)', () => {
 });
 
 describe('questionContentSchema — validation par type (§4)', () => {
+  it('text outline is on by default (readable over any background)', () => {
+    const parsed = questionContentSchema.parse({
+      type: 'poll',
+      prompt: 'Hi?',
+      options: [
+        { text: 'A', color: 'red', shape: 'circle' },
+        { text: 'B', color: 'blue', shape: 'square' },
+      ],
+    });
+    expect(parsed.textOutline).toBe(true);
+    expect(parsed.textTone).toBe('light');
+  });
+
   it('single_choice : 2–6 options, exactement 1 correcte', () => {
     expect(
       ok({
