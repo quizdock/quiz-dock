@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "i18n:check": "node scripts/check-locales.mjs",
+    "i18n:since": "node scripts/locale-since.mjs",
     "orval": "orval --config orval.config.ts"
   },
   "dependencies": {
