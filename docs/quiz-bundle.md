@@ -20,7 +20,7 @@ is what a Quiz Store repository holds.
 ```json
 {
   "format": "quizdock/quiz",
-  "version": 1,
+  "version": 2,
   "quiz": {
     "slug": "capitals",
     "namespace": null,
@@ -34,6 +34,9 @@ is what a Quiz Store repository holds.
     "license": "CC-BY-4.0",
     "feedbackEnabled": true,
     "cover": "media/cover.jpg"
+  },
+  "media": {
+    "media/cover.jpg": { "alt": "The port of Rotterdam at dusk" }
   },
   "items": [
     {
@@ -92,7 +95,8 @@ and `tags` empty; an imported bundle keeps whatever it carried.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `version` (top level) | integer | Manifest schema version, currently `1`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
+| `version` (top level) | integer | Manifest schema version, currently `2`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
+| `media` (top level) | object | Version 2: what each media file carries beyond its bytes, keyed by the same path the items reference — today an `alt`, the description read aloud by screen readers. Absent in a version 1 bundle, and a file with no alternative text simply has no entry. |
 | `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Derived from the title at first export or import when absent; the zip is named after it. |
 | `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. |
 | `revision` | integer ≥ 0 | Publication counter of the quiz the bundle came from: **+1 every time it is shared** to a template catalogue. An import starts the copy back at 0 — it has never been shared itself. An integer, not semver. |

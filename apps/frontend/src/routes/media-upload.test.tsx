@@ -36,9 +36,34 @@ describe('MediaUpload', () => {
   });
 
   it('affiche l’aperçu et permet de retirer le média', () => {
+    mockApi([]);
     const { onChange } = renderUpload('media-123');
     expect(screen.getByAltText('média de la question')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Retirer le média'));
     expect(onChange).toHaveBeenCalledWith(null);
+  });
+
+  it('charge le texte alternatif du média et l’enregistre à la sortie du champ (#43)', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/media/media-123/meta', body: { id: 'media-123', alt: 'Le port' } },
+      { method: 'PUT', path: '/media/media-123/alt', body: { id: 'media-123', alt: 'Rotterdam' } },
+    ]);
+    renderUpload('media-123');
+
+    const field = await screen.findByLabelText(/Texte alternatif/);
+    await waitFor(() => expect(field).toHaveValue('Le port'));
+
+    fireEvent.change(field, { target: { value: 'Rotterdam' } });
+    fireEvent.blur(field);
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, opts]) =>
+            String(url).includes('/media/media-123/alt') &&
+            (opts as RequestInit | undefined)?.method === 'PUT' &&
+            String((opts as RequestInit | undefined)?.body).includes('Rotterdam'),
+        ),
+      ).toBe(true),
+    );
   });
 });

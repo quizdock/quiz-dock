@@ -318,6 +318,10 @@ model MediaAsset {
   id        String    @id @default(ulid()) @db.Char(26)
   ownerId   String    @map("owner_id") @db.Char(26)
   url       String
+  /// Alternative text, written by whoever attached the media (#43). Empty is a
+  /// valid answer for decoration; for a question whose image *is* the question,
+  /// it is what a screen reader has to work with.
+  alt       String?
   mime      String
   sizeBytes BigInt    @map("size_bytes")
   kind      MediaKind

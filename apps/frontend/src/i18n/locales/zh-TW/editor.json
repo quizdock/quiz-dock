@@ -240,7 +240,10 @@
     "add": "新增媒體（圖片/音訊）",
     "fileInputLabel": "媒體檔案",
     "uploadError": "上傳失敗。",
-    "demoDisabled": "示範實例已停用媒體上傳。"
+    "demoDisabled": "示範實例已停用媒體上傳。",
+    "altLabel": "替代文字",
+    "altPlaceholder": "例如：身穿法國隊球衣的姆巴佩",
+    "altHelp": "供螢幕閱讀器朗讀。當圖片本身是題目的一部分時，請描述圖片內容；純裝飾性圖片可留空。"
   },
   "background": {
     "legend": "背景",

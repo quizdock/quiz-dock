@@ -24,6 +24,9 @@ interface UploadFile {
  * Médias stockés sur un **volume local** (MEDIA_DIR) et servis par le backend
  * (cf. décision self-hosted). Un fichier par `media_asset.id`.
  */
+/** Bornes du texte alternatif : une phrase, pas un paragraphe. */
+const ALT_MAX = 300;
+
 @Injectable()
 export class MediaService implements OnModuleInit {
   private readonly logger = new Logger(MediaService.name);
@@ -97,14 +100,51 @@ export class MediaService implements OnModuleInit {
   }
 
   /** Bytes and mime of a stored media, for the quiz export (#19). */
-  async readAsset(id: string): Promise<{ buffer: Buffer; mime: string } | null> {
+  async readAsset(
+    id: string,
+  ): Promise<{ buffer: Buffer; mime: string; alt: string | null } | null> {
     const asset = await this.prisma.mediaAsset.findUnique({ where: { id } });
     if (!asset) return null;
     try {
-      return { buffer: await readFile(join(this.dir, id)), mime: asset.mime };
+      // `alt` travels with the bytes so a bundle can carry it (#43).
+      return { buffer: await readFile(join(this.dir, id)), mime: asset.mime, alt: asset.alt };
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Texte alternatif d'un média possédé (#43). Une chaîne vide efface : pour une
+   * image décorative, c'est la bonne réponse — un mauvais texte vaut moins que rien.
+   */
+  async setAlt(
+    ownerId: string,
+    id: string,
+    alt: string,
+  ): Promise<{ id: string; alt: string | null }> {
+    const asset = await this.prisma.mediaAsset.findFirst({ where: { id, ownerId } });
+    if (!asset) {
+      throw new NotFoundException('media.not_found');
+    }
+    const trimmed = alt.trim().slice(0, ALT_MAX);
+    const updated = await this.prisma.mediaAsset.update({
+      where: { id },
+      data: { alt: trimmed || null },
+      select: { id: true, alt: true },
+    });
+    return updated;
+  }
+
+  /** Métadonnées d'un média possédé (l'éditeur relit l'alternative saisie). */
+  async describe(ownerId: string, id: string): Promise<{ id: string; alt: string | null }> {
+    const asset = await this.prisma.mediaAsset.findFirst({
+      where: { id, ownerId },
+      select: { id: true, alt: true },
+    });
+    if (!asset) {
+      throw new NotFoundException('media.not_found');
+    }
+    return asset;
   }
 
   /** Supprime un média possédé (ligne + fichier). */

@@ -240,7 +240,10 @@
     "add": "添加媒体（图片/音频）",
     "fileInputLabel": "媒体文件",
     "uploadError": "上传失败。",
-    "demoDisabled": "演示实例已禁用媒体上传。"
+    "demoDisabled": "演示实例已禁用媒体上传。",
+    "altLabel": "替代文字",
+    "altPlaceholder": "例如：身穿法国队球衣的姆巴佩",
+    "altHelp": "供屏幕阅读器朗读。当图片本身是题目的一部分时，请描述图片内容；纯装饰性图片可留空。"
   },
   "background": {
     "legend": "背景",

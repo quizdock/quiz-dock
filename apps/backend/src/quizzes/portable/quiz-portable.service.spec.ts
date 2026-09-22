@@ -154,7 +154,7 @@ describe('QuizPortableService', () => {
     it('refuses a bundle from a newer schema, a bad slug, too many tags', async () => {
       const only = [manifest().items[1]];
       for (const json of [
-        manifest({ items: only, version: 2 }),
+        manifest({ items: only, version: 3 }),
         manifest({ items: only, quiz: { title: 'X', slug: 'Not A Slug' } }),
         manifest({ items: only, quiz: { title: 'X', tags: ['a', 'b', 'c', 'd', 'e', 'f'] } }),
       ]) {
@@ -289,7 +289,7 @@ describe('QuizPortableService', () => {
         'quiz.json',
       ]);
       const json = JSON.parse(Buffer.from(files['quiz.json']).toString());
-      expect(json.version).toBe(1);
+      expect(json.version).toBe(2);
       expect(json.quiz).toMatchObject({
         slug: 'ete-a-paris',
         namespace: null,

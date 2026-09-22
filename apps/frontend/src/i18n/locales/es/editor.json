@@ -240,7 +240,10 @@
     "add": "Añadir un medio (imagen/audio)",
     "fileInputLabel": "Archivo multimedia",
     "uploadError": "Error al subir.",
-    "demoDisabled": "La subida de medios está desactivada en la instancia de demo."
+    "demoDisabled": "La subida de medios está desactivada en la instancia de demo.",
+    "altLabel": "Texto alternativo",
+    "altPlaceholder": "p. ej. Kylian Mbappé con la camiseta de Francia",
+    "altHelp": "Lo leen los lectores de pantalla. Describe lo que muestra la imagen cuando forma parte de la pregunta; déjalo vacío si es decorativa."
   },
   "background": {
     "legend": "Fondo",

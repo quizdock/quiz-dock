@@ -173,7 +173,12 @@ function slideOut(s: ExportableQuiz['slides'][number], pathFor: PathFor): SlideB
 }
 
 /** Serialises a quiz into its bundle manifest; `pathFor` names the media file for each id. */
-export function toBundle(quiz: ExportableQuiz, pathFor: PathFor): QuizBundle {
+export function toBundle(
+  quiz: ExportableQuiz,
+  pathFor: PathFor,
+  /** Alternative texts by bundle path (#43); absent entries simply carry none. */
+  mediaAlts: Record<string, string | null> = {},
+): QuizBundle {
   const items: QuizBundle['items'] = [];
   const slidesBefore = new Map<string | null, ExportableQuiz['slides']>();
   for (const s of quiz.slides) {
@@ -203,6 +208,11 @@ export function toBundle(quiz: ExportableQuiz, pathFor: PathFor): QuizBundle {
       feedbackEnabled: quiz.feedbackEnabled,
       cover: quiz.coverMediaId ? pathFor(quiz.coverMediaId) : null,
     },
+    media: Object.fromEntries(
+      Object.entries(mediaAlts)
+        .filter(([, alt]) => alt !== null && alt !== '')
+        .map(([path, alt]) => [path, { alt }]),
+    ),
     items,
   };
 }

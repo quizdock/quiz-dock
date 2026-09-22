@@ -77,15 +77,21 @@ export class QuizPortableService {
 
     const files: Record<string, Uint8Array> = {};
     const pathById = new Map<string, string>();
+    const altByPath: Record<string, string | null> = {};
     for (const mediaId of collectMediaIds(quiz)) {
       const asset = await this.media.readAsset(mediaId);
       if (!asset) continue; // dangling reference: the export simply drops it
       const path = `media/${mediaId}.${EXT_BY_MIME[asset.mime] ?? 'bin'}`;
       pathById.set(mediaId, path);
       files[path] = new Uint8Array(asset.buffer);
+      altByPath[path] = asset.alt;
     }
     // A media that could not be read keeps its route: harmless on re-import (rejected as missing).
-    const bundle = toBundle(quiz, (mediaId) => pathById.get(mediaId) ?? `/api/v1/media/${mediaId}`);
+    const bundle = toBundle(
+      quiz,
+      (mediaId) => pathById.get(mediaId) ?? `/api/v1/media/${mediaId}`,
+      altByPath,
+    );
     files[MANIFEST] = strToU8(JSON.stringify(bundle, null, 2));
     const zip = Buffer.from(zipSync(files, { level: 6 }));
     return { filename: `${slugOf(quiz)}.quizdock.zip`, zip };
@@ -112,6 +118,9 @@ export class QuizPortableService {
         mimetype,
         size: buffer.length,
       });
+      // The alternative text travels with the file (#43, bundle version 2).
+      const alt = bundle.media?.[path]?.alt;
+      if (alt) await this.media.setAlt(ownerId, mediaId, alt);
       idByPath.set(path, mediaId);
     }
 

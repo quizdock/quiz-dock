@@ -240,7 +240,10 @@
     "add": "Add media (image/audio)",
     "fileInputLabel": "Media file",
     "uploadError": "Upload failed.",
-    "demoDisabled": "Media uploads are disabled on the demo instance."
+    "demoDisabled": "Media uploads are disabled on the demo instance.",
+    "altLabel": "Alternative text",
+    "altPlaceholder": "e.g. Kylian Mbappé in a France shirt",
+    "altHelp": "Read aloud by screen readers. Describe what the image shows when it carries part of the question; leave it empty when the image is decoration."
   },
   "background": {
     "legend": "Background",

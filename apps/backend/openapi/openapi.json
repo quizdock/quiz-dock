@@ -738,6 +738,86 @@
         ]
       }
     },
+    "/api/v1/media/{id}/meta": {
+      "get": {
+        "operationId": "MediaController_describe",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaDescriptionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/{id}/alt": {
+      "put": {
+        "operationId": "MediaController_setAlt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaAltDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaDescriptionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
     "/api/v1/media/{id}": {
       "get": {
         "operationId": "MediaController_serve",
@@ -2725,6 +2805,34 @@
         "required": [
           "mediaId",
           "url"
+        ]
+      },
+      "MediaDescriptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "alt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "alt"
+        ]
+      },
+      "MediaAltDto": {
+        "type": "object",
+        "properties": {
+          "alt": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "alt"
         ]
       },
       "StoreEntryDto": {

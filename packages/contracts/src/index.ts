@@ -148,14 +148,15 @@ export interface PublicOption {
   text?: string | null;
   color: OptionColor;
   shape: OptionShape;
-  media?: { url: string; kind: 'image' | 'audio' } | null;
+  /** `alt` is what the author wrote for screen readers (#43); null = none. */
+  media?: { url: string; kind: 'image' | 'audio'; alt?: string | null } | null;
 }
 
 export interface QuestionStartPayload {
   questionIndex: number;
   type: QuestionType;
   prompt: string;
-  media?: { url: string; kind: 'image' | 'audio' } | null;
+  media?: { url: string; kind: 'image' | 'audio'; alt?: string | null } | null;
   options?: PublicOption[];
   timeLimitS: number;
   basePoints: number;

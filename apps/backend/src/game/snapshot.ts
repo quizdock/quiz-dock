@@ -36,8 +36,10 @@ const quizWithContent = Prisma.validator<Prisma.QuizDefaultArgs>()({
 export type QuizWithContent = Prisma.QuizGetPayload<typeof quizWithContent>;
 export const QUIZ_SNAPSHOT_INCLUDE = quizWithContent.include;
 
-const mediaOf = (m: { url: string; kind: string } | null) =>
-  m ? { url: m.url, kind: m.kind as 'image' | 'audio' } : null;
+const mediaOf = (m: { url: string; kind: string; alt?: string | null } | null) =>
+  // `alt` travels with the media (#43): the screens have no other description of
+  // an image that is itself the question.
+  m ? { url: m.url, kind: m.kind as 'image' | 'audio', alt: m.alt ?? null } : null;
 
 /**
  * Construit le snapshot serveur figé d'un quiz (SPECIFICATIONS §8). Fonction pure :

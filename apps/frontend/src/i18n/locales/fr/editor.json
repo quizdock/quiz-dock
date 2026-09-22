@@ -240,7 +240,10 @@
     "add": "Ajouter un média (image/audio)",
     "fileInputLabel": "Fichier média",
     "uploadError": "Échec de l’upload.",
-    "demoDisabled": "L'envoi de médias est désactivé sur l'instance de démo."
+    "demoDisabled": "L'envoi de médias est désactivé sur l'instance de démo.",
+    "altLabel": "Texte alternatif",
+    "altPlaceholder": "ex. Kylian Mbappé en maillot de l’équipe de France",
+    "altHelp": "Lu par les lecteurs d’écran. Décrivez ce que montre l’image quand elle porte une partie de la question ; laissez vide si elle est décorative."
   },
   "background": {
     "legend": "Fond",

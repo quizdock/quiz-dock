@@ -25,7 +25,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  MediaAltDto,
   MediaControllerUploadBody,
+  MediaDescriptionDto,
   MediaUploadResultDto
 } from '../model';
 
@@ -112,6 +114,188 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getMediaControllerUploadMutationOptions(options), queryClient);
+    }
+    export type mediaControllerDescribeResponse200 = {
+  data: MediaDescriptionDto
+  status: 200
+}
+
+export type mediaControllerDescribeResponseSuccess = (mediaControllerDescribeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type mediaControllerDescribeResponse = (mediaControllerDescribeResponseSuccess)
+
+export const getMediaControllerDescribeUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/media/${id}/meta`
+}
+
+export const mediaControllerDescribe = async (id: string, options?: RequestInit): Promise<mediaControllerDescribeResponse> => {
+
+  return customFetch<mediaControllerDescribeResponse>(getMediaControllerDescribeUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMediaControllerDescribeQueryKey = (id: string,) => {
+    return [
+    `/api/v1/media/${id}/meta`
+    ] as const;
+    }
+
+
+export const getMediaControllerDescribeQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerDescribe>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerDescribe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMediaControllerDescribeQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mediaControllerDescribe>>> = ({ signal }) => mediaControllerDescribe(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mediaControllerDescribe>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MediaControllerDescribeQueryResult = NonNullable<Awaited<ReturnType<typeof mediaControllerDescribe>>>
+export type MediaControllerDescribeQueryError = unknown
+
+
+export function useMediaControllerDescribe<TData = Awaited<ReturnType<typeof mediaControllerDescribe>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerDescribe>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mediaControllerDescribe>>,
+          TError,
+          Awaited<ReturnType<typeof mediaControllerDescribe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMediaControllerDescribe<TData = Awaited<ReturnType<typeof mediaControllerDescribe>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerDescribe>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mediaControllerDescribe>>,
+          TError,
+          Awaited<ReturnType<typeof mediaControllerDescribe>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMediaControllerDescribe<TData = Awaited<ReturnType<typeof mediaControllerDescribe>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerDescribe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMediaControllerDescribe<TData = Awaited<ReturnType<typeof mediaControllerDescribe>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerDescribe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMediaControllerDescribeQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type mediaControllerSetAltResponse200 = {
+  data: MediaDescriptionDto
+  status: 200
+}
+
+export type mediaControllerSetAltResponseSuccess = (mediaControllerSetAltResponse200) & {
+  headers: Headers;
+};
+;
+
+export type mediaControllerSetAltResponse = (mediaControllerSetAltResponseSuccess)
+
+export const getMediaControllerSetAltUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/media/${id}/alt`
+}
+
+export const mediaControllerSetAlt = async (id: string,
+    mediaAltDto: MediaAltDto, options?: RequestInit): Promise<mediaControllerSetAltResponse> => {
+
+  return customFetch<mediaControllerSetAltResponse>(getMediaControllerSetAltUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediaAltDto)
+  }
+);}
+
+
+
+
+export const getMediaControllerSetAltMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerSetAlt>>, TError,{id: string;data: MediaAltDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mediaControllerSetAlt>>, TError,{id: string;data: MediaAltDto}, TContext> => {
+
+const mutationKey = ['mediaControllerSetAlt'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaControllerSetAlt>>, {id: string;data: MediaAltDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  mediaControllerSetAlt(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MediaControllerSetAltMutationResult = NonNullable<Awaited<ReturnType<typeof mediaControllerSetAlt>>>
+    export type MediaControllerSetAltMutationBody = MediaAltDto
+    export type MediaControllerSetAltMutationError = unknown
+
+    export const useMediaControllerSetAlt = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaControllerSetAlt>>, TError,{id: string;data: MediaAltDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mediaControllerSetAlt>>,
+        TError,
+        {id: string;data: MediaAltDto},
+        TContext
+      > => {
+      return useMutation(getMediaControllerSetAltMutationOptions(options), queryClient);
     }
     export type mediaControllerServeResponse200 = {
   data: void

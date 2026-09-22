@@ -87,9 +87,40 @@ describe('buildSnapshot', () => {
       }),
     );
     const q = snap.questions[0];
-    expect(q.media).toEqual({ url: '/media/x', kind: 'image' });
+    expect(q.media).toEqual({ url: '/media/x', kind: 'image', alt: null });
     expect(q.numericValue).toBe(42);
     expect(q.numericTolerance).toBe(0.5);
+  });
+
+  it('embarque le texte alternatif du média, que les écrans lisent (#43)', () => {
+    const snap = buildSnapshot(
+      quiz({
+        questions: [
+          {
+            ...baseQuestion,
+            type: 'single_choice',
+            pointsMode: 'standard',
+            media: { url: '/media/x', kind: 'image', alt: 'Le port de Rotterdam' },
+            options: [
+              {
+                id: 'o1',
+                text: 'Oui',
+                color: 'red',
+                shape: 'triangle',
+                media: null,
+                isCorrect: true,
+                correctOrderIndex: null,
+              },
+            ],
+          },
+        ] as never,
+      }),
+    );
+    expect(snap.questions[0].media).toEqual({
+      url: '/media/x',
+      kind: 'image',
+      alt: 'Le port de Rotterdam',
+    });
   });
 
   it('reprend les réponses acceptées normalisées (text_input)', () => {

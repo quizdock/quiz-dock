@@ -1,10 +1,12 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   Param,
   Post,
+  Put,
   Res,
   StreamableFile,
   UploadedFile,
@@ -24,6 +26,7 @@ import type { User } from '@prisma/client';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
+import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
 import { MediaService } from './media.service';
 
@@ -54,6 +57,25 @@ export class MediaController {
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_BYTES } }))
   upload(@CurrentUser() user: User, @UploadedFile() file: UploadedMediaFile | undefined) {
     return this.media.upload(user.id, file);
+  }
+
+  /** The alternative text of one of the caller's media (#43). */
+  @Get(':id/meta')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MediaDescriptionDto })
+  describe(@CurrentUser() user: User, @Param('id') id: string): Promise<MediaDescriptionDto> {
+    return this.media.describe(user.id, id);
+  }
+
+  @Put(':id/alt')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MediaDescriptionDto })
+  setAlt(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() body: MediaAltDto,
+  ): Promise<MediaDescriptionDto> {
+    return this.media.setAlt(user.id, id, body.alt);
   }
 
   @Get(':id')

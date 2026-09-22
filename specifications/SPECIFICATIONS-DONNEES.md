@@ -162,6 +162,7 @@ CHECKs, in SQL or in the application, depending on the type:
 | `id` | char(26) | PK | |
 | `owner_id` | char(26) | FK→`user.id`, NN, IDX | The owner |
 | `url` | text | NN | The backend route that serves it (`/api/v1/media/<id>`); the file lives on a local volume |
+| `alt` | text | nullable | **Alternative text**, written by whoever attached the media and read aloud by screen readers. Carried by the media rather than by each use: typed once, valid everywhere the image serves, and it travels in a bundle (`media` section, format version 2). Null or empty is legitimate — for a decorative image it is the right answer, and a wrong description is worse than none. When it is missing, the live screens fall back to a generic label rather than an empty `alt`, which would hide an image that carries the question. |
 | `mime` | text | NN | `image/png`, `audio/mpeg`, … |
 | `size_bytes` | bigint | NN, CHECK ≤ the limit | Size |
 | `kind` | enum `media_kind` | NN | `image` \| `audio` |

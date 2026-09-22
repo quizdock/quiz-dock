@@ -18,7 +18,7 @@ export const BUNDLE_FORMAT = 'quizdock/quiz';
  * reads as version 0 (same layout, every Store field absent); the importer
  * accepts anything up to the current version and fills the defaults.
  */
-export const BUNDLE_VERSION = 1;
+export const BUNDLE_VERSION = 2;
 
 /** A media path inside the bundle: flat, under `media/`, no traversal. */
 export const mediaPathSchema = z.string().regex(/^media\/[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/);
@@ -107,6 +107,12 @@ export const quizBundleSchema = z.object({
     cover: mediaPathSchema.nullable().optional(),
     ...storeBundleFields,
   }),
+  /**
+   * What each media file carries beyond its bytes (#43, version 2): keyed by the
+   * same path the items reference. Absent in a version 1 bundle, and an entry may
+   * be missing — an image with no alternative text is a legitimate bundle.
+   */
+  media: z.record(mediaPathSchema, z.object({ alt: z.string().max(300).nullable() })).optional(),
   items: z.array(z.discriminatedUnion('kind', [questionBundleSchema, slideBundleSchema])).max(500),
 });
 
