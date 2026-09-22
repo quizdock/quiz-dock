@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { APP_NAME, APP_VERSION } from '../config';
+import { APP_NAME, APP_VERSION, getDemo, isStandalone } from '../config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,9 +41,47 @@ export function LandingPage() {
           </form>
         </CardContent>
       </Card>
+      <DemoLimits />
+
       <small className="text-muted-foreground">
         {t('landing.version', { name: APP_NAME, version: APP_VERSION })}
       </small>
     </section>
+  );
+}
+
+/**
+ * What a public demo instance (`DEMO_MODE`) does **not** do. Someone trying the
+ * product has to be able to tell a guard of this instance from a limit of the
+ * product — hence the closing line. The banner in the header says it in one
+ * sentence; this says it in full, once, where people land.
+ */
+function DemoLimits() {
+  const { t } = useTranslation(['auth', 'common']);
+  const demo = getDemo();
+  if (!demo) return null;
+  const limits = [
+    t('landing.demoSeat', { count: demo.seatMinutes }),
+    t('landing.demoMedia'),
+    t('landing.demoReset'),
+    t('landing.demoSamples'),
+    // Only when the app knows it is the all-in-one image (QUIZDOCK_FLAVOR).
+    ...(isStandalone() ? [t('landing.demoStandalone')] : []),
+  ];
+  return (
+    <Card className="content-sm text-left">
+      <CardHeader>
+        <CardTitle>{t('landing.demoTitle')}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 text-sm">
+        <p className="text-muted-foreground">{t('landing.demoIntro')}</p>
+        <ul className="text-muted-foreground list-disc space-y-1.5 pl-5">
+          {limits.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+        <p className="border-t pt-3">{t('landing.demoSelfHost')}</p>
+      </CardContent>
+    </Card>
   );
 }

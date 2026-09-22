@@ -17,6 +17,7 @@ export class AuthConfigController {
     return {
       mode,
       demo: isDemoMode() ? { seatMinutes: DEMO_SEAT_MINUTES } : null,
+      standalone: process.env.QUIZDOCK_FLAVOR === 'standalone',
       oidc:
         mode === 'oidc'
           ? {

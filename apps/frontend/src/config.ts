@@ -79,3 +79,14 @@ export function configureDemo(value: DemoConfig | null): void {
 export function getDemo(): DemoConfig | null {
   return demo;
 }
+
+let standalone = false;
+
+/** Image tout-en-un (`:standalone`) — reçu de `GET /auth/config` au démarrage. */
+export function configureStandalone(value: boolean): void {
+  standalone = value;
+}
+
+export function isStandalone(): boolean {
+  return standalone;
+}

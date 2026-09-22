@@ -41,7 +41,10 @@ RUN chmod +x /usr/local/bin/start.sh \
  && printf '#!/bin/sh\nexec node /app/dist/cli.js "$@"\n' >/usr/local/bin/qd \
  && chmod +x /usr/local/bin/qd
 
-ENV NODE_ENV=production \
+# Tells the app it is the all-in-one image, so it can say so where it matters
+# (the limitations shown on a demo instance's home page).
+ENV QUIZDOCK_FLAVOR=standalone \
+    NODE_ENV=production \
     PORT=3000 \
     CLIENT_DIR=/app/client \
     MEDIA_DIR=/data/media \

@@ -6,7 +6,7 @@ import { authConfigControllerConfig } from './api/generated/auth/auth';
 import { ApiError, setAuthHeaders } from './api/http';
 import { type AuthMode, AuthProvider, bindOidcSession, configureAuth } from './auth/auth-context';
 import { getOidc, initOidc } from './auth/oidc';
-import { APP_NAME, configureDemo } from './config';
+import { APP_NAME, configureDemo, configureStandalone } from './config';
 import { router } from './router';
 import './i18n';
 import './index.css';
@@ -35,6 +35,7 @@ async function bootstrap(): Promise<void> {
     const { data } = await authConfigControllerConfig();
     mode = data.mode;
     configureDemo(data.demo ?? null);
+    configureStandalone(data.standalone === true);
     if (data.mode === 'oidc' && data.oidc) {
       initOidc(data.oidc.authority, data.oidc.clientId);
       bindOidcSession();

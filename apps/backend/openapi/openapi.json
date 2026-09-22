@@ -1274,6 +1274,9 @@
             ],
             "nullable": true
           },
+          "standalone": {
+            "type": "boolean"
+          },
           "oidc": {
             "type": "object",
             "properties": {
@@ -1294,6 +1297,7 @@
         "required": [
           "mode",
           "demo",
+          "standalone",
           "oidc"
         ]
       },

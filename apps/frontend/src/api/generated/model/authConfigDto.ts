@@ -13,6 +13,7 @@ export interface AuthConfigDto {
   mode: AuthConfigDtoMode;
   /** @nullable */
   demo: AuthConfigDtoDemo;
+  standalone: boolean;
   /** @nullable */
   oidc: AuthConfigDtoOidc;
 }

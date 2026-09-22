@@ -127,5 +127,10 @@ where anyone can take the host seat, write quizzes and run sessions. The guards:
 - **Hourly reset** to a blank install: users, quizzes, media, session archives, the seat
   and the live state. A reset waits while a session is being played, at most 3 hours.
 
-The SPA shows a banner saying so. The sample quizzes come back with the next seat claim,
-as on any fresh install.
+The SPA shows a banner saying so, and the **home page lists these guards in full** —
+someone trying QuizDock there must be able to tell a guard of that instance from a limit
+of the product, so the list ends by saying that a self-hosted instance has none of them.
+When the app runs from the `:standalone` image it adds that image's own limits to the
+list (application, database and cache in one container); the image announces itself
+through `QUIZDOCK_FLAVOR=standalone`, which it sets on its own — an operator never has to.
+The sample quizzes come back with the next seat claim, as on any fresh install.
