@@ -1,0 +1,24 @@
+{
+  "title": "Plantillas compartidas",
+  "intro": "Los cuestionarios que los anfitriones de esta instancia han compartido. Tomar uno coloca una copia independiente en tu banco: tuya para renombrar, recortar y presentar. Después no se te envía nada.",
+  "empty": "Todavía no se ha compartido ninguna plantilla en esta instancia. Comparte una desde un cuestionario «listo».",
+  "take": "Tomar una copia",
+  "withdraw": "Retirar",
+  "by": "por {{name}}",
+  "revision": "revisión {{n}}",
+  "questionCount_one": "{{count}} pregunta",
+  "questionCount_other": "{{count}} preguntas",
+  "takeFailed": "No se pudo tomar una copia de esta plantilla.",
+  "withdrawFailed": "No se pudo retirar esta plantilla.",
+  "withdrawConfirm": {
+    "title": "¿Retirar esta plantilla?",
+    "description": "Sale del catálogo y nadie volverá a tomarla. Las copias ya tomadas son de sus autores y no se tocan."
+  },
+  "share": "Compartir como plantilla",
+  "shareConfirm": {
+    "title": "¿Compartir este cuestionario como plantilla?",
+    "description": "Una copia va al catálogo de esta instancia. Otros anfitriones toman su propia copia y la modifican a su gusto; tu cuestionario nunca cambia por lo que hagan. Volver a compartir sustituye la entrada, y retirarla nunca elimina las copias ya tomadas."
+  },
+  "shared": "Compartido como plantilla (revisión {{n}}).",
+  "shareFailed": "No se pudo compartir este cuestionario."
+}

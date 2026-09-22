@@ -81,6 +81,7 @@ export * from './sessionListDtoSessionsItem';
 export * from './sessionListDtoSessionsItemStatus';
 export * from './sessionPlayerDetailDto';
 export * from './sessionPlayerDetailDtoAnswersItem';
+export * from './shareTemplateDto';
 export * from './slideDto';
 export * from './slideDtoBlocksItem';
 export * from './slideDtoGradient';

@@ -813,6 +813,16 @@
       "post": {
         "operationId": "StoreController_share",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareTemplateDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -2783,6 +2793,19 @@
           "author",
           "revision",
           "sharedAt"
+        ]
+      },
+      "ShareTemplateDto": {
+        "type": "object",
+        "properties": {
+          "quizId": {
+            "type": "string",
+            "minLength": 26,
+            "maxLength": 26
+          }
+        },
+        "required": [
+          "quizId"
         ]
       },
       "CreateQuestionDto": {

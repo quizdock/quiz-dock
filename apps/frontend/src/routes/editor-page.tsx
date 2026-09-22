@@ -35,6 +35,7 @@ import {
   Radio,
   Save,
   Settings2,
+  Share2,
   Sparkles,
   Star,
   Trash2,
@@ -75,6 +76,10 @@ import {
   useQuizzesControllerTransition,
   useQuizzesControllerUpdate,
 } from '../api/generated/quizzes/quizzes';
+import {
+  getStoreControllerListQueryKey,
+  useStoreControllerShare,
+} from '../api/generated/store/store';
 import { useGameControllerMine } from '../api/generated/games/games';
 import { useQuestionsControllerRemove } from '../api/generated/questions/questions';
 import { editorRoute } from '../router';
@@ -1048,6 +1053,7 @@ function StatusBar({
               onFullCapture(true);
             }}
           />
+          <ShareAsTemplate quizId={quiz.id} />
           <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={onBackToDraft}>
             {t('broadcast.backToDraft')}
           </Button>
@@ -1096,5 +1102,61 @@ function StatusBar({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Shares a `ready` quiz as a template in this instance's catalogue (#39): a
+ * copy leaves, the original is never touched by what others do with theirs.
+ * The confirmation says exactly that, because "share" is the word people read
+ * as "give access to mine".
+ */
+function ShareAsTemplate({ quizId }: { quizId: string }) {
+  const { t } = useTranslation(['store', 'common']);
+  const queryClient = useQueryClient();
+  const share = useStoreControllerShare();
+  const [confirming, setConfirming] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const onShare = async () => {
+    setConfirming(false);
+    setError(null);
+    try {
+      const { data } = await share.mutateAsync({ data: { quizId } });
+      await queryClient.invalidateQueries({ queryKey: getStoreControllerListQueryKey() });
+      setNote(t('shared', { n: data.revision }));
+    } catch (e) {
+      setError(apiErrorText(e, t('shareFailed')));
+    }
+  };
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={share.isPending}
+        onClick={() => setConfirming(true)}
+      >
+        <Share2 className="size-4" />
+        {t('share')}
+      </Button>
+      {note ? <span className="text-muted-foreground text-sm">{note}</span> : null}
+      {error ? (
+        <span className="text-destructive text-sm" role="alert">
+          {error}
+        </span>
+      ) : null}
+      <ConfirmDialog
+        open={confirming}
+        title={t('shareConfirm.title')}
+        description={t('shareConfirm.description')}
+        confirmLabel={t('share')}
+        onCancel={() => setConfirming(false)}
+        onConfirm={() => void onShare()}
+      />
+    </>
   );
 }

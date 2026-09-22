@@ -76,6 +76,9 @@ export function RootLayout() {
               <Link to="/quizzes" className="whitespace-nowrap hover:underline">
                 {t('nav.myQuizzes')}
               </Link>
+              <Link to="/templates" className="whitespace-nowrap hover:underline">
+                {t('nav.templates')}
+              </Link>
               {/* A seat countdown stays in plain sight; renewal and log out live in the user menu. */}
               {mode === 'none' ? <SeatCountdown user={user} /> : null}
               <UserMenu

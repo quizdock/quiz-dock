@@ -1,0 +1,24 @@
+{
+  "title": "Shared templates",
+  "intro": "Quizzes the hosts of this instance have shared. Taking one puts an independent copy in your bank — yours to rename, cut and present. Nothing is pushed back to you afterwards.",
+  "empty": "No template has been shared on this instance yet. Share one from a quiz marked “ready”.",
+  "take": "Take a copy",
+  "withdraw": "Withdraw",
+  "by": "by {{name}}",
+  "revision": "revision {{n}}",
+  "questionCount_one": "{{count}} question",
+  "questionCount_other": "{{count}} questions",
+  "takeFailed": "Could not take a copy of this template.",
+  "withdrawFailed": "Could not withdraw this template.",
+  "withdrawConfirm": {
+    "title": "Withdraw this template?",
+    "description": "It leaves the catalogue, so nobody takes it again. The copies people already took are theirs and are not touched."
+  },
+  "share": "Share as a template",
+  "shareConfirm": {
+    "title": "Share this quiz as a template?",
+    "description": "A copy goes to this instance’s catalogue. Other hosts take their own copy and change it as they please; your quiz is never modified by what they do. Sharing again later replaces the entry, and withdrawing it never removes the copies already taken."
+  },
+  "shared": "Shared as a template (revision {{n}}).",
+  "shareFailed": "Could not share this quiz."
+}

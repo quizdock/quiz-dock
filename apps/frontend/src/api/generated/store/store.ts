@@ -26,6 +26,7 @@ import type {
 
 import type {
   QuizDto,
+  ShareTemplateDto,
   StoreEntryDto
 } from '../model';
 
@@ -162,14 +163,14 @@ export const getStoreControllerShareUrl = () => {
   return `/api/v1/store`
 }
 
-export const storeControllerShare = async ( options?: RequestInit): Promise<storeControllerShareResponse> => {
+export const storeControllerShare = async (shareTemplateDto: ShareTemplateDto, options?: RequestInit): Promise<storeControllerShareResponse> => {
 
   return customFetch<storeControllerShareResponse>(getStoreControllerShareUrl(),
   {
     ...options,
-    method: 'POST'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(shareTemplateDto)
   }
 );}
 
@@ -177,8 +178,8 @@ export const storeControllerShare = async ( options?: RequestInit): Promise<stor
 
 
 export const getStoreControllerShareMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerShare>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof storeControllerShare>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerShare>>, TError,{data: ShareTemplateDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof storeControllerShare>>, TError,{data: ShareTemplateDto}, TContext> => {
 
 const mutationKey = ['storeControllerShare'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -190,10 +191,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storeControllerShare>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storeControllerShare>>, {data: ShareTemplateDto}> = (props) => {
+          const {data} = props ?? {};
 
-
-          return  storeControllerShare(requestOptions)
+          return  storeControllerShare(data,requestOptions)
         }
 
 
@@ -204,15 +205,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type StoreControllerShareMutationResult = NonNullable<Awaited<ReturnType<typeof storeControllerShare>>>
-
+    export type StoreControllerShareMutationBody = ShareTemplateDto
     export type StoreControllerShareMutationError = unknown
 
     export const useStoreControllerShare = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerShare>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerShare>>, TError,{data: ShareTemplateDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof storeControllerShare>>,
         TError,
-        void,
+        {data: ShareTemplateDto},
         TContext
       > => {
       return useMutation(getStoreControllerShareMutationOptions(options), queryClient);

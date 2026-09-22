@@ -4,6 +4,7 @@ import type { User } from '@prisma/client';
 import { AllowAnyRole } from '../auth/allow-any-role.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { QuizDto } from '../quizzes/dto/quiz.dto';
+import { ShareTemplateDto } from './dto/share-template.dto';
 import { StoreEntryDto } from './dto/store-entry.dto';
 import { StoreService } from './store.service';
 
@@ -27,7 +28,7 @@ export class StoreController {
   /** Shares one of the caller's `ready` quizzes as a template. */
   @Post()
   @ApiOkResponse({ type: StoreEntryDto })
-  share(@CurrentUser() user: User, @Body() body: { quizId: string }): Promise<StoreEntryDto> {
+  share(@CurrentUser() user: User, @Body() body: ShareTemplateDto): Promise<StoreEntryDto> {
     return this.store.share(user, body.quizId);
   }
 

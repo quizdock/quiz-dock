@@ -1,0 +1,24 @@
+{
+  "title": "Modèles partagés",
+  "intro": "Les quiz que les animateurs de cette instance ont partagés. En prendre un place une copie indépendante dans votre banque — à vous de la renommer, la couper, la présenter. Rien ne vous sera poussé ensuite.",
+  "empty": "Aucun modèle n’a encore été partagé sur cette instance. Partagez-en un depuis un quiz « prêt ».",
+  "take": "Prendre une copie",
+  "withdraw": "Retirer",
+  "by": "par {{name}}",
+  "revision": "révision {{n}}",
+  "questionCount_one": "{{count}} question",
+  "questionCount_other": "{{count}} questions",
+  "takeFailed": "Impossible de prendre une copie de ce modèle.",
+  "withdrawFailed": "Impossible de retirer ce modèle.",
+  "withdrawConfirm": {
+    "title": "Retirer ce modèle ?",
+    "description": "Il quitte le catalogue, personne ne le prendra plus. Les copies déjà prises appartiennent à leurs auteurs et ne sont pas touchées."
+  },
+  "share": "Partager comme modèle",
+  "shareConfirm": {
+    "title": "Partager ce quiz comme modèle ?",
+    "description": "Une copie part dans le catalogue de cette instance. Les autres animateurs en prennent leur propre copie et la modifient à leur guise ; votre quiz n’est jamais modifié par ce qu’ils en font. Repartager remplace l’entrée, et la retirer ne supprime jamais les copies déjà prises."
+  },
+  "shared": "Partagé comme modèle (révision {{n}}).",
+  "shareFailed": "Impossible de partager ce quiz."
+}

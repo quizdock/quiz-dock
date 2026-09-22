@@ -11,6 +11,7 @@ import { PlayerPage } from './routes/player-page';
 import { PreviewPage } from './routes/preview-page';
 import { ScreenPage } from './routes/screen-page';
 import { SessionDetailPage, SessionPlayerPage, SessionsPage } from './routes/sessions-page';
+import { TemplatesPage } from './routes/templates-page';
 import { FeedbackPage } from './routes/feedback-page';
 import { RootLayout } from './routes/root-layout';
 
@@ -60,6 +61,14 @@ const dashboardRoute = createRoute({
   path: '/quizzes',
   beforeLoad: requireAuth,
   component: DashboardPage,
+});
+
+/** The catalogue of templates shared on this instance (#39). */
+export const templatesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/templates',
+  beforeLoad: requireAuth,
+  component: TemplatesPage,
 });
 
 export const editorRoute = createRoute({
@@ -203,6 +212,7 @@ export const routeTree = rootRoute.addChildren([
   loginRoute,
   callbackRoute,
   dashboardRoute,
+  templatesRoute,
   editorRoute,
   previewRoute,
   sessionsRoute,

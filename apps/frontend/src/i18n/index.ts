@@ -7,6 +7,7 @@ import editorFr from './locales/fr/editor.json';
 import liveFr from './locales/fr/live.json';
 import joinFr from './locales/fr/join.json';
 import sessionsFr from './locales/fr/sessions.json';
+import storeFr from './locales/fr/store.json';
 import authFr from './locales/fr/auth.json';
 import errorsFr from './locales/fr/errors.json';
 import validationFr from './locales/fr/validation.json';
@@ -16,6 +17,7 @@ import editorEn from './locales/en/editor.json';
 import liveEn from './locales/en/live.json';
 import joinEn from './locales/en/join.json';
 import sessionsEn from './locales/en/sessions.json';
+import storeEn from './locales/en/store.json';
 import authEn from './locales/en/auth.json';
 import errorsEn from './locales/en/errors.json';
 import validationEn from './locales/en/validation.json';
@@ -25,6 +27,7 @@ import editorEs from './locales/es/editor.json';
 import liveEs from './locales/es/live.json';
 import joinEs from './locales/es/join.json';
 import sessionsEs from './locales/es/sessions.json';
+import storeEs from './locales/es/store.json';
 import authEs from './locales/es/auth.json';
 import errorsEs from './locales/es/errors.json';
 import validationEs from './locales/es/validation.json';
@@ -34,6 +37,7 @@ import editorZh from './locales/zh/editor.json';
 import liveZh from './locales/zh/live.json';
 import joinZh from './locales/zh/join.json';
 import sessionsZh from './locales/zh/sessions.json';
+import storeZh from './locales/zh/store.json';
 import authZh from './locales/zh/auth.json';
 import errorsZh from './locales/zh/errors.json';
 import validationZh from './locales/zh/validation.json';
@@ -43,6 +47,7 @@ import editorZhTW from './locales/zh-TW/editor.json';
 import liveZhTW from './locales/zh-TW/live.json';
 import joinZhTW from './locales/zh-TW/join.json';
 import sessionsZhTW from './locales/zh-TW/sessions.json';
+import storeZhTW from './locales/zh-TW/store.json';
 import authZhTW from './locales/zh-TW/auth.json';
 import errorsZhTW from './locales/zh-TW/errors.json';
 import validationZhTW from './locales/zh-TW/validation.json';
@@ -67,6 +72,7 @@ export const resources = {
     live: liveEn,
     join: joinEn,
     sessions: sessionsEn,
+    store: storeEn,
     auth: authEn,
     errors: errorsEn,
     validation: validationEn,
@@ -78,6 +84,7 @@ export const resources = {
     live: liveFr,
     join: joinFr,
     sessions: sessionsFr,
+    store: storeFr,
     auth: authFr,
     errors: errorsFr,
     validation: validationFr,
@@ -89,6 +96,7 @@ export const resources = {
     live: liveEs,
     join: joinEs,
     sessions: sessionsEs,
+    store: storeEs,
     auth: authEs,
     errors: errorsEs,
     validation: validationEs,
@@ -100,6 +108,7 @@ export const resources = {
     live: liveZh,
     join: joinZh,
     sessions: sessionsZh,
+    store: storeZh,
     auth: authZh,
     errors: errorsZh,
     validation: validationZh,
@@ -111,6 +120,7 @@ export const resources = {
     live: liveZhTW,
     join: joinZhTW,
     sessions: sessionsZhTW,
+    store: storeZhTW,
     auth: authZhTW,
     errors: errorsZhTW,
     validation: validationZhTW,
