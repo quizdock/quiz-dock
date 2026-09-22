@@ -40,7 +40,7 @@
     "unavailable": "Impossible d’allouer un PIN, réessayez."
   },
   "media": {
-    "unsupported_type": "Type de média non supporté (image/audio).",
+    "unsupported_type": "Type de média non pris en charge : images uniquement pour l’instant.",
     "file_missing": "Fichier manquant (champ « file »).",
     "file_too_large": "Fichier trop volumineux (max {{max}} octets).",
     "not_found": "Média introuvable.",

@@ -237,7 +237,7 @@
     "alt": "média de la question",
     "remove": "Retirer le média",
     "uploading": "Envoi…",
-    "add": "Ajouter un média (image/audio)",
+    "add": "Ajouter une image",
     "fileInputLabel": "Fichier média",
     "uploadError": "Échec de l’upload.",
     "demoDisabled": "L'envoi de médias est désactivé sur l'instance de démo.",

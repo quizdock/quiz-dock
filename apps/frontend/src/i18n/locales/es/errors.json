@@ -40,7 +40,7 @@
     "unavailable": "No se pudo asignar un PIN, inténtalo de nuevo."
   },
   "media": {
-    "unsupported_type": "Tipo de medio no compatible (imagen/audio).",
+    "unsupported_type": "Tipo de medio no admitido: por ahora solo imágenes.",
     "file_missing": "Falta el archivo (campo «file»).",
     "file_too_large": "Archivo demasiado grande (máx. {{max}} bytes).",
     "not_found": "Medio no encontrado.",

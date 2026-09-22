@@ -58,6 +58,13 @@ describe('MediaService', () => {
     expect(prisma.mediaAsset.create).not.toHaveBeenCalled();
   });
 
+  it('refuse un média audio tant qu’aucun écran ne le joue (#42)', async () => {
+    await expect(service.upload('o1', file({ mimetype: 'audio/mpeg' }))).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(prisma.mediaAsset.create).not.toHaveBeenCalled();
+  });
+
   it('refuse un fichier trop volumineux', async () => {
     await expect(service.upload('o1', file({ size: service.maxUploadBytes + 1 }))).rejects.toThrow(
       PayloadTooLargeException,

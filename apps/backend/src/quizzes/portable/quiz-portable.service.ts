@@ -28,14 +28,21 @@ const MIME_BY_EXT: Record<string, string> = {
   gif: 'image/gif',
   webp: 'image/webp',
   avif: 'image/avif',
-  mp3: 'audio/mpeg',
-  ogg: 'audio/ogg',
-  wav: 'audio/wav',
-  m4a: 'audio/mp4',
+  // Audio is not accepted for now (#42): a bundle carrying a sound file is
+  // refused as a whole, naming it, rather than importing a quiz whose media
+  // would never be heard.
 };
 /** Reverse map; the first extension listed for a mime wins (`jpg` over `jpeg`). */
 const EXT_BY_MIME: Record<string, string> = {};
 for (const [ext, mime] of Object.entries(MIME_BY_EXT)) EXT_BY_MIME[mime] ??= ext;
+// Sound files stored before audio was suspended still leave under their own name,
+// so a backup keeps meaningful files; only the way back in is closed (#42).
+Object.assign(EXT_BY_MIME, {
+  'audio/mpeg': 'mp3',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/mp4': 'm4a',
+});
 
 export interface BundleFile {
   buffer: Buffer;

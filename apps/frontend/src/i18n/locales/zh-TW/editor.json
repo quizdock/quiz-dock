@@ -237,7 +237,7 @@
     "alt": "題目媒體",
     "remove": "移除媒體",
     "uploading": "上傳中…",
-    "add": "新增媒體（圖片/音訊）",
+    "add": "新增圖片",
     "fileInputLabel": "媒體檔案",
     "uploadError": "上傳失敗。",
     "demoDisabled": "示範實例已停用媒體上傳。",

@@ -237,7 +237,7 @@
     "alt": "medio de la pregunta",
     "remove": "Quitar el medio",
     "uploading": "Subiendo…",
-    "add": "Añadir un medio (imagen/audio)",
+    "add": "Añadir una imagen",
     "fileInputLabel": "Archivo multimedia",
     "uploadError": "Error al subir.",
     "demoDisabled": "La subida de medios está desactivada en la instancia de demo.",

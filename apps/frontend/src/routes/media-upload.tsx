@@ -12,7 +12,7 @@ import {
 } from '../api/generated/media/media';
 import { getDemo } from '../config';
 
-/** Upload d'un média (image/audio) → renvoie le mediaId au parent. */
+/** Upload d'une image → renvoie le mediaId au parent. (Audio suspendu, #42.) */
 export function MediaUpload({
   value,
   onChange,
@@ -59,7 +59,7 @@ export function MediaUpload({
           <input
             type="file"
             aria-label={t('media.fileInputLabel')}
-            accept="image/*,audio/*"
+            accept="image/*"
             hidden
             onChange={(e) => void onFile(e.target.files?.[0])}
           />

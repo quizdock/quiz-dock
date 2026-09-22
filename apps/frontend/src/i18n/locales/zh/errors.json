@@ -40,7 +40,7 @@
     "unavailable": "无法分配 PIN，请重试。"
   },
   "media": {
-    "unsupported_type": "不支持的媒体类型（图片/音频）。",
+    "unsupported_type": "不支持的媒体类型：目前仅支持图片。",
     "file_missing": "缺少文件（“file”字段）。",
     "file_too_large": "文件过大（最大 {{max}} 字节）。",
     "not_found": "未找到媒体。",

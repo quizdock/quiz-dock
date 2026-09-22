@@ -40,9 +40,16 @@ export class MediaService implements OnModuleInit {
     this.logger.log(`Répertoire des médias : ${this.dir}`);
   }
 
+  /**
+   * Images only, for now (#42). Audio was accepted and stored, but no screen has
+   * ever played it: a file could be attached to a question and simply vanish from
+   * the game. Refusing it at the door is the honest state of things until the
+   * question of *where* a sound plays — one source in a room, every device when
+   * people are remote — gets a real answer. The `audio` kind stays in the schema:
+   * the rows that exist are not rewritten.
+   */
   private kindFor(mime: string): MediaKind {
     if (mime.startsWith('image/')) return MediaKind.image;
-    if (mime.startsWith('audio/')) return MediaKind.audio;
     throw new BadRequestException('media.unsupported_type');
   }
 

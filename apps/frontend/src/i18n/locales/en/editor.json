@@ -237,7 +237,7 @@
     "alt": "question media",
     "remove": "Remove media",
     "uploading": "Uploading…",
-    "add": "Add media (image/audio)",
+    "add": "Add an image",
     "fileInputLabel": "Media file",
     "uploadError": "Upload failed.",
     "demoDisabled": "Media uploads are disabled on the demo instance.",

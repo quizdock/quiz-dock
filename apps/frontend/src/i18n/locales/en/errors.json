@@ -40,7 +40,7 @@
     "unavailable": "Could not allocate a PIN, please try again."
   },
   "media": {
-    "unsupported_type": "Unsupported media type (image/audio).",
+    "unsupported_type": "Unsupported media type: images only for now.",
     "file_missing": "Missing file (“file” field).",
     "file_too_large": "File too large (max {{max}} bytes).",
     "not_found": "Media not found.",
