@@ -4,6 +4,42 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [0.6.0] - 2026-09-22
+
+### Bug Fixes
+
+- The phone shows the nickname the server actually kept *(live)*
+- Show the question image to participants and on the projection (#41) *(live)*
+- The notice must not promise an account a guest does not have (#38) *(game)*
+
+### Documentation
+
+- Point the upgrade examples at 0.6.0
+- The revision counter describes what the code does today *(specs)*
+- No catalogue on a demo instance (#39) *(specs)*
+- Write down how quizzes are shared, by copy (#39) *(specs)*
+- Finish the guide split, specify roles and personalised tracking (#38)
+- Split the operator guide, group the variables by theme *(self-hosting)*
+- Translate the contributor docs, the ADRs and the specifications
+
+### Features
+
+- Link the project site from the demo limitations *(demo)*
+- List on the home page what a demo instance does not do *(demo)*
+- Add personalised tracking and the chosen display name (#38) *(game)*
+- Authenticate participants too under AUTH_MODE=oidc (#38) *(auth)*
+- Point OIDC_NAME_CLAIM at the claim carrying the display name (#38) *(auth)*
+- Make `host` an assignable role, not only a derived one (#38) *(auth)*
+- Take the header logo in any web format, add APP_LOGO_URL *(brand)*
+
+### Refactor
+
+- Stop exposing quiz.visibility, which describes nothing (#39) *(api)*
+
+### Contributors
+
+- fchaussin
+
 ## [0.5.1] - 2026-09-21
 
 ### Bug Fixes
