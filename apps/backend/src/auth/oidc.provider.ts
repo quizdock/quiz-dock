@@ -28,6 +28,8 @@ type Jwks = ReturnType<typeof createRemoteJWKSet>;
  * - `OIDC_AUDIENCE` (optional): expected `aud`; skipped when unset.
  * - `OIDC_ROLES_CLAIM` (optional): dotted path of the roles array claim. Default
  *   `roles`; adapt to your provider (`realm_access.roles`, `groups`, …).
+ * - `OIDC_NAME_CLAIM` (optional): dotted path of the display-name claim, symmetric
+ *   with the roles one. Unset, the standard fallback chain below applies.
  *
  * Standard claims used: `sub` (identity), `preferred_username` / `name` / `email`
  * (display), and the roles claim above.
@@ -38,6 +40,7 @@ export class OidcProvider implements AuthProvider {
   private readonly issuer: string;
   private readonly audience?: string;
   private readonly rolesClaim: string;
+  private readonly nameClaim?: string;
   private readonly jwksUri?: string;
   private jwks: Promise<Jwks> | null = null;
 
@@ -50,6 +53,7 @@ export class OidcProvider implements AuthProvider {
     this.jwksUri = process.env.OIDC_JWKS_URI || undefined;
     this.audience = process.env.OIDC_AUDIENCE || undefined;
     this.rolesClaim = process.env.OIDC_ROLES_CLAIM || 'roles';
+    this.nameClaim = process.env.OIDC_NAME_CLAIM || undefined;
   }
 
   /**
@@ -105,10 +109,15 @@ export class OidcProvider implements AuthProvider {
       const username = payload['preferred_username'];
       const name = payload['name'];
       const email = payload['email'];
+      // The configured claim wins when it carries a name; otherwise the standard
+      // chain applies, so a deployment may point at `nickname` and still work for
+      // the accounts that have none.
+      const configured = this.nameClaim ? getByPath(payload, this.nameClaim) : undefined;
       const rolesRaw = getByPath(payload, this.rolesClaim);
       return {
         sub,
         displayName:
+          (typeof configured === 'string' && configured) ||
           (typeof username === 'string' && username) ||
           (typeof name === 'string' && name) ||
           (typeof email === 'string' && email) ||

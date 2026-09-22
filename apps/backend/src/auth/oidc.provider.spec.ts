@@ -35,6 +35,7 @@ interface TokenOpts {
   username?: string;
   email?: string;
   roles?: string[];
+  nickname?: string;
 }
 
 async function makeToken(opts: TokenOpts = {}): Promise<string> {
@@ -42,6 +43,8 @@ async function makeToken(opts: TokenOpts = {}): Promise<string> {
   return new SignJWT({
     preferred_username: opts.username ?? 'marc',
     email: opts.email,
+    nickname: opts.nickname,
+    profile: { nickname: opts.nickname },
     // Flat `roles` claim (default OIDC_ROLES_CLAIM); nested paths are tested separately.
     roles: opts.roles ?? ['host'],
     realm_access: { roles: ['nested-host'] },
@@ -56,13 +59,15 @@ async function makeToken(opts: TokenOpts = {}): Promise<string> {
 }
 
 /** Construit le provider après avoir armé le JWKS local et l'env. */
-async function buildProvider(audience?: string, rolesClaim?: string) {
+async function buildProvider(audience?: string, rolesClaim?: string, nameClaim?: string) {
   const localSet = createLocalJWKSet({ keys: [publicJwk] });
   (createRemoteJWKSet as jest.Mock).mockReturnValue(localSet);
   if (audience) process.env.OIDC_AUDIENCE = audience;
   else delete process.env.OIDC_AUDIENCE;
   if (rolesClaim) process.env.OIDC_ROLES_CLAIM = rolesClaim;
   else delete process.env.OIDC_ROLES_CLAIM;
+  if (nameClaim) process.env.OIDC_NAME_CLAIM = nameClaim;
+  else delete process.env.OIDC_NAME_CLAIM;
   process.env.OIDC_ISSUER = ISSUER;
   // Explicit JWKS URI: no discovery round-trip in unit tests.
   process.env.OIDC_JWKS_URI = `${ISSUER}/jwks`;
@@ -131,6 +136,18 @@ describe('OidcProvider', () => {
     const provider = await buildProvider(undefined, 'realm_access.roles');
     const principal = await provider.authenticate(bearer(await makeToken()));
     expect(principal?.roles).toEqual(['nested-host']);
+  });
+
+  it('takes the display name from OIDC_NAME_CLAIM, standard chain as a fallback', async () => {
+    const provider = await buildProvider(undefined, undefined, 'nickname');
+    const named = await provider.authenticate(bearer(await makeToken({ nickname: 'Marco' })));
+    expect(named?.displayName).toBe('Marco');
+    // No such claim on that account: `preferred_username` still answers.
+    const plain = await provider.authenticate(bearer(await makeToken()));
+    expect(plain?.displayName).toBe('marc');
+    const nested = await buildProvider(undefined, undefined, 'profile.nickname');
+    const deep = await nested.authenticate(bearer(await makeToken({ nickname: 'Marco' })));
+    expect(deep?.displayName).toBe('Marco');
   });
 
   it('résout le JWKS via OIDC Discovery quand OIDC_JWKS_URI est absent', async () => {

@@ -53,6 +53,7 @@ OIDC_CLIENT_ID=quizdock-frontend                # public SPA client id
 OIDC_JWKS_URI=                                  # optional: skip discovery, use this JWKS
 OIDC_AUDIENCE=                                  # optional: expected `aud`
 OIDC_ROLES_CLAIM=roles                          # dotted path of the roles array claim
+OIDC_NAME_CLAIM=                                # optional: dotted path of the display-name claim
 ```
 
 ## Who may host — assigning roles
@@ -99,6 +100,14 @@ API and WebSocket event; users without it can still join as players (`admin` is
 treated as host). Providers expose roles under different claims: point
 `OIDC_ROLES_CLAIM` at yours — a flat `roles` (default), `groups`, or a nested path
 such as `realm_access.roles` or `resource_access.quizdock.roles`.
+
+## The display name (OIDC)
+
+What the lobby, the leaderboard and the podium show for an authenticated account
+comes from the token: `preferred_username`, then `name`, then `email`. Point
+`OIDC_NAME_CLAIM` at another claim — the standard `nickname`, or a nested path like
+`profile.nickname` — to override that; the standard chain still answers for the
+accounts whose token has no such claim.
 
 ## Register the client on your IdP
 

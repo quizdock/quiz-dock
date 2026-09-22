@@ -61,6 +61,7 @@ How to replace the logo and the stylesheet: **[branding](branding.md)**.
 | `OIDC_CLIENT_ID` | `quiz-dock-frontend` | Public SPA client id (sent to the browser via `GET /auth/config`). |
 | `OIDC_AUDIENCE` | _(unset)_ | Expected `aud`. Left unset = audience check skipped. |
 | `OIDC_ROLES_CLAIM` | `roles` | Dotted path to the roles array in the JWT (e.g. `groups`, `realm_access.roles`). |
+| `OIDC_NAME_CLAIM` | _(unset)_ | Dotted path to the display-name claim (e.g. the standard `nickname`). Unset, or absent from a token: `preferred_username`, then `name`, then `email`. |
 
 How the two modes behave, and how to register the client on your IdP:
 **[authentication](auth.md)**.
