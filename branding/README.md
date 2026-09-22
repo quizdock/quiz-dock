@@ -23,4 +23,4 @@ a new logo or `override.css` is picked up on the next page load.
 The defaults live in `apps/frontend/src/assets/default-logo.svg` (bundled, the last
 resort) and `apps/frontend/public/branding/` (served when no volume is mounted). Mount
 targets per setup are listed in
-[`docs/self-hosting/configuration.md`](../docs/self-hosting/configuration.md#2-branding-white-label).
+[`docs/self-hosting/branding.md`](../docs/self-hosting/branding.md).

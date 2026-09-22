@@ -12,9 +12,12 @@ infrastructure — for operators and integrators (not contributors).
 - **[CLI — install, maintain, administer](cli.md)** — the `quizdock` script
   (init, up, backup/restore, upgrade) and the admin commands shipped in the
   image (doctor, host seat, users, quiz export / import, retention purge).
-- **[Configuration, branding & OIDC](configuration.md)** — every environment
-  variable, white-labeling (name, language, logo, CSS), and wiring your own
-  OIDC identity provider.
+- **[Configuration](configuration.md)** — how to start it, every environment
+  variable, ports and volumes, and the public-demo guards.
+- **[Branding (white-label)](branding.md)** — name, language, logo and CSS,
+  without rebuilding the image.
+- **[Authentication](auth.md)** — the local host seat, or wiring your own OIDC
+  identity provider.
 
 ## Run it
 

@@ -76,7 +76,7 @@ Same image, one switch: `AUTH_MODE` decides who can host.
 | Host rights | whoever holds the seat | the `host` role, granted from the IdP |
 | Sample quizzes | included | — |
 
-Players never sign in, in either mode. Details: [configuration → auth](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/configuration.md#3-oidc-authentication).
+Players never sign in, in either mode. Details: [authentication](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/auth.md).
 
 ## 🚀 Quick start (self-host)
 
