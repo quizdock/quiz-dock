@@ -287,13 +287,14 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 
 | Event | Payload | Sender | Effect |
 |-------|---------|----------|-------|
-| `host:create` | `{ quizId, fullCapture? }` | the host | Creates the game and returns the PIN; `fullCapture` turns full-capture mode on |
+| `host:create` | `{ quizId, fullCapture?, personalTracking?, pickOwnName? }` | the host | Creates the game and returns the PIN; the three options are what the session records and how participants are named (RG-15, RG-16) |
+| `host:options` | `{ pin, personalTracking?, pickOwnName? }` | the host | Adjusts those two from the lobby, before the start (like `host:capture`) |
 | `host:start` | `{ pin }` | the host | LOBBY → QUESTION_SHOW |
 | `host:next` | `{ pin }` | the host | The next question / the podium |
 | `host:reveal` | `{ pin }` | the host | Forces the reveal |
 | `host:kick` | `{ pin, playerId }` | the host | Throws a player out |
 | `host:end` | `{ pin }` | the host | Ends the game |
-| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken` |
+| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken`. Refused without a valid token under `AUTH_MODE=oidc` (RG-15) |
 | `player:reconnect` | `{ sessionToken }` | a player | Takes back their seat and score |
 | `player:submit` | `{ pin, questionIndex, answer }` | a player | Submits an answer |
 | `ping` | `{ t0 }` | anyone | Measures the latency (answered by `pong`) |
@@ -303,7 +304,7 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 | Event | Payload | Recipients |
 |-------|---------|---------------|
 | `game:created` | `{ pin }` | the host |
-| `notice` | `{ fullCapture: true }` | a player (on joining, when full capture is on — the notice before anything is collected) |
+| `notice` | `{ fullCapture, personalTracking, pickOwnName }` | a player (on joining, before anything is collected — its wording follows the two first flags) |
 | `player:joined` | `{ playerId, nickname, playerCount }` | the host + the players (the lobby list) |
 | `player:left` | `{ playerId, playerCount }` | the room |
 | `game:state` | `{ state, questionIndex, totalQuestions }` | the room |
@@ -400,7 +401,7 @@ GET    /me/history                            the history (a signed-in player)
 | **Scalability** | Horizontal, through Node instances plus the Redis adapter, with no local state |
 | **Availability** | A game resumes after an instance crashes |
 | **Security** | TLS everywhere; validated JWTs (signature, exp, audience); strict CORS; rate limiting |
-| **Data protection** | A nickname is personal data for a signed-in player; deleting an account anonymises the logs; guests are not identifiable; **full capture** is opt-in per session with a **notice to the participants before anything is collected** (see données §2.10) |
+| **Data protection** | A nickname is personal data for a signed-in player; deleting an account anonymises the logs; guests are not identifiable; **full capture** is opt-in per session, **personalised tracking** can be switched off altogether, and either way a **notice tells the participants before anything is collected** (see données §2.10, RG-16) |
 | **Accessibility** | Colour **and** shape; AA contrast; keyboard navigation; touch target sizes |
 | **i18n** | FR/EN from v1; `language` set on the quiz |
 | **Observability** | Structured logs, metrics (active games, sockets, latency), traces |

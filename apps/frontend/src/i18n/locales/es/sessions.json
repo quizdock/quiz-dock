@@ -35,6 +35,7 @@
     "thSuccessRate": "Acierto",
     "thAvgTime": "Tiempo medio",
     "participantsTitle": "Jugadores",
+    "noPersonalTracking": "No se registró ningún resultado individual en esta sesión: el seguimiento individual estaba desactivado; solo se conservan los resultados globales del grupo.",
     "thRank": "Puesto",
     "thNickname": "Apodo",
     "thScore": "Puntuación",

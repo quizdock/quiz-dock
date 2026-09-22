@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { GameState } from '@quiz-dock/contracts';
 import { QuizStatus } from '@prisma/client';
+import { isOidcMode } from '../auth/auth-mode';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import { RedisService } from '../redis/redis.service';
@@ -19,6 +20,8 @@ import { QUIZ_SNAPSHOT_INCLUDE, buildSnapshot, refreshSnapshotForm } from './sna
 const PIN_ALLOC_ATTEMPTS = 10;
 const NICKNAME_MIN = 2;
 const NICKNAME_MAX = 20;
+/** Homonymes distingués par un suffixe avant de refuser (noms venus des comptes). */
+const NICKNAME_HOMONYM_MAX = 20;
 /** Borne de la graine d'avatar (client-fournie, stockée Redis + diffusée). */
 const AVATAR_SEED_MAX = 64;
 
@@ -62,7 +65,12 @@ export class GameService {
    */
   async createSession(
     hostUserId: string,
-    dto: { quizId: string; fullCapture?: boolean },
+    dto: {
+      quizId: string;
+      fullCapture?: boolean;
+      personalTracking?: boolean;
+      pickOwnName?: boolean;
+    },
   ): Promise<CreateSessionResult> {
     const quiz = await this.prisma.quiz.findFirst({
       where: { id: dto.quizId, ownerId: hostUserId },
@@ -90,6 +98,10 @@ export class GameService {
       currentIndex: -1,
       totalQuestions: snapshot.questions.length,
       fullCapture: dto.fullCapture === true,
+      // Suivi individuel : par défaut oui (RG-16). Nom choisi : par défaut oui, sauf
+      // sous OIDC où le nom vient du compte tant que l'hôte n'ouvre pas le choix.
+      personalTracking: dto.personalTracking !== false,
+      pickOwnName: dto.pickOwnName ?? !isOidcMode(),
       title: quiz.title,
       language: quiz.language,
       createdAt: Date.now(),
@@ -120,9 +132,10 @@ export class GameService {
   async joinSession(
     pin: string,
     rawNickname: string,
-    userId: string | null,
+    user: { id: string; displayName: string } | null,
     rawAvatar?: string,
   ): Promise<JoinSessionResult> {
+    const userId = user?.id ?? null;
     const meta = await this.getMeta(pin);
     if (!meta) {
       throw new NotFoundException('session.not_found');
@@ -133,16 +146,20 @@ export class GameService {
       throw new BadRequestException('session.ended');
     }
 
-    const nickname = sanitizeNickname(rawNickname);
-    const normalized = normalizeAnswer(nickname);
+    // Nom affiché (RG-15) : celui du compte tant que l'hôte n'ouvre pas le choix,
+    // celui saisi sinon (et toujours, faute de compte).
+    const fromAccount = !meta.pickOwnName && user ? accountNickname(user.displayName) : null;
+    const wanted = fromAccount ?? sanitizeNickname(rawNickname);
+    const normalized = normalizeAnswer(wanted);
     // Exclusion (RG-12) : pseudo banni tant que la clé court (durée fixée par l'hôte).
     if (await this.redis.exists(gameKeys.ban(pin, normalized))) {
       throw new ForbiddenException('session.banned');
     }
-    const claimed = await this.redis.sadd(gameKeys.nicknames(pin), normalized);
-    if (claimed === 0) {
-      throw new ConflictException('nickname.taken');
-    }
+    // Deux comptes peuvent porter le même nom : on les distingue plutôt que de
+    // refuser quelqu'un pour un homonyme qu'il n'a pas choisi.
+    const nickname = fromAccount
+      ? await this.claimAccountNickname(pin, fromAccount)
+      : await this.claimNickname(pin, wanted);
 
     const playerId = randomBytes(16).toString('hex');
     const sessionToken = randomBytes(24).toString('base64url');
@@ -357,6 +374,31 @@ export class GameService {
     return games;
   }
 
+  /**
+   * Réserve un pseudo saisi dans la partie (ensemble Redis, atomique). Refus net
+   * si un autre joueur l'a déjà : il en choisira un autre.
+   */
+  private async claimNickname(pin: string, nickname: string): Promise<string> {
+    const claimed = await this.redis.sadd(gameKeys.nicknames(pin), normalizeAnswer(nickname));
+    if (claimed === 0) {
+      throw new ConflictException('nickname.taken');
+    }
+    return nickname;
+  }
+
+  /**
+   * Même chose pour un nom venu du compte : l'homonyme n'est pas un choix, donc on
+   * le suffixe (« Alice (2) ») au lieu de refuser la participation.
+   */
+  private async claimAccountNickname(pin: string, base: string): Promise<string> {
+    for (let n = 1; n <= NICKNAME_HOMONYM_MAX; n++) {
+      const candidate = n === 1 ? base : suffixNickname(base, n);
+      const claimed = await this.redis.sadd(gameKeys.nicknames(pin), normalizeAnswer(candidate));
+      if (claimed === 1) return candidate;
+    }
+    throw new ConflictException('nickname.taken');
+  }
+
   /** Alloue un PIN à 6 chiffres unique (claim atomique auto-expirant). */
   private async allocatePin(gameId: string): Promise<string> {
     for (let i = 0; i < PIN_ALLOC_ATTEMPTS; i++) {
@@ -382,6 +424,22 @@ export function sanitizeNickname(raw: string): string {
   return nickname;
 }
 
+/**
+ * Nom affiché tiré du compte : mêmes bornes qu'un pseudo saisi, tronqué au besoin.
+ * Un nom trop court pour la règle (ou vide) n'est pas utilisable — l'appelant
+ * retombe alors sur le pseudo saisi.
+ */
+export function accountNickname(displayName: string): string | null {
+  const name = (displayName ?? '').trim().replace(/\s+/g, ' ').slice(0, NICKNAME_MAX);
+  return name.length >= NICKNAME_MIN ? name : null;
+}
+
+/** « Alice » → « Alice (2) », en restant dans la longueur maximale d'un pseudo. */
+function suffixNickname(base: string, n: number): string {
+  const suffix = ` (${n})`;
+  return base.slice(0, NICKNAME_MAX - suffix.length) + suffix;
+}
+
 /** Sérialise les méta pour un hash Redis (tout en string). */
 function serializeMeta(meta: GameMeta): Record<string, string> {
   const raw: Record<string, string> = {
@@ -392,6 +450,8 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     currentIndex: String(meta.currentIndex),
     totalQuestions: String(meta.totalQuestions),
     fullCapture: meta.fullCapture ? '1' : '0',
+    personalTracking: meta.personalTracking ? '1' : '0',
+    pickOwnName: meta.pickOwnName ? '1' : '0',
     title: meta.title,
     language: meta.language,
     createdAt: String(meta.createdAt),
@@ -418,6 +478,9 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     currentIndex: Number(raw.currentIndex),
     totalQuestions: Number(raw.totalQuestions),
     fullCapture: raw.fullCapture === '1',
+    // Défauts pour les parties déjà en vol avant l'ajout des deux options.
+    personalTracking: raw.personalTracking !== '0',
+    pickOwnName: raw.pickOwnName !== '0',
     title: raw.title,
     language: raw.language,
     createdAt: Number(raw.createdAt),

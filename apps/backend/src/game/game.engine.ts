@@ -31,6 +31,7 @@ import type {
   QuizSnapshot,
   SnapshotQuestion,
 } from './game.types';
+import { noticeOf } from './game.types';
 import { RedisService } from '../redis/redis.service';
 import { buildRevealCommon } from './reveal';
 import { isDeferred, rankClosest, scoreAnswer } from './scoring';
@@ -137,7 +138,33 @@ export class GameEngine {
       throw new BadRequestException('session.capture_locked');
     }
     await this.redis.hset(gameKeys.game(pin), { fullCapture: fullCapture ? '1' : '0' });
-    this.server.to(pin).emit('notice', { fullCapture });
+    this.server.to(pin).emit('notice', noticeOf({ ...meta, fullCapture }));
+  }
+
+  /**
+   * `host:options` : suivi individuel et nom affiché choisi, réglés **avant** le
+   * démarrage comme la capture (RG-15, RG-16) — ce que la session enregistre ne
+   * change pas en cours de route. La room revoit l'avis correspondant.
+   */
+  async setOptions(
+    pin: string,
+    hostUserId: string,
+    opts: { personalTracking?: boolean; pickOwnName?: boolean },
+  ): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Lobby) {
+      throw new BadRequestException('session.capture_locked');
+    }
+    const next = {
+      ...meta,
+      personalTracking: opts.personalTracking ?? meta.personalTracking,
+      pickOwnName: opts.pickOwnName ?? meta.pickOwnName,
+    };
+    await this.redis.hset(gameKeys.game(pin), {
+      personalTracking: next.personalTracking ? '1' : '0',
+      pickOwnName: next.pickOwnName ? '1' : '0',
+    });
+    this.server.to(pin).emit('notice', noticeOf(next));
   }
 
   /**
@@ -667,9 +694,9 @@ export class GameEngine {
     const meta = await this.game.getMeta(pin);
     if (!meta) return;
     const playerId = socket.data.playerId;
-    // Consentement capture intégrale (§2.10) : tout (ré)attaché — dont les joueurs
-    // arrivés après le host:create — doit voir l'avis « réponses conservées ».
-    if (meta.fullCapture) socket.emit('notice', { fullCapture: true });
+    // Transparence (§2.10, RG-16) : tout (ré)attaché — dont les joueurs arrivés après
+    // le host:create — doit voir ce que la session enregistre de lui.
+    socket.emit('notice', noticeOf(meta));
     const snapshotForNav = await this.game.getSnapshot(pin);
     socket.emit('game:state', {
       state: meta.state as GameState,

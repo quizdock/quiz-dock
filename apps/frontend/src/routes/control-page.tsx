@@ -28,6 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { getAuthMode } from '../auth/auth-context';
 import { APP_NAME } from '../config';
 import { Avatar } from '../game/avatar';
 import {
@@ -102,6 +103,10 @@ export function ControlPage() {
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
   const setCapture = (fullCapture: boolean) => socket?.emit('host:capture', { pin, fullCapture });
+  const setOptions = (opts: { personalTracking?: boolean; pickOwnName?: boolean }) =>
+    socket?.emit('host:options', { pin, ...opts });
+  // Le nom affiché ne peut venir d'un compte qu'en mode OIDC (RG-15).
+  const authMode = getAuthMode();
   const banPlayer = (playerId: string, minutes: number) =>
     socket?.emit('host:ban', { pin, playerId, minutes });
   const setPaused = (paused: boolean) => socket?.emit('host:pause', { pin, paused });
@@ -276,6 +281,38 @@ export function ControlPage() {
             <span className="text-muted-foreground block">{t('control.captureHint')}</span>
           </span>
         </label>
+
+        {/* Suivi individuel (RG-16) : coupé, la partie se joue à l'identique mais rien
+            d'individuel n'est archivé. Même fenêtre de décision que la capture. */}
+        <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+          <Switch
+            className="mt-0.5"
+            checked={view.personalTracking}
+            onCheckedChange={(personalTracking) => setOptions({ personalTracking })}
+            aria-label={t('control.trackingLabel')}
+          />
+          <span>
+            <span className="font-medium">{t('control.trackingLabel')}</span>
+            <span className="text-muted-foreground block">{t('control.trackingHint')}</span>
+          </span>
+        </label>
+
+        {/* Nom affiché (RG-15) : n'a de sens que si les participants ont un compte
+            d'où le tirer — en mode local ils saisissent toujours un pseudo. */}
+        {authMode === 'oidc' ? (
+          <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+            <Switch
+              className="mt-0.5"
+              checked={view.pickOwnName}
+              onCheckedChange={(pickOwnName) => setOptions({ pickOwnName })}
+              aria-label={t('control.ownNameLabel')}
+            />
+            <span>
+              <span className="font-medium">{t('control.ownNameLabel')}</span>
+              <span className="text-muted-foreground block">{t('control.ownNameHint')}</span>
+            </span>
+          </label>
+        ) : null}
 
         <ActionBar
           status={<ModeToggle mode={view.mode} onChange={setMode} />}

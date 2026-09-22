@@ -18,7 +18,8 @@ type RankedPlayer = PlayerRecord & { id: string };
  * Archivage d'une partie terminée (§2.7-2.10) : projette l'état live Redis (résumé,
  * classement, agrégats par question, et — en capture intégrale — réponses
  * individuelles) vers les tables durables, en **une transaction**, AVANT la purge
- * Redis. Déclenché à la demande de l'hôte (`host:end` avec `archive`) ou
+ * Redis. Suivi individuel coupé (RG-16) : seuls le résumé et les agrégats par
+ * question sont écrits — la partie elle-même (classement, podium) n'y perd rien. Déclenché à la demande de l'hôte (`host:end` avec `archive`) ou
  * automatiquement sur une fin orpheline (§7.3, marquée `interrupted`).
  *
  * Best-effort : une erreur de persistance est journalisée mais n'empêche pas la fin
@@ -75,14 +76,18 @@ export class SessionArchiveService {
       await this.prisma.$transaction(async (tx) => {
         const created = await tx.gameSessionLog.create({ data: session });
 
+        // Suivi individuel coupé (RG-16) : aucune ligne par participant, et donc
+        // aucune réponse individuelle — seuls les agrégats et ce résumé subsistent.
         // Résultats par participant : créés un à un pour récupérer les id (rattachement
         // des réponses individuelles en capture intégrale).
         const resultIdByPlayer = new Map<string, string>();
-        for (const agg of playerAgg) {
-          const row = await tx.playerResultLog.create({
-            data: { sessionLogId: created.id, ...agg.data },
-          });
-          resultIdByPlayer.set(agg.playerId, row.id);
+        if (meta.personalTracking) {
+          for (const agg of playerAgg) {
+            const row = await tx.playerResultLog.create({
+              data: { sessionLogId: created.id, ...agg.data },
+            });
+            resultIdByPlayer.set(agg.playerId, row.id);
+          }
         }
 
         if (questionStats.length > 0) {
@@ -91,7 +96,7 @@ export class SessionArchiveService {
           });
         }
 
-        if (meta.fullCapture) {
+        if (meta.personalTracking && meta.fullCapture) {
           const answerRows = this.buildAnswerLogs(
             created.id,
             resultIdByPlayer,
@@ -141,6 +146,7 @@ export class SessionArchiveService {
       language: meta.language,
       playerCount,
       successRate: answered > 0 ? new Prisma.Decimal(correct / answered) : null,
+      personalTracking: meta.personalTracking,
       fullCapture: meta.fullCapture,
       quizSnapshot: snapshot as unknown as Prisma.InputJsonValue,
       startedAt: new Date(meta.createdAt),

@@ -112,6 +112,10 @@ export interface GameMeta {
   currentIndex: number;
   totalQuestions: number;
   fullCapture: boolean;
+  /** Suivi individuel (RG-16) : `false` = aucun résultat par participant archivé. */
+  personalTracking: boolean;
+  /** Les participants choisissent leur nom affiché ; sinon il vient du compte (RG-15). */
+  pickOwnName: boolean;
   title: string;
   language: string;
   createdAt: number;
@@ -171,3 +175,21 @@ export interface ScoreResult {
 }
 
 export type { AnswerValue };
+
+/**
+ * Avis de transparence (§2.10, RG-16) : ce que la session enregistre, tel qu'il est
+ * envoyé aux participants (et reflété par la console).
+ */
+export function noticeOf(
+  meta: Pick<GameMeta, 'fullCapture' | 'personalTracking' | 'pickOwnName'>,
+): {
+  fullCapture: boolean;
+  personalTracking: boolean;
+  pickOwnName: boolean;
+} {
+  return {
+    fullCapture: meta.fullCapture,
+    personalTracking: meta.personalTracking,
+    pickOwnName: meta.pickOwnName,
+  };
+}

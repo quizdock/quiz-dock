@@ -416,6 +416,7 @@ const SESSION_SUMMARY_SELECT = {
   status: true,
   playerCount: true,
   successRate: true,
+  personalTracking: true,
   fullCapture: true,
   startedAt: true,
   endedAt: true,
@@ -449,6 +450,7 @@ function toSessionSummary(row: {
   status: string;
   playerCount: number;
   successRate: Prisma.Decimal | null;
+  personalTracking: boolean;
   fullCapture: boolean;
   startedAt: Date;
   endedAt: Date;
@@ -459,6 +461,7 @@ function toSessionSummary(row: {
     status: row.status,
     playerCount: row.playerCount,
     successRate: row.successRate === null ? null : Number(row.successRate),
+    personalTracking: row.personalTracking,
     fullCapture: row.fullCapture,
     startedAt: row.startedAt.toISOString(),
     endedAt: row.endedAt.toISOString(),

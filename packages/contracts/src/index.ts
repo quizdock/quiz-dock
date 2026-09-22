@@ -351,7 +351,17 @@ export interface PodiumPayload {
 /** Map des events client → serveur (avec accusés de réception typés). */
 export interface ClientToServerEvents {
   'host:create': (
-    p: { quizId: string; fullCapture?: boolean },
+    p: {
+      quizId: string;
+      fullCapture?: boolean;
+      /** Suivi individuel (RG-16) ; défaut `true`. `false` = agrégats seuls. */
+      personalTracking?: boolean;
+      /**
+       * Les participants choisissent leur nom affiché (RG-15) ; sous OIDC le défaut
+       * est `false` (le nom vient du compte). Sans compte, ils le saisissent toujours.
+       */
+      pickOwnName?: boolean;
+    },
     ack: (res: { pin: string }) => void,
   ) => void;
   /** Rebinde un hôte authentifié propriétaire à sa partie (reconnexion / 2ᵉ fenêtre de contrôle). */
@@ -377,6 +387,12 @@ export interface ClientToServerEvents {
    * sont informés en direct via `notice`.
    */
   'host:capture': (p: { pin: string; fullCapture: boolean }) => void;
+  /**
+   * Règle les deux autres options de session depuis le lobby, **avant** le
+   * démarrage (RG-15, RG-16) : suivi individuel et nom affiché choisi. Refusé une
+   * fois la partie lancée ; les joueurs connectés voient l'avis changer (`notice`).
+   */
+  'host:options': (p: { pin: string; personalTracking?: boolean; pickOwnName?: boolean }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
@@ -407,7 +423,11 @@ export interface ClientToServerEvents {
 /** Map des events serveur → client. */
 export interface ServerToClientEvents {
   'game:created': (p: { pin: string }) => void;
-  notice: (p: { fullCapture: boolean }) => void;
+  /**
+   * Avis de transparence (§2.10, RG-16) : ce que la session enregistre. Les deux
+   * drapeaux décident du texte affiché aux participants.
+   */
+  notice: (p: { fullCapture: boolean; personalTracking: boolean; pickOwnName: boolean }) => void;
   'player:joined': (p: {
     playerId: string;
     nickname: string;

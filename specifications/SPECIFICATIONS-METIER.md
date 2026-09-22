@@ -212,8 +212,8 @@ that mode.
 The **display name** comes from the account (the `preferred_username` claim, or whichever
 claim the deployment points at). The host may allow participants to **pick their own
 display name** for the session; it changes what the podium and the leaderboard show,
-nothing else — the results stay attached to the account. *(That per-session switch is
-the one piece not implemented yet.)*
+nothing else — the results stay attached to the account. Otherwise the name shown is the
+one on the account, and homonyms are told apart by a suffix rather than turned away.
 
 ### 8.3 quater Tracing the answers (full-capture mode)
 - By default, only the **aggregated data** per question is kept (success rate, distribution) — data minimisation.

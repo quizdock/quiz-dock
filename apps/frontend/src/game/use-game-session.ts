@@ -59,6 +59,10 @@ export interface GameView {
   players: RosterPlayer[];
   answerAccepted: boolean | null;
   fullCapture: boolean;
+  /** Suivi individuel (RG-16) : faux = seuls les résultats du groupe sont archivés. */
+  personalTracking: boolean;
+  /** Les participants choisissent leur nom affiché ; sinon il vient de leur compte. */
+  pickOwnName: boolean;
   /** Renseigné si l'hôte a banni ce joueur (durée en minutes) — son client l'affiche. */
   kicked: { minutes: number } | null;
   /** Rythme courant (§8) — `manual` par défaut. */
@@ -101,6 +105,8 @@ const INITIAL: GameView = {
   players: [],
   answerAccepted: null,
   fullCapture: false,
+  personalTracking: true,
+  pickOwnName: true,
   kicked: null,
   mode: 'manual',
   paused: false,
@@ -204,7 +210,16 @@ export function useGameSession(pin: string, role: LiveRole) {
       });
     const onEnded = (p: { feedbackEnabled?: boolean }) =>
       patch({ state: 'ENDED' as GameState, feedbackEnabled: p?.feedbackEnabled ?? true });
-    const onNotice = (p: { fullCapture: boolean }) => patch({ fullCapture: p.fullCapture });
+    const onNotice = (p: {
+      fullCapture: boolean;
+      personalTracking: boolean;
+      pickOwnName: boolean;
+    }) =>
+      patch({
+        fullCapture: p.fullCapture,
+        personalTracking: p.personalTracking,
+        pickOwnName: p.pickOwnName,
+      });
     // Banni par l'hôte : on purge la session locale (pas d'auto-reconnexion) et on
     // bascule la vue en écran d'exclusion.
     const onKicked = (p: { minutes: number }) => {

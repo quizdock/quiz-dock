@@ -52,9 +52,10 @@ describe('GameGateway.playerJoin (AUTH_MODE)', () => {
   it('attaches the account to the player under oidc', async () => {
     process.env.AUTH_MODE = 'oidc';
     const { gateway, game, socket } = makeGateway();
-    socket.data.user = { id: 'u1' } as User;
+    const user = { id: 'u1', displayName: 'Alice Account' } as User;
+    socket.data.user = user;
     await gateway.playerJoin(socket as never, payload);
-    expect(game.joinSession).toHaveBeenCalledWith('123456', 'Alice', 'u1', undefined);
+    expect(game.joinSession).toHaveBeenCalledWith('123456', 'Alice', user, undefined);
   });
 
   it('keeps the PIN as the only barrier in local mode', async () => {

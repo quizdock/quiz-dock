@@ -17,6 +17,8 @@ export const sessionSummarySchema = z.object({
   playerCount: z.number().int(),
   /** Taux de réussite global 0..1 (null si aucune réponse). */
   successRate: z.number().nullable(),
+  /** Suivi individuel (RG-16) : faux = aucun résultat par participant archivé. */
+  personalTracking: z.boolean(),
   fullCapture: z.boolean(),
   startedAt: z.string(),
   endedAt: z.string(),

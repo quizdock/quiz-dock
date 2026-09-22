@@ -25,6 +25,7 @@ import { isHostRole } from '../auth/roles';
 import { UsersService } from '../users/users.service';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
+import { noticeOf } from './game.types';
 import { WsExceptionFilter } from './ws-exception.filter';
 
 /** Données attachées à chaque socket de jeu. */
@@ -97,7 +98,13 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('host:create')
   async hostCreate(
     @ConnectedSocket() socket: GameSocket,
-    @MessageBody() payload: { quizId: string; fullCapture?: boolean },
+    @MessageBody()
+    payload: {
+      quizId: string;
+      fullCapture?: boolean;
+      personalTracking?: boolean;
+      pickOwnName?: boolean;
+    },
   ): Promise<{ pin: string }> {
     const hostId = this.requireHostId(socket);
     const { pin } = await this.game.createSession(hostId, payload);
@@ -105,9 +112,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     socket.data.isHostControl = true;
     await socket.join(pin);
     socket.emit('game:created', { pin });
-    if (payload.fullCapture === true) {
-      socket.emit('notice', { fullCapture: true });
-    }
+    const meta = await this.game.getMeta(pin);
+    if (meta) socket.emit('notice', noticeOf(meta));
     return { pin };
   }
 
@@ -125,8 +131,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (isOidcMode() && !socket.data.user) {
       throw new WsException('auth.required');
     }
-    const userId = socket.data.user?.id ?? null;
-    const res = await this.game.joinSession(payload.pin, payload.nickname, userId, payload.avatar);
+    const user = socket.data.user ?? null;
+    const res = await this.game.joinSession(payload.pin, payload.nickname, user, payload.avatar);
     socket.data.pin = res.pin;
     socket.data.playerId = res.playerId;
     await socket.join(res.pin);
@@ -350,6 +356,18 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     @MessageBody() payload: { pin: string; fullCapture: boolean },
   ): Promise<void> {
     await this.engine.setCapture(payload.pin, this.requireHostId(socket), payload.fullCapture);
+  }
+
+  /**
+   * `host:options` : règle le suivi individuel et le nom affiché choisi depuis le
+   * lobby, avant le démarrage (RG-15, RG-16). Les participants voient l'avis suivre.
+   */
+  @SubscribeMessage('host:options')
+  async hostOptions(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; personalTracking?: boolean; pickOwnName?: boolean },
+  ): Promise<void> {
+    await this.engine.setOptions(payload.pin, this.requireHostId(socket), payload);
   }
 
   /** `host:ban` : exclut un joueur pour une durée donnée (minutes). */

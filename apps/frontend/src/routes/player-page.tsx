@@ -550,9 +550,13 @@ export function PlayerPage() {
           </Button>
         </div>
         <p className="text-muted-foreground">{t('player.waitingHost')}</p>
-        {view.fullCapture ? (
-          <p className="text-muted-foreground border-t pt-2 text-sm">{t('player.captureNotice')}</p>
-        ) : null}
+        <p className="text-muted-foreground border-t pt-2 text-sm">
+          {!view.personalTracking
+            ? t('player.noTrackingNotice')
+            : view.fullCapture
+              ? t('player.captureNotice')
+              : t('player.trackingNotice')}
+        </p>
       </CardContent>
     </Card>,
   );

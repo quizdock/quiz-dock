@@ -35,6 +35,7 @@
     "thSuccessRate": "正确率",
     "thAvgTime": "平均用时",
     "participantsTitle": "玩家",
+    "noPersonalTracking": "本次会话未记录任何个人成绩：个人追踪已关闭，仅保留小组的整体结果。",
     "thRank": "名次",
     "thNickname": "昵称",
     "thScore": "分数",

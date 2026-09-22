@@ -42,6 +42,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   players: [],
   answerAccepted: null,
   fullCapture: false,
+  personalTracking: true,
+  pickOwnName: true,
   kicked: null,
   mode: 'manual',
   paused: false,
@@ -91,6 +93,31 @@ describe('PlayerPage (client participant)', () => {
 
     expect(await screen.findByText(/Tu es dans la session/)).toBeInTheDocument();
     expect(screen.getByText(/« Bob »/)).toBeInTheDocument();
+  });
+
+  it('LOBBY : l’avis dit ce que la session enregistre (RG-16)', async () => {
+    loadPlayerSession.mockReturnValue({
+      pin: '771122',
+      nickname: 'Bob',
+      sessionToken: 't',
+      playerId: 'p1',
+    });
+
+    hookState.value = view({ state: GameState.Lobby });
+    const plain = renderApp('/join/771122');
+    expect(await screen.findByText(/ta participation et ton score sont/i)).toBeInTheDocument();
+    plain.unmount();
+
+    hookState.value = view({ state: GameState.Lobby, fullCapture: true });
+    const captured = renderApp('/join/771122');
+    expect(await screen.findByText(/chacune de tes réponses est conservée/i)).toBeInTheDocument();
+    captured.unmount();
+
+    hookState.value = view({ state: GameState.Lobby, personalTracking: false });
+    renderApp('/join/771122');
+    expect(
+      await screen.findByText(/résultats individuels ne sont pas enregistrés/i),
+    ).toBeInTheDocument();
   });
 
   it('ANSWERING : taper une option émet player:submit puis verrouille', async () => {

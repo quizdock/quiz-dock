@@ -222,7 +222,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     setPresentError(null);
     setPresenting(true);
     try {
-      const { pin } = await createSession(quiz.id, fullCapture);
+      const { pin } = await createSession(quiz.id, { fullCapture });
       // The session lives in its console; the editor stays about the content.
       await navigate({ to: '/session/$pin/console', params: { pin } });
     } catch (e) {

@@ -18,6 +18,7 @@ export type SessionListDtoSessionsItem = {
   playerCount: number;
   /** @nullable */
   successRate: number | null;
+  personalTracking: boolean;
   fullCapture: boolean;
   startedAt: string;
   endedAt: string;

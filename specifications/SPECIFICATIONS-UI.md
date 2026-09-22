@@ -108,11 +108,16 @@ The `⋯` menu: Edit · Duplicate · Archive · Delete · See past sessions.
 │                                                           │
 │  ☐ Record every answer (audit / certification)            │
 │     ⓘ The participants are told when the session starts.  │
+│  ☑ Personalised tracking                                  │
+│     ⓘ Off: the group's results only, nothing individual.  │
+│  ☐ Let participants pick their display name   (OIDC only) │
 │                                                           │
 │  [ Start the session ]                       [ Cancel ]   │
 └───────────────────────────────────────────────────────────┘
 ```
-> The "Record every answer" checkbox turns on **full-capture mode** (RG-13). It locks once the session has started.
+> The "Record every answer" checkbox turns on **full-capture mode** (RG-13); the other
+> two are personalised tracking (RG-16) and the chosen display name (RG-15). All three
+> lock once the session has started.
 
 ### 3.2 During a question (host side)
 ```
@@ -195,18 +200,25 @@ The `⋯` menu: Edit · Duplicate · Archive · Delete · See past sessions.
 └───────────────────┘
 ```
 
-### 5.2 bis The full-capture notice (when it is on)
-Shown on joining, **before** anything is collected, once the host has turned full recording on:
+### 5.2 bis The notice — what the session records
+Shown on joining, **before** anything is collected, in the wording the two switches call for:
+
+| Personalised tracking | Full capture | The notice says |
+|---|---|---|
+| on | no | Your taking part and your score are recorded under your account. |
+| on | yes | …and every one of your answers is kept. |
+| off | — | Your individual results are not recorded — only the group's overall results are. |
+
 ```
 ┌───────────────────────────────┐
-│  ⓘ This session is recorded   │
-│  Your individual answers      │
-│  will be kept as part of the  │
-│  session follow-up.           │
-│              [ Understood ]   │
+│  ⓘ Your taking part and your  │
+│  score are recorded under     │
+│  your account.                │
 └───────────────────────────────┘
 ```
-> It matches the `notice { fullCapture:true }` event (séquences §2 / technique §9). Informational (transparency, RG-13).
+> It matches the `notice { fullCapture, personalTracking, pickOwnName }` event (séquences §2 /
+> technique §9). Informational (transparency, RG-13 and RG-16). Picking a display name is
+> never anonymity: the notice must not let anyone believe otherwise.
 
 ### 5.3 Answering (the heart of the app)
 ```
@@ -306,7 +318,7 @@ Shown on joining, **before** anything is collected, once the host has turned ful
 | The host disconnects | "The host disconnected, the game is paused." |
 | A participant is thrown out | "The host removed you from the session." |
 | A late answer | "Time is up — your answer was not counted." |
-| The session is recorded (full capture) | The notice "Your answers will be kept" → [ Understood ] (RG-13) |
+| What the session records | The notice, in one of its three wordings (RG-13, RG-16) |
 | The end of the session | The podium → a thank-you screen |
 
 ---

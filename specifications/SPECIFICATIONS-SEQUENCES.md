@@ -65,7 +65,7 @@ sequenceDiagram
     API-->>F: player:joined { nickname, playerCount }
     API-->>P: player:joined { nickname, playerCount }
     opt full-capture mode
-        API-->>A: notice { fullCapture:true } (the notice shown at the start of the session)
+        API-->>A: notice { fullCapture, personalTracking, pickOwnName } (what the session records)
     end
 ```
 
@@ -227,4 +227,4 @@ sequenceDiagram
 - **Anti-cheat**: `question:start` **never** carries the right answer; only `question:reveal` discloses it (technique §7).
 - **Answer idempotence**: one answer counted per `(playerId, questionIndex)` (RG-06).
 - **Source of truth**: Redis while the game runs; PostgreSQL after consolidation. No PG write per answer (except `answer_log` at the end of the game, under full capture).
-- **The full-capture notice**: sent to the participant on joining when `fullCapture=true`, before anything is collected.
+- **The notice**: sent to the participant on joining, before anything is collected; its wording follows `personalTracking` and `fullCapture` (RG-16).

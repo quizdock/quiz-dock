@@ -35,6 +35,7 @@
     "thSuccessRate": "Success",
     "thAvgTime": "Avg. time",
     "participantsTitle": "Players",
+    "noPersonalTracking": "No individual result was recorded for this session: personalised tracking was off — only the group’s overall results are kept.",
     "thRank": "Rank",
     "thNickname": "Nickname",
     "thScore": "Score",

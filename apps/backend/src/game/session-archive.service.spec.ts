@@ -62,6 +62,8 @@ describe('SessionArchiveService', () => {
     currentIndex: 0,
     totalQuestions: 1,
     fullCapture: true,
+    personalTracking: true,
+    pickOwnName: true,
     title: 'Q',
     language: 'fr',
     createdAt: 1_000,
@@ -230,6 +232,43 @@ describe('SessionArchiveService', () => {
     expect(sessionCreate.mock.calls[0][0].data.fullCapture).toBe(false);
     expect(sessionCreate.mock.calls[0][0].data.status).toBe('interrupted');
     expect(answerCreateMany).not.toHaveBeenCalled();
+  });
+
+  it('personalised tracking off (RG-16): aggregates and summary only', async () => {
+    const players = {
+      p1: JSON.stringify({
+        nickname: 'Alice',
+        userId: 'u1',
+        score: 1000,
+        streak: 1,
+        connected: true,
+        joinedAt: 1,
+        latencyMs: 0,
+      }),
+    };
+    const answers = {
+      p1: JSON.stringify({
+        answer: 'optA',
+        isCorrect: true,
+        pointsAwarded: 1000,
+        tMs: 1200,
+        receivedAt: 1000,
+      }),
+    };
+    const { prisma, sessionCreate, playerCreate, questionCreateMany, answerCreateMany } =
+      buildPrisma();
+    const svc = new SessionArchiveService(prisma, buildRedis(players, answers));
+
+    // Capture intégrale demandée, mais sans suivi individuel il n'y a rien à quoi
+    // rattacher une réponse : aucune ligne individuelle n'est écrite.
+    await svc.archive(PIN, { ...meta, personalTracking: false }, {});
+
+    const session = sessionCreate.mock.calls[0][0].data;
+    expect(session.personalTracking).toBe(false);
+    expect(session.playerCount).toBe(1);
+    expect(playerCreate).not.toHaveBeenCalled();
+    expect(answerCreateMany).not.toHaveBeenCalled();
+    expect(questionCreateMany.mock.calls[0][0].data[0]).toMatchObject({ answerCount: 1 });
   });
 
   it('no-op si aucune réponse (lobby vide) — aucune écriture', async () => {

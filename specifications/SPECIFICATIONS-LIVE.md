@@ -241,7 +241,7 @@ The wireframes (UI §3–§5) give the *look*; this matrix gives the *binding*.
 
 | State | Control (host) | Projection (spectator) | Player | Triggering events |
 |---|---|---|---|---|
-| `LOBBY` | the player list + full capture + **Start** | PIN/QR + the player list (UI §4.1) | "You are in the game" (UI §5.2) | `player:joined`/`left` |
+| `LOBBY` | the player list + the session options (full capture, personalised tracking, chosen display name) + **Start** | PIN/QR + the player list (UI §4.1) | "You are in the game" (UI §5.2) | `player:joined`/`left` |
 | `QUESTION_SHOW`* | question number + prompt | prompt + media, **answers hidden** | a minimal prompt, the grid **locked** | `question:start` (the reading window, `startedAt` in the future) |
 | `ANSWERING` | the `x/total` counter, **Reveal**/**Pause** | prompt + options (no right answer) + chrono + counter (UI §4.2) | the grid is live, then "Answer recorded ✓" (UI §5.3) | `question:start`, `answer:count`, `answer:ack` |
 | `REVEAL` | the right answer + distribution + leaderboard (UI §3.3) | the right answer + distribution | **personal** feedback: right or wrong, points, streak, rank (UI §5.4) | `question:reveal` (per socket), `leaderboard` |

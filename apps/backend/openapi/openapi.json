@@ -2276,6 +2276,9 @@
                   "type": "number",
                   "nullable": true
                 },
+                "personalTracking": {
+                  "type": "boolean"
+                },
                 "fullCapture": {
                   "type": "boolean"
                 },
@@ -2292,6 +2295,7 @@
                 "status",
                 "playerCount",
                 "successRate",
+                "personalTracking",
                 "fullCapture",
                 "startedAt",
                 "endedAt"
@@ -2330,6 +2334,9 @@
           "successRate": {
             "type": "number",
             "nullable": true
+          },
+          "personalTracking": {
+            "type": "boolean"
           },
           "fullCapture": {
             "type": "boolean"
@@ -2456,6 +2463,7 @@
           "status",
           "playerCount",
           "successRate",
+          "personalTracking",
           "fullCapture",
           "startedAt",
           "endedAt",

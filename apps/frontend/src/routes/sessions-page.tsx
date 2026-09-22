@@ -250,53 +250,62 @@ export function SessionDetailPage() {
         <CardHeader>
           <CardTitle>{t('detail.participantsTitle')}</CardTitle>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-muted-foreground border-b text-left">
-              <tr>
-                <th className="py-2 pr-2 font-medium">{t('detail.thRank')}</th>
-                <th className="py-2 pr-2 font-medium">{t('detail.thNickname')}</th>
-                <th className="py-2 pr-2 text-right font-medium">{t('detail.thScore')}</th>
-                <th className="py-2 pr-2 text-right font-medium">{t('detail.thCorrect')}</th>
-                <th className="py-2 pr-2 text-right font-medium">{t('detail.thStreak')}</th>
-                <th className="py-2 pr-2 text-right font-medium">{t('detail.thAvgTime')}</th>
-                <th className="py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {s.players.map((p) => (
-                <tr key={p.id} className="hover:bg-accent/40 border-b last:border-0">
-                  <td className="py-2 pr-2 tabular-nums">{p.finalRank}</td>
-                  <td className="py-2 pr-2 font-medium">
-                    <Link
-                      to="/quizzes/$quizId/history/$sessionId/players/$playerResultId"
-                      params={{ quizId, sessionId, playerResultId: p.id }}
-                      className="hover:underline"
-                    >
-                      {p.nickname}
-                    </Link>
-                  </td>
-                  <td className="py-2 pr-2 text-right tabular-nums">{p.finalScore}</td>
-                  <td className="py-2 pr-2 text-right tabular-nums">
-                    {p.correctCount}/{p.answeredCount}
-                  </td>
-                  <td className="py-2 pr-2 text-right tabular-nums">{p.maxStreak}</td>
-                  <td className="py-2 pr-2 text-right tabular-nums">{seconds(p.avgResponseMs)}</td>
-                  <td className="py-2 text-right">
-                    <Link
-                      to="/quizzes/$quizId/history/$sessionId/players/$playerResultId"
-                      params={{ quizId, sessionId, playerResultId: p.id }}
-                      aria-label={t('detail.participantDetailAria', { nickname: p.nickname })}
-                      className="text-muted-foreground hover:text-foreground inline-flex"
-                    >
-                      <ChevronRight className="size-4" />
-                    </Link>
-                  </td>
+        {/* Suivi individuel coupé (RG-16) : le tableau serait vide sans explication. */}
+        {!s.personalTracking ? (
+          <CardContent className="text-muted-foreground py-10 text-center text-sm">
+            {t('detail.noPersonalTracking')}
+          </CardContent>
+        ) : (
+          <CardContent className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-muted-foreground border-b text-left">
+                <tr>
+                  <th className="py-2 pr-2 font-medium">{t('detail.thRank')}</th>
+                  <th className="py-2 pr-2 font-medium">{t('detail.thNickname')}</th>
+                  <th className="py-2 pr-2 text-right font-medium">{t('detail.thScore')}</th>
+                  <th className="py-2 pr-2 text-right font-medium">{t('detail.thCorrect')}</th>
+                  <th className="py-2 pr-2 text-right font-medium">{t('detail.thStreak')}</th>
+                  <th className="py-2 pr-2 text-right font-medium">{t('detail.thAvgTime')}</th>
+                  <th className="py-2" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </CardContent>
+              </thead>
+              <tbody>
+                {s.players.map((p) => (
+                  <tr key={p.id} className="hover:bg-accent/40 border-b last:border-0">
+                    <td className="py-2 pr-2 tabular-nums">{p.finalRank}</td>
+                    <td className="py-2 pr-2 font-medium">
+                      <Link
+                        to="/quizzes/$quizId/history/$sessionId/players/$playerResultId"
+                        params={{ quizId, sessionId, playerResultId: p.id }}
+                        className="hover:underline"
+                      >
+                        {p.nickname}
+                      </Link>
+                    </td>
+                    <td className="py-2 pr-2 text-right tabular-nums">{p.finalScore}</td>
+                    <td className="py-2 pr-2 text-right tabular-nums">
+                      {p.correctCount}/{p.answeredCount}
+                    </td>
+                    <td className="py-2 pr-2 text-right tabular-nums">{p.maxStreak}</td>
+                    <td className="py-2 pr-2 text-right tabular-nums">
+                      {seconds(p.avgResponseMs)}
+                    </td>
+                    <td className="py-2 text-right">
+                      <Link
+                        to="/quizzes/$quizId/history/$sessionId/players/$playerResultId"
+                        params={{ quizId, sessionId, playerResultId: p.id }}
+                        aria-label={t('detail.participantDetailAria', { nickname: p.nickname })}
+                        className="text-muted-foreground hover:text-foreground inline-flex"
+                      >
+                        <ChevronRight className="size-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        )}
       </Card>
     </section>
   );

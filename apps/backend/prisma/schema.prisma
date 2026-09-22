@@ -330,20 +330,23 @@ model MediaAsset {
 
 /// §2.7 — session jouée (trace durable).
 model GameSessionLog {
-  id           String        @id @default(ulid()) @db.Char(26)
-  quizId       String        @map("quiz_id") @db.Char(26)
-  hostId       String        @map("host_id") @db.Char(26)
-  pin          String        @db.Char(6)
-  status       SessionStatus @default(ended)
-  language     String
-  playerCount  Int           @default(0) @map("player_count")
-  successRate  Decimal?      @map("success_rate")
-  fullCapture  Boolean       @default(false) @map("full_capture")
-  quizSnapshot Json?         @map("quiz_snapshot")
-  startedAt    DateTime      @map("started_at") @db.Timestamptz(6)
-  endedAt      DateTime      @map("ended_at") @db.Timestamptz(6)
-  retainUntil  DateTime      @map("retain_until") @db.Timestamptz(6)
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  id               String        @id @default(ulid()) @db.Char(26)
+  quizId           String        @map("quiz_id") @db.Char(26)
+  hostId           String        @map("host_id") @db.Char(26)
+  pin              String        @db.Char(6)
+  status           SessionStatus @default(ended)
+  language         String
+  playerCount      Int           @default(0) @map("player_count")
+  successRate      Decimal?      @map("success_rate")
+  /// Personalised tracking (RG-16): false = no `player_result_log` (and therefore no
+  /// `answer_log`) was written for this session — aggregates and this summary only.
+  personalTracking Boolean       @default(true) @map("personal_tracking")
+  fullCapture      Boolean       @default(false) @map("full_capture")
+  quizSnapshot     Json?         @map("quiz_snapshot")
+  startedAt        DateTime      @map("started_at") @db.Timestamptz(6)
+  endedAt          DateTime      @map("ended_at") @db.Timestamptz(6)
+  retainUntil      DateTime      @map("retain_until") @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
   quiz          Quiz                 @relation(fields: [quizId], references: [id])
   host          User                 @relation(fields: [hostId], references: [id])

@@ -137,10 +137,20 @@ export function emitWithAckOrError<T>(
   });
 }
 
+/** Options de session choisies au lancement (RG-15, RG-16). */
+export interface SessionOptions {
+  fullCapture?: boolean;
+  personalTracking?: boolean;
+  pickOwnName?: boolean;
+}
+
 /** Hôte : ouvre une partie pour `quizId`, renvoie le PIN. */
-export async function createSession(quizId: string, fullCapture = false): Promise<{ pin: string }> {
+export async function createSession(
+  quizId: string,
+  options: SessionOptions = {},
+): Promise<{ pin: string }> {
   const s = await connectHost();
-  return emitWithAckOrError<{ pin: string }>(s, 'host:create', { quizId, fullCapture });
+  return emitWithAckOrError<{ pin: string }>(s, 'host:create', { quizId, ...options });
 }
 
 /**

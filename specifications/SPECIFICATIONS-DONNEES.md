@@ -150,7 +150,7 @@ CHECKs, in SQL or in the application, depending on the type:
 | `language` | text | NN | The session's language |
 | `player_count` | int | NN, DEF 0 | How many participants played |
 | `success_rate` | numeric | nullable | The mean success rate (%) |
-| `personal_tracking` | boolean | NN, DEF true | **Personalised tracking**: when false, no `player_result_log` (and therefore no `answer_log`) is written for the session — only `question_result_stat` and this summary. Chosen when the session is created; the participants are told at the start (RG-16). *(Target, not implemented yet.)* |
+| `personal_tracking` | boolean | NN, DEF true | **Personalised tracking**: when false, no `player_result_log` (and therefore no `answer_log`) is written for the session — only `question_result_stat` and this summary. Chosen when the session is created (and adjustable from the lobby, like full capture); the participants are told at the start (RG-16). |
 | `full_capture` | boolean | NN, DEF false | **Full-capture mode**: when true, every individual answer is persisted (`answer_log`). Decided when the session is created; **the participants are told at the start of the session** (a displayed notice, see §6) |
 | `started_at` | timestamptz | NN | When it actually started |
 | `ended_at` | timestamptz | NN | When it ended |
