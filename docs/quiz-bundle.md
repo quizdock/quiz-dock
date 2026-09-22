@@ -4,6 +4,13 @@ A quiz leaves and enters QuizDock as a **bundle**: a `quiz.json` manifest next
 to a `media/` folder, zipped (`<slug>.quizdock.zip`). The same layout, unzipped,
 is what a Quiz Store repository holds.
 
+> **Sound files are not accepted for now.** Audio could be attached to a question
+> but no screen ever played it, so it is refused at the door until that is
+> designed properly ([#42](https://github.com/quizdock/quiz-dock/issues/42)). A
+> bundle carrying one is refused as a whole, naming the file — including a bundle
+> exported from an older version. Sorry for the disruption if you were relying on
+> it: the sound is still in your database, and nothing was deleted.
+
 - **Export** — editor header → *Export*, `GET /api/v1/quizzes/:id/export`, or
   `qd quiz:export <id> <file.zip>` from the operator CLI
   ([self-hosting/cli.md](self-hosting/cli.md)). An export fixes the quiz's `slug`

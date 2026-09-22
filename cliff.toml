@@ -16,6 +16,13 @@ body = """
 {% else %}\
     ## [Unreleased]
 {% endif %}\
+{% set breaking = commits | filter(attribute="breaking", value=true) %}\
+{% if breaking | length > 0 %}
+    ### Breaking changes
+    {% for commit in breaking %}
+        - {{ commit.breaking_description | replace(from="\n", to=" ") | trim | upper_first }}
+    {%- endfor %}
+{% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
     {% for commit in commits %}
