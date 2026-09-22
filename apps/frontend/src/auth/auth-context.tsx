@@ -5,6 +5,7 @@ import { setAuthHeaders, setUnauthorizedHandler } from '../api/http';
 import { getOidc } from './oidc';
 
 const STORAGE_KEY = 'live.localUser';
+const AFTER_LOGIN_KEY = 'live.afterLogin';
 
 export type AuthMode = 'none' | 'oidc';
 export type UserRole = 'host' | 'player' | 'admin';
@@ -44,6 +45,39 @@ export function bindOidcSession(): void {
 /** Identité locale (mode none) — utilisée aussi par la garde. */
 export function getLocalUser(): string | null {
   return localStorage.getItem(STORAGE_KEY);
+}
+
+/**
+ * Page the sign-in was triggered from (a participant sent to `/login` by the
+ * guard, RG-15). Kept for the round trip to the IdP only — the callback reads it
+ * once and falls back to the dashboard, which is where an host lands.
+ */
+export function rememberAfterLogin(path: string): void {
+  try {
+    sessionStorage.setItem(AFTER_LOGIN_KEY, path);
+  } catch {
+    // Private browsing / storage disabled: the callback simply goes to its default.
+  }
+}
+
+/** Same, without consuming it: the login page adapts its wording to it. */
+export function peekAfterLogin(): string | null {
+  try {
+    return sessionStorage.getItem(AFTER_LOGIN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function takeAfterLogin(): string | null {
+  try {
+    const path = sessionStorage.getItem(AFTER_LOGIN_KEY);
+    sessionStorage.removeItem(AFTER_LOGIN_KEY);
+    // Internal paths only: never send the browser somewhere a crafted link chose.
+    return path && path.startsWith('/') && !path.startsWith('//') ? path : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Garde de route synchrone : l'utilisateur est-il authentifié ? */

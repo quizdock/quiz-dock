@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from '../users/users.module';
 import { AuthConfigController } from './auth-config.controller';
+import { isOidcMode } from './auth-mode';
 import { AUTH_PROVIDER, type AuthProvider } from './auth-provider';
 import { AuthGuard } from './auth.guard';
 import { HostSeatController } from './host-seat.controller';
@@ -18,8 +19,7 @@ import { OidcProvider } from './oidc.provider';
   providers: [
     {
       provide: AUTH_PROVIDER,
-      useFactory: (): AuthProvider =>
-        (process.env.AUTH_MODE ?? 'none') === 'oidc' ? new OidcProvider() : new NoAuthProvider(),
+      useFactory: (): AuthProvider => (isOidcMode() ? new OidcProvider() : new NoAuthProvider()),
     },
     { provide: APP_GUARD, useClass: AuthGuard },
   ],

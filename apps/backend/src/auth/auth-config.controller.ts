@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { DEMO_SEAT_MINUTES, isDemoMode } from '../demo/demo.config';
+import { authMode } from './auth-mode';
 import { AuthConfigDto } from './dto/auth-config.dto';
 import { Public } from './public.decorator';
 
@@ -12,7 +13,7 @@ export class AuthConfigController {
   @Get('config')
   @ApiOkResponse({ type: AuthConfigDto })
   config(): AuthConfigDto {
-    const mode = process.env.AUTH_MODE === 'oidc' ? 'oidc' : 'none';
+    const mode = authMode();
     return {
       mode,
       demo: isDemoMode() ? { seatMinutes: DEMO_SEAT_MINUTES } : null,

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { vi } from 'vitest';
-import { AuthProvider } from '../auth/auth-context';
+import { type AuthMode, AuthProvider, configureAuth } from '../auth/auth-context';
 import { routeTree } from '../router';
 
 export interface ApiHandler {
@@ -36,8 +36,12 @@ export function mockApi(handlers: ApiHandler[]): ReturnType<typeof vi.fn> {
   return fn;
 }
 
-/** Rend l'application complète sur une route donnée (router en mémoire). */
-export function renderApp(initialPath: string) {
+/**
+ * Rend l'application complète sur une route donnée (router en mémoire). `mode`
+ * arme aussi l'état hors-React lu par les gardes (comme `main.tsx` au démarrage).
+ */
+export function renderApp(initialPath: string, mode: AuthMode = 'none') {
+  configureAuth(mode);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -47,7 +51,7 @@ export function renderApp(initialPath: string) {
   });
   const utils = render(
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <AuthProvider mode={mode}>
         <RouterProvider router={router as never} />
       </AuthProvider>
     </QueryClientProvider>,

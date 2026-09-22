@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { hostSeatControllerState, useHostSeatControllerState } from '../api/generated/auth/auth';
 import { ApiError } from '../api/http';
-import { useAuth } from '../auth/auth-context';
+import { peekAfterLogin, useAuth } from '../auth/auth-context';
 
 import { SEAT_DEFAULT_EXPIRY, SEAT_EXPIRY_OPTIONS } from '../auth/seat-options';
 import { getDemo } from '../config';
@@ -25,6 +25,9 @@ export function LoginPage() {
   const [claiming, setClaiming] = useState(false);
   const [expiry, setExpiry] = useState<number>(SEAT_DEFAULT_EXPIRY);
   const demo = getDemo();
+  // A participant sent here by the join guard (RG-15): the page is the host area,
+  // the reason they are looking at it is not.
+  const joining = mode === 'oidc' && (peekAfterLogin()?.startsWith('/join') ?? false);
   // Mode local : qui tient le siège d'hôte (et jusqu'à quand). Affiché avant même
   // de saisir un nom, pour expliquer le verrou.
   const seatQuery = useHostSeatControllerState({ query: { enabled: mode === 'none' } });
@@ -83,12 +86,14 @@ export function LoginPage() {
   return (
     <Card className="content-sm">
       <CardHeader>
-        <CardTitle>{t('login.title')}</CardTitle>
+        <CardTitle>{joining ? t('login.joinTitle') : t('login.title')}</CardTitle>
       </CardHeader>
       <CardContent>
         {mode === 'oidc' ? (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-muted-foreground">{t('login.oidcHint')}</p>
+            <p className="text-sm text-muted-foreground">
+              {joining ? t('login.joinHint') : t('login.oidcHint')}
+            </p>
             <Button type="button" onClick={() => void loginOidc()}>
               {t('login.oidcSubmit')}
             </Button>

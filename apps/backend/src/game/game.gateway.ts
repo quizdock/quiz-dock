@@ -19,6 +19,7 @@ import type {
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import type { Server, Socket } from 'socket.io';
+import { isOidcMode } from '../auth/auth-mode';
 import { AUTH_PROVIDER, type AuthProvider } from '../auth/auth-provider';
 import { isHostRole } from '../auth/roles';
 import { UsersService } from '../users/users.service';
@@ -113,12 +114,17 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   /**
    * Joueur (invité ou participant authentifié) : rejoint le lobby d'une partie.
    * Renvoie son `playerId` + un `sessionToken` de reconnexion, et notifie la room.
+   * Sous `AUTH_MODE=oidc`, le jeton est exigé (RG-15) : deux barrières
+   * indépendantes, le compte ouvre l'application et le PIN ouvre **une** partie.
    */
   @SubscribeMessage('player:join')
   async playerJoin(
     @ConnectedSocket() socket: GameSocket,
     @MessageBody() payload: { pin: string; nickname: string; avatar?: string },
   ): Promise<{ sessionToken: string; playerId: string }> {
+    if (isOidcMode() && !socket.data.user) {
+      throw new WsException('auth.required');
+    }
     const userId = socket.data.user?.id ?? null;
     const res = await this.game.joinSession(payload.pin, payload.nickname, userId, payload.avatar);
     socket.data.pin = res.pin;

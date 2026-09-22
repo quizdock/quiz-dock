@@ -8,6 +8,19 @@ describe('Garde de route', () => {
     vi.unstubAllGlobals();
   });
 
+  it('sends a participant to the sign-in page under OIDC (RG-15)', async () => {
+    mockApi([]);
+    renderApp('/join/123456', 'oidc');
+    expect(await screen.findByText('Connectez-vous pour participer')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Votre pseudo')).not.toBeInTheDocument();
+  });
+
+  it('keeps the join pages public in local mode', async () => {
+    mockApi([]);
+    renderApp('/join');
+    expect(await screen.findByLabelText('Code PIN')).toBeInTheDocument();
+  });
+
   it('redirige vers /login si non connecté', async () => {
     mockApi([]);
     renderApp('/quizzes');

@@ -23,8 +23,8 @@ and `POST /auth/host-seat/release` are what the SPA calls.
 Set **`AUTH_MODE=oidc`** to require sign-in for hosts against **any OpenID Connect
 provider**. QuizDock only relies on the OIDC standards — Discovery 1.0, the
 Authorization Code flow with PKCE, JWKS-signed JWTs and the Core 1.0 claims — so any
-compliant IdP works without product-specific glue. Players still join sessions by PIN
-without an account.
+compliant IdP works without product-specific glue. Participants sign in too: see
+[who may take part](#who-may-take-part) below.
 
 ## How it works
 
@@ -100,6 +100,22 @@ API and WebSocket event; users without it can still join as players (`admin` is
 treated as host). Providers expose roles under different claims: point
 `OIDC_ROLES_CLAIM` at yours — a flat `roles` (default), `groups`, or a nested path
 such as `realm_access.roles` or `resource_access.quizdock.roles`.
+
+## Who may take part
+
+Two independent barriers, and the second one never changes:
+
+- the **token** grants access to the application (being authenticated, role `player`);
+- the **PIN** grants access to one session, the one a host is running.
+
+Under `AUTH_MODE=oidc` everyone therefore signs in, participants included: a valid
+account opens no one else's session, and a PIN opens nothing without an account. The
+join pages redirect to the sign-in page, which comes back to the invitation once the
+IdP has answered, and `player:join` is refused without a valid token (`auth.required`).
+Each participant's results are then attached to their account.
+
+Under `AUTH_MODE=none` nothing changes: the PIN stays the only barrier, which is the
+point of that mode.
 
 ## The display name (OIDC)
 

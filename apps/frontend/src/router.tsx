@@ -1,5 +1,5 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
-import { isAuthenticated } from './auth/auth-context';
+import { getAuthMode, isAuthenticated, rememberAfterLogin } from './auth/auth-context';
 import { CallbackPage } from './routes/callback-page';
 import { ControlPage } from './routes/control-page';
 import { DashboardPage } from './routes/dashboard-page';
@@ -16,6 +16,18 @@ import { RootLayout } from './routes/root-layout';
 
 const requireAuth = () => {
   if (!isAuthenticated()) {
+    throw redirect({ to: '/login' });
+  }
+};
+
+/**
+ * Participants authenticate too under `AUTH_MODE=oidc` (RG-15): the account opens
+ * the application, the PIN opens one session. In local mode the join pages stay
+ * public — there the PIN is the only barrier.
+ */
+const requireAuthWhenOidc = ({ location }: { location: { href: string } }) => {
+  if (getAuthMode() === 'oidc' && !isAuthenticated()) {
+    rememberAfterLogin(location.href);
     throw redirect({ to: '/login' });
   }
 };
@@ -175,12 +187,14 @@ const legacyRedirects = [
 export const joinRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/join',
+  beforeLoad: requireAuthWhenOidc,
   component: JoinPage,
 });
 
 export const joinWithPinRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/join/$pin',
+  beforeLoad: requireAuthWhenOidc,
   component: PlayerPage,
 });
 
