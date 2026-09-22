@@ -32,6 +32,10 @@ describe('LandingPage — demo limitations', () => {
     expect(screen.queryByText(/Image tout-en-un/i)).not.toBeInTheDocument();
     // And the point of the whole block: self-hosting has none of these.
     expect(screen.getByText(/Hébergé chez vous/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Héberger la vôtre/i })).toHaveAttribute(
+      'href',
+      'https://quizdock.github.io',
+    );
   });
 
   it('adds the all-in-one image limitation when the backend says so', async () => {

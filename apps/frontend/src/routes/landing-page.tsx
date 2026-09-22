@@ -51,6 +51,13 @@ export function LandingPage() {
 }
 
 /**
+ * The project's own site. Hard-coded on purpose and shown **only** on a demo
+ * instance: a white-labelled self-hosted instance (`APP_NAME`, `APP_LOGO_URL`)
+ * never displays this block, so it never displays this link either.
+ */
+const PROJECT_URL = 'https://quizdock.github.io';
+
+/**
  * What a public demo instance (`DEMO_MODE`) does **not** do. Someone trying the
  * product has to be able to tell a guard of this instance from a limit of the
  * product — hence the closing line. The banner in the header says it in one
@@ -80,7 +87,17 @@ function DemoLimits() {
             <li key={line}>{line}</li>
           ))}
         </ul>
-        <p className="border-t pt-3">{t('landing.demoSelfHost')}</p>
+        <p className="border-t pt-3">
+          {t('landing.demoSelfHost')}{' '}
+          <a
+            href={PROJECT_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium underline underline-offset-2"
+          >
+            {t('landing.demoSelfHostLink')} →
+          </a>
+        </p>
       </CardContent>
     </Card>
   );
