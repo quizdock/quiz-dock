@@ -378,6 +378,35 @@ export function ClosestList({ rows }: { rows: ClosestRow[] }) {
  * nothing, tolerance…) and how it scores — shown with the question on the
  * projection and on the phone, so the rules never surprise anyone.
  */
+/**
+ * The media attached to a question, on every screen that shows the question
+ * (#41). Images only for now: an audio question raises its own questions — one
+ * source of sound in a room, every device when people are remote — and is left
+ * alone rather than half-answered.
+ *
+ * `maxClassName` caps the height per screen: on a phone the answer zone must
+ * stay where the thumb expects it, on a projected screen the image can breathe.
+ * The alternative text is generic because a question carries no authored one;
+ * the prompt right next to it is what actually describes the question.
+ */
+export function QuestionMedia({
+  media,
+  className,
+}: {
+  media: QuestionStartPayload['media'];
+  className?: string;
+}) {
+  const { t } = useTranslation('live');
+  if (media?.kind !== 'image') return null;
+  return (
+    <img
+      src={media.url}
+      alt={t('question.mediaAlt')}
+      className={cn('mx-auto rounded-lg object-contain', className)}
+    />
+  );
+}
+
 export function AnswerRules({
   question,
   className,

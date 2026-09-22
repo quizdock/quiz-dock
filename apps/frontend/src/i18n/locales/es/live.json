@@ -226,5 +226,8 @@
   "preview": {
     "note": "Vista de solo lectura de lo que ve un participante ahora mismo.",
     "personalHidden": "Cada participante ve aquí además su resultado y su puesto."
+  },
+  "question": {
+    "mediaAlt": "Ilustración de la pregunta"
   }
 }

@@ -36,6 +36,7 @@ import {
   LeaderboardList,
   OptionGrid,
   Podium,
+  QuestionMedia,
   RevealAnswer,
   SlideView,
 } from '../game/live-components';
@@ -486,13 +487,7 @@ export function ControlPage() {
 
         <ProgressBar pct={timePct} barClassName={timeTone} />
 
-        {view.question?.media?.kind === 'image' ? (
-          <img
-            src={view.question.media.url}
-            alt=""
-            className="max-h-56 self-center object-contain"
-          />
-        ) : null}
+        <QuestionMedia media={view.question?.media} className="max-h-56" />
 
         <Markdown role="heading" aria-level={1} className="text-2xl font-semibold sm:text-3xl">
           {view.question?.prompt}

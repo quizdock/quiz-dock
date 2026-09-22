@@ -226,5 +226,8 @@
   "preview": {
     "note": "參與者此刻所見的唯讀預覽。",
     "personalHidden": "每位參與者在此還會看到自己的結果和排名。"
+  },
+  "question": {
+    "mediaAlt": "題目配圖"
   }
 }

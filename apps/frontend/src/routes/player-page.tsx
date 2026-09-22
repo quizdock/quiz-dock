@@ -23,6 +23,7 @@ import { SortableAnswer } from '../game/sortable-answer';
 import {
   AnswerExplanation,
   AnswerRules,
+  QuestionMedia,
   OptionGrid,
   RevealAnswer,
   SlideView,
@@ -509,7 +510,10 @@ export function PlayerPage() {
             ⏱ {remaining}
           </span>
         ) : null}
-        <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto py-[1em]">
+        <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[1em]">
+          {/* #41: capped at ~a third of the viewport so the answer zone below
+              stays where the thumb expects it, whatever the image's ratio. */}
+          <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
           <Markdown
             role="heading"
             aria-level={1}

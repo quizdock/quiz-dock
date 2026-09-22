@@ -226,5 +226,8 @@
   "preview": {
     "note": "Read-only preview of what a participant sees right now.",
     "personalHidden": "Each participant also sees their own result and ranking here."
+  },
+  "question": {
+    "mediaAlt": "Illustration of the question"
   }
 }

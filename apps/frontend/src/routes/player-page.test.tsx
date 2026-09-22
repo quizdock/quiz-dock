@@ -128,6 +128,41 @@ describe('PlayerPage (client participant)', () => {
     ).toBeInTheDocument();
   });
 
+  it("ANSWERING : l'image de la question s'affiche sur le téléphone (#41)", async () => {
+    const question = {
+      questionIndex: 0,
+      type: 'single_choice',
+      prompt: 'Qui est ce joueur ?',
+      options: [PARIS],
+      timeLimitS: 5,
+      basePoints: 1000,
+      startedAt: Date.now(),
+      endsAt: Date.now() + 5000,
+    };
+
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      question: { ...question, media: { url: '/api/v1/media/abc', kind: 'image' } } as never,
+    });
+    const withImage = renderApp('/join/771122');
+    const img = await screen.findByRole('img', { name: /Illustration de la question/i });
+    expect(img).toHaveAttribute('src', '/api/v1/media/abc');
+    // Les boutons de réponse restent atteignables : l'image ne les remplace pas.
+    expect(screen.getByRole('button', { name: /Paris/ })).toBeInTheDocument();
+    withImage.unmount();
+
+    // Un média audio ne s'affiche pas (hors périmètre de #41, à traiter à part).
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      question: { ...question, media: { url: '/api/v1/media/snd', kind: 'audio' } } as never,
+    });
+    renderApp('/join/771122');
+    expect(await screen.findByRole('button', { name: /Paris/ })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /Illustration de la question/i })).toBeNull();
+  });
+
   it('ANSWERING : taper une option émet player:submit puis verrouille', async () => {
     hookState.value = view({
       state: GameState.Answering,

@@ -10,6 +10,7 @@ import { Avatar } from '../game/avatar';
 import {
   AnswerExplanation,
   AnswerRules,
+  QuestionMedia,
   LeaderboardList,
   OptionGrid,
   Podium,
@@ -147,6 +148,8 @@ export function ScreenView({ pin }: { pin: string }) {
             </span>
           ) : null}
         </div>
+        {/* #41: the projected screen showed everything but the image. */}
+        <QuestionMedia media={view.question.media} className="max-h-[35vh] w-auto" />
         <AnswerRules question={view.question} />
         {view.question.options?.length ? (
           <OptionGrid options={view.question.options} />

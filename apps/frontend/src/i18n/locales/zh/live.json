@@ -226,5 +226,8 @@
   "preview": {
     "note": "参与者此刻所见的只读预览。",
     "personalHidden": "每位参与者在此还会看到自己的结果和排名。"
+  },
+  "question": {
+    "mediaAlt": "题目配图"
   }
 }
