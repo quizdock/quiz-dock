@@ -322,6 +322,7 @@ Administration (relayed to the CLI inside the container)
   quiz:list [<sub|email>]
   quiz:export <id> <file.zip>       Write a quiz bundle (quiz.json + media/) on the host
   quiz:import <file> <sub|email>    Create a draft from a bundle (zip or quiz.json)
+  quiz:transfer <quiz-id> <sub|email>  Hand a quiz over to another account
   sessions:purge [--dry-run]
   admin <command…>      Any other in-image command (\`admin help\`)
 
@@ -341,7 +342,7 @@ case "$cmd" in
   backup) cmd_backup "$@" ;;
   restore) cmd_restore "$@" ;;
   upgrade) cmd_upgrade "$@" ;;
-  doctor | seat:status | seat:release | user:list | user:set-role | samples:load | sessions:purge | migrate:status | quiz:list)
+  doctor | seat:status | seat:release | user:list | user:set-role | samples:load | sessions:purge | migrate:status | quiz:list | quiz:transfer)
     need_docker; need_init; admin "$cmd" "$@" ;;
   quiz:export)
     [ $# -eq 2 ] || die "usage: $0 quiz:export <id> <file.zip>"

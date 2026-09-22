@@ -4,12 +4,13 @@ import { parseArgs } from './cli/args';
 import { CliModule } from './cli/cli.module';
 import { defaultPingRedis, defaultProbeWritable, doctor } from './cli/commands/doctor';
 import { migrationStatus } from './cli/commands/migrate-status';
-import { diskIo, quizExport, quizImport, quizList } from './cli/commands/quiz';
+import { diskIo, quizExport, quizImport, quizList, quizTransfer } from './cli/commands/quiz';
 import { seatRelease, seatStatus } from './cli/commands/seat';
 import { sessionsPurge } from './cli/commands/sessions';
 import { samplesLoad, userList, userSetRole } from './cli/commands/users';
 import { CliError, ConsoleOutput } from './cli/output';
 import { PrismaService } from './prisma/prisma.service';
+import { RedisService } from './redis/redis.service';
 import { QuizPortableService } from './quizzes/portable/quiz-portable.service';
 import { SampleQuizzesService } from './quizzes/samples/sample-quizzes.service';
 import { HostSeatService } from './users/host-seat.service';
@@ -33,6 +34,8 @@ Usage: qd <command> [options]      (in the container; = node dist/cli.js)
                     Write the quiz as a bundle (quiz.json + media/), "-" = stdout
   quiz:import <file|-> <sub|email>
                     Create a draft from a bundle (zip or quiz.json), "-" = stdin
+  quiz:transfer <quiz-id> <sub|email>
+                    Hand a quiz over to another account (media and history follow)
   sessions:purge [--dry-run]
                     Delete archived sessions past their retention date
   help              This message
@@ -108,6 +111,15 @@ async function main(argv: string[]): Promise<number> {
           prisma,
           app.get(SampleQuizzesService),
           need(args.positional[0], '<sub|email>'),
+        );
+        return 0;
+      case 'quiz:transfer':
+        await quizTransfer(
+          out,
+          prisma,
+          app.get(RedisService),
+          need(args.positional[0], '<quiz-id>'),
+          need(args.positional[1], '<sub|email>'),
         );
         return 0;
       case 'quiz:list':

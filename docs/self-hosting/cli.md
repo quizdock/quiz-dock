@@ -71,6 +71,7 @@ which still works too.)
 | `samples:load <sub\|email>` | Add the two sample quizzes to that user's bank. |
 | `quiz:list [<sub\|email>]` | Quizzes with id, title, owner, status, question count, slug, revision — every one, or one user's. |
 | `quiz:export <id> <file.zip\|->` | The quiz as a bundle ([quiz-bundle.md](../quiz-bundle.md)), whoever owns it; `-` streams the zip to stdout. Bumps the quiz `revision`, like the in-app export. |
+| `quiz:transfer <quiz-id> <sub\|email>` | Hand a quiz over to another account — an account that left, or a colleague taking over. The media only this quiz uses follow it; one shared with another of the previous owner's quizzes stays with them. Its archived sessions follow too, so their results become readable by the new owner. Refused while the quiz is being played. **Not** how hosts share their work: that is by copy. |
 | `quiz:import <file\|-> <sub\|email>` | A new draft in that user's bank from a bundle (zip or bare `quiz.json`); `-` reads stdin. Refused as a whole when invalid, naming the culprit. |
 | `sessions:purge [--dry-run]` | Delete archived sessions past their retention date (`retain_until`, 365 days at archive time) with their results. Nothing else purges them — schedule it (cron) if you need the retention enforced. |
 

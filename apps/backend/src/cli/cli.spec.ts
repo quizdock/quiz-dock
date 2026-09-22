@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseArgs } from './args';
 import { doctor, type DoctorDeps } from './commands/doctor';
 import { migrationStatus } from './commands/migrate-status';
-import { type BundleIo, quizExport, quizImport, quizList } from './commands/quiz';
+import { type BundleIo, quizExport, quizImport, quizList, quizTransfer } from './commands/quiz';
 import { seatRelease, seatStatus } from './commands/seat';
 import { sessionsPurge } from './commands/sessions';
 import { samplesLoad, userList, userSetRole } from './commands/users';
@@ -287,6 +287,98 @@ describe('quiz commands', () => {
     };
     return { io, written };
   }
+
+  describe('quiz:transfer', () => {
+    const bob = { id: 'u2', displayName: 'Bob', oidcSubject: 'oidc-2', email: 'bob@ex.io' };
+    /** A quiz whose media are: `mShared` (also used by another quiz), `mOwn` (not). */
+    const quiz = {
+      id: 'q1',
+      title: 'Ports',
+      ownerId: 'u1',
+      coverMediaId: 'mOwn',
+      description: null,
+      questions: [
+        {
+          mediaId: 'mShared',
+          backgroundMediaId: null,
+          prompt: 'Where?',
+          answerExplanation: null,
+          options: [],
+        },
+      ],
+      slides: [],
+    };
+    const otherQuiz = {
+      id: 'q2',
+      coverMediaId: 'mShared',
+      description: null,
+      questions: [],
+      slides: [],
+    };
+
+    function transferDb(live = false) {
+      const prisma = {
+        user: { findFirst: jest.fn().mockResolvedValue(bob) },
+        quiz: {
+          findUnique: jest.fn().mockResolvedValue(quiz),
+          findMany: jest.fn().mockResolvedValue([otherQuiz]),
+          update: jest.fn((args: unknown) => args),
+        },
+        mediaAsset: { updateMany: jest.fn((args: unknown) => args) },
+        $transaction: jest.fn(async (ops: unknown[]) => ops),
+      } as unknown as Parameters<typeof quizTransfer>[1];
+      const redis = {
+        smembers: jest.fn().mockResolvedValue(live ? ['123456'] : []),
+        hmget: jest.fn().mockResolvedValue(live ? ['ANSWERING', 'q1'] : [null, null]),
+      };
+      return { prisma, redis };
+    }
+
+    it('hands the quiz over and moves only the media nothing else uses', async () => {
+      const { out, text } = memOutput();
+      const { prisma, redis } = transferDb();
+      await quizTransfer(out, prisma, redis, 'q1', 'bob@ex.io');
+
+      expect(prisma.quiz.update).toHaveBeenCalledWith({
+        where: { id: 'q1' },
+        data: { ownerId: 'u2' },
+      });
+      // `mShared` serves another of Alice's quizzes: taking it would leave that
+      // quiz depending on media its owner no longer controls.
+      expect(prisma.mediaAsset.updateMany).toHaveBeenCalledWith({
+        where: { id: { in: ['mOwn'] }, ownerId: 'u1' },
+        data: { ownerId: 'u2' },
+      });
+      expect(text()).toContain('now belongs to Bob');
+      expect(text()).toContain('1 moved, 1 left behind');
+      expect(text()).toContain('archived sessions follow');
+    });
+
+    it('refuses while the quiz is being played', async () => {
+      const { out } = memOutput();
+      const { prisma, redis } = transferDb(true);
+      await expect(quizTransfer(out, prisma, redis, 'q1', 'bob@ex.io')).rejects.toThrow(
+        /being played/,
+      );
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('is a no-op when the target already owns it', async () => {
+      const { out, text } = memOutput();
+      const { prisma, redis } = transferDb();
+      (prisma.user.findFirst as jest.Mock).mockResolvedValue({ ...bob, id: 'u1' });
+      await quizTransfer(out, prisma, redis, 'q1', 'alice@ex.io');
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+      expect(text()).toContain('already belongs to');
+    });
+
+    it('fails on an unknown quiz id', async () => {
+      const { out } = memOutput();
+      const { prisma, redis } = transferDb();
+      (prisma.quiz.findUnique as jest.Mock).mockResolvedValue(null);
+      await expect(quizTransfer(out, prisma, redis, 'nope', 'bob@ex.io')).rejects.toThrow(CliError);
+    });
+  });
 
   it('quiz:list tabulates every quiz, or one user’s', async () => {
     const { out, text } = memOutput();
