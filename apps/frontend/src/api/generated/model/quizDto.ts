@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { QuizDtoStatus } from './quizDtoStatus';
-import type { QuizDtoVisibility } from './quizDtoVisibility';
 
 export interface QuizDto {
   id: string;
@@ -17,7 +16,6 @@ export interface QuizDto {
   /** @nullable */
   coverMediaId: string | null;
   status: QuizDtoStatus;
-  visibility: QuizDtoVisibility;
   language: string;
   feedbackEnabled: boolean;
   /**

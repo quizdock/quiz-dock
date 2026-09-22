@@ -9,7 +9,6 @@ export const quizSchema = z.object({
   description: z.string().nullable(),
   coverMediaId: z.string().nullable(),
   status: z.enum(['draft', 'ready', 'archived']),
-  visibility: z.enum(['private', 'unlisted']),
   language: z.string(),
   feedbackEnabled: z.boolean(),
   questionCount: z.number().int(),

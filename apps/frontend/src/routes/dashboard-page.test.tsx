@@ -9,7 +9,6 @@ const quiz = (over: Record<string, unknown> = {}) => ({
   description: null,
   coverMediaId: null,
   status: 'draft',
-  visibility: 'private',
   language: 'fr',
   questionCount: 0,
   createdAt: '2026-01-01T00:00:00.000Z',

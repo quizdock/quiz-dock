@@ -1375,13 +1375,6 @@
               "archived"
             ]
           },
-          "visibility": {
-            "type": "string",
-            "enum": [
-              "private",
-              "unlisted"
-            ]
-          },
           "language": {
             "type": "string"
           },
@@ -1411,7 +1404,6 @@
           "description",
           "coverMediaId",
           "status",
-          "visibility",
           "language",
           "feedbackEnabled",
           "questionCount",
@@ -1477,13 +1469,6 @@
               "draft",
               "ready",
               "archived"
-            ]
-          },
-          "visibility": {
-            "type": "string",
-            "enum": [
-              "private",
-              "unlisted"
             ]
           },
           "language": {
@@ -2152,7 +2137,6 @@
           "description",
           "coverMediaId",
           "status",
-          "visibility",
           "language",
           "feedbackEnabled",
           "questionCount",

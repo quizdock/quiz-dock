@@ -119,7 +119,7 @@ TanStack Query hooks + client + TS types  ──imported by──▶ the fronten
 ```
 User            id, oidc_subject, display_name, email, role, created_at
 Quiz            id, owner_id (User), title, description, cover_media_id,
-                visibility (private|unlisted), language, created_at, updated_at
+                language, created_at, updated_at
 Question        id, quiz_id, order_index, type (enum), prompt, media_id,
                 time_limit_s, points_mode (standard|double|none), created_at
 AnswerOption    id, question_id, order_index, text, media_id, is_correct,

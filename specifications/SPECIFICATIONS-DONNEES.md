@@ -68,7 +68,7 @@ The key cardinalities:
 | `description` | text | nullable | Description |
 | `cover_media_id` | char(26) | FK→`media_asset.id`, nullable | The cover artwork |
 | `status` | enum `quiz_status` | NN, DEF `draft` | `draft` \| `ready` \| `archived` *(RG-02)* |
-| `visibility` | enum `quiz_visibility` | NN, DEF `private` | `private` (v1); `unlisted` is reserved |
+| `visibility` | enum `quiz_visibility` | NN, DEF `private` | Kept in the schema, **read by nothing and no longer exposed by the API**: sharing is the presence of an entry in the local catalogue, not a state of the quiz (#39), and publishing to a public store cannot be one either since an instance cannot verify a remote (#21). Its fate is settled there. |
 | `language` | text | NN, DEF `fr` | The quiz's language |
 | `question_count` | int | NN, DEF 0 | Denormalised (listing performance) |
 | `created_at` | timestamptz | NN, DEF now() | |
@@ -220,7 +220,7 @@ Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
 |------|---------|-------|
 | `user_role` | `host`, `player`, `admin` | `admin` is reserved for v1.1 |
 | `quiz_status` | `draft`, `ready`, `archived` | The quiz lifecycle |
-| `quiz_visibility` | `private`, `unlisted` | v1: `private` only |
+| `quiz_visibility` | `private`, `unlisted` | Unused: see `quiz.visibility` |
 | `question_type` | `single_choice`, `multiple_choice`, `true_false`, `text_input`, `numeric`, `ordering`, `poll` | see technique §4 |
 | `points_mode` | `standard`, `double`, `none` | `none` = a poll (0 points) |
 | `option_color` | `red`, `blue`, `yellow`, `green` | Extensible beyond 4 options |

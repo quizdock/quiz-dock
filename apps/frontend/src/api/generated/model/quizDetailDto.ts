@@ -8,7 +8,6 @@
 import type { QuizDetailDtoQuestionsItem } from './quizDetailDtoQuestionsItem';
 import type { QuizDetailDtoSlidesItem } from './quizDetailDtoSlidesItem';
 import type { QuizDetailDtoStatus } from './quizDetailDtoStatus';
-import type { QuizDetailDtoVisibility } from './quizDetailDtoVisibility';
 
 export interface QuizDetailDto {
   id: string;
@@ -19,7 +18,6 @@ export interface QuizDetailDto {
   /** @nullable */
   coverMediaId: string | null;
   status: QuizDetailDtoStatus;
-  visibility: QuizDetailDtoVisibility;
   language: string;
   feedbackEnabled: boolean;
   /**
