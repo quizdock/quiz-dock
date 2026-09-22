@@ -1,48 +1,48 @@
-# ADR 0003 — Renommage `live-quizz` → `QuizDock`
+# ADR 0003 — Rename `live-quizz` → `QuizDock`
 
-- **Statut** : implémenté (2026-06-24)
-- **Contexte** : `Live-Quizz` (cf. [[0002-rename-live-quizz-et-white-label]]) entre en collision
-  frontale avec **[Live Quiz](https://live-quiz.forge.apps.education.fr)**, outil de quiz interactif
-  de l'Éducation nationale : nom quasi identique (`live-quiz` vs `live-quizz`), même créneau
-  (alternative souveraine à Kahoot), antériorité forte (projet public, médiatisé, hébergé sur la
-  forge gouvernementale). SEO inexploitable et confusion garantie. Le positionnement réel du projet
-  est par ailleurs le **self-hosted interne en entreprise**, pas l'éducation.
+- **Status**: implemented (2026-06-24)
+- **Context**: `Live-Quizz` (see [[0002-rename-live-quizz-et-white-label]]) collides head-on with
+  **[Live Quiz](https://live-quiz.forge.apps.education.fr)**, the interactive quiz tool of the French
+  Ministry of Education: an almost identical name (`live-quiz` vs `live-quizz`), the same niche (a
+  sovereign alternative to Kahoot) and a strong precedence (a public, well-covered project hosted on
+  the government forge). SEO would be unusable and confusion guaranteed. The project's real
+  positioning is also **self-hosted, inside a company**, not education.
 
-## Décisions
+## Decisions
 
-1. **Nouveau nom : `QuizDock`** (marque affichée `QuizDock`, slug/package `quiz-dock`, DB/Docker
-   Hub `quizdock`). « Dock » évoque le **déploiement conteneur / self-hosted** (Docker) et le « quai »
-   où les joueurs se connectent — cohérent avec le positionnement et le live multijoueur. Disponible
-   et *ownable* : npm (`quiz-dock`, `@quiz-dock/*`), domaines (`quizdock.io`/`.app`/`.fr`),
-   GitHub, Docker Hub. (`quizdock.com` déjà pris — sans impact, `.io`/`.fr` retenus.)
-2. **Périmètre du renommage** (mêmes surfaces que [[0002-rename-live-quizz-et-white-label]]) :
-   scope npm `@live-quizz/*` → `@quiz-dock/*`, noms de packages, nom de projet/réseaux/volumes
-   Docker, DB (`livequizz` → `quizdock`), realm Keycloak (`live-quizz` → `quiz-dock`), client OIDC
-   (`live-quizz-frontend` → `quiz-dock-frontend`), `OIDC_ISSUER` (realm), titres OpenAPI/Swagger,
-   code généré Orval, logos par défaut, `APP_NAME` par défaut (`QuizDock`), README/specs.
-3. **Conservé volontairement** : le mot **`live`** lorsqu'il décrit la *feature temps réel* et ne
-   porte aucun risque marque/SEO — préfixe `localStorage live.*` (sessions/avatars/auth persistés),
-   i18n `live.json`, `live-components.tsx`, user/mot de passe Postgres `live` (défaut interne
-   surchargeable). Les **identifiants protocole** (events WS `host:*`/`player:*`, `GameState`,
-   modèles Prisma) restent inchangés — cf. [[0001-i18n-et-glossaire]].
-4. **ADR historiques non réécrits** : `0001` et `0002` gardent le nom `live-quizz` (ils actent des
-   décisions passées).
-5. **Dé-spécialisation éducation → générique** : le vocabulaire `formateur`/`apprenant`/`formation`
-   devient `animateur`/`participant`/`session` partout — prose (README, specs, CHANGELOG vivant),
-   commentaires + seeds de tests, et **Keycloak** (descriptions des rôles + user de démo `animateur`).
-   Les **rôles techniques** restent `host`/`player`. Remplacement à frontière de mot (`\b`) pour
-   préserver `information`/`transformation`/`plateforme`.
+1. **New name: `QuizDock`** (displayed brand `QuizDock`, slug/package `quiz-dock`, database and
+   Docker Hub `quizdock`). "Dock" evokes the **container / self-hosted deployment** (Docker) and the
+   "quay" players connect to — in step with the positioning and with live multiplayer. Available and
+   ownable: npm (`quiz-dock`, `@quiz-dock/*`), domains (`quizdock.io`/`.app`/`.fr`), GitHub, Docker
+   Hub. (`quizdock.com` is already taken — no impact, `.io`/`.fr` were chosen.)
+2. **Scope of the rename** (the same surfaces as [[0002-rename-live-quizz-et-white-label]]): npm
+   scope `@live-quizz/*` → `@quiz-dock/*`, package names, Docker project/networks/volumes, database
+   (`livequizz` → `quizdock`), Keycloak realm (`live-quizz` → `quiz-dock`), OIDC client
+   (`live-quizz-frontend` → `quiz-dock-frontend`), `OIDC_ISSUER` (the realm), OpenAPI/Swagger titles,
+   the Orval-generated code, the default logos, the default `APP_NAME` (`QuizDock`), README and specs.
+3. **Deliberately kept**: the word **`live`** where it describes the *real-time feature* and carries
+   no brand or SEO risk — the `localStorage live.*` prefix (persisted sessions, avatars, auth), the
+   i18n `live.json`, `live-components.tsx`, the Postgres user/password `live` (an internal default
+   that can be overridden). The **protocol identifiers** (the `host:*`/`player:*` WS events,
+   `GameState`, the Prisma models) are left untouched — see [[0001-i18n-et-glossaire]].
+4. **Historical ADRs are not rewritten**: `0001` and `0002` keep the name `live-quizz` (they record
+   past decisions).
+5. **De-specialisation from education to generic**: the vocabulary `formateur`/`apprenant`/`formation`
+   becomes `animateur`/`participant`/`session` everywhere — prose (README, specs, living CHANGELOG),
+   comments and test seeds, and **Keycloak** (role descriptions and the demo user `animateur`). The
+   **technical roles** stay `host`/`player`. Replacement is done on word boundaries (`\b`) so
+   `information`/`transformation`/`plateforme` survive.
 
-## Conséquences
+## Consequences
 
-- **+** Plus de collision de marque/SEO ; positionnement self-hosted lisible dès le nom.
-- **−** Recréation des volumes Postgres/Keycloak nécessaire (DB `quizdock`, realm `quiz-dock`) —
-  données de dev jetables. En dev : `docker compose down -v` puis `up` recrée DB + realm.
-- **−** Le scope npm change → `pnpm install` régénère le lockfile (workspace `@quiz-dock/*`).
-- Le white-label runtime (cf. [[0002-rename-live-quizz-et-white-label]]) reste le mécanisme de
-  marque : une instance peut afficher tout autre nom via `APP_NAME` + `branding/` sans rebuild.
+- **+** No more brand or SEO collision; the self-hosted positioning is legible from the name itself.
+- **−** The Postgres/Keycloak volumes have to be recreated (database `quizdock`, realm `quiz-dock`) —
+  throwaway development data. In development, `docker compose down -v` then `up` recreates both.
+- **−** The npm scope changes → `pnpm install` regenerates the lockfile (workspace `@quiz-dock/*`).
+- The runtime white-label (see [[0002-rename-live-quizz-et-white-label]]) remains the brand
+  mechanism: an instance can display any other name through `APP_NAME` + `branding/`, with no rebuild.
 
-## Reste à faire (non planifié)
+## Still to do (unplanned)
 
-- Renommage du **dépôt GitHub** `live-quizz` → `quiz-dock` : fait. Le **dossier de travail local**
-  reste `projects/roux-quizz` (choix délibéré : continuité de l'historique / mémoire de session).
+- Renaming the **GitHub repository** `live-quizz` → `quiz-dock`: done. The **local working folder**
+  stays `projects/roux-quizz` (a deliberate choice: continuity of the history and of session memory).

@@ -1,121 +1,121 @@
-# QuizDock — Diagrammes de séquence
+# QuizDock — Sequence diagrams
 
-> Déroulé **dynamique** des interactions (Mermaid). Complète `SPECIFICATIONS.md` (§8 machine à états, §9 events WS, §6 timing, §11 reconnexion) et `SPECIFICATIONS-DONNEES.md`.
+> The **dynamic** run of the interactions (Mermaid). It complements `SPECIFICATIONS.md` (§8 the state machine, §9 the WS events, §6 timing, §11 reconnecting) and `SPECIFICATIONS-DONNEES.md`.
 > Version 1.0 — 2026-06-09.
 
-Acteurs / composants :
-- **Participant** : client mobile (`socket.io-client`).
-- **Animateur** : console desktop (REST + WS).
-- **Projeté** : écran de jeu (lecture seule WS).
-- **API** : backend NestJS (REST + WS Gateways).
-- **Redis** : état live (source de vérité pendant la partie).
-- **PG** : PostgreSQL (persistance durable).
-- **KC** : fournisseur OIDC (Keycloak en référence, si `AUTH_MODE=oidc`).
+Actors and components:
+- **Participant**: the mobile client (`socket.io-client`).
+- **Host**: the desktop console (REST + WS).
+- **Projection**: the game screen (read-only over WS).
+- **API**: the NestJS backend (REST + WS gateways).
+- **Redis**: the live state (the source of truth while the game runs).
+- **PG**: PostgreSQL (durable persistence).
+- **KC**: the OIDC provider (Keycloak as the reference, when `AUTH_MODE=oidc`).
 
 ---
 
-## 1. Création de quiz & synchro de contrat (REST / Orval)
+## 1. Creating a quiz & syncing the contract (REST / Orval)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Animateur
+    participant F as Host
     participant API as API (NestJS)
     participant PG as PostgreSQL
     F->>API: POST /api/v1/quizzes (JWT)
     API->>PG: INSERT quiz (status=draft)
     PG-->>API: quiz (ULID)
     API-->>F: 201 quiz
-    F->>API: POST /quizzes/:id/questions (n fois)
+    F->>API: POST /quizzes/:id/questions (n times)
     API->>PG: INSERT question + answer_option
     API-->>F: 201 question
-    Note over F,API: Quiz valide (≥1 question) → PUT status=ready (RG-02)
-    Note over API: OpenAPI auto (@nestjs/swagger) sur /api/docs-json
-    Note over F: En CI : pnpm orval régénère le client TanStack Query<br/>(drift bloquant si divergence)
+    Note over F,API: A valid quiz (≥1 question) → PUT status=ready (RG-02)
+    Note over API: OpenAPI generated automatically (@nestjs/swagger) on /api/docs-json
+    Note over F: In CI: pnpm orval regenerates the TanStack Query client<br/>(any drift blocks the build)
 ```
 
 ---
 
-## 2. Lancement d'une session & lobby
+## 2. Starting a session & the lobby
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Animateur
+    participant F as Host
     participant API as API (WS Gateway)
     participant R as Redis
     participant A as Participant
-    participant P as Projeté
+    participant P as Projection
 
     F->>API: ws host:create { quizId }
-    API->>R: SADD pin:index (PIN unique 6 chiffres, RG-04)
+    API->>R: SADD pin:index (a unique 6-digit PIN, RG-04)
     API->>R: HSET game:{pin} {state:LOBBY, quizId, hostId, fullCapture?}
     API-->>F: game:created { pin }
-    F->>P: affiche PIN (écran projeté)
+    F->>P: shows the PIN (the projected screen)
 
     A->>API: ws player:join { pin, nickname, authToken? }
-    alt participant connecté
-        API->>API: vérifie JWT (KC) → userId
-    else invité
+    alt a signed-in participant
+        API->>API: checks the JWT (KC) → userId
+    else a guest
         API->>API: userId = null
     end
     API->>R: HSET game:{pin}:players {playerId:{nickname,userId,score:0}}
-    API->>R: SET session:{token} playerId (reconnexion)
+    API->>R: SET session:{token} playerId (for reconnecting)
     API-->>A: joined { sessionToken, playerId }
     API-->>F: player:joined { nickname, playerCount }
     API-->>P: player:joined { nickname, playerCount }
-    opt mode capture intégrale
-        API-->>A: notice { fullCapture:true } (avis affiché début de session)
+    opt full-capture mode
+        API-->>A: notice { fullCapture:true } (the notice shown at the start of the session)
     end
 ```
 
 ---
 
-## 3. Déroulé d'une question (cœur — timing serveur, anti-triche)
+## 3. One question, end to end (the core — server timing, anti-cheat)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Animateur
+    participant F as Host
     participant API as API (WS Gateway)
     participant R as Redis
     participant A as Participant
-    participant P as Projeté
+    participant P as Projection
 
-    Note over A,API: au join, RTT mesuré (ping/pong) → latencyMs/2 (compensation)
+    Note over A,API: on joining, the RTT is measured (ping/pong) → latencyMs/2 (compensation)
 
-    F->>API: host:start  (ou host:next)
+    F->>API: host:start  (or host:next)
     API->>R: HSET game:{pin} state=ANSWERING, questionStartedAt=Ts, questionEndsAt=Ts+limit
-    par diffusion question (SANS bonne réponse)
+    par the question goes out (WITHOUT the right answer)
         API-->>A: question:start { options(text,color,shape), timeLimitS, startedAt, endsAt }
         API-->>P: question:start { ... }
     end
 
     A->>API: player:submit { questionIndex, answer }
     API->>API: receivedAt=Ts2 ; t = Ts2 - questionStartedAt - latencyMs/2
-    alt en délai et 1re réponse (RG-06)
-        API->>API: isCorrect = validation serveur
+    alt in time and the first answer (RG-06)
+        API->>API: isCorrect = validated on the server
         API->>API: points = scoring(t, T, correct, streak)  (technique §5)
         API->>R: HSET game:{pin}:answers:{qIdx} {playerId:{value,isCorrect,points,receivedAt}}
         API->>R: ZINCRBY game:{pin}:leaderboard points playerId
         API-->>A: answer:ack { accepted:true }
-    else hors délai / doublon
+    else late / duplicate
         API-->>A: answer:ack { accepted:false, reason:late|duplicate }
     end
     API-->>F: answer:count { answered, total }
 
-    alt timer écoulé OU tous ont répondu
+    alt the timer elapsed OR everyone answered
         API->>R: HSET game:{pin} state=REVEAL
         API-->>A: question:reveal { correctOptionIds, yourResult:{correct,points,totalScore,rank} }
         API-->>P: question:reveal { correctOptionIds, distribution }
         API-->>F: question:reveal { distribution, leaderboard }
     end
-    Note over F: REVEAL → LEADERBOARD → host:next (question suivante) ou PODIUM
+    Note over F: REVEAL → LEADERBOARD → host:next (the next question) or PODIUM
 ```
 
 ---
 
-## 4. Reconnexion d'un participant
+## 4. A participant reconnects
 
 ```mermaid
 sequenceDiagram
@@ -124,107 +124,107 @@ sequenceDiagram
     participant API as API (WS Gateway)
     participant R as Redis
 
-    Note over A: coupure réseau → socket.io retry auto
+    Note over A: the network drops → socket.io retries by itself
     A->>API: player:reconnect { sessionToken }
     API->>R: GET session:{token} → playerId
-    alt session encore vivante
+    alt the session is still alive
         API->>R: HSET game:{pin}:players[playerId].connected = true
-        API->>R: HGETALL game:{pin} (état courant) + score
+        API->>R: HGETALL game:{pin} (the current state) + the score
         API-->>A: game:state { state, questionIndex }
-        opt état = ANSWERING et pas encore répondu
-            API-->>A: question:start { ... , endsAt }  (chrono recalé sur endsAt serveur)
+        opt state = ANSWERING and they have not answered yet
+            API-->>A: question:start { ... , endsAt }  (the chrono realigned on the server's endsAt)
         end
-        Note over A: place + score conservés (technique §11)
-    else session terminée / token expiré
+        Note over A: their seat and score are kept (technique §11)
+    else the session is over / the token expired
         API-->>A: error { code: SESSION_GONE }
     end
 ```
 
 ---
 
-## 5. Hôte déconnecté → pause → reprise/fin
+## 5. The host disconnects → pause → resume or end
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Animateur
+    participant F as Host
     participant API as API (WS Gateway)
     participant R as Redis
     participant A as Participant
 
-    Note over API: disconnect socket hôte détecté
-    API->>R: HSET game:{pin} state=HOST_DISCONNECTED (gèle les timers)
-    API-->>A: game:state { state: HOST_DISCONNECTED }  (« animateur déconnecté, partie en pause »)
-    alt reconnexion < 120 s
+    Note over API: the host socket's disconnect is detected
+    API->>R: HSET game:{pin} state=HOST_DISCONNECTED (freezes the timers)
+    API-->>A: game:state { state: HOST_DISCONNECTED }  ("the host disconnected, the game is paused")
+    alt back within 120 s
         F->>API: player:reconnect / host re-auth { pin }
-        API->>R: HSET game:{pin} state=<état gelé>
-        API-->>A: game:state { reprise }
-    else délai dépassé
+        API->>R: HSET game:{pin} state=<the frozen state>
+        API-->>A: game:state { resumed }
+    else the window elapsed
         API->>R: HSET game:{pin} state=ENDED
-        Note over API: consolidation (cf. §6)
+        Note over API: consolidation (see §6)
         API-->>A: game:ended { }
     end
 ```
 
 ---
 
-## 6. Fin de session & consolidation Redis → PostgreSQL
+## 6. End of session & consolidation from Redis into PostgreSQL
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Animateur
+    participant F as Host
     participant API as API
     participant R as Redis
     participant PG as PostgreSQL
 
-    F->>API: host:end { pin }  (ou dernière question atteinte)
+    F->>API: host:end { pin }  (or the last question was reached)
     API->>R: HGETALL game:{pin}:players / :leaderboard / :answers:*
-    API->>API: calcule classement final, stats par question, success_rate
+    API->>API: computes the final leaderboard, per-question stats, success_rate
     API->>PG: INSERT game_session_log (+ quiz_snapshot JSONB)
-    API->>PG: INSERT player_result_log (1/participant, user_id si connecté)
-    API->>PG: INSERT question_result_stat (1/question : taux, distribution)
+    API->>PG: INSERT player_result_log (one per participant, user_id when signed in)
+    API->>PG: INSERT question_result_stat (one per question: rate, distribution)
     alt full_capture = true
-        API->>PG: INSERT answer_log (1/réponse individuelle)
+        API->>PG: INSERT answer_log (one per individual answer)
     end
     API->>R: DEL game:{pin}* ; SREM pin:index {pin}
-    API-->>F: game:ended → restitution disponible
+    API-->>F: game:ended → the report is available
     Note over F: GET /sessions/:id/results(.csv) (REST, Orval)
 ```
 
 ---
 
-## 7. Vue d'ensemble — cycle complet (résumé)
+## 7. Overview — the full cycle (summary)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    participant F as Animateur
+    participant F as Host
     participant A as Participant
     participant API as API
     participant R as Redis
     participant PG as PG
 
-    F->>API: créer quiz (REST) → PG
+    F->>API: creates a quiz (REST) → PG
     F->>API: host:create → PIN (R)
     A->>API: player:join → R
-    loop chaque question
+    loop each question
         F->>API: start/next
-        API-->>A: question:start (sans réponse correcte)
-        A->>API: submit (timing serveur)
+        API-->>A: question:start (without the right answer)
+        A->>API: submit (server timing)
         API-->>A: reveal + yourResult
     end
     F->>API: host:end
     API->>PG: consolidation (results, stats, answer_log?)
-    API-->>F: restitution + export CSV
+    API-->>F: the report + CSV export
 ```
 
 ---
 
-## 8. Notes de cohérence
+## 8. Consistency notes
 
-- **Timing autoritatif** : tout `t` est calculé serveur (`receivedAt - questionStartedAt - latencyMs/2`), jamais côté client (technique §6).
-- **Anti-triche** : `question:start` ne contient **jamais** la bonne réponse ; seul `question:reveal` la divulgue (technique §7).
-- **Idempotence réponse** : une seule réponse comptée par `(playerId, questionIndex)` (RG-06).
-- **Source de vérité** : Redis pendant la partie ; PostgreSQL après consolidation. Aucune écriture PG par réponse (sauf `answer_log` en fin de partie si capture intégrale).
-- **Avis capture intégrale** : envoyé à l'participant au join si `fullCapture=true`, avant toute collecte.
+- **Authoritative timing**: every `t` is computed on the server (`receivedAt - questionStartedAt - latencyMs/2`), never on the client (technique §6).
+- **Anti-cheat**: `question:start` **never** carries the right answer; only `question:reveal` discloses it (technique §7).
+- **Answer idempotence**: one answer counted per `(playerId, questionIndex)` (RG-06).
+- **Source of truth**: Redis while the game runs; PostgreSQL after consolidation. No PG write per answer (except `answer_log` at the end of the game, under full capture).
+- **The full-capture notice**: sent to the participant on joining when `fullCapture=true`, before anything is collected.

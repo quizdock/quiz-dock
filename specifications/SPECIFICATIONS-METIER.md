@@ -1,266 +1,267 @@
-# QuizDock — Spécifications métier (fonctionnel)
+# QuizDock — Business specification (functional)
 
-> Vue **domaine / fonctionnelle** de l'application. Complète `SPECIFICATIONS.md` (technique).
-> Contexte retenu : **entreprise / session**. Mode v1 : **classique individuel**. Quiz **privés**.
+> The **domain / functional** view of the application. It complements `SPECIFICATIONS.md` (technical).
+> Context chosen: **a company, a session**. v1 mode: **classic, individual**. Quizzes are **private**.
 > Version 1.0 — 2026-06-09.
 
 ---
 
-## 1. Contexte & objectifs métier
+## 1. Context & business goals
 
-QuizDock est un outil de **quiz interactif en temps réel** : un animateur anime une session live, les participants répondent depuis leur appareil, et la rapidité comme l'exactitude sont récompensées. L'objectif est de **dynamiser la session**, **mesurer l'acquisition de connaissances** et **restituer des résultats exploitables** au animateur et à l'organisation.
+QuizDock is a tool for **real-time interactive quizzes**: a host runs a live session, the participants answer from their own device, and both speed and correctness are rewarded. The goal is to **liven the session up**, **measure what people learned** and **hand the host and the organisation results they can act on**.
 
-### Objectifs métier
-- **Engager** les participants (gamification, classement, rythme).
-- **Évaluer** les connaissances de façon formative (avant/pendant/après une session).
-- **Tracer** la participation et la performance (reporting RH/session).
-- **Réutiliser** facilement les contenus (banque de quiz du animateur).
+### Business goals
+- **Engage** the participants (gamification, leaderboard, pace).
+- **Assess** knowledge formatively (before, during or after a session).
+- **Record** attendance and performance (HR / session reporting).
+- **Reuse** content easily (the host's quiz bank).
 
-### Bénéfices attendus
-| Partie prenante | Bénéfice |
+### Expected benefits
+| Stakeholder | Benefit |
 |-----------------|----------|
-| Animateur | Anime, évalue en direct, identifie les notions mal acquises |
-| Participant | Apprentissage actif, feedback immédiat, émulation |
-| Responsable session | Preuve de participation, indicateurs d'acquisition, traçabilité |
+| Host | Runs the session, assesses live, spots what was not understood |
+| Participant | Active learning, immediate feedback, friendly competition |
+| Session manager | Proof of attendance, learning indicators, traceability |
 
 ---
 
-## 2. Acteurs & personas
+## 2. Actors & personas
 
-| Acteur | Description | Auth |
+| Actor | Description | Auth |
 |--------|-------------|------|
-| **Animateur** (créateur/hôte) | Conçoit les quiz et anime les sessions. Acteur principal. | OIDC (rôle `host`) ou mode local |
-| **Participant invité** | Rejoint une session par PIN + pseudo, sans compte. | Aucune |
-| **Participant connecté** | Participant identifié (SSO entreprise) : son historique est conservé. | OIDC (rôle `player`) |
-| **Administrateur session** | (v1.1) Supervise les animateurs, consulte les rapports agrégés. | OIDC (rôle `admin`) |
+| **Host** (creator/host) | Designs the quizzes and runs the sessions. The main actor. | OIDC (role `host`) or local mode |
+| **Guest participant** | Joins a session with a PIN and a nickname, with no account. | None |
+| **Signed-in participant** | An identified participant (company SSO): their history is kept. | OIDC (role `player`) |
+| **Session administrator** | (v1.1) Oversees the hosts, reads the aggregated reports. | OIDC (role `admin`) |
 
-> Les rôles `host`/`player`/`admin` proviennent des rôles du token OIDC (claim configurable, défaut `realm_access.roles` pour compatibilité Keycloak).
+> The roles `host`/`player`/`admin` come from the roles in the OIDC token (a configurable claim, `realm_access.roles` by default for Keycloak compatibility).
 
 ### Personas
-- **Claire, animatrice interne** — anime des sessions d'onboarding de 20–40 personnes ; veut créer vite, projeter, et récupérer qui a participé et les scores.
-- **Marc, participant onboarding** — rejoint via un lien/PIN sur son téléphone, sans créer de compte ; veut une expérience fluide et ludique.
-- **Sophie, responsable L&D** *(v1.1)* — veut des indicateurs d'acquisition par session et par thème.
+- **Claire, an internal host** — runs onboarding sessions for 20–40 people; wants to create quickly, project the screen, and get back who took part and what they scored.
+- **Marc, an onboarding participant** — joins through a link or PIN on his phone, without creating an account; wants a smooth, playful experience.
+- **Sophie, head of L&D** *(v1.1)* — wants learning indicators per session and per topic.
 
 ---
 
-## 3. Glossaire métier
+## 3. Domain glossary
 
-| Terme | Définition |
+| Term | Definition |
 |-------|------------|
-| **Quiz** | Ensemble ordonné de questions, propriété d'un animateur. |
-| **Question** | Énoncé chronométré avec un ou plusieurs types de réponse (cf. spec technique §4). |
-| **Session (partie)** | Une exécution live d'un quiz, identifiée par un PIN, animée par un animateur. |
-| **Participant / Joueur** | Participant à une session. |
-| **Score** | Points cumulés d'un participant sur une session (exactitude + rapidité). |
-| **Classement** | Ordre des participants par score, mis à jour entre les questions. |
-| **Restitution** | Rapport de fin de session (participation, scores, réponses par question). |
-| **Banque de quiz** | Ensemble des quiz privés d'un animateur. |
+| **Quiz** | An ordered set of questions, owned by a host. |
+| **Question** | A timed prompt with one or more answer types (see technique §4). |
+| **Session (game)** | One live run of a quiz, identified by a PIN, run by a host. |
+| **Participant / player** | Someone taking part in a session. |
+| **Score** | A participant's points over a session (correctness + speed). |
+| **Leaderboard** | The participants ordered by score, updated between questions. |
+| **Report** | The end-of-session report (attendance, scores, answers per question). |
+| **Quiz bank** | All of a host's private quizzes. |
 
 ---
 
-## 4. Périmètre fonctionnel v1
+## 4. Functional scope of v1
 
-### Inclus
-- Création/édition de quiz privés (banque personnelle du animateur).
-- Tous les types de questions (cf. technique §4) + sondage (sans points).
-- Animation d'une session live en **mode individuel** : lobby, déroulé, classement, podium.
-- Participation **invité** (PIN + pseudo) ou **connectée** (SSO).
-- Notation au temps de réponse + séries (cf. technique §5).
-- Restitution de fin de session + export CSV.
-- Historique pour l'participant connecté.
-- **Mode capture intégrale** (optionnel par session) : conservation de chaque réponse individuelle pour audit/certification, avec avis aux participants.
+### Included
+- Creating and editing private quizzes (the host's personal bank).
+- Every question type (see technique §4) plus polls (no points).
+- Running a live session in **individual mode**: lobby, the run itself, leaderboard, podium.
+- Taking part as a **guest** (PIN + nickname) or **signed in** (SSO).
+- Scoring on answer time plus streaks (see technique §5).
+- An end-of-session report plus CSV export.
+- History for a signed-in participant.
+- **Full-capture mode** (optional, per session): every individual answer is kept for audit or
+  certification, with a notice to the participants.
 
-### Exclus v1 (backlog)
-- Mode **équipes** → v1.1.
-- Mode **asynchrone / devoir** → v1.2.
-- **Partage** de quiz entre animateurs / bibliothèque publique → ultérieur (v1 : privé uniquement).
-- Tableau de bord **administrateur** agrégé → v1.1.
-- Génération de questions par IA, import de banques externes.
-- **Générateur d'avatars** (multiavatar) : avatar déterministe dérivé du pseudo, affiché en lobby / classement / podium — cosmétique côté client, sans impact sur le contrat live.
+### Excluded from v1 (backlog)
+- **Team** mode → v1.1.
+- **Asynchronous / homework** mode → v1.2.
+- **Sharing** quizzes between hosts, a public library → later (v1 is private only).
+- An aggregated **administrator** dashboard → v1.1.
+- AI question generation, importing external banks.
+- An **avatar generator** (multiavatar): a deterministic avatar derived from the nickname, shown in the lobby, the leaderboard and the podium — cosmetic, client-side, with no effect on the live contract.
 
 ---
 
-## 5. Cycle de vie des objets métier
+## 5. Lifecycle of the domain objects
 
 ### 5.1 Quiz
 ```
-BROUILLON ──(complété & valide)──▶ PRÊT ──(joué en session)──▶ PRÊT (réutilisable)
-    │                                  │
-    └────────── ARCHIVÉ ◀──────────────┘   (le animateur archive ; non supprimé, retiré des listes actives)
+DRAFT ──(complete & valid)──▶ READY ──(played in a session)──▶ READY (reusable)
+   │                             │
+   └────────── ARCHIVED ◀────────┘   (the host archives it; it is not deleted, just out of the active lists)
 ```
-- Un quiz **BROUILLON** ne peut pas être lancé (validation : ≥ 1 question valide).
-- L'**archivage** conserve l'historique des sessions passées.
-- La **suppression** est définitive et refusée si des restitutions doivent être conservées (cf. §10 conservation).
+- A **DRAFT** quiz cannot be launched (validation: ≥ 1 valid question).
+- **Archiving** keeps the history of the sessions already played.
+- **Deletion** is permanent and refused when reports must be kept (see §10, retention).
 
 ### 5.2 Session
 ```
-PROGRAMMÉE/IMMÉDIATE → LOBBY → EN COURS → TERMINÉE → ARCHIVÉE
+SCHEDULED/IMMEDIATE → LOBBY → RUNNING → FINISHED → ARCHIVED
 ```
-(détail des états temps réel : technique §8). Une session **TERMINÉE** génère une **restitution** figée.
+(the real-time states in detail: technique §8). A **FINISHED** session produces a frozen **report**.
 
 ---
 
-## 6. Parcours utilisateurs (user journeys)
+## 6. User journeys
 
-### 6.1 Animateur — créer un quiz
-1. Se connecte (ou mode local).
-2. « Nouveau quiz » → titre, description, langue, visuel.
-3. Ajoute des questions (choix du type, énoncé, média, options, **temps limite**, **points**).
-4. Réordonne, prévisualise.
-5. Le quiz passe **PRÊT** quand il est valide. Enregistré dans sa banque privée.
+### 6.1 Host — creating a quiz
+1. Signs in (or uses local mode).
+2. "New quiz" → title, description, language, artwork.
+3. Adds questions (type, prompt, media, options, **time limit**, **points**).
+4. Reorders them, previews.
+5. The quiz becomes **READY** once it is valid. It is saved in their private bank.
 
-### 6.2 Animateur — animer une session
-1. Choisit un quiz **PRÊT** → « Lancer une session ».
-2. Le système génère un **PIN** ; le animateur projette l'écran lobby.
-3. Les participants rejoignent (PIN + pseudo, ou SSO) ; leurs pseudos s'affichent.
-4. « Démarrer » → déroulé question par question (énoncé → réponses → bonne réponse → classement).
-5. À la dernière question → **podium**.
-6. Consulte la **restitution**, l'exporte si besoin, termine la session.
+### 6.2 Host — running a session
+1. Picks a **READY** quiz → "Start a session".
+2. The system generates a **PIN**; the host projects the lobby screen.
+3. The participants join (PIN + nickname, or SSO); their nicknames appear.
+4. "Start" → question by question (prompt → answers → right answer → leaderboard).
+5. After the last question → the **podium**.
+6. Reads the **report**, exports it if needed, ends the session.
 
-### 6.3 Participant — participer
-1. Saisit le **PIN** et un **pseudo** (ou se connecte en SSO).
-2. Attend dans le lobby.
-3. À chaque question : lit l'énoncé, choisit sa réponse **avant la fin du chrono**.
-4. Reçoit un **feedback immédiat** (juste/faux, points gagnés, rang).
-5. Voit le **podium** final et son classement.
-6. *(connecté)* retrouve la session dans son **historique**.
-
----
-
-## 7. User stories (épopées)
-
-### Épopée A — Conception de quiz
-- En tant que **animateur**, je veux **créer un quiz** avec plusieurs questions afin de préparer ma session.
-- … **choisir le type de question** (QCM, vrai/faux, saisie, numérique, ordre, sondage) afin d'adapter l'évaluation.
-- … **définir le temps limite et les points** par question afin de calibrer la difficulté.
-- … **ajouter une image / un son** afin d'illustrer une question.
-- … **réordonner et prévisualiser** afin de vérifier le déroulé.
-- … **dupliquer un quiz** afin de gagner du temps sur une variante.
-- … **archiver** un quiz obsolète afin de garder ma banque propre.
-
-### Épopée B — Animation de session
-- En tant que **animateur**, je veux **lancer une session et obtenir un PIN** afin que les participants rejoignent.
-- … **voir qui a rejoint** (pseudos, nombre) afin de savoir quand démarrer.
-- … **piloter le rythme** (démarrer, révéler, question suivante, mettre en pause) afin de m'adapter au groupe.
-- … **exclure un participant** (pseudo inapproprié) afin de garder un cadre pro.
-- … **voir le nombre de réponses en temps réel** afin de savoir quand passer à la suite.
-- … **terminer la session** et obtenir la restitution.
-
-### Épopée C — Participation
-- En tant qu'**participant**, je veux **rejoindre avec un PIN sans créer de compte** afin de participer sans friction.
-- … **répondre rapidement** afin de marquer plus de points.
-- … **voir si j'ai eu juste et mes points** afin d'avoir un retour immédiat.
-- … **voir mon classement** afin de me situer.
-- … *(connecté)* **retrouver mon historique** afin de suivre ma progression.
-
-### Épopée D — Restitution & suivi
-- En tant que **animateur**, je veux une **restitution de session** (participation, scores, réussite par question) afin d'identifier les notions à retravailler.
-- … **exporter les résultats (CSV)** afin de les intégrer au suivi session.
-- *(v1.1)* En tant que **responsable session**, je veux des **indicateurs agrégés** afin de mesurer l'efficacité des sessions.
+### 6.3 Participant — taking part
+1. Enters the **PIN** and a **nickname** (or signs in through SSO).
+2. Waits in the lobby.
+3. On each question: reads the prompt, picks an answer **before the chrono runs out**.
+4. Gets **immediate feedback** (right or wrong, points earned, rank).
+5. Sees the final **podium** and their place on it.
+6. *(signed in)* finds the session again in their **history**.
 
 ---
 
-## 8. Règles métier
+## 7. User stories (epics)
 
-### 8.1 Quiz & banque
-- Un quiz appartient à **un seul animateur** ; **privé** (visible de lui seul) en v1.
-- Un quiz doit contenir **≥ 1 question valide** pour être **PRÊT** / lançable.
-- Bornes : `temps limite` 5–120 s ; **2 à 6 options** selon le type ; **≥ 1 bonne réponse** (sauf sondage).
-- La duplication crée une copie indépendante en **BROUILLON**.
+### Epic A — Designing a quiz
+- As a **host**, I want to **create a quiz** with several questions so I can prepare my session.
+- … **choose the question type** (multiple choice, true/false, text, numeric, ordering, poll) so the assessment fits.
+- … **set the time limit and the points** per question so I can calibrate the difficulty.
+- … **add an image or a sound** so a question is illustrated.
+- … **reorder and preview** so I can check how it runs.
+- … **duplicate a quiz** so a variant takes less time.
+- … **archive** an obsolete quiz so my bank stays tidy.
 
-### 8.2 Session
-- Une session est rattachée à **un quiz** et **un animateur** (l'hôte).
-- **PIN** unique à 6 chiffres, à usage unique, invalidé en fin de session.
-- Une session en **LOBBY** non démarrée expire (30 min) afin de libérer le PIN.
-- Capacité : **10 à 200** participants par session.
-- **Mode individuel** uniquement : un score par participant, pas de regroupement.
+### Epic B — Running a session
+- As a **host**, I want to **start a session and get a PIN** so the participants can join.
+- … **see who joined** (nicknames, count) so I know when to start.
+- … **drive the pace** (start, reveal, next question, pause) so I can adapt to the group.
+- … **throw a participant out** (an inappropriate nickname) so the session stays professional.
+- … **see how many have answered, live**, so I know when to move on.
+- … **end the session** and get the report.
 
-### 8.3 Participation
-- Un **pseudo** doit être unique dans une session ; filtré (longueur, liste noire de termes).
-- Un participant ne répond **qu'une fois** par question ; pas de changement d'avis.
-- Réponse **hors délai = 0 point** (cf. technique §6).
-- Un participant **exclu** ne peut pas rejoindre la même session avec le même pseudo.
+### Epic C — Taking part
+- As a **participant**, I want to **join with a PIN and no account** so there is no friction.
+- … **answer quickly** so I score more points.
+- … **see whether I was right and what I earned** so the feedback is immediate.
+- … **see my place** so I know where I stand.
+- … *(signed in)* **find my history** so I can follow my progress.
 
-### 8.3 bis Traçabilité des réponses (mode capture intégrale)
-- Par défaut, seules les **données agrégées** par question sont conservées (taux de réussite, répartition) — minimisation des données.
-- Le animateur peut activer, **à la création de la session**, le **mode capture intégrale** : chaque réponse individuelle (qui, quoi, quand, points) est alors conservée pour audit/certification.
-- Lorsque ce mode est actif, **les participants en sont informés par un avis affiché en début de session**, avant toute collecte (transparence/consentement).
-- La conservation suit la même échéance que la restitution *(RG-11)*.
-
-### 8.4 Notation (métier)
-- Points = exactitude **et** rapidité (formule technique §5) ; sondage = 0.
-- **Série** (bonnes réponses consécutives) → bonus, valorise la régularité.
-- Égalité départagée par temps de réponse cumulé (cf. technique §5).
-- Le score n'est **pas une note académique** : c'est un indicateur formatif et ludique. *(Le seuil de « réussite » par taux de bonnes réponses est une notion de reporting, cf. §9.)*
+### Epic D — Reporting & follow-up
+- As a **host**, I want a **session report** (attendance, scores, success per question) so I can spot what needs revisiting.
+- … **export the results (CSV)** so they feed the session follow-up.
+- *(v1.1)* As a **session manager**, I want **aggregated indicators** so I can measure how effective the sessions are.
 
 ---
 
-## 9. Évaluation & reporting (clé en session)
+## 8. Business rules
 
-### 9.1 Restitution de session (générée à la fin)
-Disponible au animateur, **figée** :
-- **Participation** : nombre d'participants, liste des pseudos (+ identité si connectés).
-- **Classement final** : rang, pseudo, score, nombre de bonnes réponses, temps moyen.
-- **Analyse par question** : taux de bonnes réponses, répartition des réponses, temps moyen → repère les **notions mal acquises**.
-- **Taux de réussite global** de la session (paramétrable : % de bonnes réponses moyen).
-- **Export CSV** (intégration au suivi session / SIRH).
+### 8.1 Quizzes & the bank
+- A quiz belongs to **one host**; it is **private** (only they see it) in v1.
+- A quiz must hold **≥ 1 valid question** to be **READY** and launchable.
+- Bounds: `time limit` 5–120 s; **2 to 6 options** depending on the type; **≥ 1 right answer** (except polls).
+- Duplicating creates an independent copy as a **DRAFT**.
 
-### 9.2 Historique participant (connecté)
-- Liste de ses sessions, score, rang, date.
-- Progression simple dans le temps.
+### 8.2 Sessions
+- A session hangs off **one quiz** and **one host**.
+- A unique 6-digit **PIN**, used once, invalidated when the session ends.
+- A session left in the **LOBBY** without starting expires (30 min) so the PIN is freed.
+- Capacity: **10 to 200** participants per session.
+- **Individual mode** only: one score per participant, no grouping.
 
-### 9.3 Indicateurs agrégés *(v1.1)*
-- Par animateur, par quiz, par thème : taux de réussite, participation, évolution.
-- Destinés au **responsable session**.
+### 8.3 Taking part
+- A **nickname** must be unique within a session; it is filtered (length, a blocklist of terms).
+- A participant answers **once** per question; no changing their mind.
+- A **late answer scores nothing** (see technique §6).
+- A participant who was **thrown out** cannot rejoin the same session under the same nickname.
+
+### 8.3 bis Tracing the answers (full-capture mode)
+- By default, only the **aggregated data** per question is kept (success rate, distribution) — data minimisation.
+- The host may turn on **full-capture mode** **when creating the session**: every individual answer (who, what, when, points) is then kept for audit or certification.
+- When that mode is on, **the participants are told through a notice shown at the start of the session**, before anything is collected (transparency and consent).
+- Retention follows the same deadline as the report *(RG-11)*.
+
+### 8.4 Scoring (from the business side)
+- Points = correctness **and** speed (the formula is in technique §5); a poll scores 0.
+- A **streak** of right answers in a row earns a bonus, rewarding consistency.
+- Ties are broken by cumulative answer time (see technique §5).
+- The score is **not an academic grade**: it is a formative, playful indicator. *(The "success" threshold as a share of right answers is a reporting notion, see §9.)*
 
 ---
 
-## 10. Conformité & qualité (métier)
+## 9. Assessment & reporting (central to a session)
 
-- **RGPD** : pseudos d'invités = non identifiants ; participants connectés = données perso → information, droit d'accès/suppression (anonymisation des restitutions à la suppression de compte, cf. technique §13).
-- **Conservation** : les restitutions de session sont conservées selon une durée paramétrable (défaut 24 mois en contexte session) ; suppression de quiz refusée si une rétention l'exige.
-- **Capture intégrale** : collecte des réponses individuelles uniquement si le animateur l'active ; **avis obligatoire aux participants en début de session** avant toute collecte ; même durée de conservation que la restitution. Réservée aux besoins d'audit/certification (proportionnalité RGPD).
-- **Modération de contenu** : pseudos filtrés, exclusion par le animateur ; les contenus de quiz relèvent de la responsabilité du animateur (privé).
-- **Accessibilité** : couleur **+** forme pour les réponses, contraste, clavier (cf. technique §13) — important en contexte pro inclusif.
-- **Langue** : FR/EN dès la v1 ; langue définie au niveau du quiz.
+### 9.1 The session report (generated at the end)
+Available to the host, **frozen**:
+- **Attendance**: how many participants, the list of nicknames (plus their identity when signed in).
+- **Final leaderboard**: rank, nickname, score, number of right answers, mean time.
+- **Per-question analysis**: share of right answers, answer distribution, mean time → points at **what was not understood**.
+- The session's **overall success rate** (configurable: the mean share of right answers).
+- **CSV export** (to feed the session follow-up or the HR system).
+
+### 9.2 Participant history (signed in)
+- A list of their sessions, score, rank, date.
+- A simple view of progress over time.
+
+### 9.3 Aggregated indicators *(v1.1)*
+- Per host, per quiz, per topic: success rate, attendance, trend.
+- Meant for the **session manager**.
 
 ---
 
-## 11. Indicateurs de succès (KPIs métier)
+## 10. Compliance & quality (business side)
 
-| KPI | Cible indicative |
+- **Data protection**: guests' nicknames are not identifying; signed-in participants are personal data → they must be informed, with the right to access and to erasure (reports are anonymised when an account is deleted, see technique §13).
+- **Retention**: session reports are kept for a configurable duration (24 months by default in a session context); deleting a quiz is refused when a retention rule requires it.
+- **Full capture**: individual answers are only collected when the host turns it on; a **notice to the participants at the start of the session is mandatory** before anything is collected; the same retention as the report. Reserved for audit and certification needs (proportionality).
+- **Content moderation**: nicknames are filtered and the host can throw someone out; the quiz content is the host's responsibility (it is private).
+- **Accessibility**: colour **and** shape for the answers, contrast, keyboard (see technique §13) — it matters in an inclusive professional setting.
+- **Language**: FR/EN from v1; the language is set on the quiz.
+
+---
+
+## 11. Success indicators (business KPIs)
+
+| KPI | Indicative target |
 |-----|------------------|
-| Temps de création d'un quiz de 10 questions | < 15 min |
-| Taux d'participants rejoignant une session lancée | > 90 % |
-| Taux de complétion d'une session (présents jusqu'au podium) | > 85 % |
-| Sessions générant une restitution exportée | suivi (adoption reporting) |
-| Satisfaction participant (post-session, v1.1) | > 4/5 |
+| Time to build a 10-question quiz | < 15 min |
+| Share of participants joining a session once started | > 90 % |
+| Session completion rate (still there at the podium) | > 85 % |
+| Sessions whose report gets exported | tracked (reporting adoption) |
+| Participant satisfaction (after the session, v1.1) | > 4/5 |
 
 ---
 
-## 12. Règles de gestion — synthèse (référence rapide)
+## 12. Business rules — summary (quick reference)
 
-| # | Règle |
+| # | Rule |
 |---|-------|
-| RG-01 | Un quiz est privé et appartient à un unique animateur (v1). |
-| RG-02 | Un quiz lançable a ≥ 1 question valide (état PRÊT). |
-| RG-03 | Temps limite par question ∈ [5, 120] s ; 2–6 options ; ≥ 1 correcte (hors sondage). |
-| RG-04 | PIN unique 6 chiffres, usage unique, expire (lobby 30 min). |
-| RG-05 | 10–200 participants par session ; mode individuel. |
-| RG-06 | Pseudo unique par session, filtré ; 1 réponse/question ; pas de changement d'avis. |
-| RG-07 | Réponse hors délai = 0 point ; sondage = 0 point. |
-| RG-08 | Points = exactitude + rapidité + bonus de série. |
-| RG-09 | Égalité départagée par temps de réponse cumulé. |
-| RG-10 | Une session terminée produit une restitution figée + export CSV. |
-| RG-11 | Restitutions conservées selon durée paramétrable (défaut 24 mois). |
-| RG-12 | Participant exclu non réadmis avec le même pseudo. |
-| RG-13 | Capture intégrale optionnelle, choisie à la création de la session ; avis obligatoire aux participants en début de session avant toute collecte. |
+| RG-01 | A quiz is private and belongs to a single host (v1). |
+| RG-02 | A launchable quiz has ≥ 1 valid question (state READY). |
+| RG-03 | Time limit per question ∈ [5, 120] s; 2–6 options; ≥ 1 right answer (polls aside). |
+| RG-04 | A unique 6-digit PIN, used once, expiring (30 min in the lobby). |
+| RG-05 | 10–200 participants per session; individual mode. |
+| RG-06 | One nickname per session, filtered; one answer per question; no changing their mind. |
+| RG-07 | A late answer scores 0; a poll scores 0. |
+| RG-08 | Points = correctness + speed + streak bonus. |
+| RG-09 | Ties are broken by cumulative answer time. |
+| RG-10 | A finished session produces a frozen report plus a CSV export. |
+| RG-11 | Reports are kept for a configurable duration (24 months by default). |
+| RG-12 | A participant thrown out is not readmitted under the same nickname. |
+| RG-13 | Full capture is optional, chosen when the session is created; a notice to the participants at the start of the session is mandatory before anything is collected. |
 
 ---
 
-## 13. Priorisation (MoSCoW) v1
+## 13. Prioritisation (MoSCoW) for v1
 
-- **Must** : création quiz privés, tous types de questions, session live individuelle (lobby→podium), join invité/SSO, notation temps+série, restitution + export CSV.
-- **Should** : historique participant connecté, archivage quiz, pause/exclusion hôte, accessibilité couleur+forme, i18n FR/EN.
-- **Could** : duplication de quiz, taux de réussite paramétrable, statistiques par question enrichies, **mode capture intégrale** (audit/certification).
-- **Won't (v1)** : mode équipes, mode asynchrone, partage/bibliothèque publique, dashboard admin agrégé, génération IA.
+- **Must**: creating private quizzes, every question type, an individual live session (lobby→podium), joining as guest or through SSO, time-and-streak scoring, report plus CSV export.
+- **Should**: history for signed-in participants, archiving quizzes, host pause and exclusion, colour-and-shape accessibility, FR/EN i18n.
+- **Could**: duplicating quizzes, a configurable success rate, richer per-question statistics, **full-capture mode** (audit and certification).
+- **Won't (v1)**: team mode, asynchronous mode, sharing and a public library, an aggregated admin dashboard, AI generation.

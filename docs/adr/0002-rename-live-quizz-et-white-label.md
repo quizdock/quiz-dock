@@ -1,37 +1,38 @@
-# ADR 0002 — Renommage `live-quizz` + white-label (marque configurable)
+# ADR 0002 — `live-quizz` rename + white-label (configurable brand)
 
-- **Statut** : implémenté (2026-06-24)
-- **Contexte** : le projet `roux-quizz` est renommé en `live-quizz`, et son positionnement
-  est dé-spécialisé (on retire le cadrage « formation » des taglines). En complément, la marque
-  (nom, logo, styles) doit être **personnalisable au déploiement** sans reconstruire l'image.
+- **Status**: implemented (2026-06-24)
+- **Context**: the `roux-quizz` project is renamed to `live-quizz`, and its positioning is
+  de-specialised (the "training" framing is dropped from the taglines). On top of that, the brand
+  (name, logo, styles) must be **customisable at deployment time** without rebuilding the image.
 
-## Décisions
+## Decisions
 
-1. **Renommage global `roux-quizz` → `live-quizz`** : scope npm (`@live-quizz/*`), noms de packages,
-   projet/réseaux/volumes Docker, DB (`livequizz`), user Postgres (`live`), realm Keycloak
-   (`live-quizz`), client OIDC, clés `localStorage` (`live.*`), titres Swagger, code généré (Orval
-   régénéré). Les **identifiants protocole** (`GameState`, events `host:*`/`player:*`, modèles
-   Prisma) restent inchangés — cf. [[0001-i18n-et-glossaire]].
-2. **Dé-spécialisation** : la tagline « Quiz interactifs pour la formation » devient
-   « Quizz interactif ». Le terme « formation » reste dans les **specs** (prose de domaine), pas
-   dans les taglines/headlines ni l'UI.
-3. **White-label runtime** (sans rebuild) :
-   - **Nom d'app** : variable d'env `APP_NAME` → un entrypoint régénère `/config.js`
-     (`window.__APP_CONFIG__`) au démarrage du conteneur. L'app lit `src/config.ts`.
-   - **Logo & CSS** : fichiers servis à chemin fixe (`/branding/logo.svg`, `/branding/override.css`),
-     **remplaçables par un volume Docker** (`./branding` monté dans la racine servie).
-   - Valeurs par défaut bundlées dans `apps/frontend/public/` (build + absence de volume).
+1. **Global rename `roux-quizz` → `live-quizz`**: npm scope (`@live-quizz/*`), package names,
+   Docker project/networks/volumes, database (`livequizz`), Postgres user (`live`), Keycloak realm
+   (`live-quizz`), OIDC client, `localStorage` keys (`live.*`), Swagger titles, generated code
+   (Orval regenerated). The **protocol identifiers** (`GameState`, the `host:*`/`player:*` events,
+   the Prisma models) are left untouched — see [[0001-i18n-et-glossaire]].
+2. **De-specialisation**: the tagline "Quiz interactifs pour la formation" becomes
+   "Quizz interactif". The word "formation" stays in the **specs** (domain prose), not in the
+   taglines, headlines or UI.
+3. **Runtime white-label** (no rebuild):
+   - **App name**: the `APP_NAME` environment variable → an entrypoint regenerates `/config.js`
+     (`window.__APP_CONFIG__`) when the container starts. The app reads `src/config.ts`.
+   - **Logo & CSS**: files served at fixed paths (`/branding/logo.svg`, `/branding/override.css`),
+     **replaceable through a Docker volume** (`./branding` mounted into the served root).
+   - The defaults are bundled in `apps/frontend/public/` (for the build, and when no volume is mounted).
 
-## Conséquences
+## Consequences
 
-- **+** Une instance se rebrande via `.env` (`APP_NAME`) + le dossier `branding/` — aucune image à
-  reconstruire. L'UI ne porte plus de marque en dur (header logo, onglet, partage passent par la config).
-- **−** Recréation des volumes Postgres/Keycloak nécessaire pour appliquer les nouveaux noms
-  (données de dev jetables — réalisé).
-- **−** `config.js` est chargé en bloquant avant le bundle (négligeable, fichier minuscule).
+- **+** An instance rebrands itself through `.env` (`APP_NAME`) and the `branding/` folder — no image
+  to rebuild. The UI no longer carries a hard-coded brand: the header logo, the tab title and the
+  share text all go through the config.
+- **−** The Postgres/Keycloak volumes have to be recreated for the new names to apply (throwaway
+  development data — done).
+- **−** `config.js` is loaded blocking, ahead of the bundle (negligible, the file is tiny).
 
-## Reste à faire (non planifié)
+## Still to do (unplanned)
 
-- Renommage des **identifiants code** `game` → `session` (events WS, `GameState`, modèles Prisma,
-  migrations). Gros blast-radius — séparé, cf. [[0001-i18n-et-glossaire]].
-- Renommage éventuel du **dépôt / dossier de travail** (`projects/roux-quizz`) — hors périmètre.
+- Renaming the **code identifiers** `game` → `session` (WS events, `GameState`, Prisma models,
+  migrations). A large blast radius — kept separate, see [[0001-i18n-et-glossaire]].
+- A possible rename of the **repository / working folder** (`projects/roux-quizz`) — out of scope.

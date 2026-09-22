@@ -1,120 +1,120 @@
-# QuizDock — Spécifications
+# QuizDock — Specifications
 
-> Clone de Kahoot : quiz chronométrés multijoueurs, notation au temps de réponse.
-> Document de référence pour le développement. Version 1.0 — 2026-06-09.
+> A Kahoot clone: timed multiplayer quizzes, scored on how fast people answer.
+> The reference document for the development. Version 1.0 — 2026-06-09.
 
 ---
 
-## 1. Vision & périmètre
+## 1. Vision & scope
 
-QuizDock est une plateforme de quiz en temps réel inspirée de Kahoot :
+QuizDock is a real-time quiz platform inspired by Kahoot:
 
-- Un **hôte** crée des quiz (builder) et lance des **parties** (game sessions).
-- Des **joueurs** (10 à 200 par partie) rejoignent via un **PIN** et répondent à des questions chronométrées depuis leur appareil.
-- Les **points dépendent de l'exactitude ET de la rapidité** de la réponse.
-- Un **classement** s'affiche après chaque question et un **podium** clôture la partie.
+- A **host** builds quizzes (the builder) and starts **games** (game sessions).
+- **Players** (10 to 200 per game) join with a **PIN** and answer timed questions from their own device.
+- **Points depend on correctness AND on speed**.
+- A **leaderboard** appears after each question, and a **podium** closes the game.
 
-### Rôles
+### Roles
 
-| Rôle | Authentification | Capacités |
+| Role | Authentication | What they can do |
 |------|------------------|-----------|
-| **Créateur / Hôte** | OIDC (JWT) si activé, sinon mode local | Créer/éditer des quiz, lancer une partie, piloter le déroulé |
-| **Joueur invité** | Aucune (PIN + pseudo) | Rejoindre une partie, répondre |
-| **Joueur connecté** | OIDC (JWT) optionnel | Idem invité + historique et stats persistés sur son profil |
+| **Creator / host** | OIDC (JWT) when enabled, otherwise local mode | Build and edit quizzes, start a game, drive the run |
+| **Guest player** | None (PIN + nickname) | Join a game, answer |
+| **Signed-in player** | OIDC (JWT), optional | The same as a guest, plus history and statistics kept on their profile |
 
-> **Décision** : modèle d'auth **mixte**. Un joueur peut jouer en invité (PIN + pseudo) ou se connecter pour conserver son historique.
+> **Decision**: a **mixed** auth model. A player can play as a guest (PIN + nickname) or sign in to keep their history.
 
-### Auth facultative (mode configurable)
+### Optional authentication (a configurable mode)
 
-L'authentification complète est **optionnelle** : le projet doit tourner en dev/démo sans IdP. Variable `AUTH_MODE` :
+Full authentication is **optional**: the project must run in development or in a demo without an IdP. The `AUTH_MODE` variable:
 
-| `AUTH_MODE` | Effet | Usage |
+| `AUTH_MODE` | Effect | Use |
 |-------------|-------|-------|
-| `none` | Mode local sans IdP ; l'hôte s'identifie par un simple nom local (pas de JWT), service `keycloak` non démarré | Dev, démo, déploiement léger |
-| `oidc` | Validation JWT via un fournisseur OIDC (Keycloak en référence) : hôtes via JWT OIDC, joueurs connectés possibles | Prod / multi-utilisateurs sécurisé |
+| `none` | Local mode with no IdP; the host identifies with a plain local name (no JWT), and the `keycloak` service is not started | Development, demos, a light deployment |
+| `oidc` | JWT validation through an OIDC provider (Keycloak as the reference): hosts through OIDC JWTs, signed-in players possible | Production / secured multi-user |
 
-Le backend expose une **interface d'auth** (`AuthProvider`) avec deux implémentations (`NoAuthProvider`, `OidcProvider`) sélectionnées par `AUTH_MODE` ; le reste du code ne dépend pas du provider. `OidcProvider` valide les JWT (signature via JWKS, issuer, audience) de **n'importe quel fournisseur OIDC** conforme — Keycloak est fourni comme **IdP OIDC de référence** pour le dev/démo, derrière un **profil Compose** (`--profile keycloak`) pour ne pas l'imposer.
+The backend exposes an **auth interface** (`AuthProvider`) with two implementations (`NoAuthProvider`, `OidcProvider`) selected by `AUTH_MODE`; the rest of the code does not depend on the provider. `OidcProvider` validates the JWTs (signature through JWKS, issuer, audience) of **any** compliant OIDC provider — Keycloak ships as the **reference OIDC IdP** for development and demos, behind a **Compose profile** (`--profile keycloak`) so it is never imposed.
 
-### Hors périmètre v1
-- Mode solo / défi asynchrone.
-- Marketplace de quiz publics.
-- Application mobile native (web responsive uniquement).
-- Paiement / abonnements.
+### Out of scope for v1
+- Solo mode / asynchronous challenges.
+- A marketplace of public quizzes.
+- A native mobile application (responsive web only).
+- Payment and subscriptions.
 
 ---
 
-## 2. Stack technique
+## 2. Technical stack
 
-| Couche | Choix | Notes |
+| Layer | Choice | Notes |
 |--------|-------|-------|
-| Gestionnaire de paquets | **pnpm** | Monorepo (workspaces) front + back + contrats partagés |
-| Frontend | **React + Vite + TypeScript** | UI **shadcn/ui** (Radix + Tailwind) + icônes **lucide-react** ; **TanStack** Query/Form/Router/Table ; client REST **généré par Orval** ; `socket.io-client` pour le live |
-| Backend | **Node.js + TypeScript (NestJS)** + **Socket.IO** | REST builder avec **OpenAPI auto-généré** ; WS gateways pour le jeu |
-| Sync front/back | **OpenAPI → Orval** (REST) + **package de contrats partagé** (WS) | Le REST est régénéré depuis OpenAPI ; le contrat WS est typé en TS partagé |
-| Temps réel | **Socket.IO** + **adapter Redis** | Rooms synchronisées entre instances |
-| État de partie | **Redis** | Source de vérité du live (état, joueurs, réponses, scores) |
-| Persistance durable | **PostgreSQL** | Quiz, questions, résultats finaux, profils |
-| Auth | **OIDC (JWT)** — Keycloak en IdP de référence | Hôtes via JWT si `AUTH_MODE=oidc` ; joueurs optionnel |
-| Médias | **Volume local** servi par le backend (proxy) | Images/audio des questions (self-hosted, sans service objet) |
+| Package manager | **pnpm** | A monorepo (workspaces): front + back + the shared contracts |
+| Frontend | **React + Vite + TypeScript** | **shadcn/ui** (Radix + Tailwind) with **lucide-react** icons; **TanStack** Query/Form/Router/Table; a REST client **generated by Orval**; `socket.io-client` for the live game |
+| Backend | **Node.js + TypeScript (NestJS)** + **Socket.IO** | A REST builder with **OpenAPI generated automatically**; WS gateways for the game |
+| Front/back sync | **OpenAPI → Orval** (REST) plus a **shared contracts package** (WS) | REST is regenerated from the OpenAPI; the WS contract is typed in shared TS |
+| Real time | **Socket.IO** + the **Redis adapter** | Rooms kept in sync across instances |
+| Game state | **Redis** | The source of truth while the game runs (state, players, answers, scores) |
+| Durable persistence | **PostgreSQL** | Quizzes, questions, final results, profiles |
+| Auth | **OIDC (JWT)** — Keycloak as the reference IdP | Hosts through a JWT when `AUTH_MODE=oidc`; optional for players |
+| Media | A **local volume** served by the backend (a proxy) | Images and audio for the questions (self-hosted, no object service) |
 
-### 2.1 Frontend — stack détaillée
+### 2.1 Frontend — the stack in detail
 
-Monorepo **pnpm** (workspaces). Application **React + Vite + TypeScript**.
+A **pnpm** monorepo (workspaces). A **React + Vite + TypeScript** application.
 
-| Brique | Rôle |
+| Piece | Role |
 |--------|------|
-| **shadcn/ui** (Radix UI + Tailwind CSS) | Composants accessibles, possédés dans le repo (pas une dépendance opaque) ; thème, dark mode |
-| **lucide-react** | Icônes (compagnon shadcn/ui) : actions du builder, navigation, plein écran, états |
-| **TanStack Query** | Cache & état serveur (REST builder, historiques, restitutions) ; invalidation, retry, optimistic update |
-| **TanStack Form** | Formulaires du builder (création/édition de quiz et questions), validation typée |
-| **TanStack Router** | Routage typé bout-en-bout, chargement de données par route |
-| **TanStack Table** | Tableaux (banque de quiz, classements, restitution, analyse par question) |
-| **Orval** | Génère hooks **TanStack Query** + client + types TS **à partir de l'OpenAPI** du backend |
-| **socket.io-client** | Canal temps réel (gameplay) — hors périmètre Orval/REST |
-| State local | **Zustand** pour l'état UI du jeu (état de partie courant, chrono visuel) |
+| **shadcn/ui** (Radix UI + Tailwind CSS) | Accessible components owned in the repository (not an opaque dependency); theming, dark mode |
+| **lucide-react** | Icons (shadcn/ui's companion): builder actions, navigation, fullscreen, states |
+| **TanStack Query** | Server cache and state (the REST builder, histories, reports); invalidation, retry, optimistic updates |
+| **TanStack Form** | The builder's forms (creating and editing quizzes and questions), typed validation |
+| **TanStack Router** | Typed routing end to end, per-route data loading |
+| **TanStack Table** | Tables (the quiz bank, leaderboards, the report, per-question analysis) |
+| **Orval** | Generates **TanStack Query** hooks, the client and the TS types **from the backend's OpenAPI** |
+| **socket.io-client** | The real-time channel (gameplay) — outside Orval/REST |
+| Local state | **Zustand** for the game's UI state (the current game state, the visual chrono) |
 
-### 2.2 Backend — choix Node vs Python (tranché)
+### 2.2 Backend — Node vs Python (settled)
 
-**Décision : Node.js + TypeScript (NestJS).** Pour ce projet « WebSocket réactif », Node l'emporte :
+**Decision: Node.js + TypeScript (NestJS).** For a "reactive WebSocket" project like this one, Node wins:
 
-- **End-to-end TypeScript** : le contrat WebSocket (events §9) est défini une fois en TS et **partagé** front/back via un package du monorepo (`@quiz-dock/contracts`) — impossible à obtenir avec un backend Python (Orval ne couvrant pas le WS, on perdrait le typage du live).
-- **Socket.IO est natif côté Node** : adapter Redis, rooms, reconnexion, namespaces — exactement la stack temps réel déjà spécifiée (§9, §11). `python-socketio` existe mais est secondaire.
-- **NestJS** apporte les deux besoins clés dans un seul cadre :
-  - **REST avec OpenAPI auto-généré** via `@nestjs/swagger` (décorateurs sur DTO → spec OpenAPI servie sur `/api/docs-json`).
-  - **WebSocket Gateways** Socket.IO intégrées, avec injection de dépendances (utile pour l'abstraction `AuthProvider`, §1) et testabilité.
-- Un seul langage sur tout le monorepo → DTO/schemas Zod réutilisés pour validation runtime **et** génération OpenAPI.
+- **TypeScript end to end**: the WebSocket contract (the events of §9) is defined once in TS and **shared** between front and back through a package of the monorepo (`@quiz-dock/contracts`) — impossible with a Python backend, since Orval does not cover WS and the live typing would be lost.
+- **Socket.IO is native on Node**: the Redis adapter, rooms, reconnection, namespaces — exactly the real-time stack already specified (§9, §11). `python-socketio` exists but is secondary.
+- **NestJS** brings both key needs into one framework:
+  - **REST with OpenAPI generated automatically** through `@nestjs/swagger` (decorators on the DTOs → an OpenAPI spec served on `/api/docs-json`).
+  - Built-in Socket.IO **WebSocket gateways**, with dependency injection (useful for the `AuthProvider` abstraction, §1) and testability.
+- One language across the whole monorepo → the Zod DTOs and schemas are reused for runtime validation **and** for the OpenAPI generation.
 
-> **Décision verrouillée : NestJS.** Alternatives évaluées puis écartées :
-> - **Python (FastAPI)** — excellent OpenAPI auto, mais casse l'unité de typage du temps réel (contrat WS non partageable) et dédouble le langage.
-> - **Node + Fastify** + `@fastify/swagger` + `zod-to-openapi` — plus léger, même résultat OpenAPI→Orval, mais Socket.IO à brancher manuellement et moins de structure (DI/testabilité) pour le contexte entreprise. Écarté au profit du cadre intégré NestJS.
+> **A locked decision: NestJS.** The alternatives that were evaluated and dropped:
+> - **Python (FastAPI)** — excellent automatic OpenAPI, but it breaks the typing unity of the real-time side (the WS contract cannot be shared) and doubles the number of languages.
+> - **Node + Fastify** plus `@fastify/swagger` and `zod-to-openapi` — lighter, with the same OpenAPI→Orval result, but Socket.IO has to be wired by hand and there is less structure (DI, testability) for a company context. Dropped in favour of the integrated NestJS framework.
 
-### 2.3 Boucle de synchronisation front/back
+### 2.3 The front/back synchronisation loop
 
 ```
-DTO/schemas backend (NestJS, décorés / Zod)
+Backend DTOs and schemas (NestJS, decorated / Zod)
         │  build
         ▼
-OpenAPI 3.x auto-généré  ──servi sur──▶ /api/docs (Swagger UI) + /api/docs-json
+OpenAPI 3.x generated automatically ──served on──▶ /api/docs (Swagger UI) + /api/docs-json
         │
-        ▼  pnpm orval  (CI + script local)
-Hooks TanStack Query + client + types TS  ──importés par──▶ Frontend
+        ▼  pnpm orval  (CI + a local script)
+TanStack Query hooks + client + TS types  ──imported by──▶ the frontend
 ```
 
-- **REST (builder, restitutions, historique)** : 100 % généré par **Orval** depuis l'OpenAPI ; aucune écriture manuelle d'appels HTTP côté front. Régénération en CI ; **drift détecté** si le client généré diffère du committé (test de non-régression de contrat, cf. §17.3).
-- **WebSocket (gameplay)** : **non couvert par OpenAPI/Orval**. Le contrat (§9) vit dans le package partagé `@quiz-dock/contracts` (types d'events + schemas de validation), importé par le backend (gateways) et le frontend (`socket.io-client`) → typage de bout en bout sans génération.
-- **AsyncAPI** (optionnel, v1.1) : documenter le contrat WS au format AsyncAPI pour une doc générée symétrique à l'OpenAPI.
+- **REST (the builder, the reports, the history)**: 100 % generated by **Orval** from the OpenAPI; no HTTP call is written by hand on the front end. Regenerated in CI, with **drift detected** when the generated client differs from the committed one (a contract regression test, see §17.3).
+- **WebSocket (gameplay)**: **not covered by OpenAPI/Orval**. The contract (§9) lives in the shared `@quiz-dock/contracts` package (event types plus validation schemas), imported by the backend (the gateways) and the frontend (`socket.io-client`) → typing end to end with no generation step.
+- **AsyncAPI** (optional, v1.1): document the WS contract in the AsyncAPI format for generated documentation symmetric to the OpenAPI.
 
-### Pourquoi Redis pour l'état live
-- Survit à un redémarrage d'instance (pas de perte de partie en cours).
-- Permet le **scaling horizontal** : plusieurs instances Node servent la même partie via l'adapter Redis (pub/sub des events de room).
-- TTL automatique pour nettoyer les parties abandonnées.
-- Postgres ne reçoit que les **résultats consolidés** en fin de partie (pas d'écriture à chaque réponse → latence maîtrisée).
+### Why Redis for the live state
+- It survives an instance restart (a game in progress is not lost).
+- It allows **horizontal scaling**: several Node instances serve the same game through the Redis adapter (pub/sub of the room events).
+- Automatic TTLs clean up abandoned games.
+- Postgres only receives the **consolidated results** at the end of a game (no write per answer → latency stays under control).
 
 ---
 
-## 3. Modèle de données
+## 3. Data model
 
-### 3.1 Persistant (PostgreSQL)
+### 3.1 Persistent (PostgreSQL)
 
 ```
 User            id, oidc_subject, display_name, email, role, created_at
@@ -123,436 +123,437 @@ Quiz            id, owner_id (User), title, description, cover_media_id,
 Question        id, quiz_id, order_index, type (enum), prompt, media_id,
                 time_limit_s, points_mode (standard|double|none), created_at
 AnswerOption    id, question_id, order_index, text, media_id, is_correct,
-                (numeric: value, tolerance) -- selon type
+                (numeric: value, tolerance) -- depending on the type
 GameSessionLog  id, quiz_id, host_id, pin, started_at, ended_at, player_count
 PlayerResultLog id, session_log_id, user_id (nullable), nickname,
                 final_score, final_rank, correct_count, avg_response_ms
 MediaAsset      id, owner_id, url, mime, size_bytes, created_at
 ```
 
-> `AnswerOption.is_correct` et les `value/tolerance` ne quittent **jamais** le serveur vers les joueurs avant le reveal (cf. §7).
+> `AnswerOption.is_correct` and the `value/tolerance` **never** leave the server for the players before the reveal (see §7).
 
 ### 3.2 Live (Redis)
 
-Clés (TTL ~ durée de partie + marge, ex. 4 h) :
+The keys (TTL ≈ the length of a game plus a margin, 4 h say):
 
 ```
 game:{pin}                  Hash  -> state, quizId, hostId, currentQuestionIndex,
-                                     questionStartedAt (ms epoch serveur),
+                                     questionStartedAt (server epoch ms),
                                      questionEndsAt, createdAt
 game:{pin}:players          Hash  -> playerId => {nickname, userId?, connected,
                                      score, streak, joinedAt}
 game:{pin}:answers:{qIdx}   Hash  -> playerId => {optionId|value, receivedAt,
                                      latencyMs, isCorrect, pointsAwarded}
 game:{pin}:leaderboard      ZSet  -> playerId scored by score
-session:{token}             Str   -> playerId (reconnexion)
-pin:index                   Set   -> PINs actifs (unicité)
+session:{token}             Str   -> playerId (reconnecting)
+pin:index                   Set   -> the active PINs (uniqueness)
 ```
 
 ---
 
-## 4. Types de questions & règles de scoring
+## 4. Question types & scoring rules
 
-| Type | Réponse joueur | Bonne réponse | Scoring |
+| Type | The player's answer | The right answer | Scoring |
 |------|----------------|----------------|---------|
-| **QCM réponse unique** | 1 option (couleur/forme) | 1 option correcte | Standard (cf §5) |
-| **QCM multi-réponses** | N options | ensemble correct | Tout-ou-rien v1 (option : partiel proportionnel) |
-| **Vrai / Faux** | 1 parmi 2 | 1 correcte | Standard |
-| **Saisie texte** | texte libre | liste de réponses acceptées (normalisées : casse, accents, espaces) | Standard ; pas de bonus rapidité réduit si tolérance floue |
-| **Curseur / numérique** | valeur | valeur cible ± tolérance | Standard si dans tolérance |
-| **Remise en ordre** | séquence | séquence exacte | Tout-ou-rien v1 |
-| **Sondage** | 1 option | aucune | **0 point** (collecte d'opinion) |
+| **Single choice** | 1 option (colour/shape) | 1 right option | Standard (see §5) |
+| **Multiple choice** | N options | the right set | All or nothing in v1 (option: proportional partial credit) |
+| **True / false** | 1 of 2 | 1 right | Standard |
+| **Text input** | free text | a list of accepted answers (normalised: case, accents, spaces) | Standard; no reduced speed bonus when the tolerance is fuzzy |
+| **Slider / numeric** | a value | the target value ± a tolerance | Standard when within the tolerance |
+| **Ordering** | a sequence | the exact sequence | All or nothing in v1 |
+| **Poll** | 1 option | none | **0 points** (an opinion is collected) |
 
-### Accessibilité des réponses
-Chaque option QCM a une **couleur ET une forme** (triangle/losange/cercle/carré) pour les daltoniens.
+### Accessible answers
+Every choice option has a **colour AND a shape** (triangle/diamond/circle/square) for colour-blind players.
 
 ---
 
-## 5. Algorithme de scoring (cœur produit)
+## 5. The scoring algorithm (the heart of the product)
 
-### Principe
-Une bonne réponse rapide rapporte plus qu'une bonne réponse lente. Une mauvaise réponse rapporte 0.
+### The principle
+A fast right answer earns more than a slow one. A wrong answer earns nothing.
 
-### Formule (par question)
+### The formula (per question)
 
 ```
-Soit:
-  P_max  = points de base de la question (défaut 1000 ; 2000 si points_mode=double ; 0 si none)
-  t      = temps de réponse du joueur en secondes (horodaté serveur, cf §6)
-  T      = time_limit_s de la question
+Let:
+  P_max  = the question's base points (1000 by default; 2000 when points_mode=double; 0 for none)
+  t      = the player's answer time in seconds (stamped by the server, see §6)
+  T      = the question's time_limit_s
 
-Si réponse incorrecte OU hors délai:
+If the answer is wrong OR late:
   points = 0
 
-Si réponse correcte:
+If the answer is right:
   ratio  = clamp(t / T, 0, 1)
   points = round( P_max * (1 - ratio / 2) )
-  # => réponse instantanée: P_max ; au temps limite: P_max / 2
+  # => an instant answer: P_max; at the time limit: P_max / 2
 ```
 
-### Bonus de série (streak)
-- Compteur de bonnes réponses consécutives par joueur.
-- Bonus additionnel : `+ min(streak - 1, 5) * 100` points sur une bonne réponse (cap à +500).
-- Le streak retombe à 0 sur une mauvaise réponse ou un timeout.
+### The streak bonus
+- A counter of right answers in a row, per player.
+- An extra bonus: `+ min(streak - 1, 5) * 100` points on a right answer (capped at +500).
+- The streak falls back to 0 on a wrong answer or a timeout.
 
-### Égalités
-En cas d'égalité de score final, départage par : (1) temps de réponse cumulé le plus faible, (2) ordre d'arrivée dans la partie.
+### Ties
+When final scores tie, they are broken by: (1) the lowest cumulative answer time, (2) the order in which people joined the game.
 
-### Multi-réponses — option scoring partiel (v1.1)
+### Multiple choice — the partial scoring option (v1.1)
 ```
-points = P_max_temps * (bonnes_cochées - mauvaises_cochées) / total_bonnes   (planché à 0)
+points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 ```
 
 ---
 
-## 6. Fairness du chronomètre (timing autoritatif)
+## 6. A fair chrono (authoritative timing)
 
-**Le serveur fait foi sur le temps.** Aucun calcul de score ne dépend de l'horloge du client.
+**The server is authoritative on time.** No score computation depends on a client's clock.
 
-1. À l'`question_start`, le serveur fixe `questionStartedAt` et `questionEndsAt` (epoch serveur) et les diffuse.
-2. Le client affiche un compte à rebours **purement visuel** dérivé de ces timestamps + offset mesuré.
-3. À la réception d'un `submit_answer`, le serveur **réhorodate** (`receivedAt`) et calcule `t = receivedAt - questionStartedAt`.
-4. **Compensation de latence** : au `join`, on mesure un RTT (ping/pong) ; on soustrait `latencyMs/2` de `t` (planché à 0) pour ne pas pénaliser une connexion lente.
-5. **Verrouillage serveur** : toute réponse reçue après `questionEndsAt + grace(ex. 300 ms)` est rejetée (`points = 0`, statut `late`).
-6. **Une seule réponse** par joueur et par question : les soumissions ultérieures sont ignorées (pas de changement d'avis v1).
-
----
-
-## 7. Anti-triche (règles fermes)
-
-- **Jamais** envoyer `is_correct`, la `value` cible ou la séquence correcte au client avant l'événement `reveal`.
-- Le payload `question_start` ne contient que : prompt, média, options (texte/couleur/forme, **sans** flag correct), temps limite, points de base.
-- Validation de l'exactitude **exclusivement côté serveur**.
-- Limitation de débit sur `submit_answer` (1 acceptée / question / joueur).
-- PIN à usage unique pour une session, invalidé en fin de partie.
-- Pseudos : filtre anti-abus (longueur, liste noire), dédoublonnage dans une partie.
+1. On `question_start`, the server sets `questionStartedAt` and `questionEndsAt` (server epoch) and broadcasts them.
+2. The client shows a **purely visual** countdown derived from those timestamps plus the measured offset.
+3. On receiving a `submit_answer`, the server **re-stamps** it (`receivedAt`) and computes `t = receivedAt - questionStartedAt`.
+4. **Latency compensation**: on `join` an RTT is measured (ping/pong); `latencyMs/2` is subtracted from `t` (floored at 0) so a slow connection is not penalised.
+5. **Server-side locking**: any answer received after `questionEndsAt + grace` (300 ms, say) is rejected (`points = 0`, status `late`).
+6. **One answer** per player per question: later submissions are ignored (no changing one's mind in v1).
 
 ---
 
-## 8. Machine à états de la partie
+## 7. Anti-cheat (firm rules)
 
-> Liaison de chaque état aux **écrans** (contrôle / projeté / joueur) et au
-> multi-fenêtres présentateur : voir **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)**.
+- **Never** send `is_correct`, the target `value` or the correct sequence to the client before the `reveal` event.
+- The `question_start` payload carries only: the prompt, the media, the options (text, colour, shape, **without** a correct flag), the time limit and the base points.
+- Correctness is validated **on the server only**.
+- Rate limiting on `submit_answer` (one accepted per question per player).
+- A single-use PIN per session, invalidated when the game ends.
+- Nicknames: an anti-abuse filter (length, a blocklist) and de-duplication within a game.
+
+---
+
+## 8. The game state machine
+
+> How each state binds to the **screens** (control / projection / player) and to the
+> presenter's multiple windows: see **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)**.
 
 ```
-        host crée
+      the host creates
           │
           ▼
-  ┌──────────────┐  host démarre   ┌──────────────┐
-  │    LOBBY     │ ───────────────▶│ QUESTION_SHOW│ (affiche l'énoncé, pas encore les réponses)
-  │ (PIN, join)  │                 └──────┬───────┘
-  └──────────────┘                        │ délai lecture / host
+  ┌──────────────┐  the host starts ┌──────────────┐
+  │    LOBBY     │ ────────────────▶│ QUESTION_SHOW│ (the prompt is shown, not the answers yet)
+  │ (PIN, join)  │                  └──────┬───────┘
+  └──────────────┘                         │ reading delay / the host
           ▲                                ▼
-          │                         ┌──────────────┐  timer écoulé OU
-   (nouvelle partie)                │  ANSWERING   │  tous ont répondu
+          │                         ┌──────────────┐  the timer elapsed OR
+     (a new game)                   │  ANSWERING   │  everyone answered
                                     └──────┬───────┘
                                            ▼
                                     ┌──────────────┐
-                                    │   REVEAL     │ (bonne réponse + répartition)
+                                    │   REVEAL     │ (the right answer + the distribution)
                                     └──────┬───────┘
                                            ▼
-                                    ┌──────────────┐  question suivante
+                                    ┌──────────────┐  the next question
                                     │ LEADERBOARD  │ ──────────┐
                                     └──────┬───────┘           │
-                                           │ dernière question │
+                                           │ the last question │
                                            ▼                   │
                                     ┌──────────────┐           │
                                     │   PODIUM     │           │
                                     └──────┬───────┘           │
                                            ▼                   │
                                     ┌──────────────┐           │
-                                    │    ENDED     │ ◀─────────┘ (boucle vers QUESTION_SHOW)
+                                    │    ENDED     │ ◀─────────┘ (loops back to QUESTION_SHOW)
                                     └──────────────┘
 ```
 
 ### Transitions
-- `LOBBY → QUESTION_SHOW` : déclenchée **manuellement par l'hôte** (« Démarrer »).
-- `QUESTION_SHOW → ANSWERING` : auto après court délai de lecture (configurable, défaut 3 s) ou clic hôte.
-- `ANSWERING → REVEAL` : **timer écoulé** OU **tous les joueurs connectés ont répondu**.
-- `REVEAL → LEADERBOARD` : auto (défaut 4 s) ou clic hôte.
-- `LEADERBOARD → QUESTION_SHOW` (suivante) ou `→ PODIUM` (si dernière) : clic hôte.
-- Tout état `→ ENDED` : si l'hôte termine la partie.
+- `LOBBY → QUESTION_SHOW`: triggered **by the host** ("Start").
+- `QUESTION_SHOW → ANSWERING`: automatically after a short reading delay (configurable, 3 s by default) or on a host click.
+- `ANSWERING → REVEAL`: **the timer elapsed** OR **every connected player has answered**.
+- `REVEAL → LEADERBOARD`: automatically (4 s by default) or on a host click.
+- `LEADERBOARD → QUESTION_SHOW` (the next one) or `→ PODIUM` (on the last one): a host click.
+- Any state `→ ENDED`: when the host ends the game.
 
-### Vues par rôle
-- **Hôte (écran partagé/projecteur)** : compteur de réponses reçues, répartition, classement, contrôles.
-- **Joueur** : énoncé minimal puis grille de réponses, feedback (juste/faux + points gagnés), son rang.
+### The views per role
+- **The host (shared screen / projector)**: the count of answers received, the distribution, the leaderboard, the controls.
+- **The player**: a minimal prompt then the answer grid, feedback (right or wrong plus the points earned), and their rank.
 
 ---
 
-## 9. Contrat d'événements WebSocket (Socket.IO)
+## 9. The WebSocket event contract (Socket.IO)
 
-> Namespace `/game`. Tous les events serveur→client incluent `pin`. Payloads typés (TypeScript partagé front/back).
+> The `/game` namespace. Every server→client event includes `pin`. The payloads are typed (TypeScript shared between front and back).
 
-### Client → Serveur
+### Client → server
 
-| Event | Payload | Émetteur | Effet |
+| Event | Payload | Sender | Effect |
 |-------|---------|----------|-------|
-| `host:create` | `{ quizId, fullCapture? }` | hôte | Crée la partie, renvoie le PIN ; `fullCapture` active le mode capture intégrale |
-| `host:start` | `{ pin }` | hôte | LOBBY → QUESTION_SHOW |
-| `host:next` | `{ pin }` | hôte | Question suivante / podium |
-| `host:reveal` | `{ pin }` | hôte | Force le reveal |
-| `host:kick` | `{ pin, playerId }` | hôte | Exclut un joueur |
-| `host:end` | `{ pin }` | hôte | Termine la partie |
-| `player:join` | `{ pin, nickname, authToken? }` | joueur | Rejoint le LOBBY ; renvoie `sessionToken` |
-| `player:reconnect` | `{ sessionToken }` | joueur | Reprend sa place et son score |
-| `player:submit` | `{ pin, questionIndex, answer }` | joueur | Soumet une réponse |
-| `ping` | `{ t0 }` | tous | Mesure de latence (réponse `pong`) |
+| `host:create` | `{ quizId, fullCapture? }` | the host | Creates the game and returns the PIN; `fullCapture` turns full-capture mode on |
+| `host:start` | `{ pin }` | the host | LOBBY → QUESTION_SHOW |
+| `host:next` | `{ pin }` | the host | The next question / the podium |
+| `host:reveal` | `{ pin }` | the host | Forces the reveal |
+| `host:kick` | `{ pin, playerId }` | the host | Throws a player out |
+| `host:end` | `{ pin }` | the host | Ends the game |
+| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken` |
+| `player:reconnect` | `{ sessionToken }` | a player | Takes back their seat and score |
+| `player:submit` | `{ pin, questionIndex, answer }` | a player | Submits an answer |
+| `ping` | `{ t0 }` | anyone | Measures the latency (answered by `pong`) |
 
-### Serveur → Client
+### Server → client
 
-| Event | Payload | Destinataires |
+| Event | Payload | Recipients |
 |-------|---------|---------------|
-| `game:created` | `{ pin }` | hôte |
-| `notice` | `{ fullCapture: true }` | joueur (au join, si capture intégrale active — avis avant collecte) |
-| `player:joined` | `{ playerId, nickname, playerCount }` | hôte + joueurs (liste lobby) |
-| `player:left` | `{ playerId, playerCount }` | room |
-| `game:state` | `{ state, questionIndex, totalQuestions }` | room |
-| `question:start` | `{ questionIndex, type, prompt, media?, options:[{id,text,color,shape,media?}], timeLimitS, basePoints, startedAt, endsAt }` | room (**sans** flag correct) |
-| `answer:ack` | `{ accepted, receivedAt }` | joueur émetteur |
-| `answer:count` | `{ answered, total }` | hôte |
-| `question:reveal` | `{ correctOptionIds \| correctValue, distribution, yourResult:{ correct, points, totalScore, rank } }` | room (résultat perso ciblé par socket) |
-| `leaderboard` | `{ top:[{nickname, score, rank}], you?:{score,rank} }` | room |
-| `game:podium` | `{ podium:[top3], you?:{score,rank} }` | room |
-| `game:ended` | `{ }` | room |
-| `error` | `{ code, message }` | ciblé |
-| `pong` | `{ t0, t1 }` | émetteur |
+| `game:created` | `{ pin }` | the host |
+| `notice` | `{ fullCapture: true }` | a player (on joining, when full capture is on — the notice before anything is collected) |
+| `player:joined` | `{ playerId, nickname, playerCount }` | the host + the players (the lobby list) |
+| `player:left` | `{ playerId, playerCount }` | the room |
+| `game:state` | `{ state, questionIndex, totalQuestions }` | the room |
+| `question:start` | `{ questionIndex, type, prompt, media?, options:[{id,text,color,shape,media?}], timeLimitS, basePoints, startedAt, endsAt }` | the room (**without** a correct flag) |
+| `answer:ack` | `{ accepted, receivedAt }` | the sending player |
+| `answer:count` | `{ answered, total }` | the host |
+| `question:reveal` | `{ correctOptionIds \| correctValue, distribution, yourResult:{ correct, points, totalScore, rank } }` | the room (the personal result aimed per socket) |
+| `leaderboard` | `{ top:[{nickname, score, rank}], you?:{score,rank} }` | the room |
+| `game:podium` | `{ podium:[top3], you?:{score,rank} }` | the room |
+| `game:ended` | `{ }` | the room |
+| `error` | `{ code, message }` | targeted |
+| `pong` | `{ t0, t1 }` | the sender |
 
 ---
 
-## 10. API REST (builder & administration)
+## 10. The REST API (builder & administration)
 
-> Base `/api/v1`. JWT OIDC requis (hôte). JSON.
+> Base `/api/v1`. An OIDC JWT is required (the host). JSON.
 
-### Quiz
+### Quizzes
 ```
-GET    /quizzes                 liste des quiz de l'utilisateur
-POST   /quizzes                 crée un quiz
-GET    /quizzes/:id             détail (avec questions)
-PUT    /quizzes/:id             met à jour
-DELETE /quizzes/:id             supprime
-POST   /quizzes/:id/duplicate   duplique
+GET    /quizzes                 the user's quizzes
+POST   /quizzes                 creates a quiz
+GET    /quizzes/:id             the detail (with its questions)
+PUT    /quizzes/:id             updates it
+DELETE /quizzes/:id             deletes it
+POST   /quizzes/:id/duplicate   duplicates it
 ```
 
 ### Questions
 ```
-POST   /quizzes/:id/questions          ajoute une question
-PUT    /questions/:qid                  modifie
-DELETE /questions/:qid                  supprime
-PATCH  /quizzes/:id/questions/reorder   réordonne [{questionId, orderIndex}]
+POST   /quizzes/:id/questions           adds a question
+PUT    /questions/:qid                  modifies it
+DELETE /questions/:qid                  deletes it
+PATCH  /quizzes/:id/questions/reorder   reorders them [{questionId, orderIndex}]
 ```
 
-### Médias
+### Media
 ```
 POST   /media        upload (multipart) -> { mediaId, url }
 DELETE /media/:id
 ```
 
-### Résultats
+### Results
 ```
-GET    /sessions/:sessionLogId/results        classement final
-GET    /sessions/:sessionLogId/results.csv     export CSV
-GET    /me/history                             historique (joueur connecté)
+GET    /sessions/:sessionLogId/results        the final leaderboard
+GET    /sessions/:sessionLogId/results.csv    the CSV export
+GET    /me/history                            the history (a signed-in player)
 ```
 
-### Validation à la création de question
+### Validation when a question is created
 - `time_limit_s` ∈ [5, 120].
-- 2 à 6 options selon le type ; ≥ 1 correcte (sauf sondage).
-- Saisie texte : ≥ 1 réponse acceptée.
-- Numérique : `value` + `tolerance ≥ 0`.
+- 2 to 6 options depending on the type; ≥ 1 right (except polls).
+- Text input: ≥ 1 accepted answer.
+- Numeric: a `value` plus `tolerance ≥ 0`.
 
 ---
 
-## 11. Reconnexion & robustesse
+## 11. Reconnecting & robustness
 
-### Joueur déconnecté
-- Au `join`, le serveur émet un `sessionToken` (stocké en `localStorage`).
-- Sur coupure, le joueur reste dans `players` avec `connected=false` (score conservé).
-- `player:reconnect` restaure place + score + état courant (`game:state` + question en cours si `ANSWERING`).
-- Éviction si non reconnecté **avant la fin de partie** (les déconnectés ne bloquent pas la transition `ANSWERING → REVEAL`).
+### A player disconnects
+- On `join` the server issues a `sessionToken` (kept in `localStorage`).
+- If the connection drops, the player stays in `players` with `connected=false` (their score is kept).
+- `player:reconnect` restores their seat, score and the current state (`game:state` plus the question in progress when `ANSWERING`).
+- They are dropped if they do not come back **before the game ends** (disconnected players do not block the `ANSWERING → REVEAL` transition).
 
-### Hôte déconnecté
-- La partie **se met en pause** (gel des timers) et passe en état `HOST_DISCONNECTED`.
-- Fenêtre de reconnexion (défaut 120 s) ; au-delà → partie terminée et résultats persistés en l'état.
+### The host disconnects
+- The game **pauses** (the timers freeze) and moves to the `HOST_DISCONNECTED` state.
+- A reconnect window (120 s by default); beyond it the game ends and the results are persisted as they stand.
 
-> Détection (`OnGatewayDisconnect`), délai de grâce, UX joueur/projeté, ré-attachement
-> hôte (`host:attach`), late join et persistance navigateur : **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)** §6–§8.
+> Detection (`OnGatewayDisconnect`), the grace delay, the player and projection UX, the
+> host re-attaching (`host:attach`), late joins and browser persistence:
+> **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)** §6–§8.
 
-### Pannes d'instance
-- L'état vivant étant en Redis, une autre instance reprend la room via l'adapter ; les clients se reconnectent (Socket.IO reconnection automatique).
-
----
-
-## 12. PIN & cycle de partie
-
-- PIN numérique **6 chiffres**, généré aléatoirement, vérifié unique contre `pin:index`.
-- Réessai en cas de collision ; expiration et retrait de l'index en fin de partie.
-- Une partie en `LOBBY` expire si non démarrée sous 30 min (TTL Redis).
+### An instance fails
+- Since the living state is in Redis, another instance takes the room over through the adapter; the clients reconnect (Socket.IO reconnects automatically).
 
 ---
 
-## 13. Exigences non-fonctionnelles
+## 12. The PIN & the game cycle
 
-| Domaine | Cible |
+- A numeric **6-digit** PIN, generated at random, checked for uniqueness against `pin:index`.
+- Retried on a collision; expired and removed from the index when the game ends.
+- A game left in `LOBBY` expires when it is not started within 30 min (a Redis TTL).
+
+---
+
+## 13. Non-functional requirements
+
+| Area | Target |
 |---------|-------|
-| **Charge** | 10–200 joueurs / partie ; viser 50 parties simultanées (≈10 000 sockets) |
-| **Latence** | Diffusion `question:start` < 150 ms p95 ; ack réponse < 100 ms p95 |
-| **Scalabilité** | Horizontale via instances Node + adapter Redis sans état local |
-| **Disponibilité** | Reprise de partie après crash d'une instance |
-| **Sécurité** | TLS partout ; JWT validés (signature, exp, audience) ; CORS strict ; rate-limit |
-| **RGPD** | Pseudos = données perso si joueur connecté ; suppression de compte → anonymisation des logs ; invités non identifiables ; **capture intégrale** opt-in par session avec **avis aux participants avant collecte** (cf. données §2.10) |
-| **Accessibilité** | Couleur **+** forme ; contraste AA ; navigation clavier ; tailles tactiles |
-| **i18n** | FR/EN dès la v1 ; `language` au niveau du quiz |
-| **Observabilité** | Logs structurés, métriques (parties actives, sockets, latence), traces |
+| **Load** | 10–200 players per game; aiming at 50 concurrent games (≈10,000 sockets) |
+| **Latency** | Broadcasting `question:start` < 150 ms p95; acknowledging an answer < 100 ms p95 |
+| **Scalability** | Horizontal, through Node instances plus the Redis adapter, with no local state |
+| **Availability** | A game resumes after an instance crashes |
+| **Security** | TLS everywhere; validated JWTs (signature, exp, audience); strict CORS; rate limiting |
+| **Data protection** | A nickname is personal data for a signed-in player; deleting an account anonymises the logs; guests are not identifiable; **full capture** is opt-in per session with a **notice to the participants before anything is collected** (see données §2.10) |
+| **Accessibility** | Colour **and** shape; AA contrast; keyboard navigation; touch target sizes |
+| **i18n** | FR/EN from v1; `language` set on the quiz |
+| **Observability** | Structured logs, metrics (active games, sockets, latency), traces |
 
 ---
 
-## 14. Risques & décisions ouvertes
+## 14. Risks & open decisions
 
-| Sujet | Risque | Décision / à trancher |
+| Subject | Risk | Decision / to settle |
 |-------|--------|------------------------|
-| Triche réseau | Lecture du WS pour deviner la bonne réponse | **Résolu** : aucune info de correction avant reveal |
-| Fairness latence | Joueurs sur 4G désavantagés | **Résolu** : compensation `latencyMs/2`, timing serveur |
-| Scoring multi-réponses | Tout-ou-rien frustrant | v1 tout-ou-rien, partiel en v1.1 (§5) |
-| Pic de soumissions | 200 réponses en < 1 s | Pipeline Redis, traitement batch par question |
-| Abus de pseudos | Contenu offensant projeté | Filtre + modération hôte (kick) |
-| Coût médias | Vidéos lourdes | v1 : images + audio courts uniquement |
+| Cheating over the network | Reading the WS to guess the right answer | **Resolved**: nothing about correctness travels before the reveal |
+| Latency fairness | Players on 4G are penalised | **Resolved**: `latencyMs/2` compensation, server timing |
+| Multiple-choice scoring | All-or-nothing is frustrating | All or nothing in v1, partial credit in v1.1 (§5) |
+| A spike of submissions | 200 answers in under a second | A Redis pipeline, batch processing per question |
+| Abusive nicknames | Offensive content on the projection | A filter plus host moderation (kick) |
+| The cost of media | Heavy videos | v1: images and short audio only |
 
 ---
 
-## 15. Découpage de livraison suggéré
+## 15. Suggested delivery breakdown
 
-1. **M1 — Builder + Auth** : auth OIDC hôte, CRUD quiz/questions (REST + Postgres), upload média.
-2. **M2 — Jeu de base** : lobby PIN, QCM unique, scoring temps, machine à états, leaderboard (Redis + WS).
-3. **M3 — Robustesse** : reconnexion joueur/hôte, compensation latence, adapter Redis multi-instance.
-4. **M4 — Types avancés** : multi-réponses, saisie texte, numérique, remise en ordre, sondage.
-5. **M5 — Finitions** : podium, export CSV, historique joueur connecté, i18n, accessibilité, observabilité.
+1. **M1 — Builder + auth**: host OIDC auth, quiz/question CRUD (REST + Postgres), media upload.
+2. **M2 — The basic game**: the PIN lobby, single-choice questions, time scoring, the state machine, the leaderboard (Redis + WS).
+3. **M3 — Robustness**: player and host reconnection, latency compensation, the multi-instance Redis adapter.
+4. **M4 — Advanced types**: multiple choice, text input, numeric, ordering, polls.
+5. **M5 — Finishing touches**: the podium, CSV export, history for a signed-in player, i18n, accessibility, observability.
 
-> **Règle de processus (toutes les milestones)** : à **chaque itération**, on **teste** (la fonctionnalité livrée a ses tests verts) et on **documente** (CHANGELOG + doc technique mis à jour). Une itération n'est « terminée » que si tests + doc sont à jour. Voir §16 et §18.
+> **A process rule (for every milestone)**: **every iteration** is **tested** (the feature shipped has its tests green) and **documented** (the CHANGELOG and the technical documentation updated). An iteration is only "done" once the tests and the documentation are up to date. See §16 and §18.
 
 ---
 
 ## 16. Dockerisation (Docker Compose)
 
-Tout le projet est conteneurisé et démarrable en une commande : `docker compose up`.
+The whole project is containerised and starts with one command: `docker compose up`.
 
-### Services
+### The services
 
-| Service | Image / build | Rôle | Ports |
+| Service | Image / build | Role | Ports |
 |---------|---------------|------|-------|
-| `frontend` | build `./frontend` (Vite → Nginx) | SPA React servie en statique | 80 / 5173 (dev) |
-| `backend` | build `./backend` (Node + Socket.IO) | REST + WebSocket | 3000 |
-| `postgres` | `postgres:16-alpine` | Persistance durable | 5432 |
-| `redis` | `redis:7-alpine` | État live + adapter Socket.IO | 6379 |
-| `keycloak` | `quay.io/keycloak/keycloak` | IdP OIDC de référence (**profil `keycloak`**, optionnel) | 8080 |
+| `frontend` | builds `./frontend` (Vite → Nginx) | The React SPA served statically | 80 / 5173 (dev) |
+| `backend` | builds `./backend` (Node + Socket.IO) | REST + WebSocket | 3000 |
+| `postgres` | `postgres:16-alpine` | Durable persistence | 5432 |
+| `redis` | `redis:7-alpine` | The live state + the Socket.IO adapter | 6379 |
+| `keycloak` | `quay.io/keycloak/keycloak` | The reference OIDC IdP (**the `keycloak` profile**, optional) | 8080 |
 
-> **Choix du stockage des médias** : pour un déploiement **self-hosted**, on évite toute brique objet (MinIO/SeaweedFS/Garage) et toute dépendance cloud. Les médias sont stockés sur un **volume local** (`MEDIA_DIR`) monté dans le backend, qui les **sert lui-même** via `GET /api/v1/media/:id` (proxy). Simple, direct, sans service supplémentaire. Le passage à un store objet S3-compatible reste possible plus tard si le multi-instance l'exige (volume partagé suffisant en attendant).
+> **How media is stored**: for a **self-hosted** deployment, we avoid any object-storage component (MinIO/SeaweedFS/Garage) and any cloud dependency. Media lives on a **local volume** (`MEDIA_DIR`) mounted into the backend, which **serves it itself** through `GET /api/v1/media/:id` (a proxy). Simple, direct, no extra service. Moving to an S3-compatible object store stays possible later if running multiple instances demands it (a shared volume is enough until then).
 
-### Organisation des fichiers
+### How the files are organised
 ```
-docker-compose.yml            # base (prod-like)
-docker-compose.override.yml   # dev : hot-reload, volumes montés, ports exposés
-docker-compose.test.yml       # CI : DB éphémère, lance les suites de tests
-.env / .env.example           # secrets & config (jamais commiter .env réel)
-backend/Dockerfile            # multi-stage (build → runtime slim)
-frontend/Dockerfile           # multi-stage (build Vite → Nginx)
+docker-compose.yml            # the base (production-like)
+docker-compose.override.yml   # development: hot reload, mounted volumes, exposed ports
+docker-compose.test.yml       # CI: an ephemeral database, runs the test suites
+.env / .env.example           # secrets and config (never commit the real .env)
+backend/Dockerfile            # multi-stage (build → slim runtime)
+frontend/Dockerfile           # multi-stage (Vite build → Nginx)
 ```
 
-### Exigences
-- **Multi-stage builds** : images runtime minimales (pas de devDependencies en prod).
-- **Healthchecks** sur chaque service ; `depends_on: condition: service_healthy` (backend attend postgres + redis + keycloak prêts).
-- **Volumes nommés** persistants : `pgdata`, `redisdata`, `mediadata`, realm Keycloak.
-- **Réseau interne** dédié ; seuls `frontend` (et `keycloak` si activé) exposés publiquement.
-- **Auth optionnelle** : le backend valide les JWT de n'importe quel fournisseur OIDC conforme via `OidcProvider` (config `OIDC_ISSUER` / `OIDC_JWKS_URI` / `OIDC_AUDIENCE` ; issuer attendu et URI JWKS peuvent différer en Docker). Keycloak est l'**IdP OIDC de référence** fourni pour le dev/démo, derrière le profil Compose `keycloak` (`KEYCLOAK_ADMIN`/`KEYCLOAK_ADMIN_PASSWORD` pour ce conteneur) ; en `AUTH_MODE=none`, ne pas le démarrer. Realm importé automatiquement au démarrage (`./keycloak/realm-export.json`) : clients, rôles (`host`, `player`), mappers.
-- **Variables d'environnement** centralisées dans `.env` (URLs, secrets, identifiants DB) ; `.env.example` documenté et versionné.
-- **Migrations** Postgres jouées au boot du backend (ou job dédié) de façon idempotente.
-- **Profils Compose** : `--profile dev`, `--profile test` pour ne lancer que le nécessaire.
+### Requirements
+- **Multi-stage builds**: minimal runtime images (no devDependencies in production).
+- **Healthchecks** on every service; `depends_on: condition: service_healthy` (the backend waits for postgres, redis and keycloak to be ready).
+- Persistent **named volumes**: `pgdata`, `redisdata`, `mediadata`, the Keycloak realm.
+- A dedicated **internal network**; only `frontend` (and `keycloak` when enabled) exposed publicly.
+- **Optional auth**: the backend validates the JWTs of any compliant OIDC provider through `OidcProvider` (`OIDC_ISSUER` / `OIDC_JWKS_URI` / `OIDC_AUDIENCE`; the expected issuer and the JWKS URI may differ inside Docker). Keycloak is the **reference OIDC IdP** provided for development and demos, behind the `keycloak` Compose profile (`KEYCLOAK_ADMIN`/`KEYCLOAK_ADMIN_PASSWORD` for that container); under `AUTH_MODE=none` it is simply not started. The realm is imported automatically at startup (`./keycloak/realm-export.json`): clients, roles (`host`, `player`), mappers.
+- **Environment variables** centralised in `.env` (URLs, secrets, database credentials); `.env.example` documented and versioned.
+- Postgres **migrations** run when the backend boots (or as a dedicated job), idempotently.
+- **Compose profiles**: `--profile dev`, `--profile test` to start only what is needed.
 
-### Commandes cibles
+### The target commands
 ```bash
-docker compose up -d                       # stack complète (dev avec override)
-docker compose -f docker-compose.yml up    # mode prod-like
-docker compose -f docker-compose.test.yml run --rm backend pnpm test   # tests en CI
-docker compose down -v                     # arrêt + purge des volumes
+docker compose up -d                       # the full stack (development, with the override)
+docker compose -f docker-compose.yml up    # production-like
+docker compose -f docker-compose.test.yml run --rm backend pnpm test   # the tests in CI
+docker compose down -v                     # stop and purge the volumes
 ```
 
 ---
 
-## 17. Plan de tests
+## 17. Test plan
 
-Objectif : **chaque itération livre du code testé**. Aucune fonctionnalité fusionnée sans tests verts. Couverture cible : **≥ 80 %** sur la logique métier (scoring, machine à états, validation), 100 % sur la formule de scoring.
+The goal: **every iteration ships tested code**. Nothing is merged without green tests. Target coverage: **≥ 80 %** on the domain logic (scoring, the state machine, validation), 100 % on the scoring formula.
 
-### 17.1 Tests unitaires
-Isolés, rapides, sans I/O réseau (DB/Redis mockés ou en mémoire).
+### 17.1 Unit tests
+Isolated, fast, with no network I/O (the database and Redis mocked or in memory).
 
-**Backend** (**Jest** + ts-jest) — priorités :
-- **Scoring** (§5) : réponse instantanée = `P_max` ; au temps limite = `P_max/2` ; incorrecte/hors délai = 0 ; bonus streak (cap +500, reset) ; égalités/départage ; multi-réponses tout-ou-rien puis partiel.
-- **Timing** (§6) : calcul de `t`, compensation latence (planché à 0), rejet après `endsAt + grace`, unicité de réponse.
-- **Machine à états** (§8) : transitions valides/invalides, garde « tous ont répondu », dernière question → podium.
-- **Validation** (§10) : bornes `time_limit_s`, nombre d'options, ≥1 correcte, normalisation saisie texte (casse/accents), tolérance numérique.
-- **PIN** : génération, unicité, collision.
-- **Anti-triche** : le payload `question:start` ne contient jamais de flag correct (§7).
+**Backend** (**Jest** + ts-jest) — the priorities:
+- **Scoring** (§5): an instant answer = `P_max`; at the time limit = `P_max/2`; wrong or late = 0; the streak bonus (capped at +500, reset); ties and tie-breaking; multiple choice all-or-nothing then partial.
+- **Timing** (§6): computing `t`, the latency compensation (floored at 0), rejecting after `endsAt + grace`, answer uniqueness.
+- **The state machine** (§8): valid and invalid transitions, the "everyone answered" guard, the last question → the podium.
+- **Validation** (§10): the `time_limit_s` bounds, the number of options, ≥ 1 right answer, normalising text input (case, accents), the numeric tolerance.
+- **The PIN**: generation, uniqueness, collisions.
+- **Anti-cheat**: the `question:start` payload never carries a correct flag (§7).
 
-**Frontend** (**Vitest** + React Testing Library) :
-- Composants de réponse (QCM, vrai/faux, curseur, saisie) : rendu couleur **+** forme, états enabled/locked.
-- Compte à rebours dérivé des timestamps serveur (pas d'horloge locale).
-- Store : transitions d'UI selon `game:state`.
+**Frontend** (**Vitest** + React Testing Library):
+- The answer components (choice, true/false, slider, text): rendering colour **and** shape, the enabled and locked states.
+- The countdown derived from the server timestamps (never from a local clock).
+- The store: UI transitions driven by `game:state`.
 
-### 17.2 Tests fonctionnels / intégration
-Avec services réels (Postgres + Redis éphémères via `docker-compose.test.yml`).
+### 17.2 Functional / integration tests
+Against real services (ephemeral Postgres and Redis through `docker-compose.test.yml`).
 
-- **REST builder** : CRUD quiz/questions, réordonnancement, upload média, auth JWT (accès refusé sans/mauvais token, isolation par propriétaire).
-- **Flux WebSocket de bout en bout** (clients Socket.IO simulés) :
-  - Création partie → join (invité + connecté) → start → submit → reveal → leaderboard → podium → end.
-  - Scores corrects en fonction du temps simulé.
-  - **Reconnexion** joueur (score conservé) et **hôte déconnecté** (pause puis reprise/fin).
-  - Transition `ANSWERING → REVEAL` quand tous ont répondu, et au timeout.
-- **E2E** (Playwright) : parcours hôte (créer quiz, lancer) + plusieurs joueurs (rejoindre, répondre, voir son rang) sur navigateurs réels.
-- **Charge** (k6/Artillery) : 200 joueurs/partie, pic de 200 `submit` simultanés < 1 s ; vérifier cibles latence §13. Smoke à 50 parties parallèles.
+- **The REST builder**: quiz/question CRUD, reordering, media upload, JWT auth (access refused without or with a bad token, isolation per owner).
+- **The WebSocket flow end to end** (simulated Socket.IO clients):
+  - Create a game → join (as a guest and signed in) → start → submit → reveal → leaderboard → podium → end.
+  - Correct scores for the simulated times.
+  - **Player reconnection** (the score kept) and **the host disconnecting** (a pause, then resume or end).
+  - The `ANSWERING → REVEAL` transition when everyone has answered, and on the timeout.
+- **End to end** (Playwright): the host journey (build a quiz, start it) plus several players (join, answer, see their rank) in real browsers.
+- **Load** (k6/Artillery): 200 players per game, a spike of 200 simultaneous `submit`s under a second; checking the latency targets of §13. A smoke test at 50 parallel games.
 
-### 17.3 Tests de non-régression
-- **Suite automatisée rejouée à chaque PR** (CI) : tous les tests unitaires + fonctionnels doivent rester verts avant merge — bloquant.
-- **Tests de contrat WebSocket/REST** : schémas des payloads (§9, §10) figés et vérifiés ; tout changement cassant est détecté.
-- **Snapshots** des réponses API et des payloads d'événements clés.
-- **Golden tests de scoring** : jeu de cas de référence (entrées → points attendus) protégeant la formule §5 contre toute dérive.
-- **Tickets de bug** : chaque bug corrigé ajoute un test de non-régression reproduisant le cas avant correction.
-- **Tests de migration** : une migration DB ne casse pas un schéma existant (up + rollback testés).
+### 17.3 Regression tests
+- **The automated suite replayed on every PR** (CI): all the unit and functional tests must stay green before a merge — it blocks.
+- **WebSocket/REST contract tests**: the payload schemas (§9, §10) frozen and verified; any breaking change is caught.
+- **Snapshots** of the API responses and of the key event payloads.
+- **Golden scoring tests**: a set of reference cases (inputs → expected points) protecting the formula of §5 from drift.
+- **Bug tickets**: every bug fixed adds a regression test reproducing the case as it was before the fix.
+- **Migration tests**: a database migration does not break an existing schema (up and rollback both tested).
 
-### 17.4 Intégration continue (GitHub Actions)
-- Workflows dans `.github/workflows/` : `ci.yml` (PR) et `e2e.yml`.
-- Pipeline : `lint → typecheck → tests unitaires → build images → tests fonctionnels (compose.test) → e2e`.
-- **Branch protection** sur `main` : merge **bloqué** si une étape échoue ou si la couverture passe sous le seuil ; au moins une relecture requise.
-- Rapport de couverture publié à chaque PR (commentaire automatique).
-- Cache des dépendances (`actions/setup-node` + `pnpm/action-setup` + cache pnpm) ; matrice front/back.
-- Étape **`pnpm orval` + diff** : échoue si le client REST généré diffère du committé (drift OpenAPI, §17.3).
+### 17.4 Continuous integration (GitHub Actions)
+- Workflows in `.github/workflows/`: `ci.yml` (PRs) and `e2e.yml`.
+- The pipeline: `lint → typecheck → unit tests → build the images → functional tests (compose.test) → end to end`.
+- **Branch protection** on `main`: a merge is **blocked** when a step fails or coverage falls below the threshold; at least one review is required.
+- A coverage report published on every PR (an automatic comment).
+- Dependency caching (`actions/setup-node` + `pnpm/action-setup` + the pnpm cache); a front/back matrix.
+- A **`pnpm orval` + diff** step: it fails when the generated REST client differs from the committed one (OpenAPI drift, §17.3).
 
 ---
 
-## 18. Politique « tester & documenter à chaque itération »
+## 18. The "test & document every iteration" policy
 
-Définition de **« itération terminée »** (Definition of Done) :
+What **"an iteration is done"** means (the Definition of Done):
 
-1. ✅ Code revu (au moins une relecture).
-2. ✅ Tests unitaires + fonctionnels associés **écrits et verts**.
-3. ✅ Non-régression : suite complète verte en CI.
-4. ✅ Documentation à jour dans le **même commit/PR** :
-   - `CHANGELOG.md` (entrée datée par itération).
-   - Cette spec (`SPECIFICATIONS.md`) si le comportement change.
-   - Doc d'API (OpenAPI pour REST, table d'événements §9 pour WS) si les contrats évoluent.
-   - `README` / runbook si la procédure de lancement change.
-5. ✅ Démo vérifiable via `docker compose up`.
+1. ✅ The code is reviewed (at least one reviewer).
+2. ✅ The matching unit and functional tests are **written and green**.
+3. ✅ Regression: the full suite is green in CI.
+4. ✅ The documentation is up to date **in the same commit/PR**:
+   - `CHANGELOG.md` (a dated entry per iteration).
+   - This spec (`SPECIFICATIONS.md`) when the behaviour changes.
+   - The API documentation (OpenAPI for REST, the event table of §9 for WS) when the contracts move.
+   - The `README` or the runbook when the way it is launched changes.
+5. ✅ A demo can be checked through `docker compose up`.
 
-> Aucune fonctionnalité n'est considérée livrée tant que **tests** ET **documentation** ne sont pas à jour. C'est un critère de merge, pas une étape optionnelle de fin de projet.
+> Nothing is considered shipped until the **tests** AND the **documentation** are up to date. It is a merge criterion, not an optional step at the end of the project.
 
-### Application via git hooks (Husky)
+### Enforced through git hooks (Husky)
 
-La DoD est **automatisée**, pas seulement déclarative. Hooks gérés par **Husky** + **lint-staged** :
+The DoD is **automated**, not merely declared. The hooks are managed by **Husky** and **lint-staged**:
 
-| Hook | Actions | Objectif |
+| Hook | Actions | Purpose |
 |------|---------|----------|
-| `pre-commit` | `lint-staged` : ESLint + Prettier sur les fichiers stagés, typecheck rapide | Bloquer le commit de code non conforme |
-| `commit-msg` | **commitlint** (Conventional Commits) | Messages normalisés → génération auto du CHANGELOG |
-| `pre-push` | Tests unitaires (`jest` + `vitest`) sur le périmètre impacté | Empêcher de pousser du rouge |
+| `pre-commit` | `lint-staged`: ESLint and Prettier on the staged files, a quick typecheck | Block a commit of non-conforming code |
+| `commit-msg` | **commitlint** (Conventional Commits) | Normalised messages → the CHANGELOG generated automatically |
+| `pre-push` | Unit tests (`jest` + `vitest`) over the affected scope | Stop anything red from being pushed |
 
-- **Garde-fou « doc à jour »** : un check (hook ou job CI) signale si du code métier change sans entrée `CHANGELOG.md` ni mise à jour de doc/API associée (avertissement bloquant en CI).
-- Les hooks restent **rapides** (le full suite + e2e tournent en CI GitHub Actions, §17.4) pour ne pas pénaliser le flux local ; contournement d'urgence via `--no-verify` documenté mais tracé.
-- Installation automatique des hooks au `pnpm install` (script `prepare` → `husky`).
+- **A "documentation up to date" guard**: a check (a hook or a CI job) flags domain code changing without a `CHANGELOG.md` entry or the matching documentation/API update (a blocking warning in CI).
+- The hooks stay **fast** (the full suite and the end-to-end tests run in GitHub Actions CI, §17.4) so the local flow is not penalised; the emergency escape through `--no-verify` is documented but traced.
+- The hooks install themselves on `pnpm install` (the `prepare` script → `husky`).

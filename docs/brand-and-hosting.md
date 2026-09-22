@@ -1,67 +1,67 @@
-# Marque & hébergement — QuizDock
+# Brand & hosting — QuizDock
 
-> État au 2026-06-24. Marque issue du renommage `live-quizz` → `QuizDock` (cf.
-> [ADR 0003](adr/0003-rename-quizdock.md)). Positionnement : **quiz live temps réel,
-> open-source et auto-hébergeable** (« dock » ⇒ déploiement conteneur).
+> State as of 2026-06-24. The brand comes from the `live-quizz` → `QuizDock` rename (see
+> [ADR 0003](adr/0003-rename-quizdock.md)). Positioning: **real-time live quizzes,
+> open-source and self-hostable** ("dock" ⇒ container deployment).
 
-## Identité
+## Identity
 
-| Élément | Valeur |
+| Item | Value |
 |---|---|
-| Marque affichée | **QuizDock** |
+| Displayed brand | **QuizDock** |
 | Slug / package / repo | `quiz-dock` |
-| DB / namespace Docker Hub | `quizdock` |
-| Scope npm | `@quiz-dock/*` |
-| Repo de code | `github.com/quizdock/quiz-dock` |
+| DB / Docker Hub namespace | `quizdock` |
+| npm scope | `@quiz-dock/*` |
+| Code repository | `github.com/quizdock/quiz-dock` |
 | Licence | **MIT** |
 
-Le nom de marque est **white-label runtime** : une instance peut afficher tout autre nom via
-`APP_NAME` + le dossier `branding/` sans rebuild (cf. [ADR 0002](adr/0002-rename-live-quizz-et-white-label.md)).
+The brand name is **white-label at runtime**: an instance can display any other name through
+`APP_NAME` and the `branding/` folder, with no rebuild (see [ADR 0002](adr/0002-rename-live-quizz-et-white-label.md)).
 
-## Disponibilité des surfaces (au 2026-06-24)
+## Availability of the surfaces (as of 2026-06-24)
 
-| Surface | `quizdock` | `quiz-dock` | Statut |
+| Surface | `quizdock` | `quiz-dock` | Status |
 |---|---|---|---|
-| npm (+ scope) | libre | libre | à réserver si publication |
-| Docker Hub (namespace) | libre | libre | à réserver à la 1ʳᵉ image |
-| GitHub (user/org) | **libre** | libre | **à réserver** (cf. ci-dessous) |
-| Domaine `.io` | libre | libre | optionnel |
-| Domaine `.app` | libre | libre | optionnel |
-| Domaine `.fr` | libre | libre | optionnel |
-| Domaine `.com` | **pris** | libre | — |
-| GitLab | non concluant (anti-bot) | — | à vérifier si besoin |
+| npm (+ scope) | free | free | to reserve if we publish |
+| Docker Hub (namespace) | free | free | to reserve with the first image |
+| GitHub (user/org) | **free** | free | **to reserve** (see below) |
+| `.io` domain | free | free | optional |
+| `.app` domain | free | free | optional |
+| `.fr` domain | free | free | optional |
+| `.com` domain | **taken** | free | — |
+| GitLab | inconclusive (anti-bot) | — | to check if needed |
 
-## Hébergement du site — GitHub Pages
+## Hosting the site — GitHub Pages
 
-> ✅ **En ligne : <https://quizdock.github.io>** — org `quizdock` créée, repo
-> [`quizdock/quizdock.github.io`](https://github.com/quizdock/quizdock.github.io) (landing statique
-> + workflow Pages `upload-pages-artifact` → `deploy-pages`, source *GitHub Actions*).
+> ✅ **Live: <https://quizdock.github.io>** — the `quizdock` org exists, with the repo
+> [`quizdock/quizdock.github.io`](https://github.com/quizdock/quizdock.github.io) (a static landing
+> page + the Pages workflow `upload-pages-artifact` → `deploy-pages`, source *GitHub Actions*).
 
-Objectif visé : **`https://quizdock.github.io`**. Cette URL exige une **organisation (ou un
-compte) GitHub nommé littéralement `quizdock`**, propriétaire d'un repo `quizdock.github.io`.
-Le compte actuel étant `fchaussin`, la voie par défaut donnerait `fchaussin.github.io`.
+The target was **`https://quizdock.github.io`**. That URL requires a **GitHub organisation (or
+account) named literally `quizdock`**, owning a `quizdock.github.io` repository. With the current
+account being `fchaussin`, the default path would have given `fchaussin.github.io`.
 
-### Voie recommandée — organisation `quizdock`
+### Recommended path — the `quizdock` organisation
 
-1. **Créer l'org gratuite** `quizdock` : <https://github.com/account/organizations/new> (plan *Free*).
-   ⚠️ Non automatisable — GitHub n'a pas d'API de création d'org ; action navigateur (~1 min).
-   Réserve aussi le nom face aux tiers.
-2. Créer le repo **`quizdock.github.io`** dans l'org → site servi sur `https://quizdock.github.io`.
-3. (Optionnel) **Transférer le code** `fchaussin/quiz-dock` → `quizdock/quiz-dock` pour tout
-   regrouper. Le remote local devra être mis à jour (`git remote set-url`).
-4. (Optionnel) **Domaine custom** (`quizdock.io` / `.fr`) : fichier `CNAME` dans le repo Pages
-   + enregistrement DNS.
+1. **Create the free org** `quizdock`: <https://github.com/account/organizations/new> (*Free* plan).
+   ⚠️ Not automatable — GitHub has no API for creating an org; it is a browser action (~1 min).
+   It also reserves the name against third parties.
+2. Create the **`quizdock.github.io`** repository in the org → the site is served at `https://quizdock.github.io`.
+3. (Optional) **Transfer the code** from `fchaussin/quiz-dock` to `quizdock/quiz-dock` to keep
+   everything together. The local remote then needs updating (`git remote set-url`).
+4. (Optional) **Custom domain** (`quizdock.io` / `.fr`): a `CNAME` file in the Pages repository
+   plus the DNS record.
 
-### Repli immédiat — Pages de projet (sans nouvelle org)
+### Immediate fallback — project Pages (no new org)
 
-Activer Pages sur `fchaussin/quiz-dock` → `https://fchaussin.github.io/quiz-dock/`.
-URL moins propre, mais disponible tout de suite et sans org.
+Enable Pages on `fchaussin/quiz-dock` → `https://fchaussin.github.io/quiz-dock/`.
+A less tidy URL, but available straight away and without an org.
 
-## Reste à faire
+## Still to do
 
-- [x] **Réserver l'org GitHub `quizdock`** (compte perso, plan Free).
-- [x] Échafauder le repo `quizdock.github.io` (landing + workflow Pages) → site en ligne.
-- [x] Transfert du repo de code `fchaussin/quiz-dock` → **`quizdock/quiz-dock`** (remote local + liens du site mis à jour).
-- [x] Licence **MIT** ajoutée (`LICENSE` + champ `license` des `package.json` + section README).
-- [ ] (Optionnel) Réserver npm + Docker Hub avant la 1ʳᵉ publication publique.
-- [x] Domaine custom : abandonné — on reste sur `quizdock.github.io`.
+- [x] **Reserve the GitHub org `quizdock`** (personal account, Free plan).
+- [x] Scaffold the `quizdock.github.io` repository (landing page + Pages workflow) → site online.
+- [x] Transfer the code repository `fchaussin/quiz-dock` → **`quizdock/quiz-dock`** (local remote and site links updated).
+- [x] **MIT** licence added (`LICENSE` + the `license` field of the `package.json` files + a README section).
+- [ ] (Optional) Reserve npm and Docker Hub before the first public release.
+- [x] Custom domain: dropped — we stay on `quizdock.github.io`.

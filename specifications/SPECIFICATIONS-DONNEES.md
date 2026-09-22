@@ -1,258 +1,258 @@
-# QuizDock — Dictionnaire de données
+# QuizDock — Data dictionary
 
-> Détail **niveau colonne** des données persistantes (PostgreSQL) et des structures temps réel (Redis).
-> Complète `SPECIFICATIONS.md` §3 (modèle) et `SPECIFICATIONS-METIER.md` §12 (règles de gestion).
+> **Column-level** detail of the persistent data (PostgreSQL) and of the real-time structures (Redis).
+> It complements `SPECIFICATIONS.md` §3 (the model) and `SPECIFICATIONS-METIER.md` §12 (the business rules).
 > Version 1.0 — 2026-06-09.
 
 ---
 
 ## 0. Conventions
 
-- **SGBD** : PostgreSQL 16. **ORM** : Prisma — le dictionnaire reste agnostique.
-- **Clés primaires** : **ULID** (`char(26)`, Crockford base32), générées côté app (lib `ulidx`). Choisies plutôt qu'UUID : **triables chronologiquement** (ordre d'insertion ≈ ordre temporel → meilleurs index, pagination par curseur naturelle), compactes, sans coordination. Pas d'auto-incrément exposé.
-- **Nommage** : colonnes/tables DB en `snake_case` (standard SQL) ; côté TypeScript, types et champs en **camelCase** (standard TS), mapping assuré par l'ORM (Prisma `@map`). Tables au singulier (`quiz`, `answer_option`).
-- **Horodatage** : `timestamptz` (UTC). `created_at` / `updated_at` sur toutes les tables métier.
-- **Suppression** : *soft delete* via `archived_at`/`deleted_at` là où la conservation l'exige (cf. RG-11) ; suppression dure ailleurs.
-- **Argent/score** : `integer` (points entiers).
-- **Énumérations** : types `enum` Postgres (cf. §3).
-- **Légende colonnes** : PK = clé primaire · FK = clé étrangère · NN = NOT NULL · UQ = unique · IDX = indexé · DEF = défaut.
+- **DBMS**: PostgreSQL 16. **ORM**: Prisma — the dictionary itself stays agnostic.
+- **Primary keys**: **ULID** (`char(26)`, Crockford base32), generated in the application (the `ulidx` library). Chosen over UUID because they are **chronologically sortable** (insertion order ≈ time order → better indexes, cursor pagination comes naturally), compact, and need no coordination. No auto-increment is exposed.
+- **Naming**: database columns and tables in `snake_case` (SQL convention); on the TypeScript side, types and fields in **camelCase** (TS convention), with the ORM mapping between them (Prisma `@map`). Table names are singular (`quiz`, `answer_option`).
+- **Timestamps**: `timestamptz` (UTC). `created_at` / `updated_at` on every domain table.
+- **Deletion**: a *soft delete* through `archived_at`/`deleted_at` wherever retention requires it (see RG-11); a hard delete elsewhere.
+- **Money / score**: `integer` (whole points).
+- **Enums**: Postgres `enum` types (see §3).
+- **Column legend**: PK = primary key · FK = foreign key · NN = NOT NULL · UQ = unique · IDX = indexed · DEF = default.
 
 ---
 
-## 1. Vue d'ensemble (relations)
+## 1. Overview (relations)
 
 ```
 user 1───* quiz 1───* question 1───* answer_option
                           │              
                           ├───* accepted_answer        (type = text_input)
                           │
-quiz 1───* game_session_log 1───* player_result_log 1───* answer_log  (si full_capture)
+quiz 1───* game_session_log 1───* player_result_log 1───* answer_log  (if full_capture)
                           │       1───* question_result_stat
-user 0/1 ──────────────── player_result_log   (participant connecté, nullable)
-media_asset *───0/1 quiz | question | answer_option   (cover/illustration)
+user 0/1 ──────────────── player_result_log   (a signed-in participant, nullable)
+media_asset *───0/1 quiz | question | answer_option   (cover / illustration)
 ```
 
-Cardinalités clés :
-- Un **quiz** appartient à **un** `user` (animateur). *(RG-01)*
-- Une **question** appartient à **un** quiz ; ordre via `order_index`.
-- Une **answer_option** appartient à **une** question.
-- Un **game_session_log** référence le quiz joué et l'hôte ; il agrège `player_result_log` (1/participant) et `question_result_stat` (1/question).
+The key cardinalities:
+- A **quiz** belongs to **one** `user` (a host). *(RG-01)*
+- A **question** belongs to **one** quiz; the order comes from `order_index`.
+- An **answer_option** belongs to **one** question.
+- A **game_session_log** references the quiz that was played and the host; it aggregates `player_result_log` (one per participant) and `question_result_stat` (one per question).
 
 ---
 
 ## 2. Tables (PostgreSQL)
 
-### 2.1 `user` — comptes (animateurs, participants connectés, admins)
+### 2.1 `user` — accounts (hosts, signed-in participants, admins)
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
-| `id` | char(26) | PK | Identifiant interne |
-| `oidc_subject` | text | UQ, NN | claim `sub` du token OIDC (lien IdP) |
-| `display_name` | text | NN | Nom affiché |
-| `email` | citext | UQ, nullable | Courriel (si fourni par l'IdP) |
+| `id` | char(26) | PK | The internal identifier |
+| `oidc_subject` | text | UQ, NN | The `sub` claim of the OIDC token (the link to the IdP) |
+| `display_name` | text | NN | The displayed name |
+| `email` | citext | UQ, nullable | The email address, when the IdP provides one |
 | `role` | enum `user_role` | NN, DEF `player` | `host` \| `player` \| `admin` |
-| `locale` | text | DEF `fr` | Langue préférée (`fr`/`en`) |
-| `created_at` | timestamptz | NN, DEF now() | Création |
-| `updated_at` | timestamptz | NN | Dernière modif |
-| `deleted_at` | timestamptz | nullable | Anonymisation RGPD (cf. §6) |
+| `locale` | text | DEF `fr` | The preferred language (`fr`/`en`) |
+| `created_at` | timestamptz | NN, DEF now() | Created |
+| `updated_at` | timestamptz | NN | Last modified |
+| `deleted_at` | timestamptz | nullable | Anonymised for data protection (see §6) |
 
-> En `AUTH_MODE=none`, un animateur « local » peut exister sans `oidc_subject` (colonne alors nullable en pratique ; `oidc_subject` porte une valeur sentinelle `local:<nom>`). Les **participants invités ne sont PAS** des lignes `user` (ils n'existent qu'en Redis et dans `player_result_log` sans `user_id`).
+> Under `AUTH_MODE=none` a "local" host may exist with no `oidc_subject` (in practice the column is then nullable; `oidc_subject` carries a sentinel value `local:<name>`). Guest participants are **NOT** `user` rows: they only exist in Redis and in `player_result_log`, without a `user_id`.
 
-### 2.2 `quiz` — quiz (banque privée du animateur)
+### 2.2 `quiz` — quizzes (a host's private bank)
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
-| `owner_id` | char(26) | FK→`user.id`, NN, IDX | Propriétaire (animateur) *(RG-01)* |
-| `title` | text | NN | Titre |
+| `owner_id` | char(26) | FK→`user.id`, NN, IDX | The owner (a host) *(RG-01)* |
+| `title` | text | NN | Title |
 | `description` | text | nullable | Description |
-| `cover_media_id` | char(26) | FK→`media_asset.id`, nullable | Visuel de couverture |
+| `cover_media_id` | char(26) | FK→`media_asset.id`, nullable | The cover artwork |
 | `status` | enum `quiz_status` | NN, DEF `draft` | `draft` \| `ready` \| `archived` *(RG-02)* |
-| `visibility` | enum `quiz_visibility` | NN, DEF `private` | `private` (v1) ; `unlisted` réservé |
-| `language` | text | NN, DEF `fr` | Langue du quiz |
-| `question_count` | int | NN, DEF 0 | Dénormalisé (perf listing) |
+| `visibility` | enum `quiz_visibility` | NN, DEF `private` | `private` (v1); `unlisted` is reserved |
+| `language` | text | NN, DEF `fr` | The quiz's language |
+| `question_count` | int | NN, DEF 0 | Denormalised (listing performance) |
 | `created_at` | timestamptz | NN, DEF now() | |
 | `updated_at` | timestamptz | NN | |
-| `archived_at` | timestamptz | nullable | Archivage (soft) |
+| `archived_at` | timestamptz | nullable | Archived (soft) |
 
-Index : `(owner_id, status)` pour le tableau de bord.
-Règle : passage à `status=ready` interdit si `question_count = 0` ou question invalide *(RG-02)*.
+Index: `(owner_id, status)` for the dashboard.
+Rule: moving to `status=ready` is refused when `question_count = 0` or a question is invalid *(RG-02)*.
 
 ### 2.3 `question`
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
-| `quiz_id` | char(26) | FK→`quiz.id` ON DELETE CASCADE, NN, IDX | Quiz parent |
-| `order_index` | int | NN | Position (0-based) ; UQ `(quiz_id, order_index)` |
-| `type` | enum `question_type` | NN | cf. §3 |
-| `prompt` | text | NN | Énoncé |
-| `media_id` | char(26) | FK→`media_asset.id`, nullable | Illustration |
-| `time_limit_s` | int | NN, DEF 20, CHECK 5–120 | Temps limite *(RG-03)* |
-| `points_mode` | enum `points_mode` | NN, DEF `standard` | `standard` \| `double` \| `none` (sondage) |
-| `numeric_value` | numeric | nullable | Cible (type `numeric`) |
-| `numeric_tolerance` | numeric | nullable, CHECK ≥ 0 | Tolérance ± (type `numeric`) |
+| `quiz_id` | char(26) | FK→`quiz.id` ON DELETE CASCADE, NN, IDX | The parent quiz |
+| `order_index` | int | NN | Position (0-based); UQ `(quiz_id, order_index)` |
+| `type` | enum `question_type` | NN | see §3 |
+| `prompt` | text | NN | The prompt |
+| `media_id` | char(26) | FK→`media_asset.id`, nullable | An illustration |
+| `time_limit_s` | int | NN, DEF 20, CHECK 5–120 | The time limit *(RG-03)* |
+| `points_mode` | enum `points_mode` | NN, DEF `standard` | `standard` \| `double` \| `none` (a poll) |
+| `numeric_value` | numeric | nullable | The target (`numeric` questions) |
+| `numeric_tolerance` | numeric | nullable, CHECK ≥ 0 | The ± tolerance (`numeric` questions) |
 | `created_at` | timestamptz | NN, DEF now() | |
 | `updated_at` | timestamptz | NN | |
 
-CHECK applicatif/SQL selon le type :
+CHECKs, in SQL or in the application, depending on the type:
 - `single_choice`/`multiple_choice`/`true_false`/`ordering` → ≥ 2 `answer_option` (≤ 6) *(RG-03)*.
 - `text_input` → ≥ 1 `accepted_answer`.
 - `numeric` → `numeric_value` NN + `numeric_tolerance` NN.
-- `poll` → `points_mode=none`, pas de bonne réponse.
+- `poll` → `points_mode=none`, no right answer.
 
-### 2.4 `answer_option` — options (QCM, V/F, ordre)
+### 2.4 `answer_option` — options (choice, true/false, ordering)
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
 | `question_id` | char(26) | FK→`question.id` ON DELETE CASCADE, NN, IDX | |
-| `order_index` | int | NN | Position d'affichage ; UQ `(question_id, order_index)` |
-| `text` | text | nullable | Libellé (nullable si média seul) |
-| `media_id` | char(26) | FK→`media_asset.id`, nullable | Média de l'option |
-| `color` | enum `option_color` | NN | `red`\|`blue`\|`yellow`\|`green` (+ ext.) |
-| `shape` | enum `option_shape` | NN | `triangle`\|`diamond`\|`circle`\|`square` (accessibilité) |
-| `is_correct` | boolean | NN, DEF false | Bonne réponse (QCM/V/F). **Jamais exposé avant reveal** (technique §7) |
-| `correct_order_index` | int | nullable | Rang attendu (type `ordering`) |
+| `order_index` | int | NN | Display position; UQ `(question_id, order_index)` |
+| `text` | text | nullable | The label (nullable when the option is media only) |
+| `media_id` | char(26) | FK→`media_asset.id`, nullable | The option's media |
+| `color` | enum `option_color` | NN | `red`\|`blue`\|`yellow`\|`green` (+ more) |
+| `shape` | enum `option_shape` | NN | `triangle`\|`diamond`\|`circle`\|`square` (accessibility) |
+| `is_correct` | boolean | NN, DEF false | A right answer (choice, true/false). **Never exposed before the reveal** (technique §7) |
+| `correct_order_index` | int | nullable | The expected rank (`ordering` questions) |
 
-> Pour `ordering`, l'exactitude = séquence des `correct_order_index` ; `is_correct` non utilisé.
+> For `ordering`, correctness is the sequence of `correct_order_index`; `is_correct` is unused.
 
-### 2.5 `accepted_answer` — réponses acceptées (type `text_input`)
+### 2.5 `accepted_answer` — accepted answers (`text_input` questions)
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
 | `question_id` | char(26) | FK→`question.id` ON DELETE CASCADE, NN, IDX | |
-| `text` | text | NN | Forme acceptée (libellé d'origine) |
-| `normalized` | text | NN, IDX | Forme normalisée (minuscule, sans accent/espaces superflus) pour comparaison *(RG-06)* |
+| `text` | text | NN | The accepted form (as the author wrote it) |
+| `normalized` | text | NN, IDX | The normalised form (lowercase, unaccented, extra spaces removed) for comparison *(RG-06)* |
 
-### 2.6 `media_asset` — médias
+### 2.6 `media_asset` — media
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
-| `owner_id` | char(26) | FK→`user.id`, NN, IDX | Propriétaire |
-| `url` | text | NN | Route de service backend (`/api/v1/media/<id>`) ; fichier stocké sur volume local |
+| `owner_id` | char(26) | FK→`user.id`, NN, IDX | The owner |
+| `url` | text | NN | The backend route that serves it (`/api/v1/media/<id>`); the file lives on a local volume |
 | `mime` | text | NN | `image/png`, `audio/mpeg`, … |
-| `size_bytes` | bigint | NN, CHECK ≤ limite | Taille |
+| `size_bytes` | bigint | NN, CHECK ≤ the limit | Size |
 | `kind` | enum `media_kind` | NN | `image` \| `audio` |
 | `created_at` | timestamptz | NN, DEF now() | |
 
-### 2.7 `game_session_log` — session jouée (trace durable)
+### 2.7 `game_session_log` — a session that was played (the durable trace)
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
-| `quiz_id` | char(26) | FK→`quiz.id`, NN, IDX | Quiz joué (snapshot conseillé, cf. note) |
-| `host_id` | char(26) | FK→`user.id`, NN, IDX | Animateur animateur |
-| `pin` | char(6) | NN | PIN utilisé (historique ; non unique dans le temps) |
-| `status` | enum `session_status` | NN, DEF `ended` | `ended` \| `archived` (le live `lobby`/`in_progress` vit en Redis) |
-| `language` | text | NN | Langue de la session |
-| `player_count` | int | NN, DEF 0 | Nb d'participants ayant joué |
-| `success_rate` | numeric | nullable | Taux de réussite moyen (%) |
-| `full_capture` | boolean | NN, DEF false | **Mode capture intégrale** : si vrai, chaque réponse individuelle est persistée (`answer_log`). Décidé à la création de la session ; **participants informés en début de session** (avis affiché, cf. §6) |
-| `started_at` | timestamptz | NN | Début effectif |
-| `ended_at` | timestamptz | NN | Fin |
-| `retain_until` | timestamptz | NN | Échéance de conservation *(RG-11, DEF +24 mois)* |
+| `quiz_id` | char(26) | FK→`quiz.id`, NN, IDX | The quiz that was played (a snapshot is advised, see the note) |
+| `host_id` | char(26) | FK→`user.id`, NN, IDX | The host who ran it |
+| `pin` | char(6) | NN | The PIN used (historical; not unique over time) |
+| `status` | enum `session_status` | NN, DEF `ended` | `ended` \| `archived` (the live `lobby`/`in_progress` states live in Redis) |
+| `language` | text | NN | The session's language |
+| `player_count` | int | NN, DEF 0 | How many participants played |
+| `success_rate` | numeric | nullable | The mean success rate (%) |
+| `full_capture` | boolean | NN, DEF false | **Full-capture mode**: when true, every individual answer is persisted (`answer_log`). Decided when the session is created; **the participants are told at the start of the session** (a displayed notice, see §6) |
+| `started_at` | timestamptz | NN | When it actually started |
+| `ended_at` | timestamptz | NN | When it ended |
+| `retain_until` | timestamptz | NN | The retention deadline *(RG-11, DEF +24 months)* |
 | `created_at` | timestamptz | NN, DEF now() | |
 
-> **Snapshot recommandé** : pour que la restitution reste fidèle même si le quiz est ensuite modifié/supprimé, stocker un instantané du quiz/questions (JSONB `quiz_snapshot`) au moment de la session. Sinon, une suppression de quiz fausserait l'historique.
+> **A snapshot is recommended**: so the report stays faithful even if the quiz is later modified or deleted, store a snapshot of the quiz and its questions (a JSONB `quiz_snapshot`) at the time of the session. Otherwise deleting a quiz would distort the history.
 
-### 2.8 `player_result_log` — résultat d'un participant sur une session
+### 2.8 `player_result_log` — one participant's result on a session
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
-| `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | Session |
-| `user_id` | char(26) | FK→`user.id`, **nullable**, IDX | Participant connecté ; NULL si invité |
-| `nickname` | text | NN | Pseudo affiché |
-| `final_score` | int | NN, DEF 0 | Score final |
-| `final_rank` | int | NN | Rang final (1 = meilleur) |
-| `correct_count` | int | NN, DEF 0 | Nb de bonnes réponses |
-| `answered_count` | int | NN, DEF 0 | Nb de questions répondues |
-| `avg_response_ms` | int | nullable | Temps de réponse moyen |
-| `max_streak` | int | NN, DEF 0 | Plus longue série |
+| `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | The session |
+| `user_id` | char(26) | FK→`user.id`, **nullable**, IDX | A signed-in participant; NULL for a guest |
+| `nickname` | text | NN | The displayed nickname |
+| `final_score` | int | NN, DEF 0 | The final score |
+| `final_rank` | int | NN | The final rank (1 = best) |
+| `correct_count` | int | NN, DEF 0 | How many right answers |
+| `answered_count` | int | NN, DEF 0 | How many questions were answered |
+| `avg_response_ms` | int | nullable | The mean answer time |
+| `max_streak` | int | NN, DEF 0 | The longest streak |
 
-Index : `(session_log_id, final_rank)` ; `(user_id, session_log_id)` pour l'historique.
+Indexes: `(session_log_id, final_rank)`; `(user_id, session_log_id)` for the history.
 
-### 2.9 `question_result_stat` — agrégat par question (pour la restitution)
+### 2.9 `question_result_stat` — per-question aggregate (for the report)
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
 | `id` | char(26) | PK | |
 | `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | |
-| `question_id` | char(26) | FK→`question.id`, NN | Référence (ou index dans le snapshot) |
-| `order_index` | int | NN | Position dans la session |
-| `correct_count` | int | NN, DEF 0 | Réponses correctes |
-| `answer_count` | int | NN, DEF 0 | Réponses reçues |
-| `success_rate` | numeric | NN, DEF 0 | % correct |
-| `avg_response_ms` | int | nullable | Temps moyen |
-| `distribution` | jsonb | NN, DEF '{}' | Répartition par option `{optionId: count}` |
+| `question_id` | char(26) | FK→`question.id`, NN | The reference (or the index in the snapshot) |
+| `order_index` | int | NN | Position within the session |
+| `correct_count` | int | NN, DEF 0 | Right answers |
+| `answer_count` | int | NN, DEF 0 | Answers received |
+| `success_rate` | numeric | NN, DEF 0 | % right |
+| `avg_response_ms` | int | nullable | Mean time |
+| `distribution` | jsonb | NN, DEF '{}' | Distribution per option `{optionId: count}` |
 
-> Ces lignes sont **calculées en fin de session** à partir des données live Redis, puis persistées. Par défaut, les réponses individuelles brutes ne sont pas conservées (seulement agrégées) — minimisation RGPD/volume. Le détail individuel n'est persisté **que si `full_capture = true`** (§2.10).
+> These rows are **computed at the end of the session** from the live Redis data, then persisted. By default the raw individual answers are not kept (only the aggregates) — data and volume minimisation. The individual detail is persisted **only when `full_capture = true`** (§2.10).
 
-### 2.10 `answer_log` — réponse individuelle (mode capture intégrale)
+### 2.10 `answer_log` — an individual answer (full-capture mode)
 
-> Peuplée **uniquement si** `game_session_log.full_capture = true`. Sinon la table reste vide pour la session. Permet rejeu/audit complet d'une session passée.
+> Filled **only when** `game_session_log.full_capture = true`. Otherwise the table stays empty for that session. It allows a past session to be replayed or audited in full.
 
-| Colonne | Type | Contraintes | Description |
+| Column | Type | Constraints | Description |
 |---------|------|-------------|-------------|
-| `id` | char(26) | PK (ULID, ordonnant) | |
-| `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | Session |
-| `player_result_log_id` | char(26) | FK→`player_result_log.id` ON DELETE CASCADE, NN, IDX | Participant (résultat) |
-| `question_id` | char(26) | FK→`question.id`, NN | Question (ou index dans le snapshot) |
-| `order_index` | int | NN | Position dans la session |
-| `answer_value` | jsonb | NN | Réponse brute (`optionId` \| `[optionIds]` \| texte \| nombre \| `[ordre]`) |
-| `is_correct` | boolean | NN | Exactitude calculée serveur |
-| `points_awarded` | int | NN, DEF 0 | Points attribués |
-| `response_ms` | int | NN | Temps de réponse (après compensation latence) |
-| `received_at` | timestamptz | NN | Horodatage serveur de réception |
+| `id` | char(26) | PK (ULID, ordering) | |
+| `session_log_id` | char(26) | FK→`game_session_log.id` ON DELETE CASCADE, NN, IDX | The session |
+| `player_result_log_id` | char(26) | FK→`player_result_log.id` ON DELETE CASCADE, NN, IDX | The participant (their result) |
+| `question_id` | char(26) | FK→`question.id`, NN | The question (or its index in the snapshot) |
+| `order_index` | int | NN | Position within the session |
+| `answer_value` | jsonb | NN | The raw answer (`optionId` \| `[optionIds]` \| text \| a number \| `[order]`) |
+| `is_correct` | boolean | NN | Correctness as computed by the server |
+| `points_awarded` | int | NN, DEF 0 | The points awarded |
+| `response_ms` | int | NN | The answer time (after latency compensation) |
+| `received_at` | timestamptz | NN | The server timestamp of arrival |
 
-Index : `(session_log_id, order_index)` ; `(player_result_log_id)`.
-> Allonge la durée de conservation et le volume → réservé aux sessions où l'audit/la traçabilité fine est requise (certif, examen blanc). Soumis à la même échéance `retain_until`.
+Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
+> It lengthens both the retention and the volume → reserved for sessions where fine-grained audit or traceability is required (certification, a mock exam). Subject to the same `retain_until` deadline.
 
 ---
 
-## 3. Énumérations
+## 3. Enums
 
-| Enum | Valeurs | Notes |
+| Enum | Values | Notes |
 |------|---------|-------|
-| `user_role` | `host`, `player`, `admin` | `admin` réservé v1.1 |
-| `quiz_status` | `draft`, `ready`, `archived` | Cycle de vie quiz |
-| `quiz_visibility` | `private`, `unlisted` | v1 : `private` seul |
-| `question_type` | `single_choice`, `multiple_choice`, `true_false`, `text_input`, `numeric`, `ordering`, `poll` | cf. technique §4 |
-| `points_mode` | `standard`, `double`, `none` | `none` = sondage (0 pt) |
-| `option_color` | `red`, `blue`, `yellow`, `green` | Extensible si > 4 options |
-| `option_shape` | `triangle`, `diamond`, `circle`, `square` | Accessibilité (couleur + forme) |
-| `media_kind` | `image`, `audio` | v1 (pas de vidéo) |
-| `session_status` | `lobby`, `in_progress`, `ended`, `archived` | `lobby`/`in_progress` n'existent qu'en Redis |
+| `user_role` | `host`, `player`, `admin` | `admin` is reserved for v1.1 |
+| `quiz_status` | `draft`, `ready`, `archived` | The quiz lifecycle |
+| `quiz_visibility` | `private`, `unlisted` | v1: `private` only |
+| `question_type` | `single_choice`, `multiple_choice`, `true_false`, `text_input`, `numeric`, `ordering`, `poll` | see technique §4 |
+| `points_mode` | `standard`, `double`, `none` | `none` = a poll (0 points) |
+| `option_color` | `red`, `blue`, `yellow`, `green` | Extensible beyond 4 options |
+| `option_shape` | `triangle`, `diamond`, `circle`, `square` | Accessibility (colour + shape) |
+| `media_kind` | `image`, `audio` | v1 (no video) |
+| `session_status` | `lobby`, `in_progress`, `ended`, `archived` | `lobby`/`in_progress` only exist in Redis |
 
 ---
 
-## 4. Structures temps réel (Redis)
+## 4. Real-time structures (Redis)
 
-> État **vivant** d'une partie. TTL ≈ durée de partie + marge (DEF 4 h) ; nettoyage auto des parties abandonnées. Source de vérité du live ; consolidé en base à la fin (§2.7–2.9).
+> The **living** state of a game. TTL ≈ the length of a game plus a margin (DEF 4 h); abandoned games are cleaned up automatically. It is the source of truth while the game runs, and is consolidated into the database at the end (§2.7–2.9).
 
-### 4.1 `game:{pin}` — Hash (état de partie)
+### 4.1 `game:{pin}` — a Hash (the game state)
 
-| Champ | Type | Description |
+| Field | Type | Description |
 |-------|------|-------------|
 | `state` | string | `LOBBY`\|`QUESTION_SHOW`\|`ANSWERING`\|`REVEAL`\|`LEADERBOARD`\|`PODIUM`\|`ENDED`\|`HOST_DISCONNECTED` |
-| `quizId` | string | Quiz joué |
-| `hostId` | string | Animateur |
-| `hostSocketId` | string | Socket courante de l'hôte |
-| `currentQuestionIndex` | int | Index 0-based |
-| `questionStartedAt` | int (ms epoch) | Horloge **serveur** (fairness, technique §6) |
-| `questionEndsAt` | int (ms epoch) | Fin théorique |
-| `fullCapture` | bool | Mode capture intégrale actif → écrit `answer_log` à la fin (§2.10) |
-| `createdAt` | int (ms epoch) | Création de la partie |
+| `quizId` | string | The quiz being played |
+| `hostId` | string | The host |
+| `hostSocketId` | string | The host's current socket |
+| `currentQuestionIndex` | int | 0-based index |
+| `questionStartedAt` | int (ms epoch) | The **server** clock (fairness, technique §6) |
+| `questionEndsAt` | int (ms epoch) | The theoretical end |
+| `fullCapture` | bool | Full-capture mode is on → `answer_log` is written at the end (§2.10) |
+| `createdAt` | int (ms epoch) | When the game was created |
 
-### 4.2 `game:{pin}:players` — Hash `playerId → JSON`
+### 4.2 `game:{pin}:players` — a Hash of `playerId → JSON`
 
 ```jsonc
 {
   "nickname": "marc",
-  "userId": "uuid|null",      // null = invité
+  "userId": "uuid|null",      // null = a guest
   "connected": true,
   "score": 8120,
   "streak": 3,
@@ -260,42 +260,42 @@ Index : `(session_log_id, order_index)` ; `(player_result_log_id)`.
 }
 ```
 
-### 4.3 `game:{pin}:answers:{qIdx}` — Hash `playerId → JSON`
+### 4.3 `game:{pin}:answers:{qIdx}` — a Hash of `playerId → JSON`
 
 ```jsonc
 {
-  "value": "optionId | [optionIds] | texte | nombre | [ordre]",
-  "receivedAt": 1733740812345,  // horodatage serveur
+  "value": "optionId | [optionIds] | text | a number | [order]",
+  "receivedAt": 1733740812345,  // the server timestamp
   "latencyMs": 42,              // compensation (technique §6)
   "isCorrect": true,
   "pointsAwarded": 850
 }
 ```
-> Une seule entrée par `playerId` (1 réponse/question, RG-06). Soumissions ultérieures ignorées.
+> One entry per `playerId` (one answer per question, RG-06). Later submissions are ignored.
 
-### 4.4 `game:{pin}:leaderboard` — Sorted Set
+### 4.4 `game:{pin}:leaderboard` — a Sorted Set
 
-- Membre = `playerId`, score = `score`. Lecture top-N + rang en O(log n).
+- The member is the `playerId`, the score is `score`. Reading the top N and a rank is O(log n).
 
-### 4.5 `session:{token}` — String
+### 4.5 `session:{token}` — a String
 
-- `token` (remis au join) → `playerId`. Permet la **reconnexion** (technique §11). TTL = durée de partie.
+- The `token` (handed out on joining) → the `playerId`. It makes **reconnecting** possible (technique §11). TTL = the length of the game.
 
-### 4.6 `pin:index` — Set
+### 4.6 `pin:index` — a Set
 
-- PINs actifs, pour garantir l'**unicité** à la génération *(RG-04)*. Le PIN est retiré en fin de partie.
+- The active PINs, guaranteeing **uniqueness** at generation time *(RG-04)*. The PIN is removed when the game ends.
 
 ---
 
-## 5. Contrat partagé (TypeScript)
+## 5. The shared contract (TypeScript)
 
-> Hors base : types du **package `@quiz-dock/contracts`** (technique §2.3), source de vérité du WebSocket. Alignés sur les enums §3. Exemple de structures de payload (référence, pas exhaustif) :
+> Outside the database: the types of the **`@quiz-dock/contracts` package** (technique §2.3), the source of truth of the WebSocket. They follow the enums in §3. Example payload structures (for reference, not exhaustive):
 
 ```ts
 type QuestionType = 'single_choice' | 'multiple_choice' | 'true_false'
   | 'text_input' | 'numeric' | 'ordering' | 'poll';
 
-interface QuestionStartPayload {            // serveur → client (SANS bonne réponse)
+interface QuestionStartPayload {            // server → client (WITHOUT the right answer)
   questionIndex: number;
   type: QuestionType;
   prompt: string;
@@ -303,11 +303,11 @@ interface QuestionStartPayload {            // serveur → client (SANS bonne r�
   options?: { id: string; text?: string; color: string; shape: string }[];
   timeLimitS: number;
   basePoints: number;
-  startedAt: number;   // ms epoch serveur
+  startedAt: number;   // server epoch ms
   endsAt: number;
 }
 
-interface SubmitAnswerPayload {             // client → serveur
+interface SubmitAnswerPayload {             // client → server
   pin: string;
   questionIndex: number;
   answer: string | string[] | number;
@@ -316,29 +316,29 @@ interface SubmitAnswerPayload {             // client → serveur
 
 ---
 
-## 6. RGPD, conservation & intégrité
+## 6. Data protection, retention & integrity
 
-| Règle | Application |
+| Rule | How it applies |
 |-------|-------------|
-| **Invités non identifiables** | `player_result_log.user_id = NULL`, seul le `nickname` est stocké (donnée non rattachée à une personne). |
-| **Suppression de compte** | `user.deleted_at` renseigné ; `display_name`/`email` anonymisés ; `player_result_log.user_id` conservé mais le `nickname` peut être pseudonymisé. Les restitutions agrégées restent. |
-| **Conservation** | `game_session_log.retain_until` (DEF +24 mois, RG-11). Purge planifiée au-delà. |
-| **Suppression de quiz** | Refusée si des `game_session_log` non purgés y référent **sans snapshot** ; recommandé : snapshot JSONB pour découpler (cf. §2.7). |
-| **Réponses brutes** | Par défaut non persistées individuellement (agrégées en `question_result_stat`) → minimisation des données. |
-| **Mode capture intégrale** | Si `full_capture = true`, chaque réponse est persistée (`answer_log`). **Activé à la création de la session par le animateur** ; **les participants en sont informés par un avis affiché en début de session** (transparence/consentement) avant toute collecte. Réservé aux besoins d'audit/certification. |
-| **Intégrité référentielle** | CASCADE sur les enfants directs (question, option) ; restriction/snapshot pour préserver l'historique de session. |
+| **Guests are not identifiable** | `player_result_log.user_id = NULL`; only the `nickname` is stored (data not tied to a person). |
+| **Account deletion** | `user.deleted_at` is set; `display_name`/`email` are anonymised; `player_result_log.user_id` is kept but the `nickname` may be pseudonymised. The aggregated reports remain. |
+| **Retention** | `game_session_log.retain_until` (DEF +24 months, RG-11). A scheduled purge beyond that. |
+| **Deleting a quiz** | Refused when unpurged `game_session_log` rows reference it **without a snapshot**; the recommendation is a JSONB snapshot to decouple them (see §2.7). |
+| **Raw answers** | Not persisted individually by default (aggregated into `question_result_stat`) → data minimisation. |
+| **Full-capture mode** | When `full_capture = true`, every answer is persisted (`answer_log`). **Turned on by the host when the session is created**; **the participants are told through a notice at the start of the session** (transparency and consent) before anything is collected. Reserved for audit and certification needs. |
+| **Referential integrity** | CASCADE on the direct children (question, option); restriction or a snapshot to preserve the session history. |
 
 ---
 
-## 7. Index & performance (synthèse)
+## 7. Indexes & performance (summary)
 
-| Table | Index | But |
+| Table | Index | Purpose |
 |-------|-------|-----|
-| `quiz` | `(owner_id, status)` | Tableau de bord animateur |
-| `question` | `(quiz_id, order_index)` UQ | Ordre, intégrité |
-| `answer_option` | `(question_id, order_index)` UQ | Ordre |
-| `accepted_answer` | `(question_id, normalized)` | Comparaison réponse texte |
-| `player_result_log` | `(session_log_id, final_rank)` ; `(user_id, session_log_id)` | Classement, historique |
-| `question_result_stat` | `(session_log_id, order_index)` | Restitution par question |
-| `answer_log` | `(session_log_id, order_index)` ; `(player_result_log_id)` | Rejeu/audit (si capture intégrale) |
-| `game_session_log` | `(host_id, started_at)` ; `(retain_until)` | Historique, purge |
+| `quiz` | `(owner_id, status)` | The host's dashboard |
+| `question` | `(quiz_id, order_index)` UQ | Order, integrity |
+| `answer_option` | `(question_id, order_index)` UQ | Order |
+| `accepted_answer` | `(question_id, normalized)` | Comparing a text answer |
+| `player_result_log` | `(session_log_id, final_rank)`; `(user_id, session_log_id)` | Leaderboard, history |
+| `question_result_stat` | `(session_log_id, order_index)` | The per-question report |
+| `answer_log` | `(session_log_id, order_index)`; `(player_result_log_id)` | Replay and audit (under full capture) |
+| `game_session_log` | `(host_id, started_at)`; `(retain_until)` | History, purge |

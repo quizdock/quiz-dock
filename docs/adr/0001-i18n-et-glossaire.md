@@ -1,108 +1,113 @@
-# ADR 0001 — i18n front + glossaire de vocabulaire canonique
+# ADR 0001 — Front-end i18n + a canonical vocabulary glossary
 
-- **Statut** : implémenté (Phases 1–3 livrées le 2026-06-24) — glossaire ratifié 2026-06-24.
-  Phase ultérieure (rename projet/identifiants code) toujours en attente.
-- **Date** : 2026-06-24
-- **Contexte** : le vocabulaire métier est incohérent entre le README (registre « formation » :
-  formateur / apprenant / session) et le code (registre « jeu » : joueur / partie / game). En
-  parallèle, toute la chrome UI est en français codé en dur et le backend laisse fuiter des
-  messages d'erreur en français. On veut (1) harmoniser le vocabulaire vers des termes **génériques**
-  (ni « jeu », ni « formation ») et (2) poser une infrastructure **i18n** côté front.
+- **Status**: implemented (Phases 1–3 shipped on 2026-06-24) — glossary ratified 2026-06-24.
+  A later phase (renaming the project and the code identifiers) is still pending.
+- **Date**: 2026-06-24
+- **Context**: the domain vocabulary is inconsistent between the README (a "training" register:
+  *formateur* / *apprenant* / *session*) and the code (a "game" register: *joueur* / *partie* /
+  *game*). At the same time the whole UI chrome is hard-coded French, and the backend leaks French
+  error messages. We want (1) to harmonise the vocabulary around **generic** terms — neither "game"
+  nor "training" — and (2) to lay down an **i18n** infrastructure on the front end.
 
-## Décisions
+## Decisions
 
-1. **Glossaire générique** : on converge sur **session / participant / animateur** (voir tableau).
-2. **Backend = tokens uniquement** : le backend n'émet **que des codes** stables, jamais de texte
-   destiné à l'utilisateur. Le dictionnaire i18n vit **exclusivement côté front**.
-3. **Profondeur du rebrand** : **UI + codes d'erreur backend**. On **ne renomme pas** les
-   identifiants internes (events WebSocket `game:*`/`player:*`, enum `GameState`, modèles Prisma).
-   Ce sont des identifiants protocole/persistance, pas du texte utilisateur.
-4. **Langues** : **FR seul** livré, mais infra multi-langue prête (structure de dictionnaire,
-   sélection de langue, pluriels ICU). Aucune traduction supplémentaire dans cette passe.
-5. **Validation** : erreurs class-validator renvoyées en **codes structurés** `{ field, code }`,
-   traduites côté front (ValidationPipe custom).
-6. **Hors scope (phases ultérieures)** : renommage du projet en `live-quizz` ; renommage
-   des identifiants code `game` → `session` (contrat WS, enum, modèles). « Chaque chose en son temps. »
+1. **A generic glossary**: we converge on **session / participant / animateur** (see the table).
+2. **The backend emits tokens only**: it returns **stable codes** and never text meant for a person.
+   The i18n dictionary lives **on the front end alone**.
+3. **Depth of the rebrand**: **the UI plus the backend error codes**. We do **not** rename the
+   internal identifiers (the `game:*`/`player:*` WebSocket events, the `GameState` enum, the Prisma
+   models). Those are protocol and persistence identifiers, not user-facing text.
+4. **Languages**: **French only** is shipped, but the multi-language infrastructure is in place
+   (dictionary structure, language selection, ICU plurals). No further translation in this pass.
+5. **Validation**: class-validator errors come back as **structured codes** `{ field, code }`,
+   translated on the front end (a custom ValidationPipe).
+6. **Out of scope (later phases)**: renaming the project to `live-quizz`; renaming the code
+   identifiers `game` → `session` (the WS contract, the enum, the models). One thing at a time.
 
-## Glossaire canonique
+## The canonical glossary
 
-| Concept | Termes actuels (mélangés) | **Cible** | Notes |
+| Concept | Terms in use today (mixed) | **Target** | Notes |
 |---|---|---|---|
-| Contenu créé par le propriétaire | quiz | **quiz** | conservé (générique) |
-| Exécution live d'un quiz | partie / game / session | **session** | DB déjà en `session` |
-| Personne qui répond | joueur / apprenant / participant | **participant** | |
-| Personne qui anime | formateur / animateur / hôte | **animateur** | identifiants code `host:*` conservés |
-| Code d'accès | PIN | **PIN** | conservé |
+| The content its owner creates | quiz | **quiz** | kept (generic) |
+| A live run of a quiz | partie / game / session | **session** | the database already says `session` |
+| The person answering | joueur / apprenant / participant | **participant** | |
+| The person hosting | formateur / animateur / hôte | **animateur** | the `host:*` code identifiers are kept |
+| The access code | PIN | **PIN** | kept |
 
-> Le glossaire complet (tous les termes de l'interface, 5 langues, arbitrages) est tenu dans
+> The full glossary (every term of the interface, in 5 languages, with the reasoning) is kept in
 > [`apps/frontend/src/i18n/GLOSSARY.md`](../../apps/frontend/src/i18n/GLOSSARY.md).
 >
-> Le glossaire s'applique au **texte utilisateur** (valeurs du dictionnaire) et aux **codes** de
-> tokens d'erreur. Les identifiants code (`GameState`, `host:create`, modèle Prisma) **restent** —
-> notamment le terme protocole `host` ≠ terme utilisateur « animateur » (écart volontaire et assumé).
+> The glossary governs **user-facing text** (the dictionary values) and the **codes** of the error
+> tokens. The code identifiers (`GameState`, `host:create`, the Prisma models) **stay** — in
+> particular the protocol term `host` ≠ the user-facing term "animateur", a deliberate divergence.
 
-## Architecture i18n (front)
+## The i18n architecture (front end)
 
-- **Lib** : `react-i18next` + `i18next` (compatible React 19 / Vite ; namespaces, interpolation,
-  pluriels ICU).
-- **Emplacement** : `apps/frontend/src/i18n/` → `index.ts` (init) + `locales/fr/<namespace>.json`.
-- **Découpage en namespaces** par surface : `common`, `dashboard`, `editor`, `live` (hôte/écran/joueur),
-  `join`, `sessions`, `errors` (codes backend), `validation` (codes de champ).
-- **Nommage des clés** : par **feature/emplacement**, pas par nom de domaine
-  (`dashboard.activeGames.stop`, pas `partie.stop`) — pour que le glossaire puisse encore bouger
-  sans casser les clés. Les **valeurs** portent le glossaire (« session », « participant »…).
-- **Pluriels** : on utilise les pluriels ICU natifs (`{count, plural, ...}`) — on **ne porte pas**
-  les `joueur(s)` / `question(s)` littéraux.
-- **Distinction importante** : `quiz.language` (champ existant = langue **du contenu** des questions)
-  ≠ langue de l'**UI**. Deux notions séparées.
+- **Library**: `react-i18next` + `i18next` (compatible with React 19 / Vite; namespaces,
+  interpolation, ICU plurals).
+- **Location**: `apps/frontend/src/i18n/` → `index.ts` (init) + `locales/fr/<namespace>.json`.
+- **Namespaces per surface**: `common`, `dashboard`, `editor`, `live` (host/screen/player), `join`,
+  `sessions`, `errors` (backend codes), `validation` (field codes).
+- **Key naming**: by **feature and place**, not by domain noun (`dashboard.activeGames.stop`, not
+  `partie.stop`) — so the glossary can still move without breaking the keys. The **values** carry
+  the glossary ("session", "participant"…).
+- **Plurals**: native ICU plurals (`{count, plural, ...}`) — we do **not** carry literal
+  `joueur(s)` / `question(s)` forms.
+- **An important distinction**: `quiz.language` (an existing field = the language of the
+  **content** of the questions) ≠ the language of the **UI**. Two separate notions.
 
-## Plan d'intégration (par phases)
+## Integration plan (in phases)
 
-> Contrainte d'ordre : **figer le glossaire (ce doc) AVANT d'extraire les chaînes**, sinon on grave
-> des termes périmés. Chaque phase = un commit/PR autonome, testé.
+> An ordering constraint: **freeze the glossary (this document) BEFORE extracting the strings**, or
+> we carve outdated terms in stone. Each phase is a standalone, tested commit/PR.
 
-### Phase 1 — Infra i18n (aucun changement visible)
-- Ajouter `react-i18next` / `i18next`.
-- Créer `src/i18n/index.ts`, namespaces vides + `common`.
-- **Brancher le harness de test** (`src/test/harness.tsx`) sur l'`I18nextProvider` avec `fr` réel
-  chargé en synchrone → sinon les ~10 assertions `getByText(/français/)` cassent.
-- Ajouter un sélecteur de langue inerte (FR seul) pour valider le câblage.
+### Phase 1 — i18n infrastructure (nothing visible changes)
+- Add `react-i18next` / `i18next`.
+- Create `src/i18n/index.ts`, the empty namespaces plus `common`.
+- **Wire the test harness** (`src/test/harness.tsx`) onto the `I18nextProvider` with the real `fr`
+  loaded synchronously → otherwise the ~10 `getByText(/français/)` assertions break.
+- Add an inert language selector (French only) to validate the wiring.
 
-### Phase 2 — Extraction UI → dictionnaire `fr`
-- Migrer les chaînes route par route (dashboard → editor → live → join → sessions), en appliquant
-  le glossaire dans les **valeurs**.
-- Remplacer les maps locales type `STATUS_LABEL` par des clés i18n.
-- Convertir les pluriels manuels en ICU.
-- Mettre à jour les tests touchés au fil de chaque route (clé via `t()` ou texte FR résolu).
+### Phase 2 — Extract the UI into the `fr` dictionary
+- Migrate the strings route by route (dashboard → editor → live → join → sessions), applying the
+  glossary to the **values**.
+- Replace the local maps such as `STATUS_LABEL` with i18n keys.
+- Convert the hand-written plurals to ICU.
+- Update the affected tests along each route (through `t()` or the resolved French text).
 
-### Phase 3 — Backend = tokens
-- **Enveloppe d'erreur unique** `{ code, params? }`, émise par **deux** filtres alimentant le **même**
-  namespace front `errors` :
-  - **REST** (la majorité des `throw`) : `HttpExceptionFilter` global. ⚠️ Sans lui, un `HttpException`
-    Nest sérialise `{ statusCode, message, error }` — un code plat peut tenir dans `message` mais
-    les `params` n'ont nulle part où aller → les erreurs interpolées (`transition_forbidden`)
-    perdraient leurs paramètres ou garderaient du FR. C'est la moitié silencieuse de « backend = tokens ».
-  - **WS** : `WsExceptionFilter` — faire évoluer l'event `error` de `{ code, message }` vers
-    `{ code, params? }` dans `@live-quizz/contracts` (le `message` FR disparaît ; fallback dev EN seulement).
-- Remplacer chaque `throw new XxxException('texte FR')` par un **code** stable
-  (ex. `quiz.not_found`, `session.finished`, `nickname.taken`, `quiz.transition_forbidden` + `params`).
-- **ValidationPipe custom** : `exceptionFactory` renvoyant `{ code, errors: [{ field, code, params }] }`.
-- Front : namespace `errors` (codes domaine, **niché** pour matcher les codes pointés) +
-  `validation` (codes Zod génériques). `apiErrorText` résout `code`/`params` ; pour
-  `{ code: 'validation', errors }` il traduit **chaque** `{ field, code }` via `validation`.
-- **Source de vérité** : les codes émis par le backend font foi ; `errors.json`/`validation.json`
-  doivent rester en phase avec eux (pas de garde automatique — un code sans clé renvoie la clé brute).
-- Hors scope : descriptions Swagger/OpenAPI (doc **dev**, pas UX).
+### Phase 3 — The backend emits tokens
+- **One error envelope** `{ code, params? }`, emitted by **two** filters feeding the **same** front-end
+  `errors` namespace:
+  - **REST** (most of the `throw`s): a global `HttpExceptionFilter`. ⚠️ Without it, a Nest
+    `HttpException` serialises `{ statusCode, message, error }` — a flat code can fit inside
+    `message`, but `params` has nowhere to go → the interpolated errors
+    (`transition_forbidden`) would lose their parameters or keep their French. This is the silent
+    half of "the backend emits tokens".
+  - **WS**: a `WsExceptionFilter` — move the `error` event from `{ code, message }` to
+    `{ code, params? }` in `@live-quizz/contracts` (the French `message` disappears; an
+    English-only development fallback remains).
+- Replace every `throw new XxxException('French text')` with a stable **code** (say
+  `quiz.not_found`, `session.finished`, `nickname.taken`, `quiz.transition_forbidden` + `params`).
+- **A custom ValidationPipe**: an `exceptionFactory` returning `{ code, errors: [{ field, code, params }] }`.
+- Front end: an `errors` namespace (domain codes, **nested** to match the dotted codes) and a
+  `validation` one (generic Zod codes). `apiErrorText` resolves `code`/`params`; for
+  `{ code: 'validation', errors }` it translates **each** `{ field, code }` through `validation`.
+- **Source of truth**: the codes the backend emits are authoritative; `errors.json` and
+  `validation.json` must stay in step with them (no automatic guard — a code with no key renders
+  the raw key).
+- Out of scope: the Swagger/OpenAPI descriptions (**developer** documentation, not UX).
 
-### Phase ultérieure (séparée) — non planifiée ici
-- Rename projet vers `live-quizz` (packages, scopes npm, images Docker, README).
-- Rename identifiants code `game` → `session` (events WS, `GameState`, modèles Prisma, Orval régénéré,
-  migrations). Gros blast-radius — à traiter avec le rename projet.
+### A later phase (separate) — not planned here
+- Rename the project to `live-quizz` (packages, npm scopes, Docker images, README).
+- Rename the code identifiers `game` → `session` (WS events, `GameState`, Prisma models, Orval
+  regenerated, migrations). A large blast radius — to be handled together with the project rename.
 
-## Conséquences
+## Consequences
 
-- **+** Vocabulaire cohérent et neutre ; ajout d'une 2ᵉ langue trivial (un dossier `locales/en/`).
-- **+** Backend découplé de la présentation ; clients responsables du texte.
-- **−** Changement de contrat (`error` payload) → version `contracts` à bumper, front/back synchronisés.
-- **−** ~10 assertions `getByText` accentuées **+ requêtes `getByRole('button', {name})`** sur libellés
-  FR (« Arrêter », « Présenter », « Éditer »…) à adapter + harness à instrumenter (Phase 1).
+- **+** A coherent, neutral vocabulary; adding a second language becomes trivial (a `locales/en/`
+  folder).
+- **+** The backend is decoupled from presentation; clients own the wording.
+- **−** A contract change (the `error` payload) → the `contracts` version must be bumped, front and
+  back kept in step.
+- **−** ~10 accented `getByText` assertions **plus `getByRole('button', {name})` queries** on French
+  labels ("Arrêter", "Présenter", "Éditer"…) to adapt, and the harness to instrument (Phase 1).

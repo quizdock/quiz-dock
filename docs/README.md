@@ -1,45 +1,45 @@
-# Documentation (vivante)
+# Documentation (living)
 
-> 👤 **Vous hébergez / configurez QuizDock ?** La doc **utilisateur / intégrateur**
-> (installation, configuration, branding, OIDC) est dans
-> [`self-hosting/`](self-hosting/README.md). Ce dossier-ci est pour les **contributeurs**.
+> 👤 **Hosting or configuring QuizDock?** The **user / integrator** documentation
+> (installation, configuration, branding, OIDC) lives in
+> [`self-hosting/`](self-hosting/README.md). This folder is for **contributors**.
 
-Ce dossier contient la **documentation de développement**, tenue à jour **au fil du code** — par opposition au dossier [`../specifications/`](../specifications/README.md) qui fige la conception de référence par version.
+This folder holds the **development documentation**, kept in step **with the code** — as opposed to [`../specifications/`](../specifications/README.md), which freezes the reference design per version.
 
-> Règle (cf. specs technique §18) : à **chaque itération**, on **teste** et on **documente**. Toute évolution de comportement met à jour la doc concernée **dans le même commit/PR**.
+> Rule (see technique §18): **every iteration** is **tested** and **documented**. Any change of behaviour updates the documentation it concerns **in the same commit/PR**.
 
-## Que mettre ici
+## What belongs here
 
-| Type | Exemple |
+| Kind | Example |
 |------|---------|
-| **ADR** (Architecture Decision Records) | `adr/0001-choix-nestjs.md` — décisions techniques datées et leur justification |
-| **Guides développeur** | mise en route locale, conventions de code, workflow git/CI |
-| **Doc d'API vivante** | notes complémentaires à l'OpenAPI généré, exemples d'usage |
-| **Exploitation / runbook** | déploiement, variables d'env, sauvegarde/purge, incidents |
-| **Notes de fonctionnalité** | comportement réel d'une feature livrée, écarts éventuels vs spec |
-| **CHANGELOG** | (à la racine ou ici) historique des versions `0.x` |
+| **ADRs** (Architecture Decision Records) | `adr/0001-i18n-et-glossaire.md` — dated technical decisions and what justified them |
+| **Developer guides** | local setup, code conventions, git/CI workflow |
+| **Living API documentation** | notes alongside the generated OpenAPI, usage examples |
+| **Operations / runbook** | deployment, environment variables, backup and purge, incidents |
+| **Feature notes** | how a shipped feature actually behaves, and where it departs from the spec |
+| **CHANGELOG** | (at the root or here) the history of the `0.x` releases |
 
-## Différence specifications/ vs docs/
+## specifications/ vs docs/
 
-- **`specifications/`** = *ce qu'on a décidé de construire* (intention, figée et versionnée). Source de vérité de la conception.
-- **`docs/`** = *comment c'est réellement fait et exploité* (état courant, évolutif). Source de vérité de l'implémentation.
+- **`specifications/`** = *what we decided to build* (the intent, frozen and versioned). The source of truth for the design.
+- **`docs/`** = *how it is actually built and operated* (the current state, evolving). The source of truth for the implementation.
 
-Quand l'implémentation diverge volontairement d'une spec, on met à jour la spec **et** on note l'écart ici.
+When the implementation departs from a spec on purpose, the spec is updated **and** the gap is noted here.
 
-## Structure suggérée (à créer au besoin)
+## Suggested structure (create as needed)
 
 ```
 docs/
 ├── README.md
-├── adr/                 # décisions d'architecture
-├── dev/                 # guides développeur (setup, conventions)
-├── api/                 # compléments à l'OpenAPI / contrat WS
-└── ops/                 # runbook, déploiement, exploitation
+├── adr/                 # architecture decisions
+├── dev/                 # developer guides (setup, conventions)
+├── api/                 # additions to the OpenAPI / WS contract
+└── ops/                 # runbook, deployment, operations
 ```
 
-## Notes de fonctionnalité
+## Feature notes
 
-- [`quiz-bundle.md`](quiz-bundle.md) — format d'import / export d'un quiz (`quiz.json` + `media/`).
-- [`scoring.md`](scoring.md) — barèmes : points, vitesse, série, variantes par type (plus proche, crédit partiel, tolérant).
-- [`live-session.md`](live-session.md) — session live : snapshot fond/forme, états, retour en arrière, reprise après redémarrage, adresse des invitations.
-- [`../apps/frontend/src/i18n/GLOSSARY.md`](../apps/frontend/src/i18n/GLOSSARY.md) — vocabulaire de l'interface (5 langues) et arbitrages.
+- [`quiz-bundle.md`](quiz-bundle.md) — the import / export format of a quiz (`quiz.json` + `media/`).
+- [`scoring.md`](scoring.md) — the scales: points, speed, streak, per-type variants (closest, partial credit, lenient).
+- [`live-session.md`](live-session.md) — the live session: substance/form snapshot, states, looking back, resuming after a restart, the invitation address.
+- [`../apps/frontend/src/i18n/GLOSSARY.md`](../apps/frontend/src/i18n/GLOSSARY.md) — the interface vocabulary (5 languages) and the choices behind it.
