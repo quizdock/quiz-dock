@@ -55,6 +55,10 @@ QuizDock is a tool for **real-time interactive quizzes**: a host runs a live ses
 | **Leaderboard** | The participants ordered by score, updated between questions. |
 | **Report** | The end-of-session report (attendance, scores, answers per question). |
 | **Quiz bank** | All of a host's private quizzes. |
+| **Template** | A quiz shared as a copy, for other hosts to take and make their own *(RG-17)*. |
+| **Catalogue** | The templates shared on this instance. Local, readable with no network. |
+| **Sharing** | Putting a copy of one's quiz in this instance's catalogue. Reversible; it never reaches outside. |
+| **Publishing** | Sending a copy to an **external** public store. Another act, another context: it needs a network and cannot be undone. |
 
 ---
 
@@ -164,10 +168,42 @@ SCHEDULED/IMMEDIATE → LOBBY → RUNNING → FINISHED → ARCHIVED
 ## 8. Business rules
 
 ### 8.1 Quizzes & the bank
-- A quiz belongs to **one host**; it is **private** (only they see it) in v1.
+- A quiz belongs to **one host**, who alone sees and edits it. It is never shared by reference: what circulates is a copy (§8.1 bis).
 - A quiz must hold **≥ 1 valid question** to be **READY** and launchable.
 - Bounds: `time limit` 5–120 s; **2 to 6 options** depending on the type; **≥ 1 right answer** (except polls).
 - Duplicating creates an independent copy as a **DRAFT**.
+
+### 8.1 bis Sharing a quiz — two verbs, never one
+
+Hosts pass their work around as **templates**, by copy. Two acts, kept apart in
+the interface, the CLI and the documentation, because everything about them
+differs:
+
+| | **Share** (this instance) | **Publish** (public store) |
+|---|---|---|
+| Reach | the hosts of this instance | everyone, and other instances |
+| Where | a catalogue held by this instance | outside, on a repository nobody here controls |
+| Network | none — an instance with no egress shares and takes normally | required |
+| Undo | yes: withdraw the entry, nobody takes it again | no: what left has left |
+| Who arbitrates | the instance operator (`admin`) | the rules of that repository |
+| Verifiable from here | yes, the catalogue is local | no: offline, an instance knows nothing of the remote |
+
+- Sharing puts a **copy** in the catalogue; taking one puts a **draft** in the
+  taker's bank, theirs to rename, translate, cut and present. Nothing links the
+  two afterwards: no propagation, no update pushed, no reach back to the original.
+- **Being shared is not a state of the quiz** — the catalogue holds the entry and
+  is the only truth about it. Being published cannot be a state either, since an
+  instance that works offline can never verify a remote.
+- A template keeps the **same identity across a withdrawal and a new sharing**, so
+  that everyone holding a copy still sees the same template (data §2.2,
+  `publication_id`). A host who shares their own modified copy publishes a
+  **different** template.
+- **Duplicates are accepted**: the same quiz may come back through another route
+  and coexist with its cousins. That is the price of a model with no leash, and
+  it is preferred to the alternatives *(RG-17)*.
+- Only a **READY** quiz may be shared: a draft is not a template.
+- Withdrawing an entry removes it from the catalogue and **never** the copies
+  people made from it.
 
 ### 8.2 Sessions
 - A session hangs off **one quiz** and **one host**.
@@ -306,6 +342,7 @@ Available to the host, **frozen**:
 | RG-14 | `host` is an assignable role (operator or identity provider); `admin` is not handed out; `player` is the floor. The host seat grants `host` in local mode only, as a convenience. |
 | RG-15 | Under `AUTH_MODE=oidc`, every participant is authenticated: the token opens the application, the PIN opens one session. |
 | RG-16 | Personalised tracking is a per-session switch. Off, no individual result is recorded — aggregates only. A chosen display name is never anonymity, and the notice states which case applies. |
+| RG-17 | A quiz is shared by copy, never by reference: sharing puts a copy in the instance's catalogue, taking one puts an independent draft in the taker's bank, and nothing links them afterwards. Only a READY quiz may be shared; withdrawing an entry never touches the copies already made. |
 
 ---
 

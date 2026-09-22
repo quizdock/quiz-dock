@@ -71,12 +71,41 @@ The key cardinalities:
 | `visibility` | enum `quiz_visibility` | NN, DEF `private` | Kept in the schema, **read by nothing and no longer exposed by the API**: sharing is the presence of an entry in the local catalogue, not a state of the quiz (#39), and publishing to a public store cannot be one either since an instance cannot verify a remote (#21). Its fate is settled there. |
 | `language` | text | NN, DEF `fr` | The quiz's language |
 | `question_count` | int | NN, DEF 0 | Denormalised (listing performance) |
+| `publication_id` | char(26) | nullable | ULID of the **template** this quiz is shared as, minted the first time it is shared and never rewritten — withdrawing the entry and sharing again keeps the same template for everyone holding a copy *(RG-17)*. Null for a quiz never shared, and for an imported copy: a copy carries nothing of its origin. |
+| `revision` | int | NN, DEF 0 | The publication counter: bumped when the quiz is shared, **not** by an export |
+| `slug` | text | nullable | Readable name, derived from the title at the first export. Display only — never an identifier, never a path |
+| `namespace` | text | nullable | Display only, same rule as `slug` |
 | `created_at` | timestamptz | NN, DEF now() | |
 | `updated_at` | timestamptz | NN | |
 | `archived_at` | timestamptz | nullable | Archived (soft) |
 
 Index: `(owner_id, status)` for the dashboard.
 Rule: moving to `status=ready` is refused when `question_count = 0` or a question is invalid *(RG-02)*.
+Rule: only a `ready` quiz may be shared *(RG-17)*.
+
+#### The catalogue of shared templates (on disk, not in the database)
+
+Sharing writes a **copy** under `STORE_DIR` (a volume of its own, like the media
+directory), in the bundle format of `docs/quiz-bundle.md`:
+
+```
+STORE_DIR/
+  index.json                 the catalogue: one entry per template
+  <publication_id>/          named by the ULID, never by the slug
+    quiz.json                the manifest, carrying publication_id + revision
+    media/                   the images, audio and video it refers to
+```
+
+The folder **is** the state of sharing: no table mirrors it, so restoring the
+volume, copying it to another instance or removing an entry by hand needs no
+reconciliation. An entry names the title, language, tags, question count,
+author, licence and revision — enough to browse without opening a bundle.
+
+The identifier is a ULID rather than a slug because a human string cannot be
+arbitrated with no registry to ask, which an offline instance never has. The
+same reasoning makes the catalogue readable and writable **with no network at
+all**; a public store (a remote catalogue in the same format) is an extra
+source, never a required one.
 
 ### 2.3 `question`
 
