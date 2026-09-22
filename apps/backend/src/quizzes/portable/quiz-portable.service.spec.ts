@@ -134,7 +134,8 @@ describe('QuizPortableService', () => {
       expect(prisma.tx.quiz.create.mock.calls[0][0].data).toMatchObject({
         slug: 'harbours-101',
         namespace: 'alice/harbours-101',
-        revision: 3,
+        // The copy has never been shared: the origin's revision is not its own (#39).
+        revision: 0,
         domain: 'geography',
         tags: ['sea', 'europe'],
         license: 'CC-BY-4.0',

@@ -95,7 +95,7 @@ and `tags` empty; an imported bundle keeps whatever it carried.
 | `version` (top level) | integer | Manifest schema version, currently `1`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
 | `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Derived from the title at first export or import when absent; the zip is named after it. |
 | `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. |
-| `revision` | integer ≥ 0 | Publication counter: **+1 every time the quiz is shared** to the template catalogue, carried over by import. An integer, not semver. |
+| `revision` | integer ≥ 0 | Publication counter of the quiz the bundle came from: **+1 every time it is shared** to a template catalogue. An import starts the copy back at 0 — it has never been shared itself. An integer, not semver. |
 | `updatedAt` | ISO 8601 UTC | When the quiz was last saved (the export moment, since the export itself stamps it). Informative: ignored on import. |
 | `language` | BCP 47 | A dedicated field, never a tag. |
 | `domain` | string or `null` | Free text until the Store closes the vocabulary. |

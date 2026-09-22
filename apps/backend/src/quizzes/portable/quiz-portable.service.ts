@@ -139,7 +139,9 @@ export class QuizPortableService {
           coverMediaId: imported.coverMediaId,
           slug: imported.slug,
           namespace: imported.namespace,
-          revision: imported.revision,
+          // The copy has never been shared: its publication counter starts at zero,
+          // and the bundle's number stays what it always was — the origin's (#39).
+          revision: 0,
           domain: imported.domain,
           tags: imported.tags,
           license: imported.license,

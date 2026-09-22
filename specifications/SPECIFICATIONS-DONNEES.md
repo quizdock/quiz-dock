@@ -72,7 +72,7 @@ The key cardinalities:
 | `language` | text | NN, DEF `fr` | The quiz's language |
 | `question_count` | int | NN, DEF 0 | Denormalised (listing performance) |
 | `publication_id` | char(26) | nullable | ULID of the **template** this quiz is shared as, minted the first time it is shared and never rewritten — withdrawing the entry and sharing again keeps the same template for everyone holding a copy *(RG-17)*. Null for a quiz never shared, and for an imported copy: a copy carries nothing of its origin. |
-| `revision` | int | NN, DEF 0 | Publication counter: +1 every time the quiz is shared to the catalogue; an export leaves it alone |
+| `revision` | int | NN, DEF 0 | Publication counter: +1 every time the quiz is shared to the catalogue; an export leaves it alone, and an imported copy starts back at 0 |
 | `slug` | text | nullable | Readable name, derived from the title at the first export. Display only — never an identifier, never a path |
 | `namespace` | text | nullable | Display only, same rule as `slug` |
 | `created_at` | timestamptz | NN, DEF now() | |
