@@ -64,5 +64,14 @@
   "error": "發生了錯誤。",
   "host_seat": {
     "taken": "主持人席位已被佔用。"
+  },
+  "store": {
+    "demo_disabled": "示範執行個體已關閉分享功能。",
+    "not_ready": "只有標記為「就緒」的測驗才能分享。",
+    "license_required": "分享前請選擇授權條款：範本是供他人再次使用的，條款會隨之流傳。",
+    "entry_not_found": "該範本已不在目錄中。",
+    "not_yours": "只有作者或管理員才能撤下範本。",
+    "invalid_id": "範本識別碼無效。",
+    "index_unreadable": "無法讀取目錄索引，請聯絡管理員。"
   }
 }

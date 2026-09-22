@@ -64,6 +64,7 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
       REDIS_URL: redis://redis:6379
       MEDIA_DIR: /data/media
+      STORE_DIR: /data/store
       MEDIA_MAX_BYTES: ${MEDIA_MAX_BYTES:-10485760}
       IMPORT_MAX_BYTES: ${IMPORT_MAX_BYTES:-52428800}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
@@ -91,6 +92,7 @@ services:
         condition: service_completed_successfully
     volumes:
       - mediadata:/data/media
+      - storedata:/data/store
       # White-label des assets (optionnel) : décommente pour remplacer logo + CSS
       # par un dossier `./branding/` local. Laissé commenté → logo par défaut bundlé.
       # - ./branding:/app/client/branding:ro
@@ -120,6 +122,7 @@ volumes:
   pgdata:
   redisdata:
   mediadata:
+  storedata:
 
 networks:
   internal:

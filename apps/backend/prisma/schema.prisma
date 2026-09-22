@@ -175,8 +175,14 @@ model Quiz {
   slug            String?
   /// `<username>/<slug>` once submitted to a Quiz Store; null for a quiz that never left this instance.
   namespace       String?
-  /// Content revision: bumped by every export, carried over by import.
+  /// Publication counter: bumped every time the quiz is shared to the template
+  /// catalogue (#39), carried over by import. An export does not move it.
   revision        Int            @default(0)
+  /// ULID of the template this quiz is shared as, minted at the first share and
+  /// never rewritten — withdrawing the entry and sharing again keeps the same
+  /// template for everyone holding a copy (RG-17). Null when never shared, and
+  /// on an imported copy: a copy carries nothing of its origin.
+  publicationId   String?        @map("publication_id") @db.Char(26)
   domain          String?
   tags            String[]       @default([])
   license         String?

@@ -220,14 +220,17 @@ cmd_backup() {
       compose exec -T postgres pg_dump -U "$user" --clean --if-exists "$db" >"$dir/database.sql"
       # `docker cp` needs no tar inside the (distroless) app container.
       compose cp quizdock:/data/media "$dir/media" 2>/dev/null || mkdir -p "$dir/media"
+      # Shared templates live on their own volume too (#39), not in PostgreSQL.
+      compose cp quizdock:/data/store "$dir/store" 2>/dev/null || mkdir -p "$dir/store"
       ;;
     standalone)
       docker exec -i "$CONTAINER" pg_dump -h 127.0.0.1 -U quizdock --clean --if-exists quizdock >"$dir/database.sql"
       docker cp "$CONTAINER:/data/media" "$dir/media" 2>/dev/null || mkdir -p "$dir/media"
+      docker cp "$CONTAINER:/data/store" "$dir/store" 2>/dev/null || mkdir -p "$dir/store"
       ;;
   esac
   cp "$ENV_FILE" "$dir/env" && chmod 600 "$dir/env"
-  info "done: $(du -sh "$dir" | cut -f1) — database.sql, media/, env"
+  info "done: $(du -sh "$dir" | cut -f1) — database.sql, media/, store/, env"
 }
 
 cmd_restore() {
@@ -247,6 +250,10 @@ cmd_restore() {
         info "restoring media"
         compose cp "$dir/media/." quizdock:/data/media
       fi
+      if [ -d "$dir/store" ]; then
+        info "restoring shared templates"
+        compose cp "$dir/store/." quizdock:/data/store
+      fi
       info "starting the app"
       compose up -d quizdock >/dev/null
       ;;
@@ -256,6 +263,10 @@ cmd_restore() {
       if [ -d "$dir/media" ]; then
         info "restoring media"
         docker cp "$dir/media/." "$CONTAINER:/data/media"
+      fi
+      if [ -d "$dir/store" ]; then
+        info "restoring shared templates"
+        docker cp "$dir/store/." "$CONTAINER:/data/store"
       fi
       info "restarting"
       docker restart "$CONTAINER" >/dev/null

@@ -57,9 +57,10 @@ export class QuizPortableService {
 
   /**
    * Zips a quiz, scoped to `ownerId` from the API (any quiz when omitted: the
-   * operator CLI). Every export bumps the quiz `revision` and fixes its `slug`
-   * (derived from the title the first time), so the bundle and the row agree;
-   * the filename mirrors the slug.
+   * operator CLI). An export fixes the `slug` (derived from the title the first
+   * time) so the bundle and the row agree, and the filename mirrors it. It does
+   * **not** move `revision`: that counter belongs to sharing (#39), and a backup
+   * export must not announce a new version of a template.
    */
   async exportZip(id: string, ownerId?: string): Promise<{ filename: string; zip: Buffer }> {
     const found = await this.prisma.quiz.findFirst({
@@ -69,7 +70,7 @@ export class QuizPortableService {
     if (!found) throw new NotFoundException('quiz.not_found');
     const stamped = await this.prisma.quiz.update({
       where: { id: found.id },
-      data: { slug: slugOf(found), revision: { increment: 1 } },
+      data: { slug: slugOf(found) },
       select: { slug: true, revision: true, updatedAt: true },
     });
     const quiz = { ...found, ...stamped };

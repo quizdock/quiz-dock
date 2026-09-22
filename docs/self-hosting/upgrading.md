@@ -25,4 +25,4 @@ Rules:
 - **Back up first.** Some migrations convert data (e.g. 0.4.0 turns slides into blocks), not just the schema.
 - **No rollback.** Once a newer image's migrations ran, an older image will refuse to start on that database (and columns may be gone). To go back, restore the backup.
 - **Read the release notes.** Every release lists its schema changes and anything to do by hand under *Upgrading* — if the section is absent, nothing is required.
-- Media (`MEDIA_DIR`) is untouched by upgrades; keep it on its volume.
+- Media (`MEDIA_DIR`) and the shared templates (`STORE_DIR`) are untouched by upgrades; keep them on their volumes, and back them up with the database — neither lives in PostgreSQL.

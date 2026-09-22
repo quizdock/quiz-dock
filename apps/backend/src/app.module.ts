@@ -11,6 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { QuestionsModule } from './questions/questions.module';
 import { SlidesModule } from './slides/slides.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
+import { StoreModule } from './store/store.module';
 import { RedisModule } from './redis/redis.module';
 import { UsersModule } from './users/users.module';
 
@@ -47,6 +48,7 @@ const serveStatic = process.env.CLIENT_DIR
     AuthModule,
     UsersModule,
     QuizzesModule,
+    StoreModule,
     QuestionsModule,
     SlidesModule,
     MediaModule,

@@ -64,5 +64,14 @@
   "error": "发生了错误。",
   "host_seat": {
     "taken": "主持人席位已被占用。"
+  },
+  "store": {
+    "demo_disabled": "演示实例已关闭共享功能。",
+    "not_ready": "只有标记为“就绪”的测验才能共享。",
+    "license_required": "共享前请选择许可协议：模板是供他人再次使用的，条款会随之流传。",
+    "entry_not_found": "该模板已不在目录中。",
+    "not_yours": "只有作者或管理员才能撤下模板。",
+    "invalid_id": "模板标识无效。",
+    "index_unreadable": "无法读取目录索引，请联系管理员。"
   }
 }

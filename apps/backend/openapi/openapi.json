@@ -787,6 +787,102 @@
         ]
       }
     },
+    "/api/v1/store": {
+      "get": {
+        "operationId": "StoreController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StoreEntryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      },
+      "post": {
+        "operationId": "StoreController_share",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreEntryDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      }
+    },
+    "/api/v1/store/{id}/take": {
+      "post": {
+        "operationId": "StoreController_take",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      }
+    },
+    "/api/v1/store/{id}": {
+      "delete": {
+        "operationId": "StoreController_withdraw",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      }
+    },
     "/api/v1/quizzes/{id}/questions": {
       "post": {
         "operationId": "QuestionsController_add",
@@ -2619,6 +2715,74 @@
         "required": [
           "mediaId",
           "url"
+        ]
+      },
+      "StoreEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "questionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "subject"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "sharedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "language",
+          "tags",
+          "questionCount",
+          "license",
+          "author",
+          "revision",
+          "sharedAt"
         ]
       },
       "CreateQuestionDto": {

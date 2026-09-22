@@ -92,6 +92,12 @@ The multi-service `docker-compose.prod.yml` also exposes:
 
 Which setup offers what: [where participants connect](invitation-address.md).
 
+### Shared templates
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `STORE_DIR` | `/data/store` | Where the **catalogue of shared templates** lives (#39): `index.json` plus one folder per template, in the bundle format. Its own volume, like `MEDIA_DIR` — **back it up with the database**, it is not in PostgreSQL. Nothing here reaches the network: an instance with no egress shares and takes normally. Sharing is off on a demo instance. |
+
 ### Limits & game pacing
 
 | Variable | Default | Description |

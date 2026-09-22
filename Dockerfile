@@ -49,7 +49,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV CLIENT_DIR=/app/client
-ENV MEDIA_DIR=/data/media
+ENV MEDIA_DIR=/data/media \
+    STORE_DIR=/data/store
 COPY --from=build --chown=65532:65532 /out/node_modules ./node_modules
 COPY --from=build --chown=65532:65532 /out/dist ./dist
 COPY --from=build --chown=65532:65532 /out/client ./client

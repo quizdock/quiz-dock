@@ -64,5 +64,14 @@
   "error": "Se ha producido un error.",
   "host_seat": {
     "taken": "El puesto de anfitrión ya está ocupado."
+  },
+  "store": {
+    "demo_disabled": "El uso compartido está desactivado en una instancia de demostración.",
+    "not_ready": "Solo se puede compartir un cuestionario «listo».",
+    "license_required": "Elige una licencia antes de compartir: una plantilla está hecha para reutilizarse y sus condiciones viajan con ella.",
+    "entry_not_found": "Esta plantilla ya no está en el catálogo.",
+    "not_yours": "Solo su autor, o un administrador, puede retirar una plantilla.",
+    "invalid_id": "Identificador de plantilla no válido.",
+    "index_unreadable": "No se puede leer el índice del catálogo; avisa a tu administrador."
   }
 }

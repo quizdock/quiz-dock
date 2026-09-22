@@ -48,6 +48,7 @@ ENV QUIZDOCK_FLAVOR=standalone \
     PORT=3000 \
     CLIENT_DIR=/app/client \
     MEDIA_DIR=/data/media \
+    STORE_DIR=/data/store \
     PGDATA=/data/postgres \
     DATABASE_URL=postgresql://quizdock@127.0.0.1:5432/quizdock \
     REDIS_URL=redis://127.0.0.1:6379 \

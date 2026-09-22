@@ -216,7 +216,7 @@ describe('QuizPortableService', () => {
   });
 
   describe('export', () => {
-    it('zips quiz.json with the media it can read, stamps slug and revision', async () => {
+    it('zips quiz.json with the media it can read, and stamps the slug', async () => {
       prisma.quiz.findFirst.mockResolvedValue({
         id: 'q',
         title: 'Été à Paris !',
@@ -276,12 +276,10 @@ describe('QuizPortableService', () => {
       expect(prisma.quiz.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'q', ownerId: OWNER } }),
       );
-      // First export: the slug is derived from the title and written back; the revision is bumped.
+      // First export: the slug is derived from the title and written back. The
+      // revision belongs to sharing (#39) — a backup export must not move it.
       expect(prisma.quiz.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'q' },
-          data: { slug: 'ete-a-paris', revision: { increment: 1 } },
-        }),
+        expect.objectContaining({ where: { id: 'q' }, data: { slug: 'ete-a-paris' } }),
       );
       expect(filename).toBe('ete-a-paris.quizdock.zip');
       const files = unzipSync(new Uint8Array(zip));

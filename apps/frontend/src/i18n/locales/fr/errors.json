@@ -64,5 +64,14 @@
   "error": "Une erreur est survenue.",
   "host_seat": {
     "taken": "Le siège d’animateur est déjà pris."
+  },
+  "store": {
+    "demo_disabled": "Le partage est désactivé sur une instance de démonstration.",
+    "not_ready": "Seul un quiz « prêt » peut être partagé.",
+    "license_required": "Choisissez une licence avant de partager : un modèle est fait pour être repris, les conditions voyagent avec lui.",
+    "entry_not_found": "Ce modèle n’est plus dans le catalogue.",
+    "not_yours": "Seul son auteur, ou un administrateur, peut retirer un modèle.",
+    "invalid_id": "Identifiant de modèle invalide.",
+    "index_unreadable": "L’index du catalogue est illisible ; prévenez votre administrateur."
   }
 }

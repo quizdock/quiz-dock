@@ -59,6 +59,7 @@ services:
       REDIS_URL: redis://redis:6379
       # Médias stockés sur un volume local et servis par le backend (proxy).
       MEDIA_DIR: /data/media
+      STORE_DIR: /data/store
       MEDIA_MAX_BYTES: ${MEDIA_MAX_BYTES:-10485760}
       IMPORT_MAX_BYTES: ${IMPORT_MAX_BYTES:-52428800}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
@@ -80,6 +81,7 @@ services:
         condition: service_healthy
     volumes:
       - mediadata:/data/media
+      - storedata:/data/store
     ports:
       - '${BACKEND_PORT:-13000}:3000'
     healthcheck:
@@ -123,6 +125,7 @@ volumes:
   pgdata:
   redisdata:
   mediadata:
+  storedata:
 
 networks:
   internal:

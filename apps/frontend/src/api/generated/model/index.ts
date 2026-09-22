@@ -85,6 +85,8 @@ export * from './slideDto';
 export * from './slideDtoBlocksItem';
 export * from './slideDtoGradient';
 export * from './slideDtoTextTone';
+export * from './storeEntryDto';
+export * from './storeEntryDtoAuthor';
 export * from './transitionQuizDto';
 export * from './transitionQuizDtoStatus';
 export * from './updateQuestionDto';

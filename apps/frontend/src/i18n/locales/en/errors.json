@@ -64,5 +64,14 @@
   "error": "An error occurred.",
   "host_seat": {
     "taken": "The host seat is already taken."
+  },
+  "store": {
+    "demo_disabled": "Sharing is off on a demo instance.",
+    "not_ready": "Only a quiz marked “ready” can be shared.",
+    "license_required": "Set a licence before sharing: a template is meant to be reused, so the terms travel with it.",
+    "entry_not_found": "This template is no longer in the catalogue.",
+    "not_yours": "Only its author, or an administrator, can withdraw a template.",
+    "invalid_id": "Invalid template identifier.",
+    "index_unreadable": "The catalogue index cannot be read; ask your administrator."
   }
 }

@@ -6,8 +6,9 @@ is what a Quiz Store repository holds.
 
 - **Export** — editor header → *Export*, `GET /api/v1/quizzes/:id/export`, or
   `qd quiz:export <id> <file.zip>` from the operator CLI
-  ([self-hosting/cli.md](self-hosting/cli.md)). Every export bumps the quiz's
-  `revision` and fixes its `slug` (derived from the title the first time).
+  ([self-hosting/cli.md](self-hosting/cli.md)). An export fixes the quiz's `slug`
+  (derived from the title the first time) and leaves its `revision` alone — that
+  counter moves when the quiz is *shared* to the template catalogue.
 - **Import** — dashboard → *Import* (zip, or a bare `quiz.json` when there is
   no media), `POST /api/v1/quizzes/import` (multipart field `file`), or
   `qd quiz:import <file> <sub|email>`. The result is a **new draft** owned by
@@ -94,7 +95,7 @@ and `tags` empty; an imported bundle keeps whatever it carried.
 | `version` (top level) | integer | Manifest schema version, currently `1`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
 | `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Derived from the title at first export or import when absent; the zip is named after it. |
 | `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. |
-| `revision` | integer ≥ 0 | Content revision: **+1 at every export**, carried over by import. An integer, not semver. |
+| `revision` | integer ≥ 0 | Publication counter: **+1 every time the quiz is shared** to the template catalogue, carried over by import. An integer, not semver. |
 | `updatedAt` | ISO 8601 UTC | When the quiz was last saved (the export moment, since the export itself stamps it). Informative: ignored on import. |
 | `language` | BCP 47 | A dedicated field, never a tag. |
 | `domain` | string or `null` | Free text until the Store closes the vocabulary. |
