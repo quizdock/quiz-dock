@@ -81,7 +81,7 @@ Subjects: OIDC `sub`, or `local:<slug>` in local mode (`user:list` shows them).
 **Upgrade to a release**
 
 ```bash
-./quizdock upgrade 0.5.0     # backup, pull, restart, migrations, doctor
+./quizdock upgrade 0.6.0     # backup, pull, restart, migrations, doctor
 ```
 
 **Someone left with the host seat (local mode)**
