@@ -403,7 +403,13 @@ export interface ClientToServerEvents {
   'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'player:join': (
     p: { pin: string; nickname: string; authToken?: string; avatar?: string },
-    ack: (res: { sessionToken: string; playerId: string }) => void,
+    /**
+     * `nickname` est celui **retenu par le serveur** : le pseudo saisi, ou le nom
+     * du compte quand l'hôte n'ouvre pas le choix (RG-15), suffixé en cas
+     * d'homonyme. Le client affiche celui-là, sinon il montrerait au participant
+     * un nom que personne d'autre ne voit.
+     */
+    ack: (res: { sessionToken: string; playerId: string; nickname: string }) => void,
   ) => void;
   'player:reconnect': (p: { sessionToken: string }, ack: (res: { ok: boolean }) => void) => void;
   /** Change la graine d'avatar (cosmétique) — accepté uniquement avant le démarrage. */

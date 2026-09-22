@@ -127,7 +127,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   async playerJoin(
     @ConnectedSocket() socket: GameSocket,
     @MessageBody() payload: { pin: string; nickname: string; avatar?: string },
-  ): Promise<{ sessionToken: string; playerId: string }> {
+  ): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
     if (isOidcMode() && !socket.data.user) {
       throw new WsException('auth.required');
     }
@@ -144,7 +144,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     });
     // Late join (§5) : positionne immédiatement le retardataire sur l'état courant.
     await this.engine.sendStateTo(socket, res.pin);
-    return { sessionToken: res.sessionToken, playerId: res.playerId };
+    return { sessionToken: res.sessionToken, playerId: res.playerId, nickname: res.nickname };
   }
 
   /**

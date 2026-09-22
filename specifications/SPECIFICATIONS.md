@@ -294,7 +294,7 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 | `host:reveal` | `{ pin }` | the host | Forces the reveal |
 | `host:kick` | `{ pin, playerId }` | the host | Throws a player out |
 | `host:end` | `{ pin }` | the host | Ends the game |
-| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken`. Refused without a valid token under `AUTH_MODE=oidc` (RG-15) |
+| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken` and the **nickname the server retained** (the account's name when the host did not open the choice, a suffix when a homonym was already there). Refused without a valid token under `AUTH_MODE=oidc` (RG-15) |
 | `player:reconnect` | `{ sessionToken }` | a player | Takes back their seat and score |
 | `player:submit` | `{ pin, questionIndex, answer }` | a player | Submits an answer |
 | `ping` | `{ t0 }` | anyone | Measures the latency (answered by `pong`) |

@@ -69,7 +69,7 @@ describe('PlayerPage (client participant)', () => {
 
   it('no-session : affiche le pseudo, rejoint et signale markJoined', async () => {
     hookState.value = view({ status: 'no-session' });
-    joinSession.mockResolvedValue({ sessionToken: 't', playerId: 'p1' });
+    joinSession.mockResolvedValue({ sessionToken: 't', playerId: 'p1', nickname: 'Alice' });
     renderApp('/join/771122');
 
     fireEvent.change(await screen.findByPlaceholderText('Votre pseudo'), {

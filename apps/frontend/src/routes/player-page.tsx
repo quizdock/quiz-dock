@@ -128,7 +128,9 @@ export function PlayerPage() {
     setError(null);
     setJoining(true);
     try {
-      await joinSession(pin, nickname.trim(), avatarSeed || undefined);
+      const joined = await joinSession(pin, nickname.trim(), avatarSeed || undefined);
+      // Le serveur a pu retenir un autre nom (compte, homonyme) : l'écran suit.
+      if (joined.nickname && joined.nickname !== nickname.trim()) setNickname(joined.nickname);
       markJoined();
     } catch (err) {
       setError(err instanceof Error ? err.message : t('player.joinFailed'));

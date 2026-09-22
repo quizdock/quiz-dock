@@ -163,15 +163,18 @@ export async function joinSession(
   pin: string,
   nickname: string,
   avatar?: string,
-): Promise<{ sessionToken: string; playerId: string }> {
+): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
   const s = await ensureGameSocket('guest');
-  const res = await emitWithAckOrError<{ sessionToken: string; playerId: string }>(
-    s,
-    'player:join',
-    { pin, nickname, avatar },
-  );
-  savePlayerSession({ pin, nickname, ...res }); // reprise après fermeture (§6.1)
-  saveNickname(nickname);
+  const res = await emitWithAckOrError<{
+    sessionToken: string;
+    playerId: string;
+    nickname: string;
+  }>(s, 'player:join', { pin, nickname, avatar });
+  // Le serveur peut avoir retenu un autre nom (nom du compte, homonyme suffixé) :
+  // c'est le sien qu'on garde, sinon l'écran du participant contredirait la salle.
+  const retained = res.nickname || nickname;
+  savePlayerSession({ pin, ...res, nickname: retained }); // reprise après fermeture (§6.1)
+  saveNickname(retained);
   return res;
 }
 
