@@ -1,10 +1,11 @@
 import { Link, Outlet, useMatches, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BrandLogo } from '@/components/brand-logo';
 import { SeatCountdown, SeatMenuRow } from '@/components/seat-status';
 import { UserMenu } from '@/components/user-menu';
 import { useAuth } from '../auth/auth-context';
-import { APP_NAME, appConfig, getDemo } from '../config';
+import { APP_NAME, getDemo } from '../config';
 
 /** Route id → `titles.*` key in `common`; the document title reads "<page> · <app>". */
 const TITLE_KEYS: Record<string, string> = {
@@ -57,12 +58,12 @@ export function RootLayout() {
       <header className="flex items-center justify-between gap-4 border-b px-6 py-3">
         {shell === 'participant' ? (
           <span className="flex items-center gap-2 text-lg font-bold">
-            <img src={appConfig.logoUrl} alt="" className="h-7 w-auto rounded-md" />
+            <BrandLogo className="h-7 w-auto rounded-md" />
             <span>{APP_NAME}</span>
           </span>
         ) : (
           <Link to="/" className="flex items-center gap-2 text-lg font-bold">
-            <img src={appConfig.logoUrl} alt="" className="h-7 w-auto rounded-md" />
+            <BrandLogo className="h-7 w-auto rounded-md" />
             <span>{APP_NAME}</span>
           </Link>
         )}

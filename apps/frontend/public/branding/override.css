@@ -1,6 +1,10 @@
 /*
- * Feuille de style d'override (white-label). Vide par défaut.
- * Remplaçable sans rebuild via un volume Docker monté sur ce fichier :
- *   ./branding/override.css:/usr/share/nginx/html/branding/override.css:ro
- * Chargée en dernier dans index.html → peut surcharger n'importe quel style.
+ * White-label override stylesheet. Empty by default, and **optional**: with no
+ * file here the app simply loads no override.
+ *
+ * Replaceable without a rebuild by mounting the branding folder (the path depends
+ * on the setup: `/usr/share/nginx/html/branding` behind the split frontend image,
+ * `/app/client/branding` in the single image).
+ *
+ * Loaded last in index.html, so it can override any style.
  */

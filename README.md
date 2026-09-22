@@ -137,13 +137,15 @@ Copy `.env.example` to `.env` and adjust. The settings you are most likely to to
 |---|---|---|
 | `APP_NAME` | `QuizDock` | App name shown in the UI (white-label) |
 | `APP_LANG` | `en` | Instance language: `en` · `fr` · `es` · `zh` · `zh-TW` |
+| `APP_LOGO_URL` | — | Logo served from elsewhere; empty = look in the mounted `branding/` folder |
 | `AUTH_MODE` | `none` | `none` (local mode) or `oidc` (any OpenID Connect provider) |
 | `HTTP_PORT` | `18080` | Host port for the app |
 | `APP_PUBLIC_URL` | — | Public address of the instance, offered first as the invitation address (QR code, join link) |
 | `DEMO_MODE` | `false` | Guards for an instance open to strangers: 5-minute host seat, no uploads, hourly wipe |
 
-Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.svg` + `override.css`
-into the mounted `branding/` folder.
+Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.<svg|avif|webp|png|jpg|jpeg|gif>`
++ `override.css` into the mounted `branding/` folder (or point `APP_LOGO_URL` at a logo
+hosted elsewhere).
 
 📖 **Self-hosting guide** — every variable, white-labeling and OIDC setup:
 [`docs/self-hosting/`](https://github.com/quizdock/quiz-dock/tree/main/docs/self-hosting).

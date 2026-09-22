@@ -30,6 +30,7 @@ const serveStatic = process.env.CLIENT_DIR
           '/api',
           '/health',
           '/config.js',
+          '/branding/override.css',
           '/socket.io/{*splat}',
           '/socket.io',
         ],

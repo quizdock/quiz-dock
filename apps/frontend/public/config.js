@@ -4,4 +4,6 @@
 window.__APP_CONFIG__ = {
   appName: 'QuizDock',
   lang: 'en',
+  // Vide = logo cherché dans `branding/` (tous formats web), sinon celui du build.
+  logoUrl: '',
 };
