@@ -204,6 +204,9 @@ differs:
 - Only a **READY** quiz may be shared: a draft is not a template.
 - Withdrawing an entry removes it from the catalogue and **never** the copies
   people made from it.
+- On a **demo instance** there is no catalogue at all: it is disposable and
+  single-host (one short seat at a time, no media, wiped regularly), so sharing
+  has nobody to share with.
 
 ### 8.2 Sessions
 - A session hangs off **one quiz** and **one host**.
