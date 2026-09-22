@@ -89,7 +89,7 @@ The multi-service `docker-compose.prod.yml` also exposes:
 | `APP_PUBLIC_URL` | — | Public address of the instance (`https://quiz.example.org`). Offered first as the invitation address (QR code, join link) on the host console. |
 | `HOST_LAN_IPS` | — | Comma-separated LAN IPs of the machine (bare IPs), for setups where the container cannot see the host's interfaces (Docker Desktop, bridge network). Offered as invitation addresses with the scheme and port of the page. |
 
-Which setup offers what: [where participants connect](README.md#where-participants-connect-the-invitation-address).
+Which setup offers what: [where participants connect](invitation-address.md).
 
 ### Limits & game pacing
 

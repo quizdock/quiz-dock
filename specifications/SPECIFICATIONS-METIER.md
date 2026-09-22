@@ -182,11 +182,59 @@ SCHEDULED/IMMEDIATE → LOBBY → RUNNING → FINISHED → ARCHIVED
 - A **late answer scores nothing** (see technique §6).
 - A participant who was **thrown out** cannot rejoin the same session under the same nickname.
 
-### 8.3 bis Tracing the answers (full-capture mode)
+### 8.3 bis Who may host — the roles
+
+Three roles, three scopes:
+
+| Role | Scope | How it is granted |
+|---|---|---|
+| `player` | The floor: reach the service and take part in sessions. | Every account has it. |
+| `host` | Create, edit and present quizzes. | **Assigned** — by the operator (CLI) or by the identity provider (a claim). In local mode the host seat also grants it to the first comer, as a zero-configuration convenience. |
+| `admin` | Everything, including administering the instance. | Assigned by the operator only. Not a role to hand out: it is the equivalent of root. |
+
+*(Target, not implemented yet: today `host` is only ever derived — from the seat or from
+the token — so granting it to someone in local mode means giving them `admin`, which is a
+workaround, not a design.)*
+
+### 8.3 ter Taking part under OIDC
+
+Two independent barriers, and the second one is unchanged:
+
+- **the token** grants access to the application (being authenticated, role `player`);
+- **the PIN** grants access to one session, the one a host is running.
+
+So under `AUTH_MODE=oidc` everyone authenticates, participants included: a valid account
+opens no one else's session, and a PIN opens nothing without an account. Under
+`AUTH_MODE=none` nothing changes — the PIN stays the only barrier, which is the point of
+that mode.
+
+The **display name** comes from the account (the `preferred_username` claim, or whichever
+claim the deployment points at). The host may allow participants to **pick their own
+display name** for the session; it changes what the podium and the leaderboard show,
+nothing else — the results stay attached to the account.
+
+*(Target, not implemented yet: today a participant joins by PIN with no account whatever
+the mode.)*
+
+### 8.3 quater Tracing the answers (full-capture mode)
 - By default, only the **aggregated data** per question is kept (success rate, distribution) — data minimisation.
 - The host may turn on **full-capture mode** **when creating the session**: every individual answer (who, what, when, points) is then kept for audit or certification.
 - When that mode is on, **the participants are told through a notice shown at the start of the session**, before anything is collected (transparency and consent).
 - Retention follows the same deadline as the report *(RG-11)*.
+
+**Personalised tracking** is a separate, per-session switch. On (the default under OIDC),
+the results are attached to the account: the archived leaderboard, each participant's
+sheet and their history. Off, **no individual result is recorded at all** — only the
+per-question aggregates and the session summary. The live game is unaffected: the
+leaderboard and the podium still run, they are simply not archived. Choosing a display
+name changes none of this, and the notice shown to the participants must say which of the
+three cases applies:
+
+| Personalised tracking | Full capture | What the notice says |
+|---|---|---|
+| on | no | Your taking part and your score are recorded under your account. |
+| on | yes | …and every one of your answers is kept. |
+| off | — | Your individual results are not recorded — only the group's overall results are. |
 
 ### 8.4 Scoring (from the business side)
 - Points = correctness **and** speed (the formula is in technique §5); a poll scores 0.
@@ -256,6 +304,9 @@ Available to the host, **frozen**:
 | RG-11 | Reports are kept for a configurable duration (24 months by default). |
 | RG-12 | A participant thrown out is not readmitted under the same nickname. |
 | RG-13 | Full capture is optional, chosen when the session is created; a notice to the participants at the start of the session is mandatory before anything is collected. |
+| RG-14 | `host` is an assignable role (operator or identity provider); `admin` is not handed out; `player` is the floor. The host seat grants `host` in local mode only, as a convenience. |
+| RG-15 | Under `AUTH_MODE=oidc`, every participant is authenticated: the token opens the application, the PIN opens one session. |
+| RG-16 | Personalised tracking is a per-session switch. Off, no individual result is recorded — aggregates only. A chosen display name is never anonymity, and the notice states which case applies. |
 
 ---
 

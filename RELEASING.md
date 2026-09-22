@@ -118,7 +118,7 @@ and the mounted `branding/` folder.
 - [ ] Tag `vX.Y.Z` pushed.
 - [ ] Image built multi-arch and pushed (`:X.Y.Z`, `:X.Y`, `:latest`).
 - [ ] README + landing page updated with `docker pull` instructions.
-- [ ] Release notes carry an **Upgrading** section when the release adds migrations: what changes in the schema, whether data is converted, anything manual. (Self-hosters are told to read it — see `docs/self-hosting/README.md#upgrading`.)
+- [ ] Release notes carry an **Upgrading** section when the release adds migrations: what changes in the schema, whether data is converted, anything manual. (Self-hosters are told to read it — see `docs/self-hosting/upgrading.md`.)
 
 > The Docker Hub repo overview is synced automatically from `README.md` by the
 > `dockerhub-readme` job in `release.yml` — no manual copy-paste.

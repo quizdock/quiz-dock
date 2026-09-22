@@ -127,7 +127,7 @@ Migrations run **automatically** on every start: pull the new tag and `up` again
 **Back up PostgreSQL first**, and **don't roll back** an image once its migrations ran —
 restore the backup instead. With the script: `./quizdock upgrade 0.5.0` (backup → pull →
 restart → doctor). Full procedure:
-[self-hosting → Upgrading](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/README.md#upgrading).
+[self-hosting → Upgrading](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrading.md).
 
 ## ⚙️ Configuration
 

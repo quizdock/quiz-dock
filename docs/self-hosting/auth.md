@@ -55,7 +55,39 @@ OIDC_AUDIENCE=                                  # optional: expected `aud`
 OIDC_ROLES_CLAIM=roles                          # dotted path of the roles array claim
 ```
 
-## Roles
+## Who may host — assigning roles
+
+Three roles exist: **`player`** (join sessions), **`host`** (create, edit and present
+quizzes) and **`admin`** (host privileges, granted by the operator). Where the role
+comes from depends on the mode:
+
+| Mode | How someone becomes a host |
+|---|---|
+| `none` (local) | By **taking the host seat** — first come, first served, with the confirmation dialog. Only one at a time. |
+| `oidc` | By carrying the **`host` role in their token**, under the claim `OIDC_ROLES_CLAIM` points at. No seat, no limit on how many. |
+
+**Skipping the seat ceremony (local mode).** Promote the account once, from the host:
+
+```bash
+./quizdock user:list                                   # find the subject, e.g. local:alice
+./quizdock user:set-role local:alice admin
+```
+
+`admin` is **sticky**: it outranks the seat and is never downgraded — by a seat claim in
+local mode, or by the IdP claims under OIDC. That account keeps host privileges without
+ever claiming the seat, and other people can still take the seat for themselves. The
+user must have signed in at least once to exist in the database (`user:list` shows them).
+
+If instead the seat is simply stuck — claimed with no expiry by someone who left:
+
+```bash
+./quizdock seat:status
+./quizdock seat:release
+```
+
+Both commands are in the [CLI guide](cli.md).
+
+## Roles in the token (OIDC)
 
 QuizDock reads a roles array from the token. The **`host`** role grants host
 privileges (create / edit / present quizzes) and is **enforced** on every host

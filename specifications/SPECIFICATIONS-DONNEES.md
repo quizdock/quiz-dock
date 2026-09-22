@@ -150,6 +150,7 @@ CHECKs, in SQL or in the application, depending on the type:
 | `language` | text | NN | The session's language |
 | `player_count` | int | NN, DEF 0 | How many participants played |
 | `success_rate` | numeric | nullable | The mean success rate (%) |
+| `personal_tracking` | boolean | NN, DEF true | **Personalised tracking**: when false, no `player_result_log` (and therefore no `answer_log`) is written for the session — only `question_result_stat` and this summary. Chosen when the session is created; the participants are told at the start (RG-16). *(Target, not implemented yet.)* |
 | `full_capture` | boolean | NN, DEF false | **Full-capture mode**: when true, every individual answer is persisted (`answer_log`). Decided when the session is created; **the participants are told at the start of the session** (a displayed notice, see §6) |
 | `started_at` | timestamptz | NN | When it actually started |
 | `ended_at` | timestamptz | NN | When it ended |
@@ -325,6 +326,7 @@ interface SubmitAnswerPayload {             // client → server
 | **Retention** | `game_session_log.retain_until` (DEF +24 months, RG-11). A scheduled purge beyond that. |
 | **Deleting a quiz** | Refused when unpurged `game_session_log` rows reference it **without a snapshot**; the recommendation is a JSONB snapshot to decouple them (see §2.7). |
 | **Raw answers** | Not persisted individually by default (aggregated into `question_result_stat`) → data minimisation. |
+| **Personalised tracking off** | `personal_tracking = false`: no individual row at all (`player_result_log`, `answer_log`), only the per-question aggregates and the session summary. A display name chosen by the participant is never a substitute — with tracking on, the results stay attached to the account (RG-16). |
 | **Full-capture mode** | When `full_capture = true`, every answer is persisted (`answer_log`). **Turned on by the host when the session is created**; **the participants are told through a notice at the start of the session** (transparency and consent) before anything is collected. Reserved for audit and certification needs. |
 | **Referential integrity** | CASCADE on the direct children (question, option); restriction or a snapshot to preserve the session history. |
 
