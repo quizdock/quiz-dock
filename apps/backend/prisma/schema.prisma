@@ -122,15 +122,20 @@ enum SessionStatus {
 
 /// §2.1 — comptes (animateurs, participants connectés, admins).
 model User {
-  id          String    @id @default(ulid()) @db.Char(26)
-  oidcSubject String    @unique @map("oidc_subject")
-  displayName String    @map("display_name")
-  email       String?   @unique @db.Citext
-  role        UserRole  @default(player)
-  locale      String    @default("fr")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+  id           String    @id @default(ulid()) @db.Char(26)
+  oidcSubject  String    @unique @map("oidc_subject")
+  displayName  String    @map("display_name")
+  email        String?   @unique @db.Citext
+  /// Effective role, recomputed on every request: the highest of the assigned
+  /// role and the one derived from the context (IdP claims, or the host seat).
+  role         UserRole  @default(player)
+  /// What the operator granted through the CLI (`host`, `admin`), null otherwise.
+  /// Sticky: provisioning never lowers it, and the host seat never clears it (RG-14).
+  assignedRole UserRole? @map("assigned_role")
+  locale       String    @default("fr")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   quizzes        Quiz[]
   mediaAssets    MediaAsset[]

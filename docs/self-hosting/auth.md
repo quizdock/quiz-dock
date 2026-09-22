@@ -58,25 +58,29 @@ OIDC_ROLES_CLAIM=roles                          # dotted path of the roles array
 ## Who may host — assigning roles
 
 Three roles exist: **`player`** (join sessions), **`host`** (create, edit and present
-quizzes) and **`admin`** (host privileges, granted by the operator). Where the role
-comes from depends on the mode:
+quizzes) and **`admin`** (host privileges plus administering the instance — the
+equivalent of root, not a role to hand out). A role is either **assigned** by the
+operator, or **derived** from the context on every request:
 
 | Mode | How someone becomes a host |
 |---|---|
 | `none` (local) | By **taking the host seat** — first come, first served, with the confirmation dialog. Only one at a time. |
 | `oidc` | By carrying the **`host` role in their token**, under the claim `OIDC_ROLES_CLAIM` points at. No seat, no limit on how many. |
+| either | By an **operator grant**: `user:set-role <sub\|email> host`. No seat, no claim needed. |
 
-**Skipping the seat ceremony (local mode).** Promote the account once, from the host:
+**Granting host privileges.** Promote the account once, from the host:
 
 ```bash
 ./quizdock user:list                                   # find the subject, e.g. local:alice
-./quizdock user:set-role local:alice admin
+./quizdock user:set-role local:alice host              # or admin, to administer the instance
 ```
 
-`admin` is **sticky**: it outranks the seat and is never downgraded — by a seat claim in
-local mode, or by the IdP claims under OIDC. That account keeps host privileges without
-ever claiming the seat, and other people can still take the seat for themselves. The
-user must have signed in at least once to exist in the database (`user:list` shows them).
+A grant is **sticky**: it outranks the seat and is never lowered — not by a seat
+claim or its expiry in local mode, not by the IdP claims under OIDC. That account
+keeps its privileges without ever claiming the seat, and other people can still
+take the seat for themselves. `user:set-role … player` revokes the grant; the role
+is then derived again on the next request. The user must have signed in at least
+once to exist in the database (`user:list` shows them, with their grant).
 
 If instead the seat is simply stuck — claimed with no expiry by someone who left:
 

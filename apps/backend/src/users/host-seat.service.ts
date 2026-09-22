@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, Logger } from '@nestjs/common';
 import { type HostSeat, type User, UserRole } from '@prisma/client';
 import { type AuthPrincipal, LOCAL_SUB_PREFIX } from '../auth/auth-provider';
+import { effectiveRole } from '../auth/roles';
 import { DEMO_SEAT_MINUTES, isDemoMode } from '../demo/demo.config';
 import { PrismaService } from '../prisma/prisma.service';
 import { SampleQuizzesService } from '../quizzes/samples/sample-quizzes.service';
@@ -58,24 +59,21 @@ export class HostSeatService {
    * Provisions a local principal. The role is *derived* from the seat on every
    * request: `host` while this user holds a live seat, `player` otherwise — so an
    * expiry or a release takes effect immediately, and nothing is ever claimed here.
-   * (`admin`, granted by an operator through the CLI, is kept as is.)
+   * An operator grant (`host` or `admin`, CLI) outranks the seat and survives it.
    */
   async provision(principal: AuthPrincipal): Promise<User> {
     const [existing, seat] = await Promise.all([
       this.prisma.user.findUnique({
         where: { oidcSubject: principal.sub },
-        select: { id: true, role: true },
+        select: { id: true, assignedRole: true },
       }),
       this.prisma.hostSeat.findUnique({ where: { id: SEAT_ID } }),
     ]);
     const isHolder = !!existing && HostSeatService.isLive(seat) && seat.userId === existing.id;
-    // An operator-granted `admin` (CLI) is sticky and outranks the seat.
-    const role =
-      existing?.role === UserRole.admin
-        ? UserRole.admin
-        : isHolder
-          ? UserRole.host
-          : UserRole.player;
+    const role = effectiveRole(
+      existing?.assignedRole ?? null,
+      isHolder ? UserRole.host : UserRole.player,
+    );
     return this.prisma.user.upsert({
       where: { oidcSubject: principal.sub },
       create: {
@@ -108,15 +106,26 @@ export class HostSeatService {
         throw new ConflictException('host_seat.taken');
       }
       if (seat && seat.userId !== user.id) {
-        // Expired seat left by someone else: demote them before taking over.
-        await tx.user.update({ where: { id: seat.userId }, data: { role: UserRole.player } });
+        // Expired seat left by someone else: demote them before taking over — back
+        // to their operator grant when they have one, `player` otherwise.
+        const previous = await tx.user.findUnique({
+          where: { id: seat.userId },
+          select: { assignedRole: true },
+        });
+        await tx.user.update({
+          where: { id: seat.userId },
+          data: { role: previous?.assignedRole ?? UserRole.player },
+        });
       }
       await tx.hostSeat.upsert({
         where: { id: SEAT_ID },
         create: { id: SEAT_ID, userId: user.id, claimedAt, expiresAt },
         update: { userId: user.id, claimedAt, expiresAt },
       });
-      await tx.user.update({ where: { id: user.id }, data: { role: UserRole.host } });
+      await tx.user.update({
+        where: { id: user.id },
+        data: { role: effectiveRole(user.assignedRole, UserRole.host) },
+      });
     });
     this.log.log(
       `Host seat claimed by "${user.displayName}" (${user.oidcSubject}), expires ${expiresAt?.toISOString() ?? 'never'}`,
@@ -150,11 +159,17 @@ export class HostSeatService {
 
   /** Operator override: frees the seat whoever holds it (admin CLI). */
   async forceRelease(): Promise<boolean> {
-    const seat = await this.prisma.hostSeat.findUnique({ where: { id: SEAT_ID } });
+    const seat = await this.prisma.hostSeat.findUnique({
+      where: { id: SEAT_ID },
+      include: { user: { select: { assignedRole: true } } },
+    });
     if (!seat) return false;
     await this.prisma.$transaction([
       this.prisma.hostSeat.delete({ where: { id: SEAT_ID } }),
-      this.prisma.user.update({ where: { id: seat.userId }, data: { role: UserRole.player } }),
+      this.prisma.user.update({
+        where: { id: seat.userId },
+        data: { role: seat.user.assignedRole ?? UserRole.player },
+      }),
     ]);
     this.log.log('Host seat force-released by an operator');
     return true;
@@ -165,7 +180,10 @@ export class HostSeatService {
     if (!HostSeatService.isLocal(user.oidcSubject)) return false;
     const res = await this.prisma.hostSeat.deleteMany({ where: { id: SEAT_ID, userId: user.id } });
     if (res.count > 0) {
-      await this.prisma.user.update({ where: { id: user.id }, data: { role: UserRole.player } });
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { role: user.assignedRole ?? UserRole.player },
+      });
       this.log.log(`Host seat released by ${user.oidcSubject}`);
     }
     return res.count > 0;

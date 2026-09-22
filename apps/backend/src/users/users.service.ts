@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { type User, UserRole } from '@prisma/client';
 import type { AuthPrincipal } from '../auth/auth-provider';
+import { effectiveRole } from '../auth/roles';
 import { PrismaService } from '../prisma/prisma.service';
 import { HostSeatService } from './host-seat.service';
 
@@ -28,12 +29,12 @@ export class UsersService {
       return this.seat.provision(principal);
     }
     const claimed = this.resolveRole(principal.roles);
-    // An operator-granted `admin` (CLI) is sticky: never downgraded by the claims.
+    // An operator grant (CLI) is sticky: the claims derive a role, never lower it.
     const existing = await this.prisma.user.findUnique({
       where: { oidcSubject: principal.sub },
-      select: { role: true },
+      select: { assignedRole: true },
     });
-    const role = existing?.role === UserRole.admin ? UserRole.admin : claimed;
+    const role = effectiveRole(existing?.assignedRole ?? null, claimed);
     return this.prisma.user.upsert({
       where: { oidcSubject: principal.sub },
       create: {

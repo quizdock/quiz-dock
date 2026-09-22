@@ -23,13 +23,20 @@ interface Seat {
 
 function makeService(seat: Seat | null, knownUsers: User[] = [alice, bob]) {
   const users = new Map(knownUsers.map((u) => [u.oidcSubject, u]));
+  const byId = new Map(knownUsers.map((u) => [u.id, u]));
+  const grantOf = (u: User | undefined) => ({ assignedRole: u?.assignedRole ?? null });
   const tx = {
     $executeRaw: jest.fn().mockResolvedValue(0),
     hostSeat: {
       findUnique: jest.fn().mockResolvedValue(seat),
       upsert: jest.fn().mockResolvedValue(undefined),
     },
-    user: { update: jest.fn().mockResolvedValue(undefined) },
+    user: {
+      findUnique: jest.fn(async ({ where }: { where: { id: string } }) =>
+        grantOf(byId.get(where.id)),
+      ),
+      update: jest.fn().mockResolvedValue(undefined),
+    },
   };
   const prisma = {
     $transaction: jest.fn((fn: (t: typeof tx) => unknown) => fn(tx)),
@@ -43,7 +50,7 @@ function makeService(seat: Seat | null, knownUsers: User[] = [alice, bob]) {
     user: {
       findUnique: jest.fn(async ({ where }: { where: { oidcSubject: string } }) => {
         const u = users.get(where.oidcSubject);
-        return u ? { id: u.id } : null;
+        return u ? { id: u.id, ...grantOf(u) } : null;
       }),
       upsert: jest.fn(async ({ create }: { create: Record<string, unknown> }) => ({
         id: users.get(String(create.oidcSubject))?.id ?? 'u-new',
@@ -79,6 +86,18 @@ describe('HostSeatService.provision', () => {
   it('demotes the holder once the seat has expired', async () => {
     const { service } = makeService({ id: 1, userId: alice.id, expiresAt: past });
     expect((await service.provision(principal(alice))).role).toBe('player');
+  });
+
+  it('an operator grant outranks the seat and survives its expiry (RG-14)', async () => {
+    const granted = { ...bob, assignedRole: 'host' } as User;
+    const { service } = makeService({ id: 1, userId: alice.id, expiresAt: future }, [
+      alice,
+      granted,
+    ]);
+    // Alice holds the seat; Bob hosts all the same, without ever taking it.
+    expect((await service.provision(principal(granted))).role).toBe('host');
+    const expired = makeService({ id: 1, userId: granted.id, expiresAt: past }, [granted]);
+    expect((await expired.service.provision(principal(granted))).role).toBe('host');
   });
 });
 
@@ -145,6 +164,22 @@ describe('HostSeatService.claim', () => {
     expect(tx.user.update).toHaveBeenCalledWith({ where: { id: bob.id }, data: { role: 'host' } });
   });
 
+  it('a taken-over admin keeps their grant, and an admin claimer stays admin', async () => {
+    const admin = { ...alice, assignedRole: 'admin' } as User;
+    const { service, tx } = makeService({ id: 1, userId: admin.id, expiresAt: past }, [admin, bob]);
+    await service.claim(bob, 30);
+    expect(tx.user.update).toHaveBeenCalledWith({
+      where: { id: admin.id },
+      data: { role: 'admin' },
+    });
+    const own = makeService(null, [admin]);
+    await own.service.claim(admin, null);
+    expect(own.tx.user.update).toHaveBeenCalledWith({
+      where: { id: admin.id },
+      data: { role: 'admin' },
+    });
+  });
+
   it('lets the holder renew their own seat', async () => {
     const { service, tx } = makeService({ id: 1, userId: alice.id, expiresAt: future });
     await expect(service.claim(alice, 120)).resolves.toMatchObject({ holder: 'Alice' });
@@ -185,6 +220,12 @@ describe('HostSeatService.state / release', () => {
       data: { role: 'player' },
     });
     await expect(service.release(bob)).resolves.toBe(false);
+    const granted = makeService({ id: 1, userId: alice.id, expiresAt: null });
+    await granted.service.release({ ...alice, assignedRole: 'host' } as User);
+    expect(granted.prisma.user.update).toHaveBeenCalledWith({
+      where: { id: alice.id },
+      data: { role: 'host' },
+    });
     await expect(service.release({ ...bob, oidcSubject: 'oidc-123' } as User)).resolves.toBe(false);
   });
 });

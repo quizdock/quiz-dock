@@ -226,16 +226,27 @@ describe('user commands', () => {
     expect(text()).toContain('"quizzes":2');
   });
 
-  it('user:set-role grants/revokes admin by subject or e-mail, refuses host', async () => {
+  it('user:set-role grants host or admin, and revokes with player', async () => {
     const { out, text } = memOutput();
     const prisma = db();
     await userSetRole(out, prisma, 'alice@ex.io', 'admin');
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
-      data: { role: 'admin' },
+      data: { assignedRole: 'admin', role: 'admin' },
     });
     expect(text()).toContain('is now admin');
-    await expect(userSetRole(out, prisma, 'alice@ex.io', 'host')).rejects.toThrow(CliError);
+    await userSetRole(out, prisma, 'alice@ex.io', 'host');
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { assignedRole: 'host', role: 'host' },
+    });
+    await userSetRole(out, prisma, 'alice@ex.io', 'player');
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { assignedRole: null, role: 'player' },
+    });
+    expect(text()).toContain('grant revoked');
+    await expect(userSetRole(out, prisma, 'alice@ex.io', 'root')).rejects.toThrow(CliError);
     await expect(userSetRole(out, db(null), 'nobody', 'admin')).rejects.toThrow('No user');
   });
 

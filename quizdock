@@ -316,7 +316,7 @@ Maintenance
 Administration (relayed to the CLI inside the container)
   doctor                Check env, database, migrations, Redis, media, OIDC
   seat:status | seat:release
-  user:list | user:set-role <sub|email> admin|player
+  user:list | user:set-role <sub|email> host|admin|player
   samples:load <sub|email>
   quiz:list [<sub|email>]
   quiz:export <id> <file.zip>       Write a quiz bundle (quiz.json + media/) on the host

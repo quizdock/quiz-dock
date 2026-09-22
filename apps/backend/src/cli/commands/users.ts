@@ -26,6 +26,7 @@ export async function userList(out: Output, prisma: Db): Promise<void> {
       subject: u.oidcSubject,
       email: u.email,
       role: u.role,
+      granted: u.assignedRole ?? '',
       quizzes: u._count.quizzes,
       createdAt: u.createdAt,
     })),
@@ -33,10 +34,10 @@ export async function userList(out: Output, prisma: Db): Promise<void> {
 }
 
 /**
- * `user:set-role <sub|email> admin|player`. `admin` is an operator grant that
- * provisioning never overrides (sticky); `player` revokes it — the role is then
- * derived again from the IdP claims (OIDC) or the host seat (local mode) on the
- * user's next request.
+ * `user:set-role <sub|email> host|admin|player` (RG-14). `host` and `admin` are
+ * operator grants that provisioning never lowers (sticky, and they outrank the
+ * host seat); `player` revokes the grant — the role is then derived again from
+ * the IdP claims (OIDC) or the host seat (local mode) on the user's next request.
  */
 export async function userSetRole(
   out: Output,
@@ -44,18 +45,21 @@ export async function userSetRole(
   who: string,
   role: string,
 ): Promise<void> {
-  if (role !== UserRole.admin && role !== UserRole.player) {
-    throw new CliError(
-      `Role must be "admin" (grant) or "player" (revoke); "host" is derived, not assigned.`,
-      2,
-    );
+  if (role !== UserRole.admin && role !== UserRole.host && role !== UserRole.player) {
+    throw new CliError(`Role must be "host" or "admin" (grant), or "player" (revoke).`, 2);
   }
   const user = await findUser(prisma, who);
-  await prisma.user.update({ where: { id: user.id }, data: { role } });
+  const granted = role === UserRole.player ? null : role;
+  await prisma.user.update({
+    where: { id: user.id },
+    // The effective role follows the grant right away; a revoke drops to `player`
+    // until the next request derives it again from the claims or the seat.
+    data: { assignedRole: granted, role: granted ?? UserRole.player },
+  });
   out.line(
-    role === UserRole.admin
-      ? `${user.displayName} (${user.oidcSubject}) is now admin.`
-      : `${user.displayName} (${user.oidcSubject}) admin grant revoked; role is derived again on next request.`,
+    granted
+      ? `${user.displayName} (${user.oidcSubject}) is now ${granted}.`
+      : `${user.displayName} (${user.oidcSubject}) grant revoked; role is derived again on next request.`,
   );
 }
 

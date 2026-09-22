@@ -66,8 +66,8 @@ which still works too.)
 | `migrate:status` | Applied / pending / failed migrations (folders shipped in the image vs `_prisma_migrations`). |
 | `seat:status` | Local mode: who holds the host seat, since when, until when. |
 | `seat:release` | Operator override: free the seat whoever holds it (e.g. claimed with no expiry and abandoned). |
-| `user:list` | Accounts with subject, e-mail, role (as last provisioned), quiz count. |
-| `user:set-role <sub\|email> admin\|player` | Grant the `admin` role (sticky: never overridden by IdP claims or the host seat) or revoke it. `host` is derived, never assigned. |
+| `user:list` | Accounts with subject, e-mail, role (as last provisioned), the operator grant if any, quiz count. |
+| `user:set-role <sub\|email> host\|admin\|player` | Grant `host` (create, edit and present quizzes) or `admin` (that, plus administering the instance) — sticky: never overridden by IdP claims or the host seat. `player` revokes the grant; the role is derived again on the next request. |
 | `samples:load <sub\|email>` | Add the two sample quizzes to that user's bank. |
 | `quiz:list [<sub\|email>]` | Quizzes with id, title, owner, status, question count, slug, revision — every one, or one user's. |
 | `quiz:export <id> <file.zip\|->` | The quiz as a bundle ([quiz-bundle.md](../quiz-bundle.md)), whoever owns it; `-` streams the zip to stdout. Bumps the quiz `revision`, like the in-app export. |
@@ -91,11 +91,11 @@ Subjects: OIDC `sub`, or `local:<slug>` in local mode (`user:list` shows them).
 ./quizdock seat:release
 ```
 
-**Bootstrap an administrator in OIDC mode**
+**Let someone host without the seat (or bootstrap an administrator)**
 
 ```bash
 ./quizdock user:list
-./quizdock user:set-role alice@example.com admin
+./quizdock user:set-role alice@example.com host     # admin to administer the instance
 ```
 
 **Move a quiz to another instance, or publish it**

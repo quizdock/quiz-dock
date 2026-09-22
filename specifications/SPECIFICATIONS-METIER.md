@@ -192,9 +192,10 @@ Three roles, three scopes:
 | `host` | Create, edit and present quizzes. | **Assigned** — by the operator (CLI) or by the identity provider (a claim). In local mode the host seat also grants it to the first comer, as a zero-configuration convenience. |
 | `admin` | Everything, including administering the instance. | Assigned by the operator only. Not a role to hand out: it is the equivalent of root. |
 
-*(Target, not implemented yet: today `host` is only ever derived — from the seat or from
-the token — so granting it to someone in local mode means giving them `admin`, which is a
-workaround, not a design.)*
+The effective role is the highest of the two on every request: an operator grant
+therefore survives an expired seat or claims that stop carrying the role, and never
+blocks a promotion coming from the context. Revoking the grant (`player`) hands the
+role back to the context.
 
 ### 8.3 ter Taking part under OIDC
 

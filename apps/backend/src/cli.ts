@@ -23,8 +23,8 @@ Usage: qd <command> [options]      (in the container; = node dist/cli.js)
   seat:status       Show who holds the local-mode host seat
   seat:release      Free the host seat, whoever holds it
   user:list         List accounts (name, subject, e-mail, role, quizzes)
-  user:set-role <sub|email> admin|player
-                    Grant (sticky) or revoke the admin role
+  user:set-role <sub|email> host|admin|player
+                    Grant (sticky) the host or admin role, or revoke it
   samples:load <sub|email>
                     Add the built-in sample quizzes to that user's bank
   quiz:list [<sub|email>]
@@ -99,7 +99,7 @@ async function main(argv: string[]): Promise<number> {
           out,
           prisma,
           need(args.positional[0], '<sub|email>'),
-          need(args.positional[1], 'admin|player'),
+          need(args.positional[1], 'host|admin|player'),
         );
         return 0;
       case 'samples:load':
