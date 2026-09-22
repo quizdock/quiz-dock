@@ -37,11 +37,12 @@ export function mockApi(handlers: ApiHandler[]): ReturnType<typeof vi.fn> {
 }
 
 /**
- * Rend l'application complète sur une route donnée (router en mémoire). `mode`
- * arme aussi l'état hors-React lu par les gardes (comme `main.tsx` au démarrage).
+ * Rend l'application complète sur une route donnée (router en mémoire). `mode` et
+ * `oidcAuthed` arment l'état hors-React lu par les gardes (comme `main.tsx` au
+ * démarrage) : sous `oidc`, une page gardée exige `oidcAuthed`.
  */
-export function renderApp(initialPath: string, mode: AuthMode = 'none') {
-  configureAuth(mode);
+export function renderApp(initialPath: string, mode: AuthMode = 'none', oidcAuthed = false) {
+  configureAuth(mode, oidcAuthed);
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });

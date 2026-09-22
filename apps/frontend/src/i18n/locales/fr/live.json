@@ -163,6 +163,8 @@
     "captureNotice": "ⓘ Ta participation et ton score sont enregistrés sous ton compte — et chacune de tes réponses est conservée.",
     "trackingNotice": "ⓘ Ta participation et ton score sont enregistrés sous ton compte.",
     "noTrackingNotice": "ⓘ Tes résultats individuels ne sont pas enregistrés — seuls les résultats d’ensemble du groupe le sont.",
+    "trackingNoticeGuest": "ⓘ Ta participation et ton score sont enregistrés avec les résultats de la session, sous ton pseudo.",
+    "captureNoticeGuest": "ⓘ Ta participation et ton score sont enregistrés avec les résultats de la session, sous ton pseudo — et chacune de tes réponses est conservée.",
     "answerNumberPlaceholder": "Ta réponse (nombre)",
     "answerPlaceholder": "Ta réponse",
     "submitAnswer": "Valider ma réponse",

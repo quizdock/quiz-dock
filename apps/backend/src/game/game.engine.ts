@@ -153,7 +153,7 @@ export class GameEngine {
   ): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) {
-      throw new BadRequestException('session.capture_locked');
+      throw new BadRequestException('session.options_locked');
     }
     const next = {
       ...meta,

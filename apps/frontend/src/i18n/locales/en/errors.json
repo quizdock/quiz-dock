@@ -25,6 +25,7 @@
     "timer_not_adjustable": "The timer can only be adjusted during a question.",
     "snapshot_not_found": "Session snapshot not found.",
     "capture_locked": "Full capture can only be changed before the session starts.",
+    "options_locked": "The session options can only be changed before the session starts.",
     "join_url_invalid": "Invalid invitation address (expected http(s)://host[:port]).",
     "archive_quiz_gone": "The quiz was deleted during the session: it ended without an archive."
   },

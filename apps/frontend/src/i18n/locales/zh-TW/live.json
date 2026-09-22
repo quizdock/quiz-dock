@@ -163,6 +163,8 @@
     "captureNotice": "ⓘ 你的參與和得分會記錄在你的帳號下，並且你的每一次作答都會被保存。",
     "trackingNotice": "ⓘ 你的參與和得分會記錄在你的帳號下。",
     "noTrackingNotice": "ⓘ 不會記錄你的個人成績，只保留團體的整體結果。",
+    "trackingNoticeGuest": "ⓘ 你的參與和得分會以你的匿稱記錄在本次會話的結果中。",
+    "captureNoticeGuest": "ⓘ 你的參與和得分會以你的匿稱記錄在本次會話的結果中，並且你的每一次作答都會被保存。",
     "answerNumberPlaceholder": "你的回答（數字）",
     "answerPlaceholder": "你的回答",
     "submitAnswer": "提交我的回答",

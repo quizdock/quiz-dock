@@ -25,6 +25,7 @@
     "timer_not_adjustable": "仅在答题进行中才能调整计时器。",
     "snapshot_not_found": "未找到会话快照。",
     "capture_locked": "完整记录仅可在会话开始前更改。",
+    "options_locked": "会话选项只能在会话开始前更改。",
     "join_url_invalid": "加入地址无效（应为 http(s)://主机[:端口]）。",
     "archive_quiz_gone": "测验在场次进行中被删除：场次已结束但未归档。"
   },

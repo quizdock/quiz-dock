@@ -25,6 +25,7 @@
     "timer_not_adjustable": "僅在答題進行中才能調整計時器。",
     "snapshot_not_found": "未找到會話快照。",
     "capture_locked": "完整記錄僅可在會話開始前更改。",
+    "options_locked": "會話選項只能在會話開始前變更。",
     "join_url_invalid": "加入位址無效（應為 http(s)://主機[:連接埠]）。",
     "archive_quiz_gone": "測驗在場次進行中被刪除：場次已結束但未歸檔。"
   },

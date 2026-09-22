@@ -163,6 +163,8 @@
     "captureNotice": "ⓘ Your taking part and your score are recorded under your account — and every one of your answers is kept.",
     "trackingNotice": "ⓘ Your taking part and your score are recorded under your account.",
     "noTrackingNotice": "ⓘ Your individual results are not recorded — only the group’s overall results are.",
+    "trackingNoticeGuest": "ⓘ Your taking part and your score are recorded with the session’s results, under your nickname.",
+    "captureNoticeGuest": "ⓘ Your taking part and your score are recorded with the session’s results, under your nickname — and every one of your answers is kept.",
     "answerNumberPlaceholder": "Your answer (number)",
     "answerPlaceholder": "Your answer",
     "submitAnswer": "Submit my answer",

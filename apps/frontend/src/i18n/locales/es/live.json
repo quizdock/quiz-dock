@@ -163,6 +163,8 @@
     "captureNotice": "ⓘ Tu participación y tu puntuación se registran en tu cuenta, y se conserva cada una de tus respuestas.",
     "trackingNotice": "ⓘ Tu participación y tu puntuación se registran en tu cuenta.",
     "noTrackingNotice": "ⓘ Tus resultados individuales no se registran: solo los resultados globales del grupo.",
+    "trackingNoticeGuest": "ⓘ Tu participación y tu puntuación se registran con los resultados de la sesión, con tu apodo.",
+    "captureNoticeGuest": "ⓘ Tu participación y tu puntuación se registran con los resultados de la sesión, con tu apodo, y se conserva cada una de tus respuestas.",
     "answerNumberPlaceholder": "Tu respuesta (número)",
     "answerPlaceholder": "Tu respuesta",
     "submitAnswer": "Enviar mi respuesta",

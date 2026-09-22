@@ -478,9 +478,11 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     currentIndex: Number(raw.currentIndex),
     totalQuestions: Number(raw.totalQuestions),
     fullCapture: raw.fullCapture === '1',
-    // Défauts pour les parties déjà en vol avant l'ajout des deux options.
+    // Défauts pour les parties déjà en vol avant l'ajout des deux options : les mêmes
+    // qu'à la création, pour qu'une session d'avant le déploiement se comporte comme
+    // une nouvelle (sous OIDC, le nom vient du compte).
     personalTracking: raw.personalTracking !== '0',
-    pickOwnName: raw.pickOwnName !== '0',
+    pickOwnName: raw.pickOwnName === undefined ? !isOidcMode() : raw.pickOwnName === '1',
     title: raw.title,
     language: raw.language,
     createdAt: Number(raw.createdAt),

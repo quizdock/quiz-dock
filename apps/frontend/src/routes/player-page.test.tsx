@@ -103,13 +103,21 @@ describe('PlayerPage (client participant)', () => {
       playerId: 'p1',
     });
 
+    // Sans compte (mode local), l'avis parle du pseudo, pas d'un compte inexistant.
     hookState.value = view({ state: GameState.Lobby });
-    const plain = renderApp('/join/771122');
-    expect(await screen.findByText(/ta participation et ton score sont/i)).toBeInTheDocument();
+    const guest = renderApp('/join/771122');
+    expect(
+      await screen.findByText(/enregistrés avec les résultats de la session/i),
+    ).toBeInTheDocument();
+    guest.unmount();
+
+    hookState.value = view({ state: GameState.Lobby });
+    const plain = renderApp('/join/771122', 'oidc', true);
+    expect(await screen.findByText(/enregistrés sous ton compte\.$/i)).toBeInTheDocument();
     plain.unmount();
 
     hookState.value = view({ state: GameState.Lobby, fullCapture: true });
-    const captured = renderApp('/join/771122');
+    const captured = renderApp('/join/771122', 'oidc', true);
     expect(await screen.findByText(/chacune de tes réponses est conservée/i)).toBeInTheDocument();
     captured.unmount();
 
