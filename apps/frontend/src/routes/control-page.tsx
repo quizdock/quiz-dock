@@ -3,6 +3,7 @@ import {
   type AudioTarget,
   type GameMode,
   type GameStep,
+  type MediaReadinessPayload,
   type OutlineQuestion,
 } from '@quiz-dock/contracts';
 import { Link, useParams } from '@tanstack/react-router';
@@ -13,6 +14,7 @@ import {
   ChevronRight,
   ExternalLink,
   Info,
+  Loader2,
   Eye,
   Gauge,
   Hand,
@@ -253,7 +255,8 @@ export function ControlPage() {
 
         <div className="flex flex-col gap-2">
           <PlayersBadge count={view.players.length} />
-          <ParticipantsList players={view.players} onBan={banPlayer} />
+          <ReadinessLine readiness={view.readiness} />
+          <ParticipantsList players={view.players} readiness={view.readiness} onBan={banPlayer} />
         </div>
 
         {/* Capture intégrale (§3.1 / RG-13) : choix avant le démarrage, verrouillé une
@@ -703,7 +706,7 @@ function ControlBar({
     <header className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
       <RecapHeader view={view} pin={pin} />
       <div className="flex flex-wrap items-center gap-2">
-        <ParticipantsControl players={view.players} onBan={onBan} />
+        <ParticipantsControl players={view.players} readiness={view.readiness} onBan={onBan} />
         <ModeToggle mode={view.mode} onChange={onMode} />
         {/* Pause utile dès qu'il y a quelque chose à figer : le chrono d'une question
             en cours (ANSWERING, tous modes) ou l'enchaînement auto (mode auto). */}
@@ -769,13 +772,38 @@ function ModeToggle({ mode, onChange }: { mode: GameMode; onChange: (mode: GameM
  * joueurs déconnectés). Les résultats ne sont pas conservés (archivage à venir, cf. §2.x).
  */
 /** Liste des participants avec action de bannissement (lobby + console en jeu). */
+/**
+ * How far the devices waited for have loaded the next question's sound or
+ * video: a count, and the projection's own state (the one that must be ready).
+ */
+function ReadinessLine({ readiness }: { readiness: MediaReadinessPayload | null }) {
+  const { t } = useTranslation('live');
+  if (!readiness || readiness.total === 0) return null;
+  const { screens } = readiness;
+  return (
+    <p className="text-muted-foreground text-sm" data-testid="readiness">
+      {t('control.readiness', { ready: readiness.ready, total: readiness.total })}
+      {' · '}
+      {screens.total === 0
+        ? t('control.readinessNoProjection')
+        : screens.ready === screens.total
+          ? t('control.readinessProjectionReady')
+          : t('control.readinessProjectionLoading')}
+    </p>
+  );
+}
+
 function ParticipantsList({
   players,
+  readiness = null,
   onBan,
 }: {
   players: RosterPlayer[];
+  /** Marks the participants whose device is waited for: loaded, or still loading. */
+  readiness?: MediaReadinessPayload | null;
   onBan: (playerId: string, minutes: number) => void;
 }) {
+  const waited = new Map(readiness?.players.map((p) => [p.playerId, p.ready]));
   const { t } = useTranslation('live');
   if (players.length === 0) {
     return <p className="text-muted-foreground text-sm">{t('control.noParticipants')}</p>;
@@ -789,6 +817,16 @@ function ParticipantsList({
         >
           <Avatar name={p.avatar || p.nickname} size={24} />
           <span className="max-w-[8rem] truncate">{p.nickname}</span>
+          {waited.has(p.playerId) ? (
+            waited.get(p.playerId) ? (
+              <Check className="size-3.5 text-green-600" aria-label={t('control.mediaReady')} />
+            ) : (
+              <Loader2
+                className="text-muted-foreground size-3.5 animate-spin"
+                aria-label={t('control.mediaLoading')}
+              />
+            )
+          ) : null}
           {p.presence === 'remote' ? (
             <Tooltip label={t('control.remote')}>
               <Wifi className="text-muted-foreground size-3.5" aria-label={t('control.remote')} />
@@ -853,9 +891,11 @@ function BanButton({ nickname, onBan }: { nickname: string; onBan: (minutes: num
 /** Accès aux participants depuis la barre de contrôle : permet de bannir en cours de partie. */
 function ParticipantsControl({
   players,
+  readiness,
   onBan,
 }: {
   players: RosterPlayer[];
+  readiness: MediaReadinessPayload | null;
   onBan: (playerId: string, minutes: number) => void;
 }) {
   const { t } = useTranslation('live');
@@ -870,7 +910,7 @@ function ParticipantsControl({
       </Tooltip>
       {open ? (
         <div className="bg-background absolute right-0 z-20 mt-1 max-h-80 w-64 overflow-y-auto rounded-md border p-2 shadow-lg">
-          <ParticipantsList players={players} onBan={onBan} />
+          <ParticipantsList players={players} readiness={readiness} onBan={onBan} />
         </div>
       ) : null}
     </div>

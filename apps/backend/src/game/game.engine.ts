@@ -10,6 +10,7 @@ import type {
   LeaderboardPayload,
   LeaderboardRow,
   MediaPreloadPayload,
+  MediaReadinessPayload,
   PlayerPresence,
   PodiumPayload,
   QuestionRevealPayload,
@@ -40,8 +41,21 @@ import { buildRevealCommon } from './reveal';
 import { isDeferred, rankClosest, scoreAnswer } from './scoring';
 import { SessionArchiveService } from './session-archive.service';
 import { resumeQuestionWindow } from './chrono';
-import { type PreloadDevice, preloadFor, snapshotHasMedia } from './preload';
-import { buildQuestionStart, buildSlideShow, gameAudioTarget, snapshotHasSound } from './snapshot';
+import {
+  type PreloadDevice,
+  hasSoundOrVideo,
+  mediaForDevice,
+  preloadFor,
+  snapshotHasMedia,
+} from './preload';
+import {
+  buildQuestionStart,
+  buildSlideShow,
+  gameAudioTarget,
+  questionAudioTarget,
+  questionHasSound,
+  snapshotHasSound,
+} from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
 
@@ -193,6 +207,7 @@ export class GameEngine {
     }
     // Who needs what may have changed (the phones in the room, for every device).
     await this.emitPreload(pin, snapshot, 0);
+    await this.broadcastReadiness(pin);
   }
 
   /**
@@ -221,6 +236,83 @@ export class GameEngine {
       }
       const payload = payloads.get(device);
       if (payload) socket.emit('media:preload', payload);
+    }
+  }
+
+  /** The question the room gets ready for: the first in the lobby, the next at a reveal. */
+  private upcomingIndex(meta: GameMeta): number {
+    if (meta.state === GameState.Lobby) return 0;
+    if (meta.state === GameState.Reveal || meta.state === GameState.Leaderboard) {
+      return meta.currentIndex + 1;
+    }
+    return Math.max(0, meta.currentIndex);
+  }
+
+  /**
+   * `media:ready`: a device has loaded what it fetched ahead of a question; the
+   * screens see the count move.
+   */
+  async markMediaReady(
+    pin: string,
+    socket: { id: string; data: { playerId?: string } },
+    questionIndex: number,
+  ): Promise<void> {
+    if (!Number.isInteger(questionIndex) || questionIndex < 0) return;
+    const device = socket.data.playerId ?? `screen:${socket.id}`;
+    const key = gameKeys.ready(pin, questionIndex);
+    await this.redis.multi().sadd(key, device).expire(key, GAME_TTL_S).exec();
+    await this.broadcastReadiness(pin);
+  }
+
+  /**
+   * Who is waited for, and who is ready, ahead of question `index`: the
+   * projection windows when it has a sound or a video, and the connected
+   * participants whose device will play one. Null past the last question.
+   */
+  async readiness(pin: string, index: number): Promise<MediaReadinessPayload | null> {
+    const snapshot = await this.game.getSnapshot(pin);
+    const question = snapshot?.questions[index];
+    if (!snapshot || !question) return null;
+    const target = questionHasSound(question)
+      ? questionAudioTarget(question, await this.gameTarget(pin, snapshot))
+      : undefined;
+    const ready = new Set(await this.redis.smembers(gameKeys.ready(pin, index)));
+    const sockets = await this.server.in(pin).fetchSockets();
+    const screens = hasSoundOrVideo(question.media)
+      ? sockets.filter(
+          (s) =>
+            !(s.data as { playerId?: string }).playerId &&
+            !(s.data as { isHostControl?: boolean }).isHostControl,
+        )
+      : [];
+    const screensReady = screens.filter((s) => ready.has(`screen:${s.id}`)).length;
+    const players: { playerId: string; ready: boolean }[] = [];
+    for (const [playerId, json] of Object.entries(
+      await this.redis.hgetall(gameKeys.players(pin)),
+    )) {
+      const rec = JSON.parse(json) as PlayerRecord;
+      if (!rec.connected) continue;
+      if (hasSoundOrVideo(mediaForDevice(question.media, target, rec.presence ?? 'room'))) {
+        players.push({ playerId, ready: ready.has(playerId) });
+      }
+    }
+    return {
+      questionIndex: index,
+      ready: screensReady + players.filter((p) => p.ready).length,
+      total: screens.length + players.length,
+      players,
+      screens: { ready: screensReady, total: screens.length },
+    };
+  }
+
+  /** Sends the readiness of the upcoming question to the screens (never to participants). */
+  async broadcastReadiness(pin: string): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.state === GameState.Ended) return;
+    const payload = await this.readiness(pin, this.upcomingIndex(meta));
+    if (!payload) return;
+    for (const socket of await this.server.in(pin).fetchSockets()) {
+      if (!(socket.data as { playerId?: string }).playerId) socket.emit('media:readiness', payload);
     }
   }
 
@@ -414,6 +506,7 @@ export class GameEngine {
     }
     // What comes next, fetched by every device while the leaderboard is up.
     await this.emitPreload(pin, snapshot, index + 1);
+    await this.broadcastReadiness(pin);
   }
 
   /** Common reveal + the proximity ranking of a numeric `closest` question (with nicknames). */
@@ -979,6 +1072,7 @@ export class GameEngine {
     if (!record) return;
     const playerCount = await this.game.connectedCount(pin);
     this.server.to(pin).emit('player:left', { playerId, playerCount });
+    await this.broadcastReadiness(pin);
 
     const meta = await this.game.getMeta(pin);
     if (meta && meta.state === GameState.Answering) {

@@ -73,6 +73,11 @@ export function preloadFor(
   };
 }
 
+/** Whether media hold a sound or a video — what a device is waited for (an image is not). */
+export function hasSoundOrVideo(media: LiveQuestionMedia): boolean {
+  return !!media.audio || media.visual?.kind === 'video';
+}
+
 /** Whether anything in the quiz is fetched ahead: a question's media or a slide's image. */
 export function snapshotHasMedia(snapshot: QuizSnapshot): boolean {
   return (

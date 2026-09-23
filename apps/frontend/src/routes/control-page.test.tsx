@@ -47,6 +47,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   quizHasSound: null,
   gameAudioTarget: null,
   quizHasMedia: null,
+  readiness: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,
@@ -79,12 +80,23 @@ describe('ControlPage (console hôte)', () => {
       quizHasSound: true,
       quizHasMedia: true,
       gameAudioTarget: 'projection_remote',
+      readiness: {
+        questionIndex: 0,
+        ready: 1,
+        total: 2,
+        players: [{ playerId: 'p1', ready: false }],
+        screens: { ready: 1, total: 1 },
+      },
     });
     renderApp('/session/482913/console');
 
     const select = await screen.findByLabelText('Qui entend le son dans cette session');
     expect(select).toHaveValue('projection_remote');
     expect(screen.getByLabelText('Participe à distance')).toBeInTheDocument();
+    // Who is still loading the first question's sound: Alice, the projection is ready.
+    expect(screen.getByTestId('readiness')).toHaveTextContent('1 / 2');
+    expect(screen.getByTestId('readiness')).toHaveTextContent('projection prête');
+    expect(screen.getByLabelText('Médias en chargement')).toBeInTheDocument();
     // The host is told the media reach the phones ahead.
     expect(screen.getByText(/quelques secondes avant/)).toBeInTheDocument();
     fireEvent.change(select, { target: { value: 'everyone' } });

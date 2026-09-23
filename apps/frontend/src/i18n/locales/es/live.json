@@ -25,6 +25,12 @@
     "audioTargetLabel": "Quién oye el sonido en esta sesión",
     "audioTargetHint": "Sustituye el ajuste del quiz para esta sesión. Las preguntas con su propio ajuste lo conservan.",
     "preloadNotice": "Para que nada tenga que esperar, los dispositivos de los participantes reciben la imagen, el sonido o el vídeo de la siguiente pregunta unos segundos antes de que aparezca, nunca su texto ni sus respuestas. Un participante curioso podría abrirlos antes.",
+    "readiness": "Siguientes medios cargados: {{ready}} / {{total}} dispositivos",
+    "readinessNoProjection": "proyección no abierta",
+    "readinessProjectionReady": "proyección lista",
+    "readinessProjectionLoading": "proyección cargando",
+    "mediaReady": "Medios cargados",
+    "mediaLoading": "Cargando los medios",
     "audioTarget": {
       "projection": "Solo la proyección",
       "projection_remote": "Proyección y participantes a distancia",
@@ -136,7 +142,8 @@
     "joinAt": "Únete en",
     "participants_one": "jugador",
     "participants_other": "jugadores",
-    "review": "Mirando atrás"
+    "review": "Mirando atrás",
+    "readiness": "{{ready}} / {{total}} listos"
   },
   "player": {
     "joinFailed": "No se pudo unir a la sesión.",

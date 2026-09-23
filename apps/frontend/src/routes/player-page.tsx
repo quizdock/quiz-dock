@@ -34,7 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
 import { unlockAudio } from '../game/media/audio-unlock';
-import { claimMediaElements, preloadMedia } from '../game/media/media-pool';
+import { claimMediaElements, preloadMedia, waitedFor } from '../game/media/media-pool';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { RatingPanel } from '../game/rating-panel';
 import { useCountdown, useGameRemaining } from '../game/use-countdown';
@@ -136,10 +136,21 @@ export function PlayerPage() {
     setOrder(question?.options?.map((o) => o.id) ?? []);
   }, [question]);
 
-  // What the next question will show or play here, fetched while the room waits.
+  // What the next question will show or play here, fetched while the room waits;
+  // the host's console hears when this device is ready to play it.
   useEffect(() => {
-    if (view.preload) preloadMedia(view.preload.media, view.preload.images);
-  }, [view.preload]);
+    const next = view.preload;
+    if (!next) return;
+    let cancelled = false;
+    void preloadMedia(next.media, next.images).then(() => {
+      if (!cancelled && waitedFor(next.media)) {
+        socket?.emit('media:ready', { pin, questionIndex: next.questionIndex });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [view.preload, socket, pin]);
 
   const needsJoin = view.status === 'no-session';
   useEffect(() => {

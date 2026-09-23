@@ -32,16 +32,39 @@ function preloadImage(url: string): void {
  * elements (free between questions): an element made now could not play
  * sound later on iOS.
  */
-export function preloadMedia(media: LiveQuestionMedia, slideImages: string[] = []): void {
+export function preloadMedia(media: LiveQuestionMedia, slideImages: string[] = []): Promise<void> {
   const { visual, audio } = media;
   slideImages.forEach(preloadImage);
   if (visual?.kind === 'image') preloadImage(visual.url);
-  if (visual?.kind === 'video' && 'url' in visual && !pool.has(visual.url)) {
-    if (!loadInto('video', visual.url)) pool.set(visual.url, create('video', visual.url));
+  const loading: HTMLMediaElement[] = [];
+  if (visual?.kind === 'video' && 'url' in visual) loading.push(fetchAhead('video', visual.url));
+  if (audio) loading.push(fetchAhead('audio', audio.url));
+  // Ready once each can play to its end without stalling; an image is not waited for.
+  return Promise.all(loading.map(playable)).then(() => undefined);
+}
+
+/** Whether media hold a sound or a video — what the room waits for (an image is not). */
+export function waitedFor(media: LiveQuestionMedia): boolean {
+  return !!media.audio || media.visual?.kind === 'video';
+}
+
+/** The element fetching `url` ahead: the phone's own when free, else one of the pool. */
+function fetchAhead(tag: 'video' | 'audio', url: string): HTMLMediaElement {
+  if (loadInto(tag, url)) return dedicated[tag]!;
+  let el = pool.get(url);
+  if (!el) {
+    el = create(tag, url);
+    pool.set(url, el);
   }
-  if (audio && !pool.has(audio.url) && !loadInto('audio', audio.url)) {
-    pool.set(audio.url, create('audio', audio.url));
-  }
+  return el;
+}
+
+/** Resolves when the element has enough to play through (at once when it already has). */
+function playable(el: HTMLMediaElement): Promise<void> {
+  if (el.readyState >= HTMLMediaElement.HAVE_ENOUGH_DATA) return Promise.resolve();
+  return new Promise((resolve) =>
+    el.addEventListener('canplaythrough', () => resolve(), { once: true }),
+  );
 }
 
 /**

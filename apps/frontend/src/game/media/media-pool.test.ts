@@ -38,6 +38,23 @@ describe('media pool on a phone', () => {
     expect(load.mock.calls.length).toBe(loads); // not fetched a second time
   });
 
+  it('says when what it fetched can play through — an image is not waited for', async () => {
+    const { preloadMedia, takeMedia, waitedFor } = await import('./media-pool');
+    const media = {
+      visual: { kind: 'image' as const, url: '/img', alt: null },
+      audio: { url: '/api/v1/media/snd', durationMs: 1000, peaks: [], gainDb: 0 },
+    };
+    expect(waitedFor(media)).toBe(true);
+    expect(waitedFor({ ...media, audio: null })).toBe(false);
+    let done = false;
+    const ready = preloadMedia(media).then(() => (done = true));
+    await Promise.resolve();
+    expect(done).toBe(false);
+    takeMedia('audio', '/api/v1/media/snd').dispatchEvent(new Event('canplaythrough'));
+    await ready;
+    expect(done).toBe(true);
+  });
+
   it('without the click (a projection), each media gets its own element', async () => {
     const { releaseMedia, takeMedia } = await import('./media-pool');
     const a = takeMedia('video', '/api/v1/media/v');

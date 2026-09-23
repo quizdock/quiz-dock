@@ -25,6 +25,12 @@
     "audioTargetLabel": "本次会话中谁能听到声音",
     "audioTargetHint": "在本次会话中取代测验的设置。有自己设置的题目保持不变。",
     "preloadNotice": "为避免等待，参与者的设备会在下一题出现前几秒收到其图片、声音或视频——但绝不包括题目文字和选项。好奇的参与者可能会提前打开它们。",
+    "readiness": "下一题媒体已加载：{{ready}} / {{total}} 台设备",
+    "readinessNoProjection": "投影未打开",
+    "readinessProjectionReady": "投影已就绪",
+    "readinessProjectionLoading": "投影加载中",
+    "mediaReady": "媒体已加载",
+    "mediaLoading": "媒体加载中",
     "audioTarget": {
       "projection": "仅投影",
       "projection_remote": "投影和远程参与者",
@@ -136,7 +142,8 @@
     "joinAt": "加入地址",
     "participants_one": "名玩家",
     "participants_other": "名玩家",
-    "review": "回顾"
+    "review": "回顾",
+    "readiness": "{{ready}} / {{total}} 已就绪"
   },
   "player": {
     "joinFailed": "无法加入会话。",

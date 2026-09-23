@@ -8,6 +8,7 @@ import type {
   GameStep,
   LeaderboardPayload,
   MediaPreloadPayload,
+  MediaReadinessPayload,
   OutlineQuestion,
   PersonalResult,
   PlayerPresence,
@@ -95,6 +96,8 @@ export interface GameView {
   mediaControl: { questionIndex: number; action: 'restart'; seq: number } | null;
   /** Whether the quiz plays any sound (projection and console only; null until told). */
   quizHasSound: boolean | null;
+  /** Who has loaded the upcoming question's sound or video (projection and console only). */
+  readiness: MediaReadinessPayload | null;
   /** Whether the quiz has any media fetched ahead (projection and console only). */
   quizHasMedia: boolean | null;
   /** The game's default audio target (projection and console only; null until told). */
@@ -138,6 +141,7 @@ const INITIAL: GameView = {
   quizHasSound: null,
   gameAudioTarget: null,
   quizHasMedia: null,
+  readiness: null,
   nav: null,
 };
 
@@ -228,6 +232,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       patch({ reveal: p, result: p.yourResult ?? null });
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
     const onPreload = (p: MediaPreloadPayload) => patch({ preload: p });
+    const onReadiness = (p: MediaReadinessPayload) => patch({ readiness: p });
     const onGameMedia = (p: { hasSound: boolean; hasMedia: boolean; audioTarget: AudioTarget }) =>
       patch({ quizHasSound: p.hasSound, quizHasMedia: p.hasMedia, gameAudioTarget: p.audioTarget });
     const onMediaControl = (p: { questionIndex: number; action: 'restart' }) =>
@@ -280,6 +285,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('slide:show', onSlide);
       sock.on('leaderboard', onLeaderboard);
       sock.on('media:preload', onPreload);
+      sock.on('media:readiness', onReadiness);
       sock.on('media:control', onMediaControl);
       sock.on('game:media', onGameMedia);
       sock.on('game:podium', onPodium);
@@ -344,6 +350,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('slide:show', onSlide);
       s.off('leaderboard', onLeaderboard);
       s.off('media:preload', onPreload);
+      s.off('media:readiness', onReadiness);
       s.off('media:control', onMediaControl);
       s.off('game:media', onGameMedia);
       s.off('game:podium', onPodium);

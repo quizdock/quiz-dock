@@ -19,7 +19,7 @@ import {
   TYPE_BASE,
 } from '../game/live-components';
 import { useAudioUnlocked } from '../game/media/audio-unlock';
-import { preloadMedia } from '../game/media/media-pool';
+import { preloadMedia, waitedFor } from '../game/media/media-pool';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { SoundUnlockOverlay } from '../game/media/sound-unlock-overlay';
 import { Surface } from '../game/surface';
@@ -46,13 +46,24 @@ export function ScreenPage() {
  */
 export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?: boolean }) {
   const { t } = useTranslation('live');
-  const { view } = useGameSession(pin, 'spectator');
+  const { view, socket } = useGameSession(pin, 'spectator');
   const soundUnlocked = useAudioUnlocked();
 
-  // In the lobby and while the leaderboard is up, what comes next buffers here.
+  // In the lobby and while the leaderboard is up, what comes next buffers here;
+  // the console hears when it is ready to play.
   useEffect(() => {
-    if (playMedia && view.preload) preloadMedia(view.preload.media, view.preload.images);
-  }, [playMedia, view.preload]);
+    const next = view.preload;
+    if (!playMedia || !next) return;
+    let cancelled = false;
+    void preloadMedia(next.media, next.images).then(() => {
+      if (!cancelled && waitedFor(next.media)) {
+        socket?.emit('media:ready', { pin, questionIndex: next.questionIndex });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [playMedia, view.preload, socket, pin]);
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
   const remaining = useGameRemaining(view);
 
@@ -204,6 +215,26 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           <span data-testid="player-count">{view.players.length}</span>
           <span>{t('screen.participants', { count: view.players.length })}</span>
         </div>
+        {/* The first question's sound or video, loaded on the devices that will play it. */}
+        {view.readiness && view.readiness.questionIndex === 0 && view.readiness.total > 0 ? (
+          <div className="flex w-[16em] flex-col items-center gap-[0.4em] text-[1em]">
+            <span className="text-muted-foreground" data-testid="readiness">
+              {t('screen.readiness', { ready: view.readiness.ready, total: view.readiness.total })}
+            </span>
+            <div
+              className="bg-muted h-[0.4em] w-full overflow-hidden rounded-full"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={view.readiness.total}
+              aria-valuenow={view.readiness.ready}
+            >
+              <div
+                className="bg-primary h-full transition-[width]"
+                style={{ width: `${(100 * view.readiness.ready) / view.readiness.total}%` }}
+              />
+            </div>
+          </div>
+        ) : null}
         <ul className="flex max-w-[40em] flex-wrap justify-center gap-[0.5em]">
           {view.players.map((p) => (
             <li

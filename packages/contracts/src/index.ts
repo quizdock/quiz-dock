@@ -115,6 +115,8 @@ export const ClientEvents = {
   /** Change la graine d'avatar avant le démarrage (cosmétique). */
   PlayerAvatar: 'player:avatar',
   PlayerSubmit: 'player:submit',
+  /** A device has loaded what it fetched ahead of a question. */
+  MediaReady: 'media:ready',
   /** Avis du joueur en fin de partie (note Likert 5 + commentaire facultatif). */
   PlayerRate: 'player:rate',
   Ping: 'ping',
@@ -141,6 +143,8 @@ export const ServerEvents = {
   QuestionTime: 'question:time',
   /** Media of the next question, to fetch ahead (projection and console only). */
   MediaPreload: 'media:preload',
+  /** Which devices have loaded the upcoming question's sound or video (screens only). */
+  MediaReadiness: 'media:readiness',
   /** A host command on the current question's media, relayed to the screens. */
   MediaControl: 'media:control',
   /** What the quiz's media need from a screen (sent on attach, not to players). */
@@ -272,6 +276,23 @@ export interface MediaPreloadPayload {
   audioTarget?: AudioTarget;
   /** Images of the slides shown before that question. */
   images?: string[];
+}
+
+/**
+ * Who has loaded the sound or video of an upcoming question. Counted: the
+ * projection windows, and the participants whose device will play a sound or
+ * a video (remote ones; in the room, only when the sound is for every device).
+ * Images are not waited for.
+ */
+export interface MediaReadinessPayload {
+  questionIndex: number;
+  /** Counted devices ready, out of all of them (screens and participants). */
+  ready: number;
+  total: number;
+  /** The participants counted, ready or not (the console lists them). */
+  players: { playerId: string; ready: boolean }[];
+  /** The projection windows counted. */
+  screens: { ready: number; total: number };
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -480,6 +501,8 @@ export interface ClientToServerEvents {
     p: { pin: string; rating: number; comment?: string },
     ack: (res: { ok: boolean }) => void,
   ) => void;
+  /** A device has loaded the sound or video it fetched ahead of `questionIndex`. */
+  'media:ready': (p: { pin: string; questionIndex: number }) => void;
   ping: (p: { t0: number }) => void;
 }
 
@@ -529,6 +552,8 @@ export interface ServerToClientEvents {
    * and plays them at once. Each device gets only what it will show or play.
    */
   'media:preload': (p: MediaPreloadPayload) => void;
+  /** Who has loaded the upcoming question's sound or video (screens only). */
+  'media:readiness': (p: MediaReadinessPayload) => void;
   /** The host restarts the current question's media from the top. */
   'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
   /**

@@ -23,7 +23,11 @@ describe('GameGateway.playerJoin (AUTH_MODE)', () => {
 
   function makeGateway() {
     const game = { joinSession: jest.fn().mockResolvedValue(joinResult) };
-    const engine = { sendStateTo: jest.fn().mockResolvedValue(undefined), bindServer: jest.fn() };
+    const engine = {
+      sendStateTo: jest.fn().mockResolvedValue(undefined),
+      broadcastReadiness: jest.fn().mockResolvedValue(undefined),
+      bindServer: jest.fn(),
+    };
     const gateway = new GameGateway(
       {} as AuthProvider,
       {} as UsersService,

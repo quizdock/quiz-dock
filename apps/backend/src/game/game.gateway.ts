@@ -164,6 +164,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     });
     // Late join (§5) : positionne immédiatement le retardataire sur l'état courant.
     await this.engine.sendStateTo(socket, res.pin);
+    await this.engine.broadcastReadiness(res.pin);
     return { sessionToken: res.sessionToken, playerId: res.playerId, nickname: res.nickname };
   }
 
@@ -234,6 +235,8 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     socket.data.pin = payload.pin;
     await socket.join(payload.pin);
     await this.engine.sendStateTo(socket, payload.pin);
+    // A projection counts among the devices waited for.
+    await this.engine.broadcastReadiness(payload.pin);
     return { ok: true };
   }
 
@@ -270,6 +273,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       presence: record.presence ?? 'room',
     });
     await this.engine.sendStateTo(socket, session.pin);
+    await this.engine.broadcastReadiness(session.pin);
     return { ok: true };
   }
 
@@ -464,6 +468,16 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     return this.game.recordFeedback(payload.pin, playerId, payload.rating, payload.comment);
   }
 
+  /** A device has loaded what it fetched ahead of a question (its own room only). */
+  @SubscribeMessage('media:ready')
+  async mediaReady(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; questionIndex: number },
+  ): Promise<void> {
+    if (!socket.data.pin || socket.data.pin !== payload.pin) return;
+    await this.engine.markMediaReady(payload.pin, socket, payload.questionIndex);
+  }
+
   @SubscribeMessage('ping')
   ping(@ConnectedSocket() socket: GameSocket, @MessageBody() payload: { t0: number }): void {
     socket.emit('pong', { t0: payload.t0, t1: Date.now() });
@@ -486,7 +500,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       await this.engine.handleHostDisconnect(pin, user.id).catch((err: Error) => {
         this.log.warn(`handleHostDisconnect ${pin}/${user.id}: ${err.message}`);
       });
+      return;
     }
+    // A projection gone: one device fewer to wait for.
+    if (pin) await this.engine.broadcastReadiness(pin).catch(() => undefined);
   }
 
   /** Exige un socket authentifié avec le rôle hôte (`host`/`admin`). */
