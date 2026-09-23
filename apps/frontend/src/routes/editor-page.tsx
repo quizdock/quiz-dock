@@ -310,10 +310,12 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   return (
     <div className="flex w-full flex-col gap-6">
       {/* Header: the quiz is the page title; the main action (publish / present) lives here. */}
-      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        {/* Title and description are edited in place (no settings box to open). */}
+      {/* L'en-tête occupe toute la largeur : les actions ne prennent plus la moitié
+          de la ligne au formulaire, la description et ce qui l'accompagne ont enfin
+          la page entière. */}
+      <header className="w-full">
         <form
-          className="flex min-w-0 flex-1 flex-col gap-2"
+          className="flex w-full min-w-0 flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
             void form.handleSubmit();
@@ -343,7 +345,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               </Button>
             </div>
           ) : null}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <form.Field name="title">
               {(field) => (
                 <Input
@@ -354,6 +356,53 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 />
               )}
             </form.Field>
+            <div className="flex flex-wrap items-center gap-1">
+              {/* L'état du quiz se lit sur la même ligne que ce qu'on peut en faire. */}
+              <Badge variant={statusVariant} className="mr-2">
+                {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
+              </Badge>
+              <div className="flex flex-wrap items-center gap-1">
+                <a
+                  className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+                  href={`/quizzes/${quiz.id}/preview`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="size-4" />
+                  {t('header.preview')}
+                </a>
+                <Link
+                  to="/quizzes/$quizId/history"
+                  params={{ quizId: quiz.id }}
+                  className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+                >
+                  <History className="size-4" />
+                  {t('header.history')}
+                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={exporting}
+                  onClick={() => void onExport()}
+                >
+                  <Download className="size-4" />
+                  {t('header.export')}
+                </Button>
+                {/* Supprimer est une action du quiz, pas un réglage : elle est avec les
+                autres, en dernier et dans le ton qui convient. */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <Trash2 className="size-4" />
+                  {t('header.deleteQuiz')}
+                </Button>
+              </div>
+            </div>
           </div>
           <div className="grid items-start gap-x-8 gap-y-4 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
             <form.Field name="description">
@@ -389,11 +438,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             {/* À droite de la description, ce qu'on règle en écrivant : les avis
               reçus et l'archivage. Ils tenaient derrière un bouton « Réglages »
               qui ne disait pas ce qu'il cachait. */}
-            <div className="grid items-start gap-x-6 gap-y-4 sm:grid-cols-2">
-              <Section>
+            <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
+              <Section className="min-w-72 flex-1">
                 {/* L'état des avis se lit à côté de l'interrupteur, pas dessous :
                     c'est une ligne, elle n'a pas à en coûter deux. */}
-                <div className="flex items-start gap-x-3">
+                <div className="flex items-start gap-x-4">
                   <label className="flex min-w-0 flex-1 items-start gap-2 text-sm">
                     <Switch
                       className="mt-0.5"
@@ -413,7 +462,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 </div>
               </Section>
               {quiz.status !== 'archived' ? (
-                <Section>
+                <Section className="ml-auto max-w-64 items-end text-right">
                   <p className="text-muted-foreground text-xs leading-snug">
                     {t('broadcast.archiveHelp')}
                   </p>
@@ -421,7 +470,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="self-start"
+                    className="self-end"
                     disabled={transition.isPending}
                     onClick={() => void changeStatus('archived')}
                   >
@@ -442,53 +491,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             />
           ) : null}
         </form>
-        <div className="flex flex-wrap items-center gap-1">
-          {/* L'état du quiz se lit sur la même ligne que ce qu'on peut en faire. */}
-          <Badge variant={statusVariant} className="mr-2">
-            {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
-          </Badge>
-          <div className="flex flex-wrap items-center gap-1">
-            <a
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-              href={`/quizzes/${quiz.id}/preview`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="size-4" />
-              {t('header.preview')}
-            </a>
-            <Link
-              to="/quizzes/$quizId/history"
-              params={{ quizId: quiz.id }}
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-            >
-              <History className="size-4" />
-              {t('header.history')}
-            </Link>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              disabled={exporting}
-              onClick={() => void onExport()}
-            >
-              <Download className="size-4" />
-              {t('header.export')}
-            </Button>
-            {/* Supprimer est une action du quiz, pas un réglage : elle est avec les
-                autres, en dernier et dans le ton qui convient. */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 className="size-4" />
-              {t('header.deleteQuiz')}
-            </Button>
-          </div>
-        </div>
       </header>
       {/* Always visible: where the quiz stands and the one action that follows. Live access
           shows here while a session runs — no folded box hiding dynamic state. */}
