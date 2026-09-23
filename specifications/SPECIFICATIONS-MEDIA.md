@@ -105,13 +105,14 @@ it has not loaded — the waiting part of the former phase 5, brought forward on
 ### 5.1 Presence
 
 - On joining, a player says whether they are **in the room** or **remote** (in the room by default). The choice is
+  offered only when the quiz has a sound or a video; otherwise every player is in the room. The choice is
   kept across a reconnection and shown to the host (console roster).
 - A remote player gets the full question view: the prompt, the visual (image or video) and the sound.
 
 ### 5.2 Who hears the sound
 
 - An **audio target**: a quiz default plus an optional per-question override — *projection only* / *projection and
-  remote players* / *everyone*. The host can override the quiz default from the lobby, before the start.
+  remote players* (the default) / *everyone*. The host can override the quiz default from the lobby, before the start.
 - Sound plays only on the targeted devices. In a hybrid game the phones in the room stay silent (no echo); a
   non-targeted device shows the video muted, or the image.
 - The sound is unlocked on the **Join** click: **one** audio element is created there and reused for the whole session
@@ -123,6 +124,8 @@ it has not loaded — the waiting part of the former phase 5, brought forward on
 - The existing `media:preload` (sent with the reveal, to non-players only) is extended to the players that need the
   media — remote players, and room phones for the images — and to the **next step**, slide or question.
 - **From the lobby**, every device fetches the media of the first step while people wait for the start.
+- **Accepted risk** (decided 2026-09-23): a player's device holds the next step's media 10–20 s before it shows,
+  without its prompt; a curious player could open them. The host is told so (console lobby, self-hosting guide).
 - Mobile data is spared: at most **one step ahead**; the images and sounds are light, a video is fetched only by a
   device that will play it.
 
