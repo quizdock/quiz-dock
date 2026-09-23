@@ -135,21 +135,20 @@ export function TemplatePage() {
                   : undefined
               }
             >
-              {/* Le numéro se pose dans le coin, comme une pagination : il situe
-                  l'élément sans pousser le contenu. */}
-              <span className="quiz-item-number bg-background/80 text-foreground absolute top-2 left-2 flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums" />
-              <span
-                className={cn(
-                  'flex flex-wrap items-center gap-2 text-xs opacity-80',
-                  item.kind === 'slide' && 'justify-center',
-                )}
-              >
+              {/* Numéro, type et durée tiennent dans le même coin : ce sont les
+                  méta de l'élément, elles ne descendent pas dans le contenu. */}
+              <span className="text-muted-foreground absolute top-2 left-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="quiz-item-number bg-background/80 text-foreground flex size-6 items-center justify-center rounded-full font-semibold tabular-nums" />
                 <Badge variant={item.kind === 'slide' ? 'muted' : 'default'}>
                   {item.kind === 'slide'
                     ? t('slide')
                     : t(`common:questionType.${item.type}`, item.type ?? '')}
                 </Badge>
-                {item.timeLimitS ? <span>{t('seconds', { count: item.timeLimitS })}</span> : null}
+                {item.timeLimitS ? (
+                  <span className="bg-background/80 rounded-full px-2 py-0.5">
+                    {t('seconds', { count: item.timeLimitS })}
+                  </span>
+                ) : null}
               </span>
               {item.text ? <Markdown className="font-medium">{item.text}</Markdown> : null}
               {item.mediaUrl ? (
