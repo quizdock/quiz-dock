@@ -742,7 +742,8 @@ function ControlBar({
         <ModeToggle mode={view.mode} onChange={onMode} />
         {/* Pause utile dès qu'il y a quelque chose à figer : le chrono d'une question
             en cours (ANSWERING, tous modes) ou l'enchaînement auto (mode auto). */}
-        {view.mode === 'auto' || view.state === 'ANSWERING' ? (
+        {(view.mode === 'auto' || view.state === 'ANSWERING') && view.state !== 'MEDIA_LOADING' ? (
+          // A wait for media has its own way out (Start anyway); a pause would not hold it.
           <PauseButton paused={view.paused} onToggle={onPause} />
         ) : null}
         {screenButton}

@@ -19,7 +19,7 @@ A video brings its own sound, so it excludes the sound slot.
 | 1 | Upload, playback in the room (projection) | **Delivered** — PR #44 |
 | 2 | Recording a sound with the microphone | **Idea box** — set aside, its value is not settled (§3) |
 | 3 | YouTube / Vimeo embeds | **Idea box** — set aside, it goes against the no-tracking, self-hosted promise (§4) |
-| 4 | Remote players, preloading and readiness | Planned (§5) |
+| 4 | Remote players, preloading and readiness | **Built** on `feat/media-remote` (§5) — errors left, §5.5 |
 | 5 | Synchronisation and fairness | Planned (§6) |
 
 ---
@@ -148,7 +148,14 @@ it has not loaded — the waiting part of the former phase 5, brought forward on
 
 ### 5.5 Errors
 
-A remote player's device refusing the sound (unlock lost), a media failing to load on it, the wait cap reached.
+- A remote device refusing the sound (unlock lost, page reloaded): **done** — *Sound blocked* with a button, as on
+  the projection.
+- A media failing to load on a device: shown only once the question runs (`media.slow`); the wait treats it as not
+  ready, so the cap applies. A dedicated message is **still to do**.
+- The wait cap reached: the question simply starts; the console said who was late. A message after the fact is
+  **still to do** if wanted.
+- Also shipped with the phase: a waveform size per question (S / M / L) and a playhead that follows the projection
+  on every screen that shows the sound without playing it.
 
 ---
 
