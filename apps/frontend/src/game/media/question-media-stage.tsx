@@ -32,6 +32,8 @@ function usePlayback(
   gainDb: number,
   restartSignal: number,
   positionKey: string | null,
+  /** Plays without sound: the device is not targeted, or its owner muted it. */
+  silent = false,
 ) {
   const [blocked, setBlocked] = useState<Blocked>(null);
   const [slow, setSlow] = useState(false);
@@ -58,7 +60,8 @@ function usePlayback(
     if (positionKey && readPosition(positionKey)?.ended) return;
     let cancelled = false;
     const start = async () => {
-      if (unlocked && el.muted) el.muted = false; // the video that went on muted gets its sound
+      if (silent) el.muted = true;
+      else if (unlocked && el.muted) el.muted = false; // the video that went on muted gets its sound
       await applyGain(el, gainDb);
       if (!cancelled) await el.play();
       if (!cancelled) setBlocked(null);
@@ -84,7 +87,7 @@ function usePlayback(
       window.clearTimeout(timer);
       el.removeEventListener('playing', onPlaying);
     };
-  }, [el, mode, gainDb, positionKey, unlocked]);
+  }, [el, mode, gainDb, positionKey, unlocked, silent]);
 
   const enableSound = async () => {
     if (!el) return;
@@ -169,6 +172,7 @@ function VideoBox({
   boxClassName,
   resumeKey,
   restartSignal,
+  silent,
 }: {
   url: string;
   mode: StageMode;
@@ -176,11 +180,12 @@ function VideoBox({
   boxClassName?: string;
   resumeKey: string | null;
   restartSignal: number;
+  silent: boolean;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const key = resumeKey && `${resumeKey}:${url}`;
   const el = useMediaElement('video', url, mode === 'still', key);
-  const { blocked, slow, enableSound } = usePlayback(el, mode, gainDb, restartSignal, key);
+  const { blocked, slow, enableSound } = usePlayback(el, mode, gainDb, restartSignal, key, silent);
 
   useEffect(() => {
     if (!el || !box.current) return;
@@ -202,16 +207,25 @@ function AudioTrack({
   mode,
   resumeKey,
   restartSignal,
+  silent,
 }: {
   audio: LiveAudio;
   mode: StageMode;
   resumeKey: string | null;
   restartSignal: number;
+  silent: boolean;
 }) {
   const { t } = useTranslation('live');
   const key = resumeKey && `${resumeKey}:${audio.url}`;
   const el = useMediaElement('audio', audio.url, mode === 'still', key);
-  const { blocked, slow, enableSound } = usePlayback(el, mode, audio.gainDb, restartSignal, key);
+  const { blocked, slow, enableSound } = usePlayback(
+    el,
+    mode,
+    audio.gainDb,
+    restartSignal,
+    key,
+    silent,
+  );
   const [progress, setProgress] = useState(0);
 
   // The filled part follows the sound, frame by frame, only while it plays.
@@ -262,9 +276,15 @@ export function QuestionMediaStage({
   className,
   resumeKey = null,
   restartSignal = 0,
+  audible = true,
+  muted = false,
 }: {
   media: LiveQuestionMedia | null | undefined;
   mode: StageMode;
+  /** False on a device the sound is not meant for: the video plays muted, the sound is left out. */
+  audible?: boolean;
+  /** The device's owner turned the sound off: everything plays on, silently. */
+  muted?: boolean;
   /** Session + question: where the position is kept across an interruption (projection only). */
   resumeKey?: string | null;
   /** Changes when the host restarts the media from the top. */
@@ -275,7 +295,7 @@ export function QuestionMediaStage({
 }) {
   const { t } = useTranslation('live');
   const visual = media?.visual ?? null;
-  const audio = media?.audio ?? null;
+  const audio = audible ? (media?.audio ?? null) : null;
   if (!visual && !audio) return null;
   return (
     <div className={cn('flex w-full flex-col items-center gap-[0.75em]', className)}>
@@ -295,6 +315,7 @@ export function QuestionMediaStage({
           boxClassName={boxClassName}
           resumeKey={resumeKey}
           restartSignal={restartSignal}
+          silent={muted || !audible}
         />
       ) : null}
       {audio ? (
@@ -304,6 +325,7 @@ export function QuestionMediaStage({
             mode={mode}
             resumeKey={resumeKey}
             restartSignal={restartSignal}
+            silent={muted}
           />
         </div>
       ) : null}

@@ -9,6 +9,18 @@ const { fakeSocket, hookState } = vi.hoisted(() => ({
   hookState: { value: null as unknown },
 }));
 const markJoined = vi.fn();
+const claimMediaElements = vi.fn();
+
+vi.mock('../game/media/media-pool', () => ({
+  claimMediaElements: () => claimMediaElements(),
+}));
+vi.mock('../game/media/audio-unlock', () => ({ unlockAudio: () => Promise.resolve(true) }));
+// The stage plays real media elements; here it only says how it was asked to play.
+vi.mock('../game/media/question-media-stage', () => ({
+  QuestionMediaStage: (p: { audible: boolean; muted: boolean; mode: string }) => (
+    <div data-testid="stage" data-audible={String(p.audible)} data-muted={String(p.muted)} />
+  ),
+}));
 const joinSession = vi.fn();
 const loadPlayerSession = vi.fn();
 const peekSession = vi.fn(() => Promise.resolve({ hasSound: false }));
@@ -107,6 +119,8 @@ describe('PlayerPage (client participant)', () => {
     await waitFor(() =>
       expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined, 'remote'),
     );
+    // The click itself started the phone's media elements (iOS plays sound only from them).
+    expect(claimMediaElements).toHaveBeenCalled();
   });
 
   it('LOBBY : salle d’attente avec le pseudo', async () => {
@@ -183,16 +197,66 @@ describe('PlayerPage (client participant)', () => {
     expect(screen.getByRole('button', { name: /Paris/ })).toBeInTheDocument();
     withImage.unmount();
 
-    // Phones show the image only for now: a sound or a video plays on the projection.
+    // In the room, with the sound meant for the projection: the phone stays silent.
     const sound = { url: '/api/v1/media/snd', durationMs: 1000, peaks: [], gainDb: 0 };
     hookState.value = view({
       state: GameState.Answering,
       questionIndex: 0,
-      question: { ...question, media: { visual: null, audio: sound } } as never,
+      question: {
+        ...question,
+        media: { visual: null, audio: sound },
+        audioTarget: 'projection_remote',
+      } as never,
     });
     renderApp('/join/771122');
     expect(await screen.findByRole('button', { name: /Paris/ })).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /Illustration de la question/i })).toBeNull();
+    expect(screen.queryByTestId('stage')).toBeNull();
+  });
+
+  it('ANSWERING, remote: the phone plays the question’s sound, and its owner can mute it', async () => {
+    loadPlayerSession.mockReturnValue({
+      pin: '771122',
+      nickname: 'Ada',
+      sessionToken: 't',
+      playerId: 'p1',
+    });
+    const sound = { url: '/api/v1/media/snd', durationMs: 1000, peaks: [], gainDb: 0 };
+    const question = {
+      questionIndex: 0,
+      type: 'single_choice',
+      prompt: 'Quel morceau ?',
+      options: [PARIS],
+      timeLimitS: 5,
+      basePoints: 1000,
+      startedAt: Date.now(),
+      endsAt: Date.now() + 5000,
+      media: { visual: null, audio: sound },
+    };
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      players: [{ playerId: 'p1', nickname: 'Ada', presence: 'remote' }],
+      question: { ...question, audioTarget: 'projection_remote' } as never,
+    });
+    const heard = renderApp('/join/771122');
+    const stage = await screen.findByTestId('stage');
+    expect(stage).toHaveAttribute('data-audible', 'true');
+    fireEvent.click(await screen.findByRole('button', { name: 'Couper le son' }));
+    expect(screen.getByTestId('stage')).toHaveAttribute('data-muted', 'true');
+    heard.unmount();
+    sessionStorage.clear();
+
+    // The sound kept for the projection: a remote phone still shows the question, silently.
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      players: [{ playerId: 'p1', nickname: 'Ada', presence: 'remote' }],
+      question: { ...question, audioTarget: 'projection' } as never,
+    });
+    renderApp('/join/771122');
+    expect(await screen.findByTestId('stage')).toHaveAttribute('data-audible', 'false');
+    expect(screen.queryByRole('button', { name: 'Couper le son' })).toBeNull();
   });
 
   it('ANSWERING : taper une option émet player:submit puis verrouille', async () => {

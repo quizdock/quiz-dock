@@ -186,6 +186,8 @@
     "moveDown": "下移",
     "unsupportedType": "不支援的題目類型。",
     "leave": "離開",
+    "mute": "關閉聲音",
+    "unmute": "開啟聲音",
     "leaveConfirmTitle": "離開本場會話？",
     "leaveConfirmDescription": "你將失去你的位置和分數。可使用 PIN 碼再次加入會話。",
     "joinAnother": "加入另一場遊戲",

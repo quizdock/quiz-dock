@@ -186,6 +186,8 @@
     "moveDown": "Bajar",
     "unsupportedType": "Tipo de pregunta no compatible.",
     "leave": "Salir",
+    "mute": "Silenciar",
+    "unmute": "Activar el sonido",
     "leaveConfirmTitle": "¿Salir de la sesión?",
     "leaveConfirmDescription": "Perderás tu sitio y tu puntuación. Para volver tendrás que unirte de nuevo con el PIN.",
     "joinAnother": "Unirse a otra partida",

@@ -108,4 +108,24 @@ describe('QuestionMediaStage', () => {
     await waitFor(() => expect(play).toHaveBeenCalledTimes(2));
     expect(el.currentTime).toBe(0);
   });
+  it('on a device the sound is not meant for: the video plays muted, a sound is left out', async () => {
+    render(<QuestionMediaStage media={video} mode="play" audible={false} />);
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    expect((play.mock.calls[0][0] as HTMLMediaElement).muted).toBe(true);
+    cleanup();
+    play.mockClear();
+    const { container } = render(<QuestionMediaStage media={sound} mode="play" audible={false} />);
+    await act(async () => undefined);
+    expect(play).not.toHaveBeenCalled();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('muted by its owner, it plays on silently, and gets its sound back', async () => {
+    const { rerender } = render(<QuestionMediaStage media={sound} mode="play" muted />);
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    expect(el.muted).toBe(true);
+    rerender(<QuestionMediaStage media={sound} mode="play" muted={false} />);
+    await waitFor(() => expect(el.muted).toBe(false));
+  });
 });

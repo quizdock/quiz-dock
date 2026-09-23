@@ -186,6 +186,8 @@
     "moveDown": "Descendre",
     "unsupportedType": "Type de question non pris en charge.",
     "leave": "Quitter",
+    "mute": "Couper le son",
+    "unmute": "Remettre le son",
     "leaveConfirmTitle": "Quitter la session ?",
     "leaveConfirmDescription": "Vous perdrez votre place et votre score. Pour revenir, il faudra rejoindre à nouveau avec le PIN.",
     "joinAnother": "Rejoindre une autre partie",

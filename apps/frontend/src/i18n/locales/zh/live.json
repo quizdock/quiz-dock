@@ -186,6 +186,8 @@
     "moveDown": "下移",
     "unsupportedType": "不支持的题目类型。",
     "leave": "退出",
+    "mute": "关闭声音",
+    "unmute": "打开声音",
     "leaveConfirmTitle": "退出本场？",
     "leaveConfirmDescription": "你将失去席位和分数。要回来需要再次用 PIN 加入。",
     "joinAnother": "加入另一场",

@@ -186,6 +186,8 @@
     "moveDown": "Move down",
     "unsupportedType": "Unsupported question type.",
     "leave": "Leave",
+    "mute": "Turn the sound off",
+    "unmute": "Turn the sound on",
     "leaveConfirmTitle": "Leave the session?",
     "leaveConfirmDescription": "You will lose your seat and your score. To come back you will have to join again with the PIN.",
     "joinAnother": "Join another game",

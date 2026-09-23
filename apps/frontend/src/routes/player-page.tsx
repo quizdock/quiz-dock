@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import type { PlayerPresence } from '@quiz-dock/contracts';
-import { Check, LogIn, LogOut, Shuffle, Users, Wifi } from 'lucide-react';
+import { type PlayerPresence, playsSound } from '@quiz-dock/contracts';
+import { Check, LogIn, LogOut, Shuffle, Users, Volume2, VolumeX, Wifi } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +33,9 @@ import {
 } from '../game/live-components';
 import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
+import { unlockAudio } from '../game/media/audio-unlock';
+import { claimMediaElements } from '../game/media/media-pool';
+import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { RatingPanel } from '../game/rating-panel';
 import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
@@ -67,7 +70,12 @@ export function PlayerPage() {
   const [joining, setJoining] = useState(false);
   // Asked only when the quiz plays sound: a remote player then gets it on their device.
   const [hasSound, setHasSound] = useState(false);
-  const [presence, setPresence] = useState<PlayerPresence>('room');
+  const [wantedPresence, setPresence] = useState<PlayerPresence>('room');
+  const [muted, setMuted] = useState(loadMuted);
+  const toggleMuted = () => {
+    setMuted(!muted);
+    saveMuted(!muted);
+  };
   // Leaving on purpose: the seat and the score are gone, so it is confirmed first.
   const [confirmLeave, setConfirmLeave] = useState(false);
   const navigate = useNavigate();
@@ -143,6 +151,11 @@ export function PlayerPage() {
 
   const onJoin = async (e: FormEvent) => {
     e.preventDefault();
+    // Inside the click: the only moment a phone lets its media start with sound later.
+    if (hasSound) {
+      claimMediaElements();
+      void unlockAudio();
+    }
     setError(null);
     setJoining(true);
     try {
@@ -150,7 +163,7 @@ export function PlayerPage() {
         pin,
         nickname.trim(),
         avatarSeed || undefined,
-        hasSound ? presence : undefined,
+        hasSound ? wantedPresence : undefined,
       );
       // Le serveur a pu retenir un autre nom (compte, homonyme) : l'écran suit.
       if (joined.nickname && joined.nickname !== nickname.trim()) setNickname(joined.nickname);
@@ -253,6 +266,14 @@ export function PlayerPage() {
   // The slot exists once the layout is in the DOM (after the first commit), hence the effect.
   const [topbarSlot, setTopbarSlot] = useState<HTMLElement | null>(null);
   useEffect(() => setTopbarSlot(document.getElementById('participant-topbar')), []);
+  // Where this device follows from, and whether the current question sounds here.
+  const presence = view.players.find((p) => p.playerId === myId)?.presence ?? 'room';
+  const device = presence === 'remote' ? 'remote' : 'room';
+  const hears = !!question?.audioTarget && playsSound(question.audioTarget, device);
+  // A remote participant gets the whole question (a muted video when the sound is not
+  // theirs); in the room, the phone shows the image unless the sound is meant for it too.
+  const playsHere = presence === 'remote' || hears;
+
   const participantBar =
     topbarSlot && view.status === 'ready' && view.state !== 'ENDED' && !view.kicked
       ? createPortal(
@@ -267,6 +288,19 @@ export function PlayerPage() {
               <LogOut className="size-4" />
               {t('player.leave')}
             </Button>
+            {hears ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                aria-pressed={muted}
+                aria-label={muted ? t('player.unmute') : t('player.mute')}
+                onClick={() => toggleMuted()}
+              >
+                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </Button>
+            ) : null}
             <span className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline">
               {nickname}
             </span>
@@ -344,7 +378,7 @@ export function PlayerPage() {
                 required
               />
             </Label>
-            {hasSound ? <PresenceChoice value={presence} onChange={setPresence} /> : null}
+            {hasSound ? <PresenceChoice value={wantedPresence} onChange={setPresence} /> : null}
             {error ? <p className="text-destructive text-sm">{error}</p> : null}
             <Button type="submit" disabled={joining || !nickname.trim()}>
               <LogIn className="size-4" />
@@ -539,7 +573,24 @@ export function PlayerPage() {
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[1em]">
           {/* #41: capped at ~a third of the viewport so the answer zone below
               stays where the thumb expects it, whatever the image's ratio. */}
-          <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+          {playsHere ? (
+            <QuestionMediaStage
+              key={question.questionIndex}
+              media={question.media}
+              mode={view.paused ? 'pause' : 'play'}
+              audible={hears}
+              muted={muted}
+              boxClassName="w-full max-h-[35dvh]"
+              resumeKey={`${pin}:${question.questionIndex}`}
+              restartSignal={
+                view.mediaControl?.questionIndex === question.questionIndex
+                  ? view.mediaControl.seq
+                  : 0
+              }
+            />
+          ) : (
+            <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+          )}
           <Markdown
             role="heading"
             aria-level={1}
@@ -653,4 +704,21 @@ function PresenceChoice({
       ))}
     </fieldset>
   );
+}
+
+/** The participant's own mute, kept for the tab's life (a reload keeps it). */
+const MUTED_KEY = 'live.muted';
+function loadMuted(): boolean {
+  try {
+    return sessionStorage.getItem(MUTED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function saveMuted(muted: boolean): void {
+  try {
+    sessionStorage.setItem(MUTED_KEY, muted ? '1' : '0');
+  } catch {
+    /* storage unavailable: the choice lasts until the page closes */
+  }
 }
