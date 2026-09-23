@@ -1,7 +1,8 @@
 {
   "auth": {
     "required": "Authentification requise.",
-    "host_required": "Rôle animateur requis."
+    "host_required": "Rôle animateur requis.",
+    "host_only": "Action réservée aux animateurs : un administrateur gère l’instance, il ne présente pas."
   },
   "host": {
     "auth_required": "Authentification animateur requise.",
@@ -63,7 +64,8 @@
   "internal": "Erreur interne.",
   "error": "Une erreur est survenue.",
   "host_seat": {
-    "taken": "Le siège d’animateur est déjà pris."
+    "taken": "Le siège d’animateur est déjà pris.",
+    "manager_forbidden": "Un administrateur ne prend pas le siège d’animateur."
   },
   "store": {
     "demo_disabled": "Le partage est désactivé sur une instance de démonstration.",

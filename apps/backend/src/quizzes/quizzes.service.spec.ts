@@ -1,9 +1,11 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { type Quiz, QuizStatus } from '@prisma/client';
+import { type Quiz, QuizStatus, UserRole } from '@prisma/client';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { QuizzesService } from './quizzes.service';
 
+/** L'appelant, côté hôte : un id et un rôle (RG-14). */
+const HOST = { id: 'owner-1', role: UserRole.host };
 const OWNER = 'owner-1';
 const PAGE = { page: 1, pageSize: 20 };
 
@@ -62,7 +64,7 @@ describe('QuizzesService', () => {
   describe('isolation par propriétaire', () => {
     it('list filtre sur ownerId', async () => {
       prisma.quiz.findMany.mockResolvedValue([]);
-      await service.list(OWNER);
+      await service.list(HOST);
       expect(prisma.quiz.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { ownerId: OWNER } }),
       );
@@ -70,7 +72,7 @@ describe('QuizzesService', () => {
 
     it('get cherche par id ET ownerId', async () => {
       prisma.quiz.findFirst.mockResolvedValue(makeQuiz());
-      await service.get(OWNER, 'q1');
+      await service.get(HOST, 'q1');
       expect(prisma.quiz.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'q1', ownerId: OWNER } }),
       );
@@ -78,7 +80,7 @@ describe('QuizzesService', () => {
 
     it('get renvoie 404 si non possédé', async () => {
       prisma.quiz.findFirst.mockResolvedValue(null);
-      await expect(service.get(OWNER, 'q1')).rejects.toThrow(NotFoundException);
+      await expect(service.get(HOST, 'q1')).rejects.toThrow(NotFoundException);
     });
 
     it('update et delete vérifient la possession avant d’agir', async () => {
@@ -89,9 +91,31 @@ describe('QuizzesService', () => {
       expect(prisma.quiz.delete).not.toHaveBeenCalled();
     });
 
+    it('un gestionnaire voit toute l’instance, avec le propriétaire de chaque quiz', async () => {
+      prisma.quiz.findMany.mockResolvedValue([
+        { id: 'q1', title: 'A', owner: { displayName: 'Alice' } },
+        { id: 'q2', title: 'B', owner: { displayName: 'Bob' } },
+      ]);
+      const rows = await service.list({ id: 'admin-1', role: UserRole.admin });
+      // Aucun filtre de propriétaire : c'est la vue d'ensemble (RG-14).
+      expect(prisma.quiz.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+      expect(rows).toMatchObject([{ ownerName: 'Alice' }, { ownerName: 'Bob' }]);
+    });
+
+    it('un hôte ne voit que la sienne, sans nom de propriétaire', async () => {
+      prisma.quiz.findMany.mockResolvedValue([{ id: 'q1', owner: { displayName: 'Alice' } }]);
+      const rows = await service.list(HOST);
+      expect(prisma.quiz.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { ownerId: HOST.id } }),
+      );
+      expect(rows[0]).not.toHaveProperty('ownerName');
+    });
+
     it('feedback renvoie 404 pour un non-propriétaire (et ne lit aucun avis)', async () => {
       prisma.quiz.findFirst.mockResolvedValue(null);
-      await expect(service.feedback('someone-else', 'q1', PAGE)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.feedback({ id: 'someone-else', role: UserRole.host }, 'q1', PAGE),
+      ).rejects.toThrow(NotFoundException);
       expect(prisma.quizFeedback.findMany).not.toHaveBeenCalled();
     });
 
@@ -105,7 +129,7 @@ describe('QuizzesService', () => {
       prisma.quizFeedback.findMany.mockResolvedValue([
         { id: 'f1', rating: 5, comment: 'top', nickname: 'A', createdAt: new Date() },
       ]);
-      const res = await service.feedback(OWNER, 'q1', { page: 2, pageSize: 1, rating: 5 });
+      const res = await service.feedback(HOST, 'q1', { page: 2, pageSize: 1, rating: 5 });
       expect(prisma.quizFeedback.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { quizId: 'q1', rating: 5 }, skip: 1, take: 1 }),
       );
@@ -121,7 +145,9 @@ describe('QuizzesService', () => {
   describe('historique des sessions (§2.7-2.9)', () => {
     it('sessions renvoie 404 pour un non-propriétaire (et ne lit aucune session)', async () => {
       prisma.quiz.findFirst.mockResolvedValue(null);
-      await expect(service.sessions('someone-else', 'q1')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.sessions({ id: 'someone-else', role: UserRole.host }, 'q1'),
+      ).rejects.toThrow(NotFoundException);
       expect(prisma.gameSessionLog.findMany).not.toHaveBeenCalled();
     });
 
@@ -141,7 +167,7 @@ describe('QuizzesService', () => {
           endedAt: ended,
         },
       ]);
-      const res = await service.sessions(OWNER, 'q1');
+      const res = await service.sessions(HOST, 'q1');
       expect(prisma.gameSessionLog.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { quizId: 'q1' }, orderBy: { startedAt: 'desc' } }),
       );
@@ -155,7 +181,7 @@ describe('QuizzesService', () => {
 
     it('sessionDetail renvoie 404 si la session n’appartient pas à un quiz possédé', async () => {
       prisma.gameSessionLog.findFirst.mockResolvedValue(null);
-      await expect(service.sessionDetail(OWNER, 'q1', 's1')).rejects.toThrow(NotFoundException);
+      await expect(service.sessionDetail(HOST, 'q1', 's1')).rejects.toThrow(NotFoundException);
       expect(prisma.gameSessionLog.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 's1', quizId: 'q1', quiz: { ownerId: OWNER } } }),
       );
@@ -198,7 +224,7 @@ describe('QuizzesService', () => {
           },
         ],
       });
-      const res = await service.sessionDetail(OWNER, 'q1', 's1');
+      const res = await service.sessionDetail(HOST, 'q1', 's1');
       expect(res.quizTitle).toBe('Mon quiz');
       expect(res.status).toBe('interrupted');
       expect(res.questions[0]).toMatchObject({
@@ -216,7 +242,7 @@ describe('QuizzesService', () => {
         playerResults: [],
         answerLogs: [],
       });
-      await expect(service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1')).rejects.toThrow(
+      await expect(service.sessionPlayerDetail(HOST, 'q1', 's1', 'pr1')).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -293,7 +319,7 @@ describe('QuizzesService', () => {
           },
         ],
       });
-      const res = await service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1');
+      const res = await service.sessionPlayerDetail(HOST, 'q1', 's1', 'pr1');
       expect(res.fullCapture).toBe(true);
       expect(res.answers[2].answer).toBe('Bleu, Vert'); // multi-choix : jointure « , »
       expect(res.answers[3].answer).toBe('Deux → Un'); // ordre : jointure « → »
@@ -323,7 +349,7 @@ describe('QuizzesService', () => {
         ],
         answerLogs: [],
       });
-      const res = await service.sessionPlayerDetail(OWNER, 'q1', 's1', 'pr1');
+      const res = await service.sessionPlayerDetail(HOST, 'q1', 's1', 'pr1');
       expect(res.fullCapture).toBe(false);
       expect(res.answers).toEqual([]);
     });

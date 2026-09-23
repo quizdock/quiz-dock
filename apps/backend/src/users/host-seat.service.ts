@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { type HostSeat, type User, UserRole } from '@prisma/client';
 import { type AuthPrincipal, LOCAL_SUB_PREFIX } from '../auth/auth-provider';
 import { effectiveRole } from '../auth/roles';
@@ -94,6 +94,11 @@ export class HostSeatService {
    * `DEMO_SEAT_MINUTES` from now, renewal included.
    */
   async claim(user: User, requestedMinutes: number | null): Promise<HostSeatState> {
+    // Un gestionnaire n'anime pas (RG-14) : le siège reste l'affaire des hôtes.
+    // Il garde `seat:release` pour débloquer un siège abandonné, sans l'occuper.
+    if (user.role === UserRole.admin) {
+      throw new ForbiddenException('host_seat.manager_forbidden');
+    }
     const expiresInMinutes = isDemoMode() ? DEMO_SEAT_MINUTES : requestedMinutes;
     const claimedAt = new Date();
     const expiresAt = expiresInMinutes

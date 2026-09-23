@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
+import { Prisma, type Quiz, QuizStatus, type UserRole } from '@prisma/client';
+import { isManagerRole } from '../auth/roles';
 import { gameKeys } from '../game/game.keys';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -29,12 +30,31 @@ export class QuizzesService {
     private readonly redis: RedisService,
   ) {}
 
-  /** Quiz du animateur (banque privée), les plus récents d'abord. */
-  list(ownerId: string): Promise<Quiz[]> {
-    return this.prisma.quiz.findMany({
-      where: { ownerId },
+  /**
+   * Banque de l'appelant, les plus récents d'abord — et **toute l'instance** pour
+   * un gestionnaire (`admin`), avec le nom du propriétaire de chaque quiz : il
+   * voit tout, il ne présente rien (RG-14).
+   */
+  async list(user: { id: string; role: UserRole }): Promise<(Quiz & { ownerName?: string })[]> {
+    const manager = isManagerRole(user.role);
+    const rows = await this.prisma.quiz.findMany({
+      where: manager ? {} : { ownerId: user.id },
       orderBy: { createdAt: 'desc' },
+      include: { owner: { select: { displayName: true } } },
     });
+    // Le nom du propriétaire n'a de sens que dans la vue d'ensemble : un hôte qui
+    // lit sa banque n'a pas besoin qu'on lui rappelle que tout est à lui.
+    return rows.map(({ owner, ...quiz }) =>
+      manager ? { ...quiz, ownerName: owner.displayName } : quiz,
+    );
+  }
+
+  /**
+   * Portée d'une lecture : la banque de l'appelant, ou l'instance entière pour un
+   * gestionnaire. `undefined` laisse Prisma sans filtre de propriétaire.
+   */
+  private scopeOf(user: { id: string; role: UserRole }): string | undefined {
+    return isManagerRole(user.role) ? undefined : user.id;
   }
 
   /** Crée un quiz appartenant à `ownerId` (statut `draft` par défaut). */
@@ -51,8 +71,9 @@ export class QuizzesService {
     });
   }
 
-  /** Détail d'un quiz possédé, questions ordonnées incluses (404 sinon). */
-  async get(ownerId: string, id: string) {
+  /** Détail d'un quiz, questions ordonnées incluses (404 hors portée, cf. `scopeOf`). */
+  async get(user: { id: string; role: UserRole }, id: string) {
+    const ownerId = this.scopeOf(user);
     const quiz = await this.prisma.quiz.findFirst({
       where: { id, ownerId },
       include: {
@@ -77,7 +98,8 @@ export class QuizzesService {
    * `findFirst({ where:{ id, ownerId } })` renvoie 404 pour un non-owner). Renvoie
    * la moyenne, le nombre et la liste (récente d'abord).
    */
-  async feedback(ownerId: string, id: string, query: QuizFeedbackQuery) {
+  async feedback(user: { id: string; role: UserRole }, id: string, query: QuizFeedbackQuery) {
+    const ownerId = this.scopeOf(user);
     const quiz = await this.prisma.quiz.findFirst({
       where: { id, ownerId },
       select: { id: true },
@@ -122,7 +144,8 @@ export class QuizzesService {
    * Historique des parties archivées d'un quiz possédé (§2.7), récentes d'abord.
    * Réservé au propriétaire (la garde `findFirst({ id, ownerId })` → 404 sinon).
    */
-  async sessions(ownerId: string, id: string) {
+  async sessions(user: { id: string; role: UserRole }, id: string) {
+    const ownerId = this.scopeOf(user);
     const quiz = await this.prisma.quiz.findFirst({ where: { id, ownerId }, select: { id: true } });
     if (!quiz) {
       throw new NotFoundException('quiz.not_found');
@@ -140,7 +163,8 @@ export class QuizzesService {
    * résultats par participant. L'appartenance passe par le quiz (`quiz: { ownerId }`) —
    * 404 si la session n'existe pas ou n'appartient pas à ce quiz possédé.
    */
-  async sessionDetail(ownerId: string, id: string, sessionId: string) {
+  async sessionDetail(user: { id: string; role: UserRole }, id: string, sessionId: string) {
+    const ownerId = this.scopeOf(user);
     const row = await this.prisma.gameSessionLog.findFirst({
       where: { id: sessionId, quizId: id, quiz: { ownerId } },
       include: {
@@ -190,11 +214,12 @@ export class QuizzesService {
    * via le quiz ; 404 si la session ou le participant n'existe pas pour ce propriétaire.
    */
   async sessionPlayerDetail(
-    ownerId: string,
+    user: { id: string; role: UserRole },
     id: string,
     sessionId: string,
     playerResultId: string,
   ) {
+    const ownerId = this.scopeOf(user);
     const row = await this.prisma.gameSessionLog.findFirst({
       where: { id: sessionId, quizId: id, quiz: { ownerId } },
       select: {

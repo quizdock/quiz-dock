@@ -11,9 +11,10 @@ import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import { UsersService } from '../users/users.service';
 import { ALLOW_ANY_ROLE_KEY } from './allow-any-role.decorator';
+import { ALLOW_MANAGER_KEY } from './allow-manager.decorator';
 import { AUTH_PROVIDER, type AuthProvider } from './auth-provider';
 import { IS_PUBLIC_KEY } from './public.decorator';
-import { isHostRole } from './roles';
+import { isHostRole, isManagerRole } from './roles';
 
 /**
  * Garde global : authentifie via l'`AuthProvider` actif, provisionne
@@ -41,8 +42,14 @@ export class AuthGuard implements CanActivate {
     }
     const user = await this.users.upsertFromPrincipal(principal);
     const anyRole = this.reflector.getAllAndOverride<boolean>(ALLOW_ANY_ROLE_KEY, targets);
-    if (!anyRole && !isHostRole(user.role)) {
-      throw new ForbiddenException('auth.host_required');
+    // Une route ouverte au gestionnaire (`@AllowManager`) accepte l'`admin` en plus
+    // de l'hôte : il voit l'instance, il ne l'anime pas (RG-14).
+    const manager = this.reflector.getAllAndOverride<boolean>(ALLOW_MANAGER_KEY, targets);
+    const allowed = anyRole || isHostRole(user.role) || (manager && isManagerRole(user.role));
+    if (!allowed) {
+      throw new ForbiddenException(
+        isManagerRole(user.role) ? 'auth.host_only' : 'auth.host_required',
+      );
     }
     req.user = user;
     return true;

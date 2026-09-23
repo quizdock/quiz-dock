@@ -2,6 +2,7 @@ import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { networkInterfaces } from 'node:os';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { type User, UserRole } from '@prisma/client';
+import { AllowManager } from '../auth/allow-manager.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ActiveGameDto } from './dto/active-game.dto';
 import { JoinAddressesDto } from './dto/join-addresses.dto';
@@ -29,6 +30,7 @@ export class GameController {
    * vue d'ensemble (RG-14). Les entrées disent alors de quel hôte elles sont.
    */
   @Get('mine')
+  @AllowManager()
   @ApiOkResponse({ type: ActiveGameDto, isArray: true })
   mine(@CurrentUser() user: User): Promise<ActiveGameDto[]> {
     return user.role === UserRole.admin

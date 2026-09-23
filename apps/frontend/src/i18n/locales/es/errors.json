@@ -1,7 +1,8 @@
 {
   "auth": {
     "required": "Autenticación requerida.",
-    "host_required": "Se requiere el rol de anfitrión."
+    "host_required": "Se requiere el rol de anfitrión.",
+    "host_only": "Acción reservada a los anfitriones: un administrador gestiona la instancia, no presenta."
   },
   "host": {
     "auth_required": "Se requiere autenticación del anfitrión.",
@@ -63,7 +64,8 @@
   "internal": "Error interno.",
   "error": "Se ha producido un error.",
   "host_seat": {
-    "taken": "El puesto de anfitrión ya está ocupado."
+    "taken": "El puesto de anfitrión ya está ocupado.",
+    "manager_forbidden": "Un administrador no ocupa el asiento de anfitrión."
   },
   "store": {
     "demo_disabled": "El uso compartido está desactivado en una instancia de demostración.",

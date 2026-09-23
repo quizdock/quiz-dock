@@ -1576,6 +1576,9 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "ownerName": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -1671,6 +1674,9 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "ownerName": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string"

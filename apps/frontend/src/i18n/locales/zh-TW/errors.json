@@ -1,7 +1,8 @@
 {
   "auth": {
     "required": "需要身份驗證。",
-    "host_required": "需要主持人角色。"
+    "host_required": "需要主持人角色。",
+    "host_only": "此操作僅限主持人：管理員管理執行個體，不進行主持。"
   },
   "host": {
     "auth_required": "需要主持人身份驗證。",
@@ -63,7 +64,8 @@
   "internal": "內部錯誤。",
   "error": "發生了錯誤。",
   "host_seat": {
-    "taken": "主持人席位已被佔用。"
+    "taken": "主持人席位已被佔用。",
+    "manager_forbidden": "管理員不會占用主持席位。"
   },
   "store": {
     "demo_disabled": "示範執行個體已關閉分享功能。",

@@ -25,6 +25,7 @@ export interface QuizDetailDto {
      * @maximum 9007199254740991
      */
   questionCount: number;
+  ownerName?: string;
   createdAt: string;
   updatedAt: string;
   /** @nullable */

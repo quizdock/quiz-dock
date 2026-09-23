@@ -8,6 +8,7 @@ import { AuthGuard } from './auth.guard';
 
 const fakeUser = { id: 'u1', displayName: 'Marc', role: 'host' } as User;
 const playerUser = { id: 'u2', displayName: 'Léa', role: 'player' } as User;
+const adminUser = { id: 'u3', displayName: 'Ada', role: 'admin' } as User;
 const principal: AuthPrincipal = {
   sub: 'local:marc',
   displayName: 'Marc',
@@ -26,6 +27,7 @@ function makeContext(req: Partial<Request>): ExecutionContext {
 function makeGuard(opts: {
   isPublic?: boolean;
   allowAnyRole?: boolean;
+  allowManager?: boolean;
   authResult?: AuthPrincipal | null;
   user?: User;
 }) {
@@ -36,9 +38,11 @@ function makeGuard(opts: {
     upsertFromPrincipal: jest.fn().mockResolvedValue(opts.user ?? fakeUser),
   } as unknown as UsersService;
   const reflector = {
-    getAllAndOverride: jest.fn((key: string) =>
-      key === 'isPublic' ? (opts.isPublic ?? false) : (opts.allowAnyRole ?? false),
-    ),
+    getAllAndOverride: jest.fn((key: string) => {
+      if (key === 'isPublic') return opts.isPublic ?? false;
+      if (key === 'allowManager') return opts.allowManager ?? false;
+      return opts.allowAnyRole ?? false;
+    }),
   } as unknown as Reflector;
   return {
     guard: new AuthGuard(provider, users, reflector),
@@ -81,5 +85,24 @@ describe('AuthGuard', () => {
     const req: Partial<Request> & { user?: User } = { headers: {} };
     await expect(guard.canActivate(makeContext(req))).resolves.toBe(true);
     expect(req.user).toBe(playerUser);
+  });
+
+  it('un gestionnaire ne passe pas une route d’hôte, et passe une route de gestion (RG-14)', async () => {
+    // `admin` gère l'instance, il ne l'anime pas : créer, éditer, présenter
+    // restent à l'hôte, et le refus le dit (`auth.host_only`).
+    const hostOnly = makeGuard({ authResult: principal, user: adminUser });
+    await expect(hostOnly.guard.canActivate(makeContext({ headers: {} }))).rejects.toThrow(
+      ForbiddenException,
+    );
+
+    const managed = makeGuard({ authResult: principal, user: adminUser, allowManager: true });
+    await expect(managed.guard.canActivate(makeContext({ headers: {} }))).resolves.toBe(true);
+  });
+
+  it('une route de gestion reste fermée à un participant', async () => {
+    const { guard } = makeGuard({ authResult: principal, user: playerUser, allowManager: true });
+    await expect(guard.canActivate(makeContext({ headers: {} }))).rejects.toThrow(
+      ForbiddenException,
+    );
   });
 });

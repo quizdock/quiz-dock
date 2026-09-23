@@ -1,11 +1,22 @@
 import { UserRole } from '@prisma/client';
 
-/** Roles allowed to create, edit and present quizzes. */
+/**
+ * Who may create, edit and present quizzes: the **host**, and only them.
+ *
+ * `admin` is deliberately **not** a host (RG-14): it is a manager role — it sees
+ * the instance, it does not animate it. An account that needs to present is
+ * granted `host`; the two never cumulate, so "who can do what" stays readable.
+ */
 export function isHostRole(role: UserRole): boolean {
-  return role === UserRole.host || role === UserRole.admin;
+  return role === UserRole.host;
 }
 
-/** Ordering of the three scopes: floor, host privileges, instance administration. */
+/** Who has the instance-wide view: the manager, and nobody else (RG-14). */
+export function isManagerRole(role: UserRole): boolean {
+  return role === UserRole.admin;
+}
+
+/** Ordering of the three scopes: the floor, hosting, managing the instance. */
 const RANK: Record<UserRole, number> = {
   [UserRole.player]: 0,
   [UserRole.host]: 1,

@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, ForbiddenException } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import type { AuthPrincipal } from '../auth/auth-provider';
 import type { PrismaService } from '../prisma/prisma.service';
@@ -178,6 +178,13 @@ describe('HostSeatService.claim', () => {
       where: { id: admin.id },
       data: { role: 'admin' },
     });
+  });
+
+  it('refuse le siège à un gestionnaire : il gère, il n’anime pas (RG-14)', async () => {
+    const manager = { ...alice, role: 'admin' } as User;
+    const { service, tx } = makeService(null, [manager]);
+    await expect(service.claim(manager, null)).rejects.toThrow(ForbiddenException);
+    expect(tx.hostSeat.upsert).not.toHaveBeenCalled();
   });
 
   it('lets the holder renew their own seat', async () => {

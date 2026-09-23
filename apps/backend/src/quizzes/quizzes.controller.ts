@@ -27,6 +27,7 @@ import {
 } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import type { Response } from 'express';
+import { AllowManager } from '../auth/allow-manager.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { QuizDetailDto } from './dto/quiz-detail.dto';
@@ -52,10 +53,12 @@ export class QuizzesController {
     private readonly portable: QuizPortableService,
   ) {}
 
+  /** Sa banque — ou, pour un gestionnaire, celle de toute l'instance (RG-14). */
   @Get()
+  @AllowManager()
   @ApiOkResponse({ type: QuizDto, isArray: true })
   list(@CurrentUser() user: User) {
-    return this.quizzes.list(user.id);
+    return this.quizzes.list(user);
   }
 
   @Post()
@@ -113,36 +116,40 @@ export class QuizzesController {
   @Get(':id')
   @ApiOkResponse({ type: QuizDetailDto })
   get(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.quizzes.get(user.id, id);
+    return this.quizzes.get(user, id);
   }
 
   @Get(':id/feedback')
+  @AllowManager()
   @ApiOkResponse({ type: QuizFeedbackSummaryDto })
   feedback(
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Query() query: QuizFeedbackQueryDto,
   ) {
-    return this.quizzes.feedback(user.id, id, query);
+    return this.quizzes.feedback(user, id, query);
   }
 
   @Get(':id/sessions')
+  @AllowManager()
   @ApiOkResponse({ type: SessionListDto })
   sessions(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.quizzes.sessions(user.id, id);
+    return this.quizzes.sessions(user, id);
   }
 
   @Get(':id/sessions/:sessionId')
+  @AllowManager()
   @ApiOkResponse({ type: SessionDetailDto })
   sessionDetail(
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('sessionId') sessionId: string,
   ) {
-    return this.quizzes.sessionDetail(user.id, id, sessionId);
+    return this.quizzes.sessionDetail(user, id, sessionId);
   }
 
   @Get(':id/sessions/:sessionId/players/:playerResultId')
+  @AllowManager()
   @ApiOkResponse({ type: SessionPlayerDetailDto })
   sessionPlayer(
     @CurrentUser() user: User,
@@ -150,7 +157,7 @@ export class QuizzesController {
     @Param('sessionId') sessionId: string,
     @Param('playerResultId') playerResultId: string,
   ) {
-    return this.quizzes.sessionPlayerDetail(user.id, id, sessionId, playerResultId);
+    return this.quizzes.sessionPlayerDetail(user, id, sessionId, playerResultId);
   }
 
   @Put(':id')

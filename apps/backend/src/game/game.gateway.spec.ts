@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { NestFactory } from '@nestjs/core';
 import { type Socket, io } from 'socket.io-client';
 import { AppModule } from '../app.module';
@@ -11,6 +12,9 @@ import { GameService } from './game.service';
  * Requiert Postgres + Redis joignables (dev compose / services CI).
  * Couvre : ping/pong, host:create (PIN + snapshot) et player:join (lobby).
  */
+/** L'appelant d'une lecture de quiz : un hôte ordinaire (RG-14). */
+const asHost = (id: string) => ({ id, role: UserRole.host });
+
 describe('GameGateway (intégration socket)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -481,13 +485,13 @@ describe('GameGateway (intégration socket)', () => {
 
     // API de consultation (Phase 2) contre la vraie base : liste + détail owner-only.
     const quizzes = app.get(QuizzesService);
-    const list = await quizzes.sessions(hostUserId, quizId);
+    const list = await quizzes.sessions(asHost(hostUserId), quizId);
     expect(list.sessions.find((x) => x.id === s.id)).toMatchObject({
       playerCount: 1,
       successRate: 1,
       status: 'ended',
     });
-    const detail = await quizzes.sessionDetail(hostUserId, quizId, s.id);
+    const detail = await quizzes.sessionDetail(asHost(hostUserId), quizId, s.id);
     expect(detail.quizTitle).toBe('Quiz live test');
     expect(detail.questions[0]).toMatchObject({
       prompt: 'Capitale de la France ?',
@@ -496,7 +500,7 @@ describe('GameGateway (intégration socket)', () => {
     expect(detail.players[0]).toMatchObject({ nickname: 'Zoe', finalRank: 1 });
     // Drill-down participant (Phase 3) : réponse rendue lisible depuis le snapshot.
     const playerDetail = await quizzes.sessionPlayerDetail(
-      hostUserId,
+      asHost(hostUserId),
       quizId,
       s.id,
       detail.players[0].id,
@@ -504,7 +508,7 @@ describe('GameGateway (intégration socket)', () => {
     expect(playerDetail.fullCapture).toBe(true);
     expect(playerDetail.answers[0]).toMatchObject({ answer: 'Paris', isCorrect: true });
     // Isolation : un autre propriétaire ne voit pas la session.
-    await expect(quizzes.sessionDetail('someone-else', quizId, s.id)).rejects.toThrow();
+    await expect(quizzes.sessionDetail(asHost('someone-else'), quizId, s.id)).rejects.toThrow();
 
     // Nettoyage (cascade) pour ne pas bloquer la suppression du quiz en afterAll.
     await prisma.gameSessionLog.deleteMany({ where: { quizId } });

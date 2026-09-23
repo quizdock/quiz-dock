@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import { AllowAnyRole } from '../auth/allow-any-role.decorator';
+import { AllowManager } from '../auth/allow-manager.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { QuizDto } from '../quizzes/dto/quiz.dto';
 import { ShareTemplateDto } from './dto/share-template.dto';
@@ -41,6 +42,7 @@ export class StoreController {
 
   /** Withdraws an entry — its author, or an `admin` for any of them. */
   @Delete(':id')
+  @AllowManager()
   withdraw(@CurrentUser() user: User, @Param('id') id: string): Promise<void> {
     return this.store.withdraw(user, id);
   }

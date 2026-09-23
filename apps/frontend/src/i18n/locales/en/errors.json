@@ -1,7 +1,8 @@
 {
   "auth": {
     "required": "Authentication required.",
-    "host_required": "Host role required."
+    "host_required": "Host role required.",
+    "host_only": "This is a host action; an administrator manages the instance, they do not present."
   },
   "host": {
     "auth_required": "Host authentication required.",
@@ -63,7 +64,8 @@
   "internal": "Internal error.",
   "error": "An error occurred.",
   "host_seat": {
-    "taken": "The host seat is already taken."
+    "taken": "The host seat is already taken.",
+    "manager_forbidden": "An administrator does not take the host seat."
   },
   "store": {
     "demo_disabled": "Sharing is off on a demo instance.",

@@ -58,10 +58,12 @@ OIDC_NAME_CLAIM=                                # optional: dotted path of the d
 
 ## Who may host — assigning roles
 
-Three roles exist: **`player`** (join sessions), **`host`** (create, edit and present
-quizzes) and **`admin`** (host privileges plus administering the instance — the
-equivalent of root, not a role to hand out). A role is either **assigned** by the
-operator, or **derived** from the context on every request:
+Three roles exist: **`player`** (join sessions), **`host`** (their own bank: create,
+edit and present quizzes) and **`admin`** (a **manager**: reads the whole instance
+and administers it). An `admin` does **not** create, edit or present quizzes and
+never takes the host seat — managing and animating are different jobs, and the two
+roles do not cumulate. Give `host` to whoever has to present. A role is either
+**assigned** by the operator, or **derived** from the context on every request:
 
 | Mode | How someone becomes a host |
 |---|---|

@@ -1,7 +1,8 @@
 {
   "auth": {
     "required": "需要身份验证。",
-    "host_required": "需要主持人角色。"
+    "host_required": "需要主持人角色。",
+    "host_only": "此操作仅限主持人：管理员管理实例，不进行主持。"
   },
   "host": {
     "auth_required": "需要主持人身份验证。",
@@ -63,7 +64,8 @@
   "internal": "内部错误。",
   "error": "发生了错误。",
   "host_seat": {
-    "taken": "主持人席位已被占用。"
+    "taken": "主持人席位已被占用。",
+    "manager_forbidden": "管理员不会占用主持席位。"
   },
   "store": {
     "demo_disabled": "演示实例已关闭共享功能。",

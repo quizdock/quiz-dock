@@ -12,6 +12,8 @@ export const quizSchema = z.object({
   language: z.string(),
   feedbackEnabled: z.boolean(),
   questionCount: z.number().int(),
+  /** Nom du propriétaire — uniquement dans la vue d'ensemble d'un gestionnaire (RG-14). */
+  ownerName: z.string().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
   archivedAt: z.string().nullable(),
