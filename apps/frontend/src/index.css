@@ -99,8 +99,13 @@
 /*
  * Centred content widths — the one place the app's breakpoints live.
  * `content-*` centres a block and caps its width; pages pick a tier, never a
- * raw max-w. Shell: the app frame; lg: lists, dashboards, consoles; md:
- * reading and forms; sm: a single card (sign in, join).
+ * raw max-w.
+ *
+ * A page that works — a list, a table, an editor — fills the shell and claims
+ * the screen it was given: it asks for no tier at all. Narrowing is for the
+ * pages that would otherwise be a handful of words lost in the middle of a
+ * monitor. lg: a surface framed like the slide it shows (preview);
+ * md: reading and forms (profile); sm: a single card (sign in, join).
  */
 @theme {
   --container-shell: 90rem;

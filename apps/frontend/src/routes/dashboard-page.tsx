@@ -108,7 +108,7 @@ export function DashboardPage() {
   };
 
   return (
-    <section className="content-lg flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{isManager ? t('allQuizzes') : t('title')}</h1>
         <div className={cn('flex flex-wrap items-center gap-2', managerOnly && 'hidden')}>

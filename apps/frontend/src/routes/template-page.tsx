@@ -67,7 +67,7 @@ export function TemplatePage() {
   if (!template) return <p className="text-destructive">{t('notFound')}</p>;
 
   return (
-    <section className="content-lg flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       <Link to="/templates" className="text-muted-foreground flex w-fit items-center gap-1 text-sm">
         <ArrowLeft className="size-4" />
         {t('backToCatalogue')}
@@ -75,7 +75,7 @@ export function TemplatePage() {
 
       <header className="flex flex-col gap-3">
         <h1 className="text-2xl font-bold">{template.title}</h1>
-        {template.description ? <p>{template.description}</p> : null}
+        {template.description ? <p className="max-w-prose">{template.description}</p> : null}
         <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Badge variant="muted">{template.language}</Badge>
           <span>{t('questionCount', { count: template.questionCount })}</span>

@@ -80,7 +80,7 @@ export function LivePage() {
   const overview = sessions.some((s) => s.host);
 
   return (
-    <section className="content-lg flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">{overview ? t('allSessions') : t('activeSessions')}</h1>
 
       {isPending ? <p className="text-muted-foreground">{t('common:loading')}</p> : null}

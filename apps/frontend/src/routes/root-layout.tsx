@@ -101,7 +101,8 @@ export function RootLayout() {
           {t('common:demo.banner', { count: demo.seatMinutes })}
         </p>
       ) : null}
-      {/* Wide but bounded: ~1440px, the usual ceiling for app layouts; pages narrow themselves when reading matters. */}
+      {/* Wide but bounded: ~1440px, the usual ceiling for app layouts. Pages fill it;
+          only the ones that would look lost in it narrow themselves (see `content-*`). */}
       <main
         className={
           shell === 'participant'

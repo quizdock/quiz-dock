@@ -61,7 +61,7 @@ const CHRONO_STEPS = [-5, -1, 1, 5] as const;
  * padding (2 × 1.5rem): its action bar (`mt-auto`, sticky) then sits at the
  * bottom of the screen whatever the height of the slide or question on screen.
  */
-const CONSOLE_SECTION = 'content-lg flex min-h-[calc(100dvh-7rem)] flex-col py-6';
+const CONSOLE_SECTION = 'flex min-h-[calc(100dvh-7rem)] flex-col py-6';
 
 export function ControlPage() {
   const { t } = useTranslation(['live', 'common']);
@@ -489,7 +489,11 @@ export function ControlPage() {
 
         <QuestionMedia media={view.question?.media} className="max-h-56" />
 
-        <Markdown role="heading" aria-level={1} className="text-2xl font-semibold sm:text-3xl">
+        <Markdown
+          role="heading"
+          aria-level={1}
+          className="max-w-prose text-2xl font-semibold sm:text-3xl"
+        >
           {view.question?.prompt}
         </Markdown>
 

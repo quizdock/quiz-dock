@@ -24,7 +24,7 @@ export function ProfilePage() {
   const me = data?.data;
 
   return (
-    <section className="content-sm flex flex-col gap-6">
+    <section className="content-md flex flex-col gap-6">
       <h1 className="text-2xl font-bold">{s('profile.title')}</h1>
 
       {isPending ? <p className="text-muted-foreground">{t('common:loading')}</p> : null}

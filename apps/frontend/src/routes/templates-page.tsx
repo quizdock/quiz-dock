@@ -64,10 +64,10 @@ export function TemplatesPage() {
   const date = (iso: string) => new Date(iso).toLocaleDateString(i18n.language);
 
   return (
-    <section className="content-lg flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground text-sm">{t('intro')}</p>
+        <p className="text-muted-foreground max-w-prose text-sm">{t('intro')}</p>
       </header>
 
       {error ? (
