@@ -246,7 +246,9 @@ export class MediaService implements OnModuleInit {
     const live = await this.liveSnapshots();
     let removed = 0;
     for (const { id } of orphans) {
-      if (live.some((snap) => snap.includes(id))) continue;
+      // Any upload may be a video or a sound now (a Markdown image button, a background):
+      // only the full reference check can tell nothing else holds it.
+      if (live.some((snap) => snap.includes(id)) || (await this.isReferenced(id))) continue;
       await this.deleteAsset(id);
       removed++;
     }

@@ -237,6 +237,7 @@ describe('MediaService', () => {
 
     it('sweeps the videos and sounds nothing took, once their editor had time', async () => {
       prisma.mediaAsset.findMany.mockResolvedValue([{ id: 'old' }]);
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
       await expect(service.sweepOrphans()).resolves.toBe(1);
       expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -248,6 +249,15 @@ describe('MediaService', () => {
         }),
       );
       expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'old' } });
+    });
+
+    it('spares a video or sound held elsewhere than a question slot (a background, Markdown)', async () => {
+      prisma.mediaAsset.findMany.mockResolvedValue([{ id: 'bg' }]);
+      prisma.mediaAsset.findUnique.mockResolvedValue({
+        _count: { ...unused._count, questionBackgrounds: 1 },
+      });
+      await expect(service.sweepOrphans()).resolves.toBe(0);
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
     });
 
     it('never fails the save that called it', async () => {
