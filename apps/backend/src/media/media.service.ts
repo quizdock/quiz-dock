@@ -11,7 +11,7 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import type { MediaAsset, MediaKind } from '@prisma/client';
-import { type MediaRejection, sniffMedia } from '@quiz-dock/contracts';
+import { GameState, type MediaRejection, sniffMedia } from '@quiz-dock/contracts';
 import { isDemoMode } from '../demo/demo.config';
 import { gameKeys } from '../game/game.keys';
 import { PrismaService } from '../prisma/prisma.service';
@@ -287,11 +287,20 @@ export class MediaService implements OnModuleInit {
     return row?.used ?? true;
   }
 
-  /** Snapshots of the sessions being played (they carry the URLs of their media). */
+  /**
+   * Snapshots of the sessions still being played (they carry the URLs of their
+   * media). An ended session keeps its keys until they expire, but plays nothing.
+   */
   private async liveSnapshots(): Promise<string[]> {
     const keys = await this.redis.keys(gameKeys.snapshot('*'));
     if (keys.length === 0) return [];
-    return (await this.redis.mget(...keys)).filter((v): v is string => typeof v === 'string');
+    const pins = keys.map((k) => k.split(':')[1]);
+    const states = await Promise.all(
+      pins.map((pin) => this.redis.hget(gameKeys.game(pin), 'state')),
+    );
+    const live = keys.filter((_k, i) => states[i] && states[i] !== GameState.Ended);
+    if (live.length === 0) return [];
+    return (await this.redis.mget(...live)).filter((v): v is string => typeof v === 'string');
   }
 
   private async deleteAsset(id: string): Promise<void> {

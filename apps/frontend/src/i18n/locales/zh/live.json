@@ -229,5 +229,13 @@
   },
   "question": {
     "mediaAlt": "题目配图"
+  },
+  "media": {
+    "enableSound": "开启声音",
+    "unlockHint": "在此窗口任意位置点击：浏览器只有在此窗口内点击后才允许播放声音，在控制台点击无效。整场只需一次。",
+    "soundBlocked": "声音被浏览器阻止",
+    "videoMuted": "视频已静音播放（声音被浏览器阻止）",
+    "slow": "媒体尚未加载完成…",
+    "waveform": "题目声音的波形"
   }
 }

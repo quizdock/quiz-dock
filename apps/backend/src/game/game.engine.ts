@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { GameState } from '@quiz-dock/contracts';
+import { GameState, liveMediaUrls } from '@quiz-dock/contracts';
 import type {
   AnswerValue,
   GameMode,
@@ -332,6 +332,10 @@ export class GameEngine {
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
     const top = this.topRows(ranked);
 
+    // The next question's media, fetched by the screens while the leaderboard is up.
+    const next = snapshot.questions[index + 1];
+    const preload = next && liveMediaUrls(next.media).length > 0 ? next.media : null;
+
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
       const playerId = (socket.data as { playerId?: string }).playerId;
@@ -340,6 +344,9 @@ export class GameEngine {
         this.personalReveal(common, records, ranked, rankOf, playerId),
       );
       socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
+      if (!playerId && preload) {
+        socket.emit('media:preload', { questionIndex: index + 1, media: preload });
+      }
     }
   }
 

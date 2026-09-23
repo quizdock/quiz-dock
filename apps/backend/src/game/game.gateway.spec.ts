@@ -284,6 +284,75 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.score).toBeGreaterThan(0);
   }, 15_000);
 
+  it('sends the next question’s media ahead to the projection, never to players', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/preload-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const twoQuestions = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Preload test',
+        status: 'ready',
+        questionCount: 2,
+        questions: {
+          create: [0, 1].map((orderIndex) => ({
+            orderIndex,
+            type: 'poll' as const,
+            prompt: `Q${orderIndex}`,
+            timeLimitS: 5,
+            pointsMode: 'none' as const,
+            audioMediaId: orderIndex === 1 ? asset.id : null,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red' as const, shape: 'triangle' as const },
+                { orderIndex: 1, text: 'B', color: 'blue' as const, shape: 'diamond' as const },
+              ],
+            },
+          })),
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: twoQuestions.id });
+      const screen = connect();
+      await screen.emitWithAck('spectator:join', { pin });
+      const player = connect();
+      await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+      let playerPreloads = 0;
+      player.on('media:preload', () => playerPreloads++);
+      const preload = new Promise<{ questionIndex: number; media: { audio: { url: string } } }>(
+        (resolve) => screen.once('media:preload', (p) => resolve(p as never)),
+      );
+      const reveal = new Promise<void>((resolve) =>
+        player.once('question:reveal', () => resolve()),
+      );
+      const started = new Promise<void>((resolve) =>
+        player.once('question:start', () => resolve()),
+      );
+      host.emit('host:start', { pin });
+      await started;
+      host.emit('host:reveal', { pin });
+      await reveal;
+      const next = await preload;
+      expect(next.questionIndex).toBe(1);
+      expect(next.media.audio.url).toBe('/api/v1/media/preload-test');
+      await new Promise((r) => setTimeout(r, 100));
+      expect(playerPreloads).toBe(0);
+    } finally {
+      await prisma.quiz.delete({ where: { id: twoQuestions.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

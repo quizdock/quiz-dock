@@ -229,5 +229,13 @@
   },
   "question": {
     "mediaAlt": "Illustration of the question"
+  },
+  "media": {
+    "enableSound": "Turn sound on",
+    "unlockHint": "Click anywhere in this window: the browser allows sound only after a click right here, not in the console. Once is enough for the whole session.",
+    "soundBlocked": "Sound blocked by the browser",
+    "videoMuted": "Video started without sound (blocked by the browser)",
+    "slow": "The media has not loaded yet…",
+    "waveform": "Waveform of the question’s sound"
   }
 }

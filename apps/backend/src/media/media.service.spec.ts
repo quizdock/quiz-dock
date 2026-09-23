@@ -48,7 +48,11 @@ const file = (over: Partial<{ buffer: Buffer; mimetype: string; size: number }> 
 describe('MediaService', () => {
   let prisma: ReturnType<typeof makePrisma>;
   let service: MediaService;
-  const redis = { keys: jest.fn(async () => [] as string[]), mget: jest.fn(async () => []) };
+  const redis = {
+    keys: jest.fn(async () => [] as string[]),
+    mget: jest.fn(async () => []),
+    hget: jest.fn(async () => 'ANSWERING' as string | null),
+  };
 
   beforeEach(() => {
     prisma = makePrisma();
@@ -220,6 +224,15 @@ describe('MediaService', () => {
       redis.mget.mockResolvedValue(['{"media":{"url":"/api/v1/media/m1"}}'] as never);
       await service.releaseUnused(['m1']);
       expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+    });
+
+    it('lets go of a media once its session has ended, keys or not', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      redis.keys.mockResolvedValue(['game:123456:snapshot']);
+      redis.hget.mockResolvedValueOnce('ENDED');
+      redis.mget.mockResolvedValue(['{"media":{"url":"/api/v1/media/m1"}}'] as never);
+      await service.releaseUnused(['m1']);
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
     });
 
     it('sweeps the videos and sounds nothing took, once their editor had time', async () => {

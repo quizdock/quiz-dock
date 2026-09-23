@@ -135,6 +135,8 @@ export const ServerEvents = {
   GameOutline: 'game:outline',
   /** Nouveau timing de la question courante (ajustement du chrono). */
   QuestionTime: 'question:time',
+  /** Media of the next question, to fetch ahead (projection and console only). */
+  MediaPreload: 'media:preload',
   Notice: 'notice',
   Error: 'error',
   Pong: 'pong',
@@ -238,6 +240,12 @@ export interface SlideShowPayload {
   textOutline: boolean;
   /** Auto-mode display time: null = engine default, 0 = the host clicks, else seconds. */
   displayDelayS: number | null;
+}
+
+/** The media of question `questionIndex`, to fetch ahead of it. */
+export interface MediaPreloadPayload {
+  questionIndex: number;
+  media: LiveQuestionMedia;
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -471,6 +479,12 @@ export interface ServerToClientEvents {
   'game:outline': (p: GameOutlinePayload) => void;
   /** Timing recalculé de la question courante (ajustement du chrono). */
   'question:time': (p: QuestionTimePayload) => void;
+  /**
+   * The media of the next question, sent with the reveal of the current one so
+   * a screen fetches them while the leaderboard is up and plays them at once.
+   * Only to sockets that are not players: the next question is not theirs yet.
+   */
+  'media:preload': (p: MediaPreloadPayload) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
    * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le

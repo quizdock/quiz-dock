@@ -229,5 +229,13 @@
   },
   "question": {
     "mediaAlt": "Illustration de la question"
+  },
+  "media": {
+    "enableSound": "Activer le son",
+    "unlockHint": "Cliquez n’importe où dans cette fenêtre : le navigateur n’autorise le son qu’après un clic ici même, pas dans la console. Une fois suffit pour toute la session.",
+    "soundBlocked": "Son bloqué par le navigateur",
+    "videoMuted": "Vidéo lancée sans le son (bloqué par le navigateur)",
+    "slow": "Le média n’est pas encore chargé…",
+    "waveform": "Forme d’onde du son de la question"
   }
 }
