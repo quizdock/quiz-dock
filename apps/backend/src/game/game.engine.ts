@@ -184,7 +184,7 @@ export class GameEngine {
    * screens that are not players hear of it (the console shows the choice).
    */
   private async setAudioTarget(pin: string, target: AudioTarget): Promise<void> {
-    if (!AUDIO_TARGETS.includes(target)) throw new BadRequestException('session.bad_option');
+    if (!AUDIO_TARGETS.includes(target)) return; // not one of ours: nothing to change
     await this.redis.hset(gameKeys.game(pin), { audioTarget: target });
     const snapshot = await this.game.getSnapshot(pin);
     if (!snapshot) return;
@@ -825,6 +825,7 @@ export class GameEngine {
           index,
           meta.questionStartedAt,
           meta.questionEndsAt,
+          gameAudioTarget(snapshot, meta.audioTarget),
         ),
       );
       const records = await this.readAnswers(pin, index);

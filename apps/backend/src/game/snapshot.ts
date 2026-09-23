@@ -9,7 +9,6 @@ import type {
   QuestionType,
 } from '@quiz-dock/contracts';
 import {
-  AUDIO_TARGET_DEFAULT,
   type AudioTarget,
   effectiveTimeLimitS,
   mediaDurationMs,
@@ -201,7 +200,7 @@ export function buildQuestionStart(
   startedAt: number,
   endsAt: number,
   /** The game's default audio target (see {@link gameAudioTarget}). */
-  gameTarget: AudioTarget = AUDIO_TARGET_DEFAULT,
+  gameTarget: AudioTarget,
 ): QuestionStartPayload {
   const hasOptions = question.options.length > 0;
   const options: PublicOption[] | undefined = hasOptions
