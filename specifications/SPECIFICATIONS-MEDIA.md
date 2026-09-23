@@ -19,7 +19,7 @@ A video brings its own sound, so it excludes the sound slot.
 | 1 | Upload, playback in the room (projection) | **Delivered** — PR #44 |
 | 2 | Recording a sound with the microphone | **Idea box** — set aside, its value is not settled (§3) |
 | 3 | YouTube / Vimeo embeds | **Idea box** — set aside, it goes against the no-tracking, self-hosted promise (§4) |
-| 4 | Remote players | Planned (§5) |
+| 4 | Remote players, preloading and readiness | Planned (§5) |
 | 5 | Synchronisation and fairness | Planned (§6) |
 
 ---
@@ -95,25 +95,62 @@ Points found while preparing it, to settle if it is picked up again:
 
 ---
 
-## 5. Phase 4 — remote players
+## 5. Phase 4 — remote players and media readiness
 
-- A full player view: the prompt, the visual, the sound.
-- On joining: **in the room** / **remote**.
-- Audio target: a quiz default plus a per-question setting (everyone / projection only / projection + remote),
-  overridable at launch. Sound plays only on the targeted devices (embeds through mute); in a hybrid game, phones in
-  the room stay silent.
-- Unlock on the **Join** click: **one** audio element created there and reused for the whole session (iOS).
-- A local mute button.
-- Preloading on remote devices (extend `media:preload`, today reserved to non-players).
+Today every device is assumed to be in the room: the projection plays the video or the sound, the phones show the
+prompt, the image and the answers, never a video nor a sound. A player following from home (a video call) cannot hear
+a "name this tune" question. Phase 4 gives such a player the whole question, and makes sure no screen starts a media
+it has not loaded — the waiting part of the former phase 5, brought forward on 2026-09-23.
+
+### 5.1 Presence
+
+- On joining, a player says whether they are **in the room** or **remote** (in the room by default). The choice is
+  kept across a reconnection and shown to the host (console roster).
+- A remote player gets the full question view: the prompt, the visual (image or video) and the sound.
+
+### 5.2 Who hears the sound
+
+- An **audio target**: a quiz default plus an optional per-question override — *projection only* / *projection and
+  remote players* / *everyone*. The host can override the quiz default from the lobby, before the start.
+- Sound plays only on the targeted devices. In a hybrid game the phones in the room stay silent (no echo); a
+  non-targeted device shows the video muted, or the image.
+- The sound is unlocked on the **Join** click: **one** audio element is created there and reused for the whole session
+  (iOS only lets an element that was unlocked by a gesture play later). A video follows the same rule.
+- A local **mute** button on the player's device.
+
+### 5.3 Preloading
+
+- The existing `media:preload` (sent with the reveal, to non-players only) is extended to the players that need the
+  media — remote players, and room phones for the images — and to the **next step**, slide or question.
+- **From the lobby**, every device fetches the media of the first step while people wait for the start.
+- Mobile data is spared: at most **one step ahead**; the images and sounds are light, a video is fetched only by a
+  device that will play it.
+
+### 5.4 Readiness
+
+- A device tells the server when the media of a step are loaded (`media:ready { stepIndex }`). Only the devices that
+  play something count: the projection, and the remote players for a question with a sound or a video.
+- **In the lobby**: a "ready" mark next to each participant on the host console; the projection shows a count
+  ("18 / 20 ready"). The host sees who is late before starting.
+- **During the game**: no waiting page by default, so the pace is kept. Only when a counted device is not ready as a
+  step is due, a short **loading** screen appears: the projection shows the count and a progress bar, the console
+  lists the late participants, the phones say the question is coming. It lasts at most a configurable cap
+  (`GAME_MEDIA_WAIT_S`, 10 s by default); the host can **start anyway**.
+- One slow device never holds the room: past the cap, or on "start anyway", the step starts; a late device receives
+  it part-way through and plays from where it should be.
+- Detail per participant stays on the console; the projection only shows a count (200 names would be unreadable, and
+  a name in large letters would single someone out).
+
+### 5.5 Errors
+
+A remote player's device refusing the sound (unlock lost), a media failing to load on it, the wait cap reached.
 
 ---
 
 ## 6. Phase 5 — synchronisation and fairness
 
-- Clients send `media:ready` (embeds: the `started` event). The server waits, with a configurable cap of a few seconds,
-  then broadcasts a common start timestamp.
+- A common start timestamp broadcast once the step starts, so every device starts the media at the same instant.
 - A per-question **play then time** mode: the timer starts when the media ends.
-- A player who is not ready still receives the question, part-way through.
 - Client clock alignment (the server's ping/pong exists, clients do not use it yet).
 
 ---
