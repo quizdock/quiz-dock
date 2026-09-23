@@ -478,6 +478,22 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     await this.engine.markMediaReady(payload.pin, socket, payload.questionIndex);
   }
 
+  /**
+   * The projection's position in the current sound, relayed to everyone else in
+   * the room. Only a projection speaks for it: not a participant, not a console.
+   */
+  @SubscribeMessage('media:position')
+  mediaPosition(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; questionIndex: number; t: number; playing: boolean },
+  ): void {
+    const { pin, playerId, isHostControl } = socket.data;
+    if (!pin || pin !== payload.pin || playerId || isHostControl) return;
+    const { questionIndex, t, playing } = payload;
+    if (!Number.isInteger(questionIndex) || !Number.isFinite(t) || t < 0) return;
+    socket.to(pin).emit('media:position', { questionIndex, t, playing: playing === true });
+  }
+
   @SubscribeMessage('ping')
   ping(@ConnectedSocket() socket: GameSocket, @MessageBody() payload: { t0: number }): void {
     socket.emit('pong', { t0: payload.t0, t1: Date.now() });

@@ -8,6 +8,7 @@ import type {
   GameStep,
   LeaderboardPayload,
   MediaPreloadPayload,
+  MediaPositionPayload,
   MediaReadinessPayload,
   OutlineQuestion,
   PersonalResult,
@@ -19,6 +20,7 @@ import type {
   SlideShowPayload,
 } from '@quiz-dock/contracts';
 import { useEffect, useRef, useState } from 'react';
+import type { FollowedPosition } from './media/question-media-stage';
 import { useTranslation } from 'react-i18next';
 import {
   type GameSocket,
@@ -96,6 +98,8 @@ export interface GameView {
   mediaControl: { questionIndex: number; action: 'restart'; seq: number } | null;
   /** Whether the quiz plays any sound (projection and console only; null until told). */
   quizHasSound: boolean | null;
+  /** Where the projection is in the current sound (for the screens that do not play it). */
+  mediaPosition: FollowedPosition | null;
   /** Who has loaded the upcoming question's sound or video (projection and console only). */
   readiness: MediaReadinessPayload | null;
   /** Whether the quiz has any media fetched ahead (projection and console only). */
@@ -142,6 +146,7 @@ const INITIAL: GameView = {
   gameAudioTarget: null,
   quizHasMedia: null,
   readiness: null,
+  mediaPosition: null,
   nav: null,
 };
 
@@ -233,6 +238,8 @@ export function useGameSession(pin: string, role: LiveRole) {
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
     const onPreload = (p: MediaPreloadPayload) => patch({ preload: p });
     const onReadiness = (p: MediaReadinessPayload) => patch({ readiness: p });
+    const onPosition = (p: MediaPositionPayload) =>
+      patch({ mediaPosition: { ...p, receivedAt: performance.now() } });
     const onGameMedia = (p: { hasSound: boolean; hasMedia: boolean; audioTarget: AudioTarget }) =>
       patch({ quizHasSound: p.hasSound, quizHasMedia: p.hasMedia, gameAudioTarget: p.audioTarget });
     const onMediaControl = (p: { questionIndex: number; action: 'restart' }) =>
@@ -286,6 +293,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('leaderboard', onLeaderboard);
       sock.on('media:preload', onPreload);
       sock.on('media:readiness', onReadiness);
+      sock.on('media:position', onPosition);
       sock.on('media:control', onMediaControl);
       sock.on('game:media', onGameMedia);
       sock.on('game:podium', onPodium);
@@ -351,6 +359,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('leaderboard', onLeaderboard);
       s.off('media:preload', onPreload);
       s.off('media:readiness', onReadiness);
+      s.off('media:position', onPosition);
       s.off('media:control', onMediaControl);
       s.off('game:media', onGameMedia);
       s.off('game:podium', onPodium);

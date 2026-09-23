@@ -17,6 +17,9 @@ vi.mock('../game/media/media-pool', () => ({
 vi.mock('../game/media/audio-unlock', () => ({ unlockAudio: () => Promise.resolve(true) }));
 // The stage plays real media elements; here it only says how it was asked to play.
 vi.mock('../game/media/question-media-stage', () => ({
+  FollowedWaveform: (p: { follow: { t: number } | null }) => (
+    <div data-testid="followed" data-t={String(p.follow?.t ?? '')} />
+  ),
   QuestionMediaStage: (p: { audible: boolean; muted: boolean; mode: string }) => (
     <div data-testid="stage" data-audible={String(p.audible)} data-muted={String(p.muted)} />
   ),
@@ -74,6 +77,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   gameAudioTarget: null,
   quizHasMedia: null,
   readiness: null,
+  mediaPosition: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,
@@ -214,6 +218,8 @@ describe('PlayerPage (client participant)', () => {
     expect(await screen.findByRole('button', { name: /Paris/ })).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /Illustration de la question/i })).toBeNull();
     expect(screen.queryByTestId('stage')).toBeNull();
+    // …but its waveform follows the projection's playhead.
+    expect(screen.getByTestId('followed')).toBeInTheDocument();
   });
 
   it('ANSWERING, remote: the phone plays the question’s sound, and its owner can mute it', async () => {

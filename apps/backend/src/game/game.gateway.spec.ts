@@ -657,6 +657,25 @@ describe('GameGateway (intégration socket)', () => {
     }
   }, 15_000);
 
+  it('relays the projection’s position in the sound to the room, and nobody else’s', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const screen = connect();
+    await screen.emitWithAck('spectator:join', { pin });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+    const heard: unknown[] = [];
+    host.on('media:position', (p) => heard.push(p));
+    const atPlayer = new Promise((resolve) => player.once('media:position', resolve));
+
+    player.emit('media:position', { pin, questionIndex: 0, t: 9, playing: true }); // ignored
+    screen.emit('media:position', { pin, questionIndex: 0, t: 1.5, playing: true });
+    expect(await atPlayer).toEqual({ questionIndex: 0, t: 1.5, playing: true });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(heard).toEqual([{ questionIndex: 0, t: 1.5, playing: true }]);
+    host.emit('host:end', { pin });
+  }, 15_000);
+
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

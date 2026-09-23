@@ -1,6 +1,6 @@
 import { useParams } from '@tanstack/react-router';
 import { Maximize, Minimize, Users } from 'lucide-react';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { Markdown } from '@/components/markdown';
@@ -21,6 +21,7 @@ import {
 import { useAudioUnlocked } from '../game/media/audio-unlock';
 import { preloadMedia, waitedFor } from '../game/media/media-pool';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
+import { followed } from '../game/media/followed';
 import { SoundUnlockOverlay } from '../game/media/sound-unlock-overlay';
 import { Surface } from '../game/surface';
 import { useGameRemaining } from '../game/use-countdown';
@@ -47,6 +48,13 @@ export function ScreenPage() {
 export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?: boolean }) {
   const { t } = useTranslation('live');
   const { view, socket } = useGameSession(pin, 'spectator');
+  // The projection tells the room where it is in the sound (the playheads elsewhere follow).
+  const questionIndex = view.question?.questionIndex ?? -1;
+  const sayPosition = useCallback(
+    (t: number, playing: boolean) =>
+      socket?.emit('media:position', { pin, questionIndex, t, playing }),
+    [socket, pin, questionIndex],
+  );
   const soundUnlocked = useAudioUnlocked();
 
   // In the lobby and while the leaderboard is up, what comes next buffers here;
@@ -181,6 +189,8 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           mode={!playMedia || view.nav?.review ? 'still' : view.paused ? 'pause' : 'play'}
           boxClassName="h-[35vh]"
           resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
+          follow={playMedia ? undefined : followed(view, view.question.questionIndex)}
+          onPosition={playMedia ? sayPosition : undefined}
           restartSignal={
             view.mediaControl?.questionIndex === view.question.questionIndex
               ? view.mediaControl.seq

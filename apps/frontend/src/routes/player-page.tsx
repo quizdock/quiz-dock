@@ -35,7 +35,8 @@ import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
 import { unlockAudio } from '../game/media/audio-unlock';
 import { claimMediaElements, preloadMedia, waitedFor } from '../game/media/media-pool';
-import { QuestionMediaStage } from '../game/media/question-media-stage';
+import { FollowedWaveform, QuestionMediaStage } from '../game/media/question-media-stage';
+import { followed } from '../game/media/followed';
 import { RatingPanel } from '../game/rating-panel';
 import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
@@ -596,6 +597,7 @@ export function PlayerPage() {
               mode={view.paused ? 'pause' : 'play'}
               audible={hears}
               muted={muted}
+              follow={hears ? undefined : followed(view, question.questionIndex)}
               boxClassName="w-full max-h-[35dvh]"
               resumeKey={`${pin}:${question.questionIndex}`}
               restartSignal={
@@ -605,7 +607,16 @@ export function PlayerPage() {
               }
             />
           ) : (
-            <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+            <>
+              <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+              {/* In the room: the sound plays on the projection, its playhead moves here too. */}
+              {question.media?.audio ? (
+                <FollowedWaveform
+                  audio={question.media.audio}
+                  follow={followed(view, question.questionIndex)}
+                />
+              ) : null}
+            </>
           )}
           <Markdown
             role="heading"

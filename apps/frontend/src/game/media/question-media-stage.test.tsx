@@ -133,4 +133,25 @@ describe('QuestionMediaStage', () => {
     render(<QuestionMediaStage media={large} mode="still" />);
     expect(screen.getByRole('img', { name: /Forme d’onde/ })).toHaveClass('h-[5em]');
   });
+  it('the projection says where it is in the sound, for the other screens', async () => {
+    const onPosition = vi.fn();
+    render(<QuestionMediaStage media={sound} mode="play" onPosition={onPosition} />);
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    el.dispatchEvent(new Event('pause'));
+    expect(onPosition).toHaveBeenCalledWith(0, expect.any(Boolean));
+  });
+
+  it('a screen that does not play the sound draws it where the projection is, without loading it', async () => {
+    render(
+      <QuestionMediaStage
+        media={sound}
+        mode="still"
+        follow={{ questionIndex: 0, t: 2, playing: false, receivedAt: performance.now() }}
+      />,
+    );
+    await act(async () => undefined);
+    expect(play).not.toHaveBeenCalled();
+    expect(screen.getByRole('img', { name: /Forme d’onde/ })).toBeInTheDocument();
+  });
 });

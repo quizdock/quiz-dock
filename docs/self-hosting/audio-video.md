@@ -101,6 +101,12 @@ session (iOS lets only those play sound). A participant who reloads the page
 mid-session sees **Sound blocked** with a button, as on the projection. Each
 participant can mute their own device.
 
+A sound is drawn as its waveform, as thick as the question asks (S, M or L in
+the editor), with a playhead. The projection tells the room where it is about
+once a second and at each pause or jump: the screens that show the sound
+without playing it — the console, the phones in the room — move their playhead
+with it.
+
 ## Fetched ahead
 
 To start at once, each device fetches the next question's media a few seconds

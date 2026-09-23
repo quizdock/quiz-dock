@@ -117,6 +117,8 @@ export const ClientEvents = {
   PlayerSubmit: 'player:submit',
   /** A device has loaded what it fetched ahead of a question. */
   MediaReady: 'media:ready',
+  /** The projection's playback position (relayed to the room). */
+  MediaPosition: 'media:position',
   /** Avis du joueur en fin de partie (note Likert 5 + commentaire facultatif). */
   PlayerRate: 'player:rate',
   Ping: 'ping',
@@ -293,6 +295,17 @@ export interface MediaReadinessPayload {
   players: { playerId: string; ready: boolean }[];
   /** The projection windows counted. */
   screens: { ready: number; total: number };
+}
+
+/**
+ * Where the projection is in a question's sound: seconds played, and whether it
+ * plays on. Sent about once a second and at each play, pause or jump, so the
+ * screens that do not play the sound move their playhead with the room's.
+ */
+export interface MediaPositionPayload {
+  questionIndex: number;
+  t: number;
+  playing: boolean;
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -503,6 +516,8 @@ export interface ClientToServerEvents {
   ) => void;
   /** A device has loaded the sound or video it fetched ahead of `questionIndex`. */
   'media:ready': (p: { pin: string; questionIndex: number }) => void;
+  /** The projection's playback position of the current sound (relayed to the room). */
+  'media:position': (p: { pin: string } & MediaPositionPayload) => void;
   ping: (p: { t0: number }) => void;
 }
 
@@ -554,6 +569,8 @@ export interface ServerToClientEvents {
   'media:preload': (p: MediaPreloadPayload) => void;
   /** Who has loaded the upcoming question's sound or video (screens only). */
   'media:readiness': (p: MediaReadinessPayload) => void;
+  /** Where the projection is in the current sound: the other screens draw their playhead there. */
+  'media:position': (p: MediaPositionPayload) => void;
   /** The host restarts the current question's media from the top. */
   'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
   /**
