@@ -354,9 +354,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 />
               )}
             </form.Field>
-            <Badge variant={statusVariant}>
-              {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
-            </Badge>
           </div>
           <div className="grid items-start gap-x-8 gap-y-4 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
             <form.Field name="description">
@@ -446,6 +443,10 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           ) : null}
         </form>
         <div className="flex flex-wrap items-center gap-1">
+          {/* L'état du quiz se lit sur la même ligne que ce qu'on peut en faire. */}
+          <Badge variant={statusVariant} className="mr-2">
+            {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
+          </Badge>
           <div className="flex flex-wrap items-center gap-1">
             <a
               className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
