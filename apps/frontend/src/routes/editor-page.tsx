@@ -428,6 +428,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     <MarkdownEditor
                       aria-label={t('settings.descriptionLabel')}
                       className="max-w-(--container-content-sm)"
+                      surfaceClassName="min-h-32"
                       placeholder={t('settings.descriptionPlaceholder')}
                       value={field.state.value}
                       onChange={field.handleChange}
@@ -435,7 +436,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   ) : (
                     <button
                       type="button"
-                      className="text-muted-foreground hover:bg-accent/60 -mx-2 max-w-(--container-content-sm) rounded-md px-2 py-1 text-left text-sm"
+                      className="text-muted-foreground hover:bg-accent/60 -mx-2 min-h-32 max-w-(--container-content-sm) rounded-md px-2 py-1 text-left text-sm"
                       onClick={() => setEditingDescription(true)}
                     >
                       {field.state.value ? (
@@ -452,23 +453,39 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 avis se lit à côté de l'interrupteur quand la carte a de quoi, dessous
                 sinon : c'est la largeur de **la carte** qui décide, pas celle de la
                 fenêtre — d'où le conteneur. */}
-            <Section className="bg-muted/30 @container h-fit min-w-0 rounded-lg border px-3 py-2">
-              <div className="flex flex-col gap-x-4 gap-y-2 @md:flex-row @md:items-center">
-                <label
-                  className="flex min-w-0 items-center gap-2 text-sm @md:flex-1"
-                  title={t('feedback.enableHelp')}
-                >
-                  <Switch
-                    checked={quiz.feedbackEnabled}
-                    disabled={update.isPending}
-                    onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
-                    aria-label={t('feedback.enableLabel')}
-                  />
-                  <span className="font-medium">{t('feedback.enableLabel')}</span>
-                </label>
-                <FeedbackSection quizId={quiz.id} />
-              </div>
-            </Section>
+            <div className="flex min-w-0 flex-col gap-3">
+              <Section className="bg-muted/30 @container min-w-0 rounded-lg border px-3 py-2">
+                <div className="flex flex-col gap-x-4 gap-y-2 @md:flex-row @md:items-center">
+                  <label
+                    className="flex min-w-0 items-center gap-2 text-sm @md:flex-1"
+                    title={t('feedback.enableHelp')}
+                  >
+                    <Switch
+                      checked={quiz.feedbackEnabled}
+                      disabled={update.isPending}
+                      onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
+                      aria-label={t('feedback.enableLabel')}
+                    />
+                    <span className="font-medium">{t('feedback.enableLabel')}</span>
+                  </label>
+                  <FeedbackSection quizId={quiz.id} />
+                </div>
+              </Section>
+              {/* Où en est le quiz, et l'action qui suit : sous le réglage, dans la
+                  même colonne — l'accès live s'affiche ici pendant une session. */}
+              <StatusBar
+                quiz={quiz}
+                presenting={presenting}
+                presentError={presentError}
+                fullCapture={fullCapture}
+                onFullCapture={setFullCapture}
+                onPublish={() => void changeStatus('ready')}
+                onPresent={() => void onPresent()}
+                onBackToDraft={() => void changeStatus('draft')}
+                onRestore={() => void changeStatus('draft')}
+                busy={transition.isPending}
+              />
+            </div>
           </div>
           {quizDraft && isDirty ? (
             <DraftNotice
@@ -482,21 +499,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           ) : null}
         </form>
       </header>
-      {/* Always visible: where the quiz stands and the one action that follows. Live access
-          shows here while a session runs — no folded box hiding dynamic state. */}
-      <StatusBar
-        quiz={quiz}
-        presenting={presenting}
-        presentError={presentError}
-        fullCapture={fullCapture}
-        onFullCapture={setFullCapture}
-        onPublish={() => void changeStatus('ready')}
-        onPresent={() => void onPresent()}
-        onBackToDraft={() => void changeStatus('draft')}
-        onRestore={() => void changeStatus('draft')}
-        busy={transition.isPending}
-      />
-
       {/* Master / detail: the sequence on the left, the open item on the right (a bottom
           sheet below `lg`). */}
       <div
