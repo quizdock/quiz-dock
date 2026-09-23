@@ -24,6 +24,20 @@ describe('media pool on a phone', () => {
     expect(next.src).toContain('/api/v1/media/c');
   });
 
+  it('loads the next question into the phone’s own element, which then plays it from its buffer', async () => {
+    const { claimMediaElements, preloadMedia, takeMedia } = await import('./media-pool');
+    claimMediaElements();
+    const load = HTMLMediaElement.prototype.load as unknown as ReturnType<typeof vi.fn>;
+    preloadMedia({
+      visual: null,
+      audio: { url: '/api/v1/media/next', durationMs: 1000, peaks: [], gainDb: 0 },
+    });
+    const loads = load.mock.calls.length;
+    const el = takeMedia('audio', '/api/v1/media/next');
+    expect(el.src).toContain('/api/v1/media/next');
+    expect(load.mock.calls.length).toBe(loads); // not fetched a second time
+  });
+
   it('without the click (a projection), each media gets its own element', async () => {
     const { releaseMedia, takeMedia } = await import('./media-pool');
     const a = takeMedia('video', '/api/v1/media/v');

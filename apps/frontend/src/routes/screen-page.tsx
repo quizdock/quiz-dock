@@ -49,9 +49,9 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
   const { view } = useGameSession(pin, 'spectator');
   const soundUnlocked = useAudioUnlocked();
 
-  // While the leaderboard is up, the next question's media buffer here.
+  // In the lobby and while the leaderboard is up, what comes next buffers here.
   useEffect(() => {
-    if (playMedia && view.preload) preloadMedia(view.preload.media);
+    if (playMedia && view.preload) preloadMedia(view.preload.media, view.preload.images);
   }, [playMedia, view.preload]);
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
   const remaining = useGameRemaining(view);

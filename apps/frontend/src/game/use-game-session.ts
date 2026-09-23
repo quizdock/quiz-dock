@@ -95,6 +95,8 @@ export interface GameView {
   mediaControl: { questionIndex: number; action: 'restart'; seq: number } | null;
   /** Whether the quiz plays any sound (projection and console only; null until told). */
   quizHasSound: boolean | null;
+  /** Whether the quiz has any media fetched ahead (projection and console only). */
+  quizHasMedia: boolean | null;
   /** The game's default audio target (projection and console only; null until told). */
   gameAudioTarget: AudioTarget | null;
   /** Host navigation over played steps (`game:state.nav`); `review` = a past step is on screen. */
@@ -135,6 +137,7 @@ const INITIAL: GameView = {
   mediaControl: null,
   quizHasSound: null,
   gameAudioTarget: null,
+  quizHasMedia: null,
   nav: null,
 };
 
@@ -225,8 +228,8 @@ export function useGameSession(pin: string, role: LiveRole) {
       patch({ reveal: p, result: p.yourResult ?? null });
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
     const onPreload = (p: MediaPreloadPayload) => patch({ preload: p });
-    const onGameMedia = (p: { hasSound: boolean; audioTarget: AudioTarget }) =>
-      patch({ quizHasSound: p.hasSound, gameAudioTarget: p.audioTarget });
+    const onGameMedia = (p: { hasSound: boolean; hasMedia: boolean; audioTarget: AudioTarget }) =>
+      patch({ quizHasSound: p.hasSound, quizHasMedia: p.hasMedia, gameAudioTarget: p.audioTarget });
     const onMediaControl = (p: { questionIndex: number; action: 'restart' }) =>
       setView((prev) => ({
         ...prev,

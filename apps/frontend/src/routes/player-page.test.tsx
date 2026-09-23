@@ -72,6 +72,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   mediaControl: null,
   quizHasSound: null,
   gameAudioTarget: null,
+  quizHasMedia: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,

@@ -18,18 +18,30 @@ function create(tag: 'video' | 'audio', url: string): HTMLMediaElement {
   return el;
 }
 
-/** Starts fetching the media of an upcoming question. */
-export function preloadMedia(media: LiveQuestionMedia): void {
+/** Starts fetching an image (a question's, a slide's). */
+function preloadImage(url: string): void {
+  if (images.has(url)) return;
+  const img = new Image();
+  img.src = url;
+  images.set(url, img);
+}
+
+/**
+ * Starts fetching the media of an upcoming question, and the images of the
+ * slides before it. On a phone the sound and the video load into its own
+ * elements (free between questions): an element made now could not play
+ * sound later on iOS.
+ */
+export function preloadMedia(media: LiveQuestionMedia, slideImages: string[] = []): void {
   const { visual, audio } = media;
-  if (visual?.kind === 'image' && !images.has(visual.url)) {
-    const img = new Image();
-    img.src = visual.url;
-    images.set(visual.url, img);
-  }
+  slideImages.forEach(preloadImage);
+  if (visual?.kind === 'image') preloadImage(visual.url);
   if (visual?.kind === 'video' && 'url' in visual && !pool.has(visual.url)) {
-    pool.set(visual.url, create('video', visual.url));
+    if (!loadInto('video', visual.url)) pool.set(visual.url, create('video', visual.url));
   }
-  if (audio && !pool.has(audio.url)) pool.set(audio.url, create('audio', audio.url));
+  if (audio && !pool.has(audio.url) && !loadInto('audio', audio.url)) {
+    pool.set(audio.url, create('audio', audio.url));
+  }
 }
 
 /**
@@ -80,6 +92,20 @@ export function claimMediaElements(): void {
   }
 }
 
+const absolute = (url: string) => new URL(url, window.location.href).href;
+
+/** Points the phone's free element at `url` (a no-op when it already is); false without one. */
+function loadInto(tag: 'video' | 'audio', url: string): boolean {
+  const own = dedicated[tag];
+  if (!own || inUse.has(own)) return false;
+  if (own.src !== absolute(url)) {
+    own.preload = 'auto';
+    own.src = url;
+    own.load();
+  }
+  return true;
+}
+
 /** The element for `url`: the one fetched ahead, else the phone's own, else a fresh one. */
 export function takeMedia(tag: 'video' | 'audio', url: string): HTMLMediaElement {
   const ready = pool.get(url);
@@ -87,12 +113,10 @@ export function takeMedia(tag: 'video' | 'audio', url: string): HTMLMediaElement
   images.delete(url);
   if (ready && ready.tagName.toLowerCase() === tag) return ready;
   const own = dedicated[tag];
-  if (own && !inUse.has(own)) {
+  if (own && loadInto(tag, url)) {
+    // Loaded ahead already when the preload named it: it starts from its buffer.
     inUse.add(own);
-    own.preload = 'auto';
     own.muted = false;
-    own.src = url;
-    own.load();
     return own;
   }
   return create(tag, url);
@@ -101,8 +125,14 @@ export function takeMedia(tag: 'video' | 'audio', url: string): HTMLMediaElement
 /** Stops an element for good: no sound can outlive the screen that played it. */
 export function releaseMedia(el: HTMLMediaElement): void {
   el.pause();
+  el.remove();
+  if (inUse.has(el)) {
+    // The phone's own element waits for the next question, its buffer kept: taken
+    // back for the same media (a remount), it starts over without fetching again.
+    inUse.delete(el);
+    el.currentTime = 0;
+    return;
+  }
   el.removeAttribute('src');
   el.load();
-  el.remove();
-  inUse.delete(el); // the phone's own element waits for the next question
 }

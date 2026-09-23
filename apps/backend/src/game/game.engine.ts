@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { AUDIO_TARGETS, GameState, liveMediaUrls } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, GameState } from '@quiz-dock/contracts';
 import type {
   AnswerValue,
   AudioTarget,
@@ -9,6 +9,7 @@ import type {
   GameStep,
   LeaderboardPayload,
   LeaderboardRow,
+  MediaPreloadPayload,
   PlayerPresence,
   PodiumPayload,
   QuestionRevealPayload,
@@ -39,14 +40,8 @@ import { buildRevealCommon } from './reveal';
 import { isDeferred, rankClosest, scoreAnswer } from './scoring';
 import { SessionArchiveService } from './session-archive.service';
 import { resumeQuestionWindow } from './chrono';
-import {
-  buildQuestionStart,
-  buildSlideShow,
-  gameAudioTarget,
-  questionAudioTarget,
-  questionHasSound,
-  snapshotHasSound,
-} from './snapshot';
+import { type PreloadDevice, preloadFor, snapshotHasMedia } from './preload';
+import { buildQuestionStart, buildSlideShow, gameAudioTarget, snapshotHasSound } from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
 
@@ -190,10 +185,42 @@ export class GameEngine {
     if (!snapshot) return;
     const payload = {
       hasSound: snapshotHasSound(snapshot),
+      hasMedia: snapshotHasMedia(snapshot),
       audioTarget: gameAudioTarget(snapshot, target),
     };
     for (const socket of await this.server.in(pin).fetchSockets()) {
       if (!(socket.data as { playerId?: string }).playerId) socket.emit('game:media', payload);
+    }
+    // Who needs what may have changed (the phones in the room, for every device).
+    await this.emitPreload(pin, snapshot, 0);
+  }
+
+  /**
+   * Tells each device (or `only` one) what to fetch ahead of question `index`:
+   * only what it will show or play (see `preloadFor`), never the question itself.
+   */
+  private async emitPreload(
+    pin: string,
+    snapshot: QuizSnapshot,
+    index: number,
+    only?: Emitter,
+  ): Promise<void> {
+    if (index > snapshot.questions.length) return;
+    const gameTarget = await this.gameTarget(pin, snapshot);
+    const players = await this.redis.hgetall(gameKeys.players(pin));
+    const payloads = new Map<PreloadDevice, MediaPreloadPayload | null>();
+    const sockets: Emitter[] = only ? [only] : await this.server.in(pin).fetchSockets();
+    for (const socket of sockets) {
+      const playerId = socket.data.playerId;
+      const record = playerId && players[playerId];
+      const device: PreloadDevice = !playerId
+        ? 'screen'
+        : ((record ? (JSON.parse(record) as PlayerRecord).presence : undefined) ?? 'room');
+      if (!payloads.has(device)) {
+        payloads.set(device, preloadFor(snapshot, index, gameTarget, device));
+      }
+      const payload = payloads.get(device);
+      if (payload) socket.emit('media:preload', payload);
     }
   }
 
@@ -376,14 +403,6 @@ export class GameEngine {
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
     const top = this.topRows(ranked);
 
-    // The next question's media, fetched by the screens while the leaderboard is up.
-    const next = snapshot.questions[index + 1];
-    const preload = next && liveMediaUrls(next.media).length > 0 ? next.media : null;
-    const nextTarget =
-      next && questionHasSound(next)
-        ? questionAudioTarget(next, await this.gameTarget(pin, snapshot))
-        : undefined;
-
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
       const playerId = (socket.data as { playerId?: string }).playerId;
@@ -392,14 +411,9 @@ export class GameEngine {
         this.personalReveal(common, records, ranked, rankOf, playerId),
       );
       socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
-      if (!playerId && preload) {
-        socket.emit('media:preload', {
-          questionIndex: index + 1,
-          media: preload,
-          ...(nextTarget ? { audioTarget: nextTarget } : {}),
-        });
-      }
     }
+    // What comes next, fetched by every device while the leaderboard is up.
+    await this.emitPreload(pin, snapshot, index + 1);
   }
 
   /** Common reveal + the proximity ranking of a numeric `closest` question (with nicknames). */
@@ -765,6 +779,7 @@ export class GameEngine {
       // The projection asks for sound at once when the quiz will need it.
       socket.emit('game:media', {
         hasSound: snapshotHasSound(snapshotForNav),
+        hasMedia: snapshotHasMedia(snapshotForNav),
         audioTarget: gameAudioTarget(snapshotForNav, meta.audioTarget),
       });
     }
@@ -780,6 +795,10 @@ export class GameEngine {
     // Mode/pause courants : un (ré)attache doit refléter auto/pause immédiatement.
     socket.emit('game:mode', this.buildModePayload(meta));
     if (meta.joinBaseUrl) socket.emit('game:join-url', { baseUrl: meta.joinBaseUrl });
+    // In the lobby, every device fetches what the first question needs while people wait.
+    if (meta.state === GameState.Lobby && snapshotForNav) {
+      await this.emitPreload(pin, snapshotForNav, 0, socket);
+    }
 
     const snapshot = await this.game.getSnapshot(pin);
     if (!snapshot || meta.currentIndex < 0) return;

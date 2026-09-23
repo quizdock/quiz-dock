@@ -24,6 +24,7 @@
     "ownNameHint": "ⓘ Désactivé, le nom affiché vient de leur compte. Dans les deux cas leurs résultats y restent rattachés : un nom choisi n’est pas l’anonymat.",
     "audioTargetLabel": "Qui entend le son dans cette session",
     "audioTargetHint": "Remplace le réglage du quiz pour cette session. Les questions qui ont leur propre réglage le gardent.",
+    "preloadNotice": "Pour que rien n’attende, les appareils des participants reçoivent l’image, le son ou la vidéo de la question suivante quelques secondes avant qu’elle s’affiche — jamais son texte ni ses réponses. Un participant curieux pourrait les ouvrir en avance.",
     "audioTarget": {
       "projection": "Projection seulement",
       "projection_remote": "Projection et participants à distance",

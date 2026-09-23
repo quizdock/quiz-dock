@@ -260,11 +260,18 @@ export interface SlideShowPayload {
 }
 
 /** The media of question `questionIndex`, to fetch ahead of it. */
+/**
+ * What a device fetches ahead: the next question's media — only those this
+ * device will show or play — and the images of the slides before it. Never
+ * the prompt nor the options: the question itself stays unknown.
+ */
 export interface MediaPreloadPayload {
   questionIndex: number;
   media: LiveQuestionMedia;
   /** Which devices will play its sound (present when it has one). */
   audioTarget?: AudioTarget;
+  /** Images of the slides shown before that question. */
+  images?: string[];
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -517,9 +524,9 @@ export interface ServerToClientEvents {
   /** Timing recalculé de la question courante (ajustement du chrono). */
   'question:time': (p: QuestionTimePayload) => void;
   /**
-   * The media of the next question, sent with the reveal of the current one so
-   * a screen fetches them while the leaderboard is up and plays them at once.
-   * Only to sockets that are not players: the next question is not theirs yet.
+   * The media of the next question, sent in the lobby (the first one) and with
+   * the reveal of the current one, so a device fetches them while the room waits
+   * and plays them at once. Each device gets only what it will show or play.
    */
   'media:preload': (p: MediaPreloadPayload) => void;
   /** The host restarts the current question's media from the top. */
@@ -531,6 +538,8 @@ export interface ServerToClientEvents {
    */
   'game:media': (p: {
     hasSound: boolean;
+    /** Whether any question or slide carries a media (the lobby then says they are sent ahead). */
+    hasMedia: boolean;
     /** The game's default audio target: the host's lobby choice, else the quiz's. */
     audioTarget: AudioTarget;
   }) => void;

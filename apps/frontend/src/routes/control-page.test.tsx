@@ -46,6 +46,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   mediaControl: null,
   quizHasSound: null,
   gameAudioTarget: null,
+  quizHasMedia: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,
@@ -76,6 +77,7 @@ describe('ControlPage (console hôte)', () => {
     hookState.value = view({
       players: [{ playerId: 'p1', nickname: 'Alice', presence: 'remote' }],
       quizHasSound: true,
+      quizHasMedia: true,
       gameAudioTarget: 'projection_remote',
     });
     renderApp('/session/482913/console');
@@ -83,6 +85,8 @@ describe('ControlPage (console hôte)', () => {
     const select = await screen.findByLabelText('Qui entend le son dans cette session');
     expect(select).toHaveValue('projection_remote');
     expect(screen.getByLabelText('Participe à distance')).toBeInTheDocument();
+    // The host is told the media reach the phones ahead.
+    expect(screen.getByText(/quelques secondes avant/)).toBeInTheDocument();
     fireEvent.change(select, { target: { value: 'everyone' } });
     expect(fakeSocket.emit).toHaveBeenCalledWith('host:options', {
       pin: '482913',

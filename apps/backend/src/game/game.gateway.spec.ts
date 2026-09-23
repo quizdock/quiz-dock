@@ -293,7 +293,11 @@ describe('GameGateway (intégration socket)', () => {
     const screen = connect();
     const media = new Promise((resolve) => screen.once('game:media', resolve));
     await screen.emitWithAck('spectator:join', { pin });
-    expect(await media).toEqual({ hasSound: false, audioTarget: 'projection_remote' }); // the seeded quiz is silent
+    expect(await media).toEqual({
+      hasSound: false,
+      hasMedia: false,
+      audioTarget: 'projection_remote',
+    }); // the seeded quiz is silent
     const player = connect();
     let told = false;
     player.on('game:media', () => (told = true));
@@ -321,7 +325,7 @@ describe('GameGateway (intégration socket)', () => {
     host.emit('host:end', { pin });
   }, 15_000);
 
-  it('sends the next question’s media ahead to the projection, never to players', async () => {
+  it('sends each device what it needs of the next question: the sound to the projection and to remote participants, not to phones in the room', async () => {
     const asset = await prisma.mediaAsset.create({
       data: {
         ownerId: hostUserId,
@@ -366,6 +370,11 @@ describe('GameGateway (intégration socket)', () => {
       await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
       let playerPreloads = 0;
       player.on('media:preload', () => playerPreloads++);
+      const remote = connect();
+      await remote.emitWithAck('player:join', { pin, nickname: 'Grace', presence: 'remote' });
+      const remotePreload = new Promise<{ questionIndex: number; media: { audio: unknown } }>(
+        (resolve) => remote.once('media:preload', (p) => resolve(p as never)),
+      );
       const preload = new Promise<{ questionIndex: number; media: { audio: { url: string } } }>(
         (resolve) => screen.once('media:preload', (p) => resolve(p as never)),
       );
@@ -382,8 +391,13 @@ describe('GameGateway (intégration socket)', () => {
       const next = await preload;
       expect(next.questionIndex).toBe(1);
       expect(next.media.audio.url).toBe('/api/v1/media/preload-test');
+      expect(await remotePreload).toMatchObject({
+        questionIndex: 1,
+        media: { audio: { url: '/api/v1/media/preload-test' } },
+        audioTarget: 'projection_remote',
+      });
       await new Promise((r) => setTimeout(r, 100));
-      expect(playerPreloads).toBe(0);
+      expect(playerPreloads).toBe(0); // in the room, nothing of a sound meant for the projection
     } finally {
       await prisma.quiz.delete({ where: { id: twoQuestions.id } });
       await prisma.mediaAsset.delete({ where: { id: asset.id } });
@@ -531,8 +545,16 @@ describe('GameGateway (intégration socket)', () => {
       host.emit('host:options', { pin, audioTarget: 'everyone' });
       expect((await changed).audioTarget).toBe('everyone');
 
+      // Every device, the room's included, gets the sound meant for every device — from the lobby.
       const player = connect();
+      const lobbyPreload = new Promise<{ questionIndex: number; media: { audio: unknown } }>(
+        (resolve) => player.once('media:preload', (p) => resolve(p as never)),
+      );
       await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+      expect(await lobbyPreload).toMatchObject({
+        questionIndex: 0,
+        media: { audio: { url: '/api/v1/media/target-test' } },
+      });
       const started = new Promise<{ audioTarget?: string }>((resolve) =>
         player.once('question:start', resolve),
       );

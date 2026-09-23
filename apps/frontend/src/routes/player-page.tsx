@@ -34,7 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
 import { unlockAudio } from '../game/media/audio-unlock';
-import { claimMediaElements } from '../game/media/media-pool';
+import { claimMediaElements, preloadMedia } from '../game/media/media-pool';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { RatingPanel } from '../game/rating-panel';
 import { useCountdown, useGameRemaining } from '../game/use-countdown';
@@ -135,6 +135,11 @@ export function PlayerPage() {
   useEffect(() => {
     setOrder(question?.options?.map((o) => o.id) ?? []);
   }, [question]);
+
+  // What the next question will show or play here, fetched while the room waits.
+  useEffect(() => {
+    if (view.preload) preloadMedia(view.preload.media, view.preload.images);
+  }, [view.preload]);
 
   const needsJoin = view.status === 'no-session';
   useEffect(() => {

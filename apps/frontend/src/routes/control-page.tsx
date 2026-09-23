@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Info,
   Eye,
   Gauge,
   Hand,
@@ -312,6 +313,15 @@ export function ControlPage() {
               <span className="text-muted-foreground block">{t('control.ownNameHint')}</span>
             </span>
           </label>
+        ) : null}
+
+        {/* Accepted risk (media brief §5.3): the phones get the next question's media
+            ahead, without its prompt — the host is told, once, here. */}
+        {view.quizHasMedia ? (
+          <p className="text-muted-foreground flex items-start gap-2 text-sm">
+            <Info className="mt-0.5 size-4 shrink-0" />
+            {t('control.preloadNotice')}
+          </p>
         ) : null}
 
         {/* Who hears the sound, for this game: replaces the quiz's default; a question
