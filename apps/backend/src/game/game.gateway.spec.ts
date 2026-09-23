@@ -9,7 +9,8 @@ import { GameService } from './game.service';
 
 /**
  * Test d'INTÉGRATION : vraie connexion socket.io-client → gateway /game.
- * Requiert Postgres + Redis joignables (dev compose / services CI).
+ * Requiert Postgres + Redis joignables (dev compose / services CI) ; la base est
+ * `<db>_test`, créée par le global setup de Jest.
  * Couvre : ping/pong, host:create (PIN + snapshot) et player:join (lobby).
  */
 /** L'appelant d'une lecture de quiz : un hôte ordinaire (RG-14). */
@@ -31,8 +32,10 @@ describe('GameGateway (intégration socket)', () => {
   };
 
   beforeAll(async () => {
-    process.env.DATABASE_URL ??= 'postgresql://live:live@localhost:15432/quizdock?schema=public';
-    process.env.REDIS_URL ??= 'redis://localhost:16379';
+    // Set by the Jest global setup: a test database and Redis database 1, never the dev ones.
+    if (!process.env.DATABASE_URL?.includes('_test')) {
+      throw new Error('DATABASE_URL must point at a test database (see test/jest.global-setup.ts)');
+    }
     process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
     process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
     process.env.GAME_HOST_WINDOW_MS = '1500'; // fenêtre de reconnexion hôte courte (§7.3)

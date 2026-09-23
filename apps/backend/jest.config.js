@@ -13,4 +13,6 @@ module.exports = {
   // la fin des tests (le teardown best-effort peut laisser des handles ouverts).
   forceExit: true,
   testTimeout: 20000,
+  // A database of their own for the integration tests (never the development one).
+  globalSetup: '<rootDir>/../test/jest.global-setup.ts',
 };
