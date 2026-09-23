@@ -107,6 +107,7 @@ Which setup offers what: [where participants connect](invitation-address.md).
 | `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). MP3 only. |
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
 
+Formats, conversion and playback are detailed in [Audio & video](audio-video.md).
 A file's type is read from its content, never from its name: a renamed file is refused, and so
 is a video in another codec than H.264 (the HEVC an iPhone records by default, AV1) or a
 QuickTime `.mov`. **Behind a reverse proxy, raise its request body limit to the largest of these
