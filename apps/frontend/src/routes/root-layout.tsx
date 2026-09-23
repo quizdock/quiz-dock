@@ -1,10 +1,8 @@
 import { Link, Outlet, useMatches, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AppNav } from '@/components/app-nav';
 import { BrandLogo } from '@/components/brand-logo';
-import { LiveSessions } from '@/components/live-sessions';
-import { SeatCountdown, SeatMenuRow } from '@/components/seat-status';
-import { UserMenu } from '@/components/user-menu';
 import { useAuth } from '../auth/auth-context';
 import { APP_NAME, getDemo } from '../config';
 
@@ -56,50 +54,35 @@ export function RootLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between gap-4 border-b px-6 py-3">
+      {/* Le nom de la marque n'est plus écrit à côté du logo : c'est le logo qui la
+          porte (il est remplaçable par l'opérateur), et la place gagnée revient à
+          la navigation sur un téléphone. Le lien garde le nom comme libellé. */}
+      <header className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
         {shell === 'participant' ? (
-          <span className="flex items-center gap-2 text-lg font-bold">
+          <span aria-label={APP_NAME}>
             <BrandLogo className="h-7 w-auto rounded-md" />
-            <span>{APP_NAME}</span>
           </span>
         ) : (
-          <Link to="/" className="flex items-center gap-2 text-lg font-bold">
+          <Link to="/" aria-label={APP_NAME} className="shrink-0">
             <BrandLogo className="h-7 w-auto rounded-md" />
-            <span>{APP_NAME}</span>
           </Link>
         )}
-        <nav className="flex items-center gap-3 text-sm">
-          {shell === 'participant' ? (
-            // Filled by the player page (avatar, nickname, Leave) through a portal.
-            <div id="participant-topbar" className="flex items-center gap-2" />
-          ) : user ? (
-            <>
-              <Link to="/quizzes" className="whitespace-nowrap hover:underline">
-                {t('nav.myQuizzes')}
-              </Link>
-              <Link to="/templates" className="whitespace-nowrap hover:underline">
-                {t('nav.templates')}
-              </Link>
-              {/* Les sessions en cours suivent l'hôte partout : ce ne sont pas des
-                  quiz, et on n'en oublie pas une ouverte en changeant de page. */}
-              <LiveSessions />
-              {/* A seat countdown stays in plain sight; renewal and log out live in the user menu. */}
-              {mode === 'none' ? <SeatCountdown user={user} /> : null}
-              <UserMenu
-                user={user}
-                onLogout={() => {
-                  void Promise.resolve(logout()).then(() => navigate({ to: '/login' }));
-                }}
-              >
-                {mode === 'none' ? <SeatMenuRow user={user} /> : null}
-              </UserMenu>
-            </>
-          ) : (
-            <Link to="/login" className="hover:underline">
-              {t('nav.loginLink')}
-            </Link>
-          )}
-        </nav>
+        {shell === 'participant' ? (
+          // Filled by the player page (avatar, nickname, Leave) through a portal.
+          <div id="participant-topbar" className="flex items-center gap-2" />
+        ) : user ? (
+          <AppNav
+            user={user}
+            mode={mode}
+            onLogout={() => {
+              void Promise.resolve(logout()).then(() => navigate({ to: '/login' }));
+            }}
+          />
+        ) : (
+          <Link to="/login" className="text-sm hover:underline">
+            {t('nav.loginLink')}
+          </Link>
+        )}
       </header>
       {demo ? (
         <p

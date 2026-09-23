@@ -23,7 +23,7 @@ const POLL_MS = 15_000;
  * Silent when nothing runs, and silent on error: an account without host
  * privileges (the seat is someone else's in local mode) simply sees nothing.
  */
-export function LiveSessions() {
+export function LiveSessions({ inline = false }: { inline?: boolean }) {
   const { t } = useTranslation('dashboard');
   const queryClient = useQueryClient();
   const { data } = useGameControllerMine({
@@ -63,6 +63,74 @@ export function LiveSessions() {
     );
   };
 
+  const rows = (
+    <ul className="flex flex-col">
+      {sessions.map((session) => (
+        <li key={session.pin} className="flex flex-col gap-1 rounded-md px-2 py-2">
+          <span className="flex items-baseline gap-2">
+            <span className="flex-1 truncate font-medium">{session.title}</span>
+            <span className="font-mono text-sm tracking-widest">{session.pin}</span>
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {/* `host` n'est renseigné que dans la vue d'ensemble d'un admin :
+                un hôte qui liste les siennes n'a pas besoin de son propre nom. */}
+            {session.host ? `${t('hostedBy', { name: session.host })} · ` : ''}
+            {t('playerCount', { count: session.playerCount })}
+          </span>
+          <span className="flex gap-2 pt-1">
+            <Link
+              to="/session/$pin/console"
+              params={{ pin: session.pin }}
+              onClick={() => setOpen(false)}
+            >
+              <Button type="button" size="sm" variant="outline">
+                {t('resume')}
+              </Button>
+            </Link>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              disabled={endGame.isPending}
+              onClick={() => setEndPin(session.pin)}
+            >
+              <Square className="size-4" />
+              {t('stop')}
+            </Button>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const heading = sessions.some((s) => s.host) ? t('allSessions') : t('activeSessions');
+  const confirm = (
+    <ConfirmDialog
+      open={endPin !== null}
+      destructive
+      title={t('stopConfirmTitle')}
+      description={t('stopConfirmDescription')}
+      confirmLabel={t('stopConfirmLabel')}
+      onCancel={() => setEndPin(null)}
+      onConfirm={() => endPin && onEnd(endPin)}
+    />
+  );
+
+  // Dans le menu burger, les sessions sont déjà dans un panneau : un second
+  // menu déroulant par-dessus serait injouable au pouce.
+  if (inline) {
+    return (
+      <div className="flex flex-col">
+        <p className="text-primary flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium">
+          <Radio className="size-3.5 animate-pulse" />
+          {heading}
+        </p>
+        {rows}
+        {confirm}
+      </div>
+    );
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -83,58 +151,12 @@ export function LiveSessions() {
           role="menu"
           className="bg-popover text-popover-foreground absolute right-0 z-30 mt-1 w-[min(22rem,calc(100vw-2rem))] rounded-lg border p-1 shadow-md"
         >
-          <p className="text-muted-foreground px-2 py-1.5 text-xs">
-            {sessions.some((s) => s.host) ? t('allSessions') : t('activeSessions')}
-          </p>
-          <ul className="flex flex-col">
-            {sessions.map((session) => (
-              <li key={session.pin} className="flex flex-col gap-1 rounded-md px-2 py-2">
-                <span className="flex items-baseline gap-2">
-                  <span className="flex-1 truncate font-medium">{session.title}</span>
-                  <span className="font-mono text-sm tracking-widest">{session.pin}</span>
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {/* `host` n'est renseigné que dans la vue d'ensemble d'un admin :
-                      un hôte qui liste les siennes n'a pas besoin de son propre nom. */}
-                  {session.host ? `${t('hostedBy', { name: session.host })} · ` : ''}
-                  {t('playerCount', { count: session.playerCount })}
-                </span>
-                <span className="flex gap-2 pt-1">
-                  <Link
-                    to="/session/$pin/console"
-                    params={{ pin: session.pin }}
-                    onClick={() => setOpen(false)}
-                  >
-                    <Button type="button" size="sm" variant="outline">
-                      {t('resume')}
-                    </Button>
-                  </Link>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="destructive"
-                    disabled={endGame.isPending}
-                    onClick={() => setEndPin(session.pin)}
-                  >
-                    <Square className="size-4" />
-                    {t('stop')}
-                  </Button>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <p className="text-muted-foreground px-2 py-1.5 text-xs">{heading}</p>
+          {rows}
         </div>
       ) : null}
 
-      <ConfirmDialog
-        open={endPin !== null}
-        destructive
-        title={t('stopConfirmTitle')}
-        description={t('stopConfirmDescription')}
-        confirmLabel={t('stopConfirmLabel')}
-        onCancel={() => setEndPin(null)}
-        onConfirm={() => endPin && onEnd(endPin)}
-      />
+      {confirm}
     </div>
   );
 }

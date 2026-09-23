@@ -70,6 +70,25 @@ describe('LiveSessions (barre du haut)', () => {
     expect(screen.getByText(/animée par Carol/)).toBeInTheDocument();
   });
 
+  it('sur un écran étroit, tout passe par le menu burger', async () => {
+    mockApi([
+      {
+        method: 'GET',
+        path: '/games/mine',
+        body: [{ pin: '111111', quizId: 'q1', title: 'Histoire', state: 'LOBBY', playerCount: 0 }],
+      },
+      { method: 'GET', path: '/quizzes', body: [] },
+    ]);
+    renderApp('/quizzes');
+
+    // Le panneau porte les mêmes éléments que la barre large, empilés : les
+    // sessions y sont à plat, pas dans un second menu déroulant.
+    fireEvent.click(await screen.findByRole('button', { name: 'Menu' }));
+    expect(screen.getByText('Sessions en cours')).toBeInTheDocument();
+    expect(screen.getByText('111111')).toBeInTheDocument();
+    expect(screen.getAllByText('Mes quiz').length).toBeGreaterThan(1);
+  });
+
   it('arrête une session après confirmation', async () => {
     const fetchMock = mockApi([
       {
