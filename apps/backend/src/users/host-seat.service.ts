@@ -4,7 +4,6 @@ import { type AuthPrincipal, LOCAL_SUB_PREFIX } from '../auth/auth-provider';
 import { effectiveRoles, isManager, isHost } from '../auth/roles';
 import { DEMO_SEAT_MINUTES, isDemoMode } from '../demo/demo.config';
 import { PrismaService } from '../prisma/prisma.service';
-import { SampleQuizzesService } from '../quizzes/samples/sample-quizzes.service';
 
 /** Arbitrary app-wide advisory lock id serialising concurrent seat claims. */
 const SEAT_LOCK_ID = 714_001;
@@ -32,10 +31,7 @@ export interface HostSeatState {
 export class HostSeatService {
   private readonly log = new Logger(HostSeatService.name);
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly samples: SampleQuizzesService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   static isLocal(sub: string): boolean {
     return sub.startsWith(LOCAL_SUB_PREFIX);
@@ -137,7 +133,6 @@ export class HostSeatService {
     this.log.log(
       `Host seat claimed by "${user.displayName}" (${user.oidcSubject}), expires ${expiresAt?.toISOString() ?? 'never'}`,
     );
-    await this.samples.createIfEmpty(user.id);
     return { holder: user.displayName, expiresAt, claimedAt };
   }
 

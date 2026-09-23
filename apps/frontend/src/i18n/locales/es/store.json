@@ -2,7 +2,7 @@
   "title": "Plantillas compartidas",
   "intro": "Los cuestionarios que los anfitriones de esta instancia han compartido. Tomar uno coloca una copia independiente en tu banco: tuya para renombrar, recortar y presentar. Después no se te envía nada.",
   "empty": "Todavía no se ha compartido ninguna plantilla en esta instancia. Comparte una desde un cuestionario «listo».",
-  "take": "Tomar una copia",
+  "take": "Crear a partir de esta plantilla",
   "withdraw": "Retirar",
   "questionCount_one": "{{count}} pregunta",
   "questionCount_other": "{{count}} preguntas",
@@ -38,5 +38,6 @@
   "seconds_other": "{{count}} s",
   "licence": "Licencia {{name}}",
   "notFound": "Esta plantilla ya no está en el catálogo.",
-  "takeNeedsHost": "Tomar una copia crea un cuestionario: solo un anfitrión puede hacerlo."
+  "takeNeedsHost": "Crear un cuestionario a partir de una plantilla es una acción de anfitrión.",
+  "createFrom": "Crear a partir de esto"
 }

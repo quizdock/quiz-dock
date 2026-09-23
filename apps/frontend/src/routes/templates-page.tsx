@@ -1,13 +1,19 @@
-import { Link } from '@tanstack/react-router';
-import { Search } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
 import { fold } from '@/lib/text';
-import { useStoreControllerList } from '../api/generated/store/store';
+import type { StoreEntryDto } from '../api/generated/model';
+import { useStoreControllerList, useStoreControllerTake } from '../api/generated/store/store';
+import { getQuizzesControllerListQueryKey } from '../api/generated/quizzes/quizzes';
+import { apiErrorText } from '../api/http';
+import { useRole } from '../auth/use-role';
 
 const PAGE_SIZE = 20;
 
@@ -18,7 +24,23 @@ const PAGE_SIZE = 20;
  */
 export function TemplatesPage() {
   const { t, i18n } = useTranslation(['store', 'common']);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const list = useStoreControllerList();
+  const take = useStoreControllerTake();
+  const { isHost } = useRole();
+  const [error, setError] = useState<string | null>(null);
+
+  const onCreate = async (id: string) => {
+    setError(null);
+    try {
+      const { data: quiz } = await take.mutateAsync({ id });
+      await queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
+      await navigate({ to: '/quizzes/$quizId', params: { quizId: quiz.id } });
+    } catch (e) {
+      setError(apiErrorText(e, t('takeFailed')));
+    }
+  };
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'recent' | 'title' | 'questions'>('recent');
   const [page, setPage] = useState(1);
@@ -47,6 +69,12 @@ export function TemplatesPage() {
         <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="text-muted-foreground text-sm">{t('intro')}</p>
       </header>
+
+      {error ? (
+        <p className="text-destructive text-sm" role="alert">
+          {error}
+        </p>
+      ) : null}
 
       {list.isPending ? <p className="text-muted-foreground">{t('common:loading')}</p> : null}
 
@@ -100,25 +128,13 @@ export function TemplatesPage() {
           plutôt qu'un trou. */}
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((entry) => (
-          <li key={entry.id}>
+          <li key={entry.id} className="flex flex-col overflow-hidden rounded-lg border">
             <Link
               to="/templates/$templateId"
               params={{ templateId: entry.id }}
-              className="hover:bg-accent group flex h-full flex-col overflow-hidden rounded-lg border transition-colors"
+              className="hover:bg-accent group flex flex-1 flex-col transition-colors"
             >
-              <span className="bg-muted flex aspect-video items-center justify-center overflow-hidden">
-                {entry.coverUrl ? (
-                  <img
-                    src={entry.coverUrl}
-                    alt=""
-                    className="size-full object-cover transition-transform group-hover:scale-[1.02]"
-                  />
-                ) : (
-                  <span className="text-muted-foreground text-3xl font-semibold">
-                    {entry.title.slice(0, 1).toUpperCase()}
-                  </span>
-                )}
-              </span>
+              <TemplateThumb entry={entry} />
               <span className="flex flex-1 flex-col gap-2 p-4">
                 <span className="font-semibold">{entry.title}</span>
                 {entry.description ? (
@@ -137,11 +153,61 @@ export function TemplatesPage() {
                 </span>
               </span>
             </Link>
+            {/* L'action est sur la carte : on ne devrait pas avoir à ouvrir un
+                modèle pour pouvoir s'en servir. */}
+            {isHost ? (
+              <span className="border-t p-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full"
+                  disabled={take.isPending}
+                  onClick={() => void onCreate(entry.id)}
+                >
+                  <Plus className="size-4" />
+                  {t('createFrom')}
+                </Button>
+              </span>
+            ) : null}
           </li>
         ))}
       </ul>
 
       <Pagination page={current} pages={pageCount} onChange={setPage} />
     </section>
+  );
+}
+
+/**
+ * Ce qu'on voit d'un modèle sur sa carte : sa couverture, à défaut l'image de
+ * son premier élément, à défaut ce premier élément rendu — la diapositive
+ * d'intro avec son dégradé, ou l'énoncé de la première question. Une tuile vide
+ * ne dit rien d'un quiz.
+ */
+function TemplateThumb({ entry }: { entry: StoreEntryDto }) {
+  const image = entry.coverUrl ?? entry.first?.media ?? null;
+  const gradient = entry.first?.gradient;
+  const background = gradient
+    ? { backgroundImage: `linear-gradient(${gradient.angle}deg, ${gradient.colors.join(', ')})` }
+    : undefined;
+  return (
+    <span
+      className="bg-muted flex aspect-video items-center justify-center overflow-hidden p-4"
+      style={background}
+    >
+      {image ? (
+        <img src={image} alt="" className="size-full object-cover" />
+      ) : entry.first?.text ? (
+        <span
+          className={`line-clamp-3 text-center text-sm font-medium ${gradient ? 'text-white drop-shadow' : ''}`}
+        >
+          {entry.first.text}
+        </span>
+      ) : (
+        <span className="text-muted-foreground text-3xl font-semibold">
+          {entry.title.slice(0, 1).toUpperCase()}
+        </span>
+      )}
+    </span>
   );
 }

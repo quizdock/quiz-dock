@@ -56,5 +56,7 @@
   "seeAllSessions": "See all sessions",
   "allQuizzes": "All quizzes",
   "ownedBy": "by {{name}}",
-  "view": "View"
+  "view": "View",
+  "browseTemplates": "Browse the templates",
+  "browseTemplatesHint": "Ready-made quizzes to create yours from — nothing is added to your bank until you ask."
 }

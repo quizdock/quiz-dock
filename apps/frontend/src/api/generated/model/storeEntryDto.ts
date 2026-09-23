@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { StoreEntryDtoAuthor } from './storeEntryDtoAuthor';
+import type { StoreEntryDtoFirst } from './storeEntryDtoFirst';
 
 export interface StoreEntryDto {
   id: string;
@@ -30,4 +31,6 @@ export interface StoreEntryDto {
   sharedAt: string;
   /** @nullable */
   coverUrl: string | null;
+  /** @nullable */
+  first: StoreEntryDtoFirst;
 }

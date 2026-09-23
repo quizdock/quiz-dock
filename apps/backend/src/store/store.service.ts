@@ -15,7 +15,9 @@ import { unzipSync, zipSync } from 'fflate';
 import { isDemoMode } from '../demo/demo.config';
 import { isManager, type RoleSet } from '../auth/roles';
 import { PrismaService } from '../prisma/prisma.service';
+import { BUNDLE_FORMAT, BUNDLE_VERSION } from '../quizzes/portable/quiz-bundle.schema';
 import { QuizPortableService } from '../quizzes/portable/quiz-portable.service';
+import { SAMPLE_QUIZZES, type SampleQuiz } from '../quizzes/samples/sample-quizzes.data';
 
 /** One entry of the catalogue, as `index.json` holds it. */
 export interface StoreEntry {
@@ -32,19 +34,125 @@ export interface StoreEntry {
   sharedAt: string;
   /** Chemin de la couverture dans le bundle (`media/…`), pour la vignette. */
   cover?: string | null;
+  /**
+   * Premier élément du quiz, tel que la galerie l'affiche : c'est ce qu'on voit
+   * d'un modèle avant de l'ouvrir, plutôt qu'une tuile vide. Écrit au partage.
+   */
+  first?: {
+    kind: 'question' | 'slide';
+    text: string;
+    media?: string | null;
+    gradient?: { angle: number; colors: string[] } | null;
+  } | null;
 }
 
 const INDEX = 'index.json';
+/** Les exemples sont fournis avec l'application : ils en portent la licence. */
+const SAMPLE_LICENSE = 'CC-BY-4.0';
+const SAMPLE_SUBJECT = 'system:samples';
+/** Les modèles d'usine sont signés par l'auteur du projet, pas par l'instance :
+ *  le nom de l'application est configurable (white-label), celui-ci non. */
+const SAMPLE_AUTHOR = 'fchaussin';
+
+/**
+ * Bundle d'un quiz d'exemple, construit depuis sa définition : aucun compte
+ * n'est propriétaire d'un modèle du catalogue, il n'y a donc rien en base.
+ */
+function sampleBundle(sample: SampleQuiz): unknown {
+  const items: unknown[] = [
+    {
+      kind: 'slide',
+      blocks: sample.intro.blocks,
+      backgroundGradient: sample.intro.gradient ?? null,
+      textTone: sample.intro.textTone,
+      textOutline: sample.intro.textOutline,
+    },
+    ...sample.questions.map((q) => ({
+      kind: 'question',
+      type: q.type,
+      prompt: q.prompt,
+      answerExplanation: q.answerExplanation ?? null,
+      timeLimitS: q.timeLimitS,
+      revealDelayS: q.revealDelayS ?? null,
+      pointsMode: q.pointsMode,
+      scoring: q.scoring,
+      numericValue: q.numericValue ?? undefined,
+      numericTolerance: q.numericTolerance ?? undefined,
+      options: q.options?.map((o) => ({
+        text: o.text,
+        color: o.color,
+        shape: o.shape,
+        isCorrect: o.isCorrect ?? false,
+        correctOrderIndex: o.correctOrderIndex ?? undefined,
+      })),
+      // Le bundle porte des chaînes ; le schéma d'API des objets `{ text }`.
+      acceptedAnswers: q.acceptedAnswers?.map((a) => a.text),
+    })),
+  ];
+  return {
+    format: BUNDLE_FORMAT,
+    version: BUNDLE_VERSION,
+    quiz: {
+      title: sample.title,
+      description: sample.description,
+      language: sample.language,
+      license: SAMPLE_LICENSE,
+      revision: 1,
+      feedbackEnabled: true,
+      cover: null,
+    },
+    items,
+  };
+}
 
 /** Un élément de bundle, tel que l'aperçu a besoin de le lire (lecture tolérante). */
 interface BundleItem {
   kind: 'question' | 'slide';
+  backgroundGradient?: { angle: number; colors: string[] } | null;
   prompt?: string;
   type?: string;
   timeLimitS?: number;
   media?: string;
   blocks?: unknown[];
   options?: { text?: string; color?: string; shape?: string }[];
+}
+
+/** Une entrée telle que l'API la rend : les chemins deviennent des URL servies. */
+export type ListedEntry = Omit<StoreEntry, 'first'> & {
+  coverUrl: string | null;
+  first: {
+    kind: 'question' | 'slide';
+    text: string;
+    media: string | null;
+    gradient: { angle: number; colors: string[] } | null;
+  } | null;
+};
+
+function served(entry: StoreEntry): ListedEntry {
+  return {
+    ...entry,
+    coverUrl: mediaUrl(entry.id, entry.cover),
+    first: entry.first
+      ? {
+          kind: entry.first.kind,
+          text: entry.first.text,
+          media: mediaUrl(entry.id, entry.first.media),
+          gradient: entry.first.gradient ?? null,
+        }
+      : null,
+  };
+}
+
+/** Ce qu'une carte montre d'un modèle : son premier élément, en compact. */
+function firstItemOf(items: BundleItem[] | undefined): StoreEntry['first'] {
+  const first = (items ?? [])[0];
+  if (!first) return null;
+  return {
+    kind: first.kind,
+    text: first.kind === 'question' ? (first.prompt ?? '') : firstText(first.blocks),
+    media: first.media ?? null,
+    gradient: first.backgroundGradient ?? null,
+  };
 }
 
 /** URL servie d'un média du catalogue, depuis son chemin dans le bundle. */
@@ -105,6 +213,44 @@ export class StoreService implements OnModuleInit {
     if (isDemoMode()) return; // no catalogue on a demo instance (single host, wiped hourly)
     await mkdir(this.dir, { recursive: true });
     this.log.log(`Template catalogue: ${this.dir}`);
+    await this.seedSamples();
+  }
+
+  /**
+   * Amorce un catalogue vide avec les quiz d'exemple. Ils ne sont plus versés
+   * d'office dans la banque de chaque nouvel arrivant : ils vivent ici, et qui en
+   * veut s'en prend une copie. Une instance neuve montre donc à quoi sert la
+   * bibliothèque au lieu d'une page vide, et personne n'hérite d'un contenu qu'il
+   * n'a pas demandé.
+   *
+   * Ne s'exécute que si le catalogue est vide : un opérateur qui a tout retiré ne
+   * les voit pas revenir au prochain démarrage.
+   */
+  private async seedSamples(): Promise<void> {
+    if ((await this.readIndex()).length > 0) return;
+    const entries: StoreEntry[] = [];
+    for (const sample of SAMPLE_QUIZZES) {
+      const id = ulid();
+      const bundle = sampleBundle(sample);
+      await mkdir(join(this.dir, id), { recursive: true });
+      await writeFile(join(this.dir, id, MANIFEST), JSON.stringify(bundle, null, 2), 'utf8');
+      entries.push({
+        id,
+        title: sample.title,
+        description: sample.description,
+        language: sample.language,
+        tags: [],
+        questionCount: sample.questions.length,
+        license: SAMPLE_LICENSE,
+        author: { name: SAMPLE_AUTHOR, subject: SAMPLE_SUBJECT },
+        revision: 1,
+        sharedAt: new Date().toISOString(),
+        cover: null,
+        first: firstItemOf((bundle as { items?: BundleItem[] }).items),
+      });
+    }
+    await this.writeIndex(entries);
+    this.log.log(`Template catalogue seeded with ${entries.length} sample(s)`);
   }
 
   /** Refuses everything on a demo instance: one host at a time, nobody to share with. */
@@ -113,12 +259,10 @@ export class StoreService implements OnModuleInit {
   }
 
   /** The catalogue, newest first. Reads the folder, which is the only truth. */
-  async list(): Promise<(StoreEntry & { coverUrl: string | null })[]> {
+  async list(): Promise<ListedEntry[]> {
     if (isDemoMode()) return [];
     const entries = await this.readIndex();
-    return [...entries]
-      .sort((a, b) => b.sharedAt.localeCompare(a.sharedAt))
-      .map((entry) => ({ ...entry, coverUrl: mediaUrl(entry.id, entry.cover) }));
+    return [...entries].sort((a, b) => b.sharedAt.localeCompare(a.sharedAt)).map(served);
   }
 
   /**
@@ -130,7 +274,7 @@ export class StoreService implements OnModuleInit {
   async share(
     user: { id: string; displayName: string; oidcSubject: string },
     quizId: string,
-  ): Promise<StoreEntry & { coverUrl: string | null }> {
+  ): Promise<ListedEntry> {
     this.refuseOnDemo();
     const quiz = await this.prisma.quiz.findFirst({
       where: { id: quizId, ownerId: user.id },
@@ -171,9 +315,11 @@ export class StoreService implements OnModuleInit {
     // La couverture est lue dans le bundle qu'on vient d'écrire : la galerie a
     // besoin d'une vignette sans ouvrir chaque modèle.
     const manifest = await readFile(join(folder, MANIFEST), 'utf8').catch(() => null);
-    const cover = manifest
-      ? ((JSON.parse(manifest) as { quiz?: { cover?: string | null } }).quiz?.cover ?? null)
+    const parsed = manifest
+      ? (JSON.parse(manifest) as { quiz?: { cover?: string | null }; items?: BundleItem[] })
       : null;
+    const cover = parsed?.quiz?.cover ?? null;
+    const first = firstItemOf(parsed?.items);
     const entry: StoreEntry = {
       id,
       title: quiz.title,
@@ -186,10 +332,11 @@ export class StoreService implements OnModuleInit {
       revision: stamped.revision,
       sharedAt: new Date().toISOString(),
       cover,
+      first,
     };
     await this.writeIndex([...(await this.readIndex()).filter((e) => e.id !== id), entry]);
     this.log.log(`Template shared: ${entry.title} (${id}, revision ${entry.revision})`);
-    return { ...entry, coverUrl: mediaUrl(id, cover) };
+    return served(entry);
   }
 
   /**

@@ -2961,6 +2961,51 @@
           "coverUrl": {
             "type": "string",
             "nullable": true
+          },
+          "first": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "question",
+                  "slide"
+                ]
+              },
+              "text": {
+                "type": "string"
+              },
+              "media": {
+                "type": "string",
+                "nullable": true
+              },
+              "gradient": {
+                "type": "object",
+                "properties": {
+                  "angle": {
+                    "type": "number"
+                  },
+                  "colors": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "angle",
+                  "colors"
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "kind",
+              "text",
+              "media",
+              "gradient"
+            ],
+            "nullable": true
           }
         },
         "required": [
@@ -2974,7 +3019,8 @@
           "author",
           "revision",
           "sharedAt",
-          "coverUrl"
+          "coverUrl",
+          "first"
         ]
       },
       "ShareTemplateDto": {

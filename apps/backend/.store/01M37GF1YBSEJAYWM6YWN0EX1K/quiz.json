@@ -1,0 +1,346 @@
+{
+  "format": "quizdock/quiz",
+  "version": 2,
+  "quiz": {
+    "title": "Discover France",
+    "description": "Sample quiz — geography, history and culture of France.",
+    "language": "en",
+    "license": "CC-BY-4.0",
+    "revision": 1,
+    "feedbackEnabled": true,
+    "cover": null
+  },
+  "items": [
+    {
+      "kind": "slide",
+      "blocks": [
+        {
+          "type": "heading",
+          "id": "intro-title",
+          "text": "Discover France",
+          "level": 1,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "intro-text",
+          "md": "Ten quick questions about *l’Hexagone* — from the Alps to the Atlantic.",
+          "align": "center",
+          "size": "large"
+        }
+      ],
+      "backgroundGradient": {
+        "angle": 135,
+        "colors": ["#1d3fa0", "#f5f5f5", "#d02a2a"]
+      },
+      "textTone": "light",
+      "textOutline": true
+    },
+    {
+      "kind": "question",
+      "type": "single_choice",
+      "prompt": "What is the capital of France?",
+      "answerExplanation": "Paris has been the capital since the late 10th century.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Lyon",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "Paris",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": true
+        },
+        {
+          "text": "Marseille",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false
+        },
+        {
+          "text": "Bordeaux",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "true_false",
+      "prompt": "France shares a land border with Spain.",
+      "answerExplanation": "The Pyrenees form the border between the two countries.",
+      "timeLimitS": 10,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "True",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": true
+        },
+        {
+          "text": "False",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "multiple_choice",
+      "prompt": "Which of these rivers flow through France?",
+      "answerExplanation": "The Danube rises in Germany and never enters France.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "partial",
+      "options": [
+        {
+          "text": "Loire",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": true
+        },
+        {
+          "text": "Danube",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        },
+        {
+          "text": "Seine",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": true
+        },
+        {
+          "text": "Rhône",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": true
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "numeric",
+      "prompt": "How tall is the Eiffel Tower, in metres? Closest answer wins.",
+      "answerExplanation": "It stands at about 330 m including its antennas.",
+      "timeLimitS": 30,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "closest",
+      "numericValue": 330,
+      "numericTolerance": 5,
+      "options": [],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "text_input",
+      "prompt": "Which French city is famous for its annual film festival?",
+      "answerExplanation": "The Cannes Film Festival has been held since 1946.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [],
+      "acceptedAnswers": [
+        {
+          "text": "Cannes"
+        }
+      ]
+    },
+    {
+      "kind": "question",
+      "type": "single_choice",
+      "prompt": "In which year did the French Revolution begin?",
+      "answerExplanation": "The storming of the Bastille took place on 14 July 1789.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "1776",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "1789",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": true
+        },
+        {
+          "text": "1804",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false
+        },
+        {
+          "text": "1815",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "ordering",
+      "prompt": "Order these French cities from north to south.",
+      "answerExplanation": null,
+      "timeLimitS": 30,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Marseille",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false,
+          "correctOrderIndex": 3
+        },
+        {
+          "text": "Lille",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false,
+          "correctOrderIndex": 0
+        },
+        {
+          "text": "Lyon",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false,
+          "correctOrderIndex": 2
+        },
+        {
+          "text": "Paris",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false,
+          "correctOrderIndex": 1
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "single_choice",
+      "prompt": "Which cheese is traditionally made in the Jura mountains?",
+      "answerExplanation": "Comté is an aged cow’s-milk cheese from the Jura Massif.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "double",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Camembert",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "Roquefort",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        },
+        {
+          "text": "Comté",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": true
+        },
+        {
+          "text": "Brie",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "true_false",
+      "prompt": "The Tour de France has been raced every single year since 1903.",
+      "answerExplanation": "It was suspended during both World Wars.",
+      "timeLimitS": 10,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "True",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "False",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": true
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "poll",
+      "prompt": "Which French region would you visit first?",
+      "answerExplanation": null,
+      "timeLimitS": 15,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Brittany",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "Provence",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        },
+        {
+          "text": "Alsace",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false
+        },
+        {
+          "text": "The Alps",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    }
+  ]
+}

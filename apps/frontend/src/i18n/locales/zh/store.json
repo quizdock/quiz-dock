@@ -2,7 +2,7 @@
   "title": "共享模板",
   "intro": "本实例的主持人共享出来的测验。取用一份会在你的题库中生成一个独立副本——你可以随意改名、删减、演示。之后不会有任何内容被推送给你。",
   "empty": "本实例还没有共享过模板。请从一个“就绪”的测验开始共享。",
-  "take": "取一份副本",
+  "take": "以此创建测验",
   "withdraw": "撤下",
   "questionCount_one": "{{count}} 题",
   "questionCount_other": "{{count}} 题",
@@ -38,5 +38,6 @@
   "seconds_other": "{{count}} 秒",
   "licence": "许可协议 {{name}}",
   "notFound": "该模板已不在目录中。",
-  "takeNeedsHost": "取用副本会创建测验：只有主持人可以这样做。"
+  "takeNeedsHost": "以模板创建测验是主持人的操作。",
+  "createFrom": "以此创建"
 }

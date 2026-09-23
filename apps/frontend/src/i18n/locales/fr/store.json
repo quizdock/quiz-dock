@@ -2,7 +2,7 @@
   "title": "Modèles partagés",
   "intro": "Les quiz que les animateurs de cette instance ont partagés. En prendre un place une copie indépendante dans votre banque — à vous de la renommer, la couper, la présenter. Rien ne vous sera poussé ensuite.",
   "empty": "Aucun modèle n’a encore été partagé sur cette instance. Partagez-en un depuis un quiz « prêt ».",
-  "take": "Prendre une copie",
+  "take": "Créer à partir de ce modèle",
   "withdraw": "Retirer",
   "questionCount_one": "{{count}} question",
   "questionCount_other": "{{count}} questions",
@@ -38,5 +38,6 @@
   "seconds_other": "{{count}} s",
   "licence": "Licence {{name}}",
   "notFound": "Ce modèle n’est plus dans le catalogue.",
-  "takeNeedsHost": "Prendre une copie crée un quiz : seul un animateur peut le faire."
+  "takeNeedsHost": "Créer un quiz à partir d’un modèle est une action d’animateur.",
+  "createFrom": "Créer à partir de ceci"
 }

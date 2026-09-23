@@ -56,5 +56,7 @@
   "seeAllSessions": "Voir toutes les sessions",
   "allQuizzes": "Tous les quiz",
   "ownedBy": "de {{name}}",
-  "view": "Consulter"
+  "view": "Consulter",
+  "browseTemplates": "Parcourir les modèles",
+  "browseTemplatesHint": "Des quiz tout faits pour créer le vôtre — rien n’arrive dans votre banque sans que vous le demandiez."
 }

@@ -2,7 +2,7 @@
   "title": "共享範本",
   "intro": "本執行個體的主持人分享出來的測驗。取用一份會在你的題庫中產生一個獨立副本——你可以隨意改名、刪減、演示。之後不會有任何內容被推送給你。",
   "empty": "本執行個體還沒有分享過範本。請從一個「就緒」的測驗開始分享。",
-  "take": "取一份副本",
+  "take": "以此建立測驗",
   "withdraw": "撤下",
   "questionCount_one": "{{count}} 題",
   "questionCount_other": "{{count}} 題",
@@ -38,5 +38,6 @@
   "seconds_other": "{{count}} 秒",
   "licence": "授權 {{name}}",
   "notFound": "該範本已不在目錄中。",
-  "takeNeedsHost": "取用副本會建立測驗：只有主持人可以這樣做。"
+  "takeNeedsHost": "以範本建立測驗是主持人的操作。",
+  "createFrom": "以此建立"
 }

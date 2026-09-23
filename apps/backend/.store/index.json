@@ -1,0 +1,54 @@
+{
+  "entries": [
+    {
+      "id": "01M37GF1YBSEJAYWM6YWN0EX1K",
+      "title": "Discover France",
+      "description": "Sample quiz — geography, history and culture of France.",
+      "language": "en",
+      "tags": [],
+      "questionCount": 10,
+      "license": "CC-BY-4.0",
+      "author": {
+        "name": "fchaussin",
+        "subject": "system:samples"
+      },
+      "revision": 1,
+      "sharedAt": "2026-09-23T16:09:32.368Z",
+      "cover": null,
+      "first": {
+        "kind": "slide",
+        "text": "Discover France",
+        "media": null,
+        "gradient": {
+          "angle": 135,
+          "colors": ["#1d3fa0", "#f5f5f5", "#d02a2a"]
+        }
+      }
+    },
+    {
+      "id": "01M37GF1YH58FW1S4SASQDS3Z0",
+      "title": "Discover Taiwan",
+      "description": "Sample quiz — geography, history and culture of Taiwan.",
+      "language": "en",
+      "tags": [],
+      "questionCount": 10,
+      "license": "CC-BY-4.0",
+      "author": {
+        "name": "fchaussin",
+        "subject": "system:samples"
+      },
+      "revision": 1,
+      "sharedAt": "2026-09-23T16:09:32.379Z",
+      "cover": null,
+      "first": {
+        "kind": "slide",
+        "text": "Discover Taiwan",
+        "media": null,
+        "gradient": {
+          "angle": 135,
+          "colors": ["#0b7a3b", "#f5f5f5", "#d02a2a"]
+        }
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "title": "Shared templates",
   "intro": "Quizzes the hosts of this instance have shared. Taking one puts an independent copy in your bank — yours to rename, cut and present. Nothing is pushed back to you afterwards.",
   "empty": "No template has been shared on this instance yet. Share one from a quiz marked “ready”.",
-  "take": "Take a copy",
+  "take": "Create from this",
   "withdraw": "Withdraw",
   "questionCount_one": "{{count}} question",
   "questionCount_other": "{{count}} questions",
@@ -38,5 +38,6 @@
   "seconds_other": "{{count}} s",
   "licence": "Licence {{name}}",
   "notFound": "This template is no longer in the catalogue.",
-  "takeNeedsHost": "Taking a copy creates a quiz: only a host can do that."
+  "takeNeedsHost": "Creating a quiz from a template is a host action.",
+  "createFrom": "Create from this"
 }

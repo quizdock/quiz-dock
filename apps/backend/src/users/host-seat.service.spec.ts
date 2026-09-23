@@ -2,7 +2,6 @@ import { ConflictException, ForbiddenException } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import type { AuthPrincipal } from '../auth/auth-provider';
 import type { PrismaService } from '../prisma/prisma.service';
-import type { SampleQuizzesService } from '../quizzes/samples/sample-quizzes.service';
 import { HostSeatService } from './host-seat.service';
 
 const alice = {
@@ -71,10 +70,7 @@ function makeService(seat: Seat | null, knownUsers: User[] = [alice, bob]) {
       update: jest.fn().mockResolvedValue(undefined),
     },
   } as unknown as PrismaService;
-  const samples = {
-    createIfEmpty: jest.fn().mockResolvedValue([]),
-  } as unknown as SampleQuizzesService;
-  return { service: new HostSeatService(prisma, samples), tx, prisma, samples };
+  return { service: new HostSeatService(prisma), tx, prisma };
 }
 
 const future = new Date(Date.now() + 3_600_000);
@@ -82,11 +78,10 @@ const past = new Date(Date.now() - 1_000);
 
 describe('HostSeatService.provision', () => {
   it('never claims: a new local user is a player even when the seat is free', async () => {
-    const { service, tx, samples } = makeService(null);
+    const { service, tx } = makeService(null);
     const user = await service.provision(principal(alice));
     expect(user.roles).toEqual([]);
     expect(tx.$executeRaw).not.toHaveBeenCalled();
-    expect(samples.createIfEmpty).not.toHaveBeenCalled();
   });
 
   it('derives host for the live holder and player for everyone else', async () => {
@@ -124,8 +119,8 @@ describe('HostSeatService.capExpiry', () => {
 });
 
 describe('HostSeatService.claim', () => {
-  it('takes a free seat under the advisory lock, with expiry, and loads the samples', async () => {
-    const { service, tx, samples } = makeService(null);
+  it('takes a free seat under the advisory lock, with expiry,', async () => {
+    const { service, tx } = makeService(null);
     const state = await service.claim(alice, 60);
     expect(tx.$executeRaw).toHaveBeenCalled();
     expect(tx.hostSeat.upsert).toHaveBeenCalledWith(
@@ -135,7 +130,6 @@ describe('HostSeatService.claim', () => {
       where: { id: alice.id },
       data: { roles: ['host'] },
     });
-    expect(samples.createIfEmpty).toHaveBeenCalledWith(alice.id);
     expect(state.holder).toBe('Alice');
     expect(state.expiresAt!.getTime()).toBeGreaterThan(Date.now() + 59 * 60_000);
   });

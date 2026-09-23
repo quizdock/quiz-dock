@@ -58,17 +58,22 @@ export function RootLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Le nom de la marque n'est plus écrit à côté du logo : c'est le logo qui la
-          porte (il est remplaçable par l'opérateur), et la place gagnée revient à
-          la navigation sur un téléphone. Le lien garde le nom comme libellé. */}
+      {/* Le nom s'efface sous `sm` pour laisser la place à la navigation sur un
+          téléphone, et revient dès qu'il y a de la place : c'est la marque. */}
       <header className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
         {shell === 'participant' ? (
-          <span aria-label={APP_NAME}>
+          <span className="flex items-center gap-2 text-lg font-bold">
             <BrandLogo className="h-7 w-auto rounded-md" />
+            <span className="hidden sm:inline">{APP_NAME}</span>
           </span>
         ) : (
-          <Link to="/" aria-label={APP_NAME} className="shrink-0">
+          <Link
+            to="/"
+            aria-label={APP_NAME}
+            className="flex shrink-0 items-center gap-2 text-lg font-bold"
+          >
             <BrandLogo className="h-7 w-auto rounded-md" />
+            <span className="hidden sm:inline">{APP_NAME}</span>
           </Link>
         )}
         {shell === 'participant' ? (

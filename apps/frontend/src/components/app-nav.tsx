@@ -23,12 +23,15 @@ interface NavProps {
 export function AppNav({ user, mode, onLogout }: NavProps) {
   const { t } = useTranslation('auth');
   return (
-    <>
+    <div className="flex items-center gap-2">
+      {/* Ce qui signale une échéance ou une partie en cours reste visible à toutes
+          les tailles : ça ne doit pas être caché derrière un menu. Le burger a
+          libéré la place qui manquait sur un téléphone. */}
+      {mode === 'none' ? <SeatCountdown user={user} /> : null}
+      <LiveSessions />
+
       <nav className="hidden items-center gap-3 text-sm md:flex">
         <NavLinks />
-        <LiveSessions />
-        {/* A seat countdown stays in plain sight; renewal and log out live in the user menu. */}
-        {mode === 'none' ? <SeatCountdown user={user} /> : null}
         <UserMenu user={user} onLogout={onLogout}>
           {mode === 'none' ? <SeatMenuRow user={user} /> : null}
         </UserMenu>
@@ -38,14 +41,11 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
         {(close) => (
           <div className="flex flex-col gap-1" onClick={close}>
             <NavLinks stacked />
-            <Separator />
-            {/* Inline : le panneau est déjà un menu, on n'en empile pas un second. */}
-            <LiveSessions inline />
             {mode === 'none' ? (
               <>
                 <Separator />
+                {/* Le décompte est dans la barre ; ici, de quoi le prolonger. */}
                 <div className="flex flex-col gap-2 px-2 py-1.5">
-                  <SeatCountdown user={user} />
                   <SeatMenuRow user={user} />
                 </div>
               </>
@@ -66,7 +66,7 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
           </div>
         )}
       </BurgerMenu>
-    </>
+    </div>
   );
 }
 

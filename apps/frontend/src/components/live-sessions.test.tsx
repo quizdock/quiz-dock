@@ -71,7 +71,7 @@ describe('LiveSessions (barre du haut)', () => {
     expect(screen.getByText('Toutes les sessions de l’instance')).toBeInTheDocument();
   });
 
-  it('sur un écran étroit, tout passe par le menu burger', async () => {
+  it('reste dans la barre, pas dans le burger : une partie en cours se voit', async () => {
     mockApi([
       {
         method: 'GET',
@@ -82,12 +82,10 @@ describe('LiveSessions (barre du haut)', () => {
     ]);
     renderApp('/quizzes');
 
-    // Le panneau porte les mêmes éléments que la barre large, empilés : les
-    // sessions y sont à plat, pas dans un second menu déroulant.
-    fireEvent.click(await screen.findByRole('button', { name: 'Menu' }));
+    // L'indicateur est accessible sans ouvrir quoi que ce soit, à toute taille.
+    fireEvent.click(await screen.findByRole('button', { name: /1 en direct/ }));
     expect(screen.getByText('Sessions en cours')).toBeInTheDocument();
     expect(screen.getByText('111111')).toBeInTheDocument();
-    expect(screen.getAllByText('Mes quiz').length).toBeGreaterThan(1);
   });
 
   it('plafonne la liste et renvoie vers la page dédiée', async () => {

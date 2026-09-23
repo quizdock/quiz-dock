@@ -56,5 +56,7 @@
   "seeAllSessions": "查看全部會話",
   "allQuizzes": "全部測驗",
   "ownedBy": "來自 {{name}}",
-  "view": "檢視"
+  "view": "檢視",
+  "browseTemplates": "瀏覽範本庫",
+  "browseTemplatesHint": "現成的測驗，可據此建立自己的；不主動取用則不會進入你的題庫。"
 }

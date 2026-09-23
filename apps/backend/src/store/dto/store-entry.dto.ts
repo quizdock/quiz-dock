@@ -16,6 +16,15 @@ export const storeEntrySchema = z.object({
   sharedAt: z.string(),
   /** Vignette du modèle, servie par le catalogue ; null quand il n'y a pas de couverture. */
   coverUrl: z.string().nullable(),
+  /** Premier élément du quiz, ce que la carte montre à défaut de couverture. */
+  first: z
+    .object({
+      kind: z.enum(['question', 'slide']),
+      text: z.string(),
+      media: z.string().nullable(),
+      gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }).nullable(),
+    })
+    .nullable(),
 });
 
 export class StoreEntryDto extends createZodDto(storeEntrySchema) {}

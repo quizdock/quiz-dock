@@ -15,7 +15,6 @@ import { useLaunchSession } from '../game/use-launch-session';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
-  useQuizzesControllerCreateSamples,
   useQuizzesControllerImportQuiz,
   useQuizzesControllerList,
 } from '../api/generated/quizzes/quizzes';
@@ -35,7 +34,6 @@ export function DashboardPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuizzesControllerList();
   const create = useQuizzesControllerCreate();
-  const createSamples = useQuizzesControllerCreateSamples();
   const importQuiz = useQuizzesControllerImportQuiz();
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -82,10 +80,6 @@ export function DashboardPage() {
   const seatTaken = error instanceof ApiError && error.status === 403;
   const invalidateList = () =>
     queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
-
-  const onLoadSamples = () => {
-    createSamples.mutate(undefined, { onSuccess: invalidateList });
-  };
 
   // A bundle (zip, or a bare quiz.json) becomes a new draft: straight to its editor.
   const onImportFile = (file: File | undefined) => {
@@ -166,16 +160,15 @@ export function DashboardPage() {
       {!isLoading && !error && quizzes.length === 0 && !managerOnly && (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground">{t('empty')}</p>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={createSamples.isPending}
-            onClick={onLoadSamples}
-          >
-            <Sparkles className="size-4" />
-            {t('loadSamples')}
-          </Button>
-          <small className="text-muted-foreground">{t('loadSamplesHint')}</small>
+          {/* Les quiz d'exemple ne sont plus versés d'office : ils vivent dans la
+              bibliothèque, où l'on va se servir (#39). */}
+          <Link to="/templates">
+            <Button type="button" variant="outline">
+              <Sparkles className="size-4" />
+              {t('browseTemplates')}
+            </Button>
+          </Link>
+          <small className="text-muted-foreground">{t('browseTemplatesHint')}</small>
         </div>
       )}
 

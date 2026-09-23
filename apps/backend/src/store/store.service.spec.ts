@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { zipSync } from 'fflate';
+import { quizBundleSchema } from '../quizzes/portable/quiz-bundle.schema';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { QuizPortableService } from '../quizzes/portable/quiz-portable.service';
 import { StoreService } from './store.service';
@@ -155,6 +156,23 @@ describe('StoreService', () => {
   it('an id that is not a ULID never reaches the filesystem', async () => {
     const { service } = makeService();
     await expect(service.take(bob.id, '../../etc')).rejects.toThrow(BadRequestException);
+  });
+
+  it('les modèles d’usine sont importables tels quels', async () => {
+    // Le bundle amorcé doit passer la validation de l'importeur : sans ce garde,
+    // une divergence de mapping ne se voit qu'au moment où quelqu'un s'en sert.
+    const { service } = makeService();
+    await service.onModuleInit();
+    const seeded = await service.list();
+    expect(seeded.length).toBeGreaterThan(0);
+    expect(seeded.every((e) => e.author.name === 'fchaussin')).toBe(true);
+
+    for (const entry of seeded) {
+      const manifest = JSON.parse(
+        readFileSync(join(dir, entry.id, 'quiz.json'), 'utf8'),
+      ) as unknown;
+      expect(quizBundleSchema.safeParse(manifest).success).toBe(true);
+    }
   });
 
   it('a demo instance has no catalogue at all', async () => {

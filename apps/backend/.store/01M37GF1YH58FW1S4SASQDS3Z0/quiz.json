@@ -1,0 +1,349 @@
+{
+  "format": "quizdock/quiz",
+  "version": 2,
+  "quiz": {
+    "title": "Discover Taiwan",
+    "description": "Sample quiz — geography, history and culture of Taiwan.",
+    "language": "en",
+    "license": "CC-BY-4.0",
+    "revision": 1,
+    "feedbackEnabled": true,
+    "cover": null
+  },
+  "items": [
+    {
+      "kind": "slide",
+      "blocks": [
+        {
+          "type": "heading",
+          "id": "intro-title",
+          "text": "Discover Taiwan",
+          "level": 1,
+          "align": "center"
+        },
+        {
+          "type": "text",
+          "id": "intro-text",
+          "md": "Ten quick questions about *Formosa* — from Taipei 101 to Taroko Gorge.",
+          "align": "center",
+          "size": "large"
+        }
+      ],
+      "backgroundGradient": {
+        "angle": 135,
+        "colors": ["#0b7a3b", "#f5f5f5", "#d02a2a"]
+      },
+      "textTone": "light",
+      "textOutline": true
+    },
+    {
+      "kind": "question",
+      "type": "single_choice",
+      "prompt": "What is the capital of Taiwan?",
+      "answerExplanation": "Taipei, in the north of the island, is the seat of government.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Kaohsiung",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "Taichung",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        },
+        {
+          "text": "Taipei",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": true
+        },
+        {
+          "text": "Tainan",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "true_false",
+      "prompt": "Taiwan is crossed by the Tropic of Cancer.",
+      "answerExplanation": "The Tropic of Cancer runs through Chiayi and Hualien counties.",
+      "timeLimitS": 10,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "True",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": true
+        },
+        {
+          "text": "False",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "numeric",
+      "prompt": "How many floors does Taipei 101 have?",
+      "answerExplanation": "The name says it all — 101 floors above ground.",
+      "timeLimitS": 15,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "numericValue": 101,
+      "numericTolerance": 0,
+      "options": [],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "multiple_choice",
+      "prompt": "Which of these are popular Taiwanese night-market foods?",
+      "answerExplanation": "Bubble tea was invented in Taiwan in the 1980s.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Stinky tofu",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": true
+        },
+        {
+          "text": "Bubble tea",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": true
+        },
+        {
+          "text": "Oyster omelette",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": true
+        },
+        {
+          "text": "Croissant",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "text_input",
+      "prompt": "Which marble-walled gorge is Taiwan’s most famous national park?",
+      "answerExplanation": "Taroko National Park lies on the east coast, near Hualien.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "lenient",
+      "options": [],
+      "acceptedAnswers": [
+        {
+          "text": "Taroko"
+        },
+        {
+          "text": "Taroko Gorge"
+        }
+      ]
+    },
+    {
+      "kind": "question",
+      "type": "single_choice",
+      "prompt": "What is the highest mountain in Taiwan?",
+      "answerExplanation": "Yushan reaches 3,952 m — the highest peak in East Asia outside the Himalayas.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Yushan (Jade Mountain)",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": true
+        },
+        {
+          "text": "Alishan",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        },
+        {
+          "text": "Xueshan",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false
+        },
+        {
+          "text": "Hehuanshan",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "ordering",
+      "prompt": "Order these Taiwanese cities from north to south.",
+      "answerExplanation": null,
+      "timeLimitS": 30,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "partial",
+      "options": [
+        {
+          "text": "Kaohsiung",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false,
+          "correctOrderIndex": 3
+        },
+        {
+          "text": "Taipei",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false,
+          "correctOrderIndex": 0
+        },
+        {
+          "text": "Tainan",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false,
+          "correctOrderIndex": 2
+        },
+        {
+          "text": "Taichung",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false,
+          "correctOrderIndex": 1
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "single_choice",
+      "prompt": "Which language is the most widely spoken in Taiwan?",
+      "answerExplanation": "Mandarin is the official language; Taiwanese Hokkien is the second most spoken.",
+      "timeLimitS": 20,
+      "revealDelayS": null,
+      "pointsMode": "double",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Japanese",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "Mandarin Chinese",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": true
+        },
+        {
+          "text": "Cantonese",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false
+        },
+        {
+          "text": "Hokkien",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "true_false",
+      "prompt": "Taiwan was a Japanese colony for fifty years, from 1895 to 1945.",
+      "answerExplanation": "Japanese rule began with the Treaty of Shimonoseki (1895).",
+      "timeLimitS": 10,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "True",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": true
+        },
+        {
+          "text": "False",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    },
+    {
+      "kind": "question",
+      "type": "poll",
+      "prompt": "Which Taiwanese experience would you pick?",
+      "answerExplanation": null,
+      "timeLimitS": 15,
+      "revealDelayS": null,
+      "pointsMode": "standard",
+      "scoring": "standard",
+      "options": [
+        {
+          "text": "Night market",
+          "color": "red",
+          "shape": "triangle",
+          "isCorrect": false
+        },
+        {
+          "text": "Hot springs",
+          "color": "blue",
+          "shape": "diamond",
+          "isCorrect": false
+        },
+        {
+          "text": "Hiking Yushan",
+          "color": "yellow",
+          "shape": "circle",
+          "isCorrect": false
+        },
+        {
+          "text": "Sun Moon Lake",
+          "color": "green",
+          "shape": "square",
+          "isCorrect": false
+        }
+      ],
+      "acceptedAnswers": []
+    }
+  ]
+}

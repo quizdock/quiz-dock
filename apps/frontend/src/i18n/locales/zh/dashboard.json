@@ -56,5 +56,7 @@
   "seeAllSessions": "查看全部会话",
   "allQuizzes": "全部测验",
   "ownedBy": "来自 {{name}}",
-  "view": "查看"
+  "view": "查看",
+  "browseTemplates": "浏览模板库",
+  "browseTemplatesHint": "现成的测验，可据此创建自己的；不主动取用则不会进入你的题库。"
 }

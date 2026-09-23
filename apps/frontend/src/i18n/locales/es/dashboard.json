@@ -56,5 +56,7 @@
   "seeAllSessions": "Ver todas las sesiones",
   "allQuizzes": "Todos los cuestionarios",
   "ownedBy": "de {{name}}",
-  "view": "Ver"
+  "view": "Ver",
+  "browseTemplates": "Explorar las plantillas",
+  "browseTemplatesHint": "Cuestionarios listos para crear el tuyo; nada llega a tu banco sin que lo pidas."
 }

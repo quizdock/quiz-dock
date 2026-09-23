@@ -34,6 +34,28 @@ describe('TemplatesPage (galerie)', () => {
     localStorage.clear();
   });
 
+  it('permet de créer depuis la carte, sans ouvrir le modèle', async () => {
+    localStorage.setItem('live.localUser', 'Marc');
+    mockApi([
+      {
+        method: 'GET',
+        path: '/me',
+        body: {
+          id: 'u1',
+          displayName: 'Marc',
+          email: null,
+          roles: ['host'],
+          subject: 'local:marc',
+        },
+      },
+      { method: 'GET', path: '/store', body: [ENTRY] },
+    ]);
+    renderApp('/templates');
+
+    expect(await screen.findByRole('button', { name: /Créer à partir/ })).toBeInTheDocument();
+    localStorage.clear();
+  });
+
   it('dit quand rien n’a encore été partagé', async () => {
     localStorage.setItem('live.localUser', 'Marc');
     mockApi([{ method: 'GET', path: '/store', body: [] }]);
@@ -95,7 +117,7 @@ describe('TemplatePage (aperçu)', () => {
     expect(await screen.findByText(/plus grand port d’Europe/)).toBeInTheDocument();
     expect(screen.getByText('Rotterdam')).toBeInTheDocument();
     expect(screen.getByText('Bienvenue')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Prendre une copie/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Créer à partir de ce modèle/ })).toBeInTheDocument();
     localStorage.clear();
     vi.unstubAllGlobals();
   });
@@ -112,8 +134,8 @@ describe('TemplatePage (aperçu)', () => {
     ]);
     renderApp(`/templates/${ENTRY.id}`);
 
-    expect(await screen.findByText(/seul un animateur peut le faire/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Prendre une copie/ })).toBeNull();
+    expect(await screen.findByText(/action d’animateur/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Créer à partir/ })).toBeNull();
     localStorage.clear();
     vi.unstubAllGlobals();
   });

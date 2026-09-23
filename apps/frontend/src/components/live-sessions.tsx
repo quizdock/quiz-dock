@@ -18,7 +18,7 @@ const PREVIEW = 5;
  * Silent when nothing runs, and silent on error: an account without host
  * privileges (the seat is someone else's in local mode) simply sees nothing.
  */
-export function LiveSessions({ inline = false }: { inline?: boolean }) {
+export function LiveSessions() {
   const { t } = useTranslation('dashboard');
   const { data } = useGameControllerMine({
     query: { refetchInterval: POLL_MS, retry: false, staleTime: 0 },
@@ -67,25 +67,6 @@ export function LiveSessions({ inline = false }: { inline?: boolean }) {
   );
 
   const heading = sessions.some((s) => s.host) ? t('allSessions') : t('activeSessions');
-  // Dans le menu burger, les sessions sont déjà dans un panneau : un second
-  // menu déroulant par-dessus serait injouable au pouce.
-  if (inline) {
-    return (
-      <div className="flex flex-col">
-        <p className="text-primary flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium">
-          <Radio className="size-3.5 animate-pulse" />
-          {heading}
-        </p>
-        {rows}
-        <Link
-          to="/live"
-          className="hover:bg-accent block rounded-md px-2 py-1.5 text-sm font-medium"
-        >
-          {t('seeAllSessions')} ({sessions.length})
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div ref={ref} className="relative">
