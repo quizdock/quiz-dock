@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   Param,
   Post,
@@ -20,6 +21,7 @@ import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
@@ -29,6 +31,7 @@ import { Public } from '../auth/public.decorator';
 import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
 import { MediaService } from './media.service';
+import { parseRange } from './range';
 
 const MAX_BYTES = Number(process.env.MEDIA_MAX_BYTES ?? 10 * 1024 * 1024);
 
@@ -78,15 +81,43 @@ export class MediaController {
     return this.media.setAlt(user.id, id, body.alt);
   }
 
+  /**
+   * The bytes of a media, whole or by `Range` — Safari plays no video it cannot
+   * seek into. An id names one file forever (a replaced media gets a new id), so
+   * the response may be cached for good; `nosniff` keeps the browser to the type
+   * the server decided.
+   */
   @Get(':id')
   @Public()
   @ApiOkResponse({ description: 'Contenu binaire du média.' })
+  @ApiResponse({ status: 206, description: 'Partie demandée par `Range`.' })
+  @ApiResponse({ status: 416, description: 'Plage hors du fichier.' })
   async serve(
     @Param('id') id: string,
+    @Headers('range') rangeHeader: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    const { stream, mime, sizeBytes } = await this.media.openStream(id);
-    res.set({ 'Content-Type': mime, 'Content-Length': String(sizeBytes) });
+  ): Promise<StreamableFile | undefined> {
+    const size = await this.media.sizeOf(id);
+    res.set({
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    const range = parseRange(rangeHeader, size);
+    if (range === 'unsatisfiable') {
+      res.status(416).set('Content-Range', `bytes */${size}`);
+      return undefined;
+    }
+    const { stream, mime } = await this.media.openStream(id, range ?? undefined);
+    if (range) {
+      res.status(206).set({
+        'Content-Range': `bytes ${range.start}-${range.end}/${size}`,
+        'Content-Length': String(range.end - range.start + 1),
+      });
+    } else {
+      res.set('Content-Length', String(size));
+    }
+    res.set('Content-Type', mime);
     return new StreamableFile(stream);
   }
 

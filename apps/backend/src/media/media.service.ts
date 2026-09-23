@@ -1,5 +1,5 @@
 import { createReadStream, type ReadStream } from 'node:fs';
-import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   BadRequestException,
@@ -91,19 +91,38 @@ export class MediaService implements OnModuleInit {
     return { mediaId: asset.id, url };
   }
 
-  /** Flux d'un média pour le service HTTP (public — chargé aussi par les joueurs). */
-  async openStream(id: string): Promise<{ stream: ReadStream; mime: string; sizeBytes: number }> {
+  /**
+   * Flux d'un média pour le service HTTP (public — chargé aussi par les joueurs).
+   * `span` narrows it to the bytes a `Range` request asked for.
+   */
+  async openStream(
+    id: string,
+    span?: { start: number; end: number },
+  ): Promise<{ stream: ReadStream; mime: string; sizeBytes: number }> {
     const asset = await this.prisma.mediaAsset.findUnique({ where: { id } });
     if (!asset) {
       throw new NotFoundException('media.not_found');
     }
     const path = join(this.dir, id);
-    const stream = createReadStream(path);
+    const stream = createReadStream(path, span);
     return {
       stream,
       mime: asset.mime,
       sizeBytes: Number(asset.sizeBytes),
     };
+  }
+
+  /** Size of a stored media on disk — the truth a byte range is cut from. */
+  async sizeOf(id: string): Promise<number> {
+    const asset = await this.prisma.mediaAsset.findUnique({ where: { id }, select: { id: true } });
+    if (!asset) {
+      throw new NotFoundException('media.not_found');
+    }
+    try {
+      return (await stat(join(this.dir, id))).size;
+    } catch {
+      throw new NotFoundException('media.not_found');
+    }
   }
 
   /** Bytes and mime of a stored media, for the quiz export (#19). */
