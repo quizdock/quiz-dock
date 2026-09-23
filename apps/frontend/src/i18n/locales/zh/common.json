@@ -43,7 +43,8 @@
     "join": "加入",
     "live": "进行中的会话",
     "templates": "模板",
-    "profile": "我的账号"
+    "profile": "我的账号",
+    "template": "模板"
   },
   "demo": {
     "banner": "公开演示 — 所有数据每小时清空；主持席位每次持续 {{count}} 分钟。"

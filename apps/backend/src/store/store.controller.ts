@@ -1,12 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Res, StreamableFile } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
+import type { Response } from 'express';
 import { AllowAnyRole } from '../auth/allow-any-role.decorator';
 import { AllowManager } from '../auth/allow-manager.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { QuizDto } from '../quizzes/dto/quiz.dto';
 import { ShareTemplateDto } from './dto/share-template.dto';
 import { StoreEntryDto } from './dto/store-entry.dto';
+import { StorePreviewDto } from './dto/store-preview.dto';
 import { StoreService } from './store.service';
 
 /**
@@ -31,6 +33,28 @@ export class StoreController {
   @ApiOkResponse({ type: StoreEntryDto })
   share(@CurrentUser() user: User, @Body() body: ShareTemplateDto): Promise<StoreEntryDto> {
     return this.store.share(user, body.quizId);
+  }
+
+  /** Ce que contient un modèle, avant d'en prendre une copie. */
+  @Get(':id')
+  @AllowAnyRole()
+  @ApiOkResponse({ type: StorePreviewDto })
+  preview(@Param('id') id: string): Promise<StorePreviewDto> {
+    return this.store.preview(id);
+  }
+
+  /** Un média du catalogue, pour l'aperçu (les bundles ne sont pas servis tels quels). */
+  @Get(':id/media/:name')
+  @AllowAnyRole()
+  @ApiOkResponse({ description: 'Contenu binaire du média.' })
+  async media(
+    @Param('id') id: string,
+    @Param('name') name: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const bytes = await this.store.readMedia(id, name);
+    res.set({ 'Cache-Control': 'private, max-age=300' });
+    return new StreamableFile(bytes);
   }
 
   /** Takes a copy: a new draft in the caller's own bank. */

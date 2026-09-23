@@ -920,6 +920,88 @@
         ]
       }
     },
+    "/api/v1/store/{id}": {
+      "get": {
+        "operationId": "StoreController_preview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorePreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      },
+      "delete": {
+        "operationId": "StoreController_withdraw",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      }
+    },
+    "/api/v1/store/{id}/media/{name}": {
+      "get": {
+        "operationId": "StoreController_media",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "name",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contenu binaire du média."
+          }
+        },
+        "tags": [
+          "store"
+        ]
+      }
+    },
     "/api/v1/store/{id}/take": {
       "post": {
         "operationId": "StoreController_take",
@@ -943,29 +1025,6 @@
                 }
               }
             }
-          }
-        },
-        "tags": [
-          "store"
-        ]
-      }
-    },
-    "/api/v1/store/{id}": {
-      "delete": {
-        "operationId": "StoreController_withdraw",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
           }
         },
         "tags": [
@@ -2898,6 +2957,10 @@
           },
           "sharedAt": {
             "type": "string"
+          },
+          "coverUrl": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -2910,7 +2973,8 @@
           "license",
           "author",
           "revision",
-          "sharedAt"
+          "sharedAt",
+          "coverUrl"
         ]
       },
       "ShareTemplateDto": {
@@ -2924,6 +2988,153 @@
         },
         "required": [
           "quizId"
+        ]
+      },
+      "StorePreviewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "language": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "subject"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "sharedAt": {
+            "type": "string"
+          },
+          "coverUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "questionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "slideCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "question",
+                    "slide"
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "timeLimitS": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "mediaUrl": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "mediaAlt": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string"
+                      },
+                      "color": {
+                        "type": "string"
+                      },
+                      "shape": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "color",
+                      "shape"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "text",
+                "type",
+                "timeLimitS",
+                "mediaUrl",
+                "mediaAlt",
+                "options"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "language",
+          "tags",
+          "license",
+          "author",
+          "revision",
+          "sharedAt",
+          "coverUrl",
+          "questionCount",
+          "slideCount",
+          "items"
         ]
       },
       "CreateQuestionDto": {

@@ -13,6 +13,7 @@ const TITLE_KEYS: Record<string, string> = {
   '/live': 'live',
   '/profile': 'profile',
   '/templates': 'templates',
+  '/templates/$templateId': 'template',
   '/quizzes/$quizId': 'editor',
   '/quizzes/$quizId/preview': 'preview',
   '/quizzes/$quizId/reviews': 'feedback',

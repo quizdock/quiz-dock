@@ -132,6 +132,26 @@ describe('StoreService', () => {
     await expect(service.take(bob.id, entry.id)).rejects.toThrow(NotFoundException);
   });
 
+  it('l’aperçu dit ce que le modèle contient, médias servis par le catalogue', async () => {
+    const { service } = makeService();
+    const entry = await service.share(alice, 'q1');
+    const preview = await service.preview(entry.id);
+
+    expect(preview).toMatchObject({ id: entry.id, title: 'Ports', questionCount: 3 });
+    // Le bundle de test ne porte qu'un manifeste minimal : l'aperçu ne doit pas
+    // s'effondrer pour autant, il montre ce qu'il a.
+    expect(Array.isArray(preview.items)).toBe(true);
+  });
+
+  it('un média du catalogue ne se lit que par un nom sans traversée', async () => {
+    const { service } = makeService();
+    const entry = await service.share(alice, 'q1');
+    await expect(service.readMedia(entry.id, '../../index.json')).rejects.toThrow(
+      BadRequestException,
+    );
+    await expect(service.readMedia(entry.id, 'pic.jpg')).resolves.toBeInstanceOf(Buffer);
+  });
+
   it('an id that is not a ULID never reaches the filesystem', async () => {
     const { service } = makeService();
     await expect(service.take(bob.id, '../../etc')).rejects.toThrow(BadRequestException);

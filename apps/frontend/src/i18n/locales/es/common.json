@@ -43,7 +43,8 @@
     "join": "Unirse",
     "live": "Sesiones en directo",
     "templates": "Plantillas",
-    "profile": "Mi cuenta"
+    "profile": "Mi cuenta",
+    "template": "Plantilla"
   },
   "demo": {
     "banner": "Demo pública — todo se borra cada hora; el asiento de anfitrión dura {{count}} min cada vez."

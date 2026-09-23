@@ -1,142 +1,147 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
-import { Download, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import {
-  getStoreControllerListQueryKey,
-  useStoreControllerList,
-  useStoreControllerTake,
-  useStoreControllerWithdraw,
-} from '../api/generated/store/store';
-import { getQuizzesControllerListQueryKey } from '../api/generated/quizzes/quizzes';
-import type { StoreEntryDto } from '../api/generated/model';
-import { apiErrorText } from '../api/http';
-import { useRole } from '../auth/use-role';
+import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
+import { Select } from '@/components/ui/select';
+import { fold } from '@/lib/text';
+import { useStoreControllerList } from '../api/generated/store/store';
+
+const PAGE_SIZE = 20;
 
 /**
- * The catalogue of templates shared on this instance (#39). Taking one puts an
- * **independent draft** in your own bank: it is yours to rename, cut and
- * present, and nothing is ever pushed back to you afterwards.
+ * Le catalogue des modèles partagés sur cette instance (#39). Une liste dense,
+ * comme la banque : chaque ligne dit l'essentiel — quoi, de qui, combien de
+ * questions — et mène à l'aperçu, qui est ce sur quoi on décide vraiment.
  */
 export function TemplatesPage() {
-  const { t } = useTranslation(['store', 'common']);
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { t, i18n } = useTranslation(['store', 'common']);
   const list = useStoreControllerList();
-  // Retirer une entrée est de la modération — le métier du gestionnaire ; prendre
-  // une copie crée un quiz, donc c'est celui de l'hôte (RG-14).
-  const { isHost } = useRole();
-  const take = useStoreControllerTake();
-  const withdraw = useStoreControllerWithdraw();
-  const [error, setError] = useState<string | null>(null);
-  const [confirmWithdraw, setConfirmWithdraw] = useState<StoreEntryDto | null>(null);
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<'recent' | 'title' | 'questions'>('recent');
+  const [page, setPage] = useState(1);
 
-  const entries = list.data?.data ?? [];
+  const entries = useMemo(() => list.data?.data ?? [], [list.data]);
+  const shown = useMemo(() => {
+    const needle = fold(search);
+    const kept = entries.filter(
+      (e) => !needle || fold(`${e.title} ${e.description ?? ''} ${e.author.name}`).includes(needle),
+    );
+    const sorted = [...kept];
+    if (sort === 'title') sorted.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sort === 'questions') sorted.sort((a, b) => b.questionCount - a.questionCount);
+    else sorted.sort((a, b) => b.sharedAt.localeCompare(a.sharedAt));
+    return sorted;
+  }, [entries, search, sort]);
 
-  const onTake = async (entry: StoreEntryDto) => {
-    setError(null);
-    try {
-      const { data } = await take.mutateAsync({ id: entry.id });
-      await queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
-      await navigate({ to: '/quizzes/$quizId', params: { quizId: data.id } });
-    } catch (e) {
-      setError(apiErrorText(e, t('takeFailed')));
-    }
-  };
-
-  const onWithdraw = async (entry: StoreEntryDto) => {
-    setError(null);
-    setConfirmWithdraw(null);
-    try {
-      await withdraw.mutateAsync({ id: entry.id });
-      await queryClient.invalidateQueries({ queryKey: getStoreControllerListQueryKey() });
-    } catch (e) {
-      setError(apiErrorText(e, t('withdrawFailed')));
-    }
-  };
+  const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+  const current = Math.min(page, pageCount);
+  const visible = shown.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+  const date = (iso: string) => new Date(iso).toLocaleDateString(i18n.language);
 
   return (
-    <section className="flex flex-col gap-6">
+    <section className="content-lg flex flex-col gap-6">
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="text-muted-foreground text-sm">{t('intro')}</p>
       </header>
 
-      {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
-
       {list.isPending ? <p className="text-muted-foreground">{t('common:loading')}</p> : null}
 
       {!list.isPending && entries.length === 0 ? (
-        <Card>
-          <CardContent className="text-muted-foreground py-10 text-center text-sm">
-            {t('empty')}
-          </CardContent>
-        </Card>
+        <p className="text-muted-foreground rounded-lg border border-dashed p-6">{t('empty')}</p>
       ) : null}
 
-      <ul className="flex flex-col gap-3">
-        {entries.map((entry) => (
+      {entries.length > 0 ? (
+        <>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="relative min-w-[12rem] flex-1">
+              <span className="sr-only">{t('search')}</span>
+              <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder={t('search')}
+                className="pl-8"
+              />
+            </label>
+            <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+              {t('sortBy')}
+              <Select
+                value={sort}
+                onChange={(e) => {
+                  setSort(e.target.value as typeof sort);
+                  setPage(1);
+                }}
+              >
+                <option value="recent">{t('sortRecent')}</option>
+                <option value="title">{t('sortTitle')}</option>
+                <option value="questions">{t('sortQuestions')}</option>
+              </Select>
+            </label>
+          </div>
+          <p className="text-muted-foreground text-sm" role="status">
+            {t('templateCount', { count: shown.length })}
+          </p>
+        </>
+      ) : null}
+
+      {entries.length > 0 && shown.length === 0 ? (
+        <p className="text-muted-foreground rounded-lg border border-dashed p-6">{t('noMatch')}</p>
+      ) : null}
+
+      {/* Une galerie : on choisit un modèle sur ce qu'il montre, pas sur une ligne
+          de texte. La vignette, à défaut de couverture, reste une surface neutre
+          plutôt qu'un trou. */}
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((entry) => (
           <li key={entry.id}>
-            <Card>
-              <CardHeader className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <CardTitle className="flex-1">{entry.title}</CardTitle>
-                <Badge variant="muted">{entry.language}</Badge>
-                <Badge variant="default">
-                  {t('questionCount', { count: entry.questionCount })}
-                </Badge>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                {entry.description ? <p className="text-sm">{entry.description}</p> : null}
-                <p className="text-muted-foreground text-xs">
-                  {t('by', { name: entry.author.name })} · {t('revision', { n: entry.revision })}
-                  {entry.license ? ` · ${entry.license}` : ''}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {/* Prendre une copie crée un quiz : réservé aux hôtes (RG-14). */}
-                  {isHost ? (
-                    <Button
-                      type="button"
-                      onClick={() => void onTake(entry)}
-                      disabled={take.isPending}
-                    >
-                      <Download className="size-4" />
-                      {t('take')}
-                    </Button>
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setConfirmWithdraw(entry)}
-                    disabled={withdraw.isPending}
-                  >
-                    <Trash2 className="size-4" />
-                    {t('withdraw')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <Link
+              to="/templates/$templateId"
+              params={{ templateId: entry.id }}
+              className="hover:bg-accent group flex h-full flex-col overflow-hidden rounded-lg border transition-colors"
+            >
+              <span className="bg-muted flex aspect-video items-center justify-center overflow-hidden">
+                {entry.coverUrl ? (
+                  <img
+                    src={entry.coverUrl}
+                    alt=""
+                    className="size-full object-cover transition-transform group-hover:scale-[1.02]"
+                  />
+                ) : (
+                  <span className="text-muted-foreground text-3xl font-semibold">
+                    {entry.title.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </span>
+              <span className="flex flex-1 flex-col gap-2 p-4">
+                <span className="font-semibold">{entry.title}</span>
+                {entry.description ? (
+                  <span className="text-muted-foreground line-clamp-2 text-sm">
+                    {entry.description}
+                  </span>
+                ) : null}
+                <span className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+                  <Badge variant="muted">{entry.language}</Badge>
+                  <span className="text-muted-foreground text-sm">
+                    {t('questionCount', { count: entry.questionCount })}
+                  </span>
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {t('sharedBy', { name: entry.author.name, date: date(entry.sharedAt) })}
+                </span>
+              </span>
+            </Link>
           </li>
         ))}
       </ul>
 
-      {/* Withdrawing removes the catalogue entry; the copies people took are theirs. */}
-      <ConfirmDialog
-        open={confirmWithdraw !== null}
-        title={t('withdrawConfirm.title')}
-        description={t('withdrawConfirm.description')}
-        confirmLabel={t('withdraw')}
-        onCancel={() => setConfirmWithdraw(null)}
-        onConfirm={() => confirmWithdraw && void onWithdraw(confirmWithdraw)}
-      />
+      <Pagination page={current} pages={pageCount} onChange={setPage} />
     </section>
   );
 }

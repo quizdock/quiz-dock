@@ -14,6 +14,8 @@ export const storeEntrySchema = z.object({
   author: z.object({ name: z.string(), subject: z.string() }),
   revision: z.number().int(),
   sharedAt: z.string(),
+  /** Vignette du modèle, servie par le catalogue ; null quand il n'y a pas de couverture. */
+  coverUrl: z.string().nullable(),
 });
 
 export class StoreEntryDto extends createZodDto(storeEntrySchema) {}

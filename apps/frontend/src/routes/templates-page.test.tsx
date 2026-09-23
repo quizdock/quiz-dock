@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { mockApi, renderApp } from '../test/harness';
 
@@ -10,29 +10,73 @@ const ENTRY = {
   tags: ['geo'],
   questionCount: 10,
   license: 'CC-BY-4.0',
+  coverUrl: null,
   author: { name: 'Alice', subject: 'local:alice' },
   revision: 2,
   sharedAt: '2026-09-23T08:00:00.000Z',
 };
 
 /** #39 — taking a template must read as "a copy lands in my bank", never as sharing access. */
-describe('TemplatesPage', () => {
-  it('lists the catalogue with its author, revision and licence', async () => {
+describe('TemplatesPage (galerie)', () => {
+  it('montre une carte par modèle, avec sa vignette et son auteur', async () => {
     localStorage.setItem('live.localUser', 'Marc');
     mockApi([{ method: 'GET', path: '/store', body: [ENTRY] }]);
     renderApp('/templates');
 
     expect(await screen.findByText('Ports du monde')).toBeInTheDocument();
-    expect(screen.getByText(/par Alice/)).toBeInTheDocument();
-    expect(screen.getByText(/révision 2/)).toBeInTheDocument();
-    expect(screen.getByText(/CC-BY-4.0/)).toBeInTheDocument();
+    expect(screen.getByText(/partagé par Alice/)).toBeInTheDocument();
     expect(screen.getByText('10 questions')).toBeInTheDocument();
+    // La carte mène à l'aperçu : c'est là qu'on décide.
+    expect(screen.getByRole('link', { name: /Ports du monde/ })).toHaveAttribute(
+      'href',
+      `/templates/${ENTRY.id}`,
+    );
     localStorage.clear();
   });
 
-  it('taking a copy opens the new draft in the editor', async () => {
+  it('dit quand rien n’a encore été partagé', async () => {
     localStorage.setItem('live.localUser', 'Marc');
-    const fetchMock = mockApi([
+    mockApi([{ method: 'GET', path: '/store', body: [] }]);
+    renderApp('/templates');
+    expect(await screen.findByText(/Aucun modèle n’a encore été partagé/)).toBeInTheDocument();
+    localStorage.clear();
+    vi.unstubAllGlobals();
+  });
+});
+
+describe('TemplatePage (aperçu)', () => {
+  const PREVIEW = {
+    ...ENTRY,
+    coverUrl: null,
+    slideCount: 1,
+    items: [
+      {
+        kind: 'question',
+        text: 'Quel est le plus grand port d’Europe ?',
+        type: 'single_choice',
+        timeLimitS: 20,
+        mediaUrl: null,
+        mediaAlt: null,
+        options: [
+          { text: 'Rotterdam', color: 'red', shape: 'triangle' },
+          { text: 'Anvers', color: 'blue', shape: 'diamond' },
+        ],
+      },
+      {
+        kind: 'slide',
+        text: 'Bienvenue',
+        type: null,
+        timeLimitS: null,
+        mediaUrl: null,
+        mediaAlt: null,
+        options: [],
+      },
+    ],
+  };
+
+  it('montre ce que le modèle contient avant d’en prendre une copie', async () => {
+    localStorage.setItem('live.localUser', 'Marc');
+    mockApi([
       {
         method: 'GET',
         path: '/me',
@@ -44,41 +88,32 @@ describe('TemplatesPage', () => {
           subject: 'local:marc',
         },
       },
-      { method: 'GET', path: '/store', body: [ENTRY] },
-      { method: 'POST', path: `/store/${ENTRY.id}/take`, body: { id: 'new-draft' } },
-      {
-        method: 'GET',
-        path: '/quizzes/new-draft',
-        body: {
-          id: 'new-draft',
-          title: 'Ports du monde',
-          status: 'draft',
-          questions: [],
-          slides: [],
-        },
-      },
-      { method: 'GET', path: '/quizzes', body: [] },
+      { method: 'GET', path: `/store/${ENTRY.id}`, body: PREVIEW },
     ]);
-    renderApp('/templates');
+    renderApp(`/templates/${ENTRY.id}`);
 
-    fireEvent.click(await screen.findByRole('button', { name: /Prendre une copie/ }));
-    await waitFor(() =>
-      expect(
-        fetchMock.mock.calls.some(
-          ([url, opts]) =>
-            String(url).includes(`/store/${ENTRY.id}/take`) &&
-            (opts as RequestInit | undefined)?.method === 'POST',
-        ),
-      ).toBe(true),
-    );
+    expect(await screen.findByText(/plus grand port d’Europe/)).toBeInTheDocument();
+    expect(screen.getByText('Rotterdam')).toBeInTheDocument();
+    expect(screen.getByText('Bienvenue')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Prendre une copie/ })).toBeInTheDocument();
     localStorage.clear();
+    vi.unstubAllGlobals();
   });
 
-  it('says so when nothing has been shared yet', async () => {
+  it('explique à un non-animateur pourquoi il ne peut pas prendre de copie', async () => {
     localStorage.setItem('live.localUser', 'Marc');
-    mockApi([{ method: 'GET', path: '/store', body: [] }]);
-    renderApp('/templates');
-    expect(await screen.findByText(/Aucun modèle n’a encore été partagé/)).toBeInTheDocument();
+    mockApi([
+      {
+        method: 'GET',
+        path: '/me',
+        body: { id: 'u1', displayName: 'Marc', email: null, roles: [], subject: 'local:marc' },
+      },
+      { method: 'GET', path: `/store/${ENTRY.id}`, body: PREVIEW },
+    ]);
+    renderApp(`/templates/${ENTRY.id}`);
+
+    expect(await screen.findByText(/seul un animateur peut le faire/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Prendre une copie/ })).toBeNull();
     localStorage.clear();
     vi.unstubAllGlobals();
   });

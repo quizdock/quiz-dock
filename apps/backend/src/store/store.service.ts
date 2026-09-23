@@ -30,9 +30,52 @@ export interface StoreEntry {
   author: { name: string; subject: string };
   revision: number;
   sharedAt: string;
+  /** Chemin de la couverture dans le bundle (`media/…`), pour la vignette. */
+  cover?: string | null;
 }
 
 const INDEX = 'index.json';
+
+/** Un élément de bundle, tel que l'aperçu a besoin de le lire (lecture tolérante). */
+interface BundleItem {
+  kind: 'question' | 'slide';
+  prompt?: string;
+  type?: string;
+  timeLimitS?: number;
+  media?: string;
+  blocks?: unknown[];
+  options?: { text?: string; color?: string; shape?: string }[];
+}
+
+/** URL servie d'un média du catalogue, depuis son chemin dans le bundle. */
+function mediaUrl(id: string, path?: string | null): string | null {
+  return path ? `/api/v1/store/${id}/media/${path.replace(/^media\//, '')}` : null;
+}
+
+/** Premier texte d'une diapositive : son titre, à défaut de mieux. */
+function firstText(blocks: unknown[] | undefined): string {
+  for (const block of blocks ?? []) {
+    const b = block as { text?: string; md?: string };
+    const text = b.text ?? b.md;
+    if (typeof text === 'string' && text.trim()) return text.trim().slice(0, 200);
+  }
+  return '';
+}
+
+/** L'aperçu d'un modèle : son entrée de catalogue, plus ce qu'il contient. */
+export type StorePreview = StoreEntry & {
+  coverUrl: string | null;
+  slideCount: number;
+  items: {
+    kind: 'question' | 'slide';
+    text: string;
+    type: string | null;
+    timeLimitS: number | null;
+    mediaUrl: string | null;
+    mediaAlt: string | null;
+    options: { text: string; color: string; shape: string }[];
+  }[];
+};
 const MANIFEST = 'quiz.json';
 
 /**
@@ -70,10 +113,12 @@ export class StoreService implements OnModuleInit {
   }
 
   /** The catalogue, newest first. Reads the folder, which is the only truth. */
-  async list(): Promise<StoreEntry[]> {
+  async list(): Promise<(StoreEntry & { coverUrl: string | null })[]> {
     if (isDemoMode()) return [];
     const entries = await this.readIndex();
-    return [...entries].sort((a, b) => b.sharedAt.localeCompare(a.sharedAt));
+    return [...entries]
+      .sort((a, b) => b.sharedAt.localeCompare(a.sharedAt))
+      .map((entry) => ({ ...entry, coverUrl: mediaUrl(entry.id, entry.cover) }));
   }
 
   /**
@@ -82,7 +127,10 @@ export class StoreService implements OnModuleInit {
    * so withdrawing and sharing again stays the same template for everyone who
    * took a copy.
    */
-  async share(user: { id: string; displayName: string; oidcSubject: string }, quizId: string) {
+  async share(
+    user: { id: string; displayName: string; oidcSubject: string },
+    quizId: string,
+  ): Promise<StoreEntry & { coverUrl: string | null }> {
     this.refuseOnDemo();
     const quiz = await this.prisma.quiz.findFirst({
       where: { id: quizId, ownerId: user.id },
@@ -120,6 +168,12 @@ export class StoreService implements OnModuleInit {
       await writeFile(target, bytes);
     }
 
+    // La couverture est lue dans le bundle qu'on vient d'écrire : la galerie a
+    // besoin d'une vignette sans ouvrir chaque modèle.
+    const manifest = await readFile(join(folder, MANIFEST), 'utf8').catch(() => null);
+    const cover = manifest
+      ? ((JSON.parse(manifest) as { quiz?: { cover?: string | null } }).quiz?.cover ?? null)
+      : null;
     const entry: StoreEntry = {
       id,
       title: quiz.title,
@@ -131,10 +185,11 @@ export class StoreService implements OnModuleInit {
       author: { name: user.displayName, subject: user.oidcSubject },
       revision: stamped.revision,
       sharedAt: new Date().toISOString(),
+      cover,
     };
     await this.writeIndex([...(await this.readIndex()).filter((e) => e.id !== id), entry]);
     this.log.log(`Template shared: ${entry.title} (${id}, revision ${entry.revision})`);
-    return entry;
+    return { ...entry, coverUrl: mediaUrl(id, cover) };
   }
 
   /**
@@ -157,6 +212,57 @@ export class StoreService implements OnModuleInit {
       mimetype: 'application/zip',
       originalname: `${id}.quizdock.zip`,
     });
+  }
+
+  /**
+   * Ce qu'un modèle contient, lu depuis son bundle : de quoi juger avant d'en
+   * prendre une copie. Les chemins de médias deviennent des URL servies par le
+   * catalogue, sinon l'aperçu n'aurait que du texte.
+   */
+  async preview(id: string): Promise<StorePreview> {
+    this.refuseOnDemo();
+    const entry = (await this.readIndex()).find((e) => e.id === id);
+    const raw = await readFile(join(this.dir, this.safeId(id), MANIFEST), 'utf8').catch(() => null);
+    if (!entry || !raw) throw new NotFoundException('store.entry_not_found');
+    // Le catalogue est un dossier : un manifeste retouché à la main ne doit pas
+    // faire tomber l'aperçu, il montre alors ce qu'il a.
+    const bundle = JSON.parse(raw) as {
+      quiz?: { cover?: string | null };
+      media?: Record<string, { alt: string | null }>;
+      items?: BundleItem[];
+    };
+    const urlOf = (path?: string | null) => mediaUrl(id, path);
+    const items = (bundle.items ?? []).map((item) => ({
+      kind: item.kind,
+      text: item.kind === 'question' ? (item.prompt ?? '') : firstText(item.blocks),
+      type: item.kind === 'question' ? (item.type ?? null) : null,
+      timeLimitS: item.timeLimitS ?? null,
+      mediaUrl: urlOf(item.media),
+      mediaAlt: item.media ? (bundle.media?.[item.media]?.alt ?? null) : null,
+      options: (item.options ?? []).map((o) => ({
+        text: o.text ?? '',
+        color: o.color ?? 'blue',
+        shape: o.shape ?? 'circle',
+      })),
+    }));
+    return {
+      ...entry,
+      coverUrl: urlOf(bundle.quiz?.cover),
+      slideCount: items.filter((i) => i.kind === 'slide').length,
+      items,
+    };
+  }
+
+  /** Un média du catalogue, servi pour l'aperçu (lecture seule, jamais réécrit). */
+  async readMedia(id: string, name: string): Promise<Buffer> {
+    this.refuseOnDemo();
+    // Le nom vient de l'URL : il ne doit pas pouvoir remonter hors du dossier.
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/.test(name)) {
+      throw new BadRequestException('store.invalid_id');
+    }
+    const bytes = await readFile(join(this.dir, this.safeId(id), 'media', name)).catch(() => null);
+    if (!bytes) throw new NotFoundException('store.entry_not_found');
+    return bytes;
   }
 
   /**

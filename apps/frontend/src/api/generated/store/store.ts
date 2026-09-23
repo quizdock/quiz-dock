@@ -27,7 +27,8 @@ import type {
 import type {
   QuizDto,
   ShareTemplateDto,
-  StoreEntryDto
+  StoreEntryDto,
+  StorePreviewDto
 } from '../model';
 
 import { customFetch } from '../../http';
@@ -218,32 +219,32 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getStoreControllerShareMutationOptions(options), queryClient);
     }
-    export type storeControllerTakeResponse200 = {
-  data: QuizDto
+    export type storeControllerPreviewResponse200 = {
+  data: StorePreviewDto
   status: 200
 }
 
-export type storeControllerTakeResponseSuccess = (storeControllerTakeResponse200) & {
+export type storeControllerPreviewResponseSuccess = (storeControllerPreviewResponse200) & {
   headers: Headers;
 };
 ;
 
-export type storeControllerTakeResponse = (storeControllerTakeResponseSuccess)
+export type storeControllerPreviewResponse = (storeControllerPreviewResponseSuccess)
 
-export const getStoreControllerTakeUrl = (id: string,) => {
-
-
+export const getStoreControllerPreviewUrl = (id: string,) => {
 
 
-  return `/api/v1/store/${id}/take`
+
+
+  return `/api/v1/store/${id}`
 }
 
-export const storeControllerTake = async (id: string, options?: RequestInit): Promise<storeControllerTakeResponse> => {
+export const storeControllerPreview = async (id: string, options?: RequestInit): Promise<storeControllerPreviewResponse> => {
 
-  return customFetch<storeControllerTakeResponse>(getStoreControllerTakeUrl(id),
+  return customFetch<storeControllerPreviewResponse>(getStoreControllerPreviewUrl(id),
   {
     ...options,
-    method: 'POST'
+    method: 'GET'
 
 
   }
@@ -252,48 +253,79 @@ export const storeControllerTake = async (id: string, options?: RequestInit): Pr
 
 
 
-export const getStoreControllerTakeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerTake>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof storeControllerTake>>, TError,{id: string}, TContext> => {
 
-const mutationKey = ['storeControllerTake'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storeControllerTake>>, {id: string}> = (props) => {
-          const {id} = props ?? {};
-
-          return  storeControllerTake(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type StoreControllerTakeMutationResult = NonNullable<Awaited<ReturnType<typeof storeControllerTake>>>
-
-    export type StoreControllerTakeMutationError = unknown
-
-    export const useStoreControllerTake = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerTake>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof storeControllerTake>>,
-        TError,
-        {id: string},
-        TContext
-      > => {
-      return useMutation(getStoreControllerTakeMutationOptions(options), queryClient);
+export const getStoreControllerPreviewQueryKey = (id: string,) => {
+    return [
+    `/api/v1/store/${id}`
+    ] as const;
     }
-    export type storeControllerWithdrawResponse200 = {
+
+
+export const getStoreControllerPreviewQueryOptions = <TData = Awaited<ReturnType<typeof storeControllerPreview>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStoreControllerPreviewQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storeControllerPreview>>> = ({ signal }) => storeControllerPreview(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storeControllerPreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StoreControllerPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof storeControllerPreview>>>
+export type StoreControllerPreviewQueryError = unknown
+
+
+export function useStoreControllerPreview<TData = Awaited<ReturnType<typeof storeControllerPreview>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerPreview>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storeControllerPreview>>,
+          TError,
+          Awaited<ReturnType<typeof storeControllerPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStoreControllerPreview<TData = Awaited<ReturnType<typeof storeControllerPreview>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerPreview>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storeControllerPreview>>,
+          TError,
+          Awaited<ReturnType<typeof storeControllerPreview>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStoreControllerPreview<TData = Awaited<ReturnType<typeof storeControllerPreview>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useStoreControllerPreview<TData = Awaited<ReturnType<typeof storeControllerPreview>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStoreControllerPreviewQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type storeControllerWithdrawResponse200 = {
   data: void
   status: 200
 }
@@ -367,4 +399,193 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getStoreControllerWithdrawMutationOptions(options), queryClient);
+    }
+    export type storeControllerMediaResponse200 = {
+  data: void
+  status: 200
+}
+
+export type storeControllerMediaResponseSuccess = (storeControllerMediaResponse200) & {
+  headers: Headers;
+};
+;
+
+export type storeControllerMediaResponse = (storeControllerMediaResponseSuccess)
+
+export const getStoreControllerMediaUrl = (id: string,
+    name: string,) => {
+
+
+
+
+  return `/api/v1/store/${id}/media/${name}`
+}
+
+export const storeControllerMedia = async (id: string,
+    name: string, options?: RequestInit): Promise<storeControllerMediaResponse> => {
+
+  return customFetch<storeControllerMediaResponse>(getStoreControllerMediaUrl(id,name),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getStoreControllerMediaQueryKey = (id: string,
+    name: string,) => {
+    return [
+    `/api/v1/store/${id}/media/${name}`
+    ] as const;
+    }
+
+
+export const getStoreControllerMediaQueryOptions = <TData = Awaited<ReturnType<typeof storeControllerMedia>>, TError = unknown>(id: string,
+    name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getStoreControllerMediaQueryKey(id,name);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storeControllerMedia>>> = ({ signal }) => storeControllerMedia(id,name, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && name !== null && name !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storeControllerMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StoreControllerMediaQueryResult = NonNullable<Awaited<ReturnType<typeof storeControllerMedia>>>
+export type StoreControllerMediaQueryError = unknown
+
+
+export function useStoreControllerMedia<TData = Awaited<ReturnType<typeof storeControllerMedia>>, TError = unknown>(
+ id: string,
+    name: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storeControllerMedia>>,
+          TError,
+          Awaited<ReturnType<typeof storeControllerMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStoreControllerMedia<TData = Awaited<ReturnType<typeof storeControllerMedia>>, TError = unknown>(
+ id: string,
+    name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof storeControllerMedia>>,
+          TError,
+          Awaited<ReturnType<typeof storeControllerMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStoreControllerMedia<TData = Awaited<ReturnType<typeof storeControllerMedia>>, TError = unknown>(
+ id: string,
+    name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useStoreControllerMedia<TData = Awaited<ReturnType<typeof storeControllerMedia>>, TError = unknown>(
+ id: string,
+    name: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof storeControllerMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getStoreControllerMediaQueryOptions(id,name,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type storeControllerTakeResponse200 = {
+  data: QuizDto
+  status: 200
+}
+
+export type storeControllerTakeResponseSuccess = (storeControllerTakeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type storeControllerTakeResponse = (storeControllerTakeResponseSuccess)
+
+export const getStoreControllerTakeUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/store/${id}/take`
+}
+
+export const storeControllerTake = async (id: string, options?: RequestInit): Promise<storeControllerTakeResponse> => {
+
+  return customFetch<storeControllerTakeResponse>(getStoreControllerTakeUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getStoreControllerTakeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerTake>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof storeControllerTake>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['storeControllerTake'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof storeControllerTake>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  storeControllerTake(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StoreControllerTakeMutationResult = NonNullable<Awaited<ReturnType<typeof storeControllerTake>>>
+
+    export type StoreControllerTakeMutationError = unknown
+
+    export const useStoreControllerTake = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof storeControllerTake>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof storeControllerTake>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getStoreControllerTakeMutationOptions(options), queryClient);
     }

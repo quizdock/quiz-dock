@@ -5,23 +5,19 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
-import type { StoreEntryDtoAuthor } from './storeEntryDtoAuthor';
+import type { StorePreviewDtoAuthor } from './storePreviewDtoAuthor';
+import type { StorePreviewDtoItemsItem } from './storePreviewDtoItemsItem';
 
-export interface StoreEntryDto {
+export interface StorePreviewDto {
   id: string;
   title: string;
   /** @nullable */
   description: string | null;
   language: string;
   tags: string[];
-  /**
-     * @minimum -9007199254740991
-     * @maximum 9007199254740991
-     */
-  questionCount: number;
   /** @nullable */
   license: string | null;
-  author: StoreEntryDtoAuthor;
+  author: StorePreviewDtoAuthor;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -30,4 +26,15 @@ export interface StoreEntryDto {
   sharedAt: string;
   /** @nullable */
   coverUrl: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  questionCount: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  slideCount: number;
+  items: StorePreviewDtoItemsItem[];
 }

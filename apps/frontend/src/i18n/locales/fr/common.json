@@ -43,7 +43,8 @@
     "join": "Rejoindre",
     "live": "Sessions en direct",
     "templates": "Modèles",
-    "profile": "Mon compte"
+    "profile": "Mon compte",
+    "template": "Modèle"
   },
   "demo": {
     "banner": "Démo publique — tout est effacé toutes les heures ; le siège d'hôte dure {{count}} min à la fois."

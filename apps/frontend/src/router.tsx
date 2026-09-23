@@ -13,6 +13,7 @@ import { ScreenPage } from './routes/screen-page';
 import { SessionDetailPage, SessionPlayerPage, SessionsPage } from './routes/sessions-page';
 import { LivePage } from './routes/live-page';
 import { ProfilePage } from './routes/profile-page';
+import { TemplatePage } from './routes/template-page';
 import { TemplatesPage } from './routes/templates-page';
 import { FeedbackPage } from './routes/feedback-page';
 import { RootLayout } from './routes/root-layout';
@@ -79,6 +80,14 @@ export const liveRoute = createRoute({
   path: '/live',
   beforeLoad: requireAuth,
   component: LivePage,
+});
+
+/** Un modèle du catalogue : son aperçu, et ce qu'on peut en faire. */
+export const templateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/templates/$templateId',
+  beforeLoad: requireAuth,
+  component: TemplatePage,
 });
 
 /** The catalogue of templates shared on this instance (#39). */
@@ -231,6 +240,7 @@ export const routeTree = rootRoute.addChildren([
   callbackRoute,
   dashboardRoute,
   templatesRoute,
+  templateRoute,
   liveRoute,
   profileRoute,
   editorRoute,
