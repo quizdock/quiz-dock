@@ -435,34 +435,19 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 </div>
               )}
             </form.Field>
-            {/* À droite de la description, ce qu'on règle en écrivant : les avis
-              reçus et l'archivage. Ils tenaient derrière un bouton « Réglages »
-              qui ne disait pas ce qu'il cachait. */}
-            <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
-              <Section className="min-w-72 flex-1">
-                {/* L'état des avis se lit à côté de l'interrupteur, pas dessous :
-                    c'est une ligne, elle n'a pas à en coûter deux. */}
-                <div className="flex items-start gap-x-4">
-                  <label className="flex min-w-0 flex-1 items-start gap-2 text-sm">
-                    <Switch
-                      className="mt-0.5"
-                      checked={quiz.feedbackEnabled}
-                      disabled={update.isPending}
-                      onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
-                      aria-label={t('feedback.enableLabel')}
-                    />
-                    <span>
-                      <span className="font-medium">{t('feedback.enableLabel')}</span>
-                      <span className="text-muted-foreground block text-xs leading-snug">
-                        {t('feedback.enableHelp')}
-                      </span>
-                    </span>
-                  </label>
-                  <FeedbackSection quizId={quiz.id} className="min-w-0 flex-1 text-xs" />
-                </div>
-              </Section>
+            {/* À droite de la description, ce qu'on règle en écrivant. Empilé, la
+                colonne est inversée : l'archivage passe au-dessus des avis sans
+                qu'aucun `order` n'intervienne. La bascule dépend de la largeur de
+                **cette zone**, pas de la fenêtre — la cellule est bien plus étroite
+                que l'écran. */}
+            {/* Deux cases : les avis, et l'archivage à leur droite, plus étroit.
+                L'archivage vient en premier dans le document — empilé sur un petit
+                écran il est donc au-dessus — et la grille le replace en colonne 2,
+                même rangée, dès qu'il y a la place. Pas d'`order` : la grille dit
+                où va quoi. */}
+            <div className="grid gap-x-6 gap-y-4 sm:grid-cols-[minmax(0,1fr)_11rem]">
               {quiz.status !== 'archived' ? (
-                <Section className="ml-auto max-w-64 items-end text-right">
+                <Section className="items-end py-1 text-right sm:col-start-2 sm:row-start-1">
                   <p className="text-muted-foreground text-xs leading-snug">
                     {t('broadcast.archiveHelp')}
                   </p>
@@ -478,6 +463,30 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   </Button>
                 </Section>
               ) : null}
+              <Section className="bg-muted/30 @container min-w-0 rounded-lg border p-3 sm:col-start-1 sm:row-start-1">
+                {/* L'état des avis se lit à côté de l'interrupteur quand la carte a
+                    de quoi : une ligne n'a pas à en coûter deux. À l'étroit il passe
+                    dessous. C'est la largeur de **la carte** qui décide, pas celle de
+                    la fenêtre — d'où le conteneur. */}
+                <div className="flex flex-col gap-x-4 gap-y-3 @md:flex-row @md:items-start">
+                  <label className="flex min-w-0 items-start gap-2 text-sm @md:flex-1">
+                    <Switch
+                      className="mt-0.5"
+                      checked={quiz.feedbackEnabled}
+                      disabled={update.isPending}
+                      onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
+                      aria-label={t('feedback.enableLabel')}
+                    />
+                    <span>
+                      <span className="font-medium">{t('feedback.enableLabel')}</span>
+                      <span className="text-muted-foreground block text-xs leading-snug">
+                        {t('feedback.enableHelp')}
+                      </span>
+                    </span>
+                  </label>
+                  <FeedbackSection quizId={quiz.id} className="min-w-0 text-xs @md:flex-1" />
+                </div>
+              </Section>
             </div>
           </div>
           {quizDraft && isDirty ? (
