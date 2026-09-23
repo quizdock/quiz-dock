@@ -1,7 +1,7 @@
 import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { networkInterfaces } from 'node:os';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import type { User } from '@prisma/client';
+import { type User, UserRole } from '@prisma/client';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ActiveGameDto } from './dto/active-game.dto';
 import { JoinAddressesDto } from './dto/join-addresses.dto';
@@ -23,11 +23,17 @@ export class GameController {
     private readonly engine: GameEngine,
   ) {}
 
-  /** Parties encore vivantes de l'hôte courant (index Redis auto-nettoyé). */
+  /**
+   * Parties encore vivantes (index Redis auto-nettoyé) : **les siennes** pour un
+   * hôte, **celles de l'instance** pour un `admin`, qui est le seul à avoir la
+   * vue d'ensemble (RG-14). Les entrées disent alors de quel hôte elles sont.
+   */
   @Get('mine')
   @ApiOkResponse({ type: ActiveGameDto, isArray: true })
   mine(@CurrentUser() user: User): Promise<ActiveGameDto[]> {
-    return this.games.listActiveHostGames(user.id);
+    return user.role === UserRole.admin
+      ? this.games.listAllActiveGames()
+      : this.games.listActiveHostGames(user.id);
   }
 
   /**

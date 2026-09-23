@@ -1,17 +1,22 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Pencil, Play, Plus, Radio, Sparkles, Square, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Pencil,
+  Play,
+  Plus,
+  Search,
+  Sparkles,
+  Upload,
+} from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { useLaunchSession } from '../game/use-launch-session';
-import {
-  getGameControllerMineQueryKey,
-  useGameControllerEnd,
-  useGameControllerMine,
-} from '../api/generated/games/games';
 import {
   getQuizzesControllerListQueryKey,
   useQuizzesControllerCreate,
@@ -20,6 +25,9 @@ import {
   useQuizzesControllerList,
 } from '../api/generated/quizzes/quizzes';
 import { ApiError, apiErrorText } from '../api/http';
+
+/** Rows per page: enough to scan, short enough to stay on one screen. */
+const PAGE_SIZE = 20;
 
 const STATUS_VARIANT: Record<string, 'default' | 'success' | 'muted'> = {
   draft: 'default',
@@ -37,25 +45,37 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
   const { launch, isLaunching, error: launchError } = useLaunchSession();
-  const { data: gamesData } = useGameControllerMine();
-  const endGame = useGameControllerEnd();
-  const [endPin, setEndPin] = useState<string | null>(null);
-  const quizzes = data?.data ?? [];
-  const activeGames = gamesData?.data ?? [];
-  // Live sessions per quiz, for the badge on each card.
-  const runningByQuiz = activeGames.reduce<Record<string, number>>((acc, g) => {
-    acc[g.quizId] = (acc[g.quizId] ?? 0) + 1;
-    return acc;
-  }, {});
+  // Stable entre deux rendus : le `?? []` fabriquerait un tableau neuf à chaque fois,
+  // et le tri/filtre ci-dessous se recalculerait pour rien.
+  const quizzes = useMemo(() => data?.data ?? [], [data]);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<'all' | 'draft' | 'ready' | 'archived'>('all');
+  const [sort, setSort] = useState<'recent' | 'title' | 'questions'>('recent');
+  const [page, setPage] = useState(1);
 
-  const onEndGame = (pin: string) => {
-    endGame.mutate(
-      { pin },
-      {
-        onSuccess: () =>
-          queryClient.invalidateQueries({ queryKey: getGameControllerMineQueryKey() }),
-      },
+  // A bank grows past what one screen holds: filter first, then sort, then cut
+  // into pages. All three are client-side — the API returns the caller's quizzes,
+  // which stays reasonable at this scale.
+  const shown = useMemo(() => {
+    const needle = fold(search);
+    const kept = quizzes.filter(
+      (q) =>
+        (status === 'all' || q.status === status) && (!needle || fold(q.title).includes(needle)),
     );
+    const sorted = [...kept];
+    if (sort === 'title') sorted.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sort === 'questions') sorted.sort((a, b) => b.questionCount - a.questionCount);
+    else sorted.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    return sorted;
+  }, [quizzes, search, status, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+  // Filtering can leave the current page behind the end of the list.
+  const current = Math.min(page, pageCount);
+  const visible = shown.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+  const narrow = (next: () => void) => {
+    next();
+    setPage(1);
   };
 
   // Le backend refuse (403) quand l'identité n'a pas le rôle hôte : en mode local,
@@ -131,57 +151,6 @@ export function DashboardPage() {
         </p>
       ) : null}
 
-      {activeGames.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-4">
-          <h2 className="flex items-center gap-2 font-semibold">
-            <Radio className="size-4 text-primary" />
-            {t('activeSessions')}
-          </h2>
-          <ul className="flex flex-col gap-2">
-            {activeGames.map((game) => (
-              <li
-                key={game.pin}
-                className="flex items-center gap-4 rounded-md bg-background px-3 py-2"
-              >
-                <span className="flex-1 font-medium">{game.title}</span>
-                <span className="font-mono tracking-widest">{game.pin}</span>
-                <span className="text-sm text-muted-foreground">
-                  {t('playerCount', { count: game.playerCount })}
-                </span>
-                <Link to="/session/$pin/console" params={{ pin: game.pin }}>
-                  <Button type="button" size="sm" variant="outline">
-                    {t('resume')}
-                  </Button>
-                </Link>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  disabled={endGame.isPending}
-                  onClick={() => setEndPin(game.pin)}
-                >
-                  <Square className="size-4" />
-                  {t('stop')}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <ConfirmDialog
-        open={endPin !== null}
-        destructive
-        title={t('stopConfirmTitle')}
-        description={t('stopConfirmDescription')}
-        confirmLabel={t('stopConfirmLabel')}
-        onCancel={() => setEndPin(null)}
-        onConfirm={() => {
-          if (endPin) onEndGame(endPin);
-          setEndPin(null);
-        }}
-      />
-
       {isLoading && <p className="text-muted-foreground">{t('common:loading')}</p>}
       {error ? (
         <p className="text-destructive" role="alert">
@@ -211,52 +180,135 @@ export function DashboardPage() {
         </div>
       )}
 
+      {!isLoading && !error && quizzes.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="relative min-w-[12rem] flex-1">
+              <span className="sr-only">{t('search')}</span>
+              <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+              <Input
+                value={search}
+                onChange={(e) => narrow(() => setSearch(e.target.value))}
+                placeholder={t('search')}
+                className="pl-8"
+              />
+            </label>
+            <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+              {t('filterStatus')}
+              <Select
+                value={status}
+                onChange={(e) => narrow(() => setStatus(e.target.value as typeof status))}
+              >
+                <option value="all">{t('statusAll')}</option>
+                <option value="draft">{t('common:quizStatus.draft')}</option>
+                <option value="ready">{t('common:quizStatus.ready')}</option>
+                <option value="archived">{t('common:quizStatus.archived')}</option>
+              </Select>
+            </label>
+            <label className="text-muted-foreground flex flex-col gap-1 text-xs">
+              {t('sortBy')}
+              <Select
+                value={sort}
+                onChange={(e) => narrow(() => setSort(e.target.value as typeof sort))}
+              >
+                <option value="recent">{t('sortRecent')}</option>
+                <option value="title">{t('sortTitle')}</option>
+                <option value="questions">{t('sortQuestions')}</option>
+              </Select>
+            </label>
+          </div>
+          <p className="text-muted-foreground text-sm" role="status">
+            {t('matchCount', { count: shown.length })}
+          </p>
+        </div>
+      ) : null}
+
+      {!isLoading && !error && quizzes.length > 0 && shown.length === 0 ? (
+        <p className="text-muted-foreground rounded-lg border border-dashed p-6">{t('noMatch')}</p>
+      ) : null}
+
       <ul className="flex flex-col gap-2">
-        {quizzes.map((quiz) => (
+        {visible.map((quiz) => (
           <li
             key={quiz.id}
-            className="flex items-center gap-4 rounded-lg border p-4 transition-colors hover:bg-accent"
+            className="hover:bg-accent flex flex-col gap-3 rounded-lg border p-4 transition-colors sm:flex-row sm:items-center sm:gap-4"
           >
+            {/* Le titre peut être long : il tronque au lieu de pousser les actions hors écran. */}
             <Link
               to="/quizzes/$quizId"
               params={{ quizId: quiz.id }}
-              className="flex-1 font-semibold"
+              className="min-w-0 flex-1 truncate font-semibold"
             >
               {quiz.title}
             </Link>
-            <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
-              {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
-            </Badge>
-            {runningByQuiz[quiz.id] ? (
-              <Badge variant="success" className="gap-1">
-                <Radio className="size-3" />
-                {t('running', { count: runningByQuiz[quiz.id] })}
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
+                {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
               </Badge>
-            ) : null}
-            <span className="text-sm text-muted-foreground">
-              {t('questionCount', { count: quiz.questionCount })}
+              <span className="text-muted-foreground text-sm">
+                {t('questionCount', { count: quiz.questionCount })}
+              </span>
             </span>
-            <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }}>
-              <Button type="button" size="sm" variant="outline">
-                <Pencil className="size-4" />
-                {t('edit')}
-              </Button>
-            </Link>
-            {quiz.status === 'ready' && (
-              <Button
-                type="button"
-                size="sm"
-                variant="main-action"
-                disabled={isLaunching}
-                onClick={() => void launch(quiz.id)}
-              >
-                <Play className="size-4" />
-                {t('present')}
-              </Button>
-            )}
+            <span className="flex flex-wrap gap-2">
+              <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }}>
+                <Button type="button" size="sm" variant="outline">
+                  <Pencil className="size-4" />
+                  {t('edit')}
+                </Button>
+              </Link>
+              {quiz.status === 'ready' && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="main-action"
+                  disabled={isLaunching}
+                  onClick={() => void launch(quiz.id)}
+                >
+                  <Play className="size-4" />
+                  {t('present')}
+                </Button>
+              )}
+            </span>
           </li>
         ))}
       </ul>
+
+      {pageCount > 1 ? (
+        <nav className="flex items-center justify-center gap-3" aria-label={t('pagination')}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={current <= 1}
+            onClick={() => setPage(current - 1)}
+          >
+            <ChevronLeft className="size-4" />
+            {t('previous')}
+          </Button>
+          <span className="text-muted-foreground text-sm tabular-nums">
+            {t('pageOf', { page: current, pages: pageCount })}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={current >= pageCount}
+            onClick={() => setPage(current + 1)}
+          >
+            {t('next')}
+            <ChevronRight className="size-4" />
+          </Button>
+        </nav>
+      ) : null}
     </section>
   );
+}
+
+/** Accent- and case-insensitive, so « Été » is found by typing « ete ». */
+function fold(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 }

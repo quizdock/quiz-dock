@@ -2,6 +2,7 @@ import { Link, Outlet, useMatches, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BrandLogo } from '@/components/brand-logo';
+import { LiveSessions } from '@/components/live-sessions';
 import { SeatCountdown, SeatMenuRow } from '@/components/seat-status';
 import { UserMenu } from '@/components/user-menu';
 import { useAuth } from '../auth/auth-context';
@@ -79,6 +80,9 @@ export function RootLayout() {
               <Link to="/templates" className="whitespace-nowrap hover:underline">
                 {t('nav.templates')}
               </Link>
+              {/* Les sessions en cours suivent l'hôte partout : ce ne sont pas des
+                  quiz, et on n'en oublie pas une ouverte en changeant de page. */}
+              <LiveSessions />
               {/* A seat countdown stays in plain sight; renewal and log out live in the user menu. */}
               {mode === 'none' ? <SeatCountdown user={user} /> : null}
               <UserMenu

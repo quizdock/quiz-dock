@@ -30,27 +30,6 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('Histoire')).toBeInTheDocument();
   });
 
-  it('shows how many sessions of a quiz are running (badge on the card)', async () => {
-    mockApi([
-      {
-        method: 'GET',
-        path: '/games/mine',
-        body: [
-          { pin: '111111', quizId: 'q1', title: 'Histoire', state: 'LOBBY', playerCount: 0 },
-          { pin: '222222', quizId: 'q1', title: 'Histoire', state: 'ANSWERING', playerCount: 3 },
-        ],
-      },
-      {
-        method: 'GET',
-        path: '/quizzes',
-        body: [quiz({ id: 'q1' }), quiz({ id: 'q2', title: 'Géo' })],
-      },
-    ]);
-    renderApp('/quizzes');
-    expect(await screen.findByText('2 sessions en cours')).toBeInTheDocument();
-    expect(screen.queryByText(/1 session en cours/)).toBeNull();
-  });
-
   it('affiche un état vide sans quiz', async () => {
     mockApi([{ method: 'GET', path: '/quizzes', body: [] }]);
     renderApp('/quizzes');
@@ -118,26 +97,53 @@ describe('DashboardPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('media/a.png');
   });
 
-  it('arrête une session en cours depuis la liste (confirmation → POST end)', async () => {
-    const fetchMock = mockApi([
-      { method: 'GET', path: '/quizzes', body: [] },
-      {
-        method: 'GET',
-        path: '/games/mine',
-        body: [{ pin: '482913', title: 'Histoire', state: 'LOBBY', playerCount: 2 }],
-      },
-      { method: 'POST', path: '/games/482913/end', status: 204, body: {} },
-    ]);
+  it('filtre, trie et pagine une banque qui dépasse un écran', async () => {
+    // 25 quiz : au-delà d'une page (20), de quoi exercer les trois contrôles.
+    const many = Array.from({ length: 25 }, (_, i) =>
+      quiz({
+        id: `q${i}`,
+        title: `Quiz ${String(i).padStart(2, '0')}`,
+        status: i === 0 ? 'ready' : 'draft',
+        questionCount: i,
+        updatedAt: `2026-01-${String((i % 28) + 1).padStart(2, '0')}T00:00:00.000Z`,
+      }),
+    );
+    mockApi([{ method: 'GET', path: '/quizzes', body: many }]);
     renderApp('/quizzes');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter la session' }));
+    expect(await screen.findByText('25 quiz')).toBeInTheDocument();
+    expect(screen.getByText('Page 1 sur 2')).toBeInTheDocument();
 
-    await waitFor(() => {
-      const posted = fetchMock.mock.calls.some(
-        ([url, opts]) => String(url).includes('/games/482913/end') && opts?.method === 'POST',
-      );
-      expect(posted).toBe(true);
+    // Filtre par statut : un seul quiz est « prêt ».
+    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: 'ready' } });
+    await waitFor(() => expect(screen.getByText('1 quiz')).toBeInTheDocument());
+    expect(screen.queryByText('Page 1 sur 2')).toBeNull();
+
+    // Recherche : insensible à la casse et aux accents, et elle ramène à la page 1.
+    fireEvent.change(screen.getByLabelText('Statut'), { target: { value: 'all' } });
+    fireEvent.change(screen.getByPlaceholderText('Rechercher un quiz'), {
+      target: { value: 'quiz 1' },
     });
+    await waitFor(() => expect(screen.getByText('10 quiz')).toBeInTheDocument());
+
+    // Aucun résultat : on le dit, au lieu d'une liste vide sans explication.
+    fireEvent.change(screen.getByPlaceholderText('Rechercher un quiz'), {
+      target: { value: 'introuvable' },
+    });
+    expect(await screen.findByText(/Aucun quiz ne correspond/)).toBeInTheDocument();
+  });
+
+  it('tourne les pages sans perdre le filtre', async () => {
+    const many = Array.from({ length: 25 }, (_, i) =>
+      quiz({ id: `q${i}`, title: `Quiz ${String(i).padStart(2, '0')}` }),
+    );
+    mockApi([{ method: 'GET', path: '/quizzes', body: many }]);
+    renderApp('/quizzes');
+
+    expect(await screen.findByText('Quiz 00')).toBeInTheDocument();
+    expect(screen.queryByText('Quiz 24')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Suivant/ }));
+    expect(await screen.findByText('Quiz 24')).toBeInTheDocument();
+    expect(screen.getByText('Page 2 sur 2')).toBeInTheDocument();
   });
 });

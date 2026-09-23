@@ -16,4 +16,5 @@ export interface ActiveGameDto {
      * @maximum 9007199254740991
      */
   playerCount: number;
+  host?: string;
 }

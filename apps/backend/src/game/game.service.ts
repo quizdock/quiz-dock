@@ -43,13 +43,17 @@ export interface JoinSessionResult {
  * gère pas le transport : il est appelé par le gateway (`host:create`,
  * `player:join`) et renvoie des données ; la diffusion socket reste au gateway.
  */
-/** A host's running game, as listed on the dashboard (§6.2). */
+/**
+ * A running game, as the interface lists it (§6.2). `host` is filled only for the
+ * instance-wide view an `admin` gets: a host listing their own needs no name.
+ */
 type ActiveGame = {
   pin: string;
   quizId: string;
   title: string;
   state: string;
   playerCount: number;
+  host?: string;
 };
 
 @Injectable()
@@ -370,6 +374,27 @@ export class GameService {
         state: meta.state,
         playerCount: await this.connectedCount(pin),
       });
+    }
+    return games;
+  }
+
+  /**
+   * Toutes les parties vivantes de l'instance, avec le nom de leur hôte — vue
+   * d'ensemble réservée à l'`admin` (RG-14). Parcourt les index par hôte
+   * (`host:{id}:games`) : un hôte voit les siennes, l'administrateur voit tout.
+   */
+  async listAllActiveGames(): Promise<ActiveGame[]> {
+    const keys = await this.redis.keys(gameKeys.hostGames('*'));
+    const games: ActiveGame[] = [];
+    for (const key of keys) {
+      const hostUserId = key.split(':')[1];
+      const host = await this.prisma.user.findUnique({
+        where: { id: hostUserId },
+        select: { displayName: true },
+      });
+      for (const game of await this.listActiveHostGames(hostUserId)) {
+        games.push({ ...game, host: host?.displayName ?? hostUserId });
+      }
     }
     return games;
   }
