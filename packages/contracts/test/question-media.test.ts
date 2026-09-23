@@ -67,6 +67,11 @@ describe('playbackGainDb', () => {
     expect(playbackGainDb(-30, -4)).toBe(3);
   });
 
+  it('follows the quiz’s level: loud, balanced or calm', () => {
+    expect(playbackGainDb(-20, -10, -14)).toBe(6);
+    expect(playbackGainDb(-20, -10, -23)).toBe(-3);
+  });
+
   it('leaves an unmeasured sound alone', () => {
     expect(playbackGainDb(null, null)).toBe(0);
   });

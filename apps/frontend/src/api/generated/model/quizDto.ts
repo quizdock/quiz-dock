@@ -27,6 +27,11 @@ export interface QuizDto {
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
+  loudnessTargetLufs: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
   questionCount: number;
   ownerName?: string;
   createdAt: string;

@@ -65,7 +65,7 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
         orderIndex: q.orderIndex,
         type: q.type as QuestionType,
         prompt: q.prompt,
-        media: liveMediaOf(q),
+        media: liveMediaOf(q, quiz.loudnessTargetLufs),
         answerExplanation: q.answerExplanation ?? null,
         background: q.backgroundMedia
           ? { url: q.backgroundMedia.url }

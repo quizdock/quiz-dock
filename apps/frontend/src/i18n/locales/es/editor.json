@@ -26,7 +26,14 @@
     "save": "Guardar",
     "mediaTailLabel": "Pausa tras un medio",
     "mediaTailHelp": "Cuando el sonido o el vídeo de una pregunta dura más que su cronómetro, la pregunta se alarga hasta el final del medio más esta pausa: nada se corta a mitad.",
-    "seconds": "s"
+    "seconds": "s",
+    "loudnessLabel": "Nivelación del sonido",
+    "loudnessHelp": "Nivel al que se lleva cada sonido y cada vídeo del quiz al reproducirse, para que el volumen no cambie de una pregunta a otra. Los archivos no se modifican.",
+    "loudness": {
+      "14": "Fuerte (−14 LUFS, streaming)",
+      "16": "Equilibrado (−16 LUFS)",
+      "23": "Suave (−23 LUFS, televisión)"
+    }
   },
   "broadcast": {
     "title": "Difusión",

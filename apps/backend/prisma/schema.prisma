@@ -174,38 +174,40 @@ model HostSeat {
 
 /// §2.2 — quiz (banque privée du animateur).
 model Quiz {
-  id              String         @id @default(ulid()) @db.Char(26)
-  ownerId         String         @map("owner_id") @db.Char(26)
-  title           String
-  description     String?
-  coverMediaId    String?        @map("cover_media_id") @db.Char(26)
-  status          QuizStatus     @default(draft)
-  visibility      QuizVisibility @default(private)
-  language        String         @default("fr")
-  questionCount   Int            @default(0) @map("question_count")
+  id                 String         @id @default(ulid()) @db.Char(26)
+  ownerId            String         @map("owner_id") @db.Char(26)
+  title              String
+  description        String?
+  coverMediaId       String?        @map("cover_media_id") @db.Char(26)
+  status             QuizStatus     @default(draft)
+  visibility         QuizVisibility @default(private)
+  language           String         @default("fr")
+  questionCount      Int            @default(0) @map("question_count")
   /// Quiz Store identity (docs/quiz-bundle.md): kebab-case, taken from an imported bundle or set at first export.
-  slug            String?
+  slug               String?
   /// `<username>/<slug>` once submitted to a Quiz Store; null for a quiz that never left this instance.
-  namespace       String?
+  namespace          String?
   /// Publication counter: bumped every time the quiz is shared to the template
   /// catalogue (#39), carried over by import. An export does not move it.
-  revision        Int            @default(0)
+  revision           Int            @default(0)
   /// ULID of the template this quiz is shared as, minted at the first share and
   /// never rewritten — withdrawing the entry and sharing again keeps the same
   /// template for everyone holding a copy (RG-17). Null when never shared, and
   /// on an imported copy: a copy carries nothing of its origin.
-  publicationId   String?        @map("publication_id") @db.Char(26)
-  domain          String?
-  tags            String[]       @default([])
-  license         String?
+  publicationId      String?        @map("publication_id") @db.Char(26)
+  domain             String?
+  tags               String[]       @default([])
+  license            String?
   /// Players may rate the quiz at the end of a session (§2.11); off = no panel, `player:rate` refused.
-  feedbackEnabled Boolean        @default(true) @map("feedback_enabled")
+  feedbackEnabled    Boolean        @default(true) @map("feedback_enabled")
   /// Pause kept after a question's sound or video before its time can run out (s, 0–30):
   /// a question whose media outlasts its timer is stretched, never cut mid-play.
-  mediaTailS      Int            @default(3) @map("media_tail_s")
-  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-  archivedAt      DateTime?      @map("archived_at") @db.Timestamptz(6)
+  mediaTailS         Int            @default(3) @map("media_tail_s")
+  /// Level every sound and video is brought to at playback (LUFS): -14 loud, -16 balanced, -23 calm.
+  loudnessTargetLufs Int            @default(-16) @map("loudness_target_lufs")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  archivedAt         DateTime?      @map("archived_at") @db.Timestamptz(6)
 
   owner       User             @relation(fields: [ownerId], references: [id])
   coverMedia  MediaAsset?      @relation("QuizCover", fields: [coverMediaId], references: [id])

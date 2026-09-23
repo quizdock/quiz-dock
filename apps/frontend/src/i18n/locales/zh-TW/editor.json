@@ -26,7 +26,14 @@
     "save": "儲存",
     "mediaTailLabel": "媒體播放後的停頓",
     "mediaTailHelp": "當題目的聲音或影片比計時更長時，題目時間會延長到媒體結束再加上此停頓：播放不會被中途打斷。",
-    "seconds": "秒"
+    "seconds": "秒",
+    "loudnessLabel": "聲音均衡",
+    "loudnessHelp": "播放時將測驗中每個聲音與影片調整到的響度，讓各題之間音量一致。檔案本身不會被修改。",
+    "loudness": {
+      "14": "響亮（−14 LUFS，串流）",
+      "16": "均衡（−16 LUFS）",
+      "23": "柔和（−23 LUFS，電視廣播）"
+    }
   },
   "broadcast": {
     "title": "廣播",

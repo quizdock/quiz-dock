@@ -26,7 +26,14 @@
     "save": "Save",
     "mediaTailLabel": "Pause after a media",
     "mediaTailHelp": "When a question’s sound or video lasts longer than its timer, the question is stretched to the end of the media plus this pause: nothing is cut mid-play.",
-    "seconds": "s"
+    "seconds": "s",
+    "loudnessLabel": "Sound levelling",
+    "loudnessHelp": "The level every sound and video of the quiz is brought to at playback, so the volume stays the same from one question to the next. The files are not changed.",
+    "loudness": {
+      "14": "Loud (−14 LUFS, streaming)",
+      "16": "Balanced (−16 LUFS)",
+      "23": "Calm (−23 LUFS, broadcast)"
+    }
   },
   "broadcast": {
     "title": "Broadcast",

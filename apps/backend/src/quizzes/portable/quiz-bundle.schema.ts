@@ -121,6 +121,8 @@ export const quizBundleSchema = z.object({
     feedbackEnabled: z.boolean().optional(),
     /** Pause after a question's media before its time can run out (s, version 3). */
     mediaTailS: z.number().int().min(0).max(30).optional(),
+    /** Playback level, LUFS: -14 loud, -16 balanced, -23 calm (version 3). */
+    loudnessTargetLufs: z.union([z.literal(-14), z.literal(-16), z.literal(-23)]).optional(),
     cover: mediaPathSchema.nullable().optional(),
     ...storeBundleFields,
   }),

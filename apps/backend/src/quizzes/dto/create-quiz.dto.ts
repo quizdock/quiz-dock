@@ -9,6 +9,7 @@ export const createQuizSchema = z.object({
   language: z.string().trim().min(2).max(5).default('fr'),
   feedbackEnabled: z.boolean().optional(),
   mediaTailS: z.number().int().min(0).max(MEDIA_TAIL_MAX_S).optional(),
+  loudnessTargetLufs: z.union([z.literal(-14), z.literal(-16), z.literal(-23)]).optional(),
   coverMediaId: z.string().length(26).optional(),
 });
 

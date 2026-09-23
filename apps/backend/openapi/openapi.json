@@ -1665,6 +1665,11 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "loudnessTargetLufs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "questionCount": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -1694,6 +1699,7 @@
           "language",
           "feedbackEnabled",
           "mediaTailS",
+          "loudnessTargetLufs",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -1725,6 +1731,28 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 30
+          },
+          "loudnessTargetLufs": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  -14
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  -16
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  -23
+                ]
+              }
+            ]
           },
           "coverMediaId": {
             "type": "string",
@@ -1771,6 +1799,11 @@
             "type": "boolean"
           },
           "mediaTailS": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "loudnessTargetLufs": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -2582,6 +2615,7 @@
           "language",
           "feedbackEnabled",
           "mediaTailS",
+          "loudnessTargetLufs",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -3025,6 +3059,28 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 30
+          },
+          "loudnessTargetLufs": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  -14
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  -16
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  -23
+                ]
+              }
+            ]
           },
           "coverMediaId": {
             "type": "string",

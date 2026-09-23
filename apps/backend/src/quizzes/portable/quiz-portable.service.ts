@@ -178,6 +178,7 @@ export class QuizPortableService {
           language: imported.language,
           feedbackEnabled: imported.feedbackEnabled,
           mediaTailS: imported.mediaTailS,
+          loudnessTargetLufs: imported.loudnessTargetLufs,
           coverMediaId: imported.coverMediaId,
           slug: imported.slug,
           namespace: imported.namespace,

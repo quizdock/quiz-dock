@@ -39,6 +39,7 @@ is what a Quiz Store repository holds.
     "license": "CC-BY-4.0",
     "feedbackEnabled": true,
     "mediaTailS": 3,
+    "loudnessTargetLufs": -16,
     "cover": "media/cover.jpg"
   },
   "media": {
@@ -87,6 +88,9 @@ is what a Quiz Store repository holds.
 - `quiz.mediaTailS` (version 3, 0–30, default 3): the pause kept after a
   question's sound or video. A media longer than its question stretches the
   question to the end of the media plus this pause — nothing is cut mid-play.
+- `quiz.loudnessTargetLufs` (version 3): the level sounds and videos are
+  brought to at playback — `-14` loud (streaming), `-16` balanced (default),
+  `-23` calm (broadcast). The files are never re-encoded.
 - A question's `media` is its visual (an image or an MP4), `audio` its sound
   (an MP3). Never both a video and a sound: the video carries its own.
 - Questions and slides follow the API content rules (question types and their

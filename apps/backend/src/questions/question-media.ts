@@ -3,6 +3,7 @@ import type { MediaAsset, MediaKind, Prisma } from '@prisma/client';
 import {
   type LiveQuestionMedia,
   type QuestionMedia,
+  LOUDNESS_TARGET_LUFS,
   VIDEO_WITH_AUDIO,
   playbackGainDb,
 } from '@quiz-dock/contracts';
@@ -40,10 +41,14 @@ export function questionMediaOf(q: WithMedia): QuestionMedia {
 }
 
 /** The same slots as the screens receive them: URLs and the gain each sound plays at. */
-export function liveMediaOf(q: WithMedia): LiveQuestionMedia {
+export function liveMediaOf(
+  q: WithMedia,
+  /** The quiz's loudness level (LUFS); the balanced default when absent. */
+  targetLufs: number = LOUDNESS_TARGET_LUFS,
+): LiveQuestionMedia {
   const visual = q.visualMedia;
   const audio = q.audioMedia;
-  const gain = (m: MediaAsset) => playbackGainDb(m.loudnessLufs, m.peakDbfs);
+  const gain = (m: MediaAsset) => playbackGainDb(m.loudnessLufs, m.peakDbfs, targetLufs);
   return {
     visual: !visual
       ? null

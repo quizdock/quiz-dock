@@ -101,20 +101,31 @@ export const NO_QUESTION_MEDIA: QuestionMedia = { visual: null, audio: null };
 /**
  * Where every sound is brought at playback, in LUFS. Nothing is re-encoded: the
  * loudness is measured once at upload (EBU R128 / ITU-R BS.1770) and a gain is
- * applied when the sound plays, the way ReplayGain does.
+ * applied when the sound plays, the way ReplayGain does. A quiz picks one of
+ * three levels:
+ * - `-14` loud — the streaming level (music platforms, video sites);
+ * - `-16` balanced — the default, voice and music alike (AES, mobile listening);
+ * - `-23` calm — the broadcast level (EBU R128), plenty of headroom.
  */
-export const LOUDNESS_TARGET_LUFS = -16;
+export const LOUDNESS_TARGETS = [-14, -16, -23] as const;
+export type LoudnessTarget = (typeof LOUDNESS_TARGETS)[number];
+export const LOUDNESS_TARGET_LUFS: LoudnessTarget = -16;
 
 /** Room kept under full scale when a quiet sound is raised. */
 const HEADROOM_DBFS = -1;
 
 /**
- * Gain that brings a sound to {@link LOUDNESS_TARGET_LUFS}, never so much that
+ * Gain that brings a sound to the target (the quiz's, {@link LOUDNESS_TARGET_LUFS}
+ * by default), never so much that
  * its peak would clip. 0 when the sound was never measured.
  */
-export function playbackGainDb(loudnessLufs: number | null, peakDbfs: number | null): number {
+export function playbackGainDb(
+  loudnessLufs: number | null,
+  peakDbfs: number | null,
+  targetLufs: number = LOUDNESS_TARGET_LUFS,
+): number {
   if (loudnessLufs === null || !Number.isFinite(loudnessLufs)) return 0;
-  const wanted = LOUDNESS_TARGET_LUFS - loudnessLufs;
+  const wanted = targetLufs - loudnessLufs;
   const ceiling = peakDbfs === null ? 0 : HEADROOM_DBFS - peakDbfs;
   return Math.round(Math.min(wanted, ceiling) * 10) / 10;
 }

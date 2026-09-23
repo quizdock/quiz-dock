@@ -1,5 +1,9 @@
 import type { Prisma } from '@prisma/client';
-import { MEDIA_TAIL_DEFAULT_S } from '@quiz-dock/contracts';
+import {
+  LOUDNESS_TARGET_LUFS,
+  type LoudnessTarget,
+  MEDIA_TAIL_DEFAULT_S,
+} from '@quiz-dock/contracts';
 import { ZodError } from 'zod';
 import {
   type QuestionContent,
@@ -216,6 +220,7 @@ export function toBundle(
       license: quiz.license,
       feedbackEnabled: quiz.feedbackEnabled,
       mediaTailS: quiz.mediaTailS,
+      loudnessTargetLufs: quiz.loudnessTargetLufs as LoudnessTarget,
       cover: quiz.coverMediaId ? pathFor(quiz.coverMediaId) : null,
     },
     media: Object.fromEntries(
@@ -254,6 +259,7 @@ export interface ImportedQuiz {
   language: string;
   feedbackEnabled: boolean;
   mediaTailS: number;
+  loudnessTargetLufs: LoudnessTarget;
   coverMediaId: string | null;
   /** Store fields, defaulted when the bundle predates them (`docs/quiz-bundle.md`). */
   slug: string;
@@ -431,6 +437,7 @@ export function fromBundle(
     language: quiz.language ?? 'en',
     feedbackEnabled: quiz.feedbackEnabled ?? true,
     mediaTailS: quiz.mediaTailS ?? MEDIA_TAIL_DEFAULT_S,
+    loudnessTargetLufs: quiz.loudnessTargetLufs ?? LOUDNESS_TARGET_LUFS,
     coverMediaId: quiz.cover ? idFor(quiz.cover) : null,
     slug: quiz.slug ?? slugOf({ slug: null, title: quiz.title }),
     namespace: quiz.namespace ?? null,

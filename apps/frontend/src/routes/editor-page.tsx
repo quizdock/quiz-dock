@@ -39,7 +39,7 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react';
-import { MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
+import { LOUDNESS_TARGETS, type LoudnessTarget, MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
@@ -49,6 +49,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { createSession } from '../game/game-client';
 import { downloadFile } from '../api/download';
@@ -223,6 +224,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
   const setFeedbackEnabled = async (feedbackEnabled: boolean) => {
     await update.mutateAsync({ id: quiz.id, data: { feedbackEnabled } });
+    await invalidate();
+  };
+
+  const setLoudness = async (loudnessTargetLufs: LoudnessTarget) => {
+    await update.mutateAsync({ id: quiz.id, data: { loudnessTargetLufs } });
     await invalidate();
   };
 
@@ -499,6 +505,24 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   disabled={update.isPending}
                   onSave={(mediaTailS) => void setMediaTailS(mediaTailS)}
                 />
+                <label
+                  className="mt-2 flex items-center gap-2 text-sm"
+                  title={t('settings.loudnessHelp')}
+                >
+                  <span className="font-medium">{t('settings.loudnessLabel')}</span>
+                  <Select
+                    className="h-8 w-auto"
+                    value={String(quiz.loudnessTargetLufs)}
+                    disabled={update.isPending}
+                    onChange={(e) => void setLoudness(Number(e.target.value) as LoudnessTarget)}
+                  >
+                    {LOUDNESS_TARGETS.map((lufs) => (
+                      <option key={lufs} value={lufs}>
+                        {t(`settings.loudness.${-lufs}`)}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
               </Section>
               {/* Où en est le quiz, et l'action qui suit : sous le réglage, dans la
                   même colonne — l'accès live s'affiche ici pendant une session. */}

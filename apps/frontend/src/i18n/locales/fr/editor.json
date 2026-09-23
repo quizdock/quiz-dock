@@ -26,7 +26,14 @@
     "save": "Enregistrer",
     "mediaTailLabel": "Pause après un média",
     "mediaTailHelp": "Quand le son ou la vidéo d’une question dure plus longtemps que son chrono, la question est prolongée jusqu’à la fin du média plus cette pause : aucune lecture n’est coupée.",
-    "seconds": "s"
+    "seconds": "s",
+    "loudnessLabel": "Égalisation du son",
+    "loudnessHelp": "Niveau auquel chaque son et chaque vidéo du quiz sont ramenés à la lecture, pour que le volume ne change pas d’une question à l’autre. Les fichiers ne sont pas modifiés.",
+    "loudness": {
+      "14": "Fort (−14 LUFS, streaming)",
+      "16": "Équilibré (−16 LUFS)",
+      "23": "Calme (−23 LUFS, télévision)"
+    }
   },
   "broadcast": {
     "title": "Diffusion",

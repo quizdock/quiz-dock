@@ -173,6 +173,31 @@ describe('buildSnapshot', () => {
     expect(snap.questions[1].timeLimitS).toBe(20);
   });
 
+  it('brings sounds to the quiz’s level', () => {
+    const peaks = new Array(200).fill(0.4);
+    const snap = buildSnapshot(
+      quiz({
+        loudnessTargetLufs: -23,
+        questions: [
+          {
+            ...baseQuestion,
+            type: 'poll',
+            pointsMode: 'none',
+            audioMedia: {
+              url: '/a',
+              kind: 'audio',
+              durationMs: 1000,
+              peaks,
+              loudnessLufs: -18,
+              peakDbfs: -6,
+            },
+          },
+        ],
+      } as never),
+    );
+    expect(snap.questions[0].media.audio?.gainDb).toBe(-5);
+  });
+
   it('plays a video with its own gain', () => {
     const snap = buildSnapshot(
       quiz({
