@@ -78,4 +78,18 @@ describe('GameEngine.recoverTimers (bindServer)', () => {
     expect(scheduleAuto.mock.calls.map((c) => (c as unknown as [string])[0])).toEqual(['1', '2']);
     expect(scheduleReveal).not.toHaveBeenCalled();
   });
+
+  it('re-arms the end of a wait for media, from its deadline', async () => {
+    const { engine } = build({
+      '7': meta({ state: 'MEDIA_LOADING', currentIndex: 1, mediaWaitUntil: Date.now() + 3_000 }),
+    });
+    const arm = jest
+      .spyOn(engine as unknown as { armMediaWait: () => void }, 'armMediaWait')
+      .mockImplementation(() => undefined);
+    engine.bindServer({ to: () => ({ emit: () => undefined }) } as never);
+    await new Promise((r) => setTimeout(r, 10));
+    const [pin, index, delay] = arm.mock.calls[0] as unknown as [string, number, number];
+    expect([pin, index]).toEqual(['7', 1]);
+    expect(delay).toBeGreaterThan(2_500);
+  });
 });

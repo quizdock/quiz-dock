@@ -78,6 +78,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   quizHasMedia: null,
   readiness: null,
   mediaPosition: null,
+  mediaWait: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,
@@ -127,6 +128,18 @@ describe('PlayerPage (client participant)', () => {
     );
     // The click itself started the phone's media elements (iOS plays sound only from them).
     expect(claimMediaElements).toHaveBeenCalled();
+  });
+
+  it('MEDIA_LOADING: the phone says the question is coming', async () => {
+    loadPlayerSession.mockReturnValue({
+      pin: '771122',
+      nickname: 'Bob',
+      sessionToken: 't',
+      playerId: 'p1',
+    });
+    hookState.value = view({ state: GameState.MediaLoading, questionIndex: 1 });
+    renderApp('/join/771122');
+    expect(await screen.findByText('La question arrive…')).toBeInTheDocument();
   });
 
   it('LOBBY : salle d’attente avec le pseudo', async () => {

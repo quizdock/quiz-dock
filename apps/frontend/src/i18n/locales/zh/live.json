@@ -124,7 +124,10 @@
       "https": "本页通过 HTTPS 提供：http:// 的本地地址会在手机上显示警告——带证书的公开地址才是正解。"
     },
     "backToLive": "回到当前",
-    "restartMedia": "从头重新播放媒体"
+    "restartMedia": "从头重新播放媒体",
+    "mediaLoadingTitle": "正在加载本题的媒体",
+    "mediaLate": "仍在加载：{{names}}",
+    "startAnyway": "仍然开始"
   },
   "screen": {
     "sessionUnavailable": "会话不可用。",
@@ -143,7 +146,9 @@
     "participants_one": "名玩家",
     "participants_other": "名玩家",
     "review": "回顾",
-    "readiness": "{{ready}} / {{total}} 已就绪"
+    "readiness": "{{ready}} / {{total}} 已就绪",
+    "mediaLoading": "题目即将出现…",
+    "readinessLeft": "还剩 {{seconds}} 秒"
   },
   "player": {
     "joinFailed": "无法加入会话。",
@@ -202,7 +207,8 @@
     "yourClosest": "第 {{rank}} 接近——±{{distance}}",
     "yourCredit": "{{percent}} % 的分数",
     "dragToReorder": "拖动以排序",
-    "pollThanks": "感谢你的意见！"
+    "pollThanks": "感谢你的意见！",
+    "questionComing": "题目即将出现…"
   },
   "reveal": {
     "explanation": "解析",

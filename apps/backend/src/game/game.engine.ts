@@ -25,6 +25,7 @@ import {
   GRACE_MS,
   HOST_GRACE_MS,
   HOST_RECONNECT_WINDOW_MS,
+  MEDIA_WAIT_S,
   READ_DELAY_MS,
   gameKeys,
 } from './game.keys';
@@ -96,6 +97,8 @@ export class GameEngine {
   private readonly endWindowTimers = new Map<string, NodeJS.Timeout>();
   /** Minuterie d'enchaînement automatique en mode auto (§8) — par PIN. */
   private readonly autoNextTimers = new Map<string, NodeJS.Timeout>();
+  /** End of a media wait (`MEDIA_LOADING`): the cap, after which the question starts anyway. */
+  private readonly mediaWaitTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private readonly game: GameService,
@@ -124,6 +127,9 @@ export class GameEngine {
       if (!meta) continue;
       if (meta.state === GameState.Answering && !meta.clockFrozen) {
         this.scheduleReveal(pin, meta.currentIndex, meta.questionEndsAt + GRACE_MS - Date.now());
+        armed++;
+      } else if (meta.state === GameState.MediaLoading) {
+        this.armMediaWait(pin, meta.currentIndex, (meta.mediaWaitUntil ?? 0) - Date.now());
         armed++;
       } else if (meta.state === GameState.Reveal || meta.state === GameState.SlideShow) {
         if (meta.mode === 'auto' && !meta.paused && !meta.reviewStep) {
@@ -314,6 +320,10 @@ export class GameEngine {
     for (const socket of await this.server.in(pin).fetchSockets()) {
       if (!(socket.data as { playerId?: string }).playerId) socket.emit('media:readiness', payload);
     }
+    // The last device waited for is ready (or the last one not ready left): go.
+    if (meta.state === GameState.MediaLoading && payload.ready >= payload.total) {
+      await this.endMediaWait(pin, meta.currentIndex);
+    }
   }
 
   /** The game's default audio target, read fresh (the host may change it in the lobby). */
@@ -371,7 +381,75 @@ export class GameEngine {
    * Ouvre la question `index` : fixe les timings serveur autoritatifs, diffuse
    * `game:state` (ANSWERING) + `question:start` (allowlist), arme le timer de fin.
    */
+  /**
+   * Opens question `index` — unless a device that plays its sound or video has
+   * not loaded it: the room then waits (`MEDIA_LOADING`) until every such device
+   * is ready, the cap runs out, or the host starts anyway. A silent question, or
+   * a room already ready, starts at once.
+   */
   private async beginQuestion(pin: string, snapshot: QuizSnapshot, index: number): Promise<void> {
+    const waitS = Number(process.env.GAME_MEDIA_WAIT_S ?? MEDIA_WAIT_S);
+    const readiness = waitS > 0 ? await this.readiness(pin, index) : null;
+    if (!readiness || readiness.ready >= readiness.total) {
+      await this.startQuestion(pin, snapshot, index);
+      return;
+    }
+    const until = Date.now() + waitS * 1000;
+    this.cancelTimer(this.autoNextTimers, pin);
+    await this.redis.hset(gameKeys.game(pin), {
+      state: GameState.MediaLoading,
+      currentIndex: String(index),
+      slideIndex: '-1',
+      mediaWaitUntil: String(until),
+      autoNextAt: '0',
+    });
+    this.server.to(pin).emit('game:state', {
+      state: GameState.MediaLoading,
+      questionIndex: index,
+      totalQuestions: snapshot.questions.length,
+    });
+    this.server.to(pin).emit('media:wait', { questionIndex: index, until });
+    this.armMediaWait(pin, index, until - Date.now());
+    await this.broadcastReadiness(pin);
+  }
+
+  private armMediaWait(pin: string, index: number, delayMs: number): void {
+    this.cancelTimer(this.mediaWaitTimers, pin);
+    this.mediaWaitTimers.set(
+      pin,
+      setTimeout(
+        () => {
+          this.mediaWaitTimers.delete(pin);
+          this.endMediaWait(pin, index).catch((err: Error) =>
+            this.log.error(`endMediaWait ${pin}: ${err.message}`),
+          );
+        },
+        Math.max(0, delayMs),
+      ),
+    );
+  }
+
+  /**
+   * Leaves the media wait of question `index` and opens it — once, whoever gets
+   * there first: every device ready, the cap, the host, the host coming back.
+   */
+  private async endMediaWait(pin: string, index: number): Promise<void> {
+    const meta = await this.game.getMeta(pin);
+    if (!meta || meta.state !== GameState.MediaLoading || meta.currentIndex !== index) return;
+    const won = await this.redis.set(
+      gameKeys.mediaWaitLock(pin, index),
+      '1',
+      'EX',
+      GAME_TTL_S,
+      'NX',
+    );
+    if (won !== 'OK') return;
+    this.cancelTimer(this.mediaWaitTimers, pin);
+    const snapshot = await this.game.getSnapshot(pin);
+    if (snapshot) await this.startQuestion(pin, snapshot, index);
+  }
+
+  private async startQuestion(pin: string, snapshot: QuizSnapshot, index: number): Promise<void> {
     const question = snapshot.questions[index];
     const now = Date.now();
     // Délai de lecture configurable (§8, défaut 3 s) — lu au runtime (tests rapides).
@@ -384,6 +462,7 @@ export class GameEngine {
     this.cancelTimer(this.autoNextTimers, pin);
     await this.redis.hset(gameKeys.game(pin), {
       state: GameState.Answering,
+      mediaWaitUntil: '0',
       currentIndex: String(index),
       slideIndex: '-1',
       questionStartedAt: String(startedAt),
@@ -634,6 +713,11 @@ export class GameEngine {
     // Looking back: "next" brings every screen back to the live position.
     if (meta.reviewStep) {
       await this.resume(pin);
+      return;
+    }
+    // Waiting for media: the host starts the question anyway.
+    if (meta.state === GameState.MediaLoading) {
+      await this.endMediaWait(pin, meta.currentIndex);
       return;
     }
     if (meta.state !== GameState.Reveal && meta.state !== GameState.SlideShow) {
@@ -888,9 +972,16 @@ export class GameEngine {
     // Mode/pause courants : un (ré)attache doit refléter auto/pause immédiatement.
     socket.emit('game:mode', this.buildModePayload(meta));
     if (meta.joinBaseUrl) socket.emit('game:join-url', { baseUrl: meta.joinBaseUrl });
-    // In the lobby, every device fetches what the first question needs while people wait.
+    // In the lobby, every device fetches what the first question needs while people wait;
+    // arriving during a wait for media, what the coming question needs, and how long.
     if (meta.state === GameState.Lobby && snapshotForNav) {
       await this.emitPreload(pin, snapshotForNav, 0, socket);
+    } else if (meta.state === GameState.MediaLoading && snapshotForNav) {
+      socket.emit('media:wait', {
+        questionIndex: meta.currentIndex,
+        until: meta.mediaWaitUntil ?? 0,
+      });
+      await this.emitPreload(pin, snapshotForNav, meta.currentIndex, socket);
     }
 
     const snapshot = await this.game.getSnapshot(pin);
@@ -1126,6 +1217,7 @@ export class GameEngine {
     // Gèle le chrono via la primitive partagée (idempotente : si l'hôte avait
     // déjà mis en pause, le restant figé est préservé, pas écrasé).
     this.cancelTimer(this.autoNextTimers, pin);
+    this.cancelTimer(this.mediaWaitTimers, pin);
     await this.freezeClock(pin, meta);
     await this.redis.hset(gameKeys.game(pin), {
       state: GameState.HostDisconnected,
@@ -1191,7 +1283,10 @@ export class GameEngine {
       totalQuestions: meta.totalQuestions,
     });
 
-    if (prev === GameState.Answering) {
+    if (prev === GameState.MediaLoading) {
+      // Back after a wait for media: no more waiting, the question starts.
+      await this.endMediaWait(pin, meta.currentIndex);
+    } else if (prev === GameState.Answering) {
       const snapshot = await this.game.getSnapshot(pin);
       // Toujours en pause à la reprise : on garde le chrono gelé (pas de ré-arme),
       // l'affichage du restant figé passe par `game:mode`. Sinon on dégèle.
@@ -1268,6 +1363,7 @@ export class GameEngine {
     this.cancelTimer(this.graceTimers, pin);
     this.cancelTimer(this.endWindowTimers, pin);
     this.cancelTimer(this.autoNextTimers, pin);
+    this.cancelTimer(this.mediaWaitTimers, pin);
     await this.redis.hset(gameKeys.game(pin), { state: GameState.Ended });
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(meta.hostUserId, pin);

@@ -125,6 +125,8 @@ export interface GameMeta {
   personalTracking: boolean;
   /** Les participants choisissent leur nom affiché ; sinon il vient du compte (RG-15). */
   pickOwnName: boolean;
+  /** End of the media wait (ms epoch) while in `MEDIA_LOADING`, 0 otherwise. */
+  mediaWaitUntil?: number;
   /** The host's lobby choice replacing the quiz's default audio target; empty = the quiz's. */
   audioTarget?: AudioTarget | '';
   title: string;

@@ -25,8 +25,57 @@ export interface FollowedPosition {
   receivedAt: number;
 }
 
+/** How far behind the projection a late device may start before it jumps ahead (s). */
+const CATCH_UP_S = 1;
+
+/**
+ * A device that starts a media late (it was still loading when the question
+ * opened) jumps to where the projection is, once, so the room hears the same
+ * moment. `catchUp` is read when playback starts, not before.
+ */
+function useCatchUp(el: HTMLMediaElement | null, catchUp: FollowedPosition | null | undefined) {
+  const latest = useRef(catchUp);
+  latest.current = catchUp;
+  useEffect(() => {
+    if (!el) return;
+    const onPlaying = () => {
+      const at = latest.current;
+      if (!at?.playing) return;
+      const target = at.t + (performance.now() - at.receivedAt) / 1000;
+      const end = Number.isFinite(el.duration) ? el.duration : Infinity;
+      if (target - el.currentTime > CATCH_UP_S && target < end) el.currentTime = target;
+    };
+    el.addEventListener('playing', onPlaying, { once: true });
+    return () => el.removeEventListener('playing', onPlaying);
+  }, [el]);
+}
+
 /** How often the projection says where it is while a sound plays (ms). */
 const POSITION_EVERY_MS = 1000;
+
+/**
+ * The projection tells the room where it is: at each play, pause or jump, and
+ * every second while it plays, so the other screens' playheads keep up and a
+ * late device knows where to start.
+ */
+function usePositionReport(
+  el: HTMLMediaElement | null,
+  onPosition: ((t: number, playing: boolean) => void) | undefined,
+) {
+  useEffect(() => {
+    if (!el || !onPosition) return;
+    const say = () => onPosition(el.currentTime, !el.paused && !el.ended);
+    const events = ['play', 'pause', 'seeked', 'ended'] as const;
+    events.forEach((e) => el.addEventListener(e, say));
+    const timer = window.setInterval(() => {
+      if (!el.paused && !el.ended) say();
+    }, POSITION_EVERY_MS);
+    return () => {
+      events.forEach((e) => el.removeEventListener(e, say));
+      window.clearInterval(timer);
+    };
+  }, [el, onPosition]);
+}
 
 /** How long a media may take to start before the screen says it is late. */
 const SLOW_MS = 4000;
@@ -185,6 +234,8 @@ function VideoBox({
   resumeKey,
   restartSignal,
   silent,
+  catchUp,
+  onPosition,
 }: {
   url: string;
   mode: StageMode;
@@ -193,11 +244,15 @@ function VideoBox({
   resumeKey: string | null;
   restartSignal: number;
   silent: boolean;
+  catchUp?: FollowedPosition | null;
+  onPosition?: (t: number, playing: boolean) => void;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const key = resumeKey && `${resumeKey}:${url}`;
   const el = useMediaElement('video', url, mode === 'still', key);
   const { blocked, slow, enableSound } = usePlayback(el, mode, gainDb, restartSignal, key, silent);
+  useCatchUp(el, catchUp);
+  usePositionReport(el, onPosition);
 
   useEffect(() => {
     if (!el || !box.current) return;
@@ -221,6 +276,7 @@ function AudioTrack({
   restartSignal,
   silent,
   onPosition,
+  catchUp,
 }: {
   audio: LiveAudio;
   mode: StageMode;
@@ -228,6 +284,7 @@ function AudioTrack({
   restartSignal: number;
   silent: boolean;
   onPosition?: (t: number, playing: boolean) => void;
+  catchUp?: FollowedPosition | null;
 }) {
   const { t } = useTranslation('live');
   const key = resumeKey && `${resumeKey}:${audio.url}`;
@@ -240,6 +297,7 @@ function AudioTrack({
     key,
     silent,
   );
+  useCatchUp(el, catchUp);
   const [progress, setProgress] = useState(0);
 
   // The filled part follows the sound, frame by frame, only while it plays.
@@ -267,21 +325,7 @@ function AudioTrack({
     };
   }, [el, audio.durationMs]);
 
-  // The projection tells the room where it is: at each play, pause or jump, and
-  // every second while it plays, so the other screens' playheads keep up.
-  useEffect(() => {
-    if (!el || !onPosition) return;
-    const say = () => onPosition(el.currentTime, !el.paused && !el.ended);
-    const events = ['play', 'pause', 'seeked', 'ended'] as const;
-    events.forEach((e) => el.addEventListener(e, say));
-    const timer = window.setInterval(() => {
-      if (!el.paused && !el.ended) say();
-    }, POSITION_EVERY_MS);
-    return () => {
-      events.forEach((e) => el.removeEventListener(e, say));
-      window.clearInterval(timer);
-    };
-  }, [el, onPosition]);
+  usePositionReport(el, onPosition);
 
   return (
     <div className="flex w-full flex-col items-center gap-[0.5em]">
@@ -357,6 +401,7 @@ export function QuestionMediaStage({
   muted = false,
   follow,
   onPosition,
+  catchUp,
 }: {
   media: LiveQuestionMedia | null | undefined;
   mode: StageMode;
@@ -371,6 +416,8 @@ export function QuestionMediaStage({
   follow?: FollowedPosition | null;
   /** The projection only: says where it is in the sound, for the other screens. */
   onPosition?: (t: number, playing: boolean) => void;
+  /** A device that plays too: the projection's position, to jump to when it starts late. */
+  catchUp?: FollowedPosition | null;
   /** Session + question: where the position is kept across an interruption (projection only). */
   resumeKey?: string | null;
   /** Changes when the host restarts the media from the top. */
@@ -403,6 +450,8 @@ export function QuestionMediaStage({
           resumeKey={resumeKey}
           restartSignal={restartSignal}
           silent={muted || !audible}
+          catchUp={catchUp}
+          onPosition={onPosition}
         />
       ) : null}
       {audio && (mode === 'still' || !audible) && follow !== undefined ? (
@@ -416,6 +465,7 @@ export function QuestionMediaStage({
             restartSignal={restartSignal}
             silent={muted}
             onPosition={onPosition}
+            catchUp={catchUp}
           />
         </div>
       ) : null}

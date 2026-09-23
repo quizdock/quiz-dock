@@ -24,6 +24,12 @@ export enum GameState {
   Leaderboard = 'LEADERBOARD',
   /** A content slide (#7) is on screen: no answer; advances on host click or, in auto mode, by `displayDelayS`. */
   SlideShow = 'SLIDE_SHOW',
+  /**
+   * A question is due but a device that plays its sound or video has not loaded
+   * it: the room waits, at most `GAME_MEDIA_WAIT_S` seconds; the host may start
+   * anyway (`host:next`). `questionIndex` is the question that comes.
+   */
+  MediaLoading = 'MEDIA_LOADING',
   Podium = 'PODIUM',
   Ended = 'ENDED',
   HostDisconnected = 'HOST_DISCONNECTED',
@@ -569,6 +575,8 @@ export interface ServerToClientEvents {
   'media:preload': (p: MediaPreloadPayload) => void;
   /** Who has loaded the upcoming question's sound or video (screens only). */
   'media:readiness': (p: MediaReadinessPayload) => void;
+  /** The room waits for media before question `questionIndex`, until `until` (server ms epoch). */
+  'media:wait': (p: { questionIndex: number; until: number }) => void;
   /** Where the projection is in the current sound: the other screens draw their playhead there. */
   'media:position': (p: MediaPositionPayload) => void;
   /** The host restarts the current question's media from the top. */

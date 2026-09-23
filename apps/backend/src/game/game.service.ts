@@ -506,6 +506,7 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     personalTracking: meta.personalTracking ? '1' : '0',
     pickOwnName: meta.pickOwnName ? '1' : '0',
     audioTarget: meta.audioTarget ?? '',
+    mediaWaitUntil: String(meta.mediaWaitUntil ?? 0),
     title: meta.title,
     language: meta.language,
     createdAt: String(meta.createdAt),
@@ -540,6 +541,7 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     audioTarget: (AUDIO_TARGETS as readonly string[]).includes(raw.audioTarget ?? '')
       ? (raw.audioTarget as AudioTarget)
       : '',
+    mediaWaitUntil: raw.mediaWaitUntil ? Number(raw.mediaWaitUntil) : 0,
     title: raw.title,
     language: raw.language,
     createdAt: Number(raw.createdAt),

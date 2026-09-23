@@ -114,6 +114,7 @@ QuickTime `.mov`. **Behind a reverse proxy, raise its request body limit to the 
 sizes** — nginx refuses anything over 1 MB by default (`client_max_body_size 50m;`).
 | `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
 | `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |
+| `GAME_MEDIA_WAIT_S` | `10` | How long the room waits at most, before a question, for the devices that play its sound or video to load it (the host can start anyway). `0` never waits. See [audio & video](audio-video.md#waiting-for-media). |
 
 ---
 

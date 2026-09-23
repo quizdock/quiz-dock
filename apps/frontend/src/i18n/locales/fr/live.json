@@ -124,7 +124,10 @@
       "https": "Cette page est servie en HTTPS : une adresse locale en http:// affichera un avertissement sur les téléphones — une adresse publique avec certificat est la voie propre."
     },
     "backToLive": "Revenir au direct",
-    "restartMedia": "Relancer le média depuis le début"
+    "restartMedia": "Relancer le média depuis le début",
+    "mediaLoadingTitle": "Chargement des médias de la question",
+    "mediaLate": "Encore en chargement : {{names}}",
+    "startAnyway": "Lancer quand même"
   },
   "screen": {
     "sessionUnavailable": "Session indisponible.",
@@ -143,7 +146,9 @@
     "participants_one": "participant",
     "participants_other": "participants",
     "review": "Retour en arrière",
-    "readiness": "{{ready}} / {{total}} prêts"
+    "readiness": "{{ready}} / {{total}} prêts",
+    "mediaLoading": "La question arrive…",
+    "readinessLeft": "encore {{seconds}} s"
   },
   "player": {
     "joinFailed": "Impossible de rejoindre la session.",
@@ -202,7 +207,8 @@
     "yourClosest": "{{rank}}ᵉ plus proche — ±{{distance}}",
     "yourCredit": "{{percent}} % des points",
     "dragToReorder": "Glisser pour réordonner",
-    "pollThanks": "Merci pour ton avis !"
+    "pollThanks": "Merci pour ton avis !",
+    "questionComing": "La question arrive…"
   },
   "reveal": {
     "explanation": "Explication",

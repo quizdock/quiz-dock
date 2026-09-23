@@ -124,7 +124,10 @@
       "https": "本頁透過 HTTPS 提供：http:// 的本機位址會在手機上顯示警告——帶憑證的公開位址才是正解。"
     },
     "backToLive": "回到目前",
-    "restartMedia": "從頭重新播放媒體"
+    "restartMedia": "從頭重新播放媒體",
+    "mediaLoadingTitle": "正在載入本題的媒體",
+    "mediaLate": "仍在載入：{{names}}",
+    "startAnyway": "仍然開始"
   },
   "screen": {
     "sessionUnavailable": "會話不可用。",
@@ -143,7 +146,9 @@
     "participants_one": "名玩家",
     "participants_other": "名玩家",
     "review": "回顧",
-    "readiness": "{{ready}} / {{total}} 已就緒"
+    "readiness": "{{ready}} / {{total}} 已就緒",
+    "mediaLoading": "題目即將出現…",
+    "readinessLeft": "還剩 {{seconds}} 秒"
   },
   "player": {
     "joinFailed": "無法加入會話。",
@@ -202,7 +207,8 @@
     "yourClosest": "第 {{rank}} 接近——±{{distance}}",
     "yourCredit": "{{percent}} % 的分數",
     "dragToReorder": "拖曳以重新排序",
-    "pollThanks": "感謝你的意見！"
+    "pollThanks": "感謝你的意見！",
+    "questionComing": "題目即將出現…"
   },
   "reveal": {
     "explanation": "解析",

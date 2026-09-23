@@ -442,6 +442,9 @@ export function PlayerPage() {
   if (view.state === 'HOST_DISCONNECTED') {
     return wrap(<p className="text-xl font-semibold">{t('player.hostDisconnected')}</p>);
   }
+  if (view.state === 'MEDIA_LOADING') {
+    return wrap(<p className="text-xl font-semibold">{t('player.questionComing')}</p>);
+  }
   // Fin de partie (podium ou terminée) : on propose de noter le quiz. Les deux états
   // partagent la même structure pour que le panneau d'avis (et le commentaire en
   // cours de saisie) survive à la transition PODIUM → ENDED déclenchée par l'hôte.
@@ -598,6 +601,7 @@ export function PlayerPage() {
               audible={hears}
               muted={muted}
               follow={hears ? undefined : followed(view, question.questionIndex)}
+              catchUp={followed(view, question.questionIndex)}
               boxClassName="w-full max-h-[35dvh]"
               resumeKey={`${pin}:${question.questionIndex}`}
               restartSignal={

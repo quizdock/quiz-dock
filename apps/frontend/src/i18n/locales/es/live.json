@@ -124,7 +124,10 @@
       "https": "Esta página se sirve por HTTPS: una dirección local en http:// mostrará un aviso en los teléfonos — una dirección pública con certificado es la vía limpia."
     },
     "backToLive": "Volver al directo",
-    "restartMedia": "Reiniciar el medio desde el principio"
+    "restartMedia": "Reiniciar el medio desde el principio",
+    "mediaLoadingTitle": "Cargando los medios de la pregunta",
+    "mediaLate": "Aún cargando: {{names}}",
+    "startAnyway": "Empezar de todos modos"
   },
   "screen": {
     "sessionUnavailable": "Sesión no disponible.",
@@ -143,7 +146,9 @@
     "participants_one": "jugador",
     "participants_other": "jugadores",
     "review": "Mirando atrás",
-    "readiness": "{{ready}} / {{total}} listos"
+    "readiness": "{{ready}} / {{total}} listos",
+    "mediaLoading": "La pregunta está en camino…",
+    "readinessLeft": "quedan {{seconds}} s"
   },
   "player": {
     "joinFailed": "No se pudo unir a la sesión.",
@@ -202,7 +207,8 @@
     "yourClosest": "{{rank}}.º más cercano — ±{{distance}}",
     "yourCredit": "{{percent}} % de los puntos",
     "dragToReorder": "Arrastra para reordenar",
-    "pollThanks": "¡Gracias por tu opinión!"
+    "pollThanks": "¡Gracias por tu opinión!",
+    "questionComing": "La pregunta está en camino…"
   },
   "reveal": {
     "explanation": "Explicación",

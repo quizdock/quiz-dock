@@ -21,6 +21,7 @@ import {
 import { useAudioUnlocked } from '../game/media/audio-unlock';
 import { preloadMedia, waitedFor } from '../game/media/media-pool';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
+import { ReadinessMeter } from '../game/media/readiness-meter';
 import { followed } from '../game/media/followed';
 import { SoundUnlockOverlay } from '../game/media/sound-unlock-overlay';
 import { Surface } from '../game/surface';
@@ -124,6 +125,18 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
     body = <p className="text-muted-foreground">{view.error ?? t('screen.sessionUnavailable')}</p>;
   } else if (view.state === 'HOST_DISCONNECTED') {
     body = <p className="text-[2em] font-semibold">{t('screen.paused')}</p>;
+  } else if (view.state === 'MEDIA_LOADING') {
+    // A device that plays the coming question's sound or video is still loading it.
+    body = (
+      <div className="flex flex-col items-center gap-[1em]">
+        <p className="text-[2em] font-semibold">{t('screen.mediaLoading')}</p>
+        <ReadinessMeter
+          readiness={view.readiness}
+          until={view.mediaWait?.until ?? null}
+          className="text-[1.25em]"
+        />
+      </div>
+    );
   } else if (view.state === 'ENDED') {
     body = <p className="text-[2em] font-semibold">{t('screen.thanks')}</p>;
   } else if (view.state === 'SLIDE_SHOW' && view.slide) {
@@ -226,24 +239,8 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           <span>{t('screen.participants', { count: view.players.length })}</span>
         </div>
         {/* The first question's sound or video, loaded on the devices that will play it. */}
-        {view.readiness && view.readiness.questionIndex === 0 && view.readiness.total > 0 ? (
-          <div className="flex w-[16em] flex-col items-center gap-[0.4em] text-[1em]">
-            <span className="text-muted-foreground" data-testid="readiness">
-              {t('screen.readiness', { ready: view.readiness.ready, total: view.readiness.total })}
-            </span>
-            <div
-              className="bg-muted h-[0.4em] w-full overflow-hidden rounded-full"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={view.readiness.total}
-              aria-valuenow={view.readiness.ready}
-            >
-              <div
-                className="bg-primary h-full transition-[width]"
-                style={{ width: `${(100 * view.readiness.ready) / view.readiness.total}%` }}
-              />
-            </div>
-          </div>
+        {view.readiness?.questionIndex === 0 ? (
+          <ReadinessMeter readiness={view.readiness} className="text-[1em]" />
         ) : null}
         <ul className="flex max-w-[40em] flex-wrap justify-center gap-[0.5em]">
           {view.players.map((p) => (

@@ -49,6 +49,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   quizHasMedia: null,
   readiness: null,
   mediaPosition: null,
+  mediaWait: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,
@@ -113,6 +114,33 @@ describe('ControlPage (console hôte)', () => {
     renderApp('/session/482913/console');
     await screen.findByLabelText('Code PIN');
     expect(screen.queryByText('Qui entend le son dans cette session')).not.toBeInTheDocument();
+  });
+
+  it('MEDIA_LOADING: names who is still loading, and starts anyway on request', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      state: GameState.MediaLoading,
+      questionIndex: 1,
+      players: [
+        { playerId: 'p1', nickname: 'Alice', presence: 'remote' },
+        { playerId: 'p2', nickname: 'Bob', presence: 'remote' },
+      ],
+      readiness: {
+        questionIndex: 1,
+        ready: 2,
+        total: 3,
+        players: [
+          { playerId: 'p1', ready: false },
+          { playerId: 'p2', ready: true },
+        ],
+        screens: { ready: 1, total: 1 },
+      },
+      mediaWait: { questionIndex: 1, until: Date.now() + 8000 },
+    });
+    renderApp('/session/482913/console');
+    expect(await screen.findByText('Encore en chargement : Alice')).toBeInTheDocument();
+    act(() => screen.getByRole('button', { name: /Lancer quand même/ }).click());
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:next', { pin: '482913' });
   });
 
   it('ANSWERING : compteur + « Révéler » émet host:reveal', async () => {

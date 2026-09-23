@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
+import { ReadinessMeter } from '../game/media/readiness-meter';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -374,6 +375,37 @@ export function ControlPage() {
   if (view.state === 'HOST_DISCONNECTED') {
     return (
       <p className="text-muted-foreground py-16 text-center">{t('control.hostDisconnected')}</p>
+    );
+  }
+
+  // ── MEDIA_LOADING: a device that plays the coming sound or video is late ──
+  if (view.state === 'MEDIA_LOADING') {
+    const late = view.players.filter((p) =>
+      view.readiness?.players.some((r) => r.playerId === p.playerId && !r.ready),
+    );
+    return (
+      <section className={cn(CONSOLE_SECTION, 'gap-5')}>
+        {controlBar}
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          <p className="text-xl font-semibold">{t('control.mediaLoadingTitle')}</p>
+          <ReadinessMeter readiness={view.readiness} until={view.mediaWait?.until ?? null} />
+          <ReadinessLine readiness={view.readiness} />
+          {late.length > 0 ? (
+            <p className="text-muted-foreground text-sm">
+              {t('control.mediaLate', { names: late.map((p) => p.nickname).join(', ') })}
+            </p>
+          ) : null}
+        </div>
+        <ActionBar
+          end={<EndGameButton label={t('control.endSession')} offerArchive onConfirm={endGame} />}
+          primary={
+            <Button type="button" variant="main-action" onClick={() => emit('host:next')}>
+              <Play className="size-4" />
+              {t('control.startAnyway')}
+            </Button>
+          }
+        />
+      </section>
     );
   }
 

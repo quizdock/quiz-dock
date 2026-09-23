@@ -119,6 +119,25 @@ play, and nothing goes further than one question ahead, to spare mobile data.
 image, sound or video before it shows — never its text nor its answers. A
 curious participant could open them early; the console's lobby says so.
 
+## Waiting for media
+
+Each device that will play a question's sound or video tells the server once it
+has loaded it: the projection, and the participants whose device plays it
+(remote ones; in the room, only with **Every device**). Images are not waited
+for. In the lobby, the console marks each participant ready or loading and says
+whether the projection is ready; the projection shows how many are.
+
+When a question is due and one of these devices is not ready, the room waits: the
+projection shows **The question is on its way…** with the count and the seconds
+left, the phones say so too, and the console names who is still loading, with
+**Start anyway**. The wait ends as soon as every device is ready, when the host
+starts anyway, or after `GAME_MEDIA_WAIT_S` seconds (10 by default; `0` never
+waits). A device still loading then starts late and jumps to where the
+projection is, so the room hears the same moment.
+
+Safari on iPhone often fetches only the start of a file ahead: an iPhone may stay
+"loading" until the question opens, and the cap keeps it from holding the room.
+
 ## Sound on the projection
 
 ### Why the projection asks for a click

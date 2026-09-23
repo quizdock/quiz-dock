@@ -154,4 +154,17 @@ describe('QuestionMediaStage', () => {
     expect(play).not.toHaveBeenCalled();
     expect(screen.getByRole('img', { name: /Forme d’onde/ })).toBeInTheDocument();
   });
+  it('a device that starts late jumps to where the projection is', async () => {
+    render(
+      <QuestionMediaStage
+        media={sound}
+        mode="play"
+        catchUp={{ questionIndex: 0, t: 5, playing: true, receivedAt: performance.now() }}
+      />,
+    );
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    el.dispatchEvent(new Event('playing'));
+    expect(el.currentTime).toBeGreaterThanOrEqual(5);
+  });
 });

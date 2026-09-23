@@ -40,6 +40,7 @@ describe('GameGateway (intégration socket)', () => {
     process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
     process.env.GAME_HOST_WINDOW_MS = '1500'; // fenêtre de reconnexion hôte courte (§7.3)
     process.env.GAME_AUTO_ADVANCE_MS = '300'; // enchaînement auto rapide (§8) en test
+    process.env.GAME_MEDIA_WAIT_S = '1'; // a short wait for media, capped fast
     app = await NestFactory.create(AppModule, { logger: false });
     await app.listen(0);
     prisma = app.get(PrismaService);
@@ -675,6 +676,100 @@ describe('GameGateway (intégration socket)', () => {
     expect(heard).toEqual([{ questionIndex: 0, t: 1.5, playing: true }]);
     host.emit('host:end', { pin });
   }, 15_000);
+
+  it('waits for the devices that play the sound before opening the question: until ready, the cap, or the host', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/wait-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Media wait test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    const game = async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: withSound.id });
+      const screen = connect();
+      await screen.emitWithAck('spectator:join', { pin });
+      const states: string[] = [];
+      host.on('game:state', (p: { state: string }) => states.push(p.state));
+      const answering = new Promise<number>((resolve) =>
+        host.on('game:state', (p: { state: string }) => {
+          if (p.state === 'ANSWERING') resolve(Date.now());
+        }),
+      );
+      return { host, pin, screen, states, answering };
+    };
+    try {
+      // Ready before the start: no wait at all.
+      const ready = await game();
+      ready.screen.emit('media:ready', { pin: ready.pin, questionIndex: 0 });
+      await new Promise((r) => setTimeout(r, 150));
+      ready.host.emit('host:start', { pin: ready.pin });
+      await ready.answering;
+      expect(ready.states).not.toContain('MEDIA_LOADING');
+      ready.host.emit('host:end', { pin: ready.pin });
+
+      // Not ready: the room waits, and goes as soon as the projection is.
+      const late = await game();
+      const wait = new Promise<{ questionIndex: number; until: number }>((resolve) =>
+        late.screen.once('media:wait', resolve),
+      );
+      late.host.emit('host:start', { pin: late.pin });
+      expect((await wait).questionIndex).toBe(0);
+      expect(late.states).toContain('MEDIA_LOADING');
+      late.screen.emit('media:ready', { pin: late.pin, questionIndex: 0 });
+      await late.answering;
+      late.host.emit('host:end', { pin: late.pin });
+
+      // Never ready: the host starts anyway…
+      const forced = await game();
+      const forcedWait = new Promise((resolve) => forced.screen.once('media:wait', resolve));
+      forced.host.emit('host:start', { pin: forced.pin });
+      await forcedWait;
+      const asked = Date.now();
+      forced.host.emit('host:next', { pin: forced.pin });
+      expect((await forced.answering) - asked).toBeLessThan(800);
+      forced.host.emit('host:end', { pin: forced.pin });
+
+      // …or the cap does it (1 s here).
+      const capped = await game();
+      const started = Date.now();
+      capped.host.emit('host:start', { pin: capped.pin });
+      expect((await capped.answering) - started).toBeGreaterThanOrEqual(900);
+      capped.host.emit('host:end', { pin: capped.pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 20_000);
 
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });

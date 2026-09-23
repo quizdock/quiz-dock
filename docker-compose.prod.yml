@@ -69,6 +69,9 @@ services:
       MEDIA_MAX_VIDEO_MB: ${MEDIA_MAX_VIDEO_MB:-50}
       MEDIA_MAX_AUDIO_MB: ${MEDIA_MAX_AUDIO_MB:-10}
       IMPORT_MAX_BYTES: ${IMPORT_MAX_BYTES:-52428800}
+      GAME_AUTO_ADVANCE_MS: ${GAME_AUTO_ADVANCE_MS:-5000}
+      GAME_READ_DELAY_MS: ${GAME_READ_DELAY_MS:-3000}
+      GAME_MEDIA_WAIT_S: ${GAME_MEDIA_WAIT_S:-10}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}
       HOST_LAN_IPS: ${HOST_LAN_IPS:-}
