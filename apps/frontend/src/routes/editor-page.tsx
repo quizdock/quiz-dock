@@ -358,7 +358,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
             </Badge>
           </div>
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+          <div className="grid items-start gap-x-8 gap-y-4 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
             <form.Field name="description">
               {(field) => (
                 <div className="flex flex-col gap-1">
@@ -392,26 +392,34 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             {/* À droite de la description, ce qu'on règle en écrivant : les avis
               reçus et l'archivage. Ils tenaient derrière un bouton « Réglages »
               qui ne disait pas ce qu'il cachait. */}
-            <div className="grid items-start gap-6 sm:grid-cols-2">
-              <Section title={t('feedback.title')}>
-                <label className="flex items-start gap-3 text-sm">
-                  <Switch
-                    className="mt-0.5"
-                    checked={quiz.feedbackEnabled}
-                    disabled={update.isPending}
-                    onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
-                    aria-label={t('feedback.enableLabel')}
-                  />
-                  <span>
-                    <span className="font-medium">{t('feedback.enableLabel')}</span>
-                    <span className="text-muted-foreground block">{t('feedback.enableHelp')}</span>
-                  </span>
-                </label>
-                <FeedbackSection quizId={quiz.id} />
+            <div className="grid items-start gap-x-6 gap-y-4 sm:grid-cols-2">
+              <Section>
+                {/* L'état des avis se lit à côté de l'interrupteur, pas dessous :
+                    c'est une ligne, elle n'a pas à en coûter deux. */}
+                <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+                  <label className="flex min-w-48 flex-1 items-start gap-2 text-sm">
+                    <Switch
+                      className="mt-0.5"
+                      checked={quiz.feedbackEnabled}
+                      disabled={update.isPending}
+                      onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
+                      aria-label={t('feedback.enableLabel')}
+                    />
+                    <span>
+                      <span className="font-medium">{t('feedback.enableLabel')}</span>
+                      <span className="text-muted-foreground block text-xs leading-snug">
+                        {t('feedback.enableHelp')}
+                      </span>
+                    </span>
+                  </label>
+                  <FeedbackSection quizId={quiz.id} className="min-w-40 flex-1" />
+                </div>
               </Section>
               {quiz.status !== 'archived' ? (
-                <Section title={t('broadcast.archiveTitle')}>
-                  <p className="text-muted-foreground text-sm">{t('broadcast.archiveHelp')}</p>
+                <Section>
+                  <p className="text-muted-foreground text-xs leading-snug">
+                    {t('broadcast.archiveHelp')}
+                  </p>
                   <Button
                     type="button"
                     variant="outline"
@@ -734,7 +742,7 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className={cn('flex flex-col gap-4', className)}>
+    <section className={cn('flex flex-col gap-2', className)}>
       {title ? (
         <h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
           {title}
