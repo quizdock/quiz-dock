@@ -80,7 +80,7 @@ function usePlayback(
       window.clearTimeout(timer);
       el.removeEventListener('playing', onPlaying);
     };
-  }, [el, mode, gainDb]);
+  }, [el, mode, gainDb, positionKey]);
 
   const enableSound = async () => {
     if (!el) return;
