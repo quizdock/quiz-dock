@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { ChevronDown, LogOut, UserRound } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -61,6 +62,15 @@ export function UserMenu({
           <p className="text-muted-foreground truncate px-2 py-1.5 text-xs sm:hidden">{user}</p>
           {children ? <div className="flex flex-col gap-1 px-2 py-1.5">{children}</div> : null}
           {children ? <div className="bg-border my-1 h-px" /> : null}
+          <Link
+            to="/profile"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+          >
+            <UserRound className="size-4" />
+            {t('nav.profile')}
+          </Link>
           <button
             type="button"
             role="menuitem"

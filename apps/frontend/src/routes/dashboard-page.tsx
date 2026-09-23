@@ -4,11 +4,13 @@ import { Pencil, Play, Plus, Search, Sparkles, Upload } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
 import { fold } from '@/lib/text';
+import { useRole } from '../auth/use-role';
 import { useLaunchSession } from '../game/use-launch-session';
 import {
   getQuizzesControllerListQueryKey,
@@ -38,6 +40,8 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
   const { launch, isLaunching, error: launchError } = useLaunchSession();
+  // Un gestionnaire lit l'instance ; il ne crée pas, n'importe pas, ne présente pas.
+  const { isManager } = useRole();
   // Stable entre deux rendus : le `?? []` fabriquerait un tableau neuf à chaque fois,
   // et le tri/filtre ci-dessous se recalculerait pour rien.
   const quizzes = useMemo(() => data?.data ?? [], [data]);
@@ -110,8 +114,8 @@ export function DashboardPage() {
   return (
     <section className="content-lg flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t('title')}</h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <h1 className="text-2xl font-bold">{isManager ? t('allQuizzes') : t('title')}</h1>
+        <div className={cn('flex flex-wrap items-center gap-2', isManager && 'hidden')}>
           <input
             ref={fileInput}
             type="file"
@@ -157,7 +161,7 @@ export function DashboardPage() {
       ) : null}
       {launchError ? <p className="text-destructive">{launchError}</p> : null}
 
-      {!isLoading && !error && quizzes.length === 0 && (
+      {!isLoading && !error && quizzes.length === 0 && !isManager && (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground">{t('empty')}</p>
           <Button
@@ -235,6 +239,11 @@ export function DashboardPage() {
               {quiz.title}
             </Link>
             <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              {quiz.ownerName ? (
+                <span className="text-muted-foreground text-sm">
+                  {t('ownedBy', { name: quiz.ownerName })}
+                </span>
+              ) : null}
               <Badge variant={STATUS_VARIANT[quiz.status] ?? 'default'}>
                 {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
               </Badge>
@@ -246,10 +255,10 @@ export function DashboardPage() {
               <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }}>
                 <Button type="button" size="sm" variant="outline">
                   <Pencil className="size-4" />
-                  {t('edit')}
+                  {isManager ? t('view') : t('edit')}
                 </Button>
               </Link>
-              {quiz.status === 'ready' && (
+              {!isManager && quiz.status === 'ready' && (
                 <Button
                   type="button"
                   size="sm"

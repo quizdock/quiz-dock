@@ -53,5 +53,8 @@
   "noSessionMatch": "沒有會話符合此搜尋。",
   "noLiveSession": "目前沒有進行中的會話。",
   "projection": "投影",
-  "seeAllSessions": "查看全部會話"
+  "seeAllSessions": "查看全部會話",
+  "allQuizzes": "全部測驗",
+  "ownedBy": "來自 {{name}}",
+  "view": "檢視"
 }

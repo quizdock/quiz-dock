@@ -5,7 +5,6 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
-import type { MeResponseDtoEmail } from './meResponseDtoEmail';
 import type { UserRole } from './userRole';
 
 export interface MeResponseDto {
@@ -17,7 +16,9 @@ export interface MeResponseDto {
      * Courriel, si connu.
      * @nullable
      */
-  email: MeResponseDtoEmail;
+  email: string | null;
   /** Rôle. */
   role: UserRole;
+  /** Sujet stable du compte (`sub` OIDC, ou `local:<slug>`) — c'est ce qu'un opérateur donne à `user:set-role`. */
+  subject: string;
 }

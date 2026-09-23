@@ -1416,7 +1416,7 @@
             "description": "Nom affiché."
           },
           "email": {
-            "type": "object",
+            "type": "string",
             "description": "Courriel, si connu.",
             "nullable": true
           },
@@ -1427,13 +1427,18 @@
                 "$ref": "#/components/schemas/UserRole"
               }
             ]
+          },
+          "subject": {
+            "type": "string",
+            "description": "Sujet stable du compte (`sub` OIDC, ou `local:<slug>`) — c'est ce qu'un opérateur donne à `user:set-role`."
           }
         },
         "required": [
           "id",
           "displayName",
           "email",
-          "role"
+          "role",
+          "subject"
         ]
       },
       "AuthConfigDto": {

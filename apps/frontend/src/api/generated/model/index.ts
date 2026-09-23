@@ -36,7 +36,6 @@ export * from './mediaControllerUploadBody';
 export * from './mediaDescriptionDto';
 export * from './mediaUploadResultDto';
 export * from './meResponseDto';
-export * from './meResponseDtoEmail';
 export * from './questionDto';
 export * from './questionDtoAcceptedAnswersItem';
 export * from './questionDtoBackgroundGradient';

@@ -52,6 +52,9 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
             ) : null}
             <Separator />
             <p className="text-muted-foreground truncate px-2 pt-1.5 text-xs">{user}</p>
+            <Link to="/profile" className="hover:bg-accent rounded-md px-2 py-2 text-sm">
+              {t('nav.profile')}
+            </Link>
             <button
               type="button"
               onClick={onLogout}

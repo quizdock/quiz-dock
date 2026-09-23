@@ -53,5 +53,8 @@
   "noSessionMatch": "没有会话符合此搜索。",
   "noLiveSession": "当前没有进行中的会话。",
   "projection": "投影",
-  "seeAllSessions": "查看全部会话"
+  "seeAllSessions": "查看全部会话",
+  "allQuizzes": "全部测验",
+  "ownedBy": "来自 {{name}}",
+  "view": "查看"
 }

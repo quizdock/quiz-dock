@@ -42,7 +42,8 @@
     "screen": "投影",
     "join": "加入",
     "live": "進行中的會話",
-    "templates": "範本"
+    "templates": "範本",
+    "profile": "我的帳號"
   },
   "demo": {
     "banner": "公開示範 - 所有資料每小時清空；主持席位每次持續 {{count}} 分鐘。"

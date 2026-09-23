@@ -53,5 +53,8 @@
   "noSessionMatch": "No session matches this search.",
   "noLiveSession": "No session is running.",
   "projection": "Projection",
-  "seeAllSessions": "See all sessions"
+  "seeAllSessions": "See all sessions",
+  "allQuizzes": "All quizzes",
+  "ownedBy": "by {{name}}",
+  "view": "View"
 }

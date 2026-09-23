@@ -16,6 +16,7 @@ import {
 import { getQuizzesControllerListQueryKey } from '../api/generated/quizzes/quizzes';
 import type { StoreEntryDto } from '../api/generated/model';
 import { apiErrorText } from '../api/http';
+import { useRole } from '../auth/use-role';
 
 /**
  * The catalogue of templates shared on this instance (#39). Taking one puts an
@@ -27,6 +28,9 @@ export function TemplatesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const list = useStoreControllerList();
+  // Retirer une entrée est de la modération — le métier du gestionnaire ; prendre
+  // une copie crée un quiz, donc c'est celui de l'hôte (RG-14).
+  const { isManager } = useRole();
   const take = useStoreControllerTake();
   const withdraw = useStoreControllerWithdraw();
   const [error, setError] = useState<string | null>(null);
@@ -97,14 +101,17 @@ export function TemplatesPage() {
                   {entry.license ? ` · ${entry.license}` : ''}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => void onTake(entry)}
-                    disabled={take.isPending}
-                  >
-                    <Download className="size-4" />
-                    {t('take')}
-                  </Button>
+                  {/* Prendre une copie crée un quiz : réservé aux hôtes (RG-14). */}
+                  {!isManager ? (
+                    <Button
+                      type="button"
+                      onClick={() => void onTake(entry)}
+                      disabled={take.isPending}
+                    >
+                      <Download className="size-4" />
+                      {t('take')}
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="outline"

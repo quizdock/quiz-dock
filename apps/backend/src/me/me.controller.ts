@@ -19,6 +19,7 @@ export class MeController {
       displayName: user.displayName,
       email: user.email,
       role: user.role,
+      subject: user.oidcSubject,
     };
   }
 }

@@ -12,6 +12,7 @@ import { PreviewPage } from './routes/preview-page';
 import { ScreenPage } from './routes/screen-page';
 import { SessionDetailPage, SessionPlayerPage, SessionsPage } from './routes/sessions-page';
 import { LivePage } from './routes/live-page';
+import { ProfilePage } from './routes/profile-page';
 import { TemplatesPage } from './routes/templates-page';
 import { FeedbackPage } from './routes/feedback-page';
 import { RootLayout } from './routes/root-layout';
@@ -62,6 +63,14 @@ const dashboardRoute = createRoute({
   path: '/quizzes',
   beforeLoad: requireAuth,
   component: DashboardPage,
+});
+
+/** Le compte de la personne connectée : identité, rôle, siège (mode local). */
+export const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/profile',
+  beforeLoad: requireAuth,
+  component: ProfilePage,
 });
 
 /** Les sessions en cours, en pleine page : le menu de la barre n'en montre que les premières. */
@@ -223,6 +232,7 @@ export const routeTree = rootRoute.addChildren([
   dashboardRoute,
   templatesRoute,
   liveRoute,
+  profileRoute,
   editorRoute,
   previewRoute,
   sessionsRoute,

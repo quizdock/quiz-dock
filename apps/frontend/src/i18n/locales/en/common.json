@@ -42,7 +42,8 @@
     "screen": "Projection",
     "join": "Join",
     "live": "Live sessions",
-    "templates": "Templates"
+    "templates": "Templates",
+    "profile": "My account"
   },
   "demo": {
     "banner": "Public demo — everything is wiped every hour; the host seat lasts {{count}} min at a time."
