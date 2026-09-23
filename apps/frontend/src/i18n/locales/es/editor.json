@@ -43,7 +43,7 @@
     "enableLabel": "Permitir opiniones de los participantes",
     "enableHelp": "Se ofrece un panel de valoración al final de cada sesión.",
     "title": "Opiniones de los jugadores",
-    "empty": "Aún no hay opiniones. Los jugadores pueden valorar el quiz al final de la sesión.",
+    "empty": "Aún no hay opiniones.",
     "starsAriaLabel": "{{value}} de 5",
     "seeAll_one": "Ver la opinión",
     "seeAll_other": "Ver las {{count}} opiniones",

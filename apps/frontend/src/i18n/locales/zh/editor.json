@@ -43,7 +43,7 @@
     "enableLabel": "允许参与者评价",
     "enableHelp": "每场结束时向参与者提供评分面板。",
     "title": "玩家评价",
-    "empty": "暂无评价。玩家可在会话结束时为测验评分。",
+    "empty": "暂无评价。",
     "starsAriaLabel": "5 星中的 {{value}} 星",
     "seeAll_one": "查看评价",
     "seeAll_other": "查看全部 {{count}} 条评价",

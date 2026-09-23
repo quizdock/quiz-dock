@@ -43,7 +43,7 @@
     "enableLabel": "允許參與者提供回饋",
     "enableHelp": "每場結束時向參與者提供回饋界面。",
     "title": "玩家回饋",
-    "empty": "暫無回饋。玩家可在會話結束時為測驗提供回饋。",
+    "empty": "暫無回饋。",
     "starsAriaLabel": "{{value}} / 5 星",
     "seeAll_one": "檢視回饋",
     "seeAll_other": "檢視全部 {{count}} 則回饋",

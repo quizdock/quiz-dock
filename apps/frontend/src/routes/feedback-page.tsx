@@ -39,27 +39,25 @@ export function FeedbackSummary({
   summary,
   picked,
   onPick,
-  compact,
 }: {
   summary: Pick<QuizFeedbackSummaryDto, 'count' | 'average' | 'distribution'>;
   picked?: number;
   onPick?: (rating: number | undefined) => void;
-  compact?: boolean;
 }) {
   const { t } = useTranslation('editor');
   const max = Math.max(1, ...summary.distribution);
   return (
-    <div className={cn('flex flex-wrap gap-6', compact ? 'items-center' : 'items-start')}>
+    <div className="flex flex-wrap items-start gap-6">
       <div className="flex items-baseline gap-2">
-        <span className={cn('font-bold tabular-nums', compact ? 'text-2xl' : 'text-4xl')}>
+        <span className="text-4xl font-bold tabular-nums">
           {summary.count ? summary.average.toFixed(1) : '–'}
         </span>
-        <StarRow value={Math.round(summary.average)} size={compact ? 'size-4' : 'size-5'} />
+        <StarRow value={Math.round(summary.average)} size="size-5" />
         <span className="text-muted-foreground text-sm">
           {t('feedback.count', { count: summary.count })}
         </span>
       </div>
-      <ul className={cn('flex flex-col gap-1', compact ? 'w-40' : 'w-full max-w-sm')}>
+      <ul className="flex w-full max-w-sm flex-col gap-1">
         {[5, 4, 3, 2, 1].map((star) => {
           const n = summary.distribution[star - 1] ?? 0;
           const row = (

@@ -43,7 +43,7 @@
     "enableLabel": "Allow player feedback",
     "enableHelp": "A rating panel is offered at the end of every session.",
     "title": "Player feedback",
-    "empty": "No feedback yet. Players can rate the quiz at the end of a session.",
+    "empty": "No feedback yet.",
     "starsAriaLabel": "{{value}} out of 5",
     "seeAll_one": "See the review",
     "seeAll_other": "See all {{count}} reviews",

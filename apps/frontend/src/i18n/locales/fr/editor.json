@@ -43,7 +43,7 @@
     "enableLabel": "Autoriser les avis des participants",
     "enableHelp": "Un panneau de notation est proposé à la fin de chaque session.",
     "title": "Avis des participants",
-    "empty": "Aucun avis pour l’instant. Les participants peuvent noter le quiz en fin de session.",
+    "empty": "Aucun avis pour l’instant.",
     "starsAriaLabel": "{{value}} sur 5",
     "seeAll_one": "Voir l’avis",
     "seeAll_other": "Voir les {{count}} avis",

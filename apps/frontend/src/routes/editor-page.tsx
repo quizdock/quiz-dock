@@ -19,6 +19,7 @@ import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import {
+  Archive,
   ArrowDown,
   ArrowUp,
   Download,
@@ -36,7 +37,6 @@ import {
   Save,
   Share2,
   Sparkles,
-  Star,
   Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
@@ -61,7 +61,7 @@ import { DraftNotice } from '@/components/draft-notice';
 import { Drawer } from '@/components/ui/drawer';
 import { QuestionForm } from './question-form';
 import { SlideForm } from './slide-form';
-import { FeedbackSummary } from './feedback-page';
+import { StarRow } from './feedback-page';
 import {
   useSlidesControllerRemove,
   useSlidesControllerReorderItems,
@@ -389,8 +389,21 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   <Download className="size-4" />
                   {t('header.export')}
                 </Button>
-                {/* Supprimer est une action du quiz, pas un réglage : elle est avec les
-                autres, en dernier et dans le ton qui convient. */}
+                {/* Archiver et supprimer sont des actions du quiz, pas des réglages :
+                elles sont avec les autres, en dernier et dans le ton qui convient. */}
+                {quiz.status !== 'archived' ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    title={t('broadcast.archiveHelp')}
+                    disabled={transition.isPending}
+                    onClick={() => void changeStatus('archived')}
+                  >
+                    <Archive className="size-4" />
+                    {t('broadcast.archive')}
+                  </Button>
+                ) : null}
                 <Button
                   type="button"
                   variant="ghost"
@@ -435,59 +448,27 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 </div>
               )}
             </form.Field>
-            {/* À droite de la description, ce qu'on règle en écrivant. Empilé, la
-                colonne est inversée : l'archivage passe au-dessus des avis sans
-                qu'aucun `order` n'intervienne. La bascule dépend de la largeur de
-                **cette zone**, pas de la fenêtre — la cellule est bien plus étroite
-                que l'écran. */}
-            {/* Deux cases : les avis, et l'archivage à leur droite, plus étroit.
-                L'archivage vient en premier dans le document — empilé sur un petit
-                écran il est donc au-dessus — et la grille le replace en colonne 2,
-                même rangée, dès qu'il y a la place. Pas d'`order` : la grille dit
-                où va quoi. */}
-            <div className="grid gap-x-6 gap-y-4 sm:grid-cols-[minmax(0,1fr)_11rem]">
-              {quiz.status !== 'archived' ? (
-                <Section className="items-end py-1 text-right sm:col-start-2 sm:row-start-1">
-                  <p className="text-muted-foreground text-xs leading-snug">
-                    {t('broadcast.archiveHelp')}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="self-end"
-                    disabled={transition.isPending}
-                    onClick={() => void changeStatus('archived')}
-                  >
-                    {t('broadcast.archive')}
-                  </Button>
-                </Section>
-              ) : null}
-              <Section className="bg-muted/30 @container min-w-0 rounded-lg border p-3 sm:col-start-1 sm:row-start-1">
-                {/* L'état des avis se lit à côté de l'interrupteur quand la carte a
-                    de quoi : une ligne n'a pas à en coûter deux. À l'étroit il passe
-                    dessous. C'est la largeur de **la carte** qui décide, pas celle de
-                    la fenêtre — d'où le conteneur. */}
-                <div className="flex flex-col gap-x-4 gap-y-3 @md:flex-row @md:items-start">
-                  <label className="flex min-w-0 items-start gap-2 text-sm @md:flex-1">
-                    <Switch
-                      className="mt-0.5"
-                      checked={quiz.feedbackEnabled}
-                      disabled={update.isPending}
-                      onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
-                      aria-label={t('feedback.enableLabel')}
-                    />
-                    <span>
-                      <span className="font-medium">{t('feedback.enableLabel')}</span>
-                      <span className="text-muted-foreground block text-xs leading-snug">
-                        {t('feedback.enableHelp')}
-                      </span>
-                    </span>
-                  </label>
-                  <FeedbackSection quizId={quiz.id} className="min-w-0 text-xs @md:flex-1" />
-                </div>
-              </Section>
-            </div>
+            {/* À droite de la description, le seul réglage qui s'écrit ici. L'état des
+                avis se lit à côté de l'interrupteur quand la carte a de quoi, dessous
+                sinon : c'est la largeur de **la carte** qui décide, pas celle de la
+                fenêtre — d'où le conteneur. */}
+            <Section className="bg-muted/30 @container h-fit min-w-0 rounded-lg border px-3 py-2">
+              <div className="flex flex-col gap-x-4 gap-y-2 @md:flex-row @md:items-center">
+                <label
+                  className="flex min-w-0 items-center gap-2 text-sm @md:flex-1"
+                  title={t('feedback.enableHelp')}
+                >
+                  <Switch
+                    checked={quiz.feedbackEnabled}
+                    disabled={update.isPending}
+                    onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
+                    aria-label={t('feedback.enableLabel')}
+                  />
+                  <span className="font-medium">{t('feedback.enableLabel')}</span>
+                </label>
+                <FeedbackSection quizId={quiz.id} />
+              </div>
+            </Section>
           </div>
           {quizDraft && isDirty ? (
             <DraftNotice
@@ -766,33 +747,28 @@ function Section({
 }
 
 /**
- * Player feedback at a glance (§2.11): whole-quiz summary and a link to the
- * full, paginated list — reviews can be numerous, they do not belong here.
+ * Player feedback at a glance (§2.11): the average, and a way in. The
+ * distribution and the reviews themselves live on their own page.
  */
-function FeedbackSection({ quizId, className }: { quizId: string; className?: string }) {
+function FeedbackSection({ quizId }: { quizId: string }) {
   const { t } = useTranslation(['editor', 'common']);
   const { data, isLoading } = useQuizzesControllerFeedback(quizId, { page: 1, pageSize: 1 });
   const summary = data?.data;
+  if (isLoading || !summary) return null;
+  if (summary.count === 0)
+    return <p className="text-muted-foreground text-xs">{t('feedback.empty')}</p>;
   return (
-    <Section className={className}>
-      {isLoading ? <p className="text-muted-foreground text-sm">{t('common:loading')}</p> : null}
-      {summary && summary.count === 0 ? (
-        <p className="text-muted-foreground text-sm">{t('feedback.empty')}</p>
-      ) : null}
-      {summary && summary.count > 0 ? (
-        <>
-          <FeedbackSummary summary={summary} compact />
-          <Link
-            to="/quizzes/$quizId/reviews"
-            params={{ quizId }}
-            className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'self-start')}
-          >
-            <Star className="size-4" />
-            {t('feedback.seeAll', { count: summary.count })}
-          </Link>
-        </>
-      ) : null}
-    </Section>
+    <Link
+      to="/quizzes/$quizId/reviews"
+      params={{ quizId }}
+      className="hover:bg-accent/60 -mx-2 flex items-center gap-2 rounded-md px-2 py-0.5 text-sm"
+    >
+      <span className="font-semibold tabular-nums">{summary.average.toFixed(1)}</span>
+      <StarRow value={Math.round(summary.average)} size="size-4" />
+      <span className="text-muted-foreground text-xs">
+        {t('feedback.seeAll', { count: summary.count })}
+      </span>
+    </Link>
   );
 }
 
