@@ -8,7 +8,9 @@ import type {
   QuestionStartPayload,
   QuestionType,
 } from '@quiz-dock/contracts';
+import { effectiveTimeLimitS, mediaDurationMs } from '@quiz-dock/contracts';
 import { QUESTION_MEDIA_INCLUDE, liveMediaOf } from '../questions/question-media';
+import { READ_DELAY_MS } from './game.keys';
 import { basePointsFor } from './scoring';
 import type { QuizSnapshot, SnapshotQuestion, SnapshotSlide } from './game.types';
 import type {
@@ -41,6 +43,9 @@ export const QUIZ_SNAPSHOT_INCLUDE = quizWithContent.include;
 const optionImageOf = (m: { url: string; kind: string; alt?: string | null } | null) =>
   m?.kind === 'image' ? { url: m.url, kind: 'image' as const, alt: m.alt ?? null } : null;
 
+/** Reading window before the answers open (configurable, like the engine reads it). */
+const readDelayMs = () => Number(process.env.GAME_READ_DELAY_MS ?? READ_DELAY_MS);
+
 /**
  * Construit le snapshot serveur figé d'un quiz (SPECIFICATIONS §8). Fonction pure :
  * résout les points de base depuis `pointsMode`, embarque les bonnes réponses
@@ -69,7 +74,14 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
             : null,
         textTone: q.textTone as SlideTextTone,
         textOutline: q.textOutline,
-        timeLimitS: q.timeLimitS,
+        // Stretched when the media would still be playing (quiz-wide pause after it):
+        // the timer, the display and the speed weighting all read this one value.
+        timeLimitS: effectiveTimeLimitS(
+          q.timeLimitS,
+          mediaDurationMs(liveMediaOf(q)),
+          quiz.mediaTailS,
+          readDelayMs(),
+        ),
         revealDelayS: q.revealDelayS ?? null,
         basePoints: basePointsFor(q.pointsMode as PointsMode),
         pointsMode: q.pointsMode as PointsMode,

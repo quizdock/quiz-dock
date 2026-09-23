@@ -1,6 +1,8 @@
 import type { Audio, QuestionMedia } from '@quiz-dock/contracts';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { mediaControllerDescribe } from '../api/generated/media/media';
 import { MediaUpload, type UploadedMedia } from './media-upload';
 
 /**
@@ -103,3 +105,27 @@ export function QuestionMediaField({
 
 /** The visual slot emptied, the sound kept. */
 const NO_VISUAL = (audio: Audio | null): QuestionMedia => ({ visual: null, audio });
+
+/**
+ * How long the question's media plays (ms), for the timing hint: a sound says
+ * it itself; an uploaded video is asked of the server once per video.
+ */
+export function useMediaDurationMs(media: QuestionMedia): number | null {
+  const videoId =
+    media.visual?.kind === 'video' && media.visual.source === 'upload'
+      ? media.visual.assetId
+      : null;
+  const [video, setVideo] = useState<{ id: string; ms: number | null } | null>(null);
+  useEffect(() => {
+    if (!videoId) return;
+    let cancelled = false;
+    void mediaControllerDescribe(videoId)
+      .then(({ data }) => !cancelled && setVideo({ id: videoId, ms: data.durationMs ?? null }))
+      .catch(() => undefined); // no hint rather than a wrong one
+    return () => {
+      cancelled = true;
+    };
+  }, [videoId]);
+  if (media.audio) return media.audio.durationMs;
+  return videoId && video?.id === videoId ? video.ms : null;
+}

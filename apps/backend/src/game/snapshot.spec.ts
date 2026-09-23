@@ -151,6 +151,28 @@ describe('buildSnapshot', () => {
     });
   });
 
+  it('stretches a question whose sound outlasts its timer, keeping the quiz’s pause after it', () => {
+    const peaks = new Array(200).fill(0.4);
+    const snap = buildSnapshot(
+      quiz({
+        mediaTailS: 3,
+        questions: [
+          {
+            ...baseQuestion,
+            type: 'poll',
+            pointsMode: 'none',
+            timeLimitS: 20,
+            audioMedia: { url: '/media/a', kind: 'audio', durationMs: 42_000, peaks },
+          },
+          { ...baseQuestion, id: 'q2', type: 'poll', pointsMode: 'none', timeLimitS: 20 },
+        ],
+      } as never),
+    );
+    // Starts 3 s before the answers open (read delay), 42 s long, +3 s → 42 s of answering.
+    expect(snap.questions[0].timeLimitS).toBe(42);
+    expect(snap.questions[1].timeLimitS).toBe(20);
+  });
+
   it('plays a video with its own gain', () => {
     const snap = buildSnapshot(
       quiz({

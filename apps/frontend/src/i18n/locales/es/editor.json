@@ -23,7 +23,10 @@
     "titleLabel": "Título",
     "descriptionLabel": "Descripción",
     "descriptionPlaceholder": "Descripción (opcional)…",
-    "save": "Guardar"
+    "save": "Guardar",
+    "mediaTailLabel": "Pausa tras un medio",
+    "mediaTailHelp": "Cuando el sonido o el vídeo de una pregunta dura más que su cronómetro, la pregunta se alarga hasta el final del medio más esta pausa: nada se corta a mitad.",
+    "seconds": "s"
   },
   "broadcast": {
     "title": "Difusión",
@@ -222,7 +225,8 @@
       "confirmLabel": "Eliminar"
     },
     "titleEdit": "Editar la pregunta",
-    "titleAdd": "Nueva pregunta"
+    "titleAdd": "Nueva pregunta",
+    "stretchedTime": "El medio dura {{media}} s: la pregunta durará {{total}} s (final del medio + pausa de {{tail}} s del quiz)."
   },
   "preview": {
     "view": "Vista previa (vista del jugador)",

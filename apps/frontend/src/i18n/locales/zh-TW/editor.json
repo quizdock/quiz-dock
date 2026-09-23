@@ -23,7 +23,10 @@
     "titleLabel": "標題",
     "descriptionLabel": "簡介",
     "descriptionPlaceholder": "簡介（可選）…",
-    "save": "儲存"
+    "save": "儲存",
+    "mediaTailLabel": "媒體播放後的停頓",
+    "mediaTailHelp": "當題目的聲音或影片比計時更長時，題目時間會延長到媒體結束再加上此停頓：播放不會被中途打斷。",
+    "seconds": "秒"
   },
   "broadcast": {
     "title": "廣播",
@@ -222,7 +225,8 @@
       "confirmLabel": "刪除"
     },
     "titleEdit": "編輯題目",
-    "titleAdd": "新增題目"
+    "titleAdd": "新增題目",
+    "stretchedTime": "媒體長度 {{media}} 秒：此題將持續 {{total}} 秒（媒體結束 + 測驗設定的 {{tail}} 秒停頓）。"
   },
   "preview": {
     "view": "預覽（玩家視角）",

@@ -10,4 +10,10 @@ export interface MediaDescriptionDto {
   id: string;
   /** @nullable */
   alt: string | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  durationMs: number | null;
 }

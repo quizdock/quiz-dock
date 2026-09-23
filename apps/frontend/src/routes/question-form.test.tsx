@@ -205,3 +205,45 @@ describe('QuestionForm — media slots', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 });
+
+describe('QuestionForm — media timing', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  it('says when a long sound stretches the question, and by how much', async () => {
+    localStorage.setItem(
+      'draft:quiz:q1:question:new',
+      JSON.stringify({
+        type: 'poll',
+        prompt: 'Q ?',
+        media: {
+          visual: null,
+          audio: {
+            assetId: 'A'.repeat(26),
+            origin: 'upload',
+            durationMs: 42_000,
+            peaks: new Array(200).fill(0.5),
+          },
+        },
+        answerExplanation: '',
+        background: { mediaId: null, gradient: null, textTone: 'light', textOutline: true },
+        timeLimitS: 20,
+        revealDelayS: null,
+        pointsMode: 'none',
+        scoring: 'standard',
+        numericValue: 0,
+        numericTolerance: 0,
+        options: [],
+        acceptedAnswers: [],
+      }),
+    );
+    mockApi([]);
+    renderForm();
+    // 42 s of sound starting 3 s before the answers, + the default 3 s pause → 42 s.
+    expect(await screen.findByRole('note', { name: '' })).toHaveTextContent(
+      'Le média dure 42 s : la question durera 42 s',
+    );
+  });
+});

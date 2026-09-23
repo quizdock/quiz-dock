@@ -1660,6 +1660,11 @@
           "feedbackEnabled": {
             "type": "boolean"
           },
+          "mediaTailS": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "questionCount": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -1688,6 +1693,7 @@
           "status",
           "language",
           "feedbackEnabled",
+          "mediaTailS",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -1714,6 +1720,11 @@
           },
           "feedbackEnabled": {
             "type": "boolean"
+          },
+          "mediaTailS": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 30
           },
           "coverMediaId": {
             "type": "string",
@@ -1758,6 +1769,11 @@
           },
           "feedbackEnabled": {
             "type": "boolean"
+          },
+          "mediaTailS": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "questionCount": {
             "type": "integer",
@@ -2565,6 +2581,7 @@
           "status",
           "language",
           "feedbackEnabled",
+          "mediaTailS",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -3004,6 +3021,11 @@
           "feedbackEnabled": {
             "type": "boolean"
           },
+          "mediaTailS": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 30
+          },
           "coverMediaId": {
             "type": "string",
             "minLength": 26,
@@ -3061,11 +3083,18 @@
           "alt": {
             "type": "string",
             "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
           }
         },
         "required": [
           "id",
-          "alt"
+          "alt",
+          "durationMs"
         ]
       },
       "MediaAltDto": {

@@ -23,7 +23,10 @@
     "titleLabel": "Title",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Description (optional)…",
-    "save": "Save"
+    "save": "Save",
+    "mediaTailLabel": "Pause after a media",
+    "mediaTailHelp": "When a question’s sound or video lasts longer than its timer, the question is stretched to the end of the media plus this pause: nothing is cut mid-play.",
+    "seconds": "s"
   },
   "broadcast": {
     "title": "Broadcast",
@@ -222,7 +225,8 @@
       "confirmLabel": "Remove"
     },
     "titleEdit": "Edit question",
-    "titleAdd": "New question"
+    "titleAdd": "New question",
+    "stretchedTime": "The media lasts {{media}} s: the question will last {{total}} s (end of the media + the quiz’s {{tail}} s pause)."
   },
   "preview": {
     "view": "Preview (player view)",

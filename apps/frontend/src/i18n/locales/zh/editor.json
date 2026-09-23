@@ -23,7 +23,10 @@
     "titleLabel": "标题",
     "descriptionLabel": "描述",
     "descriptionPlaceholder": "描述（可选）…",
-    "save": "保存"
+    "save": "保存",
+    "mediaTailLabel": "媒体播放后的停顿",
+    "mediaTailHelp": "当题目的声音或视频比计时更长时，题目时间会延长到媒体结束再加上此停顿：播放不会被中途打断。",
+    "seconds": "秒"
   },
   "broadcast": {
     "title": "广播",
@@ -222,7 +225,8 @@
       "confirmLabel": "删除"
     },
     "titleEdit": "编辑题目",
-    "titleAdd": "新建题目"
+    "titleAdd": "新建题目",
+    "stretchedTime": "媒体时长 {{media}} 秒：此题将持续 {{total}} 秒（媒体结束 + 测验设置的 {{tail}} 秒停顿）。"
   },
   "preview": {
     "view": "预览（玩家视图）",

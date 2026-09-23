@@ -70,6 +70,7 @@ export class QuizzesService {
         language: dto.language,
         coverMediaId: dto.coverMediaId,
         feedbackEnabled: dto.feedbackEnabled,
+        mediaTailS: dto.mediaTailS,
       },
     });
   }
@@ -292,6 +293,7 @@ export class QuizzesService {
         description: src.description,
         coverMediaId: src.coverMediaId,
         language: src.language,
+        mediaTailS: src.mediaTailS,
         questionCount: src.questions.length,
         questions: {
           create: src.questions.map((q) => ({
@@ -367,6 +369,7 @@ export class QuizzesService {
         language: dto.language,
         coverMediaId: dto.coverMediaId,
         feedbackEnabled: dto.feedbackEnabled,
+        mediaTailS: dto.mediaTailS,
       },
     });
   }

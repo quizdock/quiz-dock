@@ -119,6 +119,8 @@ export const quizBundleSchema = z.object({
     /** BCP 47 tag — a dedicated field, never a tag. */
     language: z.string().min(2).max(10).optional(),
     feedbackEnabled: z.boolean().optional(),
+    /** Pause after a question's media before its time can run out (s, version 3). */
+    mediaTailS: z.number().int().min(0).max(30).optional(),
     cover: mediaPathSchema.nullable().optional(),
     ...storeBundleFields,
   }),

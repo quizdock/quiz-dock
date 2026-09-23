@@ -39,6 +39,7 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react';
+import { MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
@@ -225,6 +226,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     await invalidate();
   };
 
+  const setMediaTailS = async (mediaTailS: number) => {
+    await update.mutateAsync({ id: quiz.id, data: { mediaTailS } });
+    await invalidate();
+  };
+
   const changeStatus = async (status: 'draft' | 'ready' | 'archived') => {
     await transition.mutateAsync({ id: quiz.id, data: { status } });
     await invalidate();
@@ -287,7 +293,13 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const editingItem = items.find((it) => it.id === editing);
   const openForm: ReactNode =
     editing === 'new' ? (
-      <QuestionForm key="new" quizId={quiz.id} onClose={closeForm} onDirtyChange={onFormDirty} />
+      <QuestionForm
+        key="new"
+        quizId={quiz.id}
+        mediaTailS={quiz.mediaTailS}
+        onClose={closeForm}
+        onDirtyChange={onFormDirty}
+      />
     ) : editing === 'new-slide' ? (
       <SlideForm key="new-slide" quizId={quiz.id} onClose={closeForm} onDirtyChange={onFormDirty} />
     ) : editingItem?.kind === 'question' ? (
@@ -296,6 +308,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         key={editingItem.id}
         quizId={quiz.id}
         question={editingItem.question}
+        mediaTailS={quiz.mediaTailS}
         onClose={closeForm}
         onDirtyChange={onFormDirty}
       />
@@ -481,6 +494,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   </label>
                   <FeedbackSection quizId={quiz.id} />
                 </div>
+                <MediaTailField
+                  value={quiz.mediaTailS}
+                  disabled={update.isPending}
+                  onSave={(mediaTailS) => void setMediaTailS(mediaTailS)}
+                />
               </Section>
               {/* Où en est le quiz, et l'action qui suit : sous le réglage, dans la
                   même colonne — l'accès live s'affiche ici pendant une session. */}
@@ -1157,5 +1175,50 @@ function ShareAsTemplate({ quizId }: { quizId: string }) {
         onConfirm={() => void onShare()}
       />
     </>
+  );
+}
+
+/**
+ * The quiz-wide pause kept after a question's sound or video: a media longer
+ * than its question stretches the question to its end plus this pause, so no
+ * sound is cut mid-play. Saved when the field is left.
+ */
+function MediaTailField({
+  value,
+  disabled,
+  onSave,
+}: {
+  value: number;
+  disabled: boolean;
+  onSave: (seconds: number) => void;
+}) {
+  const { t } = useTranslation('editor');
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  const commit = () => {
+    const n = Math.round(Number(draft));
+    const clamped = Number.isFinite(n) ? Math.min(MEDIA_TAIL_MAX_S, Math.max(0, n)) : value;
+    setDraft(String(clamped));
+    if (clamped !== value) onSave(clamped);
+  };
+  return (
+    <label
+      className="mt-2 flex items-center gap-2 border-t pt-2 text-sm"
+      title={t('settings.mediaTailHelp')}
+    >
+      <span className="font-medium">{t('settings.mediaTailLabel')}</span>
+      <Input
+        type="number"
+        min={0}
+        max={MEDIA_TAIL_MAX_S}
+        className="h-8 w-16"
+        value={draft}
+        disabled={disabled}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === 'Enter' && commit()}
+      />
+      <span className="text-muted-foreground">{t('settings.seconds')}</span>
+    </label>
   );
 }

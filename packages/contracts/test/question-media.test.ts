@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   AUDIO_PEAK_COUNT,
   VIDEO_WITH_AUDIO,
+  effectiveTimeLimitS,
+  mediaDurationMs,
   playbackGainDb,
   questionMediaSchema,
 } from '../src/question-media';
@@ -67,5 +69,36 @@ describe('playbackGainDb', () => {
 
   it('leaves an unmeasured sound alone', () => {
     expect(playbackGainDb(null, null)).toBe(0);
+  });
+});
+
+describe('effectiveTimeLimitS', () => {
+  it('keeps the question’s time when the media ends in it, with its pause', () => {
+    // 10 s sound, starts 3 s before the answers: ends 7 s in, +3 s pause → 10 s ≤ 20 s.
+    expect(effectiveTimeLimitS(20, 10_000, 3, 3000)).toBe(20);
+  });
+
+  it('stretches it to the end of a longer media plus the pause', () => {
+    // 42 s sound → ends 39 s after the answers open, +3 s → 42 s.
+    expect(effectiveTimeLimitS(20, 42_000, 3, 3000)).toBe(42);
+    expect(effectiveTimeLimitS(20, 42_500, 0, 3000)).toBe(40);
+  });
+
+  it('leaves a silent question alone', () => {
+    expect(effectiveTimeLimitS(20, null, 3, 3000)).toBe(20);
+  });
+
+  it('reads the duration of the sound, or of the video', () => {
+    const peaks = new Array(200).fill(0);
+    expect(
+      mediaDurationMs({ visual: null, audio: { url: 'a', durationMs: 5, peaks, gainDb: 0 } }),
+    ).toBe(5);
+    expect(
+      mediaDurationMs({
+        visual: { kind: 'video', source: 'upload', url: 'v', gainDb: 0, durationMs: 9 },
+        audio: null,
+      }),
+    ).toBe(9);
+    expect(mediaDurationMs({ visual: null, audio: null })).toBeNull();
   });
 });

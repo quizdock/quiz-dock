@@ -21,6 +21,11 @@ export interface CreateQuizDto {
   language?: string;
   feedbackEnabled?: boolean;
   /**
+     * @minimum 0
+     * @maximum 30
+     */
+  mediaTailS?: number;
+  /**
      * @minLength 26
      * @maxLength 26
      */

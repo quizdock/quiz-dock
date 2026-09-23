@@ -48,7 +48,13 @@ export function liveMediaOf(q: WithMedia): LiveQuestionMedia {
     visual: !visual
       ? null
       : visual.kind === 'video'
-        ? { kind: 'video', source: 'upload', url: visual.url, gainDb: gain(visual) }
+        ? {
+            kind: 'video',
+            source: 'upload',
+            url: visual.url,
+            gainDb: gain(visual),
+            ...(visual.durationMs ? { durationMs: visual.durationMs } : {}),
+          }
         : { kind: 'image', url: visual.url, alt: visual.alt ?? null },
     audio:
       audio && visual?.kind !== 'video'

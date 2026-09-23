@@ -16,7 +16,9 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  MEDIA_TAIL_DEFAULT_S,
   NO_QUESTION_MEDIA,
+  effectiveTimeLimitS,
   type QuestionMedia,
   type SlideGradient,
   type SlideTextTone,
@@ -42,7 +44,7 @@ import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { BackgroundField, NO_BACKGROUND, type BackgroundValue } from './background-field';
-import { QuestionMediaField } from './question-media-field';
+import { QuestionMediaField, useMediaDurationMs } from './question-media-field';
 import {
   useQuestionsControllerAdd,
   useQuestionsControllerUpdate,
@@ -190,11 +192,14 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
 export function QuestionForm({
   quizId,
   question,
+  mediaTailS = MEDIA_TAIL_DEFAULT_S,
   onClose,
   onDirtyChange,
 }: {
   quizId: string;
   question?: QuizDetailDtoQuestionsItem;
+  /** The quiz's pause after a media: a longer media stretches the question's time. */
+  mediaTailS?: number;
   onClose: () => void;
   /** Reports unsaved edits so the parent can guard against losing them. */
   onDirtyChange?: (dirty: boolean) => void;
@@ -261,6 +266,10 @@ export function QuestionForm({
   useUnsavedGuard(dirty);
   const cancel = () => (dirty ? setConfirmDiscard(true) : onClose());
   const media = useStore(form.store, (s) => s.values.media);
+  const timeLimitS = useStore(form.store, (s) => s.values.timeLimitS);
+  const mediaMs = useMediaDurationMs(media);
+  // What the session will really give this question (the server computes the same).
+  const stretchedS = effectiveTimeLimitS(timeLimitS, mediaMs, mediaTailS, READ_DELAY_DEFAULT_MS);
   const options = useStore(form.store, (s) => s.values.options);
   // Index of the option whose removal awaits confirmation.
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
@@ -417,6 +426,15 @@ export function QuestionForm({
             )}
           </form.Field>
         )}
+        {stretchedS > timeLimitS ? (
+          <p className="text-muted-foreground col-span-full text-sm" role="note">
+            {t('questionForm.stretchedTime', {
+              media: Math.ceil((mediaMs ?? 0) / 1000),
+              total: stretchedS,
+              tail: mediaTailS,
+            })}
+          </p>
+        ) : null}
         {SCORING_BY_TYPE[type].length > 0 && (
           <form.Field name="scoring">
             {(field) => (
@@ -674,6 +692,9 @@ export function QuestionForm({
     </form>
   );
 }
+
+/** The engine's default reading window before answers open (GAME_READ_DELAY_MS), for the hint. */
+const READ_DELAY_DEFAULT_MS = 3000;
 
 /** Construit le payload API en n'envoyant que les champs pertinents pour le type. */
 function buildPayload(v: FormValues) {

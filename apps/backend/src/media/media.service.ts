@@ -177,7 +177,7 @@ export class MediaService implements OnModuleInit {
     ownerId: string,
     id: string,
     alt: string,
-  ): Promise<{ id: string; alt: string | null }> {
+  ): Promise<{ id: string; alt: string | null; durationMs: number | null }> {
     const asset = await this.prisma.mediaAsset.findFirst({ where: { id, ownerId } });
     if (!asset) {
       throw new NotFoundException('media.not_found');
@@ -186,16 +186,19 @@ export class MediaService implements OnModuleInit {
     const updated = await this.prisma.mediaAsset.update({
       where: { id },
       data: { alt: trimmed || null },
-      select: { id: true, alt: true },
+      select: { id: true, alt: true, durationMs: true },
     });
     return updated;
   }
 
   /** Métadonnées d'un média possédé (l'éditeur relit l'alternative saisie). */
-  async describe(ownerId: string, id: string): Promise<{ id: string; alt: string | null }> {
+  async describe(
+    ownerId: string,
+    id: string,
+  ): Promise<{ id: string; alt: string | null; durationMs: number | null }> {
     const asset = await this.prisma.mediaAsset.findFirst({
       where: { id, ownerId },
-      select: { id: true, alt: true },
+      select: { id: true, alt: true, durationMs: true },
     });
     if (!asset) {
       throw new NotFoundException('media.not_found');

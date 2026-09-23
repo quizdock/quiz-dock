@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+import { MEDIA_TAIL_DEFAULT_S } from '@quiz-dock/contracts';
 import { ZodError } from 'zod';
 import {
   type QuestionContent,
@@ -214,6 +215,7 @@ export function toBundle(
       tags: quiz.tags,
       license: quiz.license,
       feedbackEnabled: quiz.feedbackEnabled,
+      mediaTailS: quiz.mediaTailS,
       cover: quiz.coverMediaId ? pathFor(quiz.coverMediaId) : null,
     },
     media: Object.fromEntries(
@@ -251,6 +253,7 @@ export interface ImportedQuiz {
   description: string | null;
   language: string;
   feedbackEnabled: boolean;
+  mediaTailS: number;
   coverMediaId: string | null;
   /** Store fields, defaulted when the bundle predates them (`docs/quiz-bundle.md`). */
   slug: string;
@@ -427,6 +430,7 @@ export function fromBundle(
     description: quiz.description ? mdIn(quiz.description, idFor) : null,
     language: quiz.language ?? 'en',
     feedbackEnabled: quiz.feedbackEnabled ?? true,
+    mediaTailS: quiz.mediaTailS ?? MEDIA_TAIL_DEFAULT_S,
     coverMediaId: quiz.cover ? idFor(quiz.cover) : null,
     slug: quiz.slug ?? slugOf({ slug: null, title: quiz.title }),
     namespace: quiz.namespace ?? null,

@@ -200,6 +200,9 @@ model Quiz {
   license         String?
   /// Players may rate the quiz at the end of a session (§2.11); off = no panel, `player:rate` refused.
   feedbackEnabled Boolean        @default(true) @map("feedback_enabled")
+  /// Pause kept after a question's sound or video before its time can run out (s, 0–30):
+  /// a question whose media outlasts its timer is stretched, never cut mid-play.
+  mediaTailS      Int            @default(3) @map("media_tail_s")
   createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   archivedAt      DateTime?      @map("archived_at") @db.Timestamptz(6)

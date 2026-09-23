@@ -24,6 +24,11 @@ export interface UpdateQuizDto {
   language?: string;
   feedbackEnabled?: boolean;
   /**
+     * @minimum 0
+     * @maximum 30
+     */
+  mediaTailS?: number;
+  /**
      * @minLength 26
      * @maxLength 26
      * @nullable

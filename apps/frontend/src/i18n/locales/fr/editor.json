@@ -23,7 +23,10 @@
     "titleLabel": "Titre",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Description (facultative)…",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "mediaTailLabel": "Pause après un média",
+    "mediaTailHelp": "Quand le son ou la vidéo d’une question dure plus longtemps que son chrono, la question est prolongée jusqu’à la fin du média plus cette pause : aucune lecture n’est coupée.",
+    "seconds": "s"
   },
   "broadcast": {
     "title": "Diffusion",
@@ -222,7 +225,8 @@
       "confirmLabel": "Supprimer"
     },
     "titleEdit": "Modifier la question",
-    "titleAdd": "Nouvelle question"
+    "titleAdd": "Nouvelle question",
+    "stretchedTime": "Le média dure {{media}} s : la question durera {{total}} s (fin du média + pause de {{tail}} s réglée sur le quiz)."
   },
   "preview": {
     "view": "Aperçu (vue participant)",

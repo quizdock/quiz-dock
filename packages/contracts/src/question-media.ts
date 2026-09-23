@@ -132,7 +132,7 @@ export const peakDbfsSchema = z.number().min(-100).max(6);
  */
 export type LiveVisual =
   | { kind: 'image'; url: string; alt: string | null }
-  | { kind: 'video'; source: 'upload'; url: string; gainDb: number }
+  | { kind: 'video'; source: 'upload'; url: string; gainDb: number; durationMs?: number }
   | (Omit<EmbeddedVideo, 'kind' | 'source'> & { kind: 'video'; source: 'embed' });
 
 export type LiveAudio = { url: string; durationMs: number; peaks: number[]; gainDb: number };
@@ -146,4 +146,38 @@ export function liveMediaUrls(media: LiveQuestionMedia | null | undefined): stri
   if (media.visual && 'url' in media.visual) urls.push(media.visual.url);
   if (media.audio) urls.push(media.audio.url);
   return urls;
+}
+
+// ─── Timing ───────────────────────────────────────────────────────────────
+
+/** Default pause kept after a question's media ends, before its time can run out (s). */
+export const MEDIA_TAIL_DEFAULT_S = 3;
+/** Bounds of that pause, set once per quiz. */
+export const MEDIA_TAIL_MAX_S = 30;
+
+/** How long a question's media plays, in ms: its sound, or its video; null when silent. */
+export function mediaDurationMs(media: LiveQuestionMedia | null | undefined): number | null {
+  if (!media) return null;
+  if (media.audio) return media.audio.durationMs;
+  const visual = media.visual;
+  return visual?.kind === 'video' && 'durationMs' in visual && visual.durationMs
+    ? visual.durationMs
+    : null;
+}
+
+/**
+ * The time a question really gets, in seconds: its own, stretched when its
+ * media would still be playing — never cut a sound in the middle. The media
+ * starts with the question, `readDelayMs` before the answers open, and must
+ * end `tailS` seconds before the time runs out.
+ */
+export function effectiveTimeLimitS(
+  timeLimitS: number,
+  durationMs: number | null,
+  tailS: number,
+  readDelayMs: number,
+): number {
+  if (!durationMs) return timeLimitS;
+  const needed = Math.ceil((durationMs + tailS * 1000 - readDelayMs) / 1000);
+  return Math.max(timeLimitS, needed);
 }

@@ -177,6 +177,7 @@ export class QuizPortableService {
           description: imported.description,
           language: imported.language,
           feedbackEnabled: imported.feedbackEnabled,
+          mediaTailS: imported.mediaTailS,
           coverMediaId: imported.coverMediaId,
           slug: imported.slug,
           namespace: imported.namespace,
