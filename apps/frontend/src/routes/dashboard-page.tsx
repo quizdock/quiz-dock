@@ -160,14 +160,20 @@ export function DashboardPage() {
       {!isLoading && !error && quizzes.length === 0 && !managerOnly && (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground">{t('empty')}</p>
-          {/* Les quiz d'exemple ne sont plus versés d'office : ils vivent dans la
-              bibliothèque, où l'on va se servir (#39). */}
-          <Link to="/templates">
-            <Button type="button" variant="outline">
-              <Sparkles className="size-4" />
-              {t('browseTemplates')}
+          {/* Les deux façons de commencer, côte à côte : partir de rien, ou partir
+              d'un modèle — les exemples ne sont plus versés d'office (#39). */}
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={onCreate} disabled={create.isPending}>
+              <Plus className="size-4" />
+              {t('newQuiz')}
             </Button>
-          </Link>
+            <Link to="/templates">
+              <Button type="button" variant="outline">
+                <Sparkles className="size-4" />
+                {t('browseTemplates')}
+              </Button>
+            </Link>
+          </div>
           <small className="text-muted-foreground">{t('browseTemplatesHint')}</small>
         </div>
       )}

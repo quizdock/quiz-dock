@@ -36,6 +36,16 @@ describe('DashboardPage', () => {
     expect(await screen.findByText(/Aucun quiz/)).toBeInTheDocument();
   });
 
+  it('sans quiz, propose les deux façons de commencer', async () => {
+    mockApi([{ method: 'GET', path: '/quizzes', body: [] }]);
+    renderApp('/quizzes');
+
+    expect(await screen.findByText(/Aucun quiz pour l’instant/)).toBeInTheDocument();
+    // Partir de rien, ou partir d'un modèle : les exemples ne sont plus versés d'office.
+    expect(screen.getAllByRole('button', { name: /Nouveau quiz/ }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: /Parcourir les modèles/ })).toBeInTheDocument();
+  });
+
   it('crée un quiz au clic sur « Nouveau quiz »', async () => {
     const fetchMock = mockApi([
       { method: 'GET', path: '/quizzes', body: [] },
