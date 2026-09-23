@@ -18,7 +18,7 @@ A video brings its own sound, so it excludes the sound slot.
 |---|---|---|
 | 1 | Upload, playback in the room (projection) | **Delivered** — PR #44 |
 | 2 | Recording a sound with the microphone | **Idea box** — set aside, its value is not settled (§3) |
-| 3 | YouTube / Vimeo embeds | Planned (§4) |
+| 3 | YouTube / Vimeo embeds | **Idea box** — set aside, it goes against the no-tracking, self-hosted promise (§4) |
 | 4 | Remote players | Planned (§5) |
 | 5 | Synchronisation and fairness | Planned (§6) |
 
@@ -59,7 +59,10 @@ Set aside on 2026-09-23: the need is not proven. Kept here so it can be picked u
 
 ---
 
-## 4. Phase 3 — YouTube / Vimeo
+## 4. Phase 3 — YouTube / Vimeo (idea box)
+
+Set aside on 2026-09-23: it contacts Google or Vimeo from the projection, which goes against the promise of a
+self-hosted quiz with no tracking, and uploading an MP4 already covers the need. Kept here as it was specified.
 
 - `MEDIA_EMBEDS_ENABLED=false` by default. Document that turning it on **breaks the "no tracking" promise** and does
   not work on a closed network.
@@ -72,6 +75,23 @@ Set aside on 2026-09-23: the need is not proven. Kept here so it can be picked u
 - Adapters with one interface: `load / play / pause / mute / unmute`, events `ready / started / ended / error`.
 - Existing: the `EmbeddedVideo` type in the contracts; the API refuses with `media.embeds_disabled`.
 - Errors: unrecognised URL, not found / private, embedding forbidden, embeds disabled, provider unreachable.
+
+Points found while preparing it, to settle if it is picked up again:
+
+- **Duration**: the server cannot know an embed's length without oEmbed; the editor's test load would measure it
+  (`getDuration`) and store the clipped length, so the question stretches as for an uploaded video.
+- **Switch turned off later**: today `resolveQuestionMedia` refuses any save holding an embed, which would block
+  editing such a question; decide whether stored embeds are kept (and not played), stripped or refused, and the same
+  for a bundle import.
+- **Outside the projection** (console screen tab, phones): a static placeholder avoids any third-party request.
+- **Adapters** also need `seek` / `currentTime` (resume one second early, restart); Vimeo has no end parameter, pause
+  at `endSec` on `timeupdate`; `@vimeo/player` can be bundled from npm, so only YouTube's `iframe_api` needs `script-src`.
+- **Limits**: the loudness levels cannot apply (a cross-origin iframe escapes Web Audio); unlisted Vimeo videos need
+  their `h=` hash, not stored, so they would read as private; autoplay needs `allow="autoplay"` on the iframe.
+- **CSP** (useful on its own): check Swagger UI's inline scripts, the OIDC issuer in `connect-src`, an external
+  `APP_LOGO_URL` in `img-src`, `blob:`/`data:`, `ws:`/`wss:`, and test on a production build (Vite dev bypasses it).
+- **Every writer of the visual slot** (`visualMediaId`: questions, quiz duplication, transfer, bundle) would need the
+  embed columns. Bundle version 3 was not released yet at the time: extend it rather than bump.
 
 ---
 
