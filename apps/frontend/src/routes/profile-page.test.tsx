@@ -6,7 +6,7 @@ const me = (over: Record<string, unknown> = {}) => ({
   id: 'u1',
   displayName: 'Marc',
   email: 'marc@ex.io',
-  role: 'host',
+  roles: ['host'],
   subject: 'local:marc',
   ...over,
 });
@@ -36,11 +36,19 @@ describe('ProfilePage', () => {
   });
 
   it('dit au gestionnaire que gérer n’est pas animer (RG-14)', async () => {
-    mockApi([{ method: 'GET', path: '/me', body: me({ role: 'admin', email: null }) }]);
+    mockApi([{ method: 'GET', path: '/me', body: me({ roles: ['admin'], email: null }) }]);
     renderApp('/profile');
 
     expect(await screen.findByText('Gestionnaire')).toBeInTheDocument();
     expect(screen.getByText(/Gérer n’est pas animer/i)).toBeInTheDocument();
     expect(screen.getByText('aucun')).toBeInTheDocument();
+  });
+
+  it('montre les deux rôles d’un compte qui gère et anime (RG-14)', async () => {
+    mockApi([{ method: 'GET', path: '/me', body: me({ roles: ['admin', 'host'] }) }]);
+    renderApp('/profile');
+
+    expect(await screen.findByText('Gestionnaire')).toBeInTheDocument();
+    expect(screen.getByText('Animateur')).toBeInTheDocument();
   });
 });

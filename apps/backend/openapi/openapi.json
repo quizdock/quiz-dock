@@ -1402,7 +1402,7 @@
           "player",
           "admin"
         ],
-        "description": "Rôle."
+        "description": "Rôles du compte. Ensemble vide = participant ; `[admin, host]` gère ET anime (RG-14)."
       },
       "MeResponseDto": {
         "type": "object",
@@ -1420,13 +1420,12 @@
             "description": "Courriel, si connu.",
             "nullable": true
           },
-          "role": {
-            "description": "Rôle.",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserRole"
-              }
-            ]
+          "roles": {
+            "type": "array",
+            "description": "Rôles du compte. Ensemble vide = participant ; `[admin, host]` gère ET anime (RG-14).",
+            "items": {
+              "$ref": "#/components/schemas/UserRole"
+            }
           },
           "subject": {
             "type": "string",
@@ -1437,7 +1436,7 @@
           "id",
           "displayName",
           "email",
-          "role",
+          "roles",
           "subject"
         ]
       },

@@ -122,20 +122,23 @@ enum SessionStatus {
 
 /// §2.1 — comptes (animateurs, participants connectés, admins).
 model User {
-  id           String    @id @default(ulid()) @db.Char(26)
-  oidcSubject  String    @unique @map("oidc_subject")
-  displayName  String    @map("display_name")
-  email        String?   @unique @db.Citext
-  /// Effective role, recomputed on every request: the highest of the assigned
-  /// role and the one derived from the context (IdP claims, or the host seat).
-  role         UserRole  @default(player)
-  /// What the operator granted through the CLI (`host`, `admin`), null otherwise.
-  /// Sticky: provisioning never lowers it, and the host seat never clears it (RG-14).
-  assignedRole UserRole? @map("assigned_role")
-  locale       String    @default("fr")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
-  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+  id            String     @id @default(ulid()) @db.Char(26)
+  oidcSubject   String     @unique @map("oidc_subject")
+  displayName   String     @map("display_name")
+  email         String?    @unique @db.Citext
+  /// Effective roles, recomputed on every request: the union of what was assigned
+  /// and what the context derives (IdP claims, or the host seat). An **empty set
+  /// is a participant** — `player` is the floor, not something one holds.
+  /// `[admin, host]` is a legitimate account: it sees the instance *and* runs its
+  /// own bank (RG-14).
+  roles         UserRole[]
+  /// What the operator granted through the CLI. Sticky: provisioning never takes
+  /// it away, and the host seat never clears it.
+  assignedRoles UserRole[] @map("assigned_roles")
+  locale        String     @default("fr")
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?  @map("deleted_at") @db.Timestamptz(6)
 
   quizzes        Quiz[]
   mediaAssets    MediaAsset[]

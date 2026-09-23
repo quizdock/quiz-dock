@@ -67,7 +67,7 @@ which still works too.)
 | `seat:status` | Local mode: who holds the host seat, since when, until when. |
 | `seat:release` | Operator override: free the seat whoever holds it (e.g. claimed with no expiry and abandoned). |
 | `user:list` | Accounts with subject, e-mail, role (as last provisioned), the operator grant if any, quiz count. |
-| `user:set-role <sub\|email> host\|admin\|player` | Grant `host` (create, edit and present quizzes) or `admin` (that, plus administering the instance) — sticky: never overridden by IdP claims or the host seat. `player` revokes the grant; the role is derived again on the next request. |
+| `user:set-role <sub\|email> host\|admin\|host,admin\|player` | Grant `host` (its holder's own bank: create, edit, present), `admin` (read the whole instance and administer it, without hosting) or both at once — sticky: never overridden by IdP claims or the host seat. `player` revokes every grant; the roles are derived again on the next request. |
 | `samples:load <sub\|email>` | Add the two sample quizzes to that user's bank. |
 | `quiz:list [<sub\|email>]` | Quizzes with id, title, owner, status, question count, slug, revision — every one, or one user's. |
 | `quiz:export <id> <file.zip\|->` | The quiz as a bundle ([quiz-bundle.md](../quiz-bundle.md)), whoever owns it; `-` streams the zip to stdout. Leaves the `revision` alone — it moves when the quiz is shared. |
@@ -96,7 +96,7 @@ Subjects: OIDC `sub`, or `local:<slug>` in local mode (`user:list` shows them).
 
 ```bash
 ./quizdock user:list
-./quizdock user:set-role alice@example.com host     # admin to administer the instance
+./quizdock user:set-role alice@example.com host,admin   # manages the instance and hosts
 ```
 
 **Move a quiz to another instance, or publish it**

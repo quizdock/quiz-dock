@@ -33,6 +33,17 @@ describe('TemplatesPage', () => {
   it('taking a copy opens the new draft in the editor', async () => {
     localStorage.setItem('live.localUser', 'Marc');
     const fetchMock = mockApi([
+      {
+        method: 'GET',
+        path: '/me',
+        body: {
+          id: 'u1',
+          displayName: 'Marc',
+          email: null,
+          roles: ['host'],
+          subject: 'local:marc',
+        },
+      },
       { method: 'GET', path: '/store', body: [ENTRY] },
       { method: 'POST', path: `/store/${ENTRY.id}/take`, body: { id: 'new-draft' } },
       {

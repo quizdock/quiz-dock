@@ -13,7 +13,7 @@ import { GameService } from './game.service';
  * Couvre : ping/pong, host:create (PIN + snapshot) et player:join (lobby).
  */
 /** L'appelant d'une lecture de quiz : un hôte ordinaire (RG-14). */
-const asHost = (id: string) => ({ id, role: UserRole.host });
+const asHost = (id: string) => ({ id, roles: [UserRole.host] });
 
 describe('GameGateway (intégration socket)', () => {
   let app: INestApplication;
@@ -46,8 +46,8 @@ describe('GameGateway (intégration socket)', () => {
     // rôle dérive du siège d'hôte (HostSeatService) : on le lui attribue.
     const host = await prisma.user.upsert({
       where: { oidcSubject: 'local:animateur' },
-      create: { oidcSubject: 'local:animateur', displayName: 'Animateur', role: 'host' },
-      update: { role: 'host' },
+      create: { oidcSubject: 'local:animateur', displayName: 'Animateur', roles: ['host'] },
+      update: { roles: ['host'] },
     });
     hostUserId = host.id;
     // The seat is shared state of the target database: remember whose it was, give it back at the end.

@@ -50,7 +50,8 @@ The key cardinalities:
 | `oidc_subject` | text | UQ, NN | The `sub` claim of the OIDC token (the link to the IdP) |
 | `display_name` | text | NN | The displayed name |
 | `email` | citext | UQ, nullable | The email address, when the IdP provides one |
-| `role` | enum `user_role` | NN, DEF `player` | `host` \| `player` \| `admin` |
+| `roles` | enum `user_role`[] | NN, DEF `{}` | The **set** of effective roles, recomputed on every request: the union of what was assigned and what the context derives (claims, host seat). Empty = participant; `{admin, host}` manages *and* hosts *(RG-14)* |
+| `assigned_roles` | enum `user_role`[] | NN, DEF `{}` | What an operator granted (CLI). Sticky: provisioning never takes it away |
 | `locale` | text | DEF `fr` | The preferred language (`fr`/`en`) |
 | `created_at` | timestamptz | NN, DEF now() | Created |
 | `updated_at` | timestamptz | NN | Last modified |
@@ -248,7 +249,7 @@ Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
 
 | Enum | Values | Notes |
 |------|---------|-------|
-| `user_role` | `host`, `player`, `admin` | `admin` is reserved for v1.1 |
+| `user_role` | `host`, `player`, `admin` | Held as a **set** on the account; `player` is the floor, never stored |
 | `quiz_status` | `draft`, `ready`, `archived` | The quiz lifecycle |
 | `quiz_visibility` | `private`, `unlisted` | Unused: see `quiz.visibility` |
 | `question_type` | `single_choice`, `multiple_choice`, `true_false`, `text_input`, `numeric`, `ordering`, `poll` | see technique §4 |

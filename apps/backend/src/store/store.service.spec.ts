@@ -14,8 +14,13 @@ import { StoreService } from './store.service';
  * that is exactly what an operator restores from a backup.
  */
 describe('StoreService', () => {
-  const alice = { id: 'u1', displayName: 'Alice', oidcSubject: 'local:alice', role: UserRole.host };
-  const bob = { id: 'u2', displayName: 'Bob', oidcSubject: 'local:bob', role: UserRole.host };
+  const alice = {
+    id: 'u1',
+    displayName: 'Alice',
+    oidcSubject: 'local:alice',
+    roles: [UserRole.host],
+  };
+  const bob = { id: 'u2', displayName: 'Bob', oidcSubject: 'local:bob', roles: [UserRole.host] };
   const quiz = {
     id: 'q1',
     title: 'Ports',
@@ -120,7 +125,7 @@ describe('StoreService', () => {
     const entry = await service.share(alice, 'q1');
 
     await expect(service.withdraw(bob, entry.id)).rejects.toThrow(ForbiddenException);
-    await service.withdraw({ ...bob, role: UserRole.admin }, entry.id);
+    await service.withdraw({ ...bob, roles: [UserRole.admin] }, entry.id);
     expect(existsSync(join(dir, entry.id))).toBe(false);
     await expect(service.list()).resolves.toHaveLength(0);
     // The entry is gone; nothing else was removed.

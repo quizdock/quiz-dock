@@ -231,11 +231,12 @@ Three roles, three scopes:
 | `host` | **Their own** bank: create, edit and present quizzes; run sessions; share templates. Sees what they manage, and nothing else. | **Assigned** — by the operator (CLI) or by the identity provider (a claim). In local mode the host seat also grants it to the first comer, as a zero-configuration convenience. |
 | `admin` | **The instance, in read**: every host's quizzes, every running session, every shared template — plus the administration (roles, withdrawing a template, purges). A **manager**, not a host. | Assigned by the operator only. |
 
-An `admin` **does not create, edit or present anything**, and does not take the
-host seat: managing and animating are different jobs, and a manager who could
-also run sessions would blur what the role means. The two never cumulate — an
-account that has to present is granted `host` instead. Whoever needs both uses
-two accounts, which is also what an audit trail wants.
+An account holds a **set** of roles, and the empty set is a participant. On its
+own, `admin` **creates, edits and presents nothing**, and does not take the host
+seat: managing and animating are different jobs. They do **cumulate** though —
+`{admin, host}` is a legitimate account, and the usual one on a small instance:
+it reads the whole instance *and* runs its own bank, like any host. What it
+never gets is someone else's bank: the overview is read-only.
 
 A host acting on their own bank and a manager reading the instance go through
 the same routes: the caller's role decides the scope, so nothing has to be
@@ -352,7 +353,7 @@ Available to the host, **frozen**:
 | RG-11 | Reports are kept for a configurable duration (24 months by default). |
 | RG-12 | A participant thrown out is not readmitted under the same nickname. |
 | RG-13 | Full capture is optional, chosen when the session is created; a notice to the participants at the start of the session is mandatory before anything is collected. |
-| RG-14 | `host` is an assignable role (operator or identity provider) and covers **its holder's own** bank and sessions. `admin` is a **manager**: it reads the whole instance and administers it, but never creates, edits, presents, nor takes the host seat — the two roles do not cumulate. `player` is the floor. The host seat grants `host` in local mode only, as a convenience. |
+| RG-14 | An account holds a **set** of roles; empty means participant. `host` covers **its holder's own** bank and sessions. `admin` is a **manager**: it reads the whole instance and administers it, and on its own neither creates, edits, presents nor takes the host seat. The two **cumulate** (`{admin, host}`): the overview stays read-only, the bank stays the holder's own. The host seat grants `host` in local mode only, as a convenience. |
 | RG-15 | Under `AUTH_MODE=oidc`, every participant is authenticated: the token opens the application, the PIN opens one session. |
 | RG-16 | Personalised tracking is a per-session switch. Off, no individual result is recorded — aggregates only. A chosen display name is never anonymity, and the notice states which case applies. |
 | RG-17 | A quiz is shared by copy, never by reference: sharing puts a copy in the instance's catalogue, taking one puts an independent draft in the taker's bank, and nothing links them afterwards. Only a READY quiz may be shared; withdrawing an entry never touches the copies already made. |

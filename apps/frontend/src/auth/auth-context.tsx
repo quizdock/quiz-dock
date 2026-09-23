@@ -104,14 +104,18 @@ function applyLocalUser(name: string | null): void {
 }
 
 /**
- * Rôle côté backend de l'identité courante (`GET /me`), ou `null` si injoignable.
+ * Rôles côté backend de l'identité courante (`GET /me`), ou `null` si injoignable.
  * En mode local c'est ici que le **siège d'hôte** se décide : le premier arrivé
- * devient `host`, les autres `player`.
+ * devient `host`, les autres restent participants. L'ensemble peut porter les
+ * deux rôles (RG-14) ; la page de connexion ne regarde que « puis-je animer ? ».
  */
 export async function fetchRole(): Promise<UserRole | null> {
   try {
     const { data } = await meControllerMe();
-    return data.role as UserRole;
+    const roles = (data.roles ?? []) as UserRole[];
+    if (roles.includes('host')) return 'host';
+    if (roles.includes('admin')) return 'admin';
+    return 'player';
   } catch {
     return null;
   }

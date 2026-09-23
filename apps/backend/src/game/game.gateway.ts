@@ -21,7 +21,7 @@ import type { Request } from 'express';
 import type { Server, Socket } from 'socket.io';
 import { isOidcMode } from '../auth/auth-mode';
 import { AUTH_PROVIDER, type AuthProvider } from '../auth/auth-provider';
-import { isHostRole } from '../auth/roles';
+import { isHost } from '../auth/roles';
 import { UsersService } from '../users/users.service';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
@@ -458,7 +458,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (!host) {
       throw new WsException('host.auth_required');
     }
-    if (!isHostRole(host.role)) {
+    if (!isHost(host.roles)) {
       throw new WsException('auth.host_required');
     }
     return host;

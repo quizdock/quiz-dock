@@ -40,8 +40,10 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
   const { launch, isLaunching, error: launchError } = useLaunchSession();
-  // Un gestionnaire lit l'instance ; il ne crée pas, n'importe pas, ne présente pas.
-  const { isManager } = useRole();
+  // Un gestionnaire lit l'instance ; s'il n'anime pas, il ne crée, n'importe ni ne
+  // présente rien. Un compte qui cumule garde tout (RG-14).
+  const { isManager, isHost } = useRole();
+  const managerOnly = isManager && !isHost;
   // Stable entre deux rendus : le `?? []` fabriquerait un tableau neuf à chaque fois,
   // et le tri/filtre ci-dessous se recalculerait pour rien.
   const quizzes = useMemo(() => data?.data ?? [], [data]);
@@ -115,7 +117,7 @@ export function DashboardPage() {
     <section className="content-lg flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{isManager ? t('allQuizzes') : t('title')}</h1>
-        <div className={cn('flex flex-wrap items-center gap-2', isManager && 'hidden')}>
+        <div className={cn('flex flex-wrap items-center gap-2', managerOnly && 'hidden')}>
           <input
             ref={fileInput}
             type="file"
@@ -161,7 +163,7 @@ export function DashboardPage() {
       ) : null}
       {launchError ? <p className="text-destructive">{launchError}</p> : null}
 
-      {!isLoading && !error && quizzes.length === 0 && !isManager && (
+      {!isLoading && !error && quizzes.length === 0 && !managerOnly && (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
           <p className="text-muted-foreground">{t('empty')}</p>
           <Button
@@ -255,10 +257,10 @@ export function DashboardPage() {
               <Link to="/quizzes/$quizId" params={{ quizId: quiz.id }}>
                 <Button type="button" size="sm" variant="outline">
                   <Pencil className="size-4" />
-                  {isManager ? t('view') : t('edit')}
+                  {quiz.ownerName && !isHost ? t('view') : t('edit')}
                 </Button>
               </Link>
-              {!isManager && quiz.status === 'ready' && (
+              {!managerOnly && quiz.status === 'ready' && (
                 <Button
                   type="button"
                   size="sm"

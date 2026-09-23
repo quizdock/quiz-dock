@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { type HostSeat, type User, UserRole } from '@prisma/client';
 import { type AuthPrincipal, LOCAL_SUB_PREFIX } from '../auth/auth-provider';
-import { effectiveRole } from '../auth/roles';
+import { effectiveRoles, isManager, isHost } from '../auth/roles';
 import { DEMO_SEAT_MINUTES, isDemoMode } from '../demo/demo.config';
 import { PrismaService } from '../prisma/prisma.service';
 import { SampleQuizzesService } from '../quizzes/samples/sample-quizzes.service';
@@ -65,24 +65,22 @@ export class HostSeatService {
     const [existing, seat] = await Promise.all([
       this.prisma.user.findUnique({
         where: { oidcSubject: principal.sub },
-        select: { id: true, assignedRole: true },
+        select: { id: true, assignedRoles: true },
       }),
       this.prisma.hostSeat.findUnique({ where: { id: SEAT_ID } }),
     ]);
     const isHolder = !!existing && HostSeatService.isLive(seat) && seat.userId === existing.id;
-    const role = effectiveRole(
-      existing?.assignedRole ?? null,
-      isHolder ? UserRole.host : UserRole.player,
-    );
+    // Le siège dérive `host` ; l'octroi de l'opérateur s'y ajoute, il ne s'efface pas.
+    const roles = effectiveRoles(existing?.assignedRoles ?? [], isHolder ? [UserRole.host] : []);
     return this.prisma.user.upsert({
       where: { oidcSubject: principal.sub },
       create: {
         oidcSubject: principal.sub,
         displayName: principal.displayName,
         email: principal.email,
-        role,
+        roles,
       },
-      update: { displayName: principal.displayName, email: principal.email, role },
+      update: { displayName: principal.displayName, email: principal.email, roles },
     });
   }
 
@@ -96,8 +94,12 @@ export class HostSeatService {
   async claim(user: User, requestedMinutes: number | null): Promise<HostSeatState> {
     // Un gestionnaire n'anime pas (RG-14) : le siège reste l'affaire des hôtes.
     // Il garde `seat:release` pour débloquer un siège abandonné, sans l'occuper.
-    if (user.role === UserRole.admin) {
-      throw new ForbiddenException('host_seat.manager_forbidden');
+    // Un gestionnaire qui n'anime pas ne prend pas le siège (RG-14) ; s'il porte
+    // aussi `host`, il n'en a pas besoin — son octroi lui suffit.
+    if (isManager(user.roles)) {
+      throw new ForbiddenException(
+        isHost(user.roles) ? 'host_seat.already_host' : 'host_seat.manager_forbidden',
+      );
     }
     const expiresInMinutes = isDemoMode() ? DEMO_SEAT_MINUTES : requestedMinutes;
     const claimedAt = new Date();
@@ -115,11 +117,11 @@ export class HostSeatService {
         // to their operator grant when they have one, `player` otherwise.
         const previous = await tx.user.findUnique({
           where: { id: seat.userId },
-          select: { assignedRole: true },
+          select: { assignedRoles: true },
         });
         await tx.user.update({
           where: { id: seat.userId },
-          data: { role: previous?.assignedRole ?? UserRole.player },
+          data: { roles: previous?.assignedRoles ?? [] },
         });
       }
       await tx.hostSeat.upsert({
@@ -129,7 +131,7 @@ export class HostSeatService {
       });
       await tx.user.update({
         where: { id: user.id },
-        data: { role: effectiveRole(user.assignedRole, UserRole.host) },
+        data: { roles: effectiveRoles(user.assignedRoles, [UserRole.host]) },
       });
     });
     this.log.log(
@@ -166,14 +168,14 @@ export class HostSeatService {
   async forceRelease(): Promise<boolean> {
     const seat = await this.prisma.hostSeat.findUnique({
       where: { id: SEAT_ID },
-      include: { user: { select: { assignedRole: true } } },
+      include: { user: { select: { assignedRoles: true } } },
     });
     if (!seat) return false;
     await this.prisma.$transaction([
       this.prisma.hostSeat.delete({ where: { id: SEAT_ID } }),
       this.prisma.user.update({
         where: { id: seat.userId },
-        data: { role: seat.user.assignedRole ?? UserRole.player },
+        data: { roles: seat.user.assignedRoles },
       }),
     ]);
     this.log.log('Host seat force-released by an operator');
@@ -187,7 +189,7 @@ export class HostSeatService {
     if (res.count > 0) {
       await this.prisma.user.update({
         where: { id: user.id },
-        data: { role: user.assignedRole ?? UserRole.player },
+        data: { roles: user.assignedRoles },
       });
       this.log.log(`Host seat released by ${user.oidcSubject}`);
     }

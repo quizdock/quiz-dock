@@ -30,7 +30,7 @@ export function TemplatesPage() {
   const list = useStoreControllerList();
   // Retirer une entrée est de la modération — le métier du gestionnaire ; prendre
   // une copie crée un quiz, donc c'est celui de l'hôte (RG-14).
-  const { isManager } = useRole();
+  const { isHost } = useRole();
   const take = useStoreControllerTake();
   const withdraw = useStoreControllerWithdraw();
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export function TemplatesPage() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {/* Prendre une copie crée un quiz : réservé aux hôtes (RG-14). */}
-                  {!isManager ? (
+                  {isHost ? (
                     <Button
                       type="button"
                       onClick={() => void onTake(entry)}

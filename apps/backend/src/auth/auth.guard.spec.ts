@@ -6,9 +6,15 @@ import type { UsersService } from '../users/users.service';
 import type { AuthPrincipal, AuthProvider } from './auth-provider';
 import { AuthGuard } from './auth.guard';
 
-const fakeUser = { id: 'u1', displayName: 'Marc', role: 'host' } as User;
-const playerUser = { id: 'u2', displayName: 'Léa', role: 'player' } as User;
-const adminUser = { id: 'u3', displayName: 'Ada', role: 'admin' } as User;
+const fakeUser = { id: 'u1', displayName: 'Marc', roles: ['host'] } as unknown as User;
+const playerUser = { id: 'u2', displayName: 'Léa', roles: [] } as unknown as User;
+const adminUser = { id: 'u3', displayName: 'Ada', roles: ['admin'] } as unknown as User;
+/** Gère ET anime : la vue d'ensemble, plus sa propre banque (RG-14). */
+const adminHostUser = {
+  id: 'u4',
+  displayName: 'Iris',
+  roles: ['admin', 'host'],
+} as unknown as User;
 const principal: AuthPrincipal = {
   sub: 'local:marc',
   displayName: 'Marc',
@@ -104,5 +110,12 @@ describe('AuthGuard', () => {
     await expect(guard.canActivate(makeContext({ headers: {} }))).rejects.toThrow(
       ForbiddenException,
     );
+  });
+
+  it('un compte qui cumule gère ET anime : les deux portes s’ouvrent (RG-14)', async () => {
+    const hostOnly = makeGuard({ authResult: principal, user: adminHostUser });
+    await expect(hostOnly.guard.canActivate(makeContext({ headers: {} }))).resolves.toBe(true);
+    const managed = makeGuard({ authResult: principal, user: adminHostUser, allowManager: true });
+    await expect(managed.guard.canActivate(makeContext({ headers: {} }))).resolves.toBe(true);
   });
 });

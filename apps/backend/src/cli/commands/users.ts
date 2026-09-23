@@ -1,4 +1,5 @@
 import { type User, UserRole } from '@prisma/client';
+import { parseRoles } from '../../auth/roles';
 import type { PrismaService } from '../../prisma/prisma.service';
 import type { SampleQuizzesService } from '../../quizzes/samples/sample-quizzes.service';
 import { CliError, type Output } from '../output';
@@ -25,8 +26,8 @@ export async function userList(out: Output, prisma: Db): Promise<void> {
       name: u.displayName,
       subject: u.oidcSubject,
       email: u.email,
-      role: u.role,
-      granted: u.assignedRole ?? '',
+      roles: u.roles.join('+') || 'player',
+      granted: u.assignedRoles.join('+'),
       quizzes: u._count.quizzes,
       createdAt: u.createdAt,
     })),
@@ -34,32 +35,40 @@ export async function userList(out: Output, prisma: Db): Promise<void> {
 }
 
 /**
- * `user:set-role <sub|email> host|admin|player` (RG-14). `host` and `admin` are
- * operator grants that provisioning never lowers (sticky, and they outrank the
- * host seat); `player` revokes the grant — the role is then derived again from
- * the IdP claims (OIDC) or the host seat (local mode) on the user's next request.
+ * `user:set-role <sub|email> host|admin|host,admin|player` (RG-14). Les rôles sont
+ * un **ensemble** : `host,admin` gère l'instance *et* anime sa propre banque.
+ * `player` révoque tout — les rôles sont alors de nouveau dérivés des claims
+ * (OIDC) ou du siège d'hôte (mode local) à la prochaine requête.
  */
 export async function userSetRole(
   out: Output,
   prisma: Db,
   who: string,
-  role: string,
+  roles: string,
 ): Promise<void> {
-  if (role !== UserRole.admin && role !== UserRole.host && role !== UserRole.player) {
-    throw new CliError(`Role must be "host" or "admin" (grant), or "player" (revoke).`, 2);
+  const wanted = roles
+    .split(',')
+    .map((r) => r.trim().toLowerCase())
+    .filter(Boolean);
+  const revoke = wanted.length === 1 && wanted[0] === UserRole.player;
+  const granted = revoke ? [] : parseRoles(wanted);
+  if (!revoke && granted.length !== wanted.length) {
+    throw new CliError(
+      `Roles must be "host", "admin", "host,admin" (grant) or "player" (revoke).`,
+      2,
+    );
   }
   const user = await findUser(prisma, who);
-  const granted = role === UserRole.player ? null : role;
   await prisma.user.update({
     where: { id: user.id },
-    // The effective role follows the grant right away; a revoke drops to `player`
-    // until the next request derives it again from the claims or the seat.
-    data: { assignedRole: granted, role: granted ?? UserRole.player },
+    // Les rôles effectifs suivent l'octroi tout de suite ; une révocation les
+    // laisse vides jusqu'à ce que la prochaine requête les redérive.
+    data: { assignedRoles: granted, roles: granted },
   });
   out.line(
-    granted
-      ? `${user.displayName} (${user.oidcSubject}) is now ${granted}.`
-      : `${user.displayName} (${user.oidcSubject}) grant revoked; role is derived again on next request.`,
+    granted.length
+      ? `${user.displayName} (${user.oidcSubject}) is now ${granted.join(' + ')}.`
+      : `${user.displayName} (${user.oidcSubject}) grant revoked; roles are derived again on next request.`,
   );
 }
 

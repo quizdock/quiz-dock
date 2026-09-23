@@ -7,7 +7,7 @@
  */
 
 /**
- * Rôle.
+ * Rôles du compte. Ensemble vide = participant ; `[admin, host]` gère ET anime (RG-14).
  */
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 

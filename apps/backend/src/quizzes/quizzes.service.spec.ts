@@ -5,7 +5,7 @@ import type { RedisService } from '../redis/redis.service';
 import { QuizzesService } from './quizzes.service';
 
 /** L'appelant, côté hôte : un id et un rôle (RG-14). */
-const HOST = { id: 'owner-1', role: UserRole.host };
+const HOST = { id: 'owner-1', roles: [UserRole.host] };
 const OWNER = 'owner-1';
 const PAGE = { page: 1, pageSize: 20 };
 
@@ -96,7 +96,7 @@ describe('QuizzesService', () => {
         { id: 'q1', title: 'A', owner: { displayName: 'Alice' } },
         { id: 'q2', title: 'B', owner: { displayName: 'Bob' } },
       ]);
-      const rows = await service.list({ id: 'admin-1', role: UserRole.admin });
+      const rows = await service.list({ id: 'admin-1', roles: [UserRole.admin] });
       // Aucun filtre de propriétaire : c'est la vue d'ensemble (RG-14).
       expect(prisma.quiz.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
       expect(rows).toMatchObject([{ ownerName: 'Alice' }, { ownerName: 'Bob' }]);
@@ -114,7 +114,7 @@ describe('QuizzesService', () => {
     it('feedback renvoie 404 pour un non-propriétaire (et ne lit aucun avis)', async () => {
       prisma.quiz.findFirst.mockResolvedValue(null);
       await expect(
-        service.feedback({ id: 'someone-else', role: UserRole.host }, 'q1', PAGE),
+        service.feedback({ id: 'someone-else', roles: [UserRole.host] }, 'q1', PAGE),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.quizFeedback.findMany).not.toHaveBeenCalled();
     });
@@ -146,7 +146,7 @@ describe('QuizzesService', () => {
     it('sessions renvoie 404 pour un non-propriétaire (et ne lit aucune session)', async () => {
       prisma.quiz.findFirst.mockResolvedValue(null);
       await expect(
-        service.sessions({ id: 'someone-else', role: UserRole.host }, 'q1'),
+        service.sessions({ id: 'someone-else', roles: [UserRole.host] }, 'q1'),
       ).rejects.toThrow(NotFoundException);
       expect(prisma.gameSessionLog.findMany).not.toHaveBeenCalled();
     });

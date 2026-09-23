@@ -14,7 +14,7 @@ import { ALLOW_ANY_ROLE_KEY } from './allow-any-role.decorator';
 import { ALLOW_MANAGER_KEY } from './allow-manager.decorator';
 import { AUTH_PROVIDER, type AuthProvider } from './auth-provider';
 import { IS_PUBLIC_KEY } from './public.decorator';
-import { isHostRole, isManagerRole } from './roles';
+import { isHost, isManager } from './roles';
 
 /**
  * Garde global : authentifie via l'`AuthProvider` actif, provisionne
@@ -45,11 +45,11 @@ export class AuthGuard implements CanActivate {
     // Une route ouverte au gestionnaire (`@AllowManager`) accepte l'`admin` en plus
     // de l'hôte : il voit l'instance, il ne l'anime pas (RG-14).
     const manager = this.reflector.getAllAndOverride<boolean>(ALLOW_MANAGER_KEY, targets);
-    const allowed = anyRole || isHostRole(user.role) || (manager && isManagerRole(user.role));
+    const allowed = anyRole || isHost(user.roles) || (manager && isManager(user.roles));
     if (!allowed) {
-      throw new ForbiddenException(
-        isManagerRole(user.role) ? 'auth.host_only' : 'auth.host_required',
-      );
+      // Un gestionnaire qui n'anime pas mérite une explication différente d'un
+      // participant : ce n'est pas un rôle manquant, c'est un autre métier.
+      throw new ForbiddenException(isManager(user.roles) ? 'auth.host_only' : 'auth.host_required');
     }
     req.user = user;
     return true;

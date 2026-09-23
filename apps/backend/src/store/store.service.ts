@@ -9,10 +9,11 @@ import {
   NotFoundException,
   type OnModuleInit,
 } from '@nestjs/common';
-import { QuizStatus, UserRole } from '@prisma/client';
+import { QuizStatus } from '@prisma/client';
 import { ulid } from 'ulid';
 import { unzipSync, zipSync } from 'fflate';
 import { isDemoMode } from '../demo/demo.config';
+import { isManager, type RoleSet } from '../auth/roles';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizPortableService } from '../quizzes/portable/quiz-portable.service';
 
@@ -162,13 +163,13 @@ export class StoreService implements OnModuleInit {
    * Withdraws an entry: its author, or an `admin` for any of them (RG-14). The
    * copies people already took are never touched — they are theirs.
    */
-  async withdraw(user: { id: string; oidcSubject: string; role: UserRole }, id: string) {
+  async withdraw(user: { id: string; oidcSubject: string; roles: RoleSet }, id: string) {
     this.refuseOnDemo();
     const entries = await this.readIndex();
     const entry = entries.find((e) => e.id === id);
     if (!entry) throw new NotFoundException('store.entry_not_found');
     const isAuthor = entry.author.subject === user.oidcSubject;
-    if (!isAuthor && user.role !== UserRole.admin) {
+    if (!isAuthor && !isManager(user.roles)) {
       throw new ForbiddenException('store.not_yours');
     }
     await rm(join(this.dir, this.safeId(id)), { recursive: true, force: true });

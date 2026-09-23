@@ -51,10 +51,19 @@ export function ProfilePage() {
               <CardTitle>{s('profile.role')}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2 text-sm">
-              <Badge variant={me.role === 'player' ? 'muted' : 'success'} className="w-fit">
-                {s(`profile.roles.${me.role}`)}
-              </Badge>
-              <p className="text-muted-foreground">{s(`profile.roleHelp.${me.role}`)}</p>
+              {/* Un ensemble vide est un participant ; `[admin, host]` porte les deux. */}
+              <span className="flex flex-wrap gap-2">
+                {(me.roles.length ? me.roles : ['player']).map((role) => (
+                  <Badge key={role} variant={role === 'player' ? 'muted' : 'success'}>
+                    {s(`profile.roles.${role}`)}
+                  </Badge>
+                ))}
+              </span>
+              {(me.roles.length ? me.roles : ['player']).map((role) => (
+                <p key={role} className="text-muted-foreground">
+                  {s(`profile.roleHelp.${role}`)}
+                </p>
+              ))}
               <p className="text-muted-foreground text-xs">
                 {s('profile.roleGranted', { app: APP_NAME })}
               </p>

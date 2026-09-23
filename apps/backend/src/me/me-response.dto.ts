@@ -13,8 +13,14 @@ export class MeResponseDto {
   @ApiProperty({ type: String, description: 'Courriel, si connu.', nullable: true })
   email!: string | null;
 
-  @ApiProperty({ enum: UserRole, enumName: 'UserRole', description: 'Rôle.' })
-  role!: UserRole;
+  @ApiProperty({
+    enum: UserRole,
+    enumName: 'UserRole',
+    isArray: true,
+    description:
+      'Rôles du compte. Ensemble vide = participant ; `[admin, host]` gère ET anime (RG-14).',
+  })
+  roles!: UserRole[];
 
   @ApiProperty({
     description:

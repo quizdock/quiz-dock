@@ -1,8 +1,9 @@
 import { Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
 import { networkInterfaces } from 'node:os';
 import { ApiBearerAuth, ApiNoContentResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { type User, UserRole } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { AllowManager } from '../auth/allow-manager.decorator';
+import { isManager } from '../auth/roles';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ActiveGameDto } from './dto/active-game.dto';
 import { JoinAddressesDto } from './dto/join-addresses.dto';
@@ -33,7 +34,9 @@ export class GameController {
   @AllowManager()
   @ApiOkResponse({ type: ActiveGameDto, isArray: true })
   mine(@CurrentUser() user: User): Promise<ActiveGameDto[]> {
-    return user.role === UserRole.admin
+    // Le gestionnaire voit l'instance ; s'il anime aussi, ses propres parties y
+    // sont de toute façon (RG-14).
+    return isManager(user.roles)
       ? this.games.listAllActiveGames()
       : this.games.listActiveHostGames(user.id);
   }

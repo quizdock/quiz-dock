@@ -1,34 +1,60 @@
 import { UserRole } from '@prisma/client';
 
 /**
- * Who may create, edit and present quizzes: the **host**, and only them.
- *
- * `admin` is deliberately **not** a host (RG-14): it is a manager role — it sees
- * the instance, it does not animate it. An account that needs to present is
- * granted `host`; the two never cumulate, so "who can do what" stays readable.
+ * Les rôles d'un compte, en **ensemble** : un compte peut gérer l'instance *et*
+ * animer sa propre banque (RG-14). L'ensemble vide est un participant — `player`
+ * est le plancher, pas quelque chose que l'on détient.
  */
-export function isHostRole(role: UserRole): boolean {
-  return role === UserRole.host;
+export type RoleSet = readonly UserRole[];
+
+/** Qui crée, édite et présente ses quiz — sa banque, pas celle des autres. */
+export function isHost(roles: RoleSet): boolean {
+  return roles.includes(UserRole.host);
 }
 
-/** Who has the instance-wide view: the manager, and nobody else (RG-14). */
-export function isManagerRole(role: UserRole): boolean {
-  return role === UserRole.admin;
+/** Qui lit l'instance entière et l'administre. */
+export function isManager(roles: RoleSet): boolean {
+  return roles.includes(UserRole.admin);
 }
 
-/** Ordering of the three scopes: the floor, hosting, managing the instance. */
-const RANK: Record<UserRole, number> = {
-  [UserRole.player]: 0,
-  [UserRole.host]: 1,
-  [UserRole.admin]: 2,
-};
+/** Gestionnaire qui n'anime pas : la vue d'ensemble sans la banque. */
+export function isPureManager(roles: RoleSet): boolean {
+  return isManager(roles) && !isHost(roles);
+}
 
 /**
- * Effective role (RG-14): the highest of what an operator (or the IdP) **assigned**
- * and what the context **derives** — the token claims under OIDC, the host seat in
- * local mode. An assignment therefore survives an expired seat or claims that no
- * longer carry the role, and never blocks a promotion coming from the context.
+ * Rôles effectifs : l'**union** de ce qu'un opérateur a octroyé et de ce que le
+ * contexte dérive — les claims du jeton sous OIDC, le siège d'hôte en mode local.
+ * Un octroi survit donc à un siège expiré ou à des claims qui ne le portent plus,
+ * et n'empêche jamais une promotion venue du contexte.
  */
-export function effectiveRole(assigned: UserRole | null, derived: UserRole): UserRole {
-  return assigned && RANK[assigned] > RANK[derived] ? assigned : derived;
+export function effectiveRoles(assigned: RoleSet, derived: RoleSet): UserRole[] {
+  return canonical([...assigned, ...derived]);
+}
+
+/** Rôle principal, pour un affichage qui n'a qu'une place (badge, table CLI). */
+export function primaryRole(roles: RoleSet): UserRole {
+  if (isManager(roles)) return UserRole.admin;
+  if (isHost(roles)) return UserRole.host;
+  return UserRole.player;
+}
+
+/**
+ * Lit un ensemble de rôles depuis des noms libres (claims OIDC, CLI), dans un
+ * ordre **stable** : ce qui est stocké et affiché ne doit pas dépendre de l'ordre
+ * dans lequel un fournisseur d'identité a listé ses claims.
+ */
+export function parseRoles(names: readonly string[]): UserRole[] {
+  const known = new Set(names.map((n) => n.trim().toLowerCase()));
+  return canonical(
+    [...known].filter((n): n is UserRole => n === UserRole.admin || n === UserRole.host),
+  );
+}
+
+/** Ordre canonique d'un ensemble de rôles : gestion d'abord, animation ensuite. */
+export function canonical(roles: RoleSet): UserRole[] {
+  const out: UserRole[] = [];
+  if (isManager(roles)) out.push(UserRole.admin);
+  if (isHost(roles)) out.push(UserRole.host);
+  return out;
 }

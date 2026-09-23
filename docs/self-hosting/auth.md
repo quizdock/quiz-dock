@@ -58,12 +58,13 @@ OIDC_NAME_CLAIM=                                # optional: dotted path of the d
 
 ## Who may host — assigning roles
 
-Three roles exist: **`player`** (join sessions), **`host`** (their own bank: create,
-edit and present quizzes) and **`admin`** (a **manager**: reads the whole instance
-and administers it). An `admin` does **not** create, edit or present quizzes and
-never takes the host seat — managing and animating are different jobs, and the two
-roles do not cumulate. Give `host` to whoever has to present. A role is either
-**assigned** by the operator, or **derived** from the context on every request:
+An account holds a **set** of roles, and an empty set is a participant.
+**`host`** covers its holder's own bank: create, edit and present quizzes.
+**`admin`** is a **manager**: it reads the whole instance and administers it, and
+on its own creates, edits and presents nothing, nor takes the host seat. The two
+**cumulate**: `host,admin` is the usual account on a small instance — the whole
+instance in read, plus a bank of one's own. A role is either **assigned** by the
+operator, or **derived** from the context on every request:
 
 | Mode | How someone becomes a host |
 |---|---|
@@ -75,7 +76,7 @@ roles do not cumulate. Give `host` to whoever has to present. A role is either
 
 ```bash
 ./quizdock user:list                                   # find the subject, e.g. local:alice
-./quizdock user:set-role local:alice host              # or admin, to administer the instance
+./quizdock user:set-role local:alice host              # admin to manage, host,admin for both
 ```
 
 A grant is **sticky**: it outranks the seat and is never lowered — not by a seat

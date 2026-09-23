@@ -17,8 +17,8 @@ export interface MeResponseDto {
      * @nullable
      */
   email: string | null;
-  /** Rôle. */
-  role: UserRole;
+  /** Rôles du compte. Ensemble vide = participant ; `[admin, host]` gère ET anime (RG-14). */
+  roles: UserRole[];
   /** Sujet stable du compte (`sub` OIDC, ou `local:<slug>`) — c'est ce qu'un opérateur donne à `user:set-role`. */
   subject: string;
 }

@@ -204,7 +204,8 @@ describe('user commands', () => {
     displayName: 'Alice',
     oidcSubject: 'oidc-1',
     email: 'alice@ex.io',
-    role: 'player',
+    roles: [],
+    assignedRoles: [],
   };
   function db(found: unknown = alice) {
     return {
@@ -232,20 +233,26 @@ describe('user commands', () => {
     await userSetRole(out, prisma, 'alice@ex.io', 'admin');
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
-      data: { assignedRole: 'admin', role: 'admin' },
+      data: { assignedRoles: ['admin'], roles: ['admin'] },
     });
     expect(text()).toContain('is now admin');
     await userSetRole(out, prisma, 'alice@ex.io', 'host');
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
-      data: { assignedRole: 'host', role: 'host' },
+      data: { assignedRoles: ['host'], roles: ['host'] },
     });
     await userSetRole(out, prisma, 'alice@ex.io', 'player');
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: 'u1' },
-      data: { assignedRole: null, role: 'player' },
+      data: { assignedRoles: [], roles: [] },
     });
     expect(text()).toContain('grant revoked');
+    // Et le cumul, qui est le point de l'ensemble (RG-14).
+    await userSetRole(out, prisma, 'alice@ex.io', 'host,admin');
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 'u1' },
+      data: { assignedRoles: ['admin', 'host'], roles: ['admin', 'host'] },
+    });
     await expect(userSetRole(out, prisma, 'alice@ex.io', 'root')).rejects.toThrow(CliError);
     await expect(userSetRole(out, db(null), 'nobody', 'admin')).rejects.toThrow('No user');
   });
