@@ -50,6 +50,7 @@ export class SampleQuizzesService {
                 textOutline: dto.textOutline,
                 timeLimitS: dto.timeLimitS,
                 revealDelayS: dto.revealDelayS ?? null,
+                audioTarget: dto.audioTarget ?? null,
                 pointsMode: dto.type === 'poll' ? 'none' : dto.pointsMode,
                 scoring: dto.scoring,
                 numericValue: isNumeric ? dto.numericValue : null,

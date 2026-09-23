@@ -16,6 +16,8 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  AUDIO_TARGETS,
+  type AudioTarget,
   MEDIA_TAIL_DEFAULT_S,
   NO_QUESTION_MEDIA,
   effectiveTimeLimitS,
@@ -120,6 +122,8 @@ interface FormValues {
   background: BackgroundValue;
   timeLimitS: number;
   revealDelayS: number | null;
+  /** Which devices play its sound; null = the game's default. */
+  audioTarget: AudioTarget | null;
   pointsMode: 'standard' | 'double' | 'none' | 'fixed';
   scoring: Scoring;
   numericValue: number;
@@ -152,6 +156,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
       background: NO_BACKGROUND,
       timeLimitS: 20,
       revealDelayS: null,
+      audioTarget: null,
       pointsMode: 'standard',
       scoring: 'standard',
       numericValue: 0,
@@ -173,6 +178,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     },
     timeLimitS: q.timeLimitS,
     revealDelayS: q.revealDelayS ?? null,
+    audioTarget: (q.audioTarget as AudioTarget | null | undefined) ?? null,
     pointsMode: q.pointsMode as FormValues['pointsMode'],
     scoring: (q.scoring ?? 'standard') as Scoring,
     numericValue: q.numericValue ? Number(q.numericValue) : 0,
@@ -376,6 +382,28 @@ export function QuestionForm({
       </form.Field>
 
       <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)} />
+      {mediaHasSound(media) ? (
+        <form.Field name="audioTarget">
+          {(field) => (
+            <Label title={t('questionForm.audioTargetHint')}>
+              {t('questionForm.audioTargetLabel')}
+              <Select
+                value={field.state.value ?? ''}
+                onChange={(e) =>
+                  field.handleChange(e.target.value === '' ? null : (e.target.value as AudioTarget))
+                }
+              >
+                <option value="">{t('questionForm.audioTargetDefault')}</option>
+                {AUDIO_TARGETS.map((target) => (
+                  <option key={target} value={target}>
+                    {t(`settings.audioTarget.${target}`)}
+                  </option>
+                ))}
+              </Select>
+            </Label>
+          )}
+        </form.Field>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <form.Field name="timeLimitS">
@@ -693,6 +721,11 @@ export function QuestionForm({
   );
 }
 
+/** Whether the media play a sound: an MP3, or a video's own track. */
+function mediaHasSound(media: QuestionMedia): boolean {
+  return !!media.audio || media.visual?.kind === 'video';
+}
+
 /** The engine's default reading window before answers open (GAME_READ_DELAY_MS), for the hint. */
 const READ_DELAY_DEFAULT_MS = 3000;
 
@@ -703,6 +736,8 @@ function buildPayload(v: FormValues) {
     prompt: v.prompt,
     timeLimitS: v.timeLimitS,
     revealDelayS: v.revealDelayS,
+    // Nothing to hear, nothing to target: a removed sound takes its setting with it.
+    audioTarget: mediaHasSound(v.media) ? v.audioTarget : null,
     pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
     scoring: SCORING_BY_TYPE[v.type].includes(v.scoring) ? v.scoring : ('standard' as const),
     media: v.media,

@@ -22,6 +22,13 @@
     "trackingHint": "ⓘ 開啟時，成績會記錄在每位參與者的帳號下（封存排行榜、歷史）。關閉時，不保存任何個人成績，只保留團體的整體結果。進行中的會話不受影響。",
     "ownNameLabel": "允許參與者自選顯示名稱",
     "ownNameHint": "ⓘ 關閉時，顯示名稱來自其帳號。無論哪種情況，成績都仍與帳號關聯——自選名稱並非匿名。",
+    "audioTargetLabel": "本次會話中誰聽得到聲音",
+    "audioTargetHint": "在本次會話中取代測驗的設定。有自己設定的題目維持不變。",
+    "audioTarget": {
+      "projection": "僅投影",
+      "projection_remote": "投影與遠端參與者",
+      "everyone": "所有裝置"
+    },
     "stopSession": "停止會話",
     "startTooltip": "請等待大多數玩家連線後再開始",
     "start": "開始會話",

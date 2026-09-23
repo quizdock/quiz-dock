@@ -33,6 +33,13 @@
       "14": "Loud (−14 LUFS, streaming)",
       "16": "Balanced (−16 LUFS)",
       "23": "Calm (−23 LUFS, broadcast)"
+    },
+    "audioTargetLabel": "Who hears the sound",
+    "audioTargetHelp": "Which devices play the sounds and videos of the quiz. Participants in the room see the projection: their phones stay silent unless \"Every device\" is chosen, which echoes if they share a room. A question can choose otherwise, and the host can change it for a session.",
+    "audioTarget": {
+      "projection": "Projection only",
+      "projection_remote": "Projection and remote participants",
+      "everyone": "Every device"
     }
   },
   "broadcast": {
@@ -175,6 +182,9 @@
     "revealDelayLabel": "Reveal delay (s)",
     "revealDelayPlaceholder": "auto",
     "revealDelayHint": "In automatic mode: time spent on the answer before the next question. Empty = default setting.",
+    "audioTargetLabel": "Who hears this sound",
+    "audioTargetHint": "Which devices play this question's sound or video. \"Every device\" includes the phones in the room, which echo if they share it.",
+    "audioTargetDefault": "The session's setting",
     "pointsLabel": "Points",
     "pointsMode": {
       "standard": "Standard",

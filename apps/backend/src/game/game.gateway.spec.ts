@@ -293,7 +293,7 @@ describe('GameGateway (intégration socket)', () => {
     const screen = connect();
     const media = new Promise((resolve) => screen.once('game:media', resolve));
     await screen.emitWithAck('spectator:join', { pin });
-    expect(await media).toEqual({ hasSound: false }); // the seeded quiz is silent
+    expect(await media).toEqual({ hasSound: false, audioTarget: 'projection_remote' }); // the seeded quiz is silent
     const player = connect();
     let told = false;
     player.on('game:media', () => (told = true));
@@ -472,6 +472,77 @@ describe('GameGateway (intégration socket)', () => {
       ]);
       host.emit('host:end', { pin: silent.pin });
       host.emit('host:end', { pin: loud.pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
+  it('lets the host pick who hears the sound in the lobby, and no longer once started', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/target-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Audio target test',
+        status: 'ready',
+        questionCount: 1,
+        audioTarget: 'projection',
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: withSound.id });
+      const screen = connect();
+      const attached = new Promise<{ audioTarget: string }>((resolve) =>
+        screen.once('game:media', resolve),
+      );
+      await screen.emitWithAck('spectator:join', { pin });
+      expect((await attached).audioTarget).toBe('projection'); // the quiz's
+
+      const changed = new Promise<{ audioTarget: string }>((resolve) =>
+        screen.once('game:media', resolve),
+      );
+      host.emit('host:options', { pin, audioTarget: 'everyone' });
+      expect((await changed).audioTarget).toBe('everyone');
+
+      const player = connect();
+      await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+      const started = new Promise<{ audioTarget?: string }>((resolve) =>
+        player.once('question:start', resolve),
+      );
+      host.emit('host:start', { pin });
+      expect((await started).audioTarget).toBe('everyone');
+
+      const refused = new Promise<{ code: string }>((resolve) => host.once('error', resolve));
+      host.emit('host:options', { pin, audioTarget: 'projection' });
+      expect((await refused).code).toBe('session.options_locked');
+      host.emit('host:end', { pin });
     } finally {
       await prisma.quiz.delete({ where: { id: withSound.id } });
       await prisma.mediaAsset.delete({ where: { id: asset.id } });

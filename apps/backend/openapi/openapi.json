@@ -1670,6 +1670,14 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
+            ]
+          },
           "questionCount": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -1700,6 +1708,7 @@
           "feedbackEnabled",
           "mediaTailS",
           "loudnessTargetLufs",
+          "audioTarget",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -1752,6 +1761,14 @@
                   -23
                 ]
               }
+            ]
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
             ]
           },
           "coverMediaId": {
@@ -1807,6 +1824,14 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
+            ]
           },
           "questionCount": {
             "type": "integer",
@@ -2055,6 +2080,16 @@
                   "maximum": 9007199254740991,
                   "nullable": true
                 },
+                "audioTarget": {
+                  "type": "string",
+                  "enum": [
+                    "projection",
+                    "projection_remote",
+                    "everyone",
+                    null
+                  ],
+                  "nullable": true
+                },
                 "pointsMode": {
                   "type": "string",
                   "enum": [
@@ -2187,6 +2222,7 @@
                 "textOutline",
                 "timeLimitS",
                 "revealDelayS",
+                "audioTarget",
                 "pointsMode",
                 "scoring",
                 "numericValue",
@@ -2616,6 +2652,7 @@
           "feedbackEnabled",
           "mediaTailS",
           "loudnessTargetLufs",
+          "audioTarget",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -3080,6 +3117,14 @@
                   -23
                 ]
               }
+            ]
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
             ]
           },
           "coverMediaId": {
@@ -3688,6 +3733,16 @@
             "maximum": 300,
             "nullable": true
           },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone",
+              null
+            ],
+            "nullable": true
+          },
           "pointsMode": {
             "default": "standard",
             "type": "string",
@@ -4024,6 +4079,16 @@
             "maximum": 9007199254740991,
             "nullable": true
           },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone",
+              null
+            ],
+            "nullable": true
+          },
           "pointsMode": {
             "type": "string",
             "enum": [
@@ -4156,6 +4221,7 @@
           "textOutline",
           "timeLimitS",
           "revealDelayS",
+          "audioTarget",
           "pointsMode",
           "scoring",
           "numericValue",
@@ -4417,6 +4483,16 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 300,
+            "nullable": true
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone",
+              null
+            ],
             "nullable": true
           },
           "pointsMode": {

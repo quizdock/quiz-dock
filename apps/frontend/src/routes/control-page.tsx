@@ -1,4 +1,10 @@
-import type { GameMode, GameStep, OutlineQuestion } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  type AudioTarget,
+  type GameMode,
+  type GameStep,
+  type OutlineQuestion,
+} from '@quiz-dock/contracts';
 import { Link, useParams } from '@tanstack/react-router';
 import {
   Ban,
@@ -26,6 +32,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -107,8 +114,11 @@ export function ControlPage() {
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
   const setCapture = (fullCapture: boolean) => socket?.emit('host:capture', { pin, fullCapture });
-  const setOptions = (opts: { personalTracking?: boolean; pickOwnName?: boolean }) =>
-    socket?.emit('host:options', { pin, ...opts });
+  const setOptions = (opts: {
+    personalTracking?: boolean;
+    pickOwnName?: boolean;
+    audioTarget?: AudioTarget;
+  }) => socket?.emit('host:options', { pin, ...opts });
   // Le nom affiché ne peut venir d'un compte qu'en mode OIDC (RG-15).
   const authMode = getAuthMode();
   const banPlayer = (playerId: string, minutes: number) =>
@@ -316,6 +326,27 @@ export function ControlPage() {
               <span className="font-medium">{t('control.ownNameLabel')}</span>
               <span className="text-muted-foreground block">{t('control.ownNameHint')}</span>
             </span>
+          </label>
+        ) : null}
+
+        {/* Who hears the sound, for this game: replaces the quiz's default; a question
+            with its own setting keeps it. Only when the quiz has something to hear. */}
+        {view.quizHasSound && view.gameAudioTarget ? (
+          <label className="flex flex-col gap-2 rounded-lg border p-4 text-sm">
+            <span className="font-medium">{t('control.audioTargetLabel')}</span>
+            <Select
+              className="h-8 w-auto"
+              value={view.gameAudioTarget}
+              aria-label={t('control.audioTargetLabel')}
+              onChange={(e) => setOptions({ audioTarget: e.target.value as AudioTarget })}
+            >
+              {AUDIO_TARGETS.map((target) => (
+                <option key={target} value={target}>
+                  {t(`control.audioTarget.${target}`)}
+                </option>
+              ))}
+            </Select>
+            <span className="text-muted-foreground">{t('control.audioTargetHint')}</span>
           </label>
         ) : null}
 

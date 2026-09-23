@@ -1,5 +1,5 @@
 import { GameState } from '@quiz-dock/contracts';
-import { act, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameView } from '../game/use-game-session';
 import { renderApp } from '../test/harness';
@@ -45,6 +45,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   preload: null,
   mediaControl: null,
   quizHasSound: null,
+  gameAudioTarget: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,
@@ -68,6 +69,33 @@ describe('ControlPage (console hôte)', () => {
 
     act(() => screen.getByRole('button', { name: /Démarrer/ }).click());
     expect(fakeSocket.emit).toHaveBeenCalledWith('host:start', { pin: '482913' });
+  });
+
+  it('LOBBY: who hears the sound, only for a quiz with sound, sent as a session option', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      players: [{ playerId: 'p1', nickname: 'Alice', presence: 'remote' }],
+      quizHasSound: true,
+      gameAudioTarget: 'projection_remote',
+    });
+    renderApp('/session/482913/console');
+
+    const select = await screen.findByLabelText('Qui entend le son dans cette session');
+    expect(select).toHaveValue('projection_remote');
+    expect(screen.getByLabelText('Participe à distance')).toBeInTheDocument();
+    fireEvent.change(select, { target: { value: 'everyone' } });
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:options', {
+      pin: '482913',
+      audioTarget: 'everyone',
+    });
+  });
+
+  it('LOBBY: a quiz without sound asks nothing about it', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({ quizHasSound: false, gameAudioTarget: 'projection_remote' });
+    renderApp('/session/482913/console');
+    await screen.findByLabelText('Code PIN');
+    expect(screen.queryByText('Qui entend le son dans cette session')).not.toBeInTheDocument();
   });
 
   it('ANSWERING : compteur + « Révéler » émet host:reveal', async () => {

@@ -1,4 +1,4 @@
-import { questionMediaSchema } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, questionMediaSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { backgroundFields, noBackgroundConflict } from '../../common/background.schema';
 
@@ -74,6 +74,8 @@ export const questionContentSchema = z
     timeLimitS: z.number().int().min(5).max(120).default(20),
     // Auto-mode delay on REVEAL (#6); null = engine default. Bounds match the SQL CHECK.
     revealDelayS: z.number().int().min(1).max(300).nullable().optional(),
+    // Which devices play its sound; null = the game's default.
+    audioTarget: z.enum(AUDIO_TARGETS).nullable().optional(),
     pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).default('standard'),
     // Per-type scoring rule (see `SCORING_BY_TYPE`); `standard` everywhere by default.
     scoring: z.enum(['standard', 'closest', 'partial', 'lenient']).default('standard'),

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { QuizDetailDtoQuestionsItemAcceptedAnswersItem } from './quizDetailDtoQuestionsItemAcceptedAnswersItem';
+import type { QuizDetailDtoQuestionsItemAudioTarget } from './quizDetailDtoQuestionsItemAudioTarget';
 import type { QuizDetailDtoQuestionsItemBackgroundGradient } from './quizDetailDtoQuestionsItemBackgroundGradient';
 import type { QuizDetailDtoQuestionsItemMedia } from './quizDetailDtoQuestionsItemMedia';
 import type { QuizDetailDtoQuestionsItemOptionsItem } from './quizDetailDtoQuestionsItemOptionsItem';
@@ -44,6 +45,8 @@ export type QuizDetailDtoQuestionsItem = {
      * @nullable
      */
   revealDelayS: number | null;
+  /** @nullable */
+  audioTarget: QuizDetailDtoQuestionsItemAudioTarget;
   pointsMode: QuizDetailDtoQuestionsItemPointsMode;
   scoring: QuizDetailDtoQuestionsItemScoring;
   /** @nullable */

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { QuestionDtoAcceptedAnswersItem } from './questionDtoAcceptedAnswersItem';
+import type { QuestionDtoAudioTarget } from './questionDtoAudioTarget';
 import type { QuestionDtoBackgroundGradient } from './questionDtoBackgroundGradient';
 import type { QuestionDtoMedia } from './questionDtoMedia';
 import type { QuestionDtoOptionsItem } from './questionDtoOptionsItem';
@@ -44,6 +45,8 @@ export interface QuestionDto {
      * @nullable
      */
   revealDelayS: number | null;
+  /** @nullable */
+  audioTarget: QuestionDtoAudioTarget;
   pointsMode: QuestionDtoPointsMode;
   scoring: QuestionDtoScoring;
   /** @nullable */

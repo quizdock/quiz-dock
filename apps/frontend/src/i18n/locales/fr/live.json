@@ -22,6 +22,13 @@
     "trackingHint": "ⓘ Activé, les résultats sont enregistrés sous le compte de chaque participant (classement archivé, historique). Désactivé, aucun résultat individuel n’est conservé — seuls les résultats d’ensemble du groupe. La partie en direct ne change pas.",
     "ownNameLabel": "Laisser les participants choisir leur nom affiché",
     "ownNameHint": "ⓘ Désactivé, le nom affiché vient de leur compte. Dans les deux cas leurs résultats y restent rattachés : un nom choisi n’est pas l’anonymat.",
+    "audioTargetLabel": "Qui entend le son dans cette session",
+    "audioTargetHint": "Remplace le réglage du quiz pour cette session. Les questions qui ont leur propre réglage le gardent.",
+    "audioTarget": {
+      "projection": "Projection seulement",
+      "projection_remote": "Projection et participants à distance",
+      "everyone": "Tous les appareils"
+    },
     "stopSession": "Arrêter la session",
     "startTooltip": "Attendez que le maximum de participants soient connectés avant de démarrer",
     "start": "Démarrer la session",
@@ -49,7 +56,7 @@
     "modeAutoTooltip": "Mode auto : passage automatique à la question suivante après chaque résultat",
     "modeAuto": "Auto",
     "noParticipants": "Aucun participant connecté.",
-    "remote": "Joue à distance",
+    "remote": "Participe à distance",
     "banTooltip": "Exclure {{nickname}}",
     "banAria": "Bannir {{nickname}}",
     "banConfirmTitle": "Bannir {{nickname}} ?",

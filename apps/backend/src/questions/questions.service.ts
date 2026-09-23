@@ -160,6 +160,7 @@ export class QuestionsService {
       textOutline: dto.textOutline,
       timeLimitS: dto.timeLimitS,
       revealDelayS: dto.revealDelayS ?? null,
+      audioTarget: dto.audioTarget ?? null,
       // Un sondage ne rapporte aucun point (technique §4).
       pointsMode: dto.type === 'poll' ? 'none' : dto.pointsMode,
       scoring: dto.scoring,

@@ -22,6 +22,13 @@
     "trackingHint": "ⓘ 开启时，成绩会记录在每位参与者的账号下（归档排行榜、历史）。关闭时，不保存任何个人成绩，只保留小组的整体结果。直播中的会话不受影响。",
     "ownNameLabel": "允许参与者自选显示名称",
     "ownNameHint": "ⓘ 关闭时，显示名称来自其账号。无论哪种情况，成绩都仍与账号关联——自选名称并非匿名。",
+    "audioTargetLabel": "本次会话中谁能听到声音",
+    "audioTargetHint": "在本次会话中取代测验的设置。有自己设置的题目保持不变。",
+    "audioTarget": {
+      "projection": "仅投影",
+      "projection_remote": "投影和远程参与者",
+      "everyone": "所有设备"
+    },
     "stopSession": "停止会话",
     "startTooltip": "请等待大多数玩家连接后再开始",
     "start": "开始会话",

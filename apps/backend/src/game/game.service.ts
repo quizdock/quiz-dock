@@ -7,7 +7,12 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { GameState, type PlayerPresence } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  type AudioTarget,
+  GameState,
+  type PlayerPresence,
+} from '@quiz-dock/contracts';
 import { QuizStatus } from '@prisma/client';
 import { isOidcMode } from '../auth/auth-mode';
 import { PrismaService } from '../prisma/prisma.service';
@@ -500,6 +505,7 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     fullCapture: meta.fullCapture ? '1' : '0',
     personalTracking: meta.personalTracking ? '1' : '0',
     pickOwnName: meta.pickOwnName ? '1' : '0',
+    audioTarget: meta.audioTarget ?? '',
     title: meta.title,
     language: meta.language,
     createdAt: String(meta.createdAt),
@@ -531,6 +537,9 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     // une nouvelle (sous OIDC, le nom vient du compte).
     personalTracking: raw.personalTracking !== '0',
     pickOwnName: raw.pickOwnName === undefined ? !isOidcMode() : raw.pickOwnName === '1',
+    audioTarget: (AUDIO_TARGETS as readonly string[]).includes(raw.audioTarget ?? '')
+      ? (raw.audioTarget as AudioTarget)
+      : '',
     title: raw.title,
     language: raw.language,
     createdAt: Number(raw.createdAt),

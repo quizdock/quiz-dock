@@ -33,6 +33,13 @@
       "14": "響亮（−14 LUFS，串流）",
       "16": "均衡（−16 LUFS）",
       "23": "柔和（−23 LUFS，電視廣播）"
+    },
+    "audioTargetLabel": "誰聽得到聲音",
+    "audioTargetHelp": "哪些裝置播放測驗中的聲音與影片。現場參與者看得到投影：除非選擇「所有裝置」，否則他們的手機保持靜音；若共處一室，「所有裝置」會產生回音。單一題目可另行設定，主持人也可在某次會話中更改。",
+    "audioTarget": {
+      "projection": "僅投影",
+      "projection_remote": "投影與遠端參與者",
+      "everyone": "所有裝置"
     }
   },
   "broadcast": {
@@ -175,6 +182,9 @@
     "revealDelayLabel": "揭曉停留（秒）",
     "revealDelayPlaceholder": "自動",
     "revealDelayHint": "自動模式下：進入下一題前在答案上停留的時間。留空 = 預設設定。",
+    "audioTargetLabel": "誰聽得到這個聲音",
+    "audioTargetHint": "哪些裝置播放本題的聲音或影片。「所有裝置」包含現場的手機，若共處一室會產生回音。",
+    "audioTargetDefault": "本次會話的設定",
     "pointsLabel": "分數",
     "pointsMode": {
       "standard": "標準",

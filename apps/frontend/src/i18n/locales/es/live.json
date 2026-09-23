@@ -22,6 +22,13 @@
     "trackingHint": "ⓘ Activado, los resultados se registran en la cuenta de cada participante (clasificación archivada, historial). Desactivado, no se conserva ningún resultado individual: solo los resultados globales del grupo. La sesión en directo no cambia.",
     "ownNameLabel": "Permitir que los participantes elijan su nombre visible",
     "ownNameHint": "ⓘ Desactivado, el nombre visible procede de su cuenta. En ambos casos sus resultados siguen vinculados a ella: un nombre elegido no es anonimato.",
+    "audioTargetLabel": "Quién oye el sonido en esta sesión",
+    "audioTargetHint": "Sustituye el ajuste del quiz para esta sesión. Las preguntas con su propio ajuste lo conservan.",
+    "audioTarget": {
+      "projection": "Solo la proyección",
+      "projection_remote": "Proyección y participantes a distancia",
+      "everyone": "Todos los dispositivos"
+    },
     "stopSession": "Detener la sesión",
     "startTooltip": "Espera a que se conecten la mayoría de los jugadores antes de empezar",
     "start": "Iniciar la sesión",
@@ -49,7 +56,7 @@
     "modeAutoTooltip": "Modo automático: pasa automáticamente a la siguiente pregunta tras cada resultado",
     "modeAuto": "Auto",
     "noParticipants": "No hay jugadores conectados.",
-    "remote": "Juega a distancia",
+    "remote": "Participa a distancia",
     "banTooltip": "Expulsar a {{nickname}}",
     "banAria": "Banear a {{nickname}}",
     "banConfirmTitle": "¿Banear a {{nickname}}?",

@@ -33,6 +33,13 @@
       "14": "响亮（−14 LUFS，流媒体）",
       "16": "均衡（−16 LUFS）",
       "23": "柔和（−23 LUFS，电视广播）"
+    },
+    "audioTargetLabel": "谁能听到声音",
+    "audioTargetHelp": "哪些设备播放测验中的声音和视频。现场参与者能看到投影：除非选择“所有设备”，否则他们的手机保持静音；若共处一室，“所有设备”会产生回声。单个题目可另行设置，主持人也可在某次会话中更改。",
+    "audioTarget": {
+      "projection": "仅投影",
+      "projection_remote": "投影和远程参与者",
+      "everyone": "所有设备"
     }
   },
   "broadcast": {
@@ -175,6 +182,9 @@
     "revealDelayLabel": "揭晓停留（秒）",
     "revealDelayPlaceholder": "自动",
     "revealDelayHint": "自动模式下：进入下一题前在答案上停留的时间。留空 = 默认设置。",
+    "audioTargetLabel": "谁能听到这个声音",
+    "audioTargetHint": "哪些设备播放本题的声音或视频。“所有设备”包括现场的手机，若共处一室会产生回声。",
+    "audioTargetDefault": "本次会话的设置",
     "pointsLabel": "分数",
     "pointsMode": {
       "standard": "标准",

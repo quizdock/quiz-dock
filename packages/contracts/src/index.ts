@@ -11,7 +11,7 @@
 
 export * from './media-sniff';
 export * from './question-media';
-import type { LiveQuestionMedia } from './question-media';
+import type { AudioTarget, LiveQuestionMedia } from './question-media';
 
 export const CONTRACTS_VERSION = '0.3.0' as const;
 
@@ -179,6 +179,8 @@ export interface QuestionStartPayload {
   prompt: string;
   /** Visual and sound of the question; both null when it has none. */
   media: LiveQuestionMedia;
+  /** Which devices play its sound, resolved for this game (present when it has one). */
+  audioTarget?: AudioTarget;
   options?: PublicOption[];
   timeLimitS: number;
   basePoints: number;
@@ -261,6 +263,8 @@ export interface SlideShowPayload {
 export interface MediaPreloadPayload {
   questionIndex: number;
   media: LiveQuestionMedia;
+  /** Which devices will play its sound (present when it has one). */
+  audioTarget?: AudioTarget;
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -421,7 +425,13 @@ export interface ClientToServerEvents {
    * démarrage (RG-15, RG-16) : suivi individuel et nom affiché choisi. Refusé une
    * fois la partie lancée ; les joueurs connectés voient l'avis changer (`notice`).
    */
-  'host:options': (p: { pin: string; personalTracking?: boolean; pickOwnName?: boolean }) => void;
+  'host:options': (p: {
+    pin: string;
+    personalTracking?: boolean;
+    pickOwnName?: boolean;
+    /** Replaces the quiz's default audio target for this game (questions with their own keep it). */
+    audioTarget?: AudioTarget;
+  }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
@@ -519,7 +529,11 @@ export interface ServerToClientEvents {
    * screens that are not players: the projection then asks for the click that
    * unlocks sound as soon as it opens, whatever the moment of the session.
    */
-  'game:media': (p: { hasSound: boolean }) => void;
+  'game:media': (p: {
+    hasSound: boolean;
+    /** The game's default audio target: the host's lobby choice, else the quiz's. */
+    audioTarget: AudioTarget;
+  }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
    * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le

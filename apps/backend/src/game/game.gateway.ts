@@ -11,6 +11,7 @@ import {
 } from '@nestjs/websockets';
 import type {
   AnswerValue,
+  AudioTarget,
   ClientToServerEvents,
   GameMode,
   GameStep,
@@ -385,7 +386,13 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('host:options')
   async hostOptions(
     @ConnectedSocket() socket: GameSocket,
-    @MessageBody() payload: { pin: string; personalTracking?: boolean; pickOwnName?: boolean },
+    @MessageBody()
+    payload: {
+      pin: string;
+      personalTracking?: boolean;
+      pickOwnName?: boolean;
+      audioTarget?: AudioTarget;
+    },
   ): Promise<void> {
     await this.engine.setOptions(payload.pin, this.requireHostId(socket), payload);
   }

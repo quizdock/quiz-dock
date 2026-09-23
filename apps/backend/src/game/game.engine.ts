@@ -1,7 +1,8 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { GameState, liveMediaUrls } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, GameState, liveMediaUrls } from '@quiz-dock/contracts';
 import type {
   AnswerValue,
+  AudioTarget,
   GameMode,
   GameModePayload,
   GameStatePayload,
@@ -38,7 +39,14 @@ import { buildRevealCommon } from './reveal';
 import { isDeferred, rankClosest, scoreAnswer } from './scoring';
 import { SessionArchiveService } from './session-archive.service';
 import { resumeQuestionWindow } from './chrono';
-import { buildQuestionStart, buildSlideShow, snapshotHasSound } from './snapshot';
+import {
+  buildQuestionStart,
+  buildSlideShow,
+  gameAudioTarget,
+  questionAudioTarget,
+  questionHasSound,
+  snapshotHasSound,
+} from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
 
@@ -151,12 +159,14 @@ export class GameEngine {
   async setOptions(
     pin: string,
     hostUserId: string,
-    opts: { personalTracking?: boolean; pickOwnName?: boolean },
+    opts: { personalTracking?: boolean; pickOwnName?: boolean; audioTarget?: AudioTarget },
   ): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) {
       throw new BadRequestException('session.options_locked');
     }
+    if (opts.audioTarget !== undefined) await this.setAudioTarget(pin, opts.audioTarget);
+    if (opts.personalTracking === undefined && opts.pickOwnName === undefined) return;
     const next = {
       ...meta,
       personalTracking: opts.personalTracking ?? meta.personalTracking,
@@ -167,6 +177,30 @@ export class GameEngine {
       pickOwnName: next.pickOwnName ? '1' : '0',
     });
     this.server.to(pin).emit('notice', noticeOf(next));
+  }
+
+  /**
+   * The host replaces the quiz's default audio target for this game; the
+   * screens that are not players hear of it (the console shows the choice).
+   */
+  private async setAudioTarget(pin: string, target: AudioTarget): Promise<void> {
+    if (!AUDIO_TARGETS.includes(target)) throw new BadRequestException('session.bad_option');
+    await this.redis.hset(gameKeys.game(pin), { audioTarget: target });
+    const snapshot = await this.game.getSnapshot(pin);
+    if (!snapshot) return;
+    const payload = {
+      hasSound: snapshotHasSound(snapshot),
+      audioTarget: gameAudioTarget(snapshot, target),
+    };
+    for (const socket of await this.server.in(pin).fetchSockets()) {
+      if (!(socket.data as { playerId?: string }).playerId) socket.emit('game:media', payload);
+    }
+  }
+
+  /** The game's default audio target, read fresh (the host may change it in the lobby). */
+  private async gameTarget(pin: string, snapshot: QuizSnapshot): Promise<AudioTarget> {
+    const session = await this.redis.hget(gameKeys.game(pin), 'audioTarget');
+    return gameAudioTarget(snapshot, session as AudioTarget | null);
   }
 
   /**
@@ -247,7 +281,16 @@ export class GameEngine {
     });
     this.server
       .to(pin)
-      .emit('question:start', buildQuestionStart(question, index, startedAt, endsAt));
+      .emit(
+        'question:start',
+        buildQuestionStart(
+          question,
+          index,
+          startedAt,
+          endsAt,
+          await this.gameTarget(pin, snapshot),
+        ),
+      );
     this.server.to(pin).emit('game:mode', await this.readMode(pin));
 
     this.scheduleReveal(pin, index, endsAt + GRACE_MS - now);
@@ -336,6 +379,10 @@ export class GameEngine {
     // The next question's media, fetched by the screens while the leaderboard is up.
     const next = snapshot.questions[index + 1];
     const preload = next && liveMediaUrls(next.media).length > 0 ? next.media : null;
+    const nextTarget =
+      next && questionHasSound(next)
+        ? questionAudioTarget(next, await this.gameTarget(pin, snapshot))
+        : undefined;
 
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
@@ -346,7 +393,11 @@ export class GameEngine {
       );
       socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
       if (!playerId && preload) {
-        socket.emit('media:preload', { questionIndex: index + 1, media: preload });
+        socket.emit('media:preload', {
+          questionIndex: index + 1,
+          media: preload,
+          ...(nextTarget ? { audioTarget: nextTarget } : {}),
+        });
       }
     }
   }
@@ -579,7 +630,10 @@ export class GameEngine {
     const question = snapshot.questions[index];
     if (!question) return;
     // The question itself (prompt, options) with a chrono already over, then its reveal.
-    socket.emit('question:start', buildQuestionStart(question, index, 0, 0));
+    socket.emit(
+      'question:start',
+      buildQuestionStart(question, index, 0, 0, gameAudioTarget(snapshot, meta.audioTarget)),
+    );
     socket.emit('game:state', {
       state: GameState.Reveal,
       questionIndex: index,
@@ -709,7 +763,10 @@ export class GameEngine {
     const snapshotForNav = await this.game.getSnapshot(pin);
     if (!playerId && snapshotForNav) {
       // The projection asks for sound at once when the quiz will need it.
-      socket.emit('game:media', { hasSound: snapshotHasSound(snapshotForNav) });
+      socket.emit('game:media', {
+        hasSound: snapshotHasSound(snapshotForNav),
+        audioTarget: gameAudioTarget(snapshotForNav, meta.audioTarget),
+      });
     }
     socket.emit('game:state', {
       state: meta.state as GameState,
@@ -746,7 +803,13 @@ export class GameEngine {
         : { startedAt: meta.questionStartedAt, endsAt: meta.questionEndsAt };
       socket.emit(
         'question:start',
-        buildQuestionStart(question, meta.currentIndex, startedAt, endsAt),
+        buildQuestionStart(
+          question,
+          meta.currentIndex,
+          startedAt,
+          endsAt,
+          gameAudioTarget(snapshot, meta.audioTarget),
+        ),
       );
       // Compteur courant : sinon un (re)attache mid-question afficherait « 0/N ».
       const { answered, total } = await this.connectedProgress(pin, meta.currentIndex);
@@ -1026,7 +1089,16 @@ export class GameEngine {
         const q = snapshot.questions[meta.currentIndex];
         this.server
           .to(pin)
-          .emit('question:start', buildQuestionStart(q, meta.currentIndex, startedAt, endsAt));
+          .emit(
+            'question:start',
+            buildQuestionStart(
+              q,
+              meta.currentIndex,
+              startedAt,
+              endsAt,
+              gameAudioTarget(snapshot, meta.audioTarget),
+            ),
+          );
       }
     } else {
       if (prev === GameState.SlideShow) {

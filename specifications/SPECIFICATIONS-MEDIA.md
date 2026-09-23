@@ -113,8 +113,10 @@ it has not loaded — the waiting part of the former phase 5, brought forward on
 
 - An **audio target**: a quiz default plus an optional per-question override — *projection only* / *projection and
   remote players* (the default) / *everyone*. The host can override the quiz default from the lobby, before the start.
-- Sound plays only on the targeted devices. In a hybrid game the phones in the room stay silent (no echo); a
-  non-targeted device shows the video muted, or the image.
+- Sound plays only on the targeted devices: the phones in the room stay silent unless the target is *everyone*
+  (which echoes in a shared room — the editor says so). A non-targeted device shows the video muted, or the image.
+- Resolution: the question's own target, else the host's lobby choice, else the quiz's; the screens receive it
+  resolved in `question:start` and `media:preload`, the console reads the session's default in `game:media`.
 - The sound is unlocked on the **Join** click: **one** audio element is created there and reused for the whole session
   (iOS only lets an element that was unlocked by a gesture play later). A video follows the same rule.
 - A local **mute** button on the player's device.

@@ -135,6 +135,40 @@ export const loudnessSchema = z.number().min(-70).max(0);
 /** Bounds of a sample peak, in dBFS (a decoded MP3 may overshoot full scale a little). */
 export const peakDbfsSchema = z.number().min(-100).max(6);
 
+// ─── Audio target ─────────────────────────────────────────────────────────
+
+/**
+ * Which devices play a question's sound (its MP3, or its video's track):
+ * - `projection` — the big screen only, the phones stay silent (a game in one room);
+ * - `projection_remote` — the big screen and the remote players (the default: a
+ *   game in one room sounds the same, a remote player hears the question);
+ * - `everyone` — every device, room phones included (echo if they share a room).
+ *
+ * A quiz sets a default, a question may override it, the host may replace the
+ * quiz default for one game from the lobby. A device not targeted shows the
+ * video muted, or the image.
+ */
+export const AUDIO_TARGETS = ['projection', 'projection_remote', 'everyone'] as const;
+export type AudioTarget = (typeof AUDIO_TARGETS)[number];
+export const AUDIO_TARGET_DEFAULT: AudioTarget = 'projection_remote';
+export const audioTargetSchema = z.enum(AUDIO_TARGETS);
+
+/** The target a question plays with: its own, else the game's, else the quiz's. */
+export function resolveAudioTarget(
+  question: AudioTarget | null | undefined,
+  session: AudioTarget | null | undefined,
+  quiz: AudioTarget | null | undefined,
+): AudioTarget {
+  return question ?? session ?? quiz ?? AUDIO_TARGET_DEFAULT;
+}
+
+/** Whether a device plays the sound: the projection, a remote player, a player in the room. */
+export function playsSound(target: AudioTarget, device: 'projection' | 'remote' | 'room'): boolean {
+  if (device === 'projection') return true;
+  if (device === 'remote') return target !== 'projection';
+  return target === 'everyone';
+}
+
 // ─── Live payload ─────────────────────────────────────────────────────────
 
 /**

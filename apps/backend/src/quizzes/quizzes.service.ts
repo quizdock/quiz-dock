@@ -72,6 +72,7 @@ export class QuizzesService {
         feedbackEnabled: dto.feedbackEnabled,
         mediaTailS: dto.mediaTailS,
         loudnessTargetLufs: dto.loudnessTargetLufs,
+        audioTarget: dto.audioTarget,
       },
     });
   }
@@ -296,6 +297,7 @@ export class QuizzesService {
         language: src.language,
         mediaTailS: src.mediaTailS,
         loudnessTargetLufs: src.loudnessTargetLufs,
+        audioTarget: src.audioTarget,
         questionCount: src.questions.length,
         questions: {
           create: src.questions.map((q) => ({
@@ -313,6 +315,7 @@ export class QuizzesService {
             pointsMode: q.pointsMode,
             scoring: q.scoring,
             revealDelayS: q.revealDelayS,
+            audioTarget: q.audioTarget,
             numericValue: q.numericValue,
             numericTolerance: q.numericTolerance,
             options: {
@@ -373,6 +376,7 @@ export class QuizzesService {
         feedbackEnabled: dto.feedbackEnabled,
         mediaTailS: dto.mediaTailS,
         loudnessTargetLufs: dto.loudnessTargetLufs,
+        audioTarget: dto.audioTarget,
       },
     });
   }

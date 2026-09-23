@@ -22,6 +22,13 @@
     "trackingHint": "ⓘ On, results are recorded under each participant’s account (archived leaderboard, history). Off, no individual result is kept — only the group’s overall results. The live game is unaffected.",
     "ownNameLabel": "Let participants pick their display name",
     "ownNameHint": "ⓘ Off, the name shown comes from their account. Either way their results stay attached to it — a chosen name is not anonymity.",
+    "audioTargetLabel": "Who hears the sound in this session",
+    "audioTargetHint": "Replaces the quiz's setting for this session. Questions with their own setting keep it.",
+    "audioTarget": {
+      "projection": "Projection only",
+      "projection_remote": "Projection and remote participants",
+      "everyone": "Every device"
+    },
     "stopSession": "Stop the session",
     "startTooltip": "Wait until most players are connected before starting",
     "start": "Start the session",
@@ -49,7 +56,7 @@
     "modeAutoTooltip": "Auto mode: automatically moves to the next question after each result",
     "modeAuto": "Auto",
     "noParticipants": "No players connected.",
-    "remote": "Playing remotely",
+    "remote": "Participating remotely",
     "banTooltip": "Remove {{nickname}}",
     "banAria": "Ban {{nickname}}",
     "banConfirmTitle": "Ban {{nickname}}?",
