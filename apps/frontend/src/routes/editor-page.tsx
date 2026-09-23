@@ -83,6 +83,14 @@ import { useGameControllerMine } from '../api/generated/games/games';
 import { useQuestionsControllerRemove } from '../api/generated/questions/questions';
 import { editorRoute } from '../router';
 
+/**
+ * The page has two columns, and they are the same from top to bottom: the
+ * sequence (or the description above it) on the left, what is open on the
+ * right. One definition, so nothing drifts by a few rem between the header
+ * and the editing pane.
+ */
+const PAGE_COLUMNS = 'lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]';
+
 export function EditorPage() {
   const { t } = useTranslation(['editor', 'common']);
   const { quizId } = editorRoute.useParams();
@@ -159,6 +167,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     }
   };
   // The description reads as text until clicked (the title is always an inline input).
+  const [editingDescription, setEditingDescription] = useState(false);
   // Capture intégrale (§2.10) : conserve le détail des réponses par participant.
   // Décidée avant le lancement de la partie (fige le snapshot côté serveur).
   const [fullCapture, setFullCapture] = useState(false);
@@ -192,6 +201,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       clearDraft(quizDraftKey);
       setQuizDraft(null);
       form.reset(value); // valeurs enregistrées = nouvelle base « propre » → bouton inactif
+      setEditingDescription(false);
     },
   });
   // A restored draft is applied once, on mount; changes are then written back on every edit.
@@ -332,6 +342,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   clearDraft(quizDraftKey);
                   setQuizDraft(null);
                   form.reset();
+                  setEditingDescription(false);
                 }}
               >
                 {t('common:cancel')}
@@ -414,7 +425,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               </div>
             </div>
           </div>
-          <div className="grid items-start gap-x-8 gap-y-4 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+          <div className={cn('grid items-start gap-x-8 gap-y-4', PAGE_COLUMNS)}>
             <form.Field name="description">
               {(field) => (
                 <div className="flex flex-col gap-1">
@@ -423,15 +434,27 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   </span>
                   {/* Du texte, rien d'autre : une description qui accepte du format
                       accepte un média, donc un identifiant local dans l'export et dans
-                      le store. Trois lignes, écrites directement. */}
-                  <Textarea
-                    aria-label={t('settings.descriptionLabel')}
-                    rows={3}
-                    className="max-w-(--container-content-sm)"
-                    placeholder={t('settings.descriptionPlaceholder')}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
+                      le store. Elle se lit en paragraphe et s'ouvre au clic. */}
+                  {editingDescription || isDirty ? (
+                    <Textarea
+                      aria-label={t('settings.descriptionLabel')}
+                      rows={3}
+                      className="max-w-(--container-content-sm)"
+                      placeholder={t('settings.descriptionPlaceholder')}
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:bg-accent/60 -mx-2 min-h-20 max-w-(--container-content-sm) rounded-md px-2 py-1 text-left text-sm whitespace-pre-line"
+                      onClick={() => setEditingDescription(true)}
+                    >
+                      {field.state.value || (
+                        <span className="italic">{t('settings.descriptionPlaceholder')}</span>
+                      )}
+                    </button>
+                  )}
                 </div>
               )}
             </form.Field>
@@ -479,6 +502,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 clearDraft(quizDraftKey);
                 setQuizDraft(null);
                 form.reset();
+                setEditingDescription(false);
               }}
             />
           ) : null}
@@ -489,9 +513,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <div
         className={cn(
           'grid grid-cols-1 items-start gap-8',
-          rail && wide
-            ? 'lg:grid-cols-[3.5rem_minmax(0,1fr)]'
-            : 'lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]',
+          rail && wide ? 'lg:grid-cols-[3.5rem_minmax(0,1fr)]' : PAGE_COLUMNS,
         )}
       >
         {rail && wide ? (
