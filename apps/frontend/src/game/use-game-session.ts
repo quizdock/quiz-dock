@@ -89,6 +89,8 @@ export interface GameView {
   preload: MediaPreloadPayload | null;
   /** Last host command on the current media; `seq` changes with each one. */
   mediaControl: { questionIndex: number; action: 'restart'; seq: number } | null;
+  /** Whether the quiz plays any sound (projection and console only; null until told). */
+  quizHasSound: boolean | null;
   /** Host navigation over played steps (`game:state.nav`); `review` = a past step is on screen. */
   nav: { prev: GameStep | null; next: GameStep | null; review: boolean } | null;
 }
@@ -125,6 +127,7 @@ const INITIAL: GameView = {
   outline: [],
   preload: null,
   mediaControl: null,
+  quizHasSound: null,
   nav: null,
 };
 
@@ -210,6 +213,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       patch({ reveal: p, result: p.yourResult ?? null });
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
     const onPreload = (p: MediaPreloadPayload) => patch({ preload: p });
+    const onGameMedia = (p: { hasSound: boolean }) => patch({ quizHasSound: p.hasSound });
     const onMediaControl = (p: { questionIndex: number; action: 'restart' }) =>
       setView((prev) => ({
         ...prev,
@@ -261,6 +265,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('leaderboard', onLeaderboard);
       sock.on('media:preload', onPreload);
       sock.on('media:control', onMediaControl);
+      sock.on('game:media', onGameMedia);
       sock.on('game:podium', onPodium);
       sock.on('game:ended', onEnded);
       sock.on('notice', onNotice);
@@ -324,6 +329,7 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('leaderboard', onLeaderboard);
       s.off('media:preload', onPreload);
       s.off('media:control', onMediaControl);
+      s.off('game:media', onGameMedia);
       s.off('game:podium', onPodium);
       s.off('game:ended', onEnded);
       s.off('notice', onNotice);

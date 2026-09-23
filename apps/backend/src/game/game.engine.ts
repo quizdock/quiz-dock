@@ -706,6 +706,13 @@ export class GameEngine {
     // le host:create — doit voir ce que la session enregistre de lui.
     socket.emit('notice', noticeOf(meta));
     const snapshotForNav = await this.game.getSnapshot(pin);
+    if (!playerId && snapshotForNav) {
+      // The projection asks for sound at once when the quiz will need it.
+      const hasSound = snapshotForNav.questions.some(
+        (q) => !!q.media?.audio || q.media?.visual?.kind === 'video',
+      );
+      socket.emit('game:media', { hasSound });
+    }
     socket.emit('game:state', {
       state: meta.state as GameState,
       questionIndex: meta.currentIndex,

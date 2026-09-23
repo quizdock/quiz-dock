@@ -141,6 +141,8 @@ export const ServerEvents = {
   MediaPreload: 'media:preload',
   /** A host command on the current question's media, relayed to the screens. */
   MediaControl: 'media:control',
+  /** What the quiz's media need from a screen (sent on attach, not to players). */
+  GameMedia: 'game:media',
   Notice: 'notice',
   Error: 'error',
   Pong: 'pong',
@@ -493,6 +495,12 @@ export interface ServerToClientEvents {
   'media:preload': (p: MediaPreloadPayload) => void;
   /** The host restarts the current question's media from the top. */
   'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
+  /**
+   * Whether the quiz plays any sound (an MP3, a video), sent on attach to the
+   * screens that are not players: the projection then asks for the click that
+   * unlocks sound as soon as it opens, whatever the moment of the session.
+   */
+  'game:media': (p: { hasSound: boolean }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
    * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le

@@ -233,7 +233,9 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
       )}
     >
       {fullscreenBtn}
-      {playMedia && !soundUnlocked && (view.state === null || view.state === 'LOBBY') ? (
+      {/* A quiz with sound asks for the unlocking click as soon as this window opens,
+          whatever the moment of the session; a silent quiz never asks. */}
+      {playMedia && !soundUnlocked && view.quizHasSound && view.state !== 'ENDED' ? (
         <SoundUnlockOverlay />
       ) : null}
       {view.nav?.review ? (

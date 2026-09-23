@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { applyGain, unlockAudio } from './audio-unlock';
+import { applyGain, unlockAudio, useAudioUnlocked } from './audio-unlock';
 import { releaseMedia, takeMedia } from './media-pool';
 import { clearPosition, readPosition, resumeAt, writePosition } from './media-position';
 import { Waveform } from './waveform';
@@ -35,6 +35,8 @@ function usePlayback(
 ) {
   const [blocked, setBlocked] = useState<Blocked>(null);
   const [slow, setSlow] = useState(false);
+  // Sound unlocked meanwhile (the projection's overlay): what was refused plays now.
+  const unlocked = useAudioUnlocked();
 
   // The host takes the media back to the top (the element keeps playing or paused as it was).
   const firstSignal = useRef(restartSignal);
@@ -56,8 +58,10 @@ function usePlayback(
     if (positionKey && readPosition(positionKey)?.ended) return;
     let cancelled = false;
     const start = async () => {
+      if (unlocked && el.muted) el.muted = false; // the video that went on muted gets its sound
       await applyGain(el, gainDb);
       if (!cancelled) await el.play();
+      if (!cancelled) setBlocked(null);
     };
     start().catch((err: DOMException) => {
       if (cancelled || err.name !== 'NotAllowedError') return;
@@ -80,7 +84,7 @@ function usePlayback(
       window.clearTimeout(timer);
       el.removeEventListener('playing', onPlaying);
     };
-  }, [el, mode, gainDb, positionKey]);
+  }, [el, mode, gainDb, positionKey, unlocked]);
 
   const enableSound = async () => {
     if (!el) return;

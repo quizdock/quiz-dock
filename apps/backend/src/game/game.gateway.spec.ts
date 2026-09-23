@@ -284,6 +284,22 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.score).toBeGreaterThan(0);
   }, 15_000);
 
+  it('tells the projection on attach whether the quiz has sound, never the players', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const screen = connect();
+    const media = new Promise((resolve) => screen.once('game:media', resolve));
+    await screen.emitWithAck('spectator:join', { pin });
+    expect(await media).toEqual({ hasSound: false }); // the seeded quiz is silent
+    const player = connect();
+    let told = false;
+    player.on('game:media', () => (told = true));
+    await player.emitWithAck('player:join', { pin, nickname: 'Mia' });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(told).toBe(false);
+    host.emit('host:end', { pin });
+  }, 15_000);
+
   it('relays the host’s media restart to the projection while a question is live', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
