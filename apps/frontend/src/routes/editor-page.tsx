@@ -321,6 +321,30 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             void form.handleSubmit();
           }}
         >
+          {/* Enregistrer suit l'édition : la barre colle en haut de la zone, calée
+              à droite, et « Enregistrer » occupe l'angle — on ne descend pas
+              chercher le bouton après avoir tapé. */}
+          {isDirty ? (
+            <div className="bg-background/95 sticky top-0 z-20 -mx-2 flex items-center justify-end gap-2 px-2 py-2 backdrop-blur">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  clearDraft(quizDraftKey);
+                  setQuizDraft(null);
+                  form.reset();
+                  setEditingDescription(false);
+                }}
+              >
+                {t('common:cancel')}
+              </Button>
+              <Button type="submit" size="sm" disabled={update.isPending}>
+                <Save className="size-4" />
+                {t('settings.save')}
+              </Button>
+            </div>
+          ) : null}
           <div className="flex flex-wrap items-center gap-3">
             <form.Field name="title">
               {(field) => (
@@ -375,27 +399,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 setEditingDescription(false);
               }}
             />
-          ) : null}
-          {isDirty ? (
-            <div className="flex items-center gap-2">
-              <Button type="submit" size="sm" disabled={update.isPending}>
-                <Save className="size-4" />
-                {t('settings.save')}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  clearDraft(quizDraftKey);
-                  setQuizDraft(null);
-                  form.reset();
-                  setEditingDescription(false);
-                }}
-              >
-                {t('common:cancel')}
-              </Button>
-            </div>
           ) : null}
         </form>
         <div className="flex flex-wrap items-center gap-1">
