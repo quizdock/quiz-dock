@@ -19,6 +19,7 @@ import {
   Smartphone,
   Square,
   Users,
+  Wifi,
 } from 'lucide-react';
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
@@ -46,7 +47,7 @@ import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { ParticipantPreview } from '../game/participant-preview';
 import { joinBase, joinHostLabel, joinUrlFor } from '../game/join-url';
 import { JoinAddressPicker } from '../game/join-address-picker';
-import { type GameView, useGameSession } from '../game/use-game-session';
+import { type GameView, type RosterPlayer, useGameSession } from '../game/use-game-session';
 import { ScreenView } from './screen-page';
 
 /** Boutons d'ajustement du chrono (§8) : retire/ajoute des secondes en direct. */
@@ -747,7 +748,7 @@ function ParticipantsList({
   players,
   onBan,
 }: {
-  players: { playerId: string; nickname: string; avatar?: string }[];
+  players: RosterPlayer[];
   onBan: (playerId: string, minutes: number) => void;
 }) {
   const { t } = useTranslation('live');
@@ -763,6 +764,11 @@ function ParticipantsList({
         >
           <Avatar name={p.avatar || p.nickname} size={24} />
           <span className="max-w-[8rem] truncate">{p.nickname}</span>
+          {p.presence === 'remote' ? (
+            <Tooltip label={t('control.remote')}>
+              <Wifi className="text-muted-foreground size-3.5" aria-label={t('control.remote')} />
+            </Tooltip>
+          ) : null}
           <BanButton nickname={p.nickname} onBan={(m) => onBan(p.playerId, m)} />
         </li>
       ))}
@@ -824,7 +830,7 @@ function ParticipantsControl({
   players,
   onBan,
 }: {
-  players: { playerId: string; nickname: string; avatar?: string }[];
+  players: RosterPlayer[];
   onBan: (playerId: string, minutes: number) => void;
 }) {
   const { t } = useTranslation('live');

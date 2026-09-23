@@ -36,6 +36,11 @@ const quizWithContent = Prisma.validator<Prisma.QuizDefaultArgs>()({
     slides: { orderBy: { orderIndex: 'asc' }, include: { media: true } },
   },
 });
+/** Whether any question plays a sound or a video: the screens ask for sound, players pick a presence. */
+export function snapshotHasSound(snapshot: QuizSnapshot): boolean {
+  return snapshot.questions.some((q) => !!q.media?.audio || q.media?.visual?.kind === 'video');
+}
+
 export type QuizWithContent = Prisma.QuizGetPayload<typeof quizWithContent>;
 export const QUIZ_SNAPSHOT_INCLUDE = quizWithContent.include;
 

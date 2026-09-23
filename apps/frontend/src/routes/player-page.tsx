@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { Check, LogIn, LogOut, Shuffle } from 'lucide-react';
+import type { PlayerPresence } from '@quiz-dock/contracts';
+import { Check, LogIn, LogOut, Shuffle, Users, Wifi } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ import {
   loadAvatarSeed,
   loadNickname,
   loadPlayerSession,
+  peekSession,
   saveAvatarSeed,
 } from '../game/game-client';
 import { ResultMark } from '../game/result-mark';
@@ -63,6 +65,9 @@ export function PlayerPage() {
   const { view, socket, markJoined } = useGameSession(pin, 'player');
   const [nickname, setNickname] = useState(() => loadPlayerSession()?.nickname ?? loadNickname());
   const [joining, setJoining] = useState(false);
+  // Asked only when the quiz plays sound: a remote player then gets it on their device.
+  const [hasSound, setHasSound] = useState(false);
+  const [presence, setPresence] = useState<PlayerPresence>('room');
   // Leaving on purpose: the seat and the score are gone, so it is confirmed first.
   const [confirmLeave, setConfirmLeave] = useState(false);
   const navigate = useNavigate();
@@ -123,12 +128,30 @@ export function PlayerPage() {
     setOrder(question?.options?.map((o) => o.id) ?? []);
   }, [question]);
 
+  const needsJoin = view.status === 'no-session';
+  useEffect(() => {
+    if (!needsJoin) return;
+    let cancelled = false;
+    // No answer (game over, network): the form stays as it was, the join says why.
+    peekSession(pin)
+      .then((res) => !cancelled && setHasSound(res.hasSound))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [needsJoin, pin]);
+
   const onJoin = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setJoining(true);
     try {
-      const joined = await joinSession(pin, nickname.trim(), avatarSeed || undefined);
+      const joined = await joinSession(
+        pin,
+        nickname.trim(),
+        avatarSeed || undefined,
+        hasSound ? presence : undefined,
+      );
       // Le serveur a pu retenir un autre nom (compte, homonyme) : l'écran suit.
       if (joined.nickname && joined.nickname !== nickname.trim()) setNickname(joined.nickname);
       markJoined();
@@ -321,6 +344,7 @@ export function PlayerPage() {
                 required
               />
             </Label>
+            {hasSound ? <PresenceChoice value={presence} onChange={setPresence} /> : null}
             {error ? <p className="text-destructive text-sm">{error}</p> : null}
             <Button type="submit" disabled={joining || !nickname.trim()}>
               <LogIn className="size-4" />
@@ -575,5 +599,58 @@ export function PlayerPage() {
         <p className="text-muted-foreground border-t pt-2 text-sm">{trackingNotice(t, view)}</p>
       </CardContent>
     </Card>,
+  );
+}
+
+/** "In the room" or "remote": whether this device will get the question's video and sound. */
+function PresenceChoice({
+  value,
+  onChange,
+}: {
+  value: PlayerPresence;
+  onChange: (presence: PlayerPresence) => void;
+}) {
+  const { t } = useTranslation('live');
+  const choices = [
+    {
+      id: 'room',
+      icon: Users,
+      label: t('player.presenceRoom'),
+      hint: t('player.presenceRoomHint'),
+    },
+    {
+      id: 'remote',
+      icon: Wifi,
+      label: t('player.presenceRemote'),
+      hint: t('player.presenceRemoteHint'),
+    },
+  ] as const;
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-1 text-sm font-medium">{t('player.presenceLegend')}</legend>
+      {choices.map(({ id, icon: Icon, label, hint }) => (
+        <label
+          key={id}
+          className={cn(
+            'flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors',
+            value === id ? 'border-primary bg-primary/5' : 'hover:bg-accent',
+          )}
+        >
+          <input
+            type="radio"
+            name="presence"
+            value={id}
+            checked={value === id}
+            onChange={() => onChange(id)}
+            className="accent-primary mt-1"
+          />
+          <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+          <span className="flex flex-col">
+            <span className="text-sm font-medium">{label}</span>
+            <span className="text-muted-foreground text-xs">{hint}</span>
+          </span>
+        </label>
+      ))}
+    </fieldset>
   );
 }

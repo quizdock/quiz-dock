@@ -11,12 +11,14 @@ const { fakeSocket, hookState } = vi.hoisted(() => ({
 const markJoined = vi.fn();
 const joinSession = vi.fn();
 const loadPlayerSession = vi.fn();
+const peekSession = vi.fn(() => Promise.resolve({ hasSound: false }));
 
 vi.mock('../game/use-game-session', () => ({
   useGameSession: () => ({ view: hookState.value, socket: fakeSocket, markJoined }),
 }));
 vi.mock('../game/game-client', () => ({
   joinSession: (...a: unknown[]) => joinSession(...a),
+  peekSession: () => peekSession(),
   loadPlayerSession: () => loadPlayerSession(),
   loadAvatarSeed: () => null,
   loadNickname: () => '',
@@ -80,8 +82,30 @@ describe('PlayerPage (client participant)', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /C'est parti/ }));
 
-    await waitFor(() => expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined));
+    await waitFor(() =>
+      expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined, undefined),
+    );
     await waitFor(() => expect(markJoined).toHaveBeenCalled());
+    // A quiz without sound: nobody is asked where they play from.
+    expect(screen.queryByText(/joues-tu/)).not.toBeInTheDocument();
+  });
+
+  it('no-session, quiz with sound: asks where the player is and joins remote', async () => {
+    hookState.value = view({ status: 'no-session' });
+    peekSession.mockResolvedValueOnce({ hasSound: true });
+    joinSession.mockResolvedValue({ sessionToken: 't', playerId: 'p1', nickname: 'Alice' });
+    renderApp('/join/771122');
+
+    expect(await screen.findByRole('radio', { name: /Dans la salle/ })).toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: /À distance/ }));
+    fireEvent.change(screen.getByPlaceholderText('Votre pseudo'), {
+      target: { value: 'Alice' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /C'est parti/ }));
+
+    await waitFor(() =>
+      expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined, 'remote'),
+    );
   });
 
   it('LOBBY : salle d’attente avec le pseudo', async () => {

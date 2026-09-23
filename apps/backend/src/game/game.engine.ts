@@ -8,6 +8,7 @@ import type {
   GameStep,
   LeaderboardPayload,
   LeaderboardRow,
+  PlayerPresence,
   PodiumPayload,
   QuestionRevealPayload,
   ServerToClientEvents,
@@ -37,7 +38,7 @@ import { buildRevealCommon } from './reveal';
 import { isDeferred, rankClosest, scoreAnswer } from './scoring';
 import { SessionArchiveService } from './session-archive.service';
 import { resumeQuestionWindow } from './chrono';
-import { buildQuestionStart, buildSlideShow } from './snapshot';
+import { buildQuestionStart, buildSlideShow, snapshotHasSound } from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
 
@@ -708,10 +709,7 @@ export class GameEngine {
     const snapshotForNav = await this.game.getSnapshot(pin);
     if (!playerId && snapshotForNav) {
       // The projection asks for sound at once when the quiz will need it.
-      const hasSound = snapshotForNav.questions.some(
-        (q) => !!q.media?.audio || q.media?.visual?.kind === 'video',
-      );
-      socket.emit('game:media', { hasSound });
+      socket.emit('game:media', { hasSound: snapshotHasSound(snapshotForNav) });
     }
     socket.emit('game:state', {
       state: meta.state as GameState,
@@ -806,12 +804,24 @@ export class GameEngine {
   /** Joueurs **connectés** (playerId + pseudo + avatar) pour l'instantané de lobby (§6/§9). */
   private async connectedRoster(
     pin: string,
-  ): Promise<{ playerId: string; nickname: string; avatar: string }[]> {
+  ): Promise<{ playerId: string; nickname: string; avatar: string; presence: PlayerPresence }[]> {
     const players = await this.redis.hgetall(gameKeys.players(pin));
-    const roster: { playerId: string; nickname: string; avatar: string }[] = [];
+    const roster: {
+      playerId: string;
+      nickname: string;
+      avatar: string;
+      presence: PlayerPresence;
+    }[] = [];
     for (const [playerId, json] of Object.entries(players)) {
       const rec = JSON.parse(json) as PlayerRecord;
-      if (rec.connected) roster.push({ playerId, nickname: rec.nickname, avatar: rec.avatar });
+      if (rec.connected) {
+        roster.push({
+          playerId,
+          nickname: rec.nickname,
+          avatar: rec.avatar,
+          presence: rec.presence ?? 'room',
+        });
+      }
     }
     return roster;
   }

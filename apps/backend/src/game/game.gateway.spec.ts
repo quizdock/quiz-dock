@@ -387,6 +387,94 @@ describe('GameGateway (intégration socket)', () => {
     }
   }, 15_000);
 
+  it('offers remote play only when the quiz has sound, and tells the roster', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/presence-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Presence test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const silent = await host.emitWithAck('host:create', { quizId });
+      const loud = await host.emitWithAck('host:create', { quizId: withSound.id });
+
+      const guest = connect();
+      expect(await guest.emitWithAck('player:peek', { pin: silent.pin })).toEqual({
+        hasSound: false,
+      });
+      expect(await guest.emitWithAck('player:peek', { pin: loud.pin })).toEqual({
+        hasSound: true,
+      });
+
+      // Remote asked for a silent quiz: nothing to play, the player is in the room.
+      const ignored = new Promise<{ presence?: string }>((resolve) =>
+        host.once('player:joined', resolve),
+      );
+      await guest.emitWithAck('player:join', {
+        pin: silent.pin,
+        nickname: 'Ada',
+        presence: 'remote',
+      });
+      expect((await ignored).presence).toBe('room');
+
+      const remote = connect();
+      const joined = new Promise<{ presence?: string }>((resolve) =>
+        host.once('player:joined', resolve),
+      );
+      await remote.emitWithAck('player:join', {
+        pin: loud.pin,
+        nickname: 'Grace',
+        presence: 'remote',
+      });
+      expect((await joined).presence).toBe('remote');
+
+      // A console that attaches again reads it from the roster.
+      const console2 = connect({ localUser: 'Animateur' });
+      const roster = new Promise<{ players: { nickname: string; presence?: string }[] }>(
+        (resolve) => console2.once('game:roster', resolve),
+      );
+      await console2.emitWithAck('host:attach', { pin: loud.pin });
+      expect((await roster).players).toEqual([
+        expect.objectContaining({ nickname: 'Grace', presence: 'remote' }),
+      ]);
+      host.emit('host:end', { pin: silent.pin });
+      host.emit('host:end', { pin: loud.pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

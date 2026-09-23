@@ -108,6 +108,8 @@ export const ClientEvents = {
   /** Ajoute/retire du temps au chrono de la question courante (± secondes). */
   HostAdjustTime: 'host:adjust-time',
   SpectatorJoin: 'spectator:join',
+  /** What a player needs to know before joining (whether the quiz plays sound). */
+  PlayerPeek: 'player:peek',
   PlayerJoin: 'player:join',
   PlayerReconnect: 'player:reconnect',
   /** Change la graine d'avatar avant le démarrage (cosmétique). */
@@ -150,6 +152,13 @@ export const ServerEvents = {
 
 // ─── Payloads WebSocket (technique §9) ──────────────────────────────────────
 // Source de vérité du contrat temps réel, typée bout-en-bout (back + front).
+
+/**
+ * Where a player follows the game from. `room`: they see the projection, their
+ * device stays silent. `remote`: they get the whole question on their device.
+ * Only offered when the quiz plays sound; `room` otherwise.
+ */
+export type PlayerPresence = 'room' | 'remote';
 
 /** Réponse d'un joueur : option(s), texte, nombre, ou séquence d'ordre. */
 export type AnswerValue = string | string[] | number;
@@ -423,8 +432,17 @@ export interface ClientToServerEvents {
   'host:adjust-time': (p: { pin: string; deltaS: number }) => void;
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
   'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
+  /** Before joining: whether the quiz plays sound, so the join form offers the presence choice. */
+  'player:peek': (p: { pin: string }, ack: (res: { hasSound: boolean }) => void) => void;
   'player:join': (
-    p: { pin: string; nickname: string; authToken?: string; avatar?: string },
+    p: {
+      pin: string;
+      nickname: string;
+      authToken?: string;
+      avatar?: string;
+      /** `room` when absent, and whenever the quiz plays no sound. */
+      presence?: PlayerPresence;
+    },
     /**
      * `nickname` est celui **retenu par le serveur** : le pseudo saisi, ou le nom
      * du compte quand l'hôte n'ouvre pas le choix (RG-15), suffixé en cas
@@ -461,13 +479,14 @@ export interface ServerToClientEvents {
     nickname: string;
     playerCount: number;
     avatar?: string;
+    presence?: PlayerPresence;
   }) => void;
   'player:left': (p: { playerId: string; playerCount: number }) => void;
   /** Le joueur a été banni par l'hôte : son client affiche l'exclusion (durée en minutes). */
   kicked: (p: { minutes: number }) => void;
   /** Instantané du lobby (joueurs connectés) renvoyé à un socket qui se (ré)attache (§6). */
   'game:roster': (p: {
-    players: { playerId: string; nickname: string; avatar?: string }[];
+    players: { playerId: string; nickname: string; avatar?: string; presence?: PlayerPresence }[];
   }) => void;
   'game:state': (p: GameStatePayload) => void;
   'question:start': (p: QuestionStartPayload) => void;

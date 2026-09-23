@@ -55,7 +55,7 @@ describe('GameGateway.playerJoin (AUTH_MODE)', () => {
     const user = { id: 'u1', displayName: 'Alice Account' } as User;
     socket.data.user = user;
     const ack = await gateway.playerJoin(socket as never, payload);
-    expect(game.joinSession).toHaveBeenCalledWith('123456', 'Alice', user, undefined);
+    expect(game.joinSession).toHaveBeenCalledWith('123456', 'Alice', user, undefined, undefined);
     // L'accusé porte le pseudo **retenu** : l'écran du participant doit montrer
     // le même nom que la salle (nom du compte, ou homonyme suffixé).
     expect(ack.nickname).toBe('Alice');
@@ -65,6 +65,6 @@ describe('GameGateway.playerJoin (AUTH_MODE)', () => {
     process.env.AUTH_MODE = 'none';
     const { gateway, game, socket } = makeGateway();
     await gateway.playerJoin(socket as never, payload);
-    expect(game.joinSession).toHaveBeenCalledWith('123456', 'Alice', null, undefined);
+    expect(game.joinSession).toHaveBeenCalledWith('123456', 'Alice', null, undefined, undefined);
   });
 });

@@ -1,5 +1,6 @@
 import type {
   AnswerValue,
+  PlayerPresence,
   GameMode,
   LiveQuestionMedia,
   OptionColor,
@@ -102,6 +103,8 @@ export interface PlayerRecord {
   joinedAt: number;
   /** RTT/2 mesuré au join (compensation latence §6). */
   latencyMs: number;
+  /** Where they follow the game from; `room` when absent (records made before it existed). */
+  presence?: PlayerPresence;
 }
 
 /** État scalaire d'une partie (Redis hash `game:{pin}`). */

@@ -14,6 +14,7 @@ import type {
   ClientToServerEvents,
   GameMode,
   GameStep,
+  PlayerPresence,
   ServerToClientEvents,
 } from '@quiz-dock/contracts';
 import type { User } from '@prisma/client';
@@ -118,6 +119,16 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   /**
+   * Before joining: whether the quiz plays sound, so the form offers "in the
+   * room / remote". Nothing else about the quiz leaks; the PIN is enough, as
+   * for the projection.
+   */
+  @SubscribeMessage('player:peek')
+  async playerPeek(@MessageBody() payload: { pin: string }): Promise<{ hasSound: boolean }> {
+    return { hasSound: await this.game.hasSound(payload.pin) };
+  }
+
+  /**
    * Joueur (invité ou participant authentifié) : rejoint le lobby d'une partie.
    * Renvoie son `playerId` + un `sessionToken` de reconnexion, et notifie la room.
    * Sous `AUTH_MODE=oidc`, le jeton est exigé (RG-15) : deux barrières
@@ -126,13 +137,20 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('player:join')
   async playerJoin(
     @ConnectedSocket() socket: GameSocket,
-    @MessageBody() payload: { pin: string; nickname: string; avatar?: string },
+    @MessageBody()
+    payload: { pin: string; nickname: string; avatar?: string; presence?: PlayerPresence },
   ): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
     if (isOidcMode() && !socket.data.user) {
       throw new WsException('auth.required');
     }
     const user = socket.data.user ?? null;
-    const res = await this.game.joinSession(payload.pin, payload.nickname, user, payload.avatar);
+    const res = await this.game.joinSession(
+      payload.pin,
+      payload.nickname,
+      user,
+      payload.avatar,
+      payload.presence,
+    );
     socket.data.pin = res.pin;
     socket.data.playerId = res.playerId;
     await socket.join(res.pin);
@@ -141,6 +159,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       nickname: res.nickname,
       playerCount: res.playerCount,
       avatar: res.avatar,
+      presence: res.presence,
     });
     // Late join (§5) : positionne immédiatement le retardataire sur l'état courant.
     await this.engine.sendStateTo(socket, res.pin);
@@ -247,6 +266,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       nickname: record.nickname,
       playerCount: await this.game.connectedCount(session.pin),
       avatar: record.avatar,
+      presence: record.presence ?? 'room',
     });
     await this.engine.sendStateTo(socket, session.pin);
     return { ok: true };
