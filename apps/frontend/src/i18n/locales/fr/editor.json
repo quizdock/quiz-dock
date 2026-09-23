@@ -247,7 +247,15 @@
     "demoDisabled": "L'envoi de médias est désactivé sur l'instance de démo.",
     "altLabel": "Texte alternatif",
     "altPlaceholder": "ex. Kylian Mbappé en maillot de l’équipe de France",
-    "altHelp": "Lu par les lecteurs d’écran. Décrivez ce que montre l’image quand elle porte une partie de la question ; laissez vide si elle est décorative."
+    "altHelp": "Lu par les lecteurs d’écran. Décrivez ce que montre l’image quand elle porte une partie de la question ; laissez vide si elle est décorative.",
+    "slotsLegend": "Médias de la question",
+    "visualLabel": "Visuel",
+    "audioLabel": "Son",
+    "addImage": "Ajouter une image",
+    "addVideo": "Ajouter une vidéo (MP4)",
+    "addAudio": "Ajouter un son (MP3)",
+    "videoExcludesAudio": "La vidéo a déjà son propre son : pas de piste audio en plus. Retirez la vidéo pour ajouter un son.",
+    "audioExcludesVideo": "Une vidéo a déjà son propre son : retirez le son pour pouvoir choisir une vidéo."
   },
   "background": {
     "legend": "Fond",

@@ -7,6 +7,7 @@ import {
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { RedisService } from '../redis/redis.service';
 import { MediaService } from './media.service';
 
 // Accepted files would land on the volume: the write is not what these tests are about.
@@ -31,7 +32,9 @@ function makePrisma() {
       delete: jest.fn(),
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(async () => [] as { id: string }[]),
     },
+    $queryRaw: jest.fn(async () => [{ used: false }]),
   };
 }
 
@@ -45,10 +48,15 @@ const file = (over: Partial<{ buffer: Buffer; mimetype: string; size: number }> 
 describe('MediaService', () => {
   let prisma: ReturnType<typeof makePrisma>;
   let service: MediaService;
+  const redis = { keys: jest.fn(async () => [] as string[]), mget: jest.fn(async () => []) };
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new MediaService(prisma as unknown as PrismaService);
+    redis.keys.mockResolvedValue([]);
+    service = new MediaService(
+      prisma as unknown as PrismaService,
+      redis as unknown as RedisService,
+    );
   });
 
   it('refuse un upload sans fichier', async () => {
@@ -170,5 +178,68 @@ describe('MediaService', () => {
       where: { id: 'm1', ownerId: 'o1' },
     });
     expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+  });
+
+  describe('releaseUnused', () => {
+    const unused = {
+      _count: {
+        coverForQuizzes: 0,
+        questionVisuals: 0,
+        questionAudios: 0,
+        questionBackgrounds: 0,
+        slides: 0,
+        options: 0,
+      },
+    };
+
+    it('deletes a media nothing uses any more, row and file', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      await service.releaseUnused(['m1', null, 'm1']);
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledTimes(1);
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
+    });
+
+    it('keeps a media another quiz still uses (a duplicated quiz shares it)', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue({
+        _count: { ...unused._count, questionVisuals: 1 },
+      });
+      await service.releaseUnused(['m1']);
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+    });
+
+    it('keeps an image still typed into some Markdown', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      prisma.$queryRaw.mockResolvedValue([{ used: true }]);
+      await service.releaseUnused(['m1']);
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+    });
+
+    it('keeps a media a session is playing, from its frozen snapshot', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      redis.keys.mockResolvedValue(['game:123456:snapshot']);
+      redis.mget.mockResolvedValue(['{"media":{"url":"/api/v1/media/m1"}}'] as never);
+      await service.releaseUnused(['m1']);
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+    });
+
+    it('sweeps the videos and sounds nothing took, once their editor had time', async () => {
+      prisma.mediaAsset.findMany.mockResolvedValue([{ id: 'old' }]);
+      await expect(service.sweepOrphans()).resolves.toBe(1);
+      expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            kind: { in: ['video', 'audio'] },
+            questionVisuals: { none: {} },
+            questionAudios: { none: {} },
+          }),
+        }),
+      );
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'old' } });
+    });
+
+    it('never fails the save that called it', async () => {
+      prisma.mediaAsset.findUnique.mockRejectedValue(new Error('db down'));
+      await expect(service.releaseUnused(['m1'])).resolves.toBeUndefined();
+    });
   });
 });

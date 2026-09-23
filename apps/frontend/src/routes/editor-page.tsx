@@ -57,6 +57,7 @@ import { quizItems, moveItem, slideLabel, type QuizItem } from '@/lib/quiz-items
 import { useMediaQuery } from '@/lib/use-media-query';
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-store';
+import { ChromiumNotice } from '@/components/chromium-notice';
 import { DraftNotice } from '@/components/draft-notice';
 import { Drawer } from '@/components/ui/drawer';
 import { QuestionForm } from './question-form';
@@ -317,6 +318,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
   return (
     <div className="flex w-full flex-col gap-6">
+      <ChromiumNotice />
       {/* Header: the quiz is the page title; the main action (publish / present) lives here. */}
       {/* L'en-tête occupe toute la largeur : les actions ne prennent plus la moitié
           de la ligne au formulaire, la description et ce qui l'accompagne ont enfin

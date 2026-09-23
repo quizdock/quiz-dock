@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import type { QuestionContent } from './dto/question-content.schema';
 import { normalizeAnswer } from './dto/question-content.schema';
@@ -25,7 +26,10 @@ const REORDER_OFFSET = 1000;
 
 @Injectable()
 export class QuestionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly media: MediaService,
+  ) {}
 
   async add(ownerId: string, quizId: string, dto: QuestionContent) {
     await this.assertQuizOwned(ownerId, quizId);
@@ -73,11 +77,20 @@ export class QuestionsService {
       },
       include: QUESTION_INCLUDE,
     });
+    // A replaced or removed media leaves with its file, unless something else holds it.
+    await this.media.releaseUnused(
+      [current.visualMediaId, current.audioMediaId].filter(
+        (id) => id !== media.visualMediaId && id !== media.audioMediaId,
+      ),
+    );
     return toQuestionOutput(question);
   }
 
   async remove(ownerId: string, questionId: string): Promise<void> {
-    const { quizId } = await this.assertQuestionOwned(ownerId, questionId);
+    const { quizId, visualMediaId, audioMediaId } = await this.assertQuestionOwned(
+      ownerId,
+      questionId,
+    );
     await this.prisma.$transaction([
       this.prisma.question.delete({ where: { id: questionId } }),
       this.prisma.quiz.update({
@@ -85,6 +98,7 @@ export class QuestionsService {
         data: { questionCount: { decrement: 1 } },
       }),
     ]);
+    await this.media.releaseUnused([visualMediaId, audioMediaId]);
   }
 
   async reorder(ownerId: string, quizId: string, dto: ReorderQuestionsDto) {

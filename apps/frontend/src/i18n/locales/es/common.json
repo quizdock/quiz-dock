@@ -48,5 +48,6 @@
   },
   "demo": {
     "banner": "Demo pública — todo se borra cada hora; el asiento de anfitrión dura {{count}} min cada vez."
-  }
+  },
+  "chromiumOnly": "Esta página está pensada para Chrome, Edge u otro navegador Chromium. En este navegador, el envío y la reproducción de vídeos y sonidos pueden fallar."
 }

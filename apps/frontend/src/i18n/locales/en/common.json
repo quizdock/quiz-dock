@@ -48,5 +48,6 @@
   },
   "demo": {
     "banner": "Public demo — everything is wiped every hour; the host seat lasts {{count}} min at a time."
-  }
+  },
+  "chromiumOnly": "This page is built for Chrome, Edge or another Chromium browser. In this browser, uploading and playing videos and sounds may not work well."
 }

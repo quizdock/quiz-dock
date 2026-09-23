@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import type { MediaService } from '../media/media.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { QuestionContent } from './dto/question-content.schema';
 import { QuestionsService } from './questions.service';
@@ -37,10 +38,15 @@ function makePrisma() {
 describe('QuestionsService', () => {
   let prisma: ReturnType<typeof makePrisma>;
   let service: QuestionsService;
+  const media = { releaseUnused: jest.fn(async () => undefined) };
 
   beforeEach(() => {
     prisma = makePrisma();
-    service = new QuestionsService(prisma as unknown as PrismaService);
+    media.releaseUnused.mockClear();
+    service = new QuestionsService(
+      prisma as unknown as PrismaService,
+      media as unknown as MediaService,
+    );
   });
 
   describe('isolation par propriétaire', () => {
@@ -151,5 +157,38 @@ describe('QuestionsService', () => {
         .map((c) => c[0].data.orderIndex);
       expect(offsets).toEqual([1001, 1000]);
     });
+  });
+});
+
+describe('QuestionsService — media left behind', () => {
+  const id = (c: string) => c.repeat(26);
+
+  it('releases the media a save replaced, not the one it kept', async () => {
+    const prisma = makePrisma() as ReturnType<typeof makePrisma> & Record<string, unknown>;
+    const media = { releaseUnused: jest.fn(async () => undefined) };
+    const service = new QuestionsService(
+      prisma as unknown as PrismaService,
+      media as unknown as MediaService,
+    );
+    prisma.question.findFirst.mockResolvedValue({
+      id: 'q1',
+      quizId: 'z',
+      visualMediaId: id('I'),
+      audioMediaId: id('A'),
+    });
+    (prisma as unknown as { mediaAsset: unknown }).mediaAsset = {
+      findMany: jest.fn(async () => [{ id: id('I'), kind: 'image' }]),
+    };
+    prisma.question.update.mockResolvedValue({
+      options: [],
+      acceptedAnswers: [],
+      visualMedia: null,
+      audioMedia: null,
+    });
+    await service.update('o1', 'q1', {
+      ...content(),
+      media: { visual: { kind: 'image', assetId: id('I') }, audio: null },
+    } as never);
+    expect(media.releaseUnused).toHaveBeenCalledWith([id('A')]);
   });
 });

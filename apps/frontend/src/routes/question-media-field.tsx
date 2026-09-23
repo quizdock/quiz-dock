@@ -1,0 +1,105 @@
+import type { Audio, QuestionMedia } from '@quiz-dock/contracts';
+import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
+import { MediaUpload, type UploadedMedia } from './media-upload';
+
+/**
+ * The two media slots of a question. The visual holds an image or a video; the
+ * audio holds an MP3. A video brings its own sound, so while one is there the
+ * audio slot is closed, and while a sound is there no video can be chosen —
+ * each side says why, so the author is never left guessing.
+ */
+export function QuestionMediaField({
+  value,
+  onChange,
+}: {
+  value: QuestionMedia;
+  onChange: (media: QuestionMedia) => void;
+}) {
+  const { t } = useTranslation('editor');
+  const { visual, audio } = value;
+  const hasVideo = visual?.kind === 'video';
+
+  const setImage = (id: string | null) =>
+    onChange({
+      visual: id ? { kind: 'image', assetId: id } : null,
+      audio: hasVideo ? null : audio,
+    });
+  const setVideo = (id: string | null) =>
+    onChange(
+      id
+        ? { visual: { kind: 'video', source: 'upload', assetId: id }, audio: null }
+        : NO_VISUAL(audio),
+    );
+  const setAudio = (id: string | null, uploaded?: UploadedMedia) => {
+    const track: Audio | null =
+      id && uploaded?.durationMs && uploaded.peaks
+        ? { assetId: id, origin: 'upload', durationMs: uploaded.durationMs, peaks: uploaded.peaks }
+        : null;
+    onChange({ visual: hasVideo ? null : visual, audio: track } as QuestionMedia);
+  };
+
+  return (
+    <fieldset className="flex flex-col gap-3 rounded-md border p-3">
+      <legend className="px-1 text-sm font-medium">{t('media.slotsLegend')}</legend>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">{t('media.visualLabel')}</span>
+        {visual?.kind === 'image' ? (
+          <MediaUpload value={visual.assetId} onChange={setImage} kind="image" />
+        ) : visual?.kind === 'video' && visual.source === 'upload' ? (
+          <MediaUpload value={visual.assetId} onChange={setVideo} kind="video" />
+        ) : visual?.kind === 'video' ? (
+          // An embedded video (YouTube / Vimeo) comes with its own phase; it can only be removed here.
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-fit"
+            onClick={() => setVideo(null)}
+          >
+            {t('media.remove')}
+          </Button>
+        ) : (
+          <div className="flex flex-wrap items-start gap-2">
+            <MediaUpload
+              value={null}
+              onChange={setImage}
+              kind="image"
+              label={t('media.addImage')}
+            />
+            {audio ? (
+              <p className="text-muted-foreground max-w-[22rem] text-sm">
+                {t('media.audioExcludesVideo')}
+              </p>
+            ) : (
+              <MediaUpload
+                value={null}
+                onChange={setVideo}
+                kind="video"
+                label={t('media.addVideo')}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">{t('media.audioLabel')}</span>
+        {hasVideo ? (
+          <p className="text-muted-foreground text-sm">{t('media.videoExcludesAudio')}</p>
+        ) : (
+          <MediaUpload
+            value={audio?.assetId ?? null}
+            onChange={setAudio}
+            kind="audio"
+            label={t('media.addAudio')}
+          />
+        )}
+      </div>
+    </fieldset>
+  );
+}
+
+/** The visual slot emptied, the sound kept. */
+const NO_VISUAL = (audio: Audio | null): QuestionMedia => ({ visual: null, audio });

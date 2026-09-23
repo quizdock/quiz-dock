@@ -247,7 +247,15 @@
     "demoDisabled": "演示实例已禁用媒体上传。",
     "altLabel": "替代文字",
     "altPlaceholder": "例如：身穿法国队球衣的姆巴佩",
-    "altHelp": "供屏幕阅读器朗读。当图片本身是题目的一部分时，请描述图片内容；纯装饰性图片可留空。"
+    "altHelp": "供屏幕阅读器朗读。当图片本身是题目的一部分时，请描述图片内容；纯装饰性图片可留空。",
+    "slotsLegend": "题目媒体",
+    "visualLabel": "画面",
+    "audioLabel": "声音",
+    "addImage": "添加图片",
+    "addVideo": "添加视频（MP4）",
+    "addAudio": "添加声音（MP3）",
+    "videoExcludesAudio": "视频自带声音：不能再加音轨。移除视频后才能添加声音。",
+    "audioExcludesVideo": "视频自带声音：移除声音后才能选择视频。"
   },
   "background": {
     "legend": "背景",

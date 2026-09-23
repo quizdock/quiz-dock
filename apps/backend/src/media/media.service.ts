@@ -13,7 +13,9 @@ import {
 import type { MediaAsset, MediaKind } from '@prisma/client';
 import { type MediaRejection, sniffMedia } from '@quiz-dock/contracts';
 import { isDemoMode } from '../demo/demo.config';
+import { gameKeys } from '../game/game.keys';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 import { parseUploadMeta } from './dto/media-upload-meta';
 import { mediaLimits, uploadCeiling } from './media.config';
 
@@ -22,6 +24,9 @@ interface UploadFile {
   mimetype: string;
   size: number;
 }
+
+/** How long an unused video or sound may wait for the form it was uploaded from. */
+const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /** Bornes du texte alternatif : une phrase, pas un paragraphe. */
 const ALT_MAX = 300;
@@ -45,11 +50,18 @@ export class MediaService implements OnModuleInit {
   private readonly logger = new Logger(MediaService.name);
   private readonly dir = process.env.MEDIA_DIR ?? join(process.cwd(), '.media');
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
 
   async onModuleInit(): Promise<void> {
     await mkdir(this.dir, { recursive: true });
     this.logger.log(`Répertoire des médias : ${this.dir}`);
+    // Whatever an earlier run left behind (a session that held a media, a crash).
+    void this.sweepOrphans().catch((err: Error) =>
+      this.logger.warn(`Media sweep skipped: ${err.message}`),
+    );
   }
 
   /**
@@ -191,6 +203,100 @@ export class MediaService implements OnModuleInit {
       throw new NotFoundException('media.not_found');
     }
     return asset;
+  }
+
+  /**
+   * Deletes the media a save left behind (a replaced or removed media, a deleted
+   * question or quiz) — row and file — unless something still uses them: a
+   * duplicated quiz shares its media, a transferred one may too, and a session
+   * being played runs on a frozen snapshot that must keep its files. What is
+   * kept is caught by the next sweep once nothing holds it any more. Never
+   * fails the save that called it.
+   */
+  async releaseUnused(ids: (string | null | undefined)[]): Promise<void> {
+    const unique = [...new Set(ids.filter((id): id is string => !!id))];
+    try {
+      if (unique.length > 0) {
+        const live = await this.liveSnapshots();
+        for (const id of unique) {
+          if (live.some((snap) => snap.includes(id)) || (await this.isReferenced(id))) continue;
+          await this.deleteAsset(id);
+        }
+      }
+      await this.sweepOrphans();
+    } catch (err) {
+      this.logger.warn(`Media clean-up skipped: ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Videos and sounds that nothing uses and that were uploaded long enough ago
+   * not to be waiting in an open editor: an upload whose form was abandoned,
+   * or a media kept earlier because a session was still playing it.
+   */
+  async sweepOrphans(olderThanMs = ORPHAN_GRACE_MS): Promise<number> {
+    const orphans = await this.prisma.mediaAsset.findMany({
+      where: {
+        kind: { in: ['video', 'audio'] },
+        createdAt: { lt: new Date(Date.now() - olderThanMs) },
+        questionVisuals: { none: {} },
+        questionAudios: { none: {} },
+      },
+      select: { id: true },
+    });
+    if (orphans.length === 0) return 0;
+    const live = await this.liveSnapshots();
+    let removed = 0;
+    for (const { id } of orphans) {
+      if (live.some((snap) => snap.includes(id))) continue;
+      await this.deleteAsset(id);
+      removed++;
+    }
+    return removed;
+  }
+
+  /** Every place a media id can be used: slots, options, slides, covers, inline Markdown. */
+  private async isReferenced(id: string): Promise<boolean> {
+    const direct = await this.prisma.mediaAsset.findUnique({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            coverForQuizzes: true,
+            questionVisuals: true,
+            questionAudios: true,
+            questionBackgrounds: true,
+            slides: true,
+            options: true,
+          },
+        },
+      },
+    });
+    if (!direct) return true; // already gone: nothing to delete
+    if (Object.values(direct._count).some((n) => n > 0)) return true;
+    // Images typed into Markdown or placed in slide blocks point at the id as text.
+    const pattern = `%${id}%`;
+    const [row] = await this.prisma.$queryRaw<{ used: boolean }[]>`
+      SELECT (
+        EXISTS (SELECT 1 FROM "slide" WHERE "blocks"::text LIKE ${pattern})
+        OR EXISTS (SELECT 1 FROM "quiz" WHERE "description" LIKE ${pattern})
+        OR EXISTS (SELECT 1 FROM "question"
+                   WHERE "prompt" LIKE ${pattern} OR "answer_explanation" LIKE ${pattern})
+        OR EXISTS (SELECT 1 FROM "answer_option" WHERE "text" LIKE ${pattern})
+      ) AS used`;
+    return row?.used ?? true;
+  }
+
+  /** Snapshots of the sessions being played (they carry the URLs of their media). */
+  private async liveSnapshots(): Promise<string[]> {
+    const keys = await this.redis.keys(gameKeys.snapshot('*'));
+    if (keys.length === 0) return [];
+    return (await this.redis.mget(...keys)).filter((v): v is string => typeof v === 'string');
+  }
+
+  private async deleteAsset(id: string): Promise<void> {
+    await this.prisma.mediaAsset.delete({ where: { id } });
+    await unlink(join(this.dir, id)).catch(() => undefined);
   }
 
   /** Supprime un média possédé (ligne + fichier). */

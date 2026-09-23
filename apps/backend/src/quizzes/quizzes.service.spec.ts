@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { type Quiz, QuizStatus, UserRole } from '@prisma/client';
+import type { MediaService } from '../media/media.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { QuizzesService } from './quizzes.service';
@@ -58,6 +59,7 @@ describe('QuizzesService', () => {
     service = new QuizzesService(
       prisma as unknown as PrismaService,
       redis as unknown as RedisService,
+      { releaseUnused: jest.fn(async () => undefined) } as unknown as MediaService,
     );
   });
 

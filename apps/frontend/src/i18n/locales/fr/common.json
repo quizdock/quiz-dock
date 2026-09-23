@@ -48,5 +48,6 @@
   },
   "demo": {
     "banner": "Démo publique — tout est effacé toutes les heures ; le siège d'hôte dure {{count}} min à la fois."
-  }
+  },
+  "chromiumOnly": "Cette page est conçue pour Chrome, Edge ou un autre navigateur Chromium. Sur ce navigateur, l’envoi et la lecture des vidéos et des sons peuvent mal fonctionner."
 }

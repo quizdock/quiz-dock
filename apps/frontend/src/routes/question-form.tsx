@@ -42,7 +42,7 @@ import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { BackgroundField, NO_BACKGROUND, type BackgroundValue } from './background-field';
-import { MediaUpload } from './media-upload';
+import { QuestionMediaField } from './question-media-field';
 import {
   useQuestionsControllerAdd,
   useQuestionsControllerUpdate,
@@ -366,15 +366,7 @@ export function QuestionForm({
         )}
       </form.Field>
 
-      <MediaUpload
-        value={media.visual?.kind === 'image' ? media.visual.assetId : null}
-        onChange={(id) =>
-          form.setFieldValue('media', {
-            visual: id ? { kind: 'image', assetId: id } : null,
-            audio: media.visual?.kind === 'video' ? null : media.audio,
-          } as QuestionMedia)
-        }
-      />
+      <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)} />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <form.Field name="timeLimitS">
