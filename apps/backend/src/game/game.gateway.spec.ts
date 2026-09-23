@@ -987,10 +987,11 @@ describe('GameGateway (intégration socket)', () => {
     await resumedP;
 
     // La reprise recalcule les timings sur le temps restant (§7.3) : la fenêtre
-    // garde sa durée (timeLimitS=5 → 5000 ms) et se termine dans le futur.
+    // garde exactement la durée de la question (timeLimitS=5), que le gel ait
+    // attrapé la réponse en cours ou le délai de lecture (`chrono.ts`), et elle
+    // se termine dans le futur.
     const resumed = qStarts[qStarts.length - 1];
-    expect(resumed.endsAt - resumed.startedAt).toBeGreaterThanOrEqual(4500);
-    expect(resumed.endsAt - resumed.startedAt).toBeLessThanOrEqual(5500);
+    expect(resumed.endsAt - resumed.startedAt).toBe(5_000);
     expect(resumed.endsAt).toBeGreaterThan(Date.now());
   }, 15_000);
 

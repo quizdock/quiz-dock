@@ -36,6 +36,7 @@ import { RedisService } from '../redis/redis.service';
 import { buildRevealCommon } from './reveal';
 import { isDeferred, rankClosest, scoreAnswer } from './scoring';
 import { SessionArchiveService } from './session-archive.service';
+import { resumeQuestionWindow } from './chrono';
 import { buildQuestionStart, buildSlideShow } from './snapshot';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
@@ -1234,16 +1235,9 @@ export class GameEngine {
     return { startedAt, endsAt };
   }
 
-  /**
-   * Timings d'affichage cohérents pour un chrono gelé : conserve le temps déjà
-   * écoulé (fenêtre − restant) en repartant de `now` (timing §6 cohérent). Pur :
-   * utilisé pour le dégel (avec persistance) comme pour l'affichage figé.
-   */
+  /** Timings d'affichage d'un chrono gelé — voir `resumeQuestionWindow`. */
   private resumeTimings(meta: GameMeta, now: number): { startedAt: number; endsAt: number } {
-    const remaining = meta.pausedRemainingMs ?? 0;
-    const windowLen = Math.max(0, meta.questionEndsAt - meta.questionStartedAt);
-    const elapsed = Math.max(0, windowLen - remaining);
-    return { startedAt: now - elapsed, endsAt: now + remaining };
+    return resumeQuestionWindow(meta, now);
   }
 
   /**
