@@ -40,7 +40,9 @@
     "player": "Participant",
     "control": "Console",
     "screen": "Projection",
-    "join": "Rejoindre"
+    "join": "Rejoindre",
+    "live": "Sessions en direct",
+    "templates": "Modèles"
   },
   "demo": {
     "banner": "Démo publique — tout est effacé toutes les heures ; le siège d'hôte dure {{count}} min à la fois."

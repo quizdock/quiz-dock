@@ -41,5 +41,17 @@
   "pagination": "Pages",
   "previous": "Précédent",
   "next": "Suivant",
-  "pageOf": "Page {{page}} sur {{pages}}"
+  "pageOf": "Page {{page}} sur {{pages}}",
+  "searchSessions": "Rechercher une session, un PIN, un animateur",
+  "filterState": "État",
+  "stateLobby": "Salle d’attente",
+  "statePlaying": "En jeu",
+  "sortPlayers": "Plus de participants",
+  "sortPin": "PIN",
+  "sessionCount_one": "{{count}} session",
+  "sessionCount_other": "{{count}} sessions",
+  "noSessionMatch": "Aucune session ne correspond à cette recherche.",
+  "noLiveSession": "Aucune session en cours.",
+  "projection": "Projection",
+  "seeAllSessions": "Voir toutes les sessions"
 }

@@ -1,21 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Pencil,
-  Play,
-  Plus,
-  Search,
-  Sparkles,
-  Upload,
-} from 'lucide-react';
+import { Pencil, Play, Plus, Search, Sparkles, Upload } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
+import { fold } from '@/lib/text';
 import { useLaunchSession } from '../game/use-launch-session';
 import {
   getQuizzesControllerListQueryKey,
@@ -273,42 +266,7 @@ export function DashboardPage() {
         ))}
       </ul>
 
-      {pageCount > 1 ? (
-        <nav className="flex items-center justify-center gap-3" aria-label={t('pagination')}>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={current <= 1}
-            onClick={() => setPage(current - 1)}
-          >
-            <ChevronLeft className="size-4" />
-            {t('previous')}
-          </Button>
-          <span className="text-muted-foreground text-sm tabular-nums">
-            {t('pageOf', { page: current, pages: pageCount })}
-          </span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={current >= pageCount}
-            onClick={() => setPage(current + 1)}
-          >
-            {t('next')}
-            <ChevronRight className="size-4" />
-          </Button>
-        </nav>
-      ) : null}
+      <Pagination page={current} pages={pageCount} onChange={setPage} />
     </section>
   );
-}
-
-/** Accent- and case-insensitive, so « Été » is found by typing « ete ». */
-function fold(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
 }

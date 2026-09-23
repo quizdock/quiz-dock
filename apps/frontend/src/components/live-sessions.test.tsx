@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockApi, renderApp } from '../test/harness';
 
@@ -66,8 +66,9 @@ describe('LiveSessions (barre du haut)', () => {
     renderApp('/quizzes');
 
     fireEvent.click(await screen.findByRole('button', { name: /1 en direct/ }));
+    // Le menu dit que la portée change ; le détail « animée par qui » est sur la
+    // page dédiée, où une ligne a la place de le porter.
     expect(screen.getByText('Toutes les sessions de l’instance')).toBeInTheDocument();
-    expect(screen.getByText(/animée par Carol/)).toBeInTheDocument();
   });
 
   it('sur un écran étroit, tout passe par le menu burger', async () => {
@@ -89,30 +90,27 @@ describe('LiveSessions (barre du haut)', () => {
     expect(screen.getAllByText('Mes quiz').length).toBeGreaterThan(1);
   });
 
-  it('arrête une session après confirmation', async () => {
-    const fetchMock = mockApi([
-      {
-        method: 'GET',
-        path: '/games/mine',
-        body: [{ pin: '482913', quizId: 'q1', title: 'Histoire', state: 'LOBBY', playerCount: 2 }],
-      },
+  it('plafonne la liste et renvoie vers la page dédiée', async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      pin: String(100000 + i),
+      quizId: 'q1',
+      title: `Partie ${i}`,
+      state: 'LOBBY',
+      playerCount: i,
+    }));
+    mockApi([
+      { method: 'GET', path: '/games/mine', body: many },
       { method: 'GET', path: '/quizzes', body: [] },
-      { method: 'POST', path: '/games/482913/end', status: 204, body: {} },
     ]);
     renderApp('/quizzes');
 
-    fireEvent.click(await screen.findByRole('button', { name: /1 en direct/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Arrêter' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Arrêter la session' }));
-
-    await waitFor(() =>
-      expect(
-        fetchMock.mock.calls.some(
-          ([url, opts]) =>
-            String(url).includes('/games/482913/end') &&
-            (opts as RequestInit | undefined)?.method === 'POST',
-        ),
-      ).toBe(true),
+    fireEvent.click(await screen.findByRole('button', { name: /12 en direct/ }));
+    // Cinq aperçus, pas douze : le menu est une porte d'entrée.
+    expect(screen.getByText('Partie 0')).toBeInTheDocument();
+    expect(screen.queryByText('Partie 11')).toBeNull();
+    expect(screen.getByRole('link', { name: /Voir toutes les sessions \(12\)/ })).toHaveAttribute(
+      'href',
+      '/live',
     );
   });
 });

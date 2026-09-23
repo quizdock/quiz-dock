@@ -40,7 +40,9 @@
     "player": "Participant",
     "control": "Console",
     "screen": "Projection",
-    "join": "Join"
+    "join": "Join",
+    "live": "Live sessions",
+    "templates": "Templates"
   },
   "demo": {
     "banner": "Public demo — everything is wiped every hour; the host seat lasts {{count}} min at a time."

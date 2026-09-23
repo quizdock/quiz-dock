@@ -11,6 +11,7 @@ import { PlayerPage } from './routes/player-page';
 import { PreviewPage } from './routes/preview-page';
 import { ScreenPage } from './routes/screen-page';
 import { SessionDetailPage, SessionPlayerPage, SessionsPage } from './routes/sessions-page';
+import { LivePage } from './routes/live-page';
 import { TemplatesPage } from './routes/templates-page';
 import { FeedbackPage } from './routes/feedback-page';
 import { RootLayout } from './routes/root-layout';
@@ -61,6 +62,14 @@ const dashboardRoute = createRoute({
   path: '/quizzes',
   beforeLoad: requireAuth,
   component: DashboardPage,
+});
+
+/** Les sessions en cours, en pleine page : le menu de la barre n'en montre que les premières. */
+export const liveRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/live',
+  beforeLoad: requireAuth,
+  component: LivePage,
 });
 
 /** The catalogue of templates shared on this instance (#39). */
@@ -213,6 +222,7 @@ export const routeTree = rootRoute.addChildren([
   callbackRoute,
   dashboardRoute,
   templatesRoute,
+  liveRoute,
   editorRoute,
   previewRoute,
   sessionsRoute,

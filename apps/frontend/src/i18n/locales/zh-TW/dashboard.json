@@ -41,5 +41,17 @@
   "pagination": "分頁",
   "previous": "上一頁",
   "next": "下一頁",
-  "pageOf": "第 {{page}} / {{pages}} 頁"
+  "pageOf": "第 {{page}} / {{pages}} 頁",
+  "searchSessions": "搜尋會話、PIN 碼或主持人",
+  "filterState": "狀態",
+  "stateLobby": "等候室",
+  "statePlaying": "進行中",
+  "sortPlayers": "參與者最多",
+  "sortPin": "PIN 碼",
+  "sessionCount_one": "{{count}} 場會話",
+  "sessionCount_other": "{{count}} 場會話",
+  "noSessionMatch": "沒有會話符合此搜尋。",
+  "noLiveSession": "目前沒有進行中的會話。",
+  "projection": "投影",
+  "seeAllSessions": "查看全部會話"
 }

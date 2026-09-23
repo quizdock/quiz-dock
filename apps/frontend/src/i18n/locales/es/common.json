@@ -40,7 +40,9 @@
     "player": "Participante",
     "control": "Consola",
     "screen": "Proyección",
-    "join": "Unirse"
+    "join": "Unirse",
+    "live": "Sesiones en directo",
+    "templates": "Plantillas"
   },
   "demo": {
     "banner": "Demo pública — todo se borra cada hora; el asiento de anfitrión dura {{count}} min cada vez."

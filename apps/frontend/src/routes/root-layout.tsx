@@ -10,6 +10,8 @@ import { APP_NAME, getDemo } from '../config';
 const TITLE_KEYS: Record<string, string> = {
   '/login': 'login',
   '/quizzes': 'dashboard',
+  '/live': 'live',
+  '/templates': 'templates',
   '/quizzes/$quizId': 'editor',
   '/quizzes/$quizId/preview': 'preview',
   '/quizzes/$quizId/reviews': 'feedback',

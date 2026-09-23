@@ -41,5 +41,17 @@
   "pagination": "Pages",
   "previous": "Previous",
   "next": "Next",
-  "pageOf": "Page {{page}} of {{pages}}"
+  "pageOf": "Page {{page}} of {{pages}}",
+  "searchSessions": "Search a session, a PIN, a host",
+  "filterState": "State",
+  "stateLobby": "Lobby",
+  "statePlaying": "Playing",
+  "sortPlayers": "Most participants",
+  "sortPin": "PIN",
+  "sessionCount_one": "{{count}} session",
+  "sessionCount_other": "{{count}} sessions",
+  "noSessionMatch": "No session matches this search.",
+  "noLiveSession": "No session is running.",
+  "projection": "Projection",
+  "seeAllSessions": "See all sessions"
 }
