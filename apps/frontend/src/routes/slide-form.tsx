@@ -233,7 +233,7 @@ export function SlideForm({
           blocs et le média poussent le bas de la page hors d'atteinte. La barre dit
           aussi ce qu'on édite — hors tiroir, le formulaire n'a pas de titre. */}
       <div className="bg-background/95 sticky top-0 z-20 -mx-1 flex items-center gap-2 px-1 py-2 backdrop-blur">
-        <span className="min-w-0 truncate text-sm font-medium">
+        <span className="min-w-0 truncate text-base font-semibold">
           {slide ? t('slideForm.titleEdit') : t('slideForm.titleAdd')}
         </span>
         {/* Le refus d'enregistrer se lit à côté du bouton qui l'a provoqué, pas en
