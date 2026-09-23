@@ -273,7 +273,7 @@ describe('quiz bundle', () => {
       license: null,
     });
     // But never a bundle from a schema newer than this build.
-    expect(quizBundleSchema.safeParse({ ...rest, version: 3 }).success).toBe(false);
+    expect(quizBundleSchema.safeParse({ ...rest, version: 4 }).success).toBe(false);
   });
 
   it('validates the Store fields: kebab-case slug and tags, five tags at most, SPDX-like license', () => {

@@ -1,3 +1,4 @@
+import { audioPeaksSchema, loudnessSchema, peakDbfsSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { gradientSchema } from '../../common/background.schema';
 import { QUESTION_TYPES } from '../../questions/dto/question-content.schema';
@@ -18,7 +19,18 @@ export const BUNDLE_FORMAT = 'quizdock/quiz';
  * reads as version 0 (same layout, every Store field absent); the importer
  * accepts anything up to the current version and fills the defaults.
  */
-export const BUNDLE_VERSION = 2;
+export const BUNDLE_VERSION = 3;
+
+/** What a bundle says about one media file (all optional: an image carries at most its alt). */
+export const bundleMediaMetaSchema = z.object({
+  alt: z.string().max(300).nullable().optional(),
+  durationMs: z.number().int().positive().optional(),
+  peaks: audioPeaksSchema.optional(),
+  origin: z.enum(['upload', 'recording']).optional(),
+  loudnessLufs: loudnessSchema.optional(),
+  peakDbfs: peakDbfsSchema.optional(),
+});
+export type BundleMediaMeta = z.infer<typeof bundleMediaMetaSchema>;
 
 /** A media path inside the bundle: flat, under `media/`, no traversal. */
 export const mediaPathSchema = z.string().regex(/^media\/[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/);
@@ -74,7 +86,10 @@ export const questionBundleSchema = z.object({
   kind: z.literal('question'),
   type: z.enum(QUESTION_TYPES),
   prompt: z.string(),
+  /** The visual slot: an image, or an MP4 video (version 3). */
   media: mediaPathSchema.optional(),
+  /** The audio slot: an MP3, never alongside a video (version 3). */
+  audio: mediaPathSchema.optional(),
   answerExplanation: z.string().nullable().optional(),
   ...backgroundBundleFields,
   timeLimitS: z.number().int().optional(),
@@ -108,11 +123,13 @@ export const quizBundleSchema = z.object({
     ...storeBundleFields,
   }),
   /**
-   * What each media file carries beyond its bytes (#43, version 2): keyed by the
-   * same path the items reference. Absent in a version 1 bundle, and an entry may
-   * be missing — an image with no alternative text is a legitimate bundle.
+   * What each media file carries beyond its bytes, keyed by the same path the
+   * items reference: its alternative text (#43, version 2); for a sound or a
+   * video, what the editor measured on it (version 3) — a sound cannot be
+   * imported without its duration and waveform, the players draw them. Absent
+   * in a version 1 bundle, and an image may have no entry at all.
    */
-  media: z.record(mediaPathSchema, z.object({ alt: z.string().max(300).nullable() })).optional(),
+  media: z.record(mediaPathSchema, bundleMediaMetaSchema).optional(),
   items: z.array(z.discriminatedUnion('kind', [questionBundleSchema, slideBundleSchema])).max(500),
 });
 

@@ -11,6 +11,7 @@ import {
   BUNDLE_VERSION,
   type QuestionBundleItem,
   type QuizBundle,
+  type BundleMediaMeta,
   type SlideBundleItem,
 } from './quiz-bundle.schema';
 
@@ -140,6 +141,7 @@ function questionOut(q: ExportableQuiz['questions'][number], pathFor: PathFor): 
     textOutline: q.textOutline,
   };
   if (q.visualMediaId) item.media = pathFor(q.visualMediaId);
+  if (q.audioMediaId) item.audio = pathFor(q.audioMediaId);
   if (q.answerExplanation) item.answerExplanation = mdOut(q.answerExplanation, pathFor);
   if (q.backgroundMediaId) item.backgroundImage = pathFor(q.backgroundMediaId);
   if (q.backgroundGradient)
@@ -182,8 +184,8 @@ function slideOut(s: ExportableQuiz['slides'][number], pathFor: PathFor): SlideB
 export function toBundle(
   quiz: ExportableQuiz,
   pathFor: PathFor,
-  /** Alternative texts by bundle path (#43); absent entries simply carry none. */
-  mediaAlts: Record<string, string | null> = {},
+  /** What each media carries beyond its bytes, by bundle path (alt, a sound's measures). */
+  mediaMeta: Record<string, BundleMediaMeta> = {},
 ): QuizBundle {
   const items: QuizBundle['items'] = [];
   const slidesBefore = new Map<string | null, ExportableQuiz['slides']>();
@@ -215,12 +217,21 @@ export function toBundle(
       cover: quiz.coverMediaId ? pathFor(quiz.coverMediaId) : null,
     },
     media: Object.fromEntries(
-      Object.entries(mediaAlts)
-        .filter(([, alt]) => alt !== null && alt !== '')
-        .map(([path, alt]) => [path, { alt }]),
+      Object.entries(mediaMeta)
+        .map(([path, meta]) => [path, compactMeta(meta)] as const)
+        .filter(([, meta]) => Object.keys(meta).length > 0),
     ),
     items,
   };
+}
+
+/** A media entry without its empty fields (an image with no alt has none left). */
+function compactMeta(meta: BundleMediaMeta): BundleMediaMeta {
+  return Object.fromEntries(
+    Object.entries(meta).filter(
+      ([, v]) => v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && v.length === 0),
+    ),
+  ) as BundleMediaMeta;
 }
 
 // ---------------------------------------------------------------------------
@@ -228,6 +239,12 @@ export function toBundle(
 // ---------------------------------------------------------------------------
 
 type IdFor = (path: string) => string;
+
+/** A media uploaded from the bundle: its id, the kind its content turned out to be. */
+export interface ImportedAsset {
+  id: string;
+  kind: 'image' | 'video' | 'audio';
+}
 
 export interface ImportedQuiz {
   title: string;
@@ -279,6 +296,7 @@ export function collectMediaPaths(bundle: QuizBundle): Set<string> {
     add(it.backgroundImage);
     if (it.kind === 'question') {
       add(it.media);
+      add(it.audio);
       scan(it.prompt);
       scan(it.answerExplanation);
       for (const o of it.options ?? []) {
@@ -293,6 +311,30 @@ export function collectMediaPaths(bundle: QuizBundle): Set<string> {
     }
   }
   return paths;
+}
+
+/** The two media slots of a bundle item, in the contract's shape (validated by the question schema). */
+function questionMediaIn(
+  bundle: QuizBundle,
+  it: QuestionBundleItem,
+  idFor: IdFor,
+  kindFor: (path: string) => ImportedAsset['kind'],
+): unknown {
+  const visual = it.media
+    ? kindFor(it.media) === 'video'
+      ? { kind: 'video', source: 'upload', assetId: idFor(it.media) }
+      : { kind: kindFor(it.media), assetId: idFor(it.media) }
+    : null;
+  const meta = it.audio ? bundle.media?.[it.audio] : undefined;
+  const audio = it.audio
+    ? {
+        assetId: idFor(it.audio),
+        origin: meta?.origin ?? 'upload',
+        durationMs: meta?.durationMs,
+        peaks: meta?.peaks,
+      }
+    : null;
+  return { visual, audio };
 }
 
 function parseOrThrow<T>(parse: () => T, item: number): T {
@@ -314,7 +356,12 @@ function parseOrThrow<T>(parse: () => T, item: number): T {
  * media path to an uploaded media id. Items are re-validated with the API
  * content schemas so a hand-written bundle obeys the same rules as the builder.
  */
-export function fromBundle(bundle: QuizBundle, idFor: IdFor): ImportedQuiz {
+export function fromBundle(
+  bundle: QuizBundle,
+  idFor: IdFor,
+  /** Kind of each uploaded media (a question's visual may be an image or a video). */
+  kindFor: (path: string) => ImportedAsset['kind'] = () => 'image',
+): ImportedQuiz {
   const questions: QuestionContent[] = [];
   const slides: ImportedQuiz['slides'] = [];
   let pending: SlideContent[] = [];
@@ -342,10 +389,7 @@ export function fromBundle(bundle: QuizBundle, idFor: IdFor): ImportedQuiz {
           type: it.type,
           prompt: mdIn(it.prompt, idFor),
           answerExplanation: it.answerExplanation ? mdIn(it.answerExplanation, idFor) : null,
-          media: {
-            visual: it.media ? { kind: 'image', assetId: idFor(it.media) } : null,
-            audio: null,
-          },
+          media: questionMediaIn(bundle, it, idFor, kindFor),
           backgroundMediaId: it.backgroundImage ? idFor(it.backgroundImage) : null,
           backgroundGradient: it.backgroundGradient ?? null,
           textTone: it.textTone,

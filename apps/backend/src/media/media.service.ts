@@ -157,15 +157,13 @@ export class MediaService implements OnModuleInit {
     }
   }
 
-  /** Bytes and mime of a stored media, for the quiz export (#19). */
-  async readAsset(
-    id: string,
-  ): Promise<{ buffer: Buffer; mime: string; alt: string | null } | null> {
+  /** Bytes, mime and what else a stored media carries, for the quiz export (#19). */
+  async readAsset(id: string): Promise<{ buffer: Buffer; mime: string; asset: MediaAsset } | null> {
     const asset = await this.prisma.mediaAsset.findUnique({ where: { id } });
     if (!asset) return null;
     try {
-      // `alt` travels with the bytes so a bundle can carry it (#43).
-      return { buffer: await readFile(join(this.dir, id)), mime: asset.mime, alt: asset.alt };
+      // The row travels with the bytes: a bundle carries the alt (#43) and a sound's measures.
+      return { buffer: await readFile(join(this.dir, id)), mime: asset.mime, asset };
     } catch {
       return null;
     }

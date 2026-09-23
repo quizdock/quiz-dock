@@ -385,7 +385,8 @@ export class StoreService implements OnModuleInit {
       text: item.kind === 'question' ? (item.prompt ?? '') : firstText(item.blocks),
       type: item.kind === 'question' ? (item.type ?? null) : null,
       timeLimitS: item.timeLimitS ?? null,
-      mediaUrl: urlOf(item.media),
+      // The preview shows pictures; a question's video (version 3) is not one.
+      mediaUrl: item.media && !item.media.endsWith('.mp4') ? urlOf(item.media) : null,
       mediaAlt: item.media ? (bundle.media?.[item.media]?.alt ?? null) : null,
       gradient: item.backgroundGradient ?? null,
       options: (item.options ?? []).map((o) => ({
