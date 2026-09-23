@@ -393,8 +393,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               <Section>
                 {/* L'état des avis se lit à côté de l'interrupteur, pas dessous :
                     c'est une ligne, elle n'a pas à en coûter deux. */}
-                <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
-                  <label className="flex min-w-48 flex-1 items-start gap-2 text-sm">
+                <div className="flex items-start gap-x-3">
+                  <label className="flex min-w-0 flex-1 items-start gap-2 text-sm">
                     <Switch
                       className="mt-0.5"
                       checked={quiz.feedbackEnabled}
@@ -409,7 +409,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                       </span>
                     </span>
                   </label>
-                  <FeedbackSection quizId={quiz.id} className="min-w-40 flex-1" />
+                  <FeedbackSection quizId={quiz.id} className="min-w-0 flex-1 text-xs" />
                 </div>
               </Section>
               {quiz.status !== 'archived' ? (
