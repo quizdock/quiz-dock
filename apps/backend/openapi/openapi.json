@@ -707,6 +707,26 @@
                   "file": {
                     "type": "string",
                     "format": "binary"
+                  },
+                  "durationMs": {
+                    "type": "integer"
+                  },
+                  "peaks": {
+                    "type": "string",
+                    "description": "JSON array of AUDIO_PEAK_COUNT values in 0–1."
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "upload",
+                      "recording"
+                    ]
+                  },
+                  "loudnessLufs": {
+                    "type": "number"
+                  },
+                  "peakDbfs": {
+                    "type": "number"
                   }
                 },
                 "required": [
@@ -3016,11 +3036,20 @@
           },
           "url": {
             "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "image",
+              "audio",
+              "video"
+            ]
           }
         },
         "required": [
           "mediaId",
-          "url"
+          "url",
+          "kind"
         ]
       },
       "MediaDescriptionDto": {

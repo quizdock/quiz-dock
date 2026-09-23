@@ -61,6 +61,21 @@ export const getMediaControllerUploadUrl = () => {
 export const mediaControllerUpload = async (mediaControllerUploadBody: MediaControllerUploadBody, options?: RequestInit): Promise<mediaControllerUploadResponse> => {
     const formData = new FormData();
 formData.append(`file`, mediaControllerUploadBody.file);
+if(mediaControllerUploadBody.durationMs !== undefined) {
+ formData.append(`durationMs`, mediaControllerUploadBody.durationMs.toString())
+ }
+if(mediaControllerUploadBody.peaks !== undefined) {
+ formData.append(`peaks`, mediaControllerUploadBody.peaks);
+ }
+if(mediaControllerUploadBody.origin !== undefined) {
+ formData.append(`origin`, mediaControllerUploadBody.origin);
+ }
+if(mediaControllerUploadBody.loudnessLufs !== undefined) {
+ formData.append(`loudnessLufs`, mediaControllerUploadBody.loudnessLufs.toString())
+ }
+if(mediaControllerUploadBody.peakDbfs !== undefined) {
+ formData.append(`peakDbfs`, mediaControllerUploadBody.peakDbfs.toString())
+ }
 
   return customFetch<mediaControllerUploadResponse>(getMediaControllerUploadUrl(),
   {

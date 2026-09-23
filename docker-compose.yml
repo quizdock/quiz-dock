@@ -61,6 +61,8 @@ services:
       MEDIA_DIR: /data/media
       STORE_DIR: /data/store
       MEDIA_MAX_BYTES: ${MEDIA_MAX_BYTES:-10485760}
+      MEDIA_MAX_VIDEO_MB: ${MEDIA_MAX_VIDEO_MB:-50}
+      MEDIA_MAX_AUDIO_MB: ${MEDIA_MAX_AUDIO_MB:-10}
       IMPORT_MAX_BYTES: ${IMPORT_MAX_BYTES:-52428800}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}

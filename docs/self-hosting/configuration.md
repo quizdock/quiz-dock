@@ -73,7 +73,7 @@ How the two modes behave, and how to register the client on your IdP:
 | `PORT` | `3000` | app | In-container HTTP port. Map it to a host port (`-p 18080:3000`). |
 | `DATABASE_URL` | — | app, migrate | PostgreSQL connection string, e.g. `postgresql://user:pass@host:5432/quizdock`. **Required** (provided by compose; baked into `:standalone`). |
 | `REDIS_URL` | — | app | Redis connection string, e.g. `redis://host:6379`. Live-game state only. |
-| `MEDIA_DIR` | `/data/media` | app | Where uploaded images/audio are stored. Mount a volume here to persist. |
+| `MEDIA_DIR` | `/data/media` | app | Where uploaded images, videos and sounds are stored. Mount a volume here to persist. |
 
 The multi-service `docker-compose.prod.yml` also exposes:
 
@@ -102,8 +102,15 @@ Which setup offers what: [where participants connect](invitation-address.md).
 
 | Variable | Default | Description |
 |---|---|---|
-| `MEDIA_MAX_BYTES` | `10485760` | Max upload size per file (bytes). Default 10 MiB. |
+| `MEDIA_MAX_BYTES` | `10485760` | Max size of an uploaded **image** (bytes). Default 10 MiB. |
+| `MEDIA_MAX_VIDEO_MB` | `50` | Max size of an uploaded **video** (MB). MP4 with H.264 video and AAC (or no) audio only — no transcoding, the file is played as uploaded. |
+| `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). MP3 only. |
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
+
+A file's type is read from its content, never from its name: a renamed file is refused, and so
+is a video in another codec than H.264 (the HEVC an iPhone records by default, AV1) or a
+QuickTime `.mov`. **Behind a reverse proxy, raise its request body limit to the largest of these
+sizes** — nginx refuses anything over 1 MB by default (`client_max_body_size 50m;`).
 | `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
 | `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |
 

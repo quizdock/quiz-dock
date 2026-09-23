@@ -10,9 +10,12 @@ import {
   type OnModuleInit,
   PayloadTooLargeException,
 } from '@nestjs/common';
-import { type MediaAsset, MediaKind } from '@prisma/client';
+import type { MediaAsset, MediaKind } from '@prisma/client';
+import { type MediaRejection, sniffMedia } from '@quiz-dock/contracts';
 import { isDemoMode } from '../demo/demo.config';
 import { PrismaService } from '../prisma/prisma.service';
+import { parseUploadMeta } from './dto/media-upload-meta';
+import { mediaLimits, uploadCeiling } from './media.config';
 
 interface UploadFile {
   buffer: Buffer;
@@ -20,18 +23,27 @@ interface UploadFile {
   size: number;
 }
 
+/** Bornes du texte alternatif : une phrase, pas un paragraphe. */
+const ALT_MAX = 300;
+
+/** A rejection of the content check, as the error code the clients translate. */
+const REJECTION_CODE: Record<MediaRejection, string> = {
+  unsupported_type: 'media.unsupported_type',
+  quicktime: 'media.quicktime',
+  unsupported_video_codec: 'media.unsupported_video_codec',
+  unsupported_audio_codec: 'media.unsupported_audio_codec',
+  no_video_track: 'media.no_video_track',
+  unreadable_mp3: 'media.unreadable_mp3',
+};
+
 /**
  * Médias stockés sur un **volume local** (MEDIA_DIR) et servis par le backend
  * (cf. décision self-hosted). Un fichier par `media_asset.id`.
  */
-/** Bornes du texte alternatif : une phrase, pas un paragraphe. */
-const ALT_MAX = 300;
-
 @Injectable()
 export class MediaService implements OnModuleInit {
   private readonly logger = new Logger(MediaService.name);
   private readonly dir = process.env.MEDIA_DIR ?? join(process.cwd(), '.media');
-  private readonly maxBytes = Number(process.env.MEDIA_MAX_BYTES ?? 10 * 1024 * 1024);
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -41,43 +53,51 @@ export class MediaService implements OnModuleInit {
   }
 
   /**
-   * Images only, for now (#42). Audio was accepted and stored, but no screen has
-   * ever played it: a file could be attached to a question and simply vanish from
-   * the game. Refusing it at the door is the honest state of things until the
-   * question of *where* a sound plays — one source in a room, every device when
-   * people are remote — gets a real answer. The `audio` kind stays in the schema:
-   * the rows that exist are not rewritten.
+   * Enregistre un média uploadé (ligne + fichier) et renvoie son URL servie.
+   *
+   * What the file *is* comes from its bytes (`sniffMedia`), never from its name
+   * or the type the browser declared: a raster image, an MP4 with H.264 video
+   * and AAC or no audio, or an MP3. The type served later is the one found here.
+   * A sound comes with what the editor measured while decoding it (duration,
+   * waveform, loudness), which the players use without decoding it again.
    */
-  private kindFor(mime: string): MediaKind {
-    if (mime.startsWith('image/')) return MediaKind.image;
-    throw new BadRequestException('media.unsupported_type');
-  }
-
-  /** Enregistre un média uploadé (ligne + fichier) et renvoie son URL servie. */
   async upload(
     ownerId: string,
     file: UploadFile | undefined,
-  ): Promise<{ mediaId: string; url: string }> {
+    fields: Record<string, unknown> = {},
+  ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
     if (isDemoMode()) {
       throw new ForbiddenException('media.demo_disabled');
     }
     if (!file) {
       throw new BadRequestException('media.file_missing');
     }
-    if (file.size > this.maxBytes) {
+    const sniffed = sniffMedia(
+      new Uint8Array(file.buffer.buffer, file.buffer.byteOffset, file.size),
+    );
+    if (!sniffed.ok) {
+      throw new BadRequestException(
+        sniffed.codec
+          ? { code: REJECTION_CODE[sniffed.reason], params: { codec: sniffed.codec } }
+          : REJECTION_CODE[sniffed.reason],
+      );
+    }
+    const max = mediaLimits()[sniffed.kind];
+    if (file.size > max) {
       throw new PayloadTooLargeException({
         code: 'media.file_too_large',
-        params: { max: this.maxBytes },
+        params: { max, maxMb: Math.floor(max / (1024 * 1024)) },
       });
     }
-    const kind = this.kindFor(file.mimetype);
+    const meta = parseUploadMeta(sniffed.kind, fields);
     const asset = await this.prisma.mediaAsset.create({
       data: {
         ownerId,
         url: '', // complété après obtention de l'id
-        mime: file.mimetype,
+        mime: sniffed.mime,
         sizeBytes: BigInt(file.size),
-        kind,
+        kind: sniffed.kind,
+        ...meta,
       },
     });
     const url = `/api/v1/media/${asset.id}`;
@@ -88,7 +108,7 @@ export class MediaService implements OnModuleInit {
       throw err;
     }
     await this.prisma.mediaAsset.update({ where: { id: asset.id }, data: { url } });
-    return { mediaId: asset.id, url };
+    return { mediaId: asset.id, url, kind: sniffed.kind };
   }
 
   /**
@@ -191,9 +211,9 @@ export class MediaService implements OnModuleInit {
     await Promise.all(names.map((n) => unlink(join(this.dir, n)).catch(() => undefined)));
   }
 
-  /** Exposé pour les tests / vérifications. */
+  /** Largest file any kind may be (bundle import caps each entry with it). */
   get maxUploadBytes(): number {
-    return this.maxBytes;
+    return uploadCeiling();
   }
 
   asset(id: string): Promise<MediaAsset | null> {

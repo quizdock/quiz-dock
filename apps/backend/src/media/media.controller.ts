@@ -30,10 +30,9 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
 import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
+import { uploadCeiling } from './media.config';
 import { MediaService } from './media.service';
 import { parseRange } from './range';
-
-const MAX_BYTES = Number(process.env.MEDIA_MAX_BYTES ?? 10 * 1024 * 1024);
 
 interface UploadedMediaFile {
   buffer: Buffer;
@@ -52,14 +51,27 @@ export class MediaController {
   @ApiBody({
     schema: {
       type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        // Measured by the editor while decoding a sound or a video (see `parseUploadMeta`).
+        durationMs: { type: 'integer' },
+        peaks: { type: 'string', description: 'JSON array of AUDIO_PEAK_COUNT values in 0–1.' },
+        origin: { type: 'string', enum: ['upload', 'recording'] },
+        loudnessLufs: { type: 'number' },
+        peakDbfs: { type: 'number' },
+      },
       required: ['file'],
     },
   })
   @ApiCreatedResponse({ type: MediaUploadResultDto })
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_BYTES } }))
-  upload(@CurrentUser() user: User, @UploadedFile() file: UploadedMediaFile | undefined) {
-    return this.media.upload(user.id, file);
+  // The stream stops at the largest kind's limit; the service applies the one of the kind found.
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: uploadCeiling() } }))
+  upload(
+    @CurrentUser() user: User,
+    @UploadedFile() file: UploadedMediaFile | undefined,
+    @Body() fields: Record<string, unknown>,
+  ) {
+    return this.media.upload(user.id, file, fields);
   }
 
   /** The alternative text of one of the caller's media (#43). */

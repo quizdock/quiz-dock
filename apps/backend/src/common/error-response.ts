@@ -1,6 +1,7 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, PayloadTooLargeException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { ZodValidationException } from 'nestjs-zod';
+import { uploadCeiling } from '../media/media.config';
 
 /**
  * Corps d'erreur **tokenisé** (ADR 0001) : le backend n'expose que des codes
@@ -62,7 +63,16 @@ export function toErrorResponse(exception: unknown): { status: number; body: Err
     };
   }
   if (exception instanceof HttpException) {
-    return { status: exception.getStatus(), body: fromPayload(exception.getResponse()) };
+    const body = fromPayload(exception.getResponse());
+    // Multer stops a stream past the largest limit with its own English message.
+    if (exception instanceof PayloadTooLargeException && body.code === 'File too large') {
+      const max = uploadCeiling();
+      return {
+        status: exception.getStatus(),
+        body: { code: 'media.file_too_large', params: { max, maxMb: Math.floor(max / 1048576) } },
+      };
+    }
+    return { status: exception.getStatus(), body };
   }
   if (exception instanceof WsException) {
     return { status: HttpStatus.BAD_REQUEST, body: fromPayload(exception.getError()) };

@@ -41,15 +41,21 @@
     "unavailable": "Impossible d’allouer un PIN, réessayez."
   },
   "media": {
-    "unsupported_type": "Type de média non pris en charge : images uniquement pour l’instant.",
+    "unsupported_type": "Format non pris en charge : image (PNG, JPEG, GIF, WebP, AVIF), vidéo MP4 (H.264) ou son MP3.",
     "file_missing": "Fichier manquant (champ « file »).",
-    "file_too_large": "Fichier trop volumineux (max {{max}} octets).",
+    "file_too_large": "Fichier trop volumineux (maximum {{maxMb}} Mo pour ce type de média).",
     "not_found": "Média introuvable.",
     "demo_disabled": "L'envoi de médias est désactivé sur l'instance de démo.",
     "video_with_audio": "Une vidéo a déjà son propre son : retirez la piste audio ou la vidéo.",
     "wrong_kind": "Ce média n’est pas du type attendu à cet emplacement.",
     "embeds_disabled": "Les vidéos YouTube et Vimeo sont désactivées sur cette instance.",
-    "invalid": "Médias de la question invalides."
+    "invalid": "Médias de la question invalides.",
+    "quicktime": "Les fichiers QuickTime (.mov) ne sont pas acceptés. Exportez la vidéo en MP4 (H.264), par exemple avec HandBrake (handbrake.fr).",
+    "unsupported_video_codec": "Codec vidéo non pris en charge ({{codec}}). Seul le H.264 est lu partout. Une vidéo filmée sur iPhone est souvent en HEVC : convertissez-la en MP4 H.264, par exemple avec HandBrake (handbrake.fr), ou réglez l’appareil photo sur « Le plus compatible ».",
+    "unsupported_audio_codec": "Le son de cette vidéo ({{codec}}) n’est pas en AAC. Réexportez-la en MP4 H.264 + AAC, par exemple avec HandBrake (handbrake.fr).",
+    "no_video_track": "Ce fichier MP4 ne contient pas de vidéo. Pour un son seul, utilisez un MP3.",
+    "unreadable_mp3": "Ce MP3 est illisible : le fichier semble endommagé ou n’est pas un vrai MP3.",
+    "metadata_invalid": "Les informations calculées sur le son sont invalides ({{field}}). Réessayez l’envoi."
   },
   "import": {
     "file_missing": "Fichier manquant (champ « file »).",
