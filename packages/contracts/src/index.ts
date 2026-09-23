@@ -9,6 +9,8 @@
  * (maps `ClientToServerEvents`/`ServerToClientEvents`) du contrat temps réel.
  */
 
+export * from './media-sniff';
+
 export const CONTRACTS_VERSION = '0.3.0' as const;
 
 /** États de la partie (machine à états — technique §8). */
