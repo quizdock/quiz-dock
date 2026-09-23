@@ -108,7 +108,8 @@
       "lanHidden": "Cette instance tourne dans Docker Desktop (ou un conteneur sur un réseau bridge), qui cache le réseau de l’ordinateur : aucune adresse locale n’a pu être détectée. Saisis-la ci-dessous — ou ajoute HOST_LAN_IPS=<ton IP> dans le fichier .env (ou « -e HOST_LAN_IPS=… » au docker run) pour qu’elle soit listée ici la prochaine fois.",
       "https": "Cette page est servie en HTTPS : une adresse locale en http:// affichera un avertissement sur les téléphones — une adresse publique avec certificat est la voie propre."
     },
-    "backToLive": "Revenir au direct"
+    "backToLive": "Revenir au direct",
+    "restartMedia": "Relancer le média depuis le début"
   },
   "screen": {
     "sessionUnavailable": "Session indisponible.",

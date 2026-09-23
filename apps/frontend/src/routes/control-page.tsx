@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   Radio,
+  RotateCcw,
   Share2,
   SkipForward,
   Smartphone,
@@ -496,6 +497,19 @@ export function ControlPage() {
           mode="still"
           boxClassName="h-56"
         />
+        {view.state === 'ANSWERING' &&
+        (view.question?.media?.audio || view.question?.media?.visual?.kind === 'video') ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-center"
+            onClick={() => socket?.emit('host:media', { pin, action: 'restart' })}
+          >
+            <RotateCcw className="size-4" />
+            {t('control.restartMedia')}
+          </Button>
+        ) : null}
 
         <Markdown
           role="heading"

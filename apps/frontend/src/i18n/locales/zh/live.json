@@ -108,7 +108,8 @@
       "lanHidden": "此实例运行在 Docker Desktop（或 bridge 网络的容器）中，看不到电脑的网络：无法检测本地地址。请在下方输入——或在 .env 文件中加入 HOST_LAN_IPS=<你的 IP>（或 docker run 时加“-e HOST_LAN_IPS=…”），下次即会列出。",
       "https": "本页通过 HTTPS 提供：http:// 的本地地址会在手机上显示警告——带证书的公开地址才是正解。"
     },
-    "backToLive": "回到当前"
+    "backToLive": "回到当前",
+    "restartMedia": "从头重新播放媒体"
   },
   "screen": {
     "sessionUnavailable": "会话不可用。",

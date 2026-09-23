@@ -1115,6 +1115,17 @@ export class GameEngine {
    * le chrono (nouveau timing diffusé) et ré-arme l'enchaînement auto si besoin.
    * Idempotent : re-pauser/re-reprendre est sans effet (hors diffusion d'état).
    */
+  /**
+   * `host:media` : relays a host command on the current question's media to
+   * the screens — after an interruption the projection resumes a second before
+   * where it was, and this lets the host take the room back to the top.
+   */
+  async mediaControl(pin: string, hostUserId: string, action: 'restart'): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Answering) return;
+    this.server.to(pin).emit('media:control', { questionIndex: meta.currentIndex, action });
+  }
+
   async setPaused(pin: string, hostUserId: string, paused: boolean): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     await this.redis.hset(gameKeys.game(pin), { paused: paused ? '1' : '0' });

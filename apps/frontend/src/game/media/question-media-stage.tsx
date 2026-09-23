@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { applyGain, unlockAudio } from './audio-unlock';
 import { releaseMedia, takeMedia } from './media-pool';
+import { clearPosition, readPosition, resumeAt, writePosition } from './media-position';
 import { Waveform } from './waveform';
 
 /**
@@ -25,9 +26,25 @@ type Blocked = null | 'video' | 'audio';
  * refused (a video then plays muted, both offer to turn the sound on) or a
  * media that has not loaded in time.
  */
-function usePlayback(el: HTMLMediaElement | null, mode: StageMode, gainDb: number) {
+function usePlayback(
+  el: HTMLMediaElement | null,
+  mode: StageMode,
+  gainDb: number,
+  restartSignal: number,
+  positionKey: string | null,
+) {
   const [blocked, setBlocked] = useState<Blocked>(null);
   const [slow, setSlow] = useState(false);
+
+  // The host takes the media back to the top (the element keeps playing or paused as it was).
+  const firstSignal = useRef(restartSignal);
+  useEffect(() => {
+    if (!el || restartSignal === firstSignal.current) return;
+    firstSignal.current = restartSignal;
+    if (positionKey) clearPosition(positionKey);
+    el.currentTime = 0;
+    if (mode === 'play') void el.play().catch(() => undefined);
+  }, [el, restartSignal, mode, positionKey]);
 
   useEffect(() => {
     if (!el) return;
@@ -35,6 +52,8 @@ function usePlayback(el: HTMLMediaElement | null, mode: StageMode, gainDb: numbe
       el.pause();
       return;
     }
+    // Played to its end before an interruption: it does not start again on its own.
+    if (positionKey && readPosition(positionKey)?.ended) return;
     let cancelled = false;
     const start = async () => {
       await applyGain(el, gainDb);
@@ -80,7 +99,12 @@ function usePlayback(el: HTMLMediaElement | null, mode: StageMode, gainDb: numbe
 }
 
 /** Adopts (or creates) the element for `url` and releases it when the screen changes. */
-function useMediaElement(tag: 'video' | 'audio', url: string | null, still: boolean) {
+function useMediaElement(
+  tag: 'video' | 'audio',
+  url: string | null,
+  still: boolean,
+  positionKey: string | null,
+) {
   const [el, setEl] = useState<HTMLMediaElement | null>(null);
   useEffect(() => {
     if (!url) return;
@@ -89,12 +113,22 @@ function useMediaElement(tag: 'video' | 'audio', url: string | null, still: bool
       media.muted = true;
       media.preload = 'metadata';
     }
+    // Back after an interruption: a second before where it was, not from the top.
+    const track = !still && positionKey;
+    const start = track ? resumeAt(readPosition(positionKey)) : null;
+    if (start !== null) media.currentTime = start;
+    const save = () =>
+      track && writePosition(positionKey, { t: media.currentTime, ended: media.ended });
+    media.addEventListener('timeupdate', save);
+    media.addEventListener('ended', save);
     setEl(media);
     return () => {
+      media.removeEventListener('timeupdate', save);
+      media.removeEventListener('ended', save);
       releaseMedia(media);
       setEl(null);
     };
-  }, [tag, url, still]);
+  }, [tag, url, still, positionKey]);
   return el;
 }
 
@@ -129,15 +163,20 @@ function VideoBox({
   mode,
   gainDb,
   boxClassName,
+  resumeKey,
+  restartSignal,
 }: {
   url: string;
   mode: StageMode;
   gainDb: number;
   boxClassName?: string;
+  resumeKey: string | null;
+  restartSignal: number;
 }) {
   const box = useRef<HTMLDivElement>(null);
-  const el = useMediaElement('video', url, mode === 'still');
-  const { blocked, slow, enableSound } = usePlayback(el, mode, gainDb);
+  const key = resumeKey && `${resumeKey}:${url}`;
+  const el = useMediaElement('video', url, mode === 'still', key);
+  const { blocked, slow, enableSound } = usePlayback(el, mode, gainDb, restartSignal, key);
 
   useEffect(() => {
     if (!el || !box.current) return;
@@ -154,10 +193,21 @@ function VideoBox({
   );
 }
 
-function AudioTrack({ audio, mode }: { audio: LiveAudio; mode: StageMode }) {
+function AudioTrack({
+  audio,
+  mode,
+  resumeKey,
+  restartSignal,
+}: {
+  audio: LiveAudio;
+  mode: StageMode;
+  resumeKey: string | null;
+  restartSignal: number;
+}) {
   const { t } = useTranslation('live');
-  const el = useMediaElement('audio', audio.url, mode === 'still');
-  const { blocked, slow, enableSound } = usePlayback(el, mode, audio.gainDb);
+  const key = resumeKey && `${resumeKey}:${audio.url}`;
+  const el = useMediaElement('audio', audio.url, mode === 'still', key);
+  const { blocked, slow, enableSound } = usePlayback(el, mode, audio.gainDb, restartSignal, key);
   const [progress, setProgress] = useState(0);
 
   // The filled part follows the sound, frame by frame, only while it plays.
@@ -206,9 +256,15 @@ export function QuestionMediaStage({
   mode,
   boxClassName,
   className,
+  resumeKey = null,
+  restartSignal = 0,
 }: {
   media: LiveQuestionMedia | null | undefined;
   mode: StageMode;
+  /** Session + question: where the position is kept across an interruption (projection only). */
+  resumeKey?: string | null;
+  /** Changes when the host restarts the media from the top. */
+  restartSignal?: number;
   /** Size of the visual box (its height, mostly). */
   boxClassName?: string;
   className?: string;
@@ -228,11 +284,23 @@ export function QuestionMediaStage({
           />
         </div>
       ) : visual?.source === 'upload' ? (
-        <VideoBox url={visual.url} mode={mode} gainDb={visual.gainDb} boxClassName={boxClassName} />
+        <VideoBox
+          url={visual.url}
+          mode={mode}
+          gainDb={visual.gainDb}
+          boxClassName={boxClassName}
+          resumeKey={resumeKey}
+          restartSignal={restartSignal}
+        />
       ) : null}
       {audio ? (
         <div className="w-full max-w-[40em]">
-          <AudioTrack audio={audio} mode={mode} />
+          <AudioTrack
+            audio={audio}
+            mode={mode}
+            resumeKey={resumeKey}
+            restartSignal={restartSignal}
+          />
         </div>
       ) : null}
     </div>

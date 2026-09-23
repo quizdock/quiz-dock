@@ -169,6 +169,12 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           media={view.question.media}
           mode={!playMedia || view.nav?.review ? 'still' : view.paused ? 'pause' : 'play'}
           boxClassName="h-[35vh]"
+          resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
+          restartSignal={
+            view.mediaControl?.questionIndex === view.question.questionIndex
+              ? view.mediaControl.seq
+              : 0
+          }
         />
         <AnswerRules question={view.question} />
         {view.question.options?.length ? (

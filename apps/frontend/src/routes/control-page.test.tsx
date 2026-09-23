@@ -43,6 +43,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   quizDescription: null,
   outline: [],
   preload: null,
+  mediaControl: null,
   nav: null,
   joinBaseUrl: null,
   ...partial,

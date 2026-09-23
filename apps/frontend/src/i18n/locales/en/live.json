@@ -108,7 +108,8 @@
       "lanHidden": "This instance runs in Docker Desktop (or a container on a bridge network), which hides the computer’s network: no local address could be detected. Type it below — or add HOST_LAN_IPS=<your IP> to the .env file (or “-e HOST_LAN_IPS=…” on docker run) so it is listed here next time.",
       "https": "This page is served over HTTPS: an http:// local address will show a warning on phones — a public address with a certificate is the clean way."
     },
-    "backToLive": "Back to live"
+    "backToLive": "Back to live",
+    "restartMedia": "Restart the media from the top"
   },
   "screen": {
     "sessionUnavailable": "Session unavailable.",

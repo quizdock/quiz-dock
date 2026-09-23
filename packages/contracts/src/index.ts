@@ -103,6 +103,8 @@ export const ClientEvents = {
   HostMode: 'host:mode',
   /** Suspend/reprend l'auto-progression (et gèle le chrono en ANSWERING). */
   HostPause: 'host:pause',
+  /** Host control over the current question's media (restart it from the top). */
+  HostMedia: 'host:media',
   /** Ajoute/retire du temps au chrono de la question courante (± secondes). */
   HostAdjustTime: 'host:adjust-time',
   SpectatorJoin: 'spectator:join',
@@ -137,6 +139,8 @@ export const ServerEvents = {
   QuestionTime: 'question:time',
   /** Media of the next question, to fetch ahead (projection and console only). */
   MediaPreload: 'media:preload',
+  /** A host command on the current question's media, relayed to the screens. */
+  MediaControl: 'media:control',
   Notice: 'notice',
   Error: 'error',
   Pong: 'pong',
@@ -411,6 +415,8 @@ export interface ClientToServerEvents {
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
   'host:pause': (p: { pin: string; paused: boolean }) => void;
+  /** Restart the current question's sound or video from the top, on the projection. */
+  'host:media': (p: { pin: string; action: 'restart' }) => void;
   /** Ajoute/retire `deltaS` secondes au chrono de la question courante. */
   'host:adjust-time': (p: { pin: string; deltaS: number }) => void;
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
@@ -485,6 +491,8 @@ export interface ServerToClientEvents {
    * Only to sockets that are not players: the next question is not theirs yet.
    */
   'media:preload': (p: MediaPreloadPayload) => void;
+  /** The host restarts the current question's media from the top. */
+  'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
    * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le

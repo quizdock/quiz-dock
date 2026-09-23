@@ -82,4 +82,30 @@ describe('QuestionMediaStage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/Son bloqué/);
     expect(screen.getByRole('button', { name: /Activer le son/ })).toBeInTheDocument();
   });
+
+  it('after an interruption, resumes a second before where it was', async () => {
+    sessionStorage.setItem(
+      'media.pos:123456:0:/api/v1/media/a',
+      JSON.stringify({ t: 7, ended: false }),
+    );
+    render(<QuestionMediaStage media={sound} mode="play" resumeKey="123456:0" />);
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    expect(el.currentTime).toBe(6);
+    sessionStorage.clear();
+  });
+
+  it('the host takes it back to the top', async () => {
+    const { rerender } = render(
+      <QuestionMediaStage media={sound} mode="play" resumeKey="123456:0" restartSignal={0} />,
+    );
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    el.currentTime = 5;
+    rerender(
+      <QuestionMediaStage media={sound} mode="play" resumeKey="123456:0" restartSignal={1} />,
+    );
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(2));
+    expect(el.currentTime).toBe(0);
+  });
 });

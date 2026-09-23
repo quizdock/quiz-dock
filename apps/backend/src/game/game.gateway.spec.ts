@@ -284,6 +284,24 @@ describe('GameGateway (intégration socket)', () => {
     expect(podium.you?.score).toBeGreaterThan(0);
   }, 15_000);
 
+  it('relays the host’s media restart to the projection while a question is live', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const screen = connect();
+    await screen.emitWithAck('spectator:join', { pin });
+    const controls: unknown[] = [];
+    screen.on('media:control', (c) => controls.push(c));
+    host.emit('host:media', { pin, action: 'restart' }); // lobby: nothing to restart
+    const started = new Promise<void>((resolve) => screen.once('question:start', () => resolve()));
+    host.emit('host:start', { pin });
+    await started;
+    const control = new Promise((resolve) => screen.once('media:control', resolve));
+    host.emit('host:media', { pin, action: 'restart' });
+    expect(await control).toEqual({ questionIndex: 0, action: 'restart' });
+    expect(controls).toHaveLength(1);
+    host.emit('host:end', { pin });
+  }, 15_000);
+
   it('sends the next question’s media ahead to the projection, never to players', async () => {
     const asset = await prisma.mediaAsset.create({
       data: {
