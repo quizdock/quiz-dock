@@ -754,7 +754,9 @@ function FeedbackSection({ quizId }: { quizId: string }) {
   const { t } = useTranslation(['editor', 'common']);
   const { data, isLoading } = useQuizzesControllerFeedback(quizId, { page: 1, pageSize: 1 });
   const summary = data?.data;
-  if (isLoading || !summary) return null;
+  // Sans `count`, la réponse n'est pas (encore) un résumé : on se tait plutôt que
+  // d'afficher une moyenne inventée.
+  if (isLoading || typeof summary?.count !== 'number') return null;
   if (summary.count === 0)
     return <p className="text-muted-foreground text-xs">{t('feedback.empty')}</p>;
   return (
