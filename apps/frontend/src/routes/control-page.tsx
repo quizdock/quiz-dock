@@ -27,8 +27,8 @@ import {
   Users,
   Wifi,
 } from 'lucide-react';
-import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
-import { useEffect, useRef, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
@@ -80,7 +80,6 @@ export function ControlPage() {
   const { pin } = useParams({ from: '/session/$pin/console' });
   const { view, socket } = useGameSession(pin, 'host');
   const [shareNote, setShareNote] = useState<string | null>(null);
-  const qrCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const joinUrl = joinUrlFor(view, pin);
   const screenUrl = `${window.location.origin}/session/${pin}/projection`;
@@ -138,35 +137,21 @@ export function ControlPage() {
     </Tooltip>
   );
 
-  const qrFile = async (): Promise<File | null> => {
-    const canvas = qrCanvasRef.current;
-    if (!canvas) return null;
-    try {
-      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-      return blob ? new File([blob], `quiz-dock-${pin}.png`, { type: 'image/png' }) : null;
-    } catch {
-      return null;
-    }
-  };
-
+  // The link itself, not a picture of the QR code: it opens in one tap wherever it lands.
   const onShare = async () => {
-    const text = [
+    const invitation = [
       t('control.shareText', { appName: APP_NAME }),
       t('control.sharePin', { pin }),
-      t('control.shareLink', { url: joinUrl }),
-    ].join('\n');
-    const data: ShareData = {
-      title: t('control.shareTitle', { appName: APP_NAME }),
-      text,
-      url: joinUrl,
-    };
-    const file = await qrFile();
-    const withFile = file ? { ...data, files: [file] } : null;
+    ];
+    const text = [...invitation, t('control.shareLink', { url: joinUrl })].join('\n');
     try {
-      if (withFile && navigator.canShare?.(withFile)) {
-        await navigator.share(withFile);
-      } else if (navigator.share) {
-        await navigator.share(data);
+      if (navigator.share) {
+        // The share sheet appends the URL itself: the text does not repeat it.
+        await navigator.share({
+          title: t('control.shareTitle', { appName: APP_NAME }),
+          text: invitation.join('\n'),
+          url: joinUrl,
+        });
       } else {
         await navigator.clipboard.writeText(text);
         setShareNote(t('control.shareCopied'));
@@ -368,7 +353,6 @@ export function ControlPage() {
             </Tooltip>
           }
         />
-        <QRCodeCanvas value={joinUrl} size={512} ref={qrCanvasRef} className="hidden" />
       </section>
     );
   }

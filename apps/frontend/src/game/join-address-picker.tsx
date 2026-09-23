@@ -40,10 +40,8 @@ export function JoinAddressPicker({
   const onLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(origin);
   const lanSource = data?.data.lanSource;
   const [custom, setCustom] = useState('');
-  // Help opens by itself in the one situation that goes wrong (console on localhost,
-  // no usable address); the button then toggles from that state.
-  const [help, setHelp] = useState<boolean | null>(null);
-  const showHelp = help ?? (onLocalhost && lanSource === 'hidden' && !data?.data.publicUrl);
+  // Help stays folded until asked for: the lobby shows the invitation first.
+  const [showHelp, setHelp] = useState(false);
   const isCustom = !candidates.includes(current);
 
   // First time on this session: apply the remembered choice, else the best candidate
@@ -136,7 +134,7 @@ export function JoinAddressPicker({
       {showHelp ? (
         // Why the address matters and where to find it — worded for the situation
         // this instance runs in (the one thing that goes wrong locally is inviting
-        // phones to "localhost"). Opens by itself when that is exactly the case.
+        // phones to "localhost").
         <div className="bg-muted/50 text-muted-foreground flex flex-col gap-2 rounded-md border px-3 py-2 text-xs leading-relaxed">
           <p>{t('control.joinAddressHelp.why')}</p>
           {data?.data.publicUrl ? (

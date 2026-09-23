@@ -119,11 +119,8 @@ describe('ControlPage (console hôte)', () => {
   it('le bouton « Partager » diffuse le lien de la partie (Web Share)', async () => {
     localStorage.setItem('live.localUser', 'Animateur');
     hookState.value = view({});
-    HTMLCanvasElement.prototype.toBlob = function (cb: BlobCallback) {
-      cb(null);
-    };
     const share = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', { ...navigator, share, canShare: () => false });
+    vi.stubGlobal('navigator', { ...navigator, share });
 
     renderApp('/session/482913/console');
     const btn = await screen.findByRole('button', { name: /Partager/ });
@@ -133,6 +130,9 @@ describe('ControlPage (console hôte)', () => {
 
     await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
     expect(share.mock.calls[0][0].url).toContain('/join/482913');
+    // The link, never an image of the QR code; the PIN rides in the text.
+    expect(share.mock.calls[0][0]).not.toHaveProperty('files');
+    expect(share.mock.calls[0][0].text).toContain('482913');
     vi.unstubAllGlobals();
   });
 });
