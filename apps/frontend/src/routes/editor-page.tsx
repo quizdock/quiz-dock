@@ -358,36 +358,74 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               {t(`common:quizStatus.${quiz.status}`, { defaultValue: quiz.status })}
             </Badge>
           </div>
-          <form.Field name="description">
-            {(field) => (
-              <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                  {t('settings.descriptionLabel')}
-                </span>
-                {editingDescription || isDirty ? (
-                  <MarkdownEditor
-                    aria-label={t('settings.descriptionLabel')}
-                    className="max-w-(--container-content-sm)"
-                    placeholder={t('settings.descriptionPlaceholder')}
-                    value={field.state.value}
-                    onChange={field.handleChange}
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+            <form.Field name="description">
+              {(field) => (
+                <div className="flex flex-col gap-1">
+                  <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                    {t('settings.descriptionLabel')}
+                  </span>
+                  {editingDescription || isDirty ? (
+                    <MarkdownEditor
+                      aria-label={t('settings.descriptionLabel')}
+                      className="max-w-(--container-content-sm)"
+                      placeholder={t('settings.descriptionPlaceholder')}
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:bg-accent/60 -mx-2 max-w-(--container-content-sm) rounded-md px-2 py-1 text-left text-sm"
+                      onClick={() => setEditingDescription(true)}
+                    >
+                      {field.state.value ? (
+                        <Markdown>{field.state.value}</Markdown>
+                      ) : (
+                        <span className="italic">{t('settings.descriptionPlaceholder')}</span>
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+            </form.Field>
+            {/* À droite de la description, ce qu'on règle en écrivant : les avis
+              reçus et l'archivage. Ils tenaient derrière un bouton « Réglages »
+              qui ne disait pas ce qu'il cachait. */}
+            <div className="grid items-start gap-6 sm:grid-cols-2">
+              <Section title={t('feedback.title')}>
+                <label className="flex items-start gap-3 text-sm">
+                  <Switch
+                    className="mt-0.5"
+                    checked={quiz.feedbackEnabled}
+                    disabled={update.isPending}
+                    onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
+                    aria-label={t('feedback.enableLabel')}
                   />
-                ) : (
-                  <button
+                  <span>
+                    <span className="font-medium">{t('feedback.enableLabel')}</span>
+                    <span className="text-muted-foreground block">{t('feedback.enableHelp')}</span>
+                  </span>
+                </label>
+                <FeedbackSection quizId={quiz.id} />
+              </Section>
+              {quiz.status !== 'archived' ? (
+                <Section title={t('broadcast.archiveTitle')}>
+                  <p className="text-muted-foreground text-sm">{t('broadcast.archiveHelp')}</p>
+                  <Button
                     type="button"
-                    className="text-muted-foreground hover:bg-accent/60 -mx-2 max-w-(--container-content-sm) rounded-md px-2 py-1 text-left text-sm"
-                    onClick={() => setEditingDescription(true)}
+                    variant="outline"
+                    size="sm"
+                    className="self-start"
+                    disabled={transition.isPending}
+                    onClick={() => void changeStatus('archived')}
                   >
-                    {field.state.value ? (
-                      <Markdown>{field.state.value}</Markdown>
-                    ) : (
-                      <span className="italic">{t('settings.descriptionPlaceholder')}</span>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
-          </form.Field>
+                    {t('broadcast.archive')}
+                  </Button>
+                </Section>
+              ) : null}
+            </div>
+          </div>
           {quizDraft && isDirty ? (
             <DraftNotice
               onDiscard={() => {
@@ -428,6 +466,18 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               <Download className="size-4" />
               {t('header.export')}
             </Button>
+            {/* Supprimer est une action du quiz, pas un réglage : elle est avec les
+                autres, en dernier et dans le ton qui convient. */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="size-4" />
+              {t('header.deleteQuiz')}
+            </Button>
           </div>
         </div>
       </header>
@@ -445,61 +495,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         onRestore={() => void changeStatus('draft')}
         busy={transition.isPending}
       />
-
-      {/* Ce qui vivait derrière « Réglages » : un tiroir cachait des choses qu'on
-          règle en écrivant — les avis, l'archivage, la suppression. Elles tiennent
-          à côté de la description, qui n'a pas besoin de toute la largeur. */}
-      <section className="grid items-start gap-8 lg:grid-cols-2">
-        <div className="flex flex-col gap-8">
-          <Section title={t('feedback.title')}>
-            <label className="flex items-start gap-3 text-sm">
-              <Switch
-                className="mt-0.5"
-                checked={quiz.feedbackEnabled}
-                disabled={update.isPending}
-                onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
-                aria-label={t('feedback.enableLabel')}
-              />
-              <span>
-                <span className="font-medium">{t('feedback.enableLabel')}</span>
-                <span className="text-muted-foreground block">{t('feedback.enableHelp')}</span>
-              </span>
-            </label>
-            <FeedbackSection quizId={quiz.id} />
-          </Section>
-          {quiz.status !== 'archived' ? (
-            <Section title={t('broadcast.archiveTitle')}>
-              <p className="text-muted-foreground text-sm">{t('broadcast.archiveHelp')}</p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
-                disabled={transition.isPending}
-                onClick={() => void changeStatus('archived')}
-              >
-                {t('broadcast.archive')}
-              </Button>
-            </Section>
-          ) : null}
-          <Section
-            title={t('deleteConfirm.zoneTitle')}
-            className="border-destructive/30 border-t pt-6"
-          >
-            <p className="text-muted-foreground text-sm">{t('deleteConfirm.hint')}</p>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-destructive hover:text-destructive self-start"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 className="size-4" />
-              {t('header.deleteQuiz')}
-            </Button>
-          </Section>
-        </div>
-      </section>
 
       {/* Master / detail: the sequence on the left, the open item on the right (a bottom
           sheet below `lg`). */}
