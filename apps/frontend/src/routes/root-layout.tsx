@@ -58,40 +58,50 @@ export function RootLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Le nom s'efface sous `sm` pour laisser la place à la navigation sur un
-          téléphone, et revient dès qu'il y a de la place : c'est la marque. */}
-      <header className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
-        {shell === 'participant' ? (
-          <span className="flex items-center gap-2 text-lg font-bold">
-            <BrandLogo className="h-7 w-auto rounded-md" />
-            <span className="hidden sm:inline">{APP_NAME}</span>
-          </span>
-        ) : (
-          <Link
-            to="/"
-            aria-label={APP_NAME}
-            className="flex shrink-0 items-center gap-2 text-lg font-bold"
-          >
-            <BrandLogo className="h-7 w-auto rounded-md" />
-            <span className="hidden sm:inline">{APP_NAME}</span>
-          </Link>
-        )}
-        {shell === 'participant' ? (
-          // Filled by the player page (avatar, nickname, Leave) through a portal.
-          <div id="participant-topbar" className="flex items-center gap-2" />
-        ) : user ? (
-          <AppNav
-            user={user}
-            mode={mode}
-            onLogout={() => {
-              void Promise.resolve(logout()).then(() => navigate({ to: '/login' }));
-            }}
-          />
-        ) : (
-          <Link to="/login" className="text-sm hover:underline">
-            {t('nav.loginLink')}
-          </Link>
-        )}
+      {/* La barre traverse l'écran — c'est la limite du cadre — mais son contenu
+          suit exactement les marges de `main` : la marque s'aligne sur le titre
+          de la page. Le nom s'efface sous `sm` pour laisser la place à la
+          navigation sur un téléphone, et revient dès qu'il y a de la place. */}
+      <header className="border-b py-3">
+        <div
+          className={
+            shell === 'participant'
+              ? 'content-phone flex items-center justify-between gap-3 px-4'
+              : 'content-shell flex items-center justify-between gap-3 px-6 lg:px-10'
+          }
+        >
+          {shell === 'participant' ? (
+            <span className="flex items-center gap-2 text-lg font-bold">
+              <BrandLogo className="h-7 w-auto rounded-md" />
+              <span className="hidden sm:inline">{APP_NAME}</span>
+            </span>
+          ) : (
+            <Link
+              to="/"
+              aria-label={APP_NAME}
+              className="flex shrink-0 items-center gap-2 text-lg font-bold"
+            >
+              <BrandLogo className="h-7 w-auto rounded-md" />
+              <span className="hidden sm:inline">{APP_NAME}</span>
+            </Link>
+          )}
+          {shell === 'participant' ? (
+            // Filled by the player page (avatar, nickname, Leave) through a portal.
+            <div id="participant-topbar" className="flex items-center gap-2" />
+          ) : user ? (
+            <AppNav
+              user={user}
+              mode={mode}
+              onLogout={() => {
+                void Promise.resolve(logout()).then(() => navigate({ to: '/login' }));
+              }}
+            />
+          ) : (
+            <Link to="/login" className="text-sm hover:underline">
+              {t('nav.loginLink')}
+            </Link>
+          )}
+        </div>
       </header>
       {demo ? (
         <p
