@@ -54,7 +54,9 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
         </div>
       </header>
 
-      <Markdown className="text-muted-foreground text-sm">{quiz.description}</Markdown>
+      {/* La description est du texte brut : on l'affiche tel qu'il a été tapé,
+          sans rien interpréter. */}
+      <p className="text-muted-foreground text-sm whitespace-pre-line">{quiz.description}</p>
 
       {total === 0 ? (
         <p className="text-muted-foreground">{t('preview.noQuestions')}</p>

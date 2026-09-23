@@ -29,8 +29,6 @@ export interface MarkdownEditorProps {
   placeholder?: string;
   'aria-label'?: string;
   className?: string;
-  /** Classes for the writing surface itself — a taller field, mostly. */
-  surfaceClassName?: string;
 }
 
 /** Single-paragraph document for the inline profile (no Enter, no blocks). */
@@ -78,7 +76,6 @@ export function MarkdownEditor({
   placeholder,
   'aria-label': ariaLabel,
   className,
-  surfaceClassName,
 }: MarkdownEditorProps) {
   const { t } = useTranslation('common');
   const [source, setSource] = useState(false);
@@ -129,11 +126,7 @@ export function MarkdownEditor({
         <Textarea
           aria-label={ariaLabel}
           rows={profile === 'inline' ? 1 : 4}
-          className={cn(
-            'font-mono resize-y',
-            profile === 'inline' ? 'min-h-9' : 'min-h-24',
-            surfaceClassName,
-          )}
+          className={cn('font-mono resize-y', profile === 'inline' ? 'min-h-9' : 'min-h-24')}
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
@@ -144,7 +137,6 @@ export function MarkdownEditor({
             'border-input bg-background focus-within:ring-ring relative rounded-md border shadow-sm focus-within:ring-1',
             // Block fields are resizable vertically, like a textarea.
             profile === 'inline' ? 'min-h-9' : 'min-h-24 resize-y overflow-auto',
-            surfaceClassName,
           )}
         >
           {isEmpty && placeholder ? (
