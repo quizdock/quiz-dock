@@ -181,6 +181,7 @@ export type StorePreview = StoreEntry & {
     timeLimitS: number | null;
     mediaUrl: string | null;
     mediaAlt: string | null;
+    gradient: { angle: number; colors: string[] } | null;
     options: { text: string; color: string; shape: string }[];
   }[];
 };
@@ -386,6 +387,7 @@ export class StoreService implements OnModuleInit {
       timeLimitS: item.timeLimitS ?? null,
       mediaUrl: urlOf(item.media),
       mediaAlt: item.media ? (bundle.media?.[item.media]?.alt ?? null) : null,
+      gradient: item.backgroundGradient ?? null,
       options: (item.options ?? []).map((o) => ({
         text: o.text ?? '',
         color: o.color ?? 'blue',

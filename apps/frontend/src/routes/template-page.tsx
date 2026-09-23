@@ -4,6 +4,7 @@ import { ArrowLeft, Download, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -112,43 +113,71 @@ export function TemplatePage() {
       </header>
 
       <h2 className="text-lg font-semibold">{t('whatIsInside')}</h2>
-      <ol className="flex flex-col gap-3">
+      {/* Deux colonnes, chaque élément rendu comme on le verra en séance : une
+          diapositive avec son fond, une question avec ses propositions. */}
+      <ul className="quiz-items">
         {template.items.map((item, index) => (
-          <li key={index} className="flex flex-col gap-2 rounded-lg border p-4">
-            <span className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
-              <Badge variant={item.kind === 'slide' ? 'muted' : 'default'}>
-                {item.kind === 'slide'
-                  ? t('slide')
-                  : t(`common:questionType.${item.type}`, item.type ?? '')}
-              </Badge>
-              {item.timeLimitS ? <span>{t('seconds', { count: item.timeLimitS })}</span> : null}
-            </span>
-            {item.text ? <Markdown className="font-medium">{item.text}</Markdown> : null}
-            {item.mediaUrl ? (
-              <img
-                src={item.mediaUrl}
-                alt={item.mediaAlt ?? ''}
-                className="max-h-48 w-auto rounded-md object-contain"
-              />
-            ) : null}
-            {item.options.length > 0 ? (
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {item.options.map((option, i) => (
-                  <li
-                    key={i}
-                    className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white ${
-                      COLOR_BG[option.color] ?? OPTION_BG_FALLBACK
-                    }`}
-                  >
-                    <span aria-hidden>{SHAPE_GLYPH[option.shape] ?? ''}</span>
-                    <span className="min-w-0 truncate">{option.text}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+          <li key={index} className="quiz-item">
+            {/* Une hauteur plancher commune : sans elle, une diapositive de deux
+                mots et une question à quatre propositions donnent une grille en
+                dents de scie. Une diapositive centre son texte, comme à l'écran. */}
+            <article
+              className={cn(
+                'relative flex h-full min-h-48 flex-col gap-3 rounded-lg border p-4 pt-10',
+                item.kind === 'slide' && 'justify-center text-center',
+              )}
+              style={
+                item.gradient
+                  ? {
+                      backgroundImage: `linear-gradient(${item.gradient.angle}deg, ${item.gradient.colors.join(', ')})`,
+                      color: 'white',
+                    }
+                  : undefined
+              }
+            >
+              {/* Le numéro se pose dans le coin, comme une pagination : il situe
+                  l'élément sans pousser le contenu. */}
+              <span className="quiz-item-number bg-background/80 text-foreground absolute top-2 left-2 flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums" />
+              <span
+                className={cn(
+                  'flex flex-wrap items-center gap-2 text-xs opacity-80',
+                  item.kind === 'slide' && 'justify-center',
+                )}
+              >
+                <Badge variant={item.kind === 'slide' ? 'muted' : 'default'}>
+                  {item.kind === 'slide'
+                    ? t('slide')
+                    : t(`common:questionType.${item.type}`, item.type ?? '')}
+                </Badge>
+                {item.timeLimitS ? <span>{t('seconds', { count: item.timeLimitS })}</span> : null}
+              </span>
+              {item.text ? <Markdown className="font-medium">{item.text}</Markdown> : null}
+              {item.mediaUrl ? (
+                <img
+                  src={item.mediaUrl}
+                  alt={item.mediaAlt ?? ''}
+                  className="max-h-48 w-auto rounded-md object-contain"
+                />
+              ) : null}
+              {item.options.length > 0 ? (
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {item.options.map((option, i) => (
+                    <li
+                      key={i}
+                      className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white ${
+                        COLOR_BG[option.color] ?? OPTION_BG_FALLBACK
+                      }`}
+                    >
+                      <span aria-hidden>{SHAPE_GLYPH[option.shape] ?? ''}</span>
+                      <span className="min-w-0 truncate">{option.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </article>
           </li>
         ))}
-      </ol>
+      </ul>
 
       <ConfirmDialog
         open={confirming}

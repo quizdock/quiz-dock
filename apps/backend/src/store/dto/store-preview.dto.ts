@@ -15,6 +15,8 @@ export const storePreviewItemSchema = z.object({
   timeLimitS: z.number().int().nullable(),
   mediaUrl: z.string().nullable(),
   mediaAlt: z.string().nullable(),
+  /** Dégradé de fond d'une diapositive : sans lui, l'aperçu n'en est plus un. */
+  gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }).nullable(),
   options: z.array(z.object({ text: z.string(), color: z.string(), shape: z.string() })),
 });
 

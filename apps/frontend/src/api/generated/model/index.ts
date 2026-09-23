@@ -95,6 +95,7 @@ export * from './storeEntryDtoFirstKind';
 export * from './storePreviewDto';
 export * from './storePreviewDtoAuthor';
 export * from './storePreviewDtoItemsItem';
+export * from './storePreviewDtoItemsItemGradient';
 export * from './storePreviewDtoItemsItemKind';
 export * from './storePreviewDtoItemsItemOptionsItem';
 export * from './transitionQuizDto';

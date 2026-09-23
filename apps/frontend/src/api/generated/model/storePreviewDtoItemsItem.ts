@@ -5,6 +5,7 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
+import type { StorePreviewDtoItemsItemGradient } from './storePreviewDtoItemsItemGradient';
 import type { StorePreviewDtoItemsItemKind } from './storePreviewDtoItemsItemKind';
 import type { StorePreviewDtoItemsItemOptionsItem } from './storePreviewDtoItemsItemOptionsItem';
 
@@ -23,5 +24,7 @@ export type StorePreviewDtoItemsItem = {
   mediaUrl: string | null;
   /** @nullable */
   mediaAlt: string | null;
+  /** @nullable */
+  gradient: StorePreviewDtoItemsItemGradient;
   options: StorePreviewDtoItemsItemOptionsItem[];
 };

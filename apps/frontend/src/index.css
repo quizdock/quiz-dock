@@ -135,6 +135,24 @@
   margin-inline: auto;
 }
 
+/* Aperçu d'un modèle : une grille qui se lit de gauche à droite puis vers le bas
+   — le multi-colonnes remplissait une colonne entière avant de passer à la
+   suivante, ce qui inverse l'ordre des questions. Deux colonnes dès qu'il y a
+   450 px pour chacune, une seule en dessous. La numérotation vient d'un compteur
+   CSS : elle suit l'ordre du document, sans dépendre du rendu. */
+@utility quiz-items {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(450px, 100%), 1fr));
+  counter-reset: quiz-item;
+}
+@utility quiz-item {
+  counter-increment: quiz-item;
+}
+.quiz-item-number::before {
+  content: counter(quiz-item);
+}
+
 /* TipTap (MarkdownEditor): Tailwind's preflight strips list and code styling,
    so the WYSIWYG surface mirrors what the `Markdown` component renders. */
 @layer components {
