@@ -7,6 +7,7 @@
  */
 import type { CreateQuestionDtoAcceptedAnswersItem } from './createQuestionDtoAcceptedAnswersItem';
 import type { CreateQuestionDtoBackgroundGradient } from './createQuestionDtoBackgroundGradient';
+import type { CreateQuestionDtoMedia } from './createQuestionDtoMedia';
 import type { CreateQuestionDtoOptionsItem } from './createQuestionDtoOptionsItem';
 import type { CreateQuestionDtoPointsMode } from './createQuestionDtoPointsMode';
 import type { CreateQuestionDtoScoring } from './createQuestionDtoScoring';
@@ -35,11 +36,7 @@ export interface CreateQuestionDto {
   backgroundGradient?: CreateQuestionDtoBackgroundGradient;
   textTone?: CreateQuestionDtoTextTone;
   textOutline?: boolean;
-  /**
-     * @minLength 26
-     * @maxLength 26
-     */
-  mediaId?: string;
+  media?: CreateQuestionDtoMedia;
   /**
      * @minimum 5
      * @maximum 120

@@ -10,6 +10,8 @@
  */
 
 export * from './media-sniff';
+export * from './question-media';
+import type { LiveQuestionMedia } from './question-media';
 
 export const CONTRACTS_VERSION = '0.3.0' as const;
 
@@ -151,14 +153,15 @@ export interface PublicOption {
   color: OptionColor;
   shape: OptionShape;
   /** `alt` is what the author wrote for screen readers (#43); null = none. */
-  media?: { url: string; kind: 'image' | 'audio'; alt?: string | null } | null;
+  media?: { url: string; kind: 'image'; alt?: string | null } | null;
 }
 
 export interface QuestionStartPayload {
   questionIndex: number;
   type: QuestionType;
   prompt: string;
-  media?: { url: string; kind: 'image' | 'audio'; alt?: string | null } | null;
+  /** Visual and sound of the question; both null when it has none. */
+  media: LiveQuestionMedia;
   options?: PublicOption[];
   timeLimitS: number;
   basePoints: number;

@@ -170,7 +170,11 @@ export class QuizPortableService {
                 orderIndex,
                 type: dto.type,
                 prompt: dto.prompt,
-                mediaId: dto.mediaId,
+                visualMediaId:
+                  dto.media?.visual && 'assetId' in dto.media.visual
+                    ? dto.media.visual.assetId
+                    : null,
+                audioMediaId: dto.media?.audio?.assetId ?? null,
                 answerExplanation: dto.answerExplanation || null,
                 backgroundMediaId: dto.backgroundMediaId || null,
                 backgroundGradient: dto.backgroundGradient ?? Prisma.JsonNull,

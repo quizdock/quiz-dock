@@ -71,7 +71,7 @@ describe('QuizzesService', () => {
     });
 
     it('get cherche par id ET ownerId', async () => {
-      prisma.quiz.findFirst.mockResolvedValue(makeQuiz());
+      prisma.quiz.findFirst.mockResolvedValue({ ...makeQuiz(), questions: [] });
       await service.get(HOST, 'q1');
       expect(prisma.quiz.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'q1', ownerId: OWNER } }),

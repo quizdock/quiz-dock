@@ -834,6 +834,12 @@
         "responses": {
           "200": {
             "description": "Contenu binaire du média."
+          },
+          "206": {
+            "description": "Partie demandée par `Range`."
+          },
+          "416": {
+            "description": "Plage hors du fichier."
           }
         },
         "tags": [
@@ -1782,9 +1788,150 @@
                 "prompt": {
                   "type": "string"
                 },
-                "mediaId": {
-                  "type": "string",
-                  "nullable": true
+                "media": {
+                  "type": "object",
+                  "properties": {
+                    "visual": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "image"
+                              ]
+                            },
+                            "assetId": {
+                              "type": "string",
+                              "minLength": 26,
+                              "maxLength": 26
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "assetId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "video"
+                              ]
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": [
+                                "upload"
+                              ]
+                            },
+                            "assetId": {
+                              "type": "string",
+                              "minLength": 26,
+                              "maxLength": 26
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "source",
+                            "assetId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "video"
+                              ]
+                            },
+                            "source": {
+                              "type": "string",
+                              "enum": [
+                                "embed"
+                              ]
+                            },
+                            "provider": {
+                              "type": "string",
+                              "enum": [
+                                "youtube",
+                                "vimeo"
+                              ]
+                            },
+                            "videoId": {
+                              "type": "string",
+                              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                            },
+                            "startSec": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "endSec": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "source",
+                            "provider",
+                            "videoId"
+                          ]
+                        }
+                      ],
+                      "nullable": true
+                    },
+                    "audio": {
+                      "type": "object",
+                      "properties": {
+                        "assetId": {
+                          "type": "string",
+                          "minLength": 26,
+                          "maxLength": 26
+                        },
+                        "origin": {
+                          "type": "string",
+                          "enum": [
+                            "upload",
+                            "recording"
+                          ]
+                        },
+                        "durationMs": {
+                          "type": "integer",
+                          "exclusiveMinimum": true,
+                          "maximum": 9007199254740991,
+                          "minimum": 0
+                        },
+                        "peaks": {
+                          "minItems": 200,
+                          "maxItems": 200,
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1
+                          }
+                        }
+                      },
+                      "required": [
+                        "assetId",
+                        "origin",
+                        "durationMs",
+                        "peaks"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "visual",
+                    "audio"
+                  ]
                 },
                 "answerExplanation": {
                   "type": "string",
@@ -1963,7 +2110,7 @@
                 "orderIndex",
                 "type",
                 "prompt",
-                "mediaId",
+                "media",
                 "answerExplanation",
                 "backgroundMediaId",
                 "backgroundGradient",
@@ -3270,10 +3417,150 @@
             "default": true,
             "type": "boolean"
           },
-          "mediaId": {
-            "type": "string",
-            "minLength": 26,
-            "maxLength": 26
+          "media": {
+            "type": "object",
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "image"
+                        ]
+                      },
+                      "assetId": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "assetId"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "video"
+                        ]
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "upload"
+                        ]
+                      },
+                      "assetId": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "source",
+                      "assetId"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "video"
+                        ]
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embed"
+                        ]
+                      },
+                      "provider": {
+                        "type": "string",
+                        "enum": [
+                          "youtube",
+                          "vimeo"
+                        ]
+                      },
+                      "videoId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                      },
+                      "startSec": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "endSec": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "source",
+                      "provider",
+                      "videoId"
+                    ]
+                  }
+                ],
+                "nullable": true
+              },
+              "audio": {
+                "type": "object",
+                "properties": {
+                  "assetId": {
+                    "type": "string",
+                    "minLength": 26,
+                    "maxLength": 26
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "upload",
+                      "recording"
+                    ]
+                  },
+                  "durationMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991,
+                    "minimum": 0
+                  },
+                  "peaks": {
+                    "minItems": 200,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                },
+                "required": [
+                  "assetId",
+                  "origin",
+                  "durationMs",
+                  "peaks"
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "visual",
+              "audio"
+            ]
           },
           "timeLimitS": {
             "default": 20,
@@ -3425,9 +3712,150 @@
           "prompt": {
             "type": "string"
           },
-          "mediaId": {
-            "type": "string",
-            "nullable": true
+          "media": {
+            "type": "object",
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "image"
+                        ]
+                      },
+                      "assetId": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "assetId"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "video"
+                        ]
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "upload"
+                        ]
+                      },
+                      "assetId": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "source",
+                      "assetId"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "video"
+                        ]
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embed"
+                        ]
+                      },
+                      "provider": {
+                        "type": "string",
+                        "enum": [
+                          "youtube",
+                          "vimeo"
+                        ]
+                      },
+                      "videoId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                      },
+                      "startSec": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "endSec": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "source",
+                      "provider",
+                      "videoId"
+                    ]
+                  }
+                ],
+                "nullable": true
+              },
+              "audio": {
+                "type": "object",
+                "properties": {
+                  "assetId": {
+                    "type": "string",
+                    "minLength": 26,
+                    "maxLength": 26
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "upload",
+                      "recording"
+                    ]
+                  },
+                  "durationMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991,
+                    "minimum": 0
+                  },
+                  "peaks": {
+                    "minItems": 200,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                },
+                "required": [
+                  "assetId",
+                  "origin",
+                  "durationMs",
+                  "peaks"
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "visual",
+              "audio"
+            ]
           },
           "answerExplanation": {
             "type": "string",
@@ -3606,7 +4034,7 @@
           "orderIndex",
           "type",
           "prompt",
-          "mediaId",
+          "media",
           "answerExplanation",
           "backgroundMediaId",
           "backgroundGradient",
@@ -3720,10 +4148,150 @@
             "default": true,
             "type": "boolean"
           },
-          "mediaId": {
-            "type": "string",
-            "minLength": 26,
-            "maxLength": 26
+          "media": {
+            "type": "object",
+            "properties": {
+              "visual": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "image"
+                        ]
+                      },
+                      "assetId": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "assetId"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "video"
+                        ]
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "upload"
+                        ]
+                      },
+                      "assetId": {
+                        "type": "string",
+                        "minLength": 26,
+                        "maxLength": 26
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "source",
+                      "assetId"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "video"
+                        ]
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embed"
+                        ]
+                      },
+                      "provider": {
+                        "type": "string",
+                        "enum": [
+                          "youtube",
+                          "vimeo"
+                        ]
+                      },
+                      "videoId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                      },
+                      "startSec": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "endSec": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "source",
+                      "provider",
+                      "videoId"
+                    ]
+                  }
+                ],
+                "nullable": true
+              },
+              "audio": {
+                "type": "object",
+                "properties": {
+                  "assetId": {
+                    "type": "string",
+                    "minLength": 26,
+                    "maxLength": 26
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "upload",
+                      "recording"
+                    ]
+                  },
+                  "durationMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991,
+                    "minimum": 0
+                  },
+                  "peaks": {
+                    "minItems": 200,
+                    "maxItems": 200,
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                },
+                "required": [
+                  "assetId",
+                  "origin",
+                  "durationMs",
+                  "peaks"
+                ],
+                "nullable": true
+              }
+            },
+            "required": [
+              "visual",
+              "audio"
+            ]
           },
           "timeLimitS": {
             "default": 20,

@@ -8,6 +8,7 @@ import type {
   QuestionStartPayload,
   QuestionType,
 } from '@quiz-dock/contracts';
+import { QUESTION_MEDIA_INCLUDE, liveMediaOf } from '../questions/question-media';
 import { basePointsFor } from './scoring';
 import type { QuizSnapshot, SnapshotQuestion, SnapshotSlide } from './game.types';
 import type {
@@ -24,7 +25,7 @@ const quizWithContent = Prisma.validator<Prisma.QuizDefaultArgs>()({
     questions: {
       orderBy: { orderIndex: 'asc' },
       include: {
-        media: true,
+        ...QUESTION_MEDIA_INCLUDE,
         backgroundMedia: true,
         options: { orderBy: { orderIndex: 'asc' }, include: { media: true } },
         acceptedAnswers: true,
@@ -36,10 +37,9 @@ const quizWithContent = Prisma.validator<Prisma.QuizDefaultArgs>()({
 export type QuizWithContent = Prisma.QuizGetPayload<typeof quizWithContent>;
 export const QUIZ_SNAPSHOT_INCLUDE = quizWithContent.include;
 
-const mediaOf = (m: { url: string; kind: string; alt?: string | null } | null) =>
-  // `alt` travels with the media (#43): the screens have no other description of
-  // an image that is itself the question.
-  m ? { url: m.url, kind: m.kind as 'image' | 'audio', alt: m.alt ?? null } : null;
+/** An option's picture. `alt` travels with it (#43): the screens have no other description. */
+const optionImageOf = (m: { url: string; kind: string; alt?: string | null } | null) =>
+  m?.kind === 'image' ? { url: m.url, kind: 'image' as const, alt: m.alt ?? null } : null;
 
 /**
  * Construit le snapshot serveur figé d'un quiz (SPECIFICATIONS §8). Fonction pure :
@@ -60,7 +60,7 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
         orderIndex: q.orderIndex,
         type: q.type as QuestionType,
         prompt: q.prompt,
-        media: mediaOf(q.media),
+        media: liveMediaOf(q),
         answerExplanation: q.answerExplanation ?? null,
         background: q.backgroundMedia
           ? { url: q.backgroundMedia.url }
@@ -82,7 +82,7 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
           text: o.text,
           color: o.color as OptionColor,
           shape: o.shape as OptionShape,
-          media: mediaOf(o.media),
+          media: optionImageOf(o.media),
           isCorrect: o.isCorrect,
           correctOrderIndex: o.correctOrderIndex,
         })),

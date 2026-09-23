@@ -45,7 +45,11 @@
     "file_missing": "Falta el archivo (campo «file»).",
     "file_too_large": "Archivo demasiado grande (máx. {{max}} bytes).",
     "not_found": "Medio no encontrado.",
-    "demo_disabled": "La subida de medios está desactivada en la instancia de demo."
+    "demo_disabled": "La subida de medios está desactivada en la instancia de demo.",
+    "video_with_audio": "Un vídeo ya tiene su propio sonido: quita la pista de audio o el vídeo.",
+    "wrong_kind": "Este medio no es del tipo que admite este espacio.",
+    "embeds_disabled": "Los vídeos de YouTube y Vimeo están desactivados en esta instancia.",
+    "invalid": "Los medios de la pregunta no son válidos."
   },
   "import": {
     "file_missing": "Falta el archivo (campo “file”).",

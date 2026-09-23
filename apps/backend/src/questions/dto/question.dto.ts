@@ -1,4 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
+import { questionMediaSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { backgroundOutputFields } from '../../common/background.schema';
 
@@ -37,7 +38,7 @@ export const questionSchema = z.object({
     'poll',
   ]),
   prompt: z.string(),
-  mediaId: z.string().nullable(),
+  media: questionMediaSchema,
   answerExplanation: z.string().nullable(),
   ...backgroundOutputFields,
   timeLimitS: z.number().int(),

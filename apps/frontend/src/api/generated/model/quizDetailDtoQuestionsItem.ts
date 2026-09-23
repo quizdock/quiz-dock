@@ -7,6 +7,7 @@
  */
 import type { QuizDetailDtoQuestionsItemAcceptedAnswersItem } from './quizDetailDtoQuestionsItemAcceptedAnswersItem';
 import type { QuizDetailDtoQuestionsItemBackgroundGradient } from './quizDetailDtoQuestionsItemBackgroundGradient';
+import type { QuizDetailDtoQuestionsItemMedia } from './quizDetailDtoQuestionsItemMedia';
 import type { QuizDetailDtoQuestionsItemOptionsItem } from './quizDetailDtoQuestionsItemOptionsItem';
 import type { QuizDetailDtoQuestionsItemPointsMode } from './quizDetailDtoQuestionsItemPointsMode';
 import type { QuizDetailDtoQuestionsItemScoring } from './quizDetailDtoQuestionsItemScoring';
@@ -23,8 +24,7 @@ export type QuizDetailDtoQuestionsItem = {
   orderIndex: number;
   type: QuizDetailDtoQuestionsItemType;
   prompt: string;
-  /** @nullable */
-  mediaId: string | null;
+  media: QuizDetailDtoQuestionsItemMedia;
   /** @nullable */
   answerExplanation: string | null;
   /** @nullable */

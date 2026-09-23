@@ -129,10 +129,10 @@ function QuestionPreview({
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
         {t(`questionType.${question.type}`, { defaultValue: question.type })}
       </div>
-      {question.mediaId && (
+      {question.media.visual?.kind === 'image' && (
         <img
           className={cn('self-center object-contain', large ? 'max-h-[40vh]' : 'max-h-56')}
-          src={`/api/v1/media/${question.mediaId}`}
+          src={`/api/v1/media/${question.media.visual.assetId}`}
           alt=""
         />
       )}

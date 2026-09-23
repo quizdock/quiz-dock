@@ -393,18 +393,19 @@ export function QuestionMedia({
   media,
   className,
 }: {
-  media: QuestionStartPayload['media'];
+  media: QuestionStartPayload['media'] | undefined;
   className?: string;
 }) {
   const { t } = useTranslation('live');
-  if (media?.kind !== 'image') return null;
+  const visual = media?.visual;
+  if (visual?.kind !== 'image') return null;
   // What the author wrote (#43), or a generic label saying an image is there —
   // never an empty alt, which would hide the image from a screen reader entirely
   // while it carries the question for everyone else.
   return (
     <img
-      src={media.url}
-      alt={media.alt?.trim() || t('question.mediaAlt')}
+      src={visual.url}
+      alt={visual.alt?.trim() || t('question.mediaAlt')}
       className={cn('mx-auto rounded-lg object-contain', className)}
     />
   );

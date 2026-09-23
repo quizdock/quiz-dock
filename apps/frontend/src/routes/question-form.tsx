@@ -15,7 +15,13 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { SlideGradient, SlideTextTone } from '@quiz-dock/contracts';
+import {
+  NO_QUESTION_MEDIA,
+  type QuestionMedia,
+  type SlideGradient,
+  type SlideTextTone,
+  questionMediaSchema,
+} from '@quiz-dock/contracts';
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -32,6 +38,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
+import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { BackgroundField, NO_BACKGROUND, type BackgroundValue } from './background-field';
@@ -105,7 +112,8 @@ interface OptionValue {
 interface FormValues {
   type: QType;
   prompt: string;
-  mediaId: string | null;
+  /** Visual + audio slots, in the contract's shape (never a video with a sound). */
+  media: QuestionMedia;
   answerExplanation: string;
   background: BackgroundValue;
   timeLimitS: number;
@@ -137,7 +145,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     return {
       type: 'single_choice',
       prompt: '',
-      mediaId: null,
+      media: NO_QUESTION_MEDIA,
       answerExplanation: '',
       background: NO_BACKGROUND,
       timeLimitS: 20,
@@ -153,7 +161,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
   return {
     type: q.type as QType,
     prompt: q.prompt,
-    mediaId: q.mediaId ?? null,
+    media: (q.media as QuestionMedia | undefined) ?? NO_QUESTION_MEDIA,
     answerExplanation: q.answerExplanation ?? '',
     background: {
       mediaId: q.backgroundMediaId ?? null,
@@ -201,12 +209,23 @@ export function QuestionForm({
   const [initial] = useState(() => initialValues(question));
   // Draft kept in localStorage until saved or discarded (survives reload / closed tab).
   const draftKey = `quiz:${quizId}:question:${question?.id ?? 'new'}`;
-  const [restored, setRestored] = useState(() => loadDraft<FormValues>(draftKey));
+  // A draft saved before the media slots existed has no `media`: it is not restored.
+  const [restored, setRestored] = useState(() => {
+    const draft = loadDraft<FormValues>(draftKey);
+    return draft && 'media' in draft ? draft : null;
+  });
 
   const form = useForm({
     defaultValues: restored ?? initial,
     onSubmit: async ({ value }) => {
       setError(null);
+      // The contract's rule, before the server says it: never a video with a sound.
+      const media = questionMediaSchema.safeParse(value.media);
+      if (!media.success) {
+        const coded = media.error.issues.find((i) => i.message.startsWith('media.'));
+        setError(errorText(coded?.message ?? 'media.invalid'));
+        return;
+      }
       const data = buildPayload(value);
       try {
         if (question) {
@@ -241,7 +260,7 @@ export function QuestionForm({
   useEffect(() => onDirtyChange?.(dirty), [dirty, onDirtyChange]);
   useUnsavedGuard(dirty);
   const cancel = () => (dirty ? setConfirmDiscard(true) : onClose());
-  const mediaId = useStore(form.store, (s) => s.values.mediaId);
+  const media = useStore(form.store, (s) => s.values.media);
   const options = useStore(form.store, (s) => s.values.options);
   // Index of the option whose removal awaits confirmation.
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
@@ -347,7 +366,15 @@ export function QuestionForm({
         )}
       </form.Field>
 
-      <MediaUpload value={mediaId} onChange={(id) => form.setFieldValue('mediaId', id)} />
+      <MediaUpload
+        value={media.visual?.kind === 'image' ? media.visual.assetId : null}
+        onChange={(id) =>
+          form.setFieldValue('media', {
+            visual: id ? { kind: 'image', assetId: id } : null,
+            audio: media.visual?.kind === 'video' ? null : media.audio,
+          } as QuestionMedia)
+        }
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <form.Field name="timeLimitS">
@@ -665,7 +692,7 @@ function buildPayload(v: FormValues) {
     revealDelayS: v.revealDelayS,
     pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
     scoring: SCORING_BY_TYPE[v.type].includes(v.scoring) ? v.scoring : ('standard' as const),
-    ...(v.mediaId ? { mediaId: v.mediaId } : {}),
+    media: v.media,
     answerExplanation: v.answerExplanation.trim() || null,
     backgroundMediaId: v.background.mediaId,
     backgroundGradient: v.background.gradient,

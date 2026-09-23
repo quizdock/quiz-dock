@@ -45,7 +45,11 @@
     "file_missing": "缺少文件（“file”字段）。",
     "file_too_large": "文件过大（最大 {{max}} 字节）。",
     "not_found": "未找到媒体。",
-    "demo_disabled": "演示实例已禁用媒体上传。"
+    "demo_disabled": "演示实例已禁用媒体上传。",
+    "video_with_audio": "视频自带声音：请移除音轨或视频。",
+    "wrong_kind": "此媒体类型与该位置不符。",
+    "embeds_disabled": "此实例已关闭 YouTube 和 Vimeo 视频。",
+    "invalid": "题目的媒体无效。"
   },
   "import": {
     "file_missing": "缺少文件（“file”字段）。",

@@ -306,7 +306,8 @@ describe('quiz commands', () => {
       description: null,
       questions: [
         {
-          mediaId: 'mShared',
+          visualMediaId: 'mShared',
+          audioMediaId: null,
           backgroundMediaId: null,
           prompt: 'Where?',
           answerExplanation: null,

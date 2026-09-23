@@ -45,7 +45,11 @@
     "file_missing": "缺少文件（「file」欄位）。",
     "file_too_large": "文件過大（最大 {{max}} 位元組）。",
     "not_found": "未找到媒體。",
-    "demo_disabled": "示範實例已停用媒體上傳。"
+    "demo_disabled": "示範實例已停用媒體上傳。",
+    "video_with_audio": "影片本身已有聲音：請移除音軌或影片。",
+    "wrong_kind": "此媒體類型與該位置不符。",
+    "embeds_disabled": "此執行個體已停用 YouTube 與 Vimeo 影片。",
+    "invalid": "題目的媒體無效。"
   },
   "import": {
     "file_missing": "缺少檔案（「file」欄位）。",

@@ -8,6 +8,7 @@ import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
 import { isManager, type RoleSet } from '../auth/roles';
 import { gameKeys } from '../game/game.keys';
 import { PrismaService } from '../prisma/prisma.service';
+import { QUESTION_INCLUDE, toQuestionOutput } from '../questions/questions.service';
 import { RedisService } from '../redis/redis.service';
 import type { CreateQuizDto } from './dto/create-quiz.dto';
 import type { QuizFeedbackQueryDto } from './dto/quiz-feedback.dto';
@@ -77,20 +78,14 @@ export class QuizzesService {
     const quiz = await this.prisma.quiz.findFirst({
       where: { id, ownerId },
       include: {
-        questions: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            options: { orderBy: { orderIndex: 'asc' } },
-            acceptedAnswers: true,
-          },
-        },
+        questions: { orderBy: { orderIndex: 'asc' }, include: QUESTION_INCLUDE },
         slides: { orderBy: { orderIndex: 'asc' } },
       },
     });
     if (!quiz) {
       throw new NotFoundException('quiz.not_found');
     }
-    return quiz;
+    return { ...quiz, questions: quiz.questions.map(toQuestionOutput) };
   }
 
   /**
@@ -301,7 +296,8 @@ export class QuizzesService {
             orderIndex: q.orderIndex,
             type: q.type,
             prompt: q.prompt,
-            mediaId: q.mediaId,
+            visualMediaId: q.visualMediaId,
+            audioMediaId: q.audioMediaId,
             answerExplanation: q.answerExplanation,
             backgroundMediaId: q.backgroundMediaId,
             backgroundGradient: q.backgroundGradient ?? Prisma.JsonNull,

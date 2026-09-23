@@ -15,7 +15,8 @@ const baseQuestion = {
   id: 'q1',
   orderIndex: 0,
   prompt: 'Q ?',
-  media: null,
+  visualMedia: null,
+  audioMedia: null,
   timeLimitS: 20,
   numericValue: null,
   numericTolerance: null,
@@ -79,7 +80,7 @@ describe('buildSnapshot', () => {
             ...baseQuestion,
             type: 'numeric',
             pointsMode: 'standard',
-            media: { url: '/media/x', kind: 'image' },
+            visualMedia: { url: '/media/x', kind: 'image' },
             numericValue: { toString: () => '42' } as never, // simulate Prisma.Decimal
             numericTolerance: { toString: () => '0.5' } as never,
           },
@@ -87,7 +88,10 @@ describe('buildSnapshot', () => {
       }),
     );
     const q = snap.questions[0];
-    expect(q.media).toEqual({ url: '/media/x', kind: 'image', alt: null });
+    expect(q.media).toEqual({
+      visual: { kind: 'image', url: '/media/x', alt: null },
+      audio: null,
+    });
     expect(q.numericValue).toBe(42);
     expect(q.numericTolerance).toBe(0.5);
   });
@@ -100,7 +104,7 @@ describe('buildSnapshot', () => {
             ...baseQuestion,
             type: 'single_choice',
             pointsMode: 'standard',
-            media: { url: '/media/x', kind: 'image', alt: 'Le port de Rotterdam' },
+            visualMedia: { url: '/media/x', kind: 'image', alt: 'Le port de Rotterdam' },
             options: [
               {
                 id: 'o1',
@@ -116,10 +120,53 @@ describe('buildSnapshot', () => {
         ] as never,
       }),
     );
-    expect(snap.questions[0].media).toEqual({
-      url: '/media/x',
+    expect(snap.questions[0].media.visual).toEqual({
       kind: 'image',
+      url: '/media/x',
       alt: 'Le port de Rotterdam',
+    });
+  });
+
+  it('carries an audio track with its waveform and the gain it plays at', () => {
+    const peaks = new Array(200).fill(0.4);
+    const audio = { url: '/media/a', kind: 'audio', durationMs: 8000, peaks };
+    const snap = buildSnapshot(
+      quiz({
+        questions: [
+          {
+            ...baseQuestion,
+            type: 'poll',
+            pointsMode: 'none',
+            visualMedia: { url: '/media/x', kind: 'image', alt: null },
+            audioMedia: { ...audio, loudnessLufs: -23, peakDbfs: -12 },
+          },
+        ] as never,
+      }),
+    );
+    expect(snap.questions[0].media.audio).toEqual({
+      url: '/media/a',
+      durationMs: 8000,
+      peaks,
+      gainDb: 7,
+    });
+  });
+
+  it('plays a video with its own gain', () => {
+    const snap = buildSnapshot(
+      quiz({
+        questions: [
+          {
+            ...baseQuestion,
+            type: 'poll',
+            pointsMode: 'none',
+            visualMedia: { url: '/media/v', kind: 'video', loudnessLufs: -10, peakDbfs: -1 },
+          },
+        ] as never,
+      }),
+    );
+    expect(snap.questions[0].media).toEqual({
+      visual: { kind: 'video', source: 'upload', url: '/media/v', gainDb: -6 },
+      audio: null,
     });
   });
 

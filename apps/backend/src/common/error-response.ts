@@ -17,6 +17,9 @@ export interface ErrorBody {
   errors?: { field: string; code: string }[];
 }
 
+/** A domain error code: dotted lowercase words (`media.video_with_audio`). */
+const DOMAIN_CODE = /^[a-z][a-z_]*(\.[a-z][a-z_]*)+$/;
+
 /** Lit le code (+ params) porté par le payload d'une exception applicative. */
 function fromPayload(payload: unknown): ErrorBody {
   if (typeof payload === 'string') return { code: payload };
@@ -39,8 +42,17 @@ function fromPayload(payload: unknown): ErrorBody {
 export function toErrorResponse(exception: unknown): { status: number; body: ErrorBody } {
   if (exception instanceof ZodValidationException) {
     const issues =
-      (exception.getResponse() as { errors?: { code: string; path: (string | number)[] }[] })
-        .errors ?? [];
+      (
+        exception.getResponse() as {
+          errors?: { code: string; message?: string; path: (string | number)[] }[];
+        }
+      ).errors ?? [];
+    // A rule of the domain written as a refinement (`media.video_with_audio`)
+    // carries its own code: it says more than a generic `custom` field error.
+    const domain = issues.find((i) => i.code === 'custom' && DOMAIN_CODE.test(i.message ?? ''));
+    if (domain) {
+      return { status: exception.getStatus(), body: { code: domain.message as string } };
+    }
     return {
       status: exception.getStatus(),
       body: {

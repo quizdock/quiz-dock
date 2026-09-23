@@ -4,11 +4,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { QuestionContent } from './dto/question-content.schema';
 import { normalizeAnswer } from './dto/question-content.schema';
 import type { ReorderQuestionsDto } from './dto/reorder-questions.dto';
+import { QUESTION_MEDIA_INCLUDE, questionMediaOf, resolveQuestionMedia } from './question-media';
 
-const QUESTION_INCLUDE = {
+export const QUESTION_INCLUDE = {
   options: { orderBy: { orderIndex: 'asc' } },
   acceptedAnswers: true,
+  ...QUESTION_MEDIA_INCLUDE,
 } satisfies Prisma.QuestionInclude;
+
+type QuestionRow = Prisma.QuestionGetPayload<{ include: typeof QUESTION_INCLUDE }>;
+
+/** A question as the editor reads it: its media as the contract's two slots. */
+export function toQuestionOutput(q: QuestionRow) {
+  const { visualMedia, audioMedia, ...rest } = q;
+  return { ...rest, media: questionMediaOf({ visualMedia, audioMedia }) };
+}
 
 /** Décalage temporaire pour réordonner sans violer @@unique([quizId, orderIndex]). */
 const REORDER_OFFSET = 1000;
@@ -24,12 +34,14 @@ export class QuestionsService {
       _max: { orderIndex: true },
     });
     const orderIndex = (agg._max.orderIndex ?? -1) + 1;
+    const media = await resolveQuestionMedia(this.prisma, ownerId, dto.media);
     const [question] = await this.prisma.$transaction([
       this.prisma.question.create({
         data: {
           quizId,
           orderIndex,
           ...this.contentData(dto),
+          ...media,
           options: { create: this.optionsCreate(dto) },
           acceptedAnswers: { create: this.answersCreate(dto) },
         },
@@ -40,22 +52,28 @@ export class QuestionsService {
         data: { questionCount: { increment: 1 } },
       }),
     ]);
-    return question;
+    return toQuestionOutput(question);
   }
 
   async update(ownerId: string, questionId: string, dto: QuestionContent) {
-    await this.assertQuestionOwned(ownerId, questionId);
+    const current = await this.assertQuestionOwned(ownerId, questionId);
     // Remplacement complet des enfants (atomique). OK tant que le quiz n'a pas
     // été joué (les sessions jouées sont figées par snapshot, §2.7).
-    return this.prisma.question.update({
+    const media = await resolveQuestionMedia(this.prisma, ownerId, dto.media, [
+      current.visualMediaId,
+      current.audioMediaId,
+    ]);
+    const question = await this.prisma.question.update({
       where: { id: questionId },
       data: {
         ...this.contentData(dto),
+        ...media,
         options: { deleteMany: {}, create: this.optionsCreate(dto) },
         acceptedAnswers: { deleteMany: {}, create: this.answersCreate(dto) },
       },
       include: QUESTION_INCLUDE,
     });
+    return toQuestionOutput(question);
   }
 
   async remove(ownerId: string, questionId: string): Promise<void> {
@@ -108,11 +126,12 @@ export class QuestionsService {
         }),
       ),
     ]);
-    return this.prisma.question.findMany({
+    const questions = await this.prisma.question.findMany({
       where: { quizId },
       orderBy: { orderIndex: 'asc' },
       include: QUESTION_INCLUDE,
     });
+    return questions.map(toQuestionOutput);
   }
 
   private contentData(dto: QuestionContent) {
@@ -120,7 +139,6 @@ export class QuestionsService {
     return {
       type: dto.type,
       prompt: dto.prompt,
-      mediaId: dto.mediaId,
       answerExplanation: dto.answerExplanation || null,
       backgroundMediaId: dto.backgroundMediaId || null,
       backgroundGradient: dto.backgroundGradient ?? Prisma.JsonNull,
@@ -169,7 +187,7 @@ export class QuestionsService {
   private async assertQuestionOwned(ownerId: string, questionId: string) {
     const question = await this.prisma.question.findFirst({
       where: { id: questionId, quiz: { ownerId } },
-      select: { id: true, quizId: true },
+      select: { id: true, quizId: true, visualMediaId: true, audioMediaId: true },
     });
     if (!question) {
       throw new NotFoundException('question.not_found');

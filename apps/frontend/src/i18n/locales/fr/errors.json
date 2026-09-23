@@ -45,7 +45,11 @@
     "file_missing": "Fichier manquant (champ « file »).",
     "file_too_large": "Fichier trop volumineux (max {{max}} octets).",
     "not_found": "Média introuvable.",
-    "demo_disabled": "L'envoi de médias est désactivé sur l'instance de démo."
+    "demo_disabled": "L'envoi de médias est désactivé sur l'instance de démo.",
+    "video_with_audio": "Une vidéo a déjà son propre son : retirez la piste audio ou la vidéo.",
+    "wrong_kind": "Ce média n’est pas du type attendu à cet emplacement.",
+    "embeds_disabled": "Les vidéos YouTube et Vimeo sont désactivées sur cette instance.",
+    "invalid": "Médias de la question invalides."
   },
   "import": {
     "file_missing": "Fichier manquant (champ « file »).",

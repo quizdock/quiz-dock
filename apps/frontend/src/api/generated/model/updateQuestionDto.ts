@@ -7,6 +7,7 @@
  */
 import type { UpdateQuestionDtoAcceptedAnswersItem } from './updateQuestionDtoAcceptedAnswersItem';
 import type { UpdateQuestionDtoBackgroundGradient } from './updateQuestionDtoBackgroundGradient';
+import type { UpdateQuestionDtoMedia } from './updateQuestionDtoMedia';
 import type { UpdateQuestionDtoOptionsItem } from './updateQuestionDtoOptionsItem';
 import type { UpdateQuestionDtoPointsMode } from './updateQuestionDtoPointsMode';
 import type { UpdateQuestionDtoScoring } from './updateQuestionDtoScoring';
@@ -35,11 +36,7 @@ export interface UpdateQuestionDto {
   backgroundGradient?: UpdateQuestionDtoBackgroundGradient;
   textTone?: UpdateQuestionDtoTextTone;
   textOutline?: boolean;
-  /**
-     * @minLength 26
-     * @maxLength 26
-     */
-  mediaId?: string;
+  media?: UpdateQuestionDtoMedia;
   /**
      * @minimum 5
      * @maximum 120

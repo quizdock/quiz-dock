@@ -143,7 +143,10 @@ describe('PlayerPage (client participant)', () => {
     hookState.value = view({
       state: GameState.Answering,
       questionIndex: 0,
-      question: { ...question, media: { url: '/api/v1/media/abc', kind: 'image' } } as never,
+      question: {
+        ...question,
+        media: { visual: { kind: 'image', url: '/api/v1/media/abc', alt: null }, audio: null },
+      } as never,
     });
     const withImage = renderApp('/join/771122');
     const img = await screen.findByRole('img', { name: /Illustration de la question/i });
@@ -152,11 +155,12 @@ describe('PlayerPage (client participant)', () => {
     expect(screen.getByRole('button', { name: /Paris/ })).toBeInTheDocument();
     withImage.unmount();
 
-    // Un média audio ne s'affiche pas (hors périmètre de #41, à traiter à part).
+    // Phones show the image only for now: a sound or a video plays on the projection.
+    const sound = { url: '/api/v1/media/snd', durationMs: 1000, peaks: [], gainDb: 0 };
     hookState.value = view({
       state: GameState.Answering,
       questionIndex: 0,
-      question: { ...question, media: { url: '/api/v1/media/snd', kind: 'audio' } } as never,
+      question: { ...question, media: { visual: null, audio: sound } } as never,
     });
     renderApp('/join/771122');
     expect(await screen.findByRole('button', { name: /Paris/ })).toBeInTheDocument();

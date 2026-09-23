@@ -4,6 +4,7 @@ import {
   type QuestionContent,
   questionContentSchema,
 } from '../../questions/dto/question-content.schema';
+import { QUESTION_MEDIA_INCLUDE } from '../../questions/question-media';
 import { type SlideContent, slideContentSchema } from '../../slides/dto/slide-content.schema';
 import {
   BUNDLE_FORMAT,
@@ -17,7 +18,11 @@ import {
 export const EXPORT_INCLUDE = {
   questions: {
     orderBy: { orderIndex: 'asc' },
-    include: { options: { orderBy: { orderIndex: 'asc' } }, acceptedAnswers: true },
+    include: {
+      options: { orderBy: { orderIndex: 'asc' } },
+      acceptedAnswers: true,
+      ...QUESTION_MEDIA_INCLUDE,
+    },
   },
   slides: { orderBy: { orderIndex: 'asc' } },
 } satisfies Prisma.QuizInclude;
@@ -104,7 +109,8 @@ export function collectMediaIds(quiz: ExportableQuiz): Set<string> {
   add(quiz.coverMediaId);
   scan(quiz.description);
   for (const q of quiz.questions) {
-    add(q.mediaId);
+    add(q.visualMediaId);
+    add(q.audioMediaId);
     add(q.backgroundMediaId);
     scan(q.prompt);
     scan(q.answerExplanation);
@@ -133,7 +139,7 @@ function questionOut(q: ExportableQuiz['questions'][number], pathFor: PathFor): 
     textTone: q.textTone,
     textOutline: q.textOutline,
   };
-  if (q.mediaId) item.media = pathFor(q.mediaId);
+  if (q.visualMediaId) item.media = pathFor(q.visualMediaId);
   if (q.answerExplanation) item.answerExplanation = mdOut(q.answerExplanation, pathFor);
   if (q.backgroundMediaId) item.backgroundImage = pathFor(q.backgroundMediaId);
   if (q.backgroundGradient)
@@ -336,7 +342,10 @@ export function fromBundle(bundle: QuizBundle, idFor: IdFor): ImportedQuiz {
           type: it.type,
           prompt: mdIn(it.prompt, idFor),
           answerExplanation: it.answerExplanation ? mdIn(it.answerExplanation, idFor) : null,
-          mediaId: it.media ? idFor(it.media) : undefined,
+          media: {
+            visual: it.media ? { kind: 'image', assetId: idFor(it.media) } : null,
+            audio: null,
+          },
           backgroundMediaId: it.backgroundImage ? idFor(it.backgroundImage) : null,
           backgroundGradient: it.backgroundGradient ?? null,
           textTone: it.textTone,

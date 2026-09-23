@@ -8,7 +8,7 @@ const question = (over: Record<string, unknown> = {}) => ({
   orderIndex: 0,
   type: 'single_choice',
   prompt: 'Capitale de la France ?',
-  mediaId: null,
+  media: { visual: null, audio: null },
   timeLimitS: 20,
   pointsMode: 'standard',
   numericValue: null,

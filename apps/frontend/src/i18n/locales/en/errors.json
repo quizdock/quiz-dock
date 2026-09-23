@@ -45,7 +45,11 @@
     "file_missing": "Missing file (“file” field).",
     "file_too_large": "File too large (max {{max}} bytes).",
     "not_found": "Media not found.",
-    "demo_disabled": "Media uploads are disabled on the demo instance."
+    "demo_disabled": "Media uploads are disabled on the demo instance.",
+    "video_with_audio": "A video already carries its own sound: remove the audio track or the video.",
+    "wrong_kind": "This media is not of the kind this slot takes.",
+    "embeds_disabled": "YouTube and Vimeo videos are turned off on this instance.",
+    "invalid": "The question’s media are not valid."
   },
   "import": {
     "file_missing": "Missing file (“file” field).",

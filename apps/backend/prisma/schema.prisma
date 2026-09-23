@@ -104,8 +104,17 @@ enum OptionShape {
 enum MediaKind {
   image
   audio
+  video
 
   @@map("media_kind")
+}
+
+/// Where a sound comes from: a file the author uploaded, or the editor's microphone.
+enum AudioOrigin {
+  upload
+  recording
+
+  @@map("audio_origin")
 }
 
 enum SessionStatus {
@@ -213,7 +222,10 @@ model Question {
   orderIndex         Int             @map("order_index")
   type               QuestionType
   prompt             String
-  mediaId            String?         @map("media_id") @db.Char(26)
+  /// Visual slot: an image or an uploaded video (the asset's kind tells which).
+  visualMediaId      String?         @map("visual_media_id") @db.Char(26)
+  /// Audio slot: an MP3. Never alongside a video — checked by the API, the kinds live on the asset.
+  audioMediaId       String?         @map("audio_media_id") @db.Char(26)
   /// Markdown shown at REVEAL only (#5) — never sent before.
   answerExplanation  String?         @map("answer_explanation")
   /// Optional full-cover background, like a slide's: image or generated gradient (exclusive).
@@ -232,7 +244,8 @@ model Question {
   updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   quiz            Quiz                 @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  media           MediaAsset?          @relation("QuestionMedia", fields: [mediaId], references: [id])
+  visualMedia     MediaAsset?          @relation("QuestionVisual", fields: [visualMediaId], references: [id])
+  audioMedia      MediaAsset?          @relation("QuestionAudio", fields: [audioMediaId], references: [id])
   backgroundMedia MediaAsset?          @relation("QuestionBackground", fields: [backgroundMediaId], references: [id])
   options         AnswerOption[]
   acceptedAnswers AcceptedAnswer[]
@@ -318,21 +331,31 @@ model Slide {
 
 /// §2.6 — médias.
 model MediaAsset {
-  id        String    @id @default(ulid()) @db.Char(26)
-  ownerId   String    @map("owner_id") @db.Char(26)
-  url       String
+  id           String       @id @default(ulid()) @db.Char(26)
+  ownerId      String       @map("owner_id") @db.Char(26)
+  url          String
   /// Alternative text, written by whoever attached the media (#43). Empty is a
   /// valid answer for decoration; for a question whose image *is* the question,
   /// it is what a screen reader has to work with.
-  alt       String?
-  mime      String
-  sizeBytes BigInt    @map("size_bytes")
-  kind      MediaKind
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  alt          String?
+  mime         String
+  sizeBytes    BigInt       @map("size_bytes")
+  kind         MediaKind
+  /// Audio and video: length, measured in the editor when the file was chosen.
+  durationMs   Int?         @map("duration_ms")
+  /// Audio: the waveform drawn by the player (AUDIO_PEAK_COUNT values, 0–1).
+  peaks        Float[]      @default([])
+  audioOrigin  AudioOrigin? @map("audio_origin")
+  /// Integrated loudness (EBU R128), for the playback gain — the file itself is never re-encoded.
+  loudnessLufs Float?       @map("loudness_lufs")
+  /// Sample peak, dBFS: how far the playback gain may raise the sound without clipping.
+  peakDbfs     Float?       @map("peak_dbfs")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
   owner               User           @relation(fields: [ownerId], references: [id])
   coverForQuizzes     Quiz[]         @relation("QuizCover")
-  questions           Question[]     @relation("QuestionMedia")
+  questionVisuals     Question[]     @relation("QuestionVisual")
+  questionAudios      Question[]     @relation("QuestionAudio")
   questionBackgrounds Question[]     @relation("QuestionBackground")
   slides              Slide[]        @relation("SlideMedia")
   options             AnswerOption[] @relation("OptionMedia")

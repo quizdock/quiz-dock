@@ -24,6 +24,9 @@
     "lint": "echo \"(lint: à configurer)\" && exit 0",
     "test": "vitest run"
   },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
   "devDependencies": {
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
