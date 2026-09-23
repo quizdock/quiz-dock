@@ -2090,6 +2090,14 @@
                   ],
                   "nullable": true
                 },
+                "waveformSize": {
+                  "type": "string",
+                  "enum": [
+                    "S",
+                    "M",
+                    "L"
+                  ]
+                },
                 "pointsMode": {
                   "type": "string",
                   "enum": [
@@ -2223,6 +2231,7 @@
                 "timeLimitS",
                 "revealDelayS",
                 "audioTarget",
+                "waveformSize",
                 "pointsMode",
                 "scoring",
                 "numericValue",
@@ -3743,6 +3752,15 @@
             ],
             "nullable": true
           },
+          "waveformSize": {
+            "default": "M",
+            "type": "string",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
+          },
           "pointsMode": {
             "default": "standard",
             "type": "string",
@@ -4089,6 +4107,14 @@
             ],
             "nullable": true
           },
+          "waveformSize": {
+            "type": "string",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
+          },
           "pointsMode": {
             "type": "string",
             "enum": [
@@ -4222,6 +4248,7 @@
           "timeLimitS",
           "revealDelayS",
           "audioTarget",
+          "waveformSize",
           "pointsMode",
           "scoring",
           "numericValue",
@@ -4494,6 +4521,15 @@
               null
             ],
             "nullable": true
+          },
+          "waveformSize": {
+            "default": "M",
+            "type": "string",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
           },
           "pointsMode": {
             "default": "standard",

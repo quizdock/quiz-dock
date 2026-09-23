@@ -185,6 +185,14 @@
     "audioTargetLabel": "Who hears this sound",
     "audioTargetHint": "Which devices play this question's sound or video. \"Every device\" includes the phones in the room, which echo if they share it.",
     "audioTargetDefault": "The session's setting",
+    "waveformSizeLabel": "Waveform size",
+    "waveformSizeHint": "How thick the sound's waveform is drawn on the projection and the phones.",
+    "waveformPreview": "Waveform preview",
+    "waveformSize": {
+      "S": "Small",
+      "M": "Medium",
+      "L": "Large"
+    },
     "pointsLabel": "Points",
     "pointsMode": {
       "standard": "Standard",

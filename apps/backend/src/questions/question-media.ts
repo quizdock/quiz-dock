@@ -5,6 +5,8 @@ import {
   type QuestionMedia,
   LOUDNESS_TARGET_LUFS,
   VIDEO_WITH_AUDIO,
+  WAVEFORM_SIZE_DEFAULT,
+  type WaveformSize,
   playbackGainDb,
 } from '@quiz-dock/contracts';
 import type { PrismaService } from '../prisma/prisma.service';
@@ -18,6 +20,8 @@ export const QUESTION_MEDIA_INCLUDE = {
 interface WithMedia {
   visualMedia: MediaAsset | null;
   audioMedia: MediaAsset | null;
+  /** How thick the waveform is drawn (the question's; M when not given). */
+  waveformSize?: WaveformSize;
 }
 
 /** The two slots of a stored question, in the shape of the shared contract. */
@@ -68,6 +72,7 @@ export function liveMediaOf(
             durationMs: audio.durationMs ?? 0,
             peaks: audio.peaks,
             gainDb: gain(audio),
+            size: q.waveformSize ?? WAVEFORM_SIZE_DEFAULT,
           }
         : null,
   };

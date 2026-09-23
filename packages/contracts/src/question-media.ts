@@ -135,6 +135,13 @@ export const loudnessSchema = z.number().min(-70).max(0);
 /** Bounds of a sample peak, in dBFS (a decoded MP3 may overshoot full scale a little). */
 export const peakDbfsSchema = z.number().min(-100).max(6);
 
+// ─── Waveform size ────────────────────────────────────────────────────────
+
+/** How thick a question's waveform is drawn on the screens: S 1em, M 2.5em, L 5em. */
+export const WAVEFORM_SIZES = ['S', 'M', 'L'] as const;
+export type WaveformSize = (typeof WAVEFORM_SIZES)[number];
+export const WAVEFORM_SIZE_DEFAULT: WaveformSize = 'M';
+
 // ─── Audio target ─────────────────────────────────────────────────────────
 
 /**
@@ -180,7 +187,14 @@ export type LiveVisual =
   | { kind: 'video'; source: 'upload'; url: string; gainDb: number; durationMs?: number }
   | (Omit<EmbeddedVideo, 'kind' | 'source'> & { kind: 'video'; source: 'embed' });
 
-export type LiveAudio = { url: string; durationMs: number; peaks: number[]; gainDb: number };
+export type LiveAudio = {
+  url: string;
+  durationMs: number;
+  peaks: number[];
+  gainDb: number;
+  /** How thick the waveform is drawn ({@link WAVEFORM_SIZE_DEFAULT} when absent). */
+  size?: WaveformSize;
+};
 
 export type LiveQuestionMedia = { visual: LiveVisual | null; audio: LiveAudio | null };
 

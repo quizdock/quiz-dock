@@ -145,6 +145,7 @@ describe('buildSnapshot', () => {
             pointsMode: 'none',
             visualMedia: { url: '/media/x', kind: 'image', alt: null },
             audioMedia: { ...audio, loudnessLufs: -23, peakDbfs: -12 },
+            waveformSize: 'L',
           },
         ] as never,
       }),
@@ -154,6 +155,7 @@ describe('buildSnapshot', () => {
       durationMs: 8000,
       peaks,
       gainDb: 7,
+      size: 'L',
     });
   });
 

@@ -14,6 +14,7 @@ import type { QuestionDtoPointsMode } from './questionDtoPointsMode';
 import type { QuestionDtoScoring } from './questionDtoScoring';
 import type { QuestionDtoTextTone } from './questionDtoTextTone';
 import type { QuestionDtoType } from './questionDtoType';
+import type { QuestionDtoWaveformSize } from './questionDtoWaveformSize';
 
 export interface QuestionDto {
   id: string;
@@ -47,6 +48,7 @@ export interface QuestionDto {
   revealDelayS: number | null;
   /** @nullable */
   audioTarget: QuestionDtoAudioTarget;
+  waveformSize: QuestionDtoWaveformSize;
   pointsMode: QuestionDtoPointsMode;
   scoring: QuestionDtoScoring;
   /** @nullable */

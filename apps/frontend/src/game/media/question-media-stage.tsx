@@ -255,7 +255,12 @@ function AudioTrack({
 
   return (
     <div className="flex w-full flex-col items-center gap-[0.5em]">
-      <Waveform peaks={audio.peaks} progress={progress} label={t('media.waveform')} />
+      <Waveform
+        peaks={audio.peaks}
+        progress={progress}
+        size={audio.size}
+        label={t('media.waveform')}
+      />
       {blocked ? <SoundNotice kind="audio" onEnable={() => void enableSound()} /> : null}
       {slow ? <SlowNotice /> : null}
     </div>

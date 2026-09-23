@@ -117,6 +117,13 @@ enum AudioOrigin {
   @@map("audio_origin")
 }
 
+/// How thick a question's waveform is drawn: S 1em, M 2.5em, L 5em.
+enum WaveformSize {
+  S
+  M
+  L
+}
+
 /// Which devices play a question's sound (see AudioTarget in @quiz-dock/contracts).
 enum AudioTarget {
   projection
@@ -252,6 +259,8 @@ model Question {
   revealDelayS       Int?            @map("reveal_delay_s")
   /// Which devices play this question's sound; null = the game's default.
   audioTarget        AudioTarget?    @map("audio_target")
+  /// How thick its waveform is drawn on the screens.
+  waveformSize       WaveformSize    @default(M) @map("waveform_size")
   pointsMode         PointsMode      @default(standard) @map("points_mode")
   scoring            QuestionScoring @default(standard)
   numericValue       Decimal?        @map("numeric_value")

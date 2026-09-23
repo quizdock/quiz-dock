@@ -14,6 +14,7 @@ import type { CreateQuestionDtoPointsMode } from './createQuestionDtoPointsMode'
 import type { CreateQuestionDtoScoring } from './createQuestionDtoScoring';
 import type { CreateQuestionDtoTextTone } from './createQuestionDtoTextTone';
 import type { CreateQuestionDtoType } from './createQuestionDtoType';
+import type { CreateQuestionDtoWaveformSize } from './createQuestionDtoWaveformSize';
 
 export interface CreateQuestionDto {
   type: CreateQuestionDtoType;
@@ -51,6 +52,7 @@ export interface CreateQuestionDto {
   revealDelayS?: number | null;
   /** @nullable */
   audioTarget?: CreateQuestionDtoAudioTarget;
+  waveformSize?: CreateQuestionDtoWaveformSize;
   pointsMode?: CreateQuestionDtoPointsMode;
   scoring?: CreateQuestionDtoScoring;
   numericValue?: number;

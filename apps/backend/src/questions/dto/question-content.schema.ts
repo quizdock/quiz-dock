@@ -1,4 +1,4 @@
-import { AUDIO_TARGETS, questionMediaSchema } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, WAVEFORM_SIZES, questionMediaSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { backgroundFields, noBackgroundConflict } from '../../common/background.schema';
 
@@ -76,6 +76,8 @@ export const questionContentSchema = z
     revealDelayS: z.number().int().min(1).max(300).nullable().optional(),
     // Which devices play its sound; null = the game's default.
     audioTarget: z.enum(AUDIO_TARGETS).nullable().optional(),
+    // How thick its waveform is drawn on the screens.
+    waveformSize: z.enum(WAVEFORM_SIZES).default('M'),
     pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).default('standard'),
     // Per-type scoring rule (see `SCORING_BY_TYPE`); `standard` everywhere by default.
     scoring: z.enum(['standard', 'closest', 'partial', 'lenient']).default('standard'),

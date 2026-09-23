@@ -1,5 +1,6 @@
 import {
   AUDIO_TARGETS,
+  WAVEFORM_SIZES,
   audioPeaksSchema,
   loudnessSchema,
   peakDbfsSchema,
@@ -101,6 +102,8 @@ export const questionBundleSchema = z.object({
   revealDelayS: z.number().int().nullable().optional(),
   /** Which devices play its sound (version 3); absent = the quiz's default. */
   audioTarget: z.enum(AUDIO_TARGETS).optional(),
+  /** How thick its waveform is drawn (version 3); absent = M. */
+  waveformSize: z.enum(WAVEFORM_SIZES).optional(),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).optional(),
   scoring: z.enum(['standard', 'closest', 'partial', 'lenient']).optional(),
   numericValue: z.number().optional(),

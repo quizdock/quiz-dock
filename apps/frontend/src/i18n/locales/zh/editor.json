@@ -185,6 +185,14 @@
     "audioTargetLabel": "谁能听到这个声音",
     "audioTargetHint": "哪些设备播放本题的声音或视频。“所有设备”包括现场的手机，若共处一室会产生回声。",
     "audioTargetDefault": "本次会话的设置",
+    "waveformSizeLabel": "波形大小",
+    "waveformSizeHint": "声音波形在投影和手机上显示的粗细。",
+    "waveformPreview": "波形预览",
+    "waveformSize": {
+      "S": "小",
+      "M": "中",
+      "L": "大"
+    },
     "pointsLabel": "分数",
     "pointsMode": {
       "standard": "标准",

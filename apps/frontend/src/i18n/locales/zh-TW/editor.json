@@ -185,6 +185,14 @@
     "audioTargetLabel": "誰聽得到這個聲音",
     "audioTargetHint": "哪些裝置播放本題的聲音或影片。「所有裝置」包含現場的手機，若共處一室會產生回音。",
     "audioTargetDefault": "本次會話的設定",
+    "waveformSizeLabel": "波形大小",
+    "waveformSizeHint": "聲音波形在投影與手機上顯示的粗細。",
+    "waveformPreview": "波形預覽",
+    "waveformSize": {
+      "S": "小",
+      "M": "中",
+      "L": "大"
+    },
     "pointsLabel": "分數",
     "pointsMode": {
       "standard": "標準",

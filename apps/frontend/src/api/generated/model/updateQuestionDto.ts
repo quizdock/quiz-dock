@@ -14,6 +14,7 @@ import type { UpdateQuestionDtoPointsMode } from './updateQuestionDtoPointsMode'
 import type { UpdateQuestionDtoScoring } from './updateQuestionDtoScoring';
 import type { UpdateQuestionDtoTextTone } from './updateQuestionDtoTextTone';
 import type { UpdateQuestionDtoType } from './updateQuestionDtoType';
+import type { UpdateQuestionDtoWaveformSize } from './updateQuestionDtoWaveformSize';
 
 export interface UpdateQuestionDto {
   type: UpdateQuestionDtoType;
@@ -51,6 +52,7 @@ export interface UpdateQuestionDto {
   revealDelayS?: number | null;
   /** @nullable */
   audioTarget?: UpdateQuestionDtoAudioTarget;
+  waveformSize?: UpdateQuestionDtoWaveformSize;
   pointsMode?: UpdateQuestionDtoPointsMode;
   scoring?: UpdateQuestionDtoScoring;
   numericValue?: number;

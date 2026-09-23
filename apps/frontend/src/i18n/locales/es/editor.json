@@ -185,6 +185,14 @@
     "audioTargetLabel": "Quién oye este sonido",
     "audioTargetHint": "Qué dispositivos reproducen el sonido o el vídeo de esta pregunta. «Todos los dispositivos» incluye los móviles de la sala, que producen eco si la comparten.",
     "audioTargetDefault": "Ajuste de la sesión",
+    "waveformSizeLabel": "Tamaño de la forma de onda",
+    "waveformSizeHint": "Grosor de la forma de onda del sonido en la proyección y los móviles.",
+    "waveformPreview": "Vista previa de la forma de onda",
+    "waveformSize": {
+      "S": "Pequeña",
+      "M": "Mediana",
+      "L": "Grande"
+    },
     "pointsLabel": "Puntos",
     "pointsMode": {
       "standard": "Estándar",

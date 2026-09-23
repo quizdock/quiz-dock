@@ -156,6 +156,7 @@ function questionOut(q: ExportableQuiz['questions'][number], pathFor: PathFor): 
   if (q.scoring !== 'standard') item.scoring = q.scoring;
   if (q.revealDelayS !== null) item.revealDelayS = q.revealDelayS;
   if (q.audioTarget) item.audioTarget = q.audioTarget;
+  if (q.waveformSize && q.waveformSize !== 'M') item.waveformSize = q.waveformSize;
   if (q.numericValue !== null) item.numericValue = Number(q.numericValue);
   if (q.numericTolerance !== null) item.numericTolerance = Number(q.numericTolerance);
   if (q.options.length > 0) {
@@ -411,6 +412,7 @@ export function fromBundle(
           timeLimitS: it.timeLimitS,
           revealDelayS: it.revealDelayS,
           audioTarget: it.audioTarget ?? null,
+          waveformSize: it.waveformSize,
           pointsMode: it.pointsMode,
           scoring: it.scoring,
           numericValue: it.numericValue,

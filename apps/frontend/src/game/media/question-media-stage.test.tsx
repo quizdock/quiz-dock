@@ -128,4 +128,9 @@ describe('QuestionMediaStage', () => {
     rerender(<QuestionMediaStage media={sound} mode="play" muted={false} />);
     await waitFor(() => expect(el.muted).toBe(false));
   });
+  it('draws the waveform at the size the author picked', async () => {
+    const large = { ...sound, audio: { ...sound.audio!, size: 'L' as const } };
+    render(<QuestionMediaStage media={large} mode="still" />);
+    expect(screen.getByRole('img', { name: /Forme d’onde/ })).toHaveClass('h-[5em]');
+  });
 });
