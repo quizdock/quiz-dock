@@ -91,8 +91,7 @@ describe('EditorPage', () => {
     ]);
     renderApp('/quizzes/q1');
 
-    // The summary lives in the Settings sheet (average + count + link); the list has its own page.
-    fireEvent.click(await screen.findByRole('button', { name: 'Réglages' }));
+    // Plus de tiroir « Réglages » : le résumé des avis est à même la page.
     expect(await screen.findByText('4.5')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Voir les 2 avis/ })).toHaveAttribute(
       'href',
@@ -223,8 +222,7 @@ describe('EditorPage', () => {
           String(url).includes('/quizzes/q1') && (opts as RequestInit)?.method === 'DELETE',
       );
 
-    // Deleting lives in the Settings sheet's danger zone.
-    fireEvent.click(await screen.findByRole('button', { name: 'Réglages' }));
+    // La zone dangereuse est visible, plus cachée derrière un tiroir.
     fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le quiz' }));
     expect(deleted()).toBe(false); // la modal s'ouvre, rien n'est supprimé encore
 

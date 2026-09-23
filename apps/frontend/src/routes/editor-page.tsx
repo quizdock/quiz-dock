@@ -34,7 +34,6 @@ import {
   Plus,
   Radio,
   Save,
-  Settings2,
   Share2,
   Sparkles,
   Star,
@@ -147,7 +146,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Deleting an item of the sequence asks first (a question takes its stats history with it).
   const [pendingDelete, setPendingDelete] = useState<QuizItem | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   // Portable bundle (zip: quiz.json + media/) — the same file the Quiz Store shares.
   const [exporting, setExporting] = useState(false);
   const onExport = async () => {
@@ -369,7 +367,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 {editingDescription || isDirty ? (
                   <MarkdownEditor
                     aria-label={t('settings.descriptionLabel')}
-                    className="max-w-(--container-content-md)"
+                    className="max-w-(--container-content-sm)"
                     placeholder={t('settings.descriptionPlaceholder')}
                     value={field.state.value}
                     onChange={field.handleChange}
@@ -377,7 +375,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 ) : (
                   <button
                     type="button"
-                    className="text-muted-foreground hover:bg-accent/60 -mx-2 max-w-(--container-content-md) rounded-md px-2 py-1 text-left text-sm"
+                    className="text-muted-foreground hover:bg-accent/60 -mx-2 max-w-(--container-content-sm) rounded-md px-2 py-1 text-left text-sm"
                     onClick={() => setEditingDescription(true)}
                   >
                     {field.state.value ? (
@@ -431,10 +429,6 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
               {t('header.export')}
             </Button>
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={() => setSettingsOpen(true)}>
-            <Settings2 className="size-4" />
-            {t('settings.title')}
-          </Button>
         </div>
       </header>
       {/* Always visible: where the quiz stands and the one action that follows. Live access
@@ -452,13 +446,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         busy={transition.isPending}
       />
 
-      <Drawer
-        open={settingsOpen}
-        side="right"
-        title={t('settings.title')}
-        onClose={() => setSettingsOpen(false)}
-      >
-        <div className="flex flex-col gap-8 py-2">
+      {/* Ce qui vivait derrière « Réglages » : un tiroir cachait des choses qu'on
+          règle en écrivant — les avis, l'archivage, la suppression. Elles tiennent
+          à côté de la description, qui n'a pas besoin de toute la largeur. */}
+      <section className="grid items-start gap-8 lg:grid-cols-2">
+        <div className="flex flex-col gap-8">
           <Section title={t('feedback.title')}>
             <label className="flex items-start gap-3 text-sm">
               <Switch
@@ -507,7 +499,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             </Button>
           </Section>
         </div>
-      </Drawer>
+      </section>
 
       {/* Master / detail: the sequence on the left, the open item on the right (a bottom
           sheet below `lg`). */}

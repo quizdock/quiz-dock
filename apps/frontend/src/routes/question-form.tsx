@@ -299,6 +299,18 @@ export function QuestionForm({
         void form.handleSubmit();
       }}
     >
+      {/* Enregistrer est en haut, collant : une question longue (propositions,
+          explication, arrière-plan) mettait le bouton hors d'atteinte, et on ne
+          devrait jamais avoir à chercher comment garder ce qu'on vient d'écrire. */}
+      <div className="bg-background/95 sticky top-0 z-20 -mx-1 flex items-center justify-end gap-2 px-1 py-2 backdrop-blur">
+        <Button type="button" variant="ghost" size="sm" onClick={cancel}>
+          {t('common:cancel')}
+        </Button>
+        <Button type="submit" size="sm" disabled={!dirty || add.isPending || update.isPending}>
+          {question ? t('questionForm.submitUpdate') : t('questionForm.submitAdd')}
+        </Button>
+      </div>
+
       {restored ? <DraftNotice onDiscard={discardDraft} /> : null}
       <Label>
         {t('questionForm.typeLabel')}
@@ -605,15 +617,6 @@ export function QuestionForm({
       </form.Field>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <div className="flex gap-2">
-        <Button type="submit" disabled={!dirty || add.isPending || update.isPending}>
-          {question ? t('questionForm.submitUpdate') : t('questionForm.submitAdd')}
-        </Button>
-        <Button type="button" variant="ghost" onClick={cancel}>
-          {t('common:cancel')}
-        </Button>
-      </div>
       <ConfirmDialog
         open={pendingRemoval !== null}
         destructive
