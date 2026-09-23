@@ -133,7 +133,9 @@
       "small": "小",
       "medium": "中",
       "large": "大"
-    }
+    },
+    "titleEdit": "編輯簡報",
+    "titleAdd": "新增簡報"
   },
   "discardConfirm": {
     "title": "放棄修改？",
@@ -218,7 +220,9 @@
       "title": "刪除此選項？",
       "description": "「{{label}}」將從題目中移除。",
       "confirmLabel": "刪除"
-    }
+    },
+    "titleEdit": "編輯題目",
+    "titleAdd": "新增題目"
   },
   "preview": {
     "view": "預覽（玩家視角）",

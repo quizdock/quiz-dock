@@ -229,6 +229,24 @@ export function SlideForm({
         void submit();
       }}
     >
+      {/* Enregistrer est en haut, collant, comme pour une question : l'aperçu, les
+          blocs et le média poussent le bas de la page hors d'atteinte. La barre dit
+          aussi ce qu'on édite — hors tiroir, le formulaire n'a pas de titre. */}
+      <div className="bg-background/95 sticky top-0 z-20 -mx-1 flex items-center gap-2 px-1 py-2 backdrop-blur">
+        <span className="min-w-0 truncate text-sm font-medium">
+          {slide ? t('slideForm.titleEdit') : t('slideForm.titleAdd')}
+        </span>
+        {/* Le refus d'enregistrer se lit à côté du bouton qui l'a provoqué, pas en
+            bas de page où plus personne ne regarde. */}
+        <p className="text-destructive mr-auto min-w-0 flex-1 truncate text-xs">{error}</p>
+        <Button type="button" variant="ghost" size="sm" onClick={cancel}>
+          {t('common:cancel')}
+        </Button>
+        <Button type="submit" size="sm" disabled={!dirty || add.isPending || update.isPending}>
+          {slide ? t('slideForm.submitUpdate') : t('slideForm.submitAdd')}
+        </Button>
+      </div>
+
       {restored ? <DraftNotice onDiscard={discardDraft} /> : null}
       {/* What the projected screen will show, at slide proportions — foldable, remembered. */}
       <div className="flex flex-col gap-2">
@@ -285,16 +303,6 @@ export function SlideForm({
         onChange={(v) => patch({ displayDelayS: v })}
       />
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      <div className="flex gap-2">
-        <Button type="submit" disabled={!dirty || add.isPending || update.isPending}>
-          {slide ? t('slideForm.submitUpdate') : t('slideForm.submitAdd')}
-        </Button>
-        <Button type="button" variant="ghost" onClick={cancel}>
-          {t('common:cancel')}
-        </Button>
-      </div>
       <ConfirmDialog
         open={confirmDiscard}
         destructive

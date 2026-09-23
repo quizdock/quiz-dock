@@ -133,7 +133,9 @@
       "small": "S",
       "medium": "M",
       "large": "L"
-    }
+    },
+    "titleEdit": "Edit slide",
+    "titleAdd": "New slide"
   },
   "discardConfirm": {
     "title": "Discard changes?",
@@ -218,7 +220,9 @@
       "title": "Remove this option?",
       "description": "“{{label}}” will be removed from the question.",
       "confirmLabel": "Remove"
-    }
+    },
+    "titleEdit": "Edit question",
+    "titleAdd": "New question"
   },
   "preview": {
     "view": "Preview (player view)",

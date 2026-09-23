@@ -302,7 +302,11 @@ export function QuestionForm({
       {/* Enregistrer est en haut, collant : une question longue (propositions,
           explication, arrière-plan) mettait le bouton hors d'atteinte, et on ne
           devrait jamais avoir à chercher comment garder ce qu'on vient d'écrire. */}
-      <div className="bg-background/95 sticky top-0 z-20 -mx-1 flex items-center justify-end gap-2 px-1 py-2 backdrop-blur">
+      <div className="bg-background/95 sticky top-0 z-20 -mx-1 flex items-center gap-2 px-1 py-2 backdrop-blur">
+        {/* Hors tiroir, le formulaire n'a pas de titre : la barre dit ce qu'on édite. */}
+        <span className="mr-auto min-w-0 truncate text-sm font-medium">
+          {question ? t('questionForm.titleEdit') : t('questionForm.titleAdd')}
+        </span>
         <Button type="button" variant="ghost" size="sm" onClick={cancel}>
           {t('common:cancel')}
         </Button>

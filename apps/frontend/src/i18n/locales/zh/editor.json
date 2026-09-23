@@ -133,7 +133,9 @@
       "small": "小",
       "medium": "中",
       "large": "大"
-    }
+    },
+    "titleEdit": "编辑幻灯片",
+    "titleAdd": "新建幻灯片"
   },
   "discardConfirm": {
     "title": "放弃修改？",
@@ -218,7 +220,9 @@
       "title": "删除此选项？",
       "description": "“{{label}}”将从题目中移除。",
       "confirmLabel": "删除"
-    }
+    },
+    "titleEdit": "编辑题目",
+    "titleAdd": "新建题目"
   },
   "preview": {
     "view": "预览（玩家视图）",

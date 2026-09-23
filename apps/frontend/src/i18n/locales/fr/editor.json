@@ -133,7 +133,9 @@
       "small": "S",
       "medium": "M",
       "large": "L"
-    }
+    },
+    "titleEdit": "Modifier la slide",
+    "titleAdd": "Nouvelle slide"
   },
   "discardConfirm": {
     "title": "Abandonner les modifications ?",
@@ -218,7 +220,9 @@
       "title": "Supprimer cette option ?",
       "description": "« {{label}} » sera retirée de la question.",
       "confirmLabel": "Supprimer"
-    }
+    },
+    "titleEdit": "Modifier la question",
+    "titleAdd": "Nouvelle question"
   },
   "preview": {
     "view": "Aperçu (vue participant)",
