@@ -24,7 +24,7 @@
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Description (optional)…",
     "save": "Save",
-    "soundLegend": "Sound",
+    "soundLegend": "Audio",
     "soundSummary": "{{lufs}} LUFS · {{target}} · {{tail}} s pause",
     "mediaTailLabel": "Pause after a media",
     "mediaTailHelp": "When a question’s sound or video lasts longer than its timer, the question is stretched to the end of the media plus this pause: nothing is cut mid-play.",
