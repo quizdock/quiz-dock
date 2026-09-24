@@ -24,6 +24,7 @@ export class AuthConfigController {
           ? {
               authority: process.env.OIDC_ISSUER ?? '',
               clientId: process.env.OIDC_CLIENT_ID ?? 'quiz-dock-frontend',
+              sessionScope: process.env.OIDC_SESSION_SCOPE === 'tab' ? 'tab' : 'browser',
             }
           : null,
     };

@@ -32,10 +32,16 @@ describe('AuthConfigController', () => {
       oidc: {
         authority: 'http://localhost:18080/realms/quiz-dock',
         clientId: 'quiz-dock-frontend',
+        sessionScope: 'browser',
       },
       standalone: false,
       anonymousParticipants: false,
     });
+  });
+
+  it('keeps the OIDC session per tab when OIDC_SESSION_SCOPE=tab', () => {
+    process.env = { ...env, AUTH_MODE: 'oidc', OIDC_SESSION_SCOPE: 'tab' };
+    expect(controller.config().oidc?.sessionScope).toBe('tab');
   });
 
   it('offers open access only under OIDC with ALLOW_ANONYMOUS_PARTICIPANTS=true', () => {

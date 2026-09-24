@@ -24,7 +24,8 @@ export function configureAuth(mode: AuthMode, oidcUserAuthed = false): void {
 /**
  * Suit le cycle de vie du jeton OIDC (mode oidc, après `initOidc`) : chaque
  * renouvellement silencieux remplace l'en-tête Bearer ; une expiration sans
- * renouvellement, ou un 401 du backend, ramène à la page de connexion.
+ * renouvellement, un 401 du backend, ou une déconnexion dans un autre onglet,
+ * ramène à la page de connexion.
  */
 export function bindOidcSession(): void {
   const events = getOidc().events;
@@ -41,6 +42,14 @@ export function bindOidcSession(): void {
   events.addAccessTokenExpired(dropSession);
   events.addUserSignedOut(dropSession);
   setUnauthorizedHandler(dropSession);
+  // The session is shared by the tabs (localStorage): signed out in one, signed
+  // out in all — another tab never keeps a token its user gave back.
+  window.addEventListener('storage', (e) => {
+    if (!oidcAuthed || e.newValue !== null || !e.key?.startsWith('oidc.user:')) return;
+    oidcAuthed = false;
+    setAuthHeaders({});
+    if (window.location.pathname !== '/login') window.location.assign('/login');
+  });
 }
 
 /** Identité locale (mode none) — utilisée aussi par la garde. */

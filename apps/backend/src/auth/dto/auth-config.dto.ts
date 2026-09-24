@@ -19,6 +19,11 @@ export const authConfigSchema = z.object({
     .object({
       authority: z.string(),
       clientId: z.string(),
+      /**
+       * Where the browser keeps the session (`OIDC_SESSION_SCOPE`): `browser`, shared
+       * by the tabs (default), or `tab`, each tab signing in on its own.
+       */
+      sessionScope: z.enum(['browser', 'tab']),
     })
     .nullable(),
 });

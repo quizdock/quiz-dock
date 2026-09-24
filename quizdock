@@ -133,6 +133,8 @@ cmd_init() {
     say "OIDC_AUDIENCE="
     say "OIDC_ROLES_CLAIM=roles"
     say "OIDC_NAME_CLAIM="
+    say "# browser = the session is shared by the tabs; tab = each tab signs in on its own."
+    say "OIDC_SESSION_SCOPE=browser"
     say "# true = hosts may open a game to participants without an account (PIN + nickname)."
     say "ALLOW_ANONYMOUS_PARTICIPANTS=false"
     say "MEDIA_MAX_BYTES=10485760"

@@ -5,6 +5,7 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
+import type { AuthConfigDtoOidcSessionScope } from './authConfigDtoOidcSessionScope';
 
 /**
  * @nullable
@@ -12,4 +13,5 @@
 export type AuthConfigDtoOidc = {
   authority: string;
   clientId: string;
+  sessionScope: AuthConfigDtoOidcSessionScope;
 } | null;

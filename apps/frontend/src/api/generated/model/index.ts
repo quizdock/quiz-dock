@@ -11,6 +11,7 @@ export * from './authConfigDto';
 export * from './authConfigDtoDemo';
 export * from './authConfigDtoMode';
 export * from './authConfigDtoOidc';
+export * from './authConfigDtoOidcSessionScope';
 export * from './claimHostSeatDto';
 export * from './createQuestionDto';
 export * from './createQuestionDtoAcceptedAnswersItem';

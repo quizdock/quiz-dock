@@ -43,7 +43,7 @@ async function bootstrap(): Promise<void> {
     configureStandalone(data.standalone === true);
     configureAnonymousParticipants(data.anonymousParticipants === true);
     if (data.mode === 'oidc' && data.oidc) {
-      initOidc(data.oidc.authority, data.oidc.clientId);
+      initOidc(data.oidc.authority, data.oidc.clientId, data.oidc.sessionScope);
       bindOidcSession();
       const oidcUser = await getOidc().getUser();
       if (oidcUser && !oidcUser.expired) {
