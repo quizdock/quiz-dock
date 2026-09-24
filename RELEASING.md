@@ -49,9 +49,11 @@ change: don't tag at all, wait until there is a `fix:`/`feat:` worth shipping.
 
 ```bash
 VERSION=0.3.0
-docker buildx create --use --name quizdock 2>/dev/null || docker buildx use quizdock
+# A multi-arch builder, named on each build: `--use` would make it every
+# project's default builder, and some hosts cannot boot it (cgroup errors in DDEV).
+docker buildx create --name quizdock 2>/dev/null || true
 echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-docker buildx build --platform linux/amd64,linux/arm64 \
+docker buildx build --builder quizdock --platform linux/amd64,linux/arm64 \
   -t fchaussin/quizdock:$VERSION -t fchaussin/quizdock:latest \
   --push .
 ```
