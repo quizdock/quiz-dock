@@ -200,4 +200,12 @@ describe('MediaLibraryService (integration)', () => {
     process.env = { ...env, MEDIA_LIBRARY_LINKS: '{not json' };
     expect(library.links().map((l) => l.name)).toContain('OpenSoundLibrary');
   });
+
+  it('offers several free libraries for every kind by default', () => {
+    process.env = { ...env, MEDIA_LIBRARY_LINKS: '' };
+    const links = library.links();
+    for (const kind of ['image', 'video', 'audio'] as const) {
+      expect(links.filter((l) => l.kinds.includes(kind)).length).toBeGreaterThanOrEqual(2);
+    }
+  });
 });

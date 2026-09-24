@@ -31,15 +31,27 @@ export interface MediaLibraryLink {
   kinds: MediaKind[];
 }
 
+/**
+ * Free libraries under open licences (Creative Commons, public domain), several for
+ * each kind: images, videos, sounds and music. Content free of charge but under a
+ * site's own licence (Pexels, Pixabay…) is left out: an author can add it.
+ */
 const DEFAULT_LINKS: MediaLibraryLink[] = [
   { name: 'OpenSoundLibrary', url: 'https://opensoundlibrary.com/', kinds: ['audio'] },
   { name: 'Freesound', url: 'https://freesound.org/', kinds: ['audio'] },
+  { name: 'ccMixter', url: 'https://ccmixter.org/', kinds: ['audio'] },
   { name: 'Openverse', url: 'https://openverse.org/', kinds: ['image', 'audio'] },
   {
     name: 'Wikimedia Commons',
     url: 'https://commons.wikimedia.org/',
     kinds: ['image', 'video', 'audio'],
   },
+  {
+    name: 'NASA Image and Video Library',
+    url: 'https://images.nasa.gov/',
+    kinds: ['image', 'video', 'audio'],
+  },
+  { name: 'Internet Archive', url: 'https://archive.org/', kinds: ['image', 'video', 'audio'] },
 ];
 
 const KINDS: MediaKind[] = ['image', 'video', 'audio'];

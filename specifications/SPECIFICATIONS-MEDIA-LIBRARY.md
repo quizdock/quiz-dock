@@ -142,7 +142,13 @@ backend (`GET /api/v1/media/links`, set by `MEDIA_LIBRARY_LINKS`: a JSON list, o
 - [OpenSoundLibrary](https://opensoundlibrary.com/) — sounds, CC0 / CC-BY / CC-BY-SA;
 - [Openverse](https://openverse.org/) — images and sounds under Creative Commons;
 - [Wikimedia Commons](https://commons.wikimedia.org/) — images, sounds, video;
-- [Freesound](https://freesound.org/) — sounds (account needed to download).
+- [Freesound](https://freesound.org/) — sounds (account needed to download);
+- [ccMixter](https://ccmixter.org/) — music under Creative Commons;
+- [NASA Image and Video Library](https://images.nasa.gov/) — images, video, sounds, mostly public domain;
+- [Internet Archive](https://archive.org/) — images, video, sounds, public domain and Creative Commons.
+
+Only open licences (Creative Commons, public domain), several for each kind; sites free of charge under their own
+licence (Pexels, Pixabay…) are left for an instance to add.
 
 CC-BY and CC-BY-SA require **crediting the author**, hence a free-text **credit** on the asset (author, licence,
 source). The credits of every media a quiz uses (slots, options, slides, images typed in text) are listed on its
