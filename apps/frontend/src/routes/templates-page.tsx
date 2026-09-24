@@ -1,3 +1,4 @@
+import type { SlideBlock } from '@quiz-dock/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { LibraryBig, ListChecks, Plus, Search } from 'lucide-react';
@@ -14,6 +15,7 @@ import { useStoreControllerList, useStoreControllerTake } from '../api/generated
 import { getQuizzesControllerListQueryKey } from '../api/generated/quizzes/quizzes';
 import { apiErrorText } from '../api/http';
 import { useRole } from '../auth/use-role';
+import { SlideStage } from '../game/slide-stage';
 
 const PAGE_SIZE = 20;
 
@@ -177,12 +179,30 @@ export function TemplatesPage() {
 }
 
 /**
- * Ce qu'on voit d'un modèle sur sa carte : sa couverture, à défaut l'image de
- * son premier élément, à défaut ce premier élément rendu — la diapositive
- * d'intro avec son dégradé, ou l'énoncé de la première question. Une tuile vide
- * ne dit rien d'un quiz.
+ * Ce qu'on voit d'un modèle sur sa carte : sa couverture, à défaut sa première
+ * diapositive dessinée comme à l'écran, à défaut l'image ou l'énoncé de la
+ * première question. Une tuile vide ne dit rien d'un quiz.
  */
 function TemplateThumb({ entry }: { entry: StoreEntryDto }) {
+  const slide = entry.first?.slide;
+  if (!entry.coverUrl && slide) {
+    // The stage is a picture here: the whole card is the link.
+    return (
+      <span aria-hidden="true" className="pointer-events-none block">
+        <SlideStage
+          slide={{
+            slideIndex: 0,
+            questionIndex: 0,
+            blocks: slide.blocks as SlideBlock[],
+            background: slide.background,
+            textTone: slide.textTone,
+            textOutline: slide.textOutline,
+            displayDelayS: null,
+          }}
+        />
+      </span>
+    );
+  }
   const image = entry.coverUrl ?? entry.first?.media ?? null;
   const gradient = entry.first?.gradient;
   const background = gradient

@@ -34,6 +34,35 @@ describe('TemplatesPage (galerie)', () => {
     localStorage.clear();
   });
 
+  it('dessine la première diapositive telle qu’à l’écran, pas seulement son titre', async () => {
+    localStorage.setItem('live.localUser', 'Marc');
+    const entry = {
+      ...ENTRY,
+      first: {
+        kind: 'slide',
+        text: 'Discover France',
+        media: null,
+        gradient: { angle: 135, colors: ['#1d3fa0', '#f5f5f5', '#d02a2a'] },
+        slide: {
+          blocks: [
+            { type: 'heading', id: 'h', text: 'Discover France', level: 1, align: 'center' },
+            { type: 'text', id: 't', md: 'Ten quick questions', align: 'center', size: 'large' },
+          ],
+          background: { gradient: { angle: 135, colors: ['#1d3fa0', '#f5f5f5', '#d02a2a'] } },
+          textTone: 'light',
+          textOutline: true,
+        },
+      },
+    };
+    mockApi([{ method: 'GET', path: '/store', body: [entry] }]);
+    renderApp('/templates');
+
+    expect(await screen.findByText('Discover France')).toBeInTheDocument();
+    // The subtitle block is on the card too — the old thumbnail kept the title alone.
+    expect(screen.getByText('Ten quick questions')).toBeInTheDocument();
+    localStorage.clear();
+  });
+
   it('dit qu’aucun modèle n’est partagé, et mène aux quiz d’où l’on en partage un', async () => {
     localStorage.setItem('live.localUser', 'Marc');
     mockApi([{ method: 'GET', path: '/store', body: [] }]);

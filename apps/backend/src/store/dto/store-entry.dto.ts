@@ -23,6 +23,23 @@ export const storeEntrySchema = z.object({
       text: z.string(),
       media: z.string().nullable(),
       gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }).nullable(),
+      /** Quand le premier élément est une diapositive : de quoi la dessiner telle quelle. */
+      slide: z
+        .object({
+          /** Slide blocks, image URLs served by the catalogue (`SlideBlock[]`). */
+          blocks: z.array(z.unknown()),
+          background: z
+            .union([
+              z.object({ url: z.string() }),
+              z.object({
+                gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }),
+              }),
+            ])
+            .nullable(),
+          textTone: z.enum(['light', 'dark']),
+          textOutline: z.boolean(),
+        })
+        .nullable(),
     })
     .nullable(),
 });

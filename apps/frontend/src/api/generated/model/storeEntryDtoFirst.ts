@@ -7,6 +7,7 @@
  */
 import type { StoreEntryDtoFirstGradient } from './storeEntryDtoFirstGradient';
 import type { StoreEntryDtoFirstKind } from './storeEntryDtoFirstKind';
+import type { StoreEntryDtoFirstSlide } from './storeEntryDtoFirstSlide';
 
 /**
  * @nullable
@@ -18,4 +19,6 @@ export type StoreEntryDtoFirst = {
   media: string | null;
   /** @nullable */
   gradient: StoreEntryDtoFirstGradient;
+  /** @nullable */
+  slide: StoreEntryDtoFirstSlide;
 } | null;
