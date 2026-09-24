@@ -10,6 +10,7 @@
  */
 
 export * from './media-sniff';
+export * from './preferences';
 export * from './question-media';
 import type { AudioTarget, LiveQuestionMedia } from './question-media';
 

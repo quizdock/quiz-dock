@@ -159,6 +159,9 @@ model User {
   /// it away, and the host seat never clears it.
   assignedRoles UserRole[] @map("assigned_roles")
   locale        String     @default("fr")
+  /// What the account remembers wherever it signs in (`UserPreferences` in the
+  /// contracts). Read key by key: an unknown or stale key falls back to its default.
+  preferences   Json       @default("{}")
   createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt     DateTime?  @map("deleted_at") @db.Timestamptz(6)
