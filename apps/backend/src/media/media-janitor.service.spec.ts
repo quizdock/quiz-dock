@@ -4,7 +4,9 @@ import type { MediaService } from './media.service';
 
 describe('MediaJanitor', () => {
   const media = {
+    adoptLegacyFiles: jest.fn(async () => 1),
     sweepOrphans: jest.fn(async () => 2),
+    sweepUnusedBlobs: jest.fn(async () => 4),
     purgeStrayFiles: jest.fn(async () => 3),
   };
   const redis = { set: jest.fn(async () => 'OK' as string | null) };
@@ -15,10 +17,11 @@ describe('MediaJanitor', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('sweeps unused media, then stray files, under the lock', async () => {
-    await expect(janitor.run()).resolves.toEqual({ media: 2, files: 3 });
+  it('adopts older files, sweeps unused media, blobs and stray files, under the lock', async () => {
+    await expect(janitor.run()).resolves.toEqual({ adopted: 1, media: 2, blobs: 4, files: 3 });
     expect(redis.set).toHaveBeenCalledWith(MEDIA_SWEEP_LOCK, '1', 'PX', expect.any(Number), 'NX');
     expect(media.sweepOrphans).toHaveBeenCalled();
+    expect(media.sweepUnusedBlobs).toHaveBeenCalled();
     expect(media.purgeStrayFiles).toHaveBeenCalled();
   });
 

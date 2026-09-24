@@ -15,6 +15,7 @@ import { MediaService } from './media.service';
 jest.mock('node:fs/promises', () => ({
   ...jest.requireActual('node:fs/promises'),
   writeFile: jest.fn(async () => undefined),
+  rename: jest.fn(async () => undefined),
 }));
 
 /** Real files (ffmpeg, 0.5 s) — the content check must hold on what encoders produce. */
@@ -26,18 +27,34 @@ const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0
 const peaks = JSON.stringify(new Array(200).fill(0.5));
 
 function makePrisma() {
-  return {
+  const prisma = {
     mediaAsset: {
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
+      create: jest.fn(async () => ({ id: 'm1' })),
+      update: jest.fn(async () => ({ id: 'm1', url: '/api/v1/media/m1' })),
+      delete: jest.fn(async ({ where }: { where: { id: string } }) => ({
+        id: where.id,
+        blobSha256: null as string | null,
+      })),
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(async () => [] as { id: string }[]),
       count: jest.fn(async () => 1),
     },
+    mediaBlob: {
+      upsert: jest.fn(async () => ({})),
+      findMany: jest.fn(async () => [] as { sha256: string }[]),
+      findUnique: jest.fn(async () => null as { sha256: string } | null),
+      deleteMany: jest.fn(async () => ({ count: 1 })),
+    },
     $queryRaw: jest.fn(async () => [{ used: false }]),
+    $transaction: jest.fn(
+      async (arg: unknown): Promise<unknown> =>
+        typeof arg === 'function'
+          ? (arg as (tx: unknown) => unknown)(prisma)
+          : Promise.all(arg as unknown[]),
+    ),
   };
+  return prisma;
 }
 
 const file = (over: Partial<{ buffer: Buffer; mimetype: string; size: number }> = {}) => ({
@@ -88,10 +105,6 @@ describe('MediaService', () => {
   });
 
   describe('content check on real files', () => {
-    beforeEach(() => {
-      prisma.mediaAsset.create.mockResolvedValue({ id: 'm1' });
-    });
-
     const rejection = async (name: string) => {
       const err = await service.upload('o1', fixture(name)).catch((e: BadRequestException) => e);
       expect(err).toBeInstanceOf(BadRequestException);
@@ -202,7 +215,19 @@ describe('MediaService', () => {
       prisma.mediaAsset.findUnique.mockResolvedValue(unused);
       await service.releaseUnused(['m1', null, 'm1']);
       expect(prisma.mediaAsset.delete).toHaveBeenCalledTimes(1);
-      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'm1' } }),
+      );
+    });
+
+    it('keeps a shared file while another media still holds it', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      prisma.mediaAsset.delete.mockResolvedValue({ id: 'm1', blobSha256: 'a'.repeat(64) });
+      prisma.mediaBlob.deleteMany.mockResolvedValue({ count: 0 });
+      await service.releaseUnused(['m1']);
+      expect(prisma.mediaBlob.deleteMany).toHaveBeenCalledWith({
+        where: { sha256: 'a'.repeat(64), assets: { none: {} } },
+      });
     });
 
     it('keeps a media another quiz still uses (a duplicated quiz shares it)', async () => {
@@ -234,7 +259,9 @@ describe('MediaService', () => {
       redis.hget.mockResolvedValueOnce('ENDED');
       redis.mget.mockResolvedValue(['{"media":{"url":"/api/v1/media/m1"}}'] as never);
       await service.releaseUnused(['m1']);
-      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'm1' } }),
+      );
     });
 
     it('only releases what the save named: the rest is the scheduled sweep', async () => {
@@ -268,7 +295,9 @@ describe('MediaService', () => {
         slides: { none: {} },
         options: { none: {} },
       });
-      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'old' } });
+      expect(prisma.mediaAsset.delete).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'old' } }),
+      );
     });
 
     it('spares a media the full check finds held (a slot, Markdown)', async () => {

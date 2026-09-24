@@ -167,7 +167,17 @@ CHECKs, in SQL or in the application, depending on the type:
 | `mime` | text | NN | `image/png`, `audio/mpeg`, … |
 | `size_bytes` | bigint | NN, CHECK ≤ the limit | Size |
 | `kind` | enum `media_kind` | NN | `image` \| `audio` |
+| `blob_sha256` | char(64) | FK→`media_blob.sha256` (RESTRICT), nullable, IDX | The stored file, shared by every media carrying the same bytes. Null until the clean-up job adopts a file uploaded before files were shared, or when the file is lost. The media keeps its own `mime`, `size_bytes` and measures: the bytes never change, so the copies cannot drift |
 | `created_at` | timestamptz | NN, DEF now() | |
+
+### 2.6 bis `media_blob` — a stored file
+
+| Column | Type | Constraints | Description |
+|---------|------|-------------|-------------|
+| `sha256` | char(64) | PK | SHA-256 of the bytes, computed by the server; the file is `MEDIA_DIR/<sha256>` |
+| `mime` | text | NN | As found by the content check |
+| `size_bytes` | bigint | NN | Size |
+| `created_at` | timestamptz | NN, DEF now() | A blob no media holds is deleted, with its file, after the 24 h grace period |
 
 ### 2.7 `game_session_log` — a session that was played (the durable trace)
 
