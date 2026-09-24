@@ -17,6 +17,8 @@ export interface MediaLibraryItem {
   createdAt: string;
   /** How many of the author's quizzes use it. */
   usedIn: number;
+  /** Shown in a past session's results: kept, even once no quiz uses it. */
+  inHistory: boolean;
 }
 
 /** A free media library an author can look in, for the kinds it offers. */
@@ -98,7 +100,12 @@ export class MediaLibraryService {
       )
       SELECT l.id, l.url, l.kind, l.name, l.alt, l.credit, l.duration_ms AS "durationMs",
              l.peaks, l.size_bytes AS "sizeBytes", l.created_at AS "createdAt",
-             COALESCE(u.n, 0) AS "usedIn"
+             COALESCE(u.n, 0) AS "usedIn",
+             EXISTS (
+               SELECT 1 FROM mine m JOIN game_session_log g
+                 ON g.quiz_snapshot::text LIKE '%' || m.id || '%'
+               WHERE m.file = l.file
+             ) AS "inHistory"
       FROM latest l LEFT JOIN used u ON u.file = l.file
       ${
         q

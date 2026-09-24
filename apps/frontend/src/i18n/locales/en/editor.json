@@ -329,7 +329,8 @@
         "image": "My images",
         "video": "My videos",
         "audio": "My sounds"
-      }
+      },
+      "inHistory": "Kept for past results"
     },
     "creditLabel": "Credit",
     "creditPlaceholder": "e.g. Photo: Lin Wei, CC BY 4.0, openverse.org",

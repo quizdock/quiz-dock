@@ -329,7 +329,8 @@
         "image": "我的图片",
         "video": "我的视频",
         "audio": "我的声音"
-      }
+      },
+      "inHistory": "为以往结果保留"
     },
     "creditLabel": "署名",
     "creditPlaceholder": "例如 照片：林伟，CC BY 4.0，openverse.org",

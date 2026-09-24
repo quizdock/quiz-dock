@@ -95,6 +95,7 @@ export function MediaLibraryDialog({
       aria-labelledby="media-library-title"
       onCancel={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
       }}
       onClick={(e) => {
@@ -155,8 +156,10 @@ export function MediaLibraryDialog({
                   <span className="text-muted-foreground flex items-center justify-between gap-1 text-xs">
                     {item.usedIn > 0
                       ? t('media.library.usedIn', { count: item.usedIn })
-                      : t('media.library.unused')}
-                    {item.usedIn === 0 ? (
+                      : item.inHistory
+                        ? t('media.library.inHistory')
+                        : t('media.library.unused')}
+                    {item.usedIn === 0 && !item.inHistory ? (
                       <button
                         type="button"
                         onClick={() => setToDelete(item)}

@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
-import { MediaService } from './media.service';
+import { MediaService, uploadName } from './media.service';
 
 // Accepted files would land on the volume: the write is not what these tests are about.
 jest.mock('node:fs/promises', () => ({
@@ -62,6 +62,18 @@ const file = (over: Partial<{ buffer: Buffer; mimetype: string; size: number }> 
   mimetype: 'image/png',
   size: PNG.length,
   ...over,
+});
+
+describe('uploadName', () => {
+  it('reads again as UTF-8 a name multer decoded as latin1, and leaves a right one alone', () => {
+    const mangled = Buffer.from('église-台北.png', 'utf8').toString('latin1');
+    expect(uploadName(mangled)).toBe('église-台北.png');
+    expect(uploadName('photo.png')).toBe('photo.png');
+    expect(uploadName('café.png')).toBe('café.png');
+    expect(uploadName('台北.png')).toBe('台北.png');
+    expect(uploadName('  ')).toBeNull();
+    expect(uploadName(undefined)).toBeNull();
+  });
 });
 
 describe('MediaService', () => {

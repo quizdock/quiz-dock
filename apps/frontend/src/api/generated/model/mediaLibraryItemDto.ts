@@ -35,4 +35,5 @@ export interface MediaLibraryItemDto {
      * @maximum 9007199254740991
      */
   usedIn: number;
+  inHistory: boolean;
 }

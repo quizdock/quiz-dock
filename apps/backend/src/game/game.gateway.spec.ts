@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { NestFactory } from '@nestjs/core';
 import { type Socket, io } from 'socket.io-client';
 import { AppModule } from '../app.module';
+import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
 import { GameService } from './game.service';
@@ -328,6 +329,26 @@ describe('GameGateway (intégration socket)', () => {
     expect(controls).toHaveLength(1);
     host.emit('host:end', { pin });
   }, 15_000);
+
+  it('keeps an uploaded file name as the author typed it, accents and CJK included (#53)', async () => {
+    // Through the real route: multer reads multipart file names as latin1.
+    const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x23, 0x35]);
+    const form = new FormData();
+    form.append('file', new Blob([png], { type: 'image/png' }), 'église-台北.png');
+    const res = await fetch(url.replace(/\/game$/, '/media'), {
+      method: 'POST',
+      headers: { 'X-Local-User': 'Animateur' },
+      body: form,
+    });
+    expect(res.status).toBe(201);
+    const { mediaId } = (await res.json()) as { mediaId: string };
+    try {
+      const row = await prisma.mediaAsset.findUniqueOrThrow({ where: { id: mediaId } });
+      expect(row.name).toBe('église-台北.png');
+    } finally {
+      await app.get(MediaService).remove(hostUserId, mediaId);
+    }
+  });
 
   it("shows the credits of the quiz's media at the podium (#53)", async () => {
     const asset = await prisma.mediaAsset.create({

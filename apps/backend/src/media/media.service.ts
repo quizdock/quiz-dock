@@ -54,6 +54,23 @@ const DETAILS = { id: true, alt: true, credit: true, durationMs: true } as const
 const CREDIT_MAX = 300;
 const NAME_MAX = 200;
 
+/**
+ * A file name as the author typed it. Multer reads a multipart file name as
+ * latin1, so `église-台北.png` arrives as `Ã©glise-å°å.png`: its bytes are
+ * read again as UTF-8 — only when they make valid UTF-8, so a name that came
+ * right (plain ASCII, or a fixed multer) is left as it is.
+ */
+export function uploadName(raw: string | undefined): string | null {
+  const name = raw?.trim();
+  if (!name) return null;
+  let decoded = name;
+  if ([...name].every((c) => c.charCodeAt(0) <= 0xff) && /[\x80-\xff]/.test(name)) {
+    const utf8 = Buffer.from(name, 'latin1').toString('utf8');
+    if (!utf8.includes('\uFFFD')) decoded = utf8;
+  }
+  return decoded.slice(0, NAME_MAX);
+}
+
 /** How long an unused media may wait for the form it was uploaded from. */
 export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 
@@ -167,7 +184,7 @@ export class MediaService implements OnModuleInit {
           sizeBytes: BigInt(file.size),
           kind: sniffed.kind,
           blobSha256: sha256,
-          name: file.originalname?.trim().slice(0, NAME_MAX) || null,
+          name: uploadName(file.originalname),
           ...meta,
         },
       });

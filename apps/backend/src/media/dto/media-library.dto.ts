@@ -18,6 +18,8 @@ export const mediaLibraryItemSchema = z.object({
   createdAt: z.string(),
   /** How many of the author's quizzes use it: an unused one can be deleted. */
   usedIn: z.number().int(),
+  /** Shown in a past session's results: kept even when no quiz uses it any more. */
+  inHistory: z.boolean(),
 });
 
 export class MediaLibraryItemDto extends createZodDto(mediaLibraryItemSchema) {}

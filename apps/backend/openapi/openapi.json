@@ -3438,6 +3438,9 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "inHistory": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -3451,7 +3454,8 @@
           "peaks",
           "sizeBytes",
           "createdAt",
-          "usedIn"
+          "usedIn",
+          "inHistory"
         ]
       },
       "MediaLibraryLinkDto": {

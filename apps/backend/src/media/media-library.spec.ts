@@ -63,6 +63,7 @@ describe('MediaLibraryService (integration)', () => {
 
   afterEach(async () => {
     process.env = env;
+    await prisma.gameSessionLog.deleteMany({ where: { hostId: ownerId } });
     await prisma.quiz.deleteMany({ where: { ownerId } });
     const assets = await prisma.mediaAsset.findMany({
       where: { ownerId },
@@ -90,8 +91,29 @@ describe('MediaLibraryService (integration)', () => {
     expect(items.map((i) => i.name)).toEqual(['taipei-101.webp', 'sun-moon-lake.webp']);
     // The reused media is the same file: one entry, used by both quizzes.
     expect(items[1]).toMatchObject({ id: reused.mediaId, usedIn: 2 });
-    expect(items[0]).toMatchObject({ usedIn: 0 });
+    expect(items[0]).toMatchObject({ usedIn: 0, inHistory: false });
     expect(await library.list(ownerId, { kind: 'audio' })).toEqual([]);
+  });
+
+  it('tells a media kept for past results from an unused one', async () => {
+    const a = await upload('archived.webp');
+    const quiz = await quizUsing(a.mediaId);
+    await prisma.gameSessionLog.create({
+      data: {
+        quizId: quiz.id,
+        hostId: ownerId,
+        pin: '123456',
+        language: 'en',
+        startedAt: new Date(),
+        endedAt: new Date(),
+        retainUntil: new Date(Date.now() + 86_400_000),
+        quizSnapshot: { questions: [{ media: { visual: { url: `/api/v1/media/${a.mediaId}` } } }] },
+      },
+    });
+    await prisma.question.updateMany({ where: { quizId: quiz.id }, data: { visualMediaId: null } });
+    const [item] = await library.list(ownerId);
+    expect(item).toMatchObject({ usedIn: 0, inHistory: true });
+    await expect(media.remove(ownerId, a.mediaId)).rejects.toThrow(ConflictException);
   });
 
   it('searches the name, the alt text and the credit', async () => {
