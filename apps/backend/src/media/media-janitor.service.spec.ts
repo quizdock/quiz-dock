@@ -4,7 +4,7 @@ import type { MediaService } from './media.service';
 
 describe('MediaJanitor', () => {
   const media = {
-    adoptLegacyFiles: jest.fn(async () => 1),
+    adoptLegacyFiles: jest.fn(async () => ({ adopted: 1, failed: 0 })),
     sweepOrphans: jest.fn(async () => 2),
     sweepUnusedBlobs: jest.fn(async () => 4),
     purgeStrayFiles: jest.fn(async () => 3),
@@ -22,6 +22,12 @@ describe('MediaJanitor', () => {
     expect(redis.set).toHaveBeenCalledWith(MEDIA_SWEEP_LOCK, '1', 'PX', expect.any(Number), 'NX');
     expect(media.sweepOrphans).toHaveBeenCalled();
     expect(media.sweepUnusedBlobs).toHaveBeenCalled();
+    expect(media.purgeStrayFiles).toHaveBeenCalled();
+  });
+
+  it('still sweeps when older files cannot be moved', async () => {
+    media.adoptLegacyFiles.mockRejectedValueOnce(new Error('EACCES'));
+    await expect(janitor.run()).resolves.toEqual({ adopted: 0, media: 2, blobs: 4, files: 3 });
     expect(media.purgeStrayFiles).toHaveBeenCalled();
   });
 

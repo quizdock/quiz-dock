@@ -1,6 +1,16 @@
-import { createHash } from 'node:crypto';
-import { createReadStream, type ReadStream } from 'node:fs';
-import { link, mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
+import { constants, createReadStream, type ReadStream } from 'node:fs';
+import {
+  copyFile,
+  link,
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  stat,
+  unlink,
+  writeFile,
+} from 'node:fs/promises';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import {
@@ -32,8 +42,8 @@ export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /** A stored file is named after the SHA-256 of its bytes. */
 const BLOB_FILE = /^[0-9a-f]{64}$/;
-/** A write that did not finish (renamed to its blob name once complete). */
-const PARTIAL_FILE = /^[0-9a-f]{64}\.part$/;
+/** A write that did not finish (renamed to its blob name once complete), one per upload. */
+const PARTIAL_FILE = /^[0-9a-f]{64}\.[0-9a-f-]{36}\.part$/;
 /** A file from before files were shared, named after its media id (a ULID). */
 const LEGACY_FILE = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 
@@ -157,7 +167,8 @@ export class MediaService implements OnModuleInit {
   private async writeBlobFile(sha256: string, buffer: Buffer): Promise<void> {
     const path = join(this.dir, sha256);
     if (await exists(path)) return;
-    const partial = `${path}.part`;
+    // Two uploads of the same new file each write their own part; either rename gives the same bytes.
+    const partial = `${path}.${randomUUID()}.part`;
     await writeFile(partial, buffer);
     await rename(partial, path);
   }
@@ -325,34 +336,59 @@ export class MediaService implements OnModuleInit {
   /**
    * Moves the files of the media uploaded before files were shared under their
    * blob name, merging identical ones. Each step can be interrupted and run
-   * again: the blob name is linked before the media points at it, and the old
-   * name goes last. A media whose file is missing is left as it is.
+   * again: the blob name is made before the media points at it, and the old
+   * name goes last. A media whose file is missing is left as it is; one that
+   * fails is tried again on the next pass, without holding up the others.
    */
-  async adoptLegacyFiles(): Promise<number> {
+  async adoptLegacyFiles(): Promise<{ adopted: number; failed: number }> {
     const legacy = await this.prisma.mediaAsset.findMany({
       where: { blobSha256: null },
       select: { id: true, mime: true, sizeBytes: true },
     });
     let adopted = 0;
+    let failed = 0;
     for (const asset of legacy) {
-      const old = join(this.dir, asset.id);
-      if (!(await exists(old))) continue;
-      const sha256 = await sha256OfFile(old);
-      await link(old, join(this.dir, sha256)).catch((err: NodeJS.ErrnoException) => {
-        if (err.code !== 'EEXIST') throw err;
-      });
-      await this.prisma.$transaction([
-        this.prisma.mediaBlob.upsert({
-          where: { sha256 },
-          create: { sha256, mime: asset.mime, sizeBytes: asset.sizeBytes },
-          update: {},
-        }),
-        this.prisma.mediaAsset.update({ where: { id: asset.id }, data: { blobSha256: sha256 } }),
-      ]);
-      await unlink(old).catch(() => undefined);
-      adopted++;
+      try {
+        if (await this.adoptLegacyFile(asset)) adopted++;
+      } catch (err) {
+        failed++;
+        this.logger.warn(
+          `Media ${asset.id} not moved to shared storage: ${(err as Error).message}`,
+        );
+      }
     }
-    return adopted;
+    return { adopted, failed };
+  }
+
+  private async adoptLegacyFile(
+    asset: Pick<MediaAsset, 'id' | 'mime' | 'sizeBytes'>,
+  ): Promise<boolean> {
+    const old = join(this.dir, asset.id);
+    if (!(await exists(old))) return false;
+    const sha256 = await sha256OfFile(old);
+    await this.linkOrCopy(old, join(this.dir, sha256));
+    await this.prisma.$transaction([
+      this.prisma.mediaBlob.upsert({
+        where: { sha256 },
+        create: { sha256, mime: asset.mime, sizeBytes: asset.sizeBytes },
+        update: {},
+      }),
+      this.prisma.mediaAsset.update({ where: { id: asset.id }, data: { blobSha256: sha256 } }),
+    ]);
+    await unlink(old).catch(() => undefined);
+    return true;
+  }
+
+  /** A second name for a file; a copy where the volume has no hard links (some network shares). */
+  private async linkOrCopy(from: string, to: string): Promise<void> {
+    try {
+      await link(from, to);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'EEXIST') return;
+      await copyFile(from, to, constants.COPYFILE_EXCL).catch((copyErr: NodeJS.ErrnoException) => {
+        if (copyErr.code !== 'EEXIST') throw copyErr;
+      });
+    }
   }
 
   /**
@@ -361,12 +397,15 @@ export class MediaService implements OnModuleInit {
    * of, a delete whose unlink failed, a write cut short, the old name of an
    * adopted file. Only names this service gives are considered — a blob, a
    * partial write, a media id — anything else an operator put there is left
-   * alone. A
-   * database with no media at all is taken for a misconfiguration (an empty
-   * database pointed at a full volume) rather than a reason to empty the volume.
+   * alone. Two mismatches between the database and the volume stop the purge
+   * rather than empty the volume: a database with no media at all (an empty
+   * database pointed at a full volume), and media from before files were shared
+   * whose file is gone (a database restored from before the files were renamed
+   * after their SHA-256 — its blobs look stray, and a hard link keeps the old
+   * file's date, past any grace period).
    */
   async purgeStrayFiles(olderThanMs = ORPHAN_GRACE_MS): Promise<number> {
-    const names = (await readdir(this.dir)).filter(
+    let names = (await readdir(this.dir)).filter(
       (n) => BLOB_FILE.test(n) || PARTIAL_FILE.test(n) || LEGACY_FILE.test(n),
     );
     if (names.length === 0) return 0;
@@ -375,6 +414,13 @@ export class MediaService implements OnModuleInit {
         `${names.length} files in ${this.dir} but no media in the database: stray files kept`,
       );
       return 0;
+    }
+    const orphanedLegacy = await this.legacyMediaWithoutFile(names);
+    if (orphanedLegacy > 0) {
+      this.logger.warn(
+        `${orphanedLegacy} media without their file (database older than ${this.dir}?): stored files kept`,
+      );
+      names = names.filter((n) => !BLOB_FILE.test(n));
     }
     const [blobs, legacy] = await Promise.all([
       this.prisma.mediaBlob.findMany({
@@ -398,6 +444,16 @@ export class MediaService implements OnModuleInit {
       removed++;
     }
     return removed;
+  }
+
+  /** Media not adopted yet whose file under their own id is missing too. */
+  private async legacyMediaWithoutFile(names: string[]): Promise<number> {
+    const legacy = await this.prisma.mediaAsset.findMany({
+      where: { blobSha256: null },
+      select: { id: true },
+    });
+    const present = new Set(names);
+    return legacy.filter((a) => !present.has(a.id)).length;
   }
 
   /**

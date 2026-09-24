@@ -1,10 +1,16 @@
 import { createHash } from 'node:crypto';
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { link, mkdtemp, readdir, rm, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { MediaService } from './media.service';
+
+// Real files; `link` can be made to fail like on a volume without hard links.
+jest.mock('node:fs/promises', () => {
+  const actual = jest.requireActual<typeof import('node:fs/promises')>('node:fs/promises');
+  return { ...actual, link: jest.fn(actual.link) };
+});
 
 /** Shared files on the test database and a scratch media directory: the SQL is the point here. */
 describe('MediaService — shared files (integration)', () => {
@@ -100,7 +106,7 @@ describe('MediaService — shared files (integration)', () => {
       data: { ownerId, url: '', mime: 'image/png', sizeBytes: 1n, kind: 'image' },
     });
 
-    await expect(service.adoptLegacyFiles()).resolves.toBe(2);
+    await expect(service.adoptLegacyFiles()).resolves.toEqual({ adopted: 2, failed: 0 });
     expect(await readdir(dir)).toEqual([sha(bytes)]);
     const rows = await prisma.mediaAsset.findMany({
       where: { id: { in: [...legacy.map((l) => l.id), lost.id] } },
@@ -109,7 +115,31 @@ describe('MediaService — shared files (integration)', () => {
     expect(rows.find((r) => r.id === lost.id)?.blobSha256).toBeNull();
     expect(rows.filter((r) => r.blobSha256 === sha(bytes))).toHaveLength(2);
     expect((await service.readAsset(legacy[0].id))?.buffer.equals(bytes)).toBe(true);
-    await expect(service.adoptLegacyFiles()).resolves.toBe(0);
+    await expect(service.adoptLegacyFiles()).resolves.toEqual({ adopted: 0, failed: 0 });
+  });
+
+  it('copies an older file where the volume has no hard links', async () => {
+    const bytes = png(`copy-${Date.now()}`);
+    const legacy = await prisma.mediaAsset.create({
+      data: { ownerId, url: '', mime: 'image/png', sizeBytes: BigInt(bytes.length), kind: 'image' },
+    });
+    await writeFile(join(dir, legacy.id), bytes);
+    jest.mocked(link).mockRejectedValueOnce(Object.assign(new Error('EPERM'), { code: 'EPERM' }));
+    await expect(service.adoptLegacyFiles()).resolves.toEqual({ adopted: 1, failed: 0 });
+    expect(await readdir(dir)).toEqual([sha(bytes)]);
+  });
+
+  it('keeps the stored files when the database is older than the volume', async () => {
+    // Restored from before the upgrade: its media point at id-named files that were renamed since.
+    const bytes = png(`restored-${Date.now()}`);
+    await prisma.mediaAsset.create({
+      data: { ownerId, url: '', mime: 'image/png', sizeBytes: BigInt(bytes.length), kind: 'image' },
+    });
+    await writeFile(join(dir, sha(bytes)), bytes);
+    const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await utimes(join(dir, sha(bytes)), old, old);
+    await expect(service.purgeStrayFiles()).resolves.toBe(0);
+    expect(await readdir(dir)).toEqual([sha(bytes)]);
   });
 
   it('deletes a blob no media holds once its grace period is over', async () => {

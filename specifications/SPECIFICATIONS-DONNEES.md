@@ -30,6 +30,7 @@ quiz 1───* game_session_log 1───* player_result_log 1───* answ
                           │       1───* question_result_stat
 user 0/1 ──────────────── player_result_log   (a signed-in participant, nullable)
 media_asset *───0/1 quiz | question | answer_option   (cover / illustration)
+media_asset *───0/1 media_blob                         (the stored file, shared by identical media)
 ```
 
 The key cardinalities:
