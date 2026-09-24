@@ -24,7 +24,7 @@
     "ownNameHint": "ⓘ Off, the name shown comes from their account. Either way their results stay attached to it — a chosen name is not anonymity.",
     "audioTargetLabel": "Who hears the sound in this session",
     "audioTargetHint": "Replaces the quiz's setting for this session. Questions with their own setting keep it.",
-    "preloadNotice": "So that nothing waits, the participants' devices receive the next question's image, sound or video a few seconds before it appears — never its text nor its answers. A curious participant could open them early.",
+    "preloadNotice": "So that nothing waits, the participants' devices receive the next question's image, sound or video a few seconds before it appears — never its text nor its answers. A geeky, malicious participant could open them early.",
     "readiness": "Next media loaded: {{ready}} / {{total}} devices",
     "readinessNoProjection": "projection not open",
     "readinessProjectionReady": "projection ready",
