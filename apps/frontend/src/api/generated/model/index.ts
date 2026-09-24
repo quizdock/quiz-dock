@@ -43,6 +43,7 @@ export * from './mediaAltDto';
 export * from './mediaControllerUploadBody';
 export * from './mediaControllerUploadBodyOrigin';
 export * from './mediaDescriptionDto';
+export * from './mediaLimitsDto';
 export * from './mediaUploadResultDto';
 export * from './mediaUploadResultDtoKind';
 export * from './meResponseDto';

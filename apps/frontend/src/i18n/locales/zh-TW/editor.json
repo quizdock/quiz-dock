@@ -292,10 +292,16 @@
     "kindVideo": "影片",
     "none": "無",
     "addImage": "新增圖片",
-    "addVideo": "新增影片（MP4）",
-    "addAudio": "新增聲音（MP3）",
+    "addVideo": "新增影片",
+    "addAudio": "新增聲音",
     "videoExcludesAudio": "影片本身已有聲音：不能再加音軌。移除影片後才能新增聲音。",
-    "audioExcludesVideo": "影片本身已有聲音：移除聲音後才能選擇影片。"
+    "audioExcludesVideo": "影片本身已有聲音：移除聲音後才能選擇影片。",
+    "converting": "轉換中…",
+    "convertingPercent": "轉換中… {{percent}} %",
+    "cancelConversion": "取消",
+    "notice": {
+      "gifFirstFrame": "動態 GIF：只保留第一格畫面。"
+    }
   },
   "background": {
     "legend": "背景",

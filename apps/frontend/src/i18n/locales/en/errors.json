@@ -41,7 +41,7 @@
     "unavailable": "Could not allocate a PIN, please try again."
   },
   "media": {
-    "unsupported_type": "Unsupported format: image (PNG, JPEG, GIF, WebP, AVIF), MP4 video (H.264) or MP3 audio.",
+    "unsupported_type": "Unsupported format: an image, an MP4 video (H.264) or a sound (MP3, M4A). The editor converts the other files this browser can read; SVG is not accepted.",
     "file_missing": "Missing file (“file” field).",
     "file_too_large": "File too large (at most {{maxMb}} MB for this kind of media).",
     "not_found": "Media not found.",
@@ -53,9 +53,14 @@
     "quicktime": "QuickTime files (.mov) are not accepted. Export the video as MP4 (H.264), for instance with HandBrake (handbrake.fr).",
     "unsupported_video_codec": "Unsupported video codec ({{codec}}). Only H.264 plays everywhere. A video shot on an iPhone is often HEVC: convert it to MP4 H.264, for instance with HandBrake (handbrake.fr), or set the camera to “Most Compatible”.",
     "unsupported_audio_codec": "The sound of this video ({{codec}}) is not AAC. Export it again as MP4 H.264 + AAC, for instance with HandBrake (handbrake.fr).",
-    "no_video_track": "This MP4 file holds no video. For a sound on its own, use an MP3.",
-    "unreadable_mp3": "This MP3 cannot be read: the file looks damaged or is not a real MP3.",
-    "metadata_invalid": "What was measured on the sound is not valid ({{field}}). Try the upload again."
+    "no_video_track": "This file holds no video. For a sound on its own, use the sound slot.",
+    "unreadable_mp3": "This sound cannot be read: the file looks damaged.",
+    "metadata_invalid": "What was measured on the sound is not valid ({{field}}). Try the upload again.",
+    "cannot_read": "This browser cannot read this file. Try another browser, or convert it first with a dedicated tool (HandBrake for videos, Audacity for sounds).",
+    "cannot_convert_video": "This browser cannot convert this video to MP4 H.264. Use Chrome, Edge or Safari, or convert it first with HandBrake (handbrake.fr).",
+    "cannot_convert_audio": "This browser cannot convert this sound to AAC. Try another browser, or convert it first with Audacity (audacityteam.org).",
+    "too_long": "Too long to fit the {{maxMb}} MB limit for this kind of media, even compressed. Shorten it first.",
+    "canceled": "Conversion cancelled."
   },
   "import": {
     "file_missing": "Missing file (“file” field).",

@@ -29,8 +29,9 @@ import type { Response } from 'express';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
 import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
+import { MediaLimitsDto } from './dto/media-limits.dto';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
-import { uploadCeiling } from './media.config';
+import { mediaLimits, uploadCeiling } from './media.config';
 import { MediaService } from './media.service';
 import { parseRange } from './range';
 
@@ -72,6 +73,14 @@ export class MediaController {
     @Body() fields: Record<string, unknown>,
   ) {
     return this.media.upload(user.id, file, fields);
+  }
+
+  /** Largest file per kind: the editor checks a conversion will fit before running it. */
+  @Get('limits')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MediaLimitsDto })
+  limits(): MediaLimitsDto {
+    return mediaLimits();
   }
 
   /** The alternative text of one of the caller's media (#43). */

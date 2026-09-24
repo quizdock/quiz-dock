@@ -292,10 +292,16 @@
     "kindVideo": "视频",
     "none": "无",
     "addImage": "添加图片",
-    "addVideo": "添加视频（MP4）",
-    "addAudio": "添加声音（MP3）",
+    "addVideo": "添加视频",
+    "addAudio": "添加声音",
     "videoExcludesAudio": "视频自带声音：不能再加音轨。移除视频后才能添加声音。",
-    "audioExcludesVideo": "视频自带声音：移除声音后才能选择视频。"
+    "audioExcludesVideo": "视频自带声音：移除声音后才能选择视频。",
+    "converting": "转换中…",
+    "convertingPercent": "转换中… {{percent}} %",
+    "cancelConversion": "取消",
+    "notice": {
+      "gifFirstFrame": "动态 GIF：只保留第一帧。"
+    }
   },
   "background": {
     "legend": "背景",

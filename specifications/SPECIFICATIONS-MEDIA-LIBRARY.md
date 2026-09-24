@@ -48,7 +48,10 @@ Why these, and not the others considered:
 Special cases:
 
 - **Nothing is re-encoded that need not be**: a file already in the target format and within the limits is kept
-  as it is (an MP4 is only rewritten for fast start). Mediabunny does this by itself.
+  as it is (an MP4 is only rewritten for fast start; an H.264/AAC QuickTime film is moved into an MP4 without
+  re-encoding, which Firefox can do too). Mediabunny does this by itself.
+- **The server does not check dimensions**: the legacy formats it keeps accepting are not capped either; the
+  bounds are the editor's (#52).
 - **Animated GIF**: the first frame only, with a notice to the author.
 - **SVG**: still refused (phase 1 decision).
 - **What goes in**: whatever the browser decodes, probed file by file (Mediabunny for audio/video,
@@ -61,9 +64,12 @@ Special cases:
 
 ## 3. The upload flow
 
-1. The author drops or picks a file. The module checks the input limits (size, duration) **before** any work.
+1. The author drops or picks a file. Before any work, the editor checks the result will fit the instance's limit
+   for its kind (`GET /api/v1/media/limits`): a sound or a video is given the bitrate that fits its duration,
+   down to a floor below which it is refused (#52 — there is no separate input limit: the input is streamed).
 2. The browser probes, converts (progress bar, cancel button, the tab must stay open), then measures on the
-   **converted** file what it measures today: the waveform and the loudness (BS.1770, SPECIFICATIONS-MEDIA §2).
+   **converted** file what it measures today: the waveform and the loudness (BS.1770, SPECIFICATIONS-MEDIA §2) —
+   on the original when the browser can encode the result but not decode it (Firefox without the system's AAC).
 3. It uploads the file — **always**, even when the server may hold the same content already: a "send the hash
    first" shortcut would hand a file to anyone who knows its hash. The bandwidth of a duplicate is the price.
 4. The server **does not trust the client**: it sniffs the container and codecs, checks the kind, the size

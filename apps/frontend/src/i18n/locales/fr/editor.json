@@ -292,10 +292,16 @@
     "kindVideo": "Vidéo",
     "none": "Aucun",
     "addImage": "Ajouter une image",
-    "addVideo": "Ajouter une vidéo (MP4)",
-    "addAudio": "Ajouter un son (MP3)",
+    "addVideo": "Ajouter une vidéo",
+    "addAudio": "Ajouter un son",
     "videoExcludesAudio": "La vidéo a déjà son propre son : pas de piste audio en plus. Retirez la vidéo pour ajouter un son.",
-    "audioExcludesVideo": "Une vidéo a déjà son propre son : retirez le son pour pouvoir choisir une vidéo."
+    "audioExcludesVideo": "Une vidéo a déjà son propre son : retirez le son pour pouvoir choisir une vidéo.",
+    "converting": "Conversion…",
+    "convertingPercent": "Conversion… {{percent}} %",
+    "cancelConversion": "Annuler",
+    "notice": {
+      "gifFirstFrame": "GIF animé : seule sa première image est conservée."
+    }
   },
   "background": {
     "legend": "Fond",

@@ -28,6 +28,7 @@ import type {
   MediaAltDto,
   MediaControllerUploadBody,
   MediaDescriptionDto,
+  MediaLimitsDto,
   MediaUploadResultDto
 } from '../model';
 
@@ -130,7 +131,113 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getMediaControllerUploadMutationOptions(options), queryClient);
     }
-    export type mediaControllerDescribeResponse200 = {
+    export type mediaControllerLimitsResponse200 = {
+  data: MediaLimitsDto
+  status: 200
+}
+
+export type mediaControllerLimitsResponseSuccess = (mediaControllerLimitsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type mediaControllerLimitsResponse = (mediaControllerLimitsResponseSuccess)
+
+export const getMediaControllerLimitsUrl = () => {
+
+
+
+
+  return `/api/v1/media/limits`
+}
+
+export const mediaControllerLimits = async ( options?: RequestInit): Promise<mediaControllerLimitsResponse> => {
+
+  return customFetch<mediaControllerLimitsResponse>(getMediaControllerLimitsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMediaControllerLimitsQueryKey = () => {
+    return [
+    `/api/v1/media/limits`
+    ] as const;
+    }
+
+
+export const getMediaControllerLimitsQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerLimits>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerLimits>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMediaControllerLimitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mediaControllerLimits>>> = ({ signal }) => mediaControllerLimits({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mediaControllerLimits>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MediaControllerLimitsQueryResult = NonNullable<Awaited<ReturnType<typeof mediaControllerLimits>>>
+export type MediaControllerLimitsQueryError = unknown
+
+
+export function useMediaControllerLimits<TData = Awaited<ReturnType<typeof mediaControllerLimits>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerLimits>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mediaControllerLimits>>,
+          TError,
+          Awaited<ReturnType<typeof mediaControllerLimits>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMediaControllerLimits<TData = Awaited<ReturnType<typeof mediaControllerLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerLimits>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mediaControllerLimits>>,
+          TError,
+          Awaited<ReturnType<typeof mediaControllerLimits>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMediaControllerLimits<TData = Awaited<ReturnType<typeof mediaControllerLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerLimits>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMediaControllerLimits<TData = Awaited<ReturnType<typeof mediaControllerLimits>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerLimits>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMediaControllerLimitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type mediaControllerDescribeResponse200 = {
   data: MediaDescriptionDto
   status: 200
 }

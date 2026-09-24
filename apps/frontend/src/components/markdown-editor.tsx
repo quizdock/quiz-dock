@@ -9,6 +9,7 @@ import { useMediaControllerUpload } from '../api/generated/media/media';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { readyForUpload } from '@/lib/media-pipeline';
 import { getDemo } from '../config';
 import type { MarkdownProfile } from './markdown';
 
@@ -261,7 +262,9 @@ function ImageButton({ editor }: { editor: Editor }) {
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      const res = await upload.mutateAsync({ data: { file } });
+      // Converted like any image (WebP, 1920 px at most) before it goes up.
+      const ready = await readyForUpload(file, 'image');
+      const res = await upload.mutateAsync({ data: { file: ready.file } });
       editor.chain().focus().setImage({ src: res.data.url }).run();
     } catch {
       // The upload endpoint reports its own error; nothing is inserted.

@@ -10,7 +10,7 @@
 > [issues](https://github.com/quizdock/quiz-dock/issues).
 
 A question has two media slots: a **visual** (an image or a video) and a
-**sound** (an MP3). A video brings its own sound, so a question never has both a
+**sound**. A video brings its own sound, so a question never has both a
 video and a separate sound. Media play in the **projection window**; the
 console stays silent, and so do the phones in the room (they show the question's
 image), so the room hears everything once. A participant who joins **remotely**
@@ -18,17 +18,32 @@ gets the whole question on their device — see [Remote participants](#remote-pa
 
 ## Formats
 
-| Kind | Accepted | Refused |
-| --- | --- | --- |
-| Video | MP4 with **H.264** video and **AAC** audio (or no audio) | HEVC / H.265 (what an iPhone records by default), AV1, VP9, QuickTime `.mov`, WebM |
-| Sound | **MP3** | WAV, OGG, M4A, FLAC |
-| Image | PNG, JPEG, GIF, WebP, AVIF | SVG and anything else |
+The editor converts every media, **in the author's browser**, to one format per
+kind — the server never transcodes:
 
-A file is recognised by its **content**, never by its name: a renamed file is
-refused. Nothing is transcoded: the file plays as uploaded, its quality is the
-author's call. To convert a video, [HandBrake](https://handbrake.fr) with the
-*Fast 1080p30* preset gives an MP4 H.264 + AAC; on an iPhone,
-*Settings → Camera → Formats → Most Compatible* records H.264 directly.
+| Kind | Stored as | Settings |
+| --- | --- | --- |
+| Image | **WebP** | longest edge at most 1920 px, transparency kept; an animated GIF keeps its first frame |
+| Video | **MP4, H.264 + AAC** | short edge at most 1080 px (portrait included), at most 30 fps |
+| Sound | **M4A, AAC** | 128 kb/s, stereo at most |
+
+What goes in is whatever the browser can read: JPEG, PNG, HEIC (Safari), MP4,
+MOV, WebM, MP3, WAV, FLAC, OGG… A file already in its format and within bounds
+is kept as it is (a video is only rewritten to start playing sooner). A long
+video is compressed harder to fit the size limit, and refused when even that
+would not do. SVG is refused.
+
+Some browsers cannot encode everything: Firefox has no H.264 encoder, so it only
+takes videos that need no re-encoding (an H.264 MP4 or MOV within bounds) — use
+Chrome, Edge or Safari for the others. Sounds convert in every browser (a
+built-in encoder takes over where the browser has none). When a file cannot be
+read or converted, the editor says so and points to
+[HandBrake](https://handbrake.fr) (videos) or [Audacity](https://www.audacityteam.org)
+(sounds).
+
+The server still checks every file by its **content**, never by its name. It
+accepts the formats above plus those already stored before the converter (MP3,
+PNG, JPEG, GIF, AVIF), which keep playing — imported quizzes may carry them.
 
 ## Sizes and the reverse proxy
 
