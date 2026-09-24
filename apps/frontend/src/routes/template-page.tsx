@@ -18,6 +18,7 @@ import {
 } from '../api/generated/store/store';
 import { apiErrorText } from '../api/http';
 import { useRole } from '../auth/use-role';
+import { getDemo } from '../config';
 import { templateRoute } from '../router';
 
 /**
@@ -100,10 +101,13 @@ export function TemplatePage() {
             // Prendre une copie crée un quiz : sans banque, l'action n'a pas de sens.
             <p className="text-muted-foreground text-sm">{t('takeNeedsHost')}</p>
           )}
-          <Button type="button" variant="outline" onClick={() => setConfirming(true)}>
-            <Trash2 className="size-4" />
-            {t('withdraw')}
-          </Button>
+          {/* A demo catalogue is read-only. */}
+          {getDemo() ? null : (
+            <Button type="button" variant="outline" onClick={() => setConfirming(true)}>
+              <Trash2 className="size-4" />
+              {t('withdraw')}
+            </Button>
+          )}
         </div>
         {error ? (
           <p className="text-destructive text-sm" role="alert">

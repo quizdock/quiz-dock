@@ -2,6 +2,7 @@ import { createContext, type ReactNode, useCallback, useContext, useMemo, useSta
 import { hostSeatControllerClaim, hostSeatControllerRelease } from '../api/generated/auth/auth';
 import { meControllerMe } from '../api/generated/me/me';
 import { setAuthHeaders, setUnauthorizedHandler } from '../api/http';
+import { getDemo } from '../config';
 import { getOidc } from './oidc';
 
 const STORAGE_KEY = 'live.localUser';
@@ -44,7 +45,15 @@ export function bindOidcSession(): void {
 
 /** Identité locale (mode none) — utilisée aussi par la garde. */
 export function getLocalUser(): string | null {
-  return localStorage.getItem(STORAGE_KEY);
+  const stored = localStorage.getItem(STORAGE_KEY);
+  // A demo serves one shared account whatever the name: a name kept from before
+  // would only show the wrong one in the menu.
+  const demo = getDemo();
+  if (stored && demo && stored !== demo.user) {
+    localStorage.setItem(STORAGE_KEY, demo.user);
+    return demo.user;
+  }
+  return stored;
 }
 
 /**

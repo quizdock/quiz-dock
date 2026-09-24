@@ -108,7 +108,7 @@ export function RootLayout() {
           role="note"
           className="border-b bg-amber-500/15 px-6 py-1.5 text-center text-xs text-amber-700 dark:text-amber-400"
         >
-          {t('common:demo.banner', { count: demo.seatMinutes })}
+          {t('common:demo.banner', { user: demo.user })}
         </p>
       ) : null}
       {/* Wide but bounded: ~1440px, the usual ceiling for app layouts. Pages fill it;

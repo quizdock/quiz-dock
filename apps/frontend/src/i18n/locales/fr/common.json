@@ -47,7 +47,7 @@
     "template": "Modèle"
   },
   "demo": {
-    "banner": "Démo publique — tout est effacé toutes les heures ; le siège d'hôte dure {{count}} min à la fois."
+    "banner": "Démo publique — un seul compte animateur partagé par tous les visiteurs ; tout est effacé chaque heure."
   },
   "chromiumOnly": "Cette page est conçue pour Chrome, Edge ou un autre navigateur Chromium. Sur ce navigateur, l’envoi et la lecture des vidéos et des sons peuvent mal fonctionner."
 }

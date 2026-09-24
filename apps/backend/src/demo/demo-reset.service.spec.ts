@@ -24,24 +24,34 @@ function makeService(games: Record<string, string>) {
   const media = {
     removeAllFiles: jest.fn().mockResolvedValue(undefined),
   } as unknown as MediaService;
-  const seat = { capExpiry: jest.fn().mockResolvedValue(false) } as unknown as HostSeatService;
+  const demoUser = { id: 'u1', displayName: 'demo_user' };
+  const seat = {
+    provision: jest.fn().mockResolvedValue(demoUser),
+    claim: jest.fn().mockResolvedValue({}),
+  } as unknown as HostSeatService;
   return {
     service: new DemoResetService(prisma, redis, media, seat),
     prisma,
     redis,
     media,
+    seat,
+    demoUser,
     deleteMany,
   };
 }
 
 describe('DemoResetService', () => {
-  it('reset: every table, the media files, then the live state', async () => {
-    const { service, prisma, redis, media, deleteMany } = makeService({});
+  it('reset: every table, the media files, the live state, then the shared host', async () => {
+    const { service, prisma, redis, media, seat, demoUser, deleteMany } = makeService({});
     await service.reset();
     expect(deleteMany).toHaveBeenCalledTimes(5);
     expect(prisma.$transaction).toHaveBeenCalledWith(['op', 'op', 'op', 'op', 'op']);
     expect(media.removeAllFiles).toHaveBeenCalled();
     expect(redis.flushdb).toHaveBeenCalled();
+    expect(seat.provision).toHaveBeenCalledWith(
+      expect.objectContaining({ sub: 'local:demo-user', displayName: 'demo_user' }),
+    );
+    expect(seat.claim).toHaveBeenCalledWith(demoUser, null);
   });
 
   it('hasLiveGames: only game hashes count, and ended ones do not', async () => {

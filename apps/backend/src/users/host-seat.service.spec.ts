@@ -108,16 +108,6 @@ describe('HostSeatService.provision', () => {
   });
 });
 
-describe('HostSeatService.capExpiry', () => {
-  it('cuts a seat without expiry (or a longer one) to N minutes from now', async () => {
-    const { service, prisma } = makeService({ id: 1, userId: alice.id, expiresAt: null });
-    expect(await service.capExpiry(5)).toBe(true);
-    const call = (prisma.hostSeat.updateMany as jest.Mock).mock.calls[0][0];
-    expect(call.where.OR).toEqual([{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }]);
-    expect(call.data.expiresAt.getTime()).toBeLessThanOrEqual(Date.now() + 5 * 60_000);
-  });
-});
-
 describe('HostSeatService.claim', () => {
   it('takes a free seat under the advisory lock, with expiry,', async () => {
     const { service, tx } = makeService(null);
@@ -139,16 +129,12 @@ describe('HostSeatService.claim', () => {
     expect((await service.claim(alice, null)).expiresAt).toBeNull();
   });
 
-  it('on a demo instance the seat lasts DEMO_SEAT_MINUTES whatever was asked', async () => {
+  it('on a demo instance the seat has no expiry, whatever was asked', async () => {
     const env = process.env;
     process.env = { ...env, DEMO_MODE: 'true' };
     try {
       const { service } = makeService(null);
-      const before = Date.now();
-      const state = await service.claim(alice, null);
-      const left = state.expiresAt!.getTime() - before;
-      expect(left).toBeGreaterThan(4 * 60_000);
-      expect(left).toBeLessThanOrEqual(5 * 60_000 + 1_000);
+      expect((await service.claim(alice, 30)).expiresAt).toBeNull();
     } finally {
       process.env = env;
     }

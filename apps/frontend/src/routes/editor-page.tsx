@@ -91,6 +91,7 @@ import {
 } from '../api/generated/store/store';
 import { useGameControllerMine } from '../api/generated/games/games';
 import { useQuestionsControllerRemove } from '../api/generated/questions/questions';
+import { getDemo } from '../config';
 import { editorRoute } from '../router';
 
 /**
@@ -430,7 +431,10 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   <Download className="size-4" />
                   {t('header.export')}
                 </Button>
-                {quiz.status === 'ready' ? <ShareAsTemplate quizId={quiz.id} /> : null}
+                {/* A demo catalogue is read-only. */}
+                {quiz.status === 'ready' && !getDemo() ? (
+                  <ShareAsTemplate quizId={quiz.id} />
+                ) : null}
                 {/* Archiver et supprimer sont des actions du quiz, pas des réglages :
                 elles sont avec les autres, en dernier et dans le ton qui convient. */}
                 {quiz.status !== 'archived' ? (

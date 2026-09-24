@@ -175,13 +175,15 @@ describe('StoreService', () => {
     }
   });
 
-  it('a demo instance has no catalogue at all', async () => {
+  it('a demo catalogue is read-only: seeded and listed, never shared to nor withdrawn from', async () => {
     process.env.DEMO_MODE = 'true';
     const { service } = makeService();
-    await expect(service.list()).resolves.toEqual([]);
+    await service.onModuleInit();
+    const seeded = await service.list();
+    expect(seeded.length).toBeGreaterThan(0);
     await expect(service.share(alice, 'q1')).rejects.toThrow(ForbiddenException);
-    await expect(service.take(bob.id, '01ARZ3NDEKTSV4RRFFQ69G5FAV')).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(
+      service.withdraw({ ...alice, roles: [UserRole.admin] }, seeded[0].id),
+    ).rejects.toThrow(ForbiddenException);
   });
 });

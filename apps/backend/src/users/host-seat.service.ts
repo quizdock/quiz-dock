@@ -2,7 +2,7 @@ import { ConflictException, ForbiddenException, Injectable, Logger } from '@nest
 import { type HostSeat, type User, UserRole } from '@prisma/client';
 import { type AuthPrincipal, LOCAL_SUB_PREFIX } from '../auth/auth-provider';
 import { effectiveRoles, isManager, isHost } from '../auth/roles';
-import { DEMO_SEAT_MINUTES, isDemoMode } from '../demo/demo.config';
+import { isDemoMode } from '../demo/demo.config';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Arbitrary app-wide advisory lock id serialising concurrent seat claims. */
@@ -24,8 +24,9 @@ export interface HostSeatState {
  * freed on release (log out) or lazily once `expiresAt` is past — no scheduler.
  *
  * Not a security boundary: a local identity is a self-declared name, so whoever
- * types the holder's name shares their seat. Meant for trusted networks; a public
- * instance adds the `DEMO_MODE` guards on top (short seat, no uploads, reset).
+ * types the holder's name shares their seat. Meant for trusted networks. A public
+ * demo (`DEMO_MODE`) turns that into the rule: everyone is the demo account, which
+ * holds the seat for good.
  */
 @Injectable()
 export class HostSeatService {
@@ -83,9 +84,8 @@ export class HostSeatService {
   /**
    * Takes the seat for `user` (or renews its expiry when already held by them).
    * Serialised by a transaction-scoped advisory lock; refused (409) while another
-   * user holds a live seat. First-time claimers get the sample quizzes. On a demo
-   * instance the requested expiry is ignored: the seat always lasts
-   * `DEMO_SEAT_MINUTES` from now, renewal included.
+   * user holds a live seat. On a demo instance the requested expiry is ignored:
+   * the shared account holds the seat without expiry.
    */
   async claim(user: User, requestedMinutes: number | null): Promise<HostSeatState> {
     // Un gestionnaire n'anime pas (RG-14) : le siège reste l'affaire des hôtes.
@@ -97,7 +97,7 @@ export class HostSeatService {
         isHost(user.roles) ? 'host_seat.already_host' : 'host_seat.manager_forbidden',
       );
     }
-    const expiresInMinutes = isDemoMode() ? DEMO_SEAT_MINUTES : requestedMinutes;
+    const expiresInMinutes = isDemoMode() ? null : requestedMinutes;
     const claimedAt = new Date();
     const expiresAt = expiresInMinutes
       ? new Date(claimedAt.getTime() + expiresInMinutes * 60_000)
@@ -136,21 +136,6 @@ export class HostSeatService {
     return { holder: user.displayName, expiresAt, claimedAt };
   }
 
-  /**
-   * Shortens a live seat to at most `minutes` from now (demo instance starting
-   * over a seat taken before the guard existed). Returns whether a seat was cut.
-   */
-  async capExpiry(minutes: number): Promise<boolean> {
-    const now = new Date();
-    const cap = new Date(now.getTime() + minutes * 60_000);
-    const res = await this.prisma.hostSeat.updateMany({
-      where: { id: SEAT_ID, OR: [{ expiresAt: null }, { expiresAt: { gt: cap } }] },
-      data: { expiresAt: cap },
-    });
-    if (res.count > 0) this.log.log(`Host seat capped to ${minutes} min`);
-    return res.count > 0;
-  }
-
   /** Full seat row with its holder (operator tooling), or `null` when no row. */
   details(): Promise<(HostSeat & { user: Pick<User, 'displayName' | 'oidcSubject'> }) | null> {
     return this.prisma.hostSeat.findUnique({
@@ -179,7 +164,9 @@ export class HostSeatService {
 
   /** Releases the seat if `user` holds it. Returns whether anything changed. */
   async release(user: User): Promise<boolean> {
-    if (!HostSeatService.isLocal(user.oidcSubject)) return false;
+    // On a demo the seat is the shared account's for good: a visitor logging out
+    // must not demote everyone else.
+    if (isDemoMode() || !HostSeatService.isLocal(user.oidcSubject)) return false;
     const res = await this.prisma.hostSeat.deleteMany({ where: { id: SEAT_ID, userId: user.id } });
     if (res.count > 0) {
       await this.prisma.user.update({

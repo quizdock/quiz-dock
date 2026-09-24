@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { DEMO_SEAT_MINUTES, isDemoMode } from '../demo/demo.config';
+import { DEMO_USER, isDemoMode } from '../demo/demo.config';
 import { authMode } from './auth-mode';
 import { AuthConfigDto } from './dto/auth-config.dto';
 import { Public } from './public.decorator';
@@ -16,7 +16,7 @@ export class AuthConfigController {
     const mode = authMode();
     return {
       mode,
-      demo: isDemoMode() ? { seatMinutes: DEMO_SEAT_MINUTES } : null,
+      demo: isDemoMode() ? { user: DEMO_USER } : null,
       standalone: process.env.QUIZDOCK_FLAVOR === 'standalone',
       oidc:
         mode === 'oidc'

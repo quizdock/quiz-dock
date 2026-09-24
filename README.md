@@ -46,14 +46,14 @@ the results never leave your servers.
 
 ## 🎮 Try it online
 
-**https://quizdock-standalone.onrender.com** — a public instance in demo mode: enter a
-name, take the host seat and present one of the sample quizzes; open the join link on
+**https://quizdock-standalone.onrender.com** — a public instance in demo mode: enter the
+demo, take a copy of the France or Taiwan template and present it; open the join link on
 your phone to play.
 
 - It sleeps when idle: the **first load can take about a minute**.
-- Shared with strangers: **everything is wiped every hour**, the host seat lasts
-  **5 minutes** at a time (renewable), media uploads are off. Don't put anything you
-  care about in it.
+- Shared with strangers: **every visitor uses the same host account** (`demo_user`), so
+  you may see — or step on — someone else's quizzes and sessions. **Everything is wiped
+  every hour**, media uploads are off. Don't put anything you care about in it.
 
 ## ✨ Main features
 
@@ -156,7 +156,7 @@ Copy `.env.example` to `.env` and adjust. The settings you are most likely to to
 | `AUTH_MODE` | `none` | `none` (local mode) or `oidc` (any OpenID Connect provider) |
 | `HTTP_PORT` | `18080` | Host port for the app |
 | `APP_PUBLIC_URL` | — | Public address of the instance, offered first as the invitation address (QR code, join link) |
-| `DEMO_MODE` | `false` | Guards for an instance open to strangers: 5-minute host seat, no uploads, hourly wipe |
+| `DEMO_MODE` | `false` | Guards for an instance open to strangers: one shared host account, read-only templates, no uploads, hourly wipe |
 
 Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.<svg|avif|webp|png|jpg|jpeg|gif>`
 + `override.css` into the mounted `branding/` folder (or point `APP_LOGO_URL` at a logo

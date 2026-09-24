@@ -83,6 +83,13 @@ export function LoginPage() {
     dropLocal();
   };
 
+  // Public demo: one shared host account, no seat to claim — just walk in.
+  const enterDemo = async () => {
+    if (!demo) return;
+    await loginLocal(demo.user);
+    void navigate({ to: '/quizzes' });
+  };
+
   return (
     <Card className="content-sm">
       <CardHeader>
@@ -96,6 +103,15 @@ export function LoginPage() {
             </p>
             <Button type="button" onClick={() => void loginOidc()}>
               {t('login.oidcSubmit')}
+            </Button>
+          </div>
+        ) : demo ? (
+          <div className="flex flex-col gap-4">
+            <p className="rounded-md bg-muted p-3 text-sm" role="status">
+              {t('login.demoShared', { user: demo.user })}
+            </p>
+            <Button type="button" onClick={() => void enterDemo()}>
+              {t('login.demoEnter')}
             </Button>
           </div>
         ) : (
@@ -148,27 +164,22 @@ export function LoginPage() {
           <li>{t('claim.ruleRelease')}</li>
           <li>{t('claim.ruleName')}</li>
         </ul>
-        {demo ? (
-          // The server fixes the seat length on a demo; the choice would be a lie.
-          <p className="text-sm">{t('claim.demoExpiry', { count: demo.seatMinutes })}</p>
-        ) : (
-          <Label htmlFor="seat-expiry">
-            {t('claim.expiryLabel')}
-            <Select
-              id="seat-expiry"
-              value={expiry}
-              onChange={(e) => setExpiry(Number(e.target.value))}
-            >
-              {SEAT_EXPIRY_OPTIONS.map((minutes) => (
-                <option key={minutes} value={minutes}>
-                  {minutes === 0
-                    ? t('claim.expiryNever')
-                    : t('claim.expiryHours', { count: minutes / 60 })}
-                </option>
-              ))}
-            </Select>
-          </Label>
-        )}
+        <Label htmlFor="seat-expiry">
+          {t('claim.expiryLabel')}
+          <Select
+            id="seat-expiry"
+            value={expiry}
+            onChange={(e) => setExpiry(Number(e.target.value))}
+          >
+            {SEAT_EXPIRY_OPTIONS.map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes === 0
+                  ? t('claim.expiryNever')
+                  : t('claim.expiryHours', { count: minutes / 60 })}
+              </option>
+            ))}
+          </Select>
+        </Label>
       </ConfirmDialog>
     </Card>
   );

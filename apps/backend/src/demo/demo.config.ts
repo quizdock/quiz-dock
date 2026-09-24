@@ -1,14 +1,18 @@
 /**
- * `DEMO_MODE=true` — a public, unattended instance (strangers take the host
- * seat, write quizzes, run sessions). Independent of `AUTH_MODE`: local mode says
- * who may host, demo mode says the instance is open to all and adds guards on
- * top — a short host seat, no media uploads, a periodic reset to a blank state.
- * Read lazily so tests can flip the variable.
+ * `DEMO_MODE=true` — a public, unattended instance. Independent of `AUTH_MODE`:
+ * local mode says who may host, demo mode says the instance is open to all and
+ * adds guards on top — one shared host account, a read-only template catalogue,
+ * no media uploads, a periodic reset to a blank state. Read lazily so tests can
+ * flip the variable.
  */
 export const isDemoMode = (): boolean => process.env.DEMO_MODE === 'true';
 
-/** The seat lasts this long; a claim while holding it renews from now. */
-export const DEMO_SEAT_MINUTES = 5;
+/**
+ * The one host account every visitor shares. Whatever name a request carries, a
+ * demo instance serves this one — visitors see and change the same bank, and
+ * nobody ever waits for a seat.
+ */
+export const DEMO_USER = 'demo_user';
 
 /** The reset runs this often… */
 export const DEMO_RESET_INTERVAL_MS = 60 * 60_000;

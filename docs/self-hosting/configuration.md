@@ -131,16 +131,24 @@ sizes** — nginx refuses anything over 1 MB by default (`client_max_body_size 5
 
 Not to be confused with local mode: `AUTH_MODE` says *who may host* (a name, or an
 OIDC account); `DEMO_MODE` says *the instance is open to strangers* and adds guards on
-top, whatever the auth mode. `DEMO_MODE=true` is meant for `:standalone` with no volume,
-where anyone can take the host seat, write quizzes and run sessions. The guards:
+top. `DEMO_MODE=true` is meant for `:standalone` in local mode with no volume, where
+anyone walks in, writes quizzes and runs sessions. The guards:
 
-- **Host seat: 5 minutes at a time** (local mode only — OIDC has no seat). The expiry
-  choice disappears from the sign-in dialog; the seat can be renewed for another
-  5 minutes from the user menu while held. The server ignores any other duration.
+- **One shared host account, `demo_user`** (local mode). Whatever name a request carries,
+  the server serves that account, which holds the host seat without expiry — nobody
+  waits for a seat, and everyone sees and changes the same bank. Visitors may step on
+  each other's quizzes and sessions; that is accepted, and said on the home page. The
+  sign-in page is a single *Enter the demo* button; the seat controls and logging out
+  never release the seat.
+- **Read-only template catalogue.** The sample templates (France, Taiwan) are seeded
+  and can be previewed and copied — the way back to something playable when someone
+  emptied the shared bank — but sharing and withdrawing are refused
+  (`403 store.demo_disabled`) and their buttons are hidden.
 - **No media uploads** (`403 media.demo_disabled`, also for imported bundles that carry
   media). The upload buttons are hidden.
 - **Hourly reset** to a blank install: users, quizzes, media, session archives, the seat
-  and the live state. A reset waits while a session is being played, at most 3 hours.
+  and the live state — then `demo_user` and its seat are created again. A reset waits
+  while a session is being played, at most 3 hours.
 
 The SPA shows a banner saying so, and the **home page lists these guards in full** —
 someone trying QuizDock there must be able to tell a guard of that instance from a limit
@@ -148,4 +156,4 @@ of the product, so the list ends by saying that a self-hosted instance has none 
 When the app runs from the `:standalone` image it adds that image's own limits to the
 list (application, database and cache in one container); the image announces itself
 through `QUIZDOCK_FLAVOR=standalone`, which it sets on its own — an operator never has to.
-The sample quizzes come back with the next seat claim, as on any fresh install.
+The templates are never touched by the reset: the catalogue is a folder, not a table.

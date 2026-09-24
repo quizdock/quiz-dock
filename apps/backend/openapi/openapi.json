@@ -1538,14 +1538,12 @@
           "demo": {
             "type": "object",
             "properties": {
-              "seatMinutes": {
-                "type": "integer",
-                "minimum": -9007199254740991,
-                "maximum": 9007199254740991
+              "user": {
+                "type": "string"
               }
             },
             "required": [
-              "seatMinutes"
+              "user"
             ],
             "nullable": true
           },

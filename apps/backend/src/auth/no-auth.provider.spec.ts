@@ -41,4 +41,17 @@ describe('NoAuthProvider', () => {
     const b = await provider.authenticate(reqWith({ 'x-local-user': 'Bob' }));
     expect(a?.sub).not.toBe(b?.sub);
   });
+
+  it('sur une démo, tout nom devient le compte partagé', async () => {
+    const env = process.env;
+    process.env = { ...env, DEMO_MODE: 'true' };
+    try {
+      const principal = await provider.authenticate(reqWith({ 'x-local-user': 'Alice' }));
+      expect(principal).toMatchObject({ sub: 'local:demo-user', displayName: 'demo_user' });
+      // Toujours pas d'identité sans en-tête.
+      expect(await provider.authenticate(reqWith({}))).toBeNull();
+    } finally {
+      process.env = env;
+    }
+  });
 });

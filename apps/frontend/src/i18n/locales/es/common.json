@@ -47,7 +47,7 @@
     "template": "Plantilla"
   },
   "demo": {
-    "banner": "Demo pública — todo se borra cada hora; el asiento de anfitrión dura {{count}} min cada vez."
+    "banner": "Demo pública — una sola cuenta de anfitrión compartida por todos los visitantes; todo se borra cada hora."
   },
   "chromiumOnly": "Esta página está pensada para Chrome, Edge u otro navegador Chromium. En este navegador, el envío y la reproducción de vídeos y sonidos pueden fallar."
 }

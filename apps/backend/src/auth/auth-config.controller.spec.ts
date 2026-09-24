@@ -36,11 +36,11 @@ describe('AuthConfigController', () => {
     });
   });
 
-  it('announces the demo guards (seat length) when DEMO_MODE=true', () => {
+  it('announces the shared demo account when DEMO_MODE=true', () => {
     process.env = { ...env, AUTH_MODE: 'none', DEMO_MODE: 'true' };
     expect(controller.config()).toEqual({
       mode: 'none',
-      demo: { seatMinutes: 5 },
+      demo: { user: 'demo_user' },
       oidc: null,
       standalone: false,
     });

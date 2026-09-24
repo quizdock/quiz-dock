@@ -63,9 +63,10 @@ export const LOGO_CANDIDATES: readonly string[] = [
 /** Version of this build, shown to people (the release tag, or "dev"). */
 export const APP_VERSION: string = typeof __APP_VERSION__ === 'undefined' ? 'dev' : __APP_VERSION__;
 
-/** Instance de démo publique (`DEMO_MODE`) : siège court, pas d'upload, reset horaire. */
+/** Instance de démo publique (`DEMO_MODE`) : un compte hôte partagé, pas d'upload, reset horaire. */
 export interface DemoConfig {
-  seatMinutes: number;
+  /** Le compte hôte que tous les visiteurs partagent. */
+  user: string;
 }
 
 let demo: DemoConfig | null = null;

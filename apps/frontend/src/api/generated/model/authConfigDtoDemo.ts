@@ -10,9 +10,5 @@
  * @nullable
  */
 export type AuthConfigDtoDemo = {
-  /**
-     * @minimum -9007199254740991
-     * @maximum 9007199254740991
-     */
-  seatMinutes: number;
+  user: string;
 } | null;

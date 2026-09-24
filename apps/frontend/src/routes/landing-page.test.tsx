@@ -20,14 +20,15 @@ describe('LandingPage — demo limitations', () => {
     expect(screen.queryByText(/Ce que cette démo ne fait pas/i)).not.toBeInTheDocument();
   });
 
-  it('lists the guards in demo mode, with the host seat duration', async () => {
-    configureDemo({ seatMinutes: 5 });
+  it('lists the guards in demo mode, starting with the shared account', async () => {
+    configureDemo({ user: 'demo_user' });
     mockApi([]);
     renderApp('/');
     expect(await screen.findByText(/Ce que cette démo ne fait pas/i)).toBeInTheDocument();
-    expect(screen.getByText(/le siège dure 5 min/i)).toBeInTheDocument();
+    expect(screen.getByText(/chaque visiteur est demo_user/i)).toBeInTheDocument();
+    expect(screen.getByText(/modèles France et Taïwan/i)).toBeInTheDocument();
     expect(screen.getByText(/Aucun envoi de média/i)).toBeInTheDocument();
-    expect(screen.getByText(/effacé chaque heure/i)).toBeInTheDocument();
+    expect(screen.getByText(/effacé chaque heure : quiz/i)).toBeInTheDocument();
     // Not the all-in-one image: that limitation is not this instance's.
     expect(screen.queryByText(/Image tout-en-un/i)).not.toBeInTheDocument();
     // And the point of the whole block: self-hosting has none of these.
@@ -39,7 +40,7 @@ describe('LandingPage — demo limitations', () => {
   });
 
   it('adds the all-in-one image limitation when the backend says so', async () => {
-    configureDemo({ seatMinutes: 5 });
+    configureDemo({ user: 'demo_user' });
     configureStandalone(true);
     mockApi([]);
     renderApp('/');

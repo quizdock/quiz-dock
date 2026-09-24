@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Request } from 'express';
+import { DEMO_USER, isDemoMode } from '../demo/demo.config';
 import { type AuthPrincipal, type AuthProvider, LOCAL_SUB_PREFIX } from './auth-provider';
 
 /** Slug déterministe (minuscule, sans accent, alphanumérique + tirets). */
@@ -19,6 +20,9 @@ export function localSlug(name: string): string {
  * nom → même `sub` ; sans en-tête → non authentifié (401). Le rôle n'est PAS porté par le principal : il est attribué au
  * provisionnement par le **siège d'hôte** (`HostSeatService`) — premier arrivé
  * dans l'espace hôte = `host`, les autres = `player`.
+ *
+ * Sur une démo publique (`DEMO_MODE`), tout nom devient `DEMO_USER` : un seul
+ * compte hôte, partagé par tous les visiteurs.
  */
 @Injectable()
 export class NoAuthProvider implements AuthProvider {
@@ -30,11 +34,16 @@ export class NoAuthProvider implements AuthProvider {
     if (!displayName) {
       return null;
     }
-    return {
-      sub: `${LOCAL_SUB_PREFIX}${localSlug(displayName)}`,
-      displayName,
-      email: null,
-      roles: [],
-    };
+    return localPrincipal(isDemoMode() ? DEMO_USER : displayName);
   }
+}
+
+/** Le principal d'un nom local : même nom → même `sub`. */
+export function localPrincipal(displayName: string): AuthPrincipal {
+  return {
+    sub: `${LOCAL_SUB_PREFIX}${localSlug(displayName)}`,
+    displayName,
+    email: null,
+    roles: [],
+  };
 }

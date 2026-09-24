@@ -9,7 +9,8 @@ import { z } from 'zod';
  */
 export const authConfigSchema = z.object({
   mode: z.enum(['none', 'oidc']),
-  demo: z.object({ seatMinutes: z.number().int() }).nullable(),
+  /** Démo publique : le compte hôte que tous les visiteurs partagent. */
+  demo: z.object({ user: z.string() }).nullable(),
   /** Image tout-en-un (`:standalone`) : base et cache dans le même conteneur. */
   standalone: z.boolean(),
   oidc: z

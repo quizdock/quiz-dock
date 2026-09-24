@@ -3,11 +3,12 @@ import { GameState } from '@quiz-dock/contracts';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { localPrincipal } from '../auth/no-auth.provider';
 import { HostSeatService } from '../users/host-seat.service';
 import {
   DEMO_RESET_INTERVAL_MS,
   DEMO_RESET_MAX_DEFER_MS,
-  DEMO_SEAT_MINUTES,
+  DEMO_USER,
   isDemoMode,
 } from './demo.config';
 
@@ -16,8 +17,8 @@ const GAME_HASH = /^game:\d+$/;
 
 /**
  * Demo instance hygiene: every hour, back to a blank install — users, quizzes,
- * media, sessions, seat, live state. Whatever a visitor typed is gone within
- * the hour. A reset waits while a session is being played (a visitor mid-game
+ * media, sessions, seat, live state — then the shared host account is set up
+ * again, seat included. Whatever a visitor typed is gone within the hour. A reset waits while a session is being played (a visitor mid-game
  * should not lose it), but not forever: past `DEMO_RESET_MAX_DEFER_MS` it runs
  * regardless.
  */
@@ -36,9 +37,10 @@ export class DemoResetService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     if (!isDemoMode()) return;
-    this.log.warn('DEMO_MODE: short host seat, uploads disabled, hourly reset');
-    // A seat taken before the guard (persistent data, or a restart) gets the cap too.
-    await this.seat.capExpiry(DEMO_SEAT_MINUTES);
+    this.log.warn(`DEMO_MODE: shared host account "${DEMO_USER}", uploads disabled, hourly reset`);
+    // A seat taken before the guard (persistent data) goes back to the shared account.
+    await this.seat.forceRelease();
+    await this.seatDemoHost();
     this.timer = setInterval(() => void this.tick(), DEMO_RESET_INTERVAL_MS);
     this.timer.unref();
   }
@@ -88,6 +90,13 @@ export class DemoResetService implements OnModuleInit, OnModuleDestroy {
     ]);
     await this.media.removeAllFiles();
     await this.redis.flushdb();
+    await this.seatDemoHost();
     this.log.log('Demo reset: back to a blank install');
+  }
+
+  /** The shared account, holding the host seat without expiry. */
+  async seatDemoHost(): Promise<void> {
+    const user = await this.seat.provision(localPrincipal(DEMO_USER));
+    await this.seat.claim(user, null);
   }
 }

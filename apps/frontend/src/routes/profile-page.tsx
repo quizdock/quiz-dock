@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SeatCountdown, SeatMenuRow } from '@/components/seat-status';
 import { useMeControllerMe } from '../api/generated/me/me';
 import { useAuth } from '../auth/auth-context';
-import { APP_NAME } from '../config';
+import { APP_NAME, getDemo } from '../config';
 
 /**
  * Le compte, vu par la personne à qui il appartient : qui elle est pour cette
@@ -70,8 +70,9 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Le siège n'existe qu'en mode local, et seul son titulaire le voit. */}
-          {mode === 'none' && user ? (
+          {/* Le siège n'existe qu'en mode local, et seul son titulaire le voit ; sur
+              une démo, il appartient pour de bon au compte partagé. */}
+          {mode === 'none' && user && !getDemo() ? (
             <Card>
               <CardHeader>
                 <CardTitle>{s('profile.seat')}</CardTitle>

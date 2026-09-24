@@ -211,7 +211,6 @@ export class StoreService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
-    if (isDemoMode()) return; // no catalogue on a demo instance (single host, wiped hourly)
     await mkdir(this.dir, { recursive: true });
     this.log.log(`Template catalogue: ${this.dir}`);
     await this.seedSamples();
@@ -254,14 +253,16 @@ export class StoreService implements OnModuleInit {
     this.log.log(`Template catalogue seeded with ${entries.length} sample(s)`);
   }
 
-  /** Refuses everything on a demo instance: one host at a time, nobody to share with. */
+  /**
+   * A demo catalogue is read-only: the sample templates stay put — they are how a
+   * visitor gets something to play when someone else emptied the shared bank.
+   */
   private refuseOnDemo(): void {
     if (isDemoMode()) throw new ForbiddenException('store.demo_disabled');
   }
 
   /** The catalogue, newest first. Reads the folder, which is the only truth. */
   async list(): Promise<ListedEntry[]> {
-    if (isDemoMode()) return [];
     const entries = await this.readIndex();
     return [...entries].sort((a, b) => b.sharedAt.localeCompare(a.sharedAt)).map(served);
   }
@@ -345,7 +346,6 @@ export class StoreService implements OnModuleInit {
    * copy carries nothing of its origin — no back-reference, no update signal.
    */
   async take(ownerId: string, id: string) {
-    this.refuseOnDemo();
     const folder = join(this.dir, this.safeId(id));
     const manifest = await readFile(join(folder, MANIFEST)).catch(() => null);
     if (!manifest) throw new NotFoundException('store.entry_not_found');
@@ -368,7 +368,6 @@ export class StoreService implements OnModuleInit {
    * catalogue, sinon l'aperçu n'aurait que du texte.
    */
   async preview(id: string): Promise<StorePreview> {
-    this.refuseOnDemo();
     const entry = (await this.readIndex()).find((e) => e.id === id);
     const raw = await readFile(join(this.dir, this.safeId(id), MANIFEST), 'utf8').catch(() => null);
     if (!entry || !raw) throw new NotFoundException('store.entry_not_found');
@@ -405,7 +404,6 @@ export class StoreService implements OnModuleInit {
 
   /** Un média du catalogue, servi pour l'aperçu (lecture seule, jamais réécrit). */
   async readMedia(id: string, name: string): Promise<Buffer> {
-    this.refuseOnDemo();
     // Le nom vient de l'URL : il ne doit pas pouvoir remonter hors du dossier.
     if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/.test(name)) {
       throw new BadRequestException('store.invalid_id');

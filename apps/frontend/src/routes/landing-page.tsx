@@ -68,7 +68,7 @@ function DemoLimits() {
   const demo = getDemo();
   if (!demo) return null;
   const limits = [
-    t('landing.demoSeat', { count: demo.seatMinutes }),
+    t('landing.demoShared', { user: demo.user }),
     t('landing.demoMedia'),
     t('landing.demoReset'),
     t('landing.demoSamples'),
