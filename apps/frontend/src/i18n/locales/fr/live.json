@@ -16,7 +16,7 @@
     "shareTitle": "Rejoindre la session {{appName}}",
     "screenButton": "Écran de projection",
     "screenButtonTooltip": "Ouvre le grand écran à vidéoprojeter (vue spectateur)",
-    "captureLabel": "Enregistrer toutes les réponses (audit / certification)",
+    "captureLabel": "Enregistrer toutes les réponses",
     "captureHint": "ⓘ Les participants en seront informés au démarrage. Conserve le détail des réponses de chaque participant pour le suivi individuel.",
     "trackingLabel": "Suivi individuel",
     "trackingHint": "ⓘ Activé, les résultats sont enregistrés sous le compte de chaque participant (classement archivé, historique). Désactivé, aucun résultat individuel n’est conservé — seuls les résultats d’ensemble du groupe. La partie en direct ne change pas.",

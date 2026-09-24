@@ -16,7 +16,7 @@
     "shareTitle": "Join the {{appName}} session",
     "screenButton": "Projection screen",
     "screenButtonTooltip": "Opens the large screen to project (spectator view)",
-    "captureLabel": "Record all answers (audit / certification)",
+    "captureLabel": "Record all answers",
     "captureHint": "ⓘ Players will be informed at startup. Keeps each player's answer details for individual tracking.",
     "trackingLabel": "Personalised tracking",
     "trackingHint": "ⓘ On, results are recorded under each participant’s account (archived leaderboard, history). Off, no individual result is kept — only the group’s overall results. The live game is unaffected.",

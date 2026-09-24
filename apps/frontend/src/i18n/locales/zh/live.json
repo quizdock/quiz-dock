@@ -16,7 +16,7 @@
     "shareTitle": "加入 {{appName}} 会话",
     "screenButton": "投影屏幕",
     "screenButtonTooltip": "打开用于投影的大屏幕（观众视图）",
-    "captureLabel": "记录所有回答（审计 / 认证）",
+    "captureLabel": "记录所有回答",
     "captureHint": "ⓘ 开始时将通知玩家。保留每位玩家的回答详情以便个人追踪。",
     "trackingLabel": "个人追踪",
     "trackingHint": "ⓘ 开启时，成绩会记录在每位参与者的账号下（归档排行榜、历史）。关闭时，不保存任何个人成绩，只保留小组的整体结果。直播中的会话不受影响。",

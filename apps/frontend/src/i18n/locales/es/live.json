@@ -16,7 +16,7 @@
     "shareTitle": "Únete a la sesión de {{appName}}",
     "screenButton": "Pantalla de proyección",
     "screenButtonTooltip": "Abre la pantalla grande para proyectar (vista de espectador)",
-    "captureLabel": "Registrar todas las respuestas (auditoría / certificación)",
+    "captureLabel": "Registrar todas las respuestas",
     "captureHint": "ⓘ Se informará a los jugadores al iniciar. Conserva el detalle de las respuestas de cada jugador para el seguimiento individual.",
     "trackingLabel": "Seguimiento individual",
     "trackingHint": "ⓘ Activado, los resultados se registran en la cuenta de cada participante (clasificación archivada, historial). Desactivado, no se conserva ningún resultado individual: solo los resultados globales del grupo. La sesión en directo no cambia.",
