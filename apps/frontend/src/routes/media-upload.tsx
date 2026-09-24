@@ -97,13 +97,19 @@ export function MediaUpload({
     setChecking(true);
     abort.current = new AbortController();
     try {
-      const { file, prepared, notices } = await readyForUpload(picked, kind, {
+      const ready = await readyForUpload(picked, kind, {
         onProgress: setProgress,
         signal: abort.current.signal,
       });
+      // The same original was uploaded before: reused, nothing converted nor sent.
+      if ('reuse' in ready) {
+        await onPick(ready.reuse);
+        return;
+      }
+      const { file, prepared, notices, sourceSha256 } = ready;
       setProgress(null);
       setNotices(notices);
-      const res = await upload.mutateAsync({ data: { file, ...prepared.fields } });
+      const res = await upload.mutateAsync({ data: { file, ...prepared.fields, sourceSha256 } });
       onChange(res.data.mediaId, {
         kind: prepared.kind,
         durationMs: prepared.fields.durationMs,

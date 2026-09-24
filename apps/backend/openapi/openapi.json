@@ -777,6 +777,10 @@
                   },
                   "peakDbfs": {
                     "type": "number"
+                  },
+                  "sourceSha256": {
+                    "type": "string",
+                    "description": "SHA-256 of the original file, before conversion."
                   }
                 },
                 "required": [
@@ -845,6 +849,63 @@
                   "items": {
                     "$ref": "#/components/schemas/MediaLibraryItemDto"
                   }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/source/{sha256}": {
+      "get": {
+        "operationId": "MediaController_fromSource",
+        "parameters": [
+          {
+            "name": "sha256",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "image",
+                "video",
+                "audio"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLibraryItemDto"
                 }
               }
             }
@@ -1194,6 +1255,9 @@
                   },
                   "peakDbfs": {
                     "type": "number"
+                  },
+                  "sourceSha256": {
+                    "type": "string"
                   }
                 },
                 "required": [

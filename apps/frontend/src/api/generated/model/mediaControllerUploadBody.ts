@@ -15,4 +15,6 @@ export type MediaControllerUploadBody = {
   origin?: MediaControllerUploadBodyOrigin;
   loudnessLufs?: number;
   peakDbfs?: number;
+  /** SHA-256 of the original file, before conversion. */
+  sourceSha256?: string;
 };

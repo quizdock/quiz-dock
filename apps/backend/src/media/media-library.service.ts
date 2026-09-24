@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { type MediaKind, Prisma } from '@prisma/client';
+import { type MediaAsset, type MediaKind, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** One entry of an author's library: a file, whatever number of their media use it. */
@@ -148,22 +148,32 @@ export class MediaLibraryService {
       orderBy: { createdAt: 'desc' },
       take: LIST_MAX,
     });
-    return rows.map((m) => ({
-      id: m.id,
-      url: m.url,
-      kind: m.kind,
-      name: m.name,
-      alt: m.alt,
-      credit: m.credit,
-      durationMs: m.durationMs,
-      peaks: m.peaks,
-      width: m.width,
-      height: m.height,
-      sizeBytes: Number(m.sizeBytes),
-      createdAt: m.createdAt.toISOString(),
-      usedIn: 0,
-      inHistory: false,
-    }));
+    return rows.map(toItem);
+  }
+
+  /**
+   * A media the author can reuse instead of uploading the same original again
+   * (#62 follow-up): one of theirs, or one of the instance's, made from the file
+   * whose SHA-256 the editor computed before converting it. Never another
+   * author's: knowing a file's hash must not hand over their media.
+   */
+  async fromSource(
+    ownerId: string,
+    sourceSha256: string,
+    kind?: MediaKind,
+  ): Promise<MediaLibraryItem | null> {
+    const media = await this.prisma.mediaAsset.findFirst({
+      where: {
+        sourceSha256,
+        // A film in the sound slot keeps its sound only: the same original, another media.
+        ...(kind && KINDS.includes(kind) ? { kind } : {}),
+        blobSha256: { not: null },
+        OR: [{ ownerId, instance: false }, { instance: true }],
+      },
+      // The author's own first (their alt text comes with it), the newest.
+      orderBy: [{ instance: 'asc' }, { createdAt: 'desc' }],
+    });
+    return media ? toItem(media) : null;
   }
 
   /**
@@ -218,4 +228,24 @@ export class MediaLibraryService {
       return DEFAULT_LINKS;
     }
   }
+}
+
+/** A media row as the library lists it (no usage counted: a single media, not a file). */
+function toItem(m: MediaAsset): MediaLibraryItem {
+  return {
+    id: m.id,
+    url: m.url,
+    kind: m.kind,
+    name: m.name,
+    alt: m.alt,
+    credit: m.credit,
+    durationMs: m.durationMs,
+    peaks: m.peaks,
+    width: m.width,
+    height: m.height,
+    sizeBytes: Number(m.sizeBytes),
+    createdAt: m.createdAt.toISOString(),
+    usedIn: 0,
+    inHistory: false,
+  };
 }

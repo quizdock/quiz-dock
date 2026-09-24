@@ -72,6 +72,12 @@ export function uploadName(raw: string | undefined): string | null {
   return decoded.slice(0, NAME_MAX);
 }
 
+/** The SHA-256 of the original file the editor sends along, when it is one. */
+function sourceSha256Of(fields: Record<string, unknown>): string | null {
+  const value = fields.sourceSha256;
+  return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value) ? value : null;
+}
+
 /** How long an unused media may wait for the form it was uploaded from. */
 export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 
@@ -190,6 +196,7 @@ export class MediaService implements OnModuleInit {
           name: uploadName(file.originalname),
           ...(mediaDimensions(file.buffer, sniffed.mime) ?? {}),
           instance: options.instance ?? false,
+          sourceSha256: sourceSha256Of(fields),
           ...meta,
         },
       });
@@ -396,6 +403,7 @@ export class MediaService implements OnModuleInit {
         peakDbfs: source.peakDbfs,
         width: source.width,
         height: source.height,
+        sourceSha256: source.sourceSha256,
       },
     });
     const url = `/api/v1/media/${created.id}`;

@@ -26,7 +26,7 @@ export interface PreparedUpload {
 }
 
 /** The bytes of a file (`FileReader` where `Blob.arrayBuffer` is missing, as in jsdom). */
-function readBytes(file: Blob): Promise<Uint8Array> {
+export function readBytes(file: Blob): Promise<Uint8Array> {
   if (typeof file.arrayBuffer === 'function') {
     return file.arrayBuffer().then((b) => new Uint8Array(b));
   }

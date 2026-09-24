@@ -62,6 +62,7 @@ export class MediaAdminController {
         peaks: { type: 'string' },
         loudnessLufs: { type: 'number' },
         peakDbfs: { type: 'number' },
+        sourceSha256: { type: 'string' },
       },
       required: ['file'],
     },

@@ -266,4 +266,59 @@ describe('MediaUpload', () => {
       expect(onChange).toHaveBeenCalledWith('m-copy', expect.objectContaining({ kind: 'image' })),
     );
   });
+
+  it('reuses an original uploaded before instead of converting and sending it again', async () => {
+    const known = {
+      id: 'm-film',
+      url: '/api/v1/media/m-film',
+      kind: 'video',
+      name: 'scooters.mp4',
+      alt: null,
+      credit: 'Tze Chiang Hao, CC BY-SA 4.0',
+      durationMs: 12_000,
+      peaks: [],
+      width: 894,
+      height: 602,
+      sizeBytes: 2_400_000,
+      createdAt: '2026-09-24T10:00:00.000Z',
+      usedIn: 1,
+      inHistory: false,
+    };
+    const fetchMock = mockApi([
+      { method: 'GET', path: /\/media\/source\/[0-9a-f]{64}\?kind=video/, body: known },
+      {
+        method: 'POST',
+        path: '/media/m-film/reuse',
+        status: 201,
+        body: { mediaId: 'm-again', url: '/api/v1/media/m-again', kind: 'video' },
+      },
+    ]);
+    vi.mocked(convertMedia).mockClear();
+    const queryClient = new QueryClient();
+    const onChange = vi.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MediaUpload value={null} onChange={onChange} kind="video" />
+      </QueryClientProvider>,
+    );
+    fireEvent.change(screen.getByLabelText('Fichier média'), {
+      target: {
+        files: [new File([new Uint8Array([1, 2, 3])], 'scooters.webm', { type: 'video/webm' })],
+      },
+    });
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith(
+        'm-again',
+        expect.objectContaining({ kind: 'video', durationMs: 12_000 }),
+      ),
+    );
+    expect(convertMedia).not.toHaveBeenCalled();
+    // Nothing was sent but the reuse.
+    const posts = fetchMock.mock.calls.filter(
+      ([, opts]) => (opts as RequestInit | undefined)?.method === 'POST',
+    );
+    expect(posts.map(([url]) => String(url))).toEqual([
+      expect.stringContaining('/media/m-film/reuse'),
+    ]);
+  });
 });

@@ -78,6 +78,9 @@ if(mediaAdminControllerAddUploadBody.loudnessLufs !== undefined) {
 if(mediaAdminControllerAddUploadBody.peakDbfs !== undefined) {
  formData.append(`peakDbfs`, mediaAdminControllerAddUploadBody.peakDbfs.toString())
  }
+if(mediaAdminControllerAddUploadBody.sourceSha256 !== undefined) {
+ formData.append(`sourceSha256`, mediaAdminControllerAddUploadBody.sourceSha256);
+ }
 
   return customFetch<mediaAdminControllerAddUploadResponse>(getMediaAdminControllerAddUploadUrl(),
   {

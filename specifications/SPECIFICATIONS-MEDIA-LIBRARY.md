@@ -70,8 +70,14 @@ Special cases:
 2. The browser probes, converts (progress bar, cancel button, the tab must stay open), then measures on the
    **converted** file what it measures today: the waveform and the loudness (BS.1770, SPECIFICATIONS-MEDIA §2) —
    on the original when the browser can encode the result but not decode it (Firefox without the system's AAC).
-3. It uploads the file — **always**, even when the server may hold the same content already: a "send the hash
-   first" shortcut would hand a file to anyone who knows its hash. The bandwidth of a duplicate is the price.
+3. It uploads the file — even when the server may hold the same content already: a "send the hash first" shortcut
+   over the whole instance would hand a file to anyone who knows its hash. **One exception**, found before the
+   first release with the library: a video re-encoded never gives the same bytes twice, so the converted file's
+   hash could not recognise the same video uploaded again. The browser hashes the **original** file picked
+   (`media_asset.source_sha256`, sent along) and first asks whether **the author's own media or the global ones**
+   hold one made from it (`GET /media/source/:sha256?kind=`): if so, that one is reused (a new media on the same
+   file), nothing converted nor sent. Another author's media are never looked at, so knowing a hash hands over
+   nothing one could not already see. Originals over 512 MiB are not hashed.
 4. The server **does not trust the client**: it sniffs the container and codecs, checks the kind, the size
    (`MEDIA_MAX_BYTES`) and the dimensions, and computes the SHA-256 itself.
 5. It stores the file unless that content is there already (§4), creates the media row and returns it.

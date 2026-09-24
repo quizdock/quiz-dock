@@ -5,6 +5,7 @@ import {
   Get,
   Headers,
   HttpCode,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -79,6 +80,27 @@ export class MediaController {
     return this.library.instanceMedia(query);
   }
 
+  /**
+   * A media of the caller's — or of the instance's — made from the same original
+   * file (its SHA-256, computed by the editor before converting): reused instead
+   * of converting and uploading it again. 404 when there is none.
+   */
+  @Get('source/:sha256')
+  @AllowManager()
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MediaLibraryItemDto })
+  async fromSource(
+    @CurrentUser() user: User,
+    @Param('sha256') sha256: string,
+    @Query() query: MediaLibraryQueryDto,
+  ): Promise<MediaLibraryItemDto> {
+    const item = /^[0-9a-f]{64}$/.test(sha256)
+      ? await this.library.fromSource(user.id, sha256, query.kind)
+      : null;
+    if (!item) throw new NotFoundException('media.not_found');
+    return item;
+  }
+
   /** The free libraries the editor points to (`MEDIA_LIBRARY_LINKS`). */
   @Get('links')
   @ApiBearerAuth()
@@ -112,6 +134,10 @@ export class MediaController {
         origin: { type: 'string', enum: ['upload', 'recording'] },
         loudnessLufs: { type: 'number' },
         peakDbfs: { type: 'number' },
+        sourceSha256: {
+          type: 'string',
+          description: 'SHA-256 of the original file, before conversion.',
+        },
       },
       required: ['file'],
     },

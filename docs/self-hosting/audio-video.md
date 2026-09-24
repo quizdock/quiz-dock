@@ -94,6 +94,9 @@ gives (a media id, a SHA-256) are touched. With several backend instances, one o
 
 Files are stored once per content, named after their SHA-256: the same image or
 sound uploaded twice, or brought back by importing a quiz, takes the room of one.
+An original an author uploads again — a video, whose conversion never gives the
+same bytes twice — is recognised before it is converted and reused as it is;
+this looks at the author's own media and the global ones, never another's.
 After an upgrade from 0.7, the first pass moves the existing files under their
 new names (`older files moved to shared storage` in the log); the media are
 served throughout.

@@ -5,7 +5,7 @@ import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/r
 import StarterKit from '@tiptap/starter-kit';
 import { Bold, Code, ImagePlus, Italic, List, ListOrdered, SquareCode } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useMediaControllerUpload } from '../api/generated/media/media';
+import { useMediaControllerReuse, useMediaControllerUpload } from '../api/generated/media/media';
 import { useTranslation } from 'react-i18next';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -258,13 +258,20 @@ function ToolButton({
 function ImageButton({ editor }: { editor: Editor }) {
   const { t } = useTranslation('common');
   const upload = useMediaControllerUpload();
+  const reuse = useMediaControllerReuse();
   const input = useRef<HTMLInputElement>(null);
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      // Converted like any image (WebP, 1920 px at most) before it goes up.
+      // Converted like any image (WebP, 1920 px at most) before it goes up — or, the same
+      // original uploaded before, reused as it is.
       const ready = await readyForUpload(file, 'image');
-      const res = await upload.mutateAsync({ data: { file: ready.file } });
+      const res =
+        'reuse' in ready
+          ? await reuse.mutateAsync({ id: ready.reuse.id })
+          : await upload.mutateAsync({
+              data: { file: ready.file, sourceSha256: ready.sourceSha256 },
+            });
       editor.chain().focus().setImage({ src: res.data.url }).run();
     } catch {
       // The upload endpoint reports its own error; nothing is inserted.

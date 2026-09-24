@@ -12,4 +12,5 @@ export type MediaAdminControllerAddUploadBody = {
   peaks?: string;
   loudnessLufs?: number;
   peakDbfs?: number;
+  sourceSha256?: string;
 };

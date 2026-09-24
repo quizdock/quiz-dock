@@ -152,6 +152,51 @@ describe('Instance media and dimensions (integration)', () => {
     expect(overview.byOwner.map((o) => o.ownerId)).toContain('global');
   });
 
+  it("recognises an original uploaded again, among the author's media and the global ones only", async () => {
+    const source = 'a'.repeat(64);
+    const withSource = (ownerId: string, name: string, instance = false) => {
+      const buffer = png(64, 64, name);
+      return media.upload(
+        ownerId,
+        { buffer, mimetype: 'image/png', size: buffer.length, originalname: name },
+        { sourceSha256: source },
+        { instance },
+      );
+    };
+    const mine = await withSource(hostId, 'clip.png');
+    expect((await library.fromSource(hostId, source))?.id).toBe(mine.mediaId);
+    // The same original as another kind (a film's sound) is another media.
+    expect(await library.fromSource(hostId, source, 'audio')).toBeNull();
+    expect((await library.fromSource(hostId, source, 'image'))?.id).toBe(mine.mediaId);
+    // Another author knowing the hash gets nothing of it.
+    expect(await library.fromSource(adminId, source)).toBeNull();
+    // A reuse carries the original's hash along.
+    const copy = await media.reuse(hostId, mine.mediaId);
+    expect(
+      (await prisma.mediaAsset.findUniqueOrThrow({ where: { id: copy.mediaId } })).sourceSha256,
+    ).toBe(source);
+
+    // The instance's media are everyone's to recognise.
+    const other = 'b'.repeat(64);
+    const buffer = png(32, 32, 'global');
+    const global = await media.upload(
+      adminId,
+      { buffer, mimetype: 'image/png', size: buffer.length, originalname: 'global.png' },
+      { sourceSha256: other },
+      { instance: true },
+    );
+    expect((await library.fromSource(hostId, other))?.id).toBe(global.mediaId);
+    // Nonsense is not stored.
+    const bad = await media.upload(
+      hostId,
+      { buffer: png(8, 8, 'bad'), mimetype: 'image/png', size: 40, originalname: 'bad.png' },
+      { sourceSha256: 'not-a-hash' },
+    );
+    expect(
+      (await prisma.mediaAsset.findUniqueOrThrow({ where: { id: bad.mediaId } })).sourceSha256,
+    ).toBeNull();
+  });
+
   it('never sweeps the instance media, and withdrawing one leaves the hosts their copies', async () => {
     const a = await upload(adminId, 'jingle.png', png(10, 10, 'jingle'), true);
     await prisma.mediaAsset.update({

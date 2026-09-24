@@ -372,6 +372,10 @@ model MediaAsset {
   /// Displayed size of an image or a video, read from the bytes (rotation applied).
   width        Int?
   height       Int?
+  /// SHA-256 of the file the author picked, before the browser converted it: a video
+  /// re-encoded never gives the same bytes twice, the original does. Recognising it
+  /// is limited to the author's own media and the instance's.
+  sourceSha256 String?      @map("source_sha256") @db.Char(64)
   /// One of the instance's media (#62): provided by an administrator to every host, never swept.
   /// Hosts reuse it as a media of their own on the same file; the quizzes never point at it.
   instance     Boolean      @default(false)
@@ -404,6 +408,7 @@ model MediaAsset {
 
   @@index([ownerId])
   @@index([blobSha256])
+  @@index([ownerId, sourceSha256])
   @@map("media_asset")
 }
 
