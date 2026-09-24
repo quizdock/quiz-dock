@@ -25,8 +25,11 @@ interface UploadFile {
   size: number;
 }
 
-/** How long an unused video or sound may wait for the form it was uploaded from. */
-const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
+/** How long an unused media may wait for the form it was uploaded from. */
+export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
+
+/** A stored file is named after its media id (a ULID); anything else in the directory is not ours. */
+const MEDIA_FILE = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 
 /** Bornes du texte alternatif : une phrase, pas un paragraphe. */
 const ALT_MAX = 300;
@@ -58,10 +61,6 @@ export class MediaService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await mkdir(this.dir, { recursive: true });
     this.logger.log(`Répertoire des médias : ${this.dir}`);
-    // Whatever an earlier run left behind (a session that held a media, a crash).
-    void this.sweepOrphans().catch((err: Error) =>
-      this.logger.warn(`Media sweep skipped: ${err.message}`),
-    );
   }
 
   /**
@@ -211,8 +210,8 @@ export class MediaService implements OnModuleInit {
    * question or quiz) — row and file — unless something still uses them: a
    * duplicated quiz shares its media, a transferred one may too, and a session
    * being played runs on a frozen snapshot that must keep its files. What is
-   * kept is caught by the next sweep once nothing holds it any more. Never
-   * fails the save that called it.
+   * kept is caught by the scheduled sweep (MediaJanitor) once nothing holds it
+   * any more. Never fails the save that called it.
    */
   async releaseUnused(ids: (string | null | undefined)[]): Promise<void> {
     const unique = [...new Set(ids.filter((id): id is string => !!id))];
@@ -224,24 +223,27 @@ export class MediaService implements OnModuleInit {
           await this.deleteAsset(id);
         }
       }
-      await this.sweepOrphans();
     } catch (err) {
       this.logger.warn(`Media clean-up skipped: ${(err as Error).message}`);
     }
   }
 
   /**
-   * Videos and sounds that nothing uses and that were uploaded long enough ago
-   * not to be waiting in an open editor: an upload whose form was abandoned,
-   * or a media kept earlier because a session was still playing it.
+   * Media of any kind that nothing uses and that were uploaded long enough ago
+   * not to be waiting in an open editor: an upload whose form was abandoned, an
+   * image taken out of a text, or a media kept earlier because a session was
+   * still playing it.
    */
   async sweepOrphans(olderThanMs = ORPHAN_GRACE_MS): Promise<number> {
     const orphans = await this.prisma.mediaAsset.findMany({
       where: {
-        kind: { in: ['video', 'audio'] },
         createdAt: { lt: new Date(Date.now() - olderThanMs) },
+        coverForQuizzes: { none: {} },
         questionVisuals: { none: {} },
         questionAudios: { none: {} },
+        questionBackgrounds: { none: {} },
+        slides: { none: {} },
+        options: { none: {} },
       },
       select: { id: true },
     });
@@ -249,8 +251,7 @@ export class MediaService implements OnModuleInit {
     const live = await this.liveSnapshots();
     let removed = 0;
     for (const { id } of orphans) {
-      // Any upload may be a video or a sound now (a Markdown image button, a background):
-      // only the full reference check can tell nothing else holds it.
+      // The slots are ruled out above; texts, archives and live sessions still need the full check.
       if (live.some((snap) => snap.includes(id)) || (await this.isReferenced(id))) continue;
       await this.deleteAsset(id);
       removed++;
@@ -258,7 +259,48 @@ export class MediaService implements OnModuleInit {
     return removed;
   }
 
-  /** Every place a media id can be used: slots, options, slides, covers, inline Markdown. */
+  /**
+   * Files in the media directory no media row points to, left long enough not
+   * to be an upload in flight: the old sounds the audio migration dropped the
+   * rows of, a delete whose unlink failed. Only files named like a media id
+   * are considered — anything else an operator put there is left alone. A
+   * database with no media at all is taken for a misconfiguration (an empty
+   * database pointed at a full volume) rather than a reason to empty the volume.
+   */
+  async purgeStrayFiles(olderThanMs = ORPHAN_GRACE_MS): Promise<number> {
+    const names = (await readdir(this.dir)).filter((n) => MEDIA_FILE.test(n));
+    if (names.length === 0) return 0;
+    if ((await this.prisma.mediaAsset.count()) === 0) {
+      this.logger.warn(
+        `${names.length} files in ${this.dir} but no media in the database: stray files kept`,
+      );
+      return 0;
+    }
+    const known = new Set(
+      (
+        await this.prisma.mediaAsset.findMany({
+          where: { id: { in: names } },
+          select: { id: true },
+        })
+      ).map((a) => a.id),
+    );
+    const cutoff = Date.now() - olderThanMs;
+    let removed = 0;
+    for (const name of names.filter((n) => !known.has(n))) {
+      const path = join(this.dir, name);
+      const info = await stat(path).catch(() => null);
+      if (!info?.isFile() || info.mtimeMs >= cutoff) continue;
+      await unlink(path).catch(() => undefined);
+      removed++;
+    }
+    return removed;
+  }
+
+  /**
+   * Every place a media id can be used: slots, options, slides, covers, inline
+   * Markdown — and the archived sessions, whose frozen questions the results
+   * still show.
+   */
   private async isReferenced(id: string): Promise<boolean> {
     const direct = await this.prisma.mediaAsset.findUnique({
       where: { id },
@@ -286,6 +328,7 @@ export class MediaService implements OnModuleInit {
         OR EXISTS (SELECT 1 FROM "question"
                    WHERE "prompt" LIKE ${pattern} OR "answer_explanation" LIKE ${pattern})
         OR EXISTS (SELECT 1 FROM "answer_option" WHERE "text" LIKE ${pattern})
+        OR EXISTS (SELECT 1 FROM "game_session_log" WHERE "quiz_snapshot"::text LIKE ${pattern})
       ) AS used`;
     return row?.used ?? true;
   }

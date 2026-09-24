@@ -26,9 +26,11 @@ A video brings its own sound, so it excludes the sound slot.
 
 ## 2. Phase 1 — the decisions it settled
 
-- **Old audio**: the foreign keys are nulled and the rows deleted; the files stay on disk (purged later, §8).
+- **Old audio**: the foreign keys are nulled and the rows deleted; the files stay on disk (purged by the hourly clean-up
+  job since #50).
 - **Orphans**: a media file no reference holds any more is deleted server-side after a 24 h grace period
-  (duplicating a quiz shares its media ids); a running game protects its media.
+  (duplicating a quiz shares its media ids); a running game and an archived session protect its media. An hourly
+  job does it since #50.
 - **Playback**: the media starts with `question:start` and follows the host's pause. Autoplay happens in the
   **projection window only**; phones show the image alone. Peer-to-peer delivery is ruled out (same Wi-Fi access point).
 - **Length**: a question lasts at least as long as its media plus a tail (`media_tail_s`, 3 s by default).
