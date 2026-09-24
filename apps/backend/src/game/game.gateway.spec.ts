@@ -6,7 +6,9 @@ import { AppModule } from '../app.module';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
+import { RedisService } from '../redis/redis.service';
 import { GameService } from './game.service';
+import { PIN_ATTEMPTS_MAX } from './pin-attempts';
 
 /**
  * Test d'INTÉGRATION : vraie connexion socket.io-client → gateway /game.
@@ -1831,6 +1833,36 @@ describe('GameGateway (intégration socket)', () => {
         participantAccess: 'account',
       });
     }, 15_000);
+
+    it('makes an address wait after too many wrong PINs, for one window', async () => {
+      const redis = app.get(RedisService);
+      // Every socket of this suite shares one address: start clean, leave clean.
+      const clear = async () => {
+        const keys = await redis.keys('pin-attempts:*');
+        if (keys.length) await redis.del(...keys);
+      };
+      await clear();
+      try {
+        const guest = connect();
+        // Every event that takes a PIN without authentication counts.
+        expect((await errorOf(guest, 'spectator:join', { pin: '000000' })).code).toBe(
+          'session.not_found',
+        );
+        for (let i = 1; i < PIN_ATTEMPTS_MAX; i++) {
+          expect((await errorOf(guest, 'player:peek', { pin: '000000' })).code).toBe(
+            'session.not_found',
+          );
+        }
+        const host = connect({ localUser: 'Animateur' });
+        const { pin } = await host.emitWithAck('host:create', { quizId });
+        // Right PIN or not, the address now waits for the end of the window.
+        expect((await errorOf(guest, 'player:peek', { pin })).code).toBe('pin.too_many_attempts');
+        const [key] = await redis.keys('pin-attempts:*');
+        expect(await redis.ttl(key)).toBeGreaterThan(0);
+      } finally {
+        await clear();
+      }
+    }, 20_000);
 
     it('closes the game to newcomers, not to those already in', async () => {
       const host = connect({ localUser: 'Animateur' });

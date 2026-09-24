@@ -306,7 +306,7 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 | Event | Payload | Recipients |
 |-------|---------|---------------|
 | `game:created` | `{ pin }` | the host |
-| `notice` | `{ fullCapture, personalTracking, pickOwnName }` | a player (on joining, before anything is collected — its wording follows the two first flags) |
+| `notice` | `{ fullCapture, personalTracking, pickOwnName, participantAccess, joinLocked }` | the room (a player on joining, before anything is collected — its wording follows the first flags and the access; the console reflects the access and the lock) |
 | `player:joined` | `{ playerId, nickname, playerCount }` | the host + the players (the lobby list) |
 | `player:left` | `{ playerId, playerCount }` | the room |
 | `game:state` | `{ state, questionIndex, totalQuestions }` | the room |

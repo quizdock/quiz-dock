@@ -33,7 +33,13 @@ export class PinAttempts {
       return await attempt();
     } catch (err) {
       if (toErrorResponse(err).body.code === 'session.not_found') {
-        await this.redis.multi().incr(key(ip)).expire(key(ip), PIN_ATTEMPTS_WINDOW_S, 'NX').exec();
+        // The first failure opens the window (SET … NX with its expiry, any Redis
+        // version); INCR keeps that expiry, so a key never outlives its window.
+        await this.redis
+          .multi()
+          .set(key(ip), '0', 'EX', PIN_ATTEMPTS_WINDOW_S, 'NX')
+          .incr(key(ip))
+          .exec();
       }
       throw err;
     }

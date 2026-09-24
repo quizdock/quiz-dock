@@ -139,7 +139,9 @@ Whatever the access, the host can **close the game to new participants** from th
 lobby (those already in come back after a lost connection) and remove one, and each
 address may try 30 wrong PINs a minute — generous, since a whole room shares one
 public address. Behind a reverse proxy on a private address, the client's address is
-read from `X-Forwarded-For`.
+read from `X-Forwarded-For`. Published directly with no proxy in front, where Docker
+hides the client's address (Docker Desktop, the userland proxy), every connection looks
+private and that header could be forged: put a reverse proxy in front that sets it.
 
 ## The display name (OIDC)
 
