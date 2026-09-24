@@ -52,6 +52,17 @@ Media are served with byte ranges (`206 Partial Content`), which Safari requires
 to play a video, and cached for good (a media never changes under its id): a
 cache or proxy in front may keep them.
 
+## Clean-up
+
+Every hour, and once at start-up, the backend deletes the media nothing uses
+any more — images, videos and sounds alike — once they are a day old: an upload
+whose form was abandoned, a media replaced in a question, an image taken out of
+a text. A media stays as long as a quiz, a session being played or an **archived
+session** (its results show the questions as they were) still refers to it. The
+same pass deletes the files in `MEDIA_DIR` no media points to any more, such as
+the sounds left behind by the 0.7 audio migration; only files named like a media
+id are touched. With several backend instances, one of them runs each pass.
+
 ## Loudness levelling
 
 When a sound or a video is added, the editor measures its loudness

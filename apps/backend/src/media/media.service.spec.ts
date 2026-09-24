@@ -5,6 +5,7 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
@@ -33,6 +34,7 @@ function makePrisma() {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
       findMany: jest.fn(async () => [] as { id: string }[]),
+      count: jest.fn(async () => 1),
     },
     $queryRaw: jest.fn(async () => [{ used: false }]),
   };
@@ -235,23 +237,41 @@ describe('MediaService', () => {
       expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'm1' } });
     });
 
-    it('sweeps the videos and sounds nothing took, once their editor had time', async () => {
+    it('only releases what the save named: the rest is the scheduled sweep', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      await service.releaseUnused(['m1']);
+      expect(prisma.mediaAsset.findMany).not.toHaveBeenCalled();
+    });
+
+    it('keeps a media an archived session still shows', async () => {
+      prisma.mediaAsset.findUnique.mockResolvedValue(unused);
+      prisma.$queryRaw.mockResolvedValue([{ used: true }]);
+      await service.releaseUnused(['m1']);
+      const [sql] = prisma.$queryRaw.mock.calls[0] as unknown as [TemplateStringsArray];
+      expect(sql.join('?')).toContain('"game_session_log"');
+      expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
+    });
+
+    it('sweeps media of every kind nothing took, once their editor had time', async () => {
       prisma.mediaAsset.findMany.mockResolvedValue([{ id: 'old' }]);
       prisma.mediaAsset.findUnique.mockResolvedValue(unused);
       await expect(service.sweepOrphans()).resolves.toBe(1);
-      expect(prisma.mediaAsset.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            kind: { in: ['video', 'audio'] },
-            questionVisuals: { none: {} },
-            questionAudios: { none: {} },
-          }),
-        }),
-      );
+      const { where } = (
+        prisma.mediaAsset.findMany.mock.calls[0] as unknown as [{ where: Record<string, unknown> }]
+      )[0];
+      expect(where).not.toHaveProperty('kind');
+      expect(where).toMatchObject({
+        coverForQuizzes: { none: {} },
+        questionVisuals: { none: {} },
+        questionAudios: { none: {} },
+        questionBackgrounds: { none: {} },
+        slides: { none: {} },
+        options: { none: {} },
+      });
       expect(prisma.mediaAsset.delete).toHaveBeenCalledWith({ where: { id: 'old' } });
     });
 
-    it('spares a video or sound held elsewhere than a question slot (a background, Markdown)', async () => {
+    it('spares a media the full check finds held (a slot, Markdown)', async () => {
       prisma.mediaAsset.findMany.mockResolvedValue([{ id: 'bg' }]);
       prisma.mediaAsset.findUnique.mockResolvedValue({
         _count: { ...unused._count, questionBackgrounds: 1 },
@@ -263,6 +283,48 @@ describe('MediaService', () => {
     it('never fails the save that called it', async () => {
       prisma.mediaAsset.findUnique.mockRejectedValue(new Error('db down'));
       await expect(service.releaseUnused(['m1'])).resolves.toBeUndefined();
+    });
+  });
+
+  describe('purgeStrayFiles', () => {
+    const fs = jest.requireActual<typeof import('node:fs/promises')>('node:fs/promises');
+    const KNOWN = '01K0000000000000000000KNWN';
+    const STRAY = '01K0000000000000000000STRY';
+    const FRESH = '01K0000000000000000000FRSH';
+    let dir: string;
+    let env: NodeJS.ProcessEnv;
+
+    beforeEach(async () => {
+      dir = await fs.mkdtemp(join(tmpdir(), 'media-'));
+      env = process.env;
+      process.env = { ...env, MEDIA_DIR: dir };
+      service = new MediaService(
+        prisma as unknown as PrismaService,
+        redis as unknown as RedisService,
+      );
+      const old = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+      for (const name of [KNOWN, STRAY, 'README.txt']) {
+        await fs.writeFile(join(dir, name), 'x');
+        await fs.utimes(join(dir, name), old, old);
+      }
+      await fs.writeFile(join(dir, FRESH), 'x');
+      prisma.mediaAsset.findMany.mockResolvedValue([{ id: KNOWN }]);
+    });
+
+    afterEach(async () => {
+      process.env = env;
+      await fs.rm(dir, { recursive: true, force: true });
+    });
+
+    it('deletes old files no media row points to, and nothing else', async () => {
+      await expect(service.purgeStrayFiles()).resolves.toBe(1);
+      expect((await fs.readdir(dir)).sort()).toEqual([FRESH, KNOWN, 'README.txt'].sort());
+    });
+
+    it('keeps every file when the database holds no media at all', async () => {
+      prisma.mediaAsset.count.mockResolvedValue(0);
+      await expect(service.purgeStrayFiles()).resolves.toBe(0);
+      expect(await fs.readdir(dir)).toHaveLength(4);
     });
   });
 });
