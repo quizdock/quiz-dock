@@ -2,7 +2,8 @@
   "auth": {
     "required": "Autenticación requerida.",
     "host_required": "Se requiere el rol de anfitrión.",
-    "host_only": "Acción reservada a los anfitriones: un administrador gestiona la instancia, no presenta."
+    "host_only": "Acción reservada a los anfitriones: un administrador gestiona la instancia, no presenta.",
+    "admin_required": "Se requiere el rol de administrador."
   },
   "host": {
     "auth_required": "Se requiere autenticación del anfitrión.",
@@ -61,7 +62,8 @@
     "cannot_convert_audio": "Este navegador no puede convertir este sonido a AAC. Prueba otro navegador o conviértelo antes con Audacity (audacityteam.org).",
     "too_long": "Demasiado largo para caber en el límite de {{maxMb}} MB de este tipo de medio, incluso comprimido. Acórtalo antes.",
     "canceled": "Conversión cancelada.",
-    "in_use": "Este medio aún lo usa un quiz o una partida: quítalo primero de ahí."
+    "in_use": "Este medio aún lo usa un quiz o una partida: quítalo primero de ahí.",
+    "playing": "Una partida está reproduciendo este medio: vuelve a intentarlo cuando termine."
   },
   "import": {
     "file_missing": "Falta el archivo (campo “file”).",

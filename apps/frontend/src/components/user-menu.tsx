@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router';
-import { ChevronDown, LogOut, UserRound } from 'lucide-react';
+import { ChevronDown, HardDrive, LogOut, UserRound } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useRole } from '../auth/use-role';
 
 /**
  * Topbar identity of the host, at the far right: the name opens a small menu
@@ -19,6 +20,7 @@ export function UserMenu({
   children?: ReactNode;
 }) {
   const { t } = useTranslation('auth');
+  const { isManager } = useRole();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -62,6 +64,17 @@ export function UserMenu({
           <p className="text-muted-foreground truncate px-2 py-1.5 text-xs sm:hidden">{user}</p>
           {children ? <div className="flex flex-col gap-1 px-2 py-1.5">{children}</div> : null}
           {children ? <div className="bg-border my-1 h-px" /> : null}
+          {isManager ? (
+            <Link
+              to="/admin/media"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+            >
+              <HardDrive className="size-4" />
+              {t('nav.instanceMedia')}
+            </Link>
+          ) : null}
           <Link
             to="/profile"
             role="menuitem"

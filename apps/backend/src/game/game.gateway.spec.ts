@@ -330,6 +330,14 @@ describe('GameGateway (intégration socket)', () => {
     host.emit('host:end', { pin });
   }, 15_000);
 
+  it("keeps the instance's media administration from a host (#54)", async () => {
+    const res = await fetch(url.replace(/\/game$/, '/admin/media/overview'), {
+      headers: { 'X-Local-User': 'Animateur' },
+    });
+    expect(res.status).toBe(403);
+    expect(await res.json()).toMatchObject({ message: 'auth.admin_required' });
+  });
+
   it('keeps an uploaded file name as the author typed it, accents and CJK included (#53)', async () => {
     // Through the real route: multer reads multipart file names as latin1.
     const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x23, 0x35]);

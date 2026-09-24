@@ -34,6 +34,7 @@ function makeGuard(opts: {
   isPublic?: boolean;
   allowAnyRole?: boolean;
   allowManager?: boolean;
+  managerOnly?: boolean;
   authResult?: AuthPrincipal | null;
   user?: User;
 }) {
@@ -47,6 +48,7 @@ function makeGuard(opts: {
     getAllAndOverride: jest.fn((key: string) => {
       if (key === 'isPublic') return opts.isPublic ?? false;
       if (key === 'allowManager') return opts.allowManager ?? false;
+      if (key === 'managerOnly') return opts.managerOnly ?? false;
       return opts.allowAnyRole ?? false;
     }),
   } as unknown as Reflector;
@@ -103,6 +105,17 @@ describe('AuthGuard', () => {
 
     const managed = makeGuard({ authResult: principal, user: adminUser, allowManager: true });
     await expect(managed.guard.canActivate(makeContext({ headers: {} }))).resolves.toBe(true);
+  });
+
+  it("a route of the instance's administration takes the admin role only, not a host", async () => {
+    const host = makeGuard({ authResult: principal, user: fakeUser, managerOnly: true });
+    await expect(host.guard.canActivate(makeContext({ headers: {} }))).rejects.toThrow(
+      'auth.admin_required',
+    );
+    const admin = makeGuard({ authResult: principal, user: adminUser, managerOnly: true });
+    const req: Partial<Request> & { user?: User } = { headers: {} };
+    await expect(admin.guard.canActivate(makeContext(req))).resolves.toBe(true);
+    expect(req.user).toBe(adminUser);
   });
 
   it('une route de gestion reste fermée à un participant', async () => {

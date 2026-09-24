@@ -334,6 +334,21 @@ export class MediaService implements OnModuleInit {
     return { mediaId: created.id, url, kind: created.kind };
   }
 
+  /** Whether any of these media is played by a session right now. */
+  async playing(ids: string[]): Promise<boolean> {
+    const live = await this.liveSnapshots();
+    return ids.some((id) => live.some((snap) => snap.includes(id)));
+  }
+
+  /**
+   * Deletes these media whatever uses them — an administrator's decision
+   * (moderation): the quiz slots pointing at them are emptied by the database,
+   * a text that shows one no longer does; their files go with the last of them.
+   */
+  async deleteForGood(ids: string[]): Promise<void> {
+    for (const id of ids) await this.deleteAsset(id);
+  }
+
   /** Whether a media is held by a quiz, an archived session or a session being played. */
   async inUse(id: string): Promise<boolean> {
     const live = await this.liveSnapshots();
@@ -490,21 +505,41 @@ export class MediaService implements OnModuleInit {
    * file's date, past any grace period).
    */
   async purgeStrayFiles(olderThanMs = ORPHAN_GRACE_MS): Promise<number> {
+    const { files, guard } = await this.strayFiles();
+    if (guard === 'empty_database') {
+      this.logger.warn(`Files in ${this.dir} but no media in the database: stray files kept`);
+    } else if (guard === 'database_older') {
+      this.logger.warn(
+        `Media without their file (database older than ${this.dir}?): stored files kept`,
+      );
+    }
+    const cutoff = Date.now() - olderThanMs;
+    let removed = 0;
+    for (const file of files.filter((f) => f.mtimeMs < cutoff)) {
+      await unlink(join(this.dir, file.name)).catch(() => undefined);
+      removed++;
+    }
+    return removed;
+  }
+
+  /**
+   * The files `purgeStrayFiles` would consider, whatever their age, and what
+   * holds the purge back: nothing, an empty database (`empty_database`: nothing
+   * listed), or media from before sharing that lost their file
+   * (`database_older`: stored files left out).
+   */
+  async strayFiles(): Promise<{
+    files: Array<{ name: string; bytes: number; mtimeMs: number }>;
+    guard: 'empty_database' | 'database_older' | null;
+  }> {
     let names = (await readdir(this.dir)).filter(
       (n) => BLOB_FILE.test(n) || PARTIAL_FILE.test(n) || LEGACY_FILE.test(n),
     );
-    if (names.length === 0) return 0;
-    if ((await this.prisma.mediaAsset.count()) === 0) {
-      this.logger.warn(
-        `${names.length} files in ${this.dir} but no media in the database: stray files kept`,
-      );
-      return 0;
-    }
-    const orphanedLegacy = await this.legacyMediaWithoutFile(names);
-    if (orphanedLegacy > 0) {
-      this.logger.warn(
-        `${orphanedLegacy} media without their file (database older than ${this.dir}?): stored files kept`,
-      );
+    if (names.length === 0) return { files: [], guard: null };
+    if ((await this.prisma.mediaAsset.count()) === 0) return { files: [], guard: 'empty_database' };
+    let guard: 'database_older' | null = null;
+    if ((await this.legacyMediaWithoutFile(names)) > 0) {
+      guard = 'database_older';
       names = names.filter((n) => !BLOB_FILE.test(n));
     }
     const [blobs, legacy] = await Promise.all([
@@ -519,16 +554,12 @@ export class MediaService implements OnModuleInit {
       }),
     ]);
     const known = new Set([...blobs.map((b) => b.sha256), ...legacy.map((a) => a.id)]);
-    const cutoff = Date.now() - olderThanMs;
-    let removed = 0;
+    const files = [];
     for (const name of names.filter((n) => !known.has(n))) {
-      const path = join(this.dir, name);
-      const info = await stat(path).catch(() => null);
-      if (!info?.isFile() || info.mtimeMs >= cutoff) continue;
-      await unlink(path).catch(() => undefined);
-      removed++;
+      const info = await stat(join(this.dir, name)).catch(() => null);
+      if (info?.isFile()) files.push({ name, bytes: info.size, mtimeMs: info.mtimeMs });
     }
-    return removed;
+    return { files, guard };
   }
 
   /** Media not adopted yet whose file under their own id is missing too. */

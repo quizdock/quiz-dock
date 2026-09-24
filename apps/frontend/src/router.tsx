@@ -17,6 +17,7 @@ import { TemplatePage } from './routes/template-page';
 import { TemplatesPage } from './routes/templates-page';
 import { FeedbackPage } from './routes/feedback-page';
 import { RootLayout } from './routes/root-layout';
+import { AdminMediaPage } from './routes/admin-media-page';
 
 const requireAuth = () => {
   if (!isAuthenticated()) {
@@ -234,6 +235,14 @@ export const joinWithPinRoute = createRoute({
   component: PlayerPage,
 });
 
+/** The instance's media, for administrators (#54). */
+export const adminMediaRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/media',
+  beforeLoad: requireAuth,
+  component: AdminMediaPage,
+});
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -243,6 +252,7 @@ export const routeTree = rootRoute.addChildren([
   templateRoute,
   liveRoute,
   profileRoute,
+  adminMediaRoute,
   editorRoute,
   previewRoute,
   sessionsRoute,

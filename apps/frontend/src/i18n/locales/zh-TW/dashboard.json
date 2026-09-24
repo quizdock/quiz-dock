@@ -58,5 +58,76 @@
   "ownedBy": "來自 {{name}}",
   "view": "檢視",
   "browseTemplates": "瀏覽範本庫",
-  "browseTemplatesHint": "現成的測驗，可據此建立自己的；不主動取用則不會進入你的題庫。"
+  "browseTemplatesHint": "現成的測驗，可據此建立自己的；不主動取用則不會進入你的題庫。",
+  "mediaAdmin": {
+    "title": "執行個體媒體",
+    "adminOnly": "此頁面僅供管理員使用。",
+    "loading": "載入中…",
+    "kind": {
+      "image": "圖片",
+      "video": "影片",
+      "audio": "聲音"
+    },
+    "disk": {
+      "title": "磁碟",
+      "files_one": "{{count}} 個檔案",
+      "files_other": "{{count}} 個檔案",
+      "byOwner": "依擁有者：",
+      "legacy_one": "{{count}} 個舊格式檔案（{{mimes}}），{{size}}",
+      "legacy_other": "{{count}} 個舊格式檔案（{{mimes}}），{{size}}"
+    },
+    "cleanup": {
+      "title": "清理",
+      "orphans_one": "{{count}} 個未使用的媒體（{{size}}）",
+      "orphans_other": "{{count}} 個未使用的媒體（{{size}}）",
+      "waiting_one": "— 其中 {{count}} 個仍在一天寬限期內。",
+      "waiting_other": "— 其中 {{count}} 個仍在一天寬限期內。",
+      "stray_one": "磁碟上 {{count}} 個沒有對應媒體的檔案（{{size}}）",
+      "stray_other": "磁碟上 {{count}} 個沒有對應媒體的檔案（{{size}}）",
+      "guard": {
+        "empty_database": "資料庫中沒有媒體，但磁碟區有檔案：不會清除任何內容。請確認資料庫與媒體磁碟區相符。",
+        "database_older": "部分媒體遺失了檔案：資料庫似乎比媒體磁碟區舊（單獨還原？）。在兩者一致之前，儲存的檔案都會保留。"
+      },
+      "lastRun": "上次清理：{{ago}}",
+      "neverRun": "後端啟動後尚未清理。",
+      "runNow": "立即清理",
+      "done": "完成：移動 {{adopted}} 個，刪除 {{media}} 個媒體、{{blobs}} 個檔案與 {{files}} 個孤立檔案。",
+      "busy": "已有清理正在進行：請稍後再試。",
+      "failed": "無法執行清理。"
+    },
+    "files": {
+      "title": "檔案",
+      "kind": "類型",
+      "allKinds": "所有類型",
+      "owner": "擁有者",
+      "allOwners": "所有擁有者",
+      "sort": "排序",
+      "bySize": "最大優先",
+      "byUsage": "最常用優先",
+      "byDate": "最新優先",
+      "legacyOnly": "僅舊格式",
+      "search": "依檔名搜尋",
+      "none": "沒有符合的檔案。",
+      "legacy": "舊格式",
+      "usedIn_one": "用於 {{count}} 個測驗",
+      "usedIn_other": "用於 {{count}} 個測驗",
+      "inHistory": "僅用於過往結果",
+      "unused": "未使用",
+      "delete": "刪除 {{name}}"
+    },
+    "delete": {
+      "title": "刪除這個檔案？",
+      "confirm": "刪除",
+      "usedBy": "使用者：",
+      "quiz": "「{{title}}」（{{owner}}）",
+      "sessions_one": "{{count}} 場已封存遊戲",
+      "sessions_other": "{{count}} 場已封存遊戲",
+      "unused": "沒有任何內容使用它。",
+      "playing": "有遊戲正在播放它：遊戲結束前無法刪除。",
+      "failed": "無法刪除這個檔案。",
+      "quizzesLose": "相關問題將失去這個媒體。",
+      "resultsLose": "過往結果不再顯示它。",
+      "everyCopy": "這個檔案的所有副本都會刪除，不論擁有者是誰。"
+    }
+  }
 }

@@ -5,8 +5,25 @@ import { MediaService } from './media.service';
 /** How often the media directory is cleaned. */
 export const MEDIA_SWEEP_INTERVAL_MS = 60 * 60 * 1000;
 
-/** One run at a time across backend instances sharing the media volume. */
+/** One scheduled pass an hour across backend instances sharing the media volume. */
 export const MEDIA_SWEEP_LOCK = 'media:sweep-lock';
+/** Held while a pass runs, scheduled or asked for: never two at once. */
+export const MEDIA_SWEEP_RUNNING = 'media:sweep-running';
+/** The last pass, for the administration page. */
+export const MEDIA_SWEEP_LAST = 'media:sweep-last';
+const RUNNING_TTL_MS = 30 * 60 * 1000;
+
+export interface SweepResult {
+  adopted: number;
+  media: number;
+  blobs: number;
+  files: number;
+}
+
+export interface LastSweep extends SweepResult {
+  /** ISO time the pass ended. */
+  at: string;
+}
 
 /**
  * The media housekeeping job: every hour, and once at start-up for whatever an
@@ -47,17 +64,27 @@ export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /** One pass, unless another instance holds the lock. Never throws. */
-  async run(): Promise<{ adopted: number; media: number; blobs: number; files: number } | null> {
+  /**
+   * One pass, unless another instance had this hour's or one is running. Asked
+   * for by an administrator (`now`), it skips the hourly turn but still waits
+   * for no other pass to run. Never throws.
+   */
+  async run(now = false): Promise<SweepResult | null> {
+    let running = false;
     try {
-      const won = await this.redis.set(
-        MEDIA_SWEEP_LOCK,
-        '1',
-        'PX',
-        MEDIA_SWEEP_INTERVAL_MS - 60_000,
-        'NX',
-      );
-      if (!won) return null;
+      if (!now) {
+        const turn = await this.redis.set(
+          MEDIA_SWEEP_LOCK,
+          '1',
+          'PX',
+          MEDIA_SWEEP_INTERVAL_MS - 60_000,
+          'NX',
+        );
+        if (!turn) return null;
+      }
+      running =
+        (await this.redis.set(MEDIA_SWEEP_RUNNING, '1', 'PX', RUNNING_TTL_MS, 'NX')) !== null;
+      if (!running) return null;
       const adopted = await this.adoptLegacyFiles();
       const media = await this.media.sweepOrphans();
       const blobs = await this.media.sweepUnusedBlobs();
@@ -68,10 +95,21 @@ export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
           `Media sweep: ${media} unused media, ${blobs} unused files, ${files} stray files deleted`,
         );
       }
-      return { adopted, media, blobs, files };
+      const result = { adopted, media, blobs, files };
+      const last: LastSweep = { ...result, at: new Date().toISOString() };
+      await this.redis.set(MEDIA_SWEEP_LAST, JSON.stringify(last));
+      return result;
     } catch (err) {
       this.log.warn(`Media sweep skipped: ${(err as Error).message}`);
       return null;
+    } finally {
+      if (running) await this.redis.del(MEDIA_SWEEP_RUNNING).catch(() => undefined);
     }
+  }
+
+  /** The last pass that ran, if any. */
+  async last(): Promise<LastSweep | null> {
+    const raw = await this.redis.get(MEDIA_SWEEP_LAST).catch(() => null);
+    return raw ? (JSON.parse(raw) as LastSweep) : null;
   }
 }
