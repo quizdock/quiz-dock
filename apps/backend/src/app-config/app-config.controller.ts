@@ -28,7 +28,9 @@ export class AppConfigController {
     const esc = (s: string): string => s.replace(/[\\"]/g, '\\$&');
     // Vide (le défaut) = le SPA cherche le logo dans `branding/`, tous formats web.
     const logoUrl = process.env.APP_LOGO_URL ?? '';
-    return `window.__APP_CONFIG__ = { appName: "${esc(appName)}", lang: "${esc(lang)}", logoUrl: "${esc(logoUrl)}" };\n`;
+    // The home page's feedback links: empty = the QuizDock repository, `none` = hidden.
+    const feedbackUrl = process.env.APP_FEEDBACK_URL ?? '';
+    return `window.__APP_CONFIG__ = { appName: "${esc(appName)}", lang: "${esc(lang)}", logoUrl: "${esc(logoUrl)}", feedbackUrl: "${esc(feedbackUrl)}" };\n`;
   }
 
   /**

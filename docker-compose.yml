@@ -112,6 +112,7 @@ services:
       APP_LANG: ${APP_LANG:-en}
       # Vide = logo cherché dans `branding/` (tous formats web), sinon celui de l'image.
       APP_LOGO_URL: ${APP_LOGO_URL:-}
+      APP_FEEDBACK_URL: ${APP_FEEDBACK_URL:-}
     depends_on:
       backend:
         condition: service_healthy

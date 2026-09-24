@@ -1,0 +1,26 @@
+name: Feature idea
+description: Something missing, or that could work better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: The need
+      description: What you are trying to do, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How you manage today
+      description: Workarounds, other tools.
+  - type: input
+    id: version
+    attributes:
+      label: QuizDock version

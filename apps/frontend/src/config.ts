@@ -20,6 +20,11 @@ export interface AppConfig {
   overrideCssUrl: string;
   /** Langue de l'UI pour cette instance (`APP_LANG`). Une seule par déploiement. */
   lang: string;
+  /**
+   * Where the home page's feedback links lead (`APP_FEEDBACK_URL`): empty = the
+   * QuizDock repository, another URL = the operator's own, `none` = no links.
+   */
+  feedbackUrl?: string;
 }
 
 const DEFAULTS: AppConfig = {

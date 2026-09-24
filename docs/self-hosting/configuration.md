@@ -47,6 +47,7 @@ Where you set them depends on how you run it:
 | `APP_NAME` | `QuizDock` | Brand name shown in the header, tab title and share text. |
 | `APP_LANG` | `en` | UI language for the instance: `en` · `fr` · `es` · `zh` · `zh-TW`. One per deployment (no browser detection). |
 | `APP_LOGO_URL` | — | Logo served from somewhere else (a CDN, a path outside `branding/`). Empty by default, which is the usual setup: the logo is then looked up in the mounted `branding/` folder. |
+| `APP_FEEDBACK_URL` | — | Where the home page's *Report a bug · Suggest a feature · Fix a translation · Ask a question* links lead. Empty: the QuizDock repository, its forms filled in with the version, the browser and the language. Another GitHub repository (`https://github.com/owner/repo`): the same forms there — copy `.github/ISSUE_TEMPLATE/` into it. Any other address: a single *Send feedback* link. `none`: no links. |
 
 How to replace the logo and the stylesheet: **[branding](branding.md)**.
 

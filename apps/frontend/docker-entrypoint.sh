@@ -11,9 +11,12 @@ escaped=$(printf '%s' "$APP_NAME" | sed 's/"/\\"/g')
 escaped_lang=$(printf '%s' "$APP_LANG" | sed 's/"/\\"/g')
 # Vide (le défaut) = le SPA cherche le logo dans `branding/`, tous formats web.
 escaped_logo=$(printf '%s' "${APP_LOGO_URL:-}" | sed 's/"/\\"/g')
+# Where the home page's "report a bug / suggest…" links lead: empty = the QuizDock
+# repository, another URL = the operator's, `none` = no such links.
+escaped_feedback=$(printf '%s' "${APP_FEEDBACK_URL:-}" | sed 's/"/\\"/g')
 
 cat > /usr/share/nginx/html/config.js <<EOF
-window.__APP_CONFIG__ = { appName: "${escaped}", lang: "${escaped_lang}", logoUrl: "${escaped_logo}" };
+window.__APP_CONFIG__ = { appName: "${escaped}", lang: "${escaped_lang}", logoUrl: "${escaped_logo}", feedbackUrl: "${escaped_feedback}" };
 EOF
 
 echo "[entrypoint] config.js généré (appName=\"${APP_NAME}\", lang=\"${APP_LANG}\")"
