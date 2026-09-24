@@ -44,6 +44,7 @@ import {
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Disclosure } from '@/components/ui/disclosure';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -331,10 +332,10 @@ function DisplayTimeField({
   const { t } = useTranslation('editor');
   const mode = value === null ? 'default' : value === 0 ? 'manual' : 'custom';
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-        {t('slideForm.displayLegend')}
-      </legend>
+    <Disclosure
+      title={t('slideForm.displayLegend')}
+      value={mode === 'custom' ? `${value} s` : t(`slideForm.display.${mode}`)}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <Select
           aria-label={t('slideForm.displayLegend')}
@@ -361,7 +362,7 @@ function DisplayTimeField({
         ) : null}
       </div>
       <p className="text-muted-foreground text-xs">{t('slideForm.displayHint')}</p>
-    </fieldset>
+    </Disclosure>
   );
 }
 

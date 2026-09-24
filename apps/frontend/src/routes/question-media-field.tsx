@@ -1,5 +1,5 @@
 import type { Audio, QuestionMedia } from '@quiz-dock/contracts';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { mediaControllerDescribe } from '../api/generated/media/media';
@@ -14,9 +14,12 @@ import { MediaUpload, type UploadedMedia } from './media-upload';
 export function QuestionMediaField({
   value,
   onChange,
+  children,
 }: {
   value: QuestionMedia;
   onChange: (media: QuestionMedia) => void;
+  /** The settings that only mean something with these media, under the slots. */
+  children?: ReactNode;
 }) {
   const { t } = useTranslation('editor');
   const { visual, audio } = value;
@@ -42,8 +45,10 @@ export function QuestionMediaField({
   };
 
   return (
-    <fieldset className="flex flex-col gap-3 rounded-md border p-3">
-      <legend className="px-1 text-sm font-medium">{t('media.slotsLegend')}</legend>
+    <fieldset className="flex flex-col gap-3">
+      <legend className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
+        {t('media.slotsLegend')}
+      </legend>
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium">{t('media.visualLabel')}</span>
@@ -99,6 +104,7 @@ export function QuestionMediaField({
           />
         )}
       </div>
+      {children}
     </fieldset>
   );
 }

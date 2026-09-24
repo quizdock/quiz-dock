@@ -35,6 +35,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Disclosure } from '@/components/ui/disclosure';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-store';
@@ -288,6 +289,11 @@ export function QuestionForm({
   const mediaMs = useMediaDurationMs(media);
   // What the session will really give this question (the server computes the same).
   const listenFirst = useStore(form.store, (s) => s.values.timerAfterMedia);
+  // Read on the folded lines (playback, points).
+  const audioTarget = useStore(form.store, (s) => s.values.audioTarget);
+  const waveformSize = useStore(form.store, (s) => s.values.waveformSize);
+  const pointsMode = useStore(form.store, (s) => s.values.pointsMode);
+  const scoring = useStore(form.store, (s) => s.values.scoring);
   const canListenFirst = mediaHasSound(media) && mediaMs !== null;
   const stretchedS =
     canListenFirst && listenFirst
@@ -398,140 +404,145 @@ export function QuestionForm({
         )}
       </form.Field>
 
-      <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)} />
-      {canListenFirst ? (
-        <form.Field name="timerAfterMedia">
-          {(field) => (
-            <label
-              className="flex items-start gap-2 text-sm"
-              title={t('questionForm.listenFirstHint')}
-            >
-              <input
-                type="checkbox"
-                className="accent-primary mt-0.5"
-                checked={field.state.value}
-                onChange={(e) => field.handleChange(e.target.checked)}
-              />
-              <span>
-                <span className="font-medium">{t('questionForm.listenFirstLabel')}</span>
-                <span className="text-muted-foreground block">
-                  {t('questionForm.listenFirstHint')}
-                </span>
-              </span>
-            </label>
-          )}
-        </form.Field>
-      ) : null}
-      {media.audio ? (
-        <form.Field name="waveformSize">
-          {(field) => (
-            <div className="flex flex-col gap-1.5">
-              <Label title={t('questionForm.waveformSizeHint')}>
-                {t('questionForm.waveformSizeLabel')}
-                <Select
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value as WaveformSize)}
-                >
-                  {WAVEFORM_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {t(`questionForm.waveformSize.${size}`)}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-              {/* As the screens will draw it, at their type size. */}
-              <Waveform
-                peaks={media.audio?.peaks ?? []}
-                progress={0}
-                size={field.state.value}
-                className="text-base"
-                label={t('questionForm.waveformPreview')}
-              />
-            </div>
-          )}
-        </form.Field>
-      ) : null}
-      {mediaHasSound(media) ? (
-        <form.Field name="audioTarget">
-          {(field) => (
-            <Label title={t('questionForm.audioTargetHint')}>
-              {t('questionForm.audioTargetLabel')}
-              <Select
-                value={field.state.value ?? ''}
-                onChange={(e) =>
-                  field.handleChange(e.target.value === '' ? null : (e.target.value as AudioTarget))
-                }
+      {/* Le média et ce qui ne vaut que pour lui : écouter d'abord, puis, repliés,
+          la forme d'onde et qui entend le son. */}
+      <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)}>
+        {canListenFirst ? (
+          <form.Field name="timerAfterMedia">
+            {(field) => (
+              <label
+                className="flex items-start gap-2 text-sm"
+                title={t('questionForm.listenFirstHint')}
               >
-                <option value="">{t('questionForm.audioTargetDefault')}</option>
-                {AUDIO_TARGETS.map((target) => (
-                  <option key={target} value={target}>
-                    {t(`settings.audioTarget.${target}`)}
-                  </option>
-                ))}
-              </Select>
-            </Label>
-          )}
-        </form.Field>
-      ) : null}
+                <input
+                  type="checkbox"
+                  className="accent-primary mt-0.5"
+                  checked={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.checked)}
+                />
+                <span>
+                  <span className="font-medium">{t('questionForm.listenFirstLabel')}</span>
+                  <span className="text-muted-foreground block">
+                    {t('questionForm.listenFirstHint')}
+                  </span>
+                </span>
+              </label>
+            )}
+          </form.Field>
+        ) : null}
+        {mediaHasSound(media) ? (
+          <Disclosure
+            title={t('questionForm.playbackLegend')}
+            value={[
+              audioTarget
+                ? t(`settings.audioTarget.${audioTarget}`)
+                : t('questionForm.audioTargetDefault'),
+              media.audio ? t(`questionForm.waveformSize.${waveformSize}`) : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          >
+            <form.Field name="audioTarget">
+              {(field) => (
+                <Label title={t('questionForm.audioTargetHint')}>
+                  {t('questionForm.audioTargetLabel')}
+                  <Select
+                    value={field.state.value ?? ''}
+                    onChange={(e) =>
+                      field.handleChange(
+                        e.target.value === '' ? null : (e.target.value as AudioTarget),
+                      )
+                    }
+                  >
+                    <option value="">{t('questionForm.audioTargetDefault')}</option>
+                    {AUDIO_TARGETS.map((target) => (
+                      <option key={target} value={target}>
+                        {t(`settings.audioTarget.${target}`)}
+                      </option>
+                    ))}
+                  </Select>
+                </Label>
+              )}
+            </form.Field>
+            {media.audio ? (
+              <form.Field name="waveformSize">
+                {(field) => (
+                  <div className="flex flex-col gap-1.5">
+                    <Label title={t('questionForm.waveformSizeHint')}>
+                      {t('questionForm.waveformSizeLabel')}
+                      <Select
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value as WaveformSize)}
+                      >
+                        {WAVEFORM_SIZES.map((size) => (
+                          <option key={size} value={size}>
+                            {t(`questionForm.waveformSize.${size}`)}
+                          </option>
+                        ))}
+                      </Select>
+                    </Label>
+                    {/* As the screens will draw it, at their type size. */}
+                    <Waveform
+                      peaks={media.audio?.peaks ?? []}
+                      progress={0}
+                      size={field.state.value}
+                      className="text-base"
+                      label={t('questionForm.waveformPreview')}
+                    />
+                  </div>
+                )}
+              </form.Field>
+            ) : null}
+          </Disclosure>
+        ) : null}
+      </QuestionMediaField>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <form.Field name="timeLimitS">
-          {(field) => (
-            <Label>
-              {t('questionForm.timeLimitLabel')}
-              <Input
-                type="number"
-                min={5}
-                max={120}
-                value={field.state.value}
-                onChange={(e) => field.handleChange(Number(e.target.value))}
-              />
-            </Label>
-          )}
-        </form.Field>
-        <form.Field name="revealDelayS">
-          {(field) => (
-            <Label title={t('questionForm.revealDelayHint')}>
-              {t('questionForm.revealDelayLabel')}
-              <Input
-                type="number"
-                min={1}
-                max={300}
-                placeholder={t('questionForm.revealDelayPlaceholder')}
-                value={field.state.value ?? ''}
-                onChange={(e) =>
-                  field.handleChange(e.target.value === '' ? null : Number(e.target.value))
-                }
-              />
-            </Label>
-          )}
-        </form.Field>
-        {type !== 'poll' && (
-          <form.Field name="pointsMode">
+      {/* Le temps reste en vue : c'est ce qu'on règle le plus, et la note qui
+          l'explique (média plus long, écoute d'abord) le suit. */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className={LEGEND}>{t('questionForm.timingLegend')}</legend>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <form.Field name="timeLimitS">
             {(field) => (
               <Label>
-                {t('questionForm.pointsLabel')}
-                <Select
+                {t('questionForm.timeLimitLabel')}
+                <Input
+                  type="number"
+                  min={5}
+                  max={120}
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value as FormValues['pointsMode'])}
-                >
-                  <option value="standard">{t('questionForm.pointsMode.standard')}</option>
-                  <option value="double">{t('questionForm.pointsMode.double')}</option>
-                  <option value="fixed">{t('questionForm.pointsMode.fixed')}</option>
-                </Select>
+                  onChange={(e) => field.handleChange(Number(e.target.value))}
+                />
               </Label>
             )}
           </form.Field>
-        )}
+          <form.Field name="revealDelayS">
+            {(field) => (
+              <Label title={t('questionForm.revealDelayHint')}>
+                {t('questionForm.revealDelayLabel')}
+                <Input
+                  type="number"
+                  min={1}
+                  max={300}
+                  placeholder={t('questionForm.revealDelayPlaceholder')}
+                  value={field.state.value ?? ''}
+                  onChange={(e) =>
+                    field.handleChange(e.target.value === '' ? null : Number(e.target.value))
+                  }
+                />
+              </Label>
+            )}
+          </form.Field>
+        </div>
         {canListenFirst && listenFirst ? (
-          <p className="text-muted-foreground col-span-full text-sm" role="note">
+          <p className="text-muted-foreground text-sm" role="note">
             {t('questionForm.listenFirstTime', {
               media: Math.ceil((mediaMs ?? 0) / 1000),
               time: timeLimitS,
             })}
           </p>
         ) : stretchedS > timeLimitS ? (
-          <p className="text-muted-foreground col-span-full text-sm" role="note">
+          <p className="text-muted-foreground text-sm" role="note">
             {t('questionForm.stretchedTime', {
               media: Math.ceil((mediaMs ?? 0) / 1000),
               total: stretchedS,
@@ -539,33 +550,11 @@ export function QuestionForm({
             })}
           </p>
         ) : null}
-        {SCORING_BY_TYPE[type].length > 0 && (
-          <form.Field name="scoring">
-            {(field) => (
-              <Label title={t(`questionForm.scoringHelp.${type}`)}>
-                {t('questionForm.scoringLabel')}
-                <Select
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value as Scoring)}
-                >
-                  <option value="standard">{t(`questionForm.scoring.${type}.standard`)}</option>
-                  {SCORING_BY_TYPE[type].map((v) => (
-                    <option key={v} value={v}>
-                      {t(`questionForm.scoring.${type}.${v}`)}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-            )}
-          </form.Field>
-        )}
-      </div>
+      </fieldset>
 
       {OPTION_TYPES.includes(type) && (
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-            {t('questionForm.optionsLegend')}
-          </legend>
+          <legend className={LEGEND}>{t('questionForm.optionsLegend')}</legend>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -662,9 +651,7 @@ export function QuestionForm({
 
       {type === 'text_input' && (
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase">
-            {t('questionForm.acceptedAnswersLegend')}
-          </legend>
+          <legend className={LEGEND}>{t('questionForm.acceptedAnswersLegend')}</legend>
           {answers.map((a, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input
@@ -739,20 +726,76 @@ export function QuestionForm({
         </div>
       )}
 
+      {/* Le barème par défaut convient presque toujours : il se lit replié. */}
+      {type !== 'poll' && (
+        <Disclosure
+          title={t('questionForm.pointsLegend')}
+          value={[
+            t(`questionForm.pointsMode.${pointsMode}`, { defaultValue: pointsMode }),
+            SCORING_BY_TYPE[type].length > 0
+              ? t(
+                  `questionForm.scoring.${type}.${SCORING_BY_TYPE[type].includes(scoring) ? scoring : 'standard'}`,
+                )
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <form.Field name="pointsMode">
+              {(field) => (
+                <Label>
+                  {t('questionForm.pointsLabel')}
+                  <Select
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value as FormValues['pointsMode'])}
+                  >
+                    <option value="standard">{t('questionForm.pointsMode.standard')}</option>
+                    <option value="double">{t('questionForm.pointsMode.double')}</option>
+                    <option value="fixed">{t('questionForm.pointsMode.fixed')}</option>
+                  </Select>
+                </Label>
+              )}
+            </form.Field>
+            {SCORING_BY_TYPE[type].length > 0 && (
+              <form.Field name="scoring">
+                {(field) => (
+                  <Label title={t(`questionForm.scoringHelp.${type}`)}>
+                    {t('questionForm.scoringLabel')}
+                    <Select
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value as Scoring)}
+                    >
+                      <option value="standard">{t(`questionForm.scoring.${type}.standard`)}</option>
+                      {SCORING_BY_TYPE[type].map((v) => (
+                        <option key={v} value={v}>
+                          {t(`questionForm.scoring.${type}.${v}`)}
+                        </option>
+                      ))}
+                    </Select>
+                  </Label>
+                )}
+              </form.Field>
+            )}
+          </div>
+        </Disclosure>
+      )}
+
+      {/* Facultative : repliée tant qu'elle est vide. */}
       {type !== 'poll' && (
         <form.Field name="answerExplanation">
           {(field) => (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium leading-none">
-                {t('questionForm.answerExplanationLabel')}
-              </span>
+            <Disclosure
+              title={t('questionForm.answerExplanationLabel')}
+              defaultOpen={field.state.value.trim() !== ''}
+            >
               <MarkdownEditor
                 aria-label={t('questionForm.answerExplanationLabel')}
                 value={field.state.value}
                 onChange={field.handleChange}
                 placeholder={t('questionForm.answerExplanationPlaceholder')}
               />
-            </div>
+            </Disclosure>
           )}
         </form.Field>
       )}
@@ -796,6 +839,9 @@ export function QuestionForm({
     </form>
   );
 }
+
+/** Legend of a primary section of the form; secondary groups fold in a `Disclosure`. */
+const LEGEND = 'text-muted-foreground mb-2 text-xs font-semibold tracking-wider uppercase';
 
 /** Whether the media play a sound: an MP3, or a video's own track. */
 function mediaHasSound(media: QuestionMedia): boolean {

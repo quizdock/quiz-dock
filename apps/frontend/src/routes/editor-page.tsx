@@ -67,6 +67,7 @@ import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-store';
 import { ChromiumNotice } from '@/components/chromium-notice';
 import { DraftNotice } from '@/components/draft-notice';
+import { Disclosure } from '@/components/ui/disclosure';
 import { Drawer } from '@/components/ui/drawer';
 import { QuestionForm } from './question-form';
 import { SlideForm } from './slide-form';
@@ -429,6 +430,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   <Download className="size-4" />
                   {t('header.export')}
                 </Button>
+                {quiz.status === 'ready' ? <ShareAsTemplate quizId={quiz.id} /> : null}
                 {/* Archiver et supprimer sont des actions du quiz, pas des réglages :
                 elles sont avec les autres, en dernier et dans le ton qui convient. */}
                 {quiz.status !== 'archived' ? (
@@ -490,85 +492,90 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 </div>
               )}
             </form.Field>
-            {/* À droite de la description, le seul réglage qui s'écrit ici. L'état des
-                avis se lit à côté de l'interrupteur quand la carte a de quoi, dessous
-                sinon : c'est la largeur de **la carte** qui décide, pas celle de la
-                fenêtre — d'où le conteneur. */}
-            <div className="flex min-w-0 flex-col gap-3">
-              <Section className="bg-muted/30 @container min-w-0 rounded-lg border px-3 py-2">
-                <div className="flex flex-col gap-x-4 gap-y-2 @md:flex-row @md:items-center">
+            {/* À droite de la description, les réglages du quiz dans une carte : les avis
+                en clair, le son replié au bout de la même ligne — ouvert, il la quitte
+                pour toute la largeur de la carte. */}
+            <Section className="bg-muted/30 min-w-0 rounded-lg border px-3 py-2">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <label className="flex items-center gap-2 text-sm" title={t('feedback.enableHelp')}>
+                  <Switch
+                    checked={quiz.feedbackEnabled}
+                    disabled={update.isPending}
+                    onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
+                    aria-label={t('feedback.enableLabel')}
+                  />
+                  <span className="font-medium">{t('feedback.enableLabel')}</span>
+                </label>
+                <FeedbackSection quizId={quiz.id} />
+                <Disclosure
+                  flush
+                  className="ml-auto min-w-0 open:ml-0 open:basis-full"
+                  title={t('settings.soundLegend')}
+                  value={t('settings.soundSummary', {
+                    lufs: String(quiz.loudnessTargetLufs).replace('-', '−'),
+                    target: t(`settings.audioTarget.${quiz.audioTarget}`),
+                    tail: quiz.mediaTailS,
+                  })}
+                >
+                  <MediaTailField
+                    value={quiz.mediaTailS}
+                    disabled={update.isPending}
+                    onSave={(mediaTailS) => void setMediaTailS(mediaTailS)}
+                  />
                   <label
-                    className="flex min-w-0 items-center gap-2 text-sm @md:flex-1"
-                    title={t('feedback.enableHelp')}
+                    className="flex items-center gap-2 text-sm"
+                    title={t('settings.loudnessHelp')}
                   >
-                    <Switch
-                      checked={quiz.feedbackEnabled}
+                    <span className="font-medium">{t('settings.loudnessLabel')}</span>
+                    <Select
+                      className="h-8 w-auto"
+                      value={String(quiz.loudnessTargetLufs)}
                       disabled={update.isPending}
-                      onCheckedChange={(checked) => void setFeedbackEnabled(checked)}
-                      aria-label={t('feedback.enableLabel')}
-                    />
-                    <span className="font-medium">{t('feedback.enableLabel')}</span>
+                      onChange={(e) => void setLoudness(Number(e.target.value) as LoudnessTarget)}
+                    >
+                      {LOUDNESS_TARGETS.map((lufs) => (
+                        <option key={lufs} value={lufs}>
+                          {t(`settings.loudness.${-lufs}`)}
+                        </option>
+                      ))}
+                    </Select>
                   </label>
-                  <FeedbackSection quizId={quiz.id} />
-                </div>
-                <MediaTailField
-                  value={quiz.mediaTailS}
-                  disabled={update.isPending}
-                  onSave={(mediaTailS) => void setMediaTailS(mediaTailS)}
-                />
-                <label
-                  className="mt-2 flex items-center gap-2 text-sm"
-                  title={t('settings.loudnessHelp')}
-                >
-                  <span className="font-medium">{t('settings.loudnessLabel')}</span>
-                  <Select
-                    className="h-8 w-auto"
-                    value={String(quiz.loudnessTargetLufs)}
-                    disabled={update.isPending}
-                    onChange={(e) => void setLoudness(Number(e.target.value) as LoudnessTarget)}
+                  <label
+                    className="flex flex-wrap items-center gap-2 text-sm"
+                    title={t('settings.audioTargetHelp')}
                   >
-                    {LOUDNESS_TARGETS.map((lufs) => (
-                      <option key={lufs} value={lufs}>
-                        {t(`settings.loudness.${-lufs}`)}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
-                <label
-                  className="mt-2 flex flex-wrap items-center gap-2 text-sm"
-                  title={t('settings.audioTargetHelp')}
-                >
-                  <span className="font-medium">{t('settings.audioTargetLabel')}</span>
-                  <Select
-                    className="h-8 w-auto"
-                    value={quiz.audioTarget}
-                    disabled={update.isPending}
-                    onChange={(e) => void setAudioTarget(e.target.value as AudioTarget)}
-                  >
-                    {AUDIO_TARGETS.map((target) => (
-                      <option key={target} value={target}>
-                        {t(`settings.audioTarget.${target}`)}
-                      </option>
-                    ))}
-                  </Select>
-                </label>
-              </Section>
-              {/* Où en est le quiz, et l'action qui suit : sous le réglage, dans la
-                  même colonne — l'accès live s'affiche ici pendant une session. */}
-              <StatusBar
-                quiz={quiz}
-                presenting={presenting}
-                presentError={presentError}
-                fullCapture={fullCapture}
-                onFullCapture={setFullCapture}
-                onPublish={() => void changeStatus('ready')}
-                onPresent={() => void onPresent()}
-                onBackToDraft={() => void changeStatus('draft')}
-                onRestore={() => void changeStatus('draft')}
-                busy={transition.isPending}
-              />
-            </div>
+                    <span className="font-medium">{t('settings.audioTargetLabel')}</span>
+                    <Select
+                      className="h-8 w-auto"
+                      value={quiz.audioTarget}
+                      disabled={update.isPending}
+                      onChange={(e) => void setAudioTarget(e.target.value as AudioTarget)}
+                    >
+                      {AUDIO_TARGETS.map((target) => (
+                        <option key={target} value={target}>
+                          {t(`settings.audioTarget.${target}`)}
+                        </option>
+                      ))}
+                    </Select>
+                  </label>
+                </Disclosure>
+              </div>
+            </Section>
           </div>
+          {/* Où en est le quiz, et l'action qui suit : toute la largeur, sous la
+              description et les réglages — l'accès live s'affiche ici pendant une session. */}
+          <StatusBar
+            quiz={quiz}
+            presenting={presenting}
+            presentError={presentError}
+            fullCapture={fullCapture}
+            onFullCapture={setFullCapture}
+            onPublish={() => void changeStatus('ready')}
+            onPresent={() => void onPresent()}
+            onBackToDraft={() => void changeStatus('draft')}
+            onRestore={() => void changeStatus('draft')}
+            busy={transition.isPending}
+          />
           {quizDraft && isDirty ? (
             <DraftNotice
               onDiscard={() => {
@@ -1123,7 +1130,6 @@ function StatusBar({
               onFullCapture(true);
             }}
           />
-          <ShareAsTemplate quizId={quiz.id} />
           <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={onBackToDraft}>
             {t('broadcast.backToDraft')}
           </Button>
@@ -1205,7 +1211,7 @@ function ShareAsTemplate({ quizId }: { quizId: string }) {
     <>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="sm"
         disabled={share.isPending}
         onClick={() => setConfirming(true)}
@@ -1255,10 +1261,7 @@ function MediaTailField({
     if (clamped !== value) onSave(clamped);
   };
   return (
-    <label
-      className="mt-2 flex items-center gap-2 border-t pt-2 text-sm"
-      title={t('settings.mediaTailHelp')}
-    >
+    <label className="flex items-center gap-2 text-sm" title={t('settings.mediaTailHelp')}>
       <span className="font-medium">{t('settings.mediaTailLabel')}</span>
       <Input
         type="number"
