@@ -74,10 +74,12 @@ export async function prepareMediaUpload(
   source?: File,
 ): Promise<PreparedUpload> {
   const bytes = await readBytes(file);
-  // A browser may encode AAC and yet have no decoder for it (Firefox without the system's codecs).
+  // A browser may encode AAC and yet have no decoder for it (Firefox without the system's codecs):
+  // a sound is then measured on its original. Not a video, which may weigh a gigabyte and plays
+  // well enough at its own level.
   const decodeSound = () =>
     decode(bytes).catch(async (err: unknown) => {
-      if (!source || source === file) throw err;
+      if (!source || source === file || expect !== 'audio') throw err;
       return decode(await readBytes(source));
     });
   const sniffed = sniffMedia(bytes, expect);

@@ -167,8 +167,11 @@ async function convertTimed(
             numberOfChannels: Math.min(audioTrack?.numberOfChannels ?? 2, 2),
           },
     });
+    // Only the picture and the sound that play count: a second language or a spatial-audio
+    // track an iPhone adds may be left out without refusing the file.
+    const kept = new Set([kind === 'video' ? videoTrack?.id : undefined, audioTrack?.id]);
     const dropped: DroppedTrack[] = conversion.discardedTracks
-      .filter((d) => d.reason !== 'discarded_by_user')
+      .filter((d) => kept.has(d.track.id))
       .map((d) => ({ type: d.track.type as 'video' | 'audio', reason: d.reason }));
     const refusal = droppedTrackError(dropped);
     if (refusal || !conversion.isValid) {
@@ -192,6 +195,11 @@ async function convertTimed(
       file: new File([buffer], renamed(file, kind === 'video' ? 'mp4' : 'm4a'), { type }),
       notices: [],
     };
+  } catch (err) {
+    // What the browser's codecs throw on their own (an unsupported colour space, a
+    // configuration refused) is still a file this browser cannot convert.
+    if (err instanceof MediaCheckError) throw err;
+    throw new MediaCheckError(`media.cannot_convert_${kind}`);
   } finally {
     input.dispose();
   }
