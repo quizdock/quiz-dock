@@ -15,19 +15,20 @@ import type {
   ClientToServerEvents,
   GameMode,
   GameStep,
+  ParticipantAccess,
   PlayerPresence,
   ServerToClientEvents,
 } from '@quiz-dock/contracts';
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
 import type { Server, Socket } from 'socket.io';
-import { isOidcMode } from '../auth/auth-mode';
 import { AUTH_PROVIDER, type AuthProvider } from '../auth/auth-provider';
 import { isHost } from '../auth/roles';
 import { UsersService } from '../users/users.service';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { noticeOf } from './game.types';
+import { clientIp, PinAttempts } from './pin-attempts';
 import { WsExceptionFilter } from './ws-exception.filter';
 
 /** Données attachées à chaque socket de jeu. */
@@ -60,6 +61,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     private readonly users: UsersService,
     private readonly game: GameService,
     private readonly engine: GameEngine,
+    private readonly pins: PinAttempts,
   ) {}
 
   /**
@@ -121,19 +123,23 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   /**
    * Before joining: whether the quiz plays sound, so the form offers "in the
-   * room / remote". Nothing else about the quiz leaks; the PIN is enough, as
-   * for the projection.
+   * room / remote", and whether an account is needed (#57), so the page sends
+   * to the sign-in only when it is. Nothing else about the quiz leaks; the PIN
+   * is enough, as for the projection.
    */
   @SubscribeMessage('player:peek')
-  async playerPeek(@MessageBody() payload: { pin: string }): Promise<{ hasSound: boolean }> {
-    return { hasSound: await this.game.hasSound(payload.pin) };
+  async playerPeek(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<{ hasSound: boolean; participantAccess: ParticipantAccess }> {
+    return this.pins.guard(ipOf(socket), () => this.game.peek(payload.pin));
   }
 
   /**
    * Joueur (invité ou participant authentifié) : rejoint le lobby d'une partie.
    * Renvoie son `playerId` + un `sessionToken` de reconnexion, et notifie la room.
-   * Sous `AUTH_MODE=oidc`, le jeton est exigé (RG-15) : deux barrières
-   * indépendantes, le compte ouvre l'application et le PIN ouvre **une** partie.
+   * Sous `AUTH_MODE=oidc`, le jeton est exigé (RG-15) sauf partie en accès libre
+   * (#57) — le service en décide, il lit la partie. Les PIN faux sont comptés.
    */
   @SubscribeMessage('player:join')
   async playerJoin(
@@ -141,16 +147,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     @MessageBody()
     payload: { pin: string; nickname: string; avatar?: string; presence?: PlayerPresence },
   ): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
-    if (isOidcMode() && !socket.data.user) {
-      throw new WsException('auth.required');
-    }
     const user = socket.data.user ?? null;
-    const res = await this.game.joinSession(
-      payload.pin,
-      payload.nickname,
-      user,
-      payload.avatar,
-      payload.presence,
+    const res = await this.pins.guard(ipOf(socket), () =>
+      this.game.joinSession(payload.pin, payload.nickname, user, payload.avatar, payload.presence),
     );
     socket.data.pin = res.pin;
     socket.data.playerId = res.playerId;
@@ -228,10 +227,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     @ConnectedSocket() socket: GameSocket,
     @MessageBody() payload: { pin: string },
   ): Promise<{ ok: boolean }> {
-    const meta = await this.game.getMeta(payload.pin);
-    if (!meta) {
-      throw new WsException('session.not_found');
-    }
+    await this.pins.guard(ipOf(socket), async () => {
+      if (!(await this.game.getMeta(payload.pin))) throw new WsException('session.not_found');
+    });
     socket.data.pin = payload.pin;
     await socket.join(payload.pin);
     await this.engine.sendStateTo(socket, payload.pin);
@@ -372,6 +370,19 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     @MessageBody() payload: { pin: string; archive?: boolean },
   ): Promise<void> {
     await this.engine.end(payload.pin, this.requireHostId(socket), payload.archive === true);
+  }
+
+  /** `host:lock` : ferme la partie aux nouveaux participants (ou la rouvre), jusqu'à la fin. */
+  @SubscribeMessage('host:lock')
+  async hostLock(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; locked: boolean },
+  ): Promise<void> {
+    await this.engine.setJoinLocked(
+      payload.pin,
+      this.requireHostId(socket),
+      payload.locked === true,
+    );
   }
 
   /** `host:capture` : (dé)active la capture intégrale depuis le lobby, avant le démarrage. */
@@ -551,4 +562,9 @@ function handshakeAsRequest(socket: GameSocket): Request {
       'x-local-user': auth.localUser,
     },
   } as unknown as Request;
+}
+
+/** The address a socket connected from, through our reverse proxy if any. */
+function ipOf(socket: GameSocket): string {
+  return clientIp(socket.handshake.address, socket.handshake.headers['x-forwarded-for']);
 }

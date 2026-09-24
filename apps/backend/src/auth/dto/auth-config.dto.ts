@@ -13,6 +13,8 @@ export const authConfigSchema = z.object({
   demo: z.object({ user: z.string() }).nullable(),
   /** Image tout-en-un (`:standalone`) : base et cache dans le même conteneur. */
   standalone: z.boolean(),
+  /** Hosts may open a game to participants without an account (#57, OIDC only). */
+  anonymousParticipants: z.boolean(),
   oidc: z
     .object({
       authority: z.string(),

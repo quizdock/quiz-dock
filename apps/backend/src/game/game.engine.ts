@@ -191,6 +191,14 @@ export class GameEngine {
     }
     if (opts.audioTarget !== undefined) await this.setAudioTarget(pin, opts.audioTarget);
     if (opts.personalTracking === undefined && opts.pickOwnName === undefined) return;
+    // Open access (#57): guests only — nothing personal to track, no account to
+    // take a name from. The console greys both out; a client insisting is refused.
+    if (
+      meta.participantAccess === 'open' &&
+      (opts.personalTracking === true || opts.pickOwnName === false)
+    ) {
+      throw new BadRequestException('session.open_access_guests_only');
+    }
     const next = {
       ...meta,
       personalTracking: opts.personalTracking ?? meta.personalTracking,
@@ -201,6 +209,20 @@ export class GameEngine {
       pickOwnName: next.pickOwnName ? '1' : '0',
     });
     this.server.to(pin).emit('notice', noticeOf(next));
+  }
+
+  /**
+   * `host:lock`: closes the game to new participants, or reopens it, until it
+   * ends. Those already in keep playing and come back through a reconnection;
+   * the console (and the phones) see the notice change.
+   */
+  async setJoinLocked(pin: string, hostUserId: string, locked: boolean): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state === GameState.Ended) {
+      throw new BadRequestException('session.ended');
+    }
+    await this.redis.hset(gameKeys.game(pin), { joinLocked: locked ? '1' : '0' });
+    this.server.to(pin).emit('notice', noticeOf({ ...meta, joinLocked: locked }));
   }
 
   /**

@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { DEMO_USER, isDemoMode } from '../demo/demo.config';
-import { authMode } from './auth-mode';
+import { allowsAnonymousParticipants, authMode } from './auth-mode';
 import { AuthConfigDto } from './dto/auth-config.dto';
 import { Public } from './public.decorator';
 
@@ -18,6 +18,7 @@ export class AuthConfigController {
       mode,
       demo: isDemoMode() ? { user: DEMO_USER } : null,
       standalone: process.env.QUIZDOCK_FLAVOR === 'standalone',
+      anonymousParticipants: allowsAnonymousParticipants(),
       oidc:
         mode === 'oidc'
           ? {
