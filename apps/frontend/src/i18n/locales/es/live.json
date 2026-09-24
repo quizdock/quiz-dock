@@ -24,7 +24,7 @@
     "ownNameHint": "ⓘ Desactivado, el nombre visible procede de su cuenta. En ambos casos sus resultados siguen vinculados a ella: un nombre elegido no es anonimato.",
     "audioTargetLabel": "Quién oye el sonido en esta sesión",
     "audioTargetHint": "Sustituye el ajuste del quiz para esta sesión. Las preguntas con su propio ajuste lo conservan.",
-    "preloadNotice": "Para que nada tenga que esperar, los dispositivos de los participantes reciben la imagen, el sonido o el vídeo de la siguiente pregunta unos segundos antes de que aparezca, nunca su texto ni sus respuestas. Un participante friki y malintencionado podría abrirlos antes.",
+    "preloadNotice": "Para que nada tenga que esperar, los dispositivos de los participantes reciben la imagen, el sonido o el vídeo de la siguiente pregunta unos segundos antes de que aparezca, nunca su texto ni sus respuestas. Un participante con conocimientos técnicos podría abrirlos antes.",
     "readiness": "Siguientes medios cargados: {{ready}} / {{total}} dispositivos",
     "readinessNoProjection": "proyección no abierta",
     "readinessProjectionReady": "proyección lista",
