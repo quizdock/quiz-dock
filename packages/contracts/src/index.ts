@@ -435,6 +435,8 @@ export interface PodiumPayload {
   you?: { score: number; rank: number };
   /** Whether the end-of-session rating panel is offered (§2.11); absent = yes. */
   feedbackEnabled?: boolean;
+  /** Credits of the quiz's media (author, licence, source), shown under the podium (#53). */
+  credits?: string[];
 }
 
 /** Map des events client → serveur (avec accusés de réception typés). */

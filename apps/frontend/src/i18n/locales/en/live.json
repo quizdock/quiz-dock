@@ -149,7 +149,8 @@
     "readiness": "{{ready}} / {{total}} ready",
     "mediaLoading": "The question is on its way…",
     "readinessLeft": "{{seconds}} s left",
-    "listening": "Listening"
+    "listening": "Listening",
+    "credits": "Credits:"
   },
   "player": {
     "joinFailed": "Could not join the session.",

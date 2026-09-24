@@ -272,7 +272,8 @@
     "correctAnswer": "正确答案",
     "optionFallback": "选项 {{index}}",
     "acceptedAnswers": "可接受的答案：{{answers}}",
-    "numericTarget": "目标：{{value}}（± {{tolerance}}）"
+    "numericTarget": "目标：{{value}}（± {{tolerance}}）",
+    "credits": "署名"
   },
   "media": {
     "alt": "题目媒体",
@@ -301,7 +302,38 @@
     "cancelConversion": "取消",
     "notice": {
       "gifFirstFrame": "动态 GIF：只保留第一帧。"
-    }
+    },
+    "library": {
+      "close": "关闭",
+      "search": "按名称、替代文本或署名搜索",
+      "loading": "加载中…",
+      "empty": "暂无内容：你上传的媒体会保存在这里，方便再次使用。",
+      "noMatch": "没有符合搜索的媒体。",
+      "pick": "使用 {{name}}",
+      "unused": "未使用",
+      "delete": "删除 {{name}}",
+      "deleteTitle": "删除此媒体？",
+      "deleteDescription": "没有测验使用它。其文件将被永久删除。",
+      "deleteConfirm": "删除",
+      "deleteError": "无法删除该媒体。",
+      "findElsewhere": "在别处查找：",
+      "creditReminder": "采用 CC-BY 许可时，请在媒体署名中注明作者和许可。",
+      "title": {
+        "image": "我的媒体 · 图片",
+        "video": "我的媒体 · 视频",
+        "audio": "我的媒体 · 声音"
+      },
+      "usedIn_one": "用于 {{count}} 个测验",
+      "usedIn_other": "用于 {{count}} 个测验",
+      "openKind": {
+        "image": "我的图片",
+        "video": "我的视频",
+        "audio": "我的声音"
+      }
+    },
+    "creditLabel": "署名",
+    "creditPlaceholder": "例如 照片：林伟，CC BY 4.0，openverse.org",
+    "creditHelp": "作者、许可和来源。显示在预览和游戏结束时——CC-BY 许可要求这样做。"
   },
   "background": {
     "legend": "背景",

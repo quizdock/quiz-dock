@@ -12,6 +12,7 @@ import { SlideStage } from '../game/slide-stage';
 import type { QuizDetailDto, QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { useQuizzesControllerGet } from '../api/generated/quizzes/quizzes';
 import { previewRoute } from '../router';
+import { useMediaControllerCredits } from '../api/generated/media/media';
 
 export function PreviewPage() {
   const { t } = useTranslation(['editor', 'common']);
@@ -107,6 +108,7 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
           </nav>
         </>
       )}
+      <QuizCredits quizId={quiz.id} />
     </div>
   );
 }
@@ -191,5 +193,23 @@ function QuestionPreview({
         </div>
       )}
     </article>
+  );
+}
+
+/** The credits of the quiz's media (#53): what a CC-BY licence asks to be shown. */
+function QuizCredits({ quizId }: { quizId: string }) {
+  const { t } = useTranslation('editor');
+  const { data } = useMediaControllerCredits(quizId);
+  const credits = data?.data.credits ?? [];
+  if (credits.length === 0) return null;
+  return (
+    <section className="text-muted-foreground border-t pt-3 text-sm">
+      <h2 className="text-foreground mb-1 font-medium">{t('preview.credits')}</h2>
+      <ul className="flex flex-col gap-0.5">
+        {credits.map((credit) => (
+          <li key={credit}>{credit}</li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -149,7 +149,8 @@
     "readiness": "{{ready}} / {{total}} prêts",
     "mediaLoading": "La question arrive…",
     "readinessLeft": "encore {{seconds}} s",
-    "listening": "Écoute en cours"
+    "listening": "Écoute en cours",
+    "credits": "Crédits :"
   },
   "player": {
     "joinFailed": "Impossible de rejoindre la session.",

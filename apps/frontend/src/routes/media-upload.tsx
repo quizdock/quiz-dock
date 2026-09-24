@@ -1,4 +1,4 @@
-import { Film, ImagePlus, Music, Trash2, X } from 'lucide-react';
+import { Film, FolderOpen, ImagePlus, Music, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -11,10 +11,14 @@ import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import {
   mediaControllerDescribe,
+  useMediaControllerReuse,
   useMediaControllerSetAlt,
+  useMediaControllerSetCredit,
   useMediaControllerUpload,
 } from '../api/generated/media/media';
+import type { MediaLibraryItemDto } from '../api/generated/model';
 import { getDemo } from '../config';
+import { MediaLibraryDialog } from './media-library-dialog';
 
 /**
  * What the picker offers for each kind — a hint only: whatever this browser can
@@ -64,6 +68,25 @@ export function MediaUpload({
   const [error, setError] = useState<string | null>(null);
   const [notices, setNotices] = useState<ConversionNotice[]>([]);
   const abort = useRef<AbortController | null>(null);
+  const reuse = useMediaControllerReuse();
+  const [libraryOpen, setLibraryOpen] = useState(false);
+
+  /** A media from the author's library: a new use of the same file, alt and credit to start from. */
+  const onPick = async (item: MediaLibraryItemDto) => {
+    setLibraryOpen(false);
+    setError(null);
+    setNotices([]);
+    try {
+      const res = await reuse.mutateAsync({ id: item.id });
+      onChange(res.data.mediaId, {
+        kind: item.kind,
+        durationMs: item.durationMs ?? undefined,
+        peaks: item.peaks.length > 0 ? item.peaks : undefined,
+      });
+    } catch (err) {
+      setError(apiErrorText(err, t('media.uploadError')));
+    }
+  };
 
   useEffect(() => () => abort.current?.abort(), []);
 
@@ -131,27 +154,45 @@ export function MediaUpload({
           </Button>
         </div>
       ) : (
-        <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
-          <Icon className="size-4" />
-          {upload.isPending
-            ? t('media.uploading')
-            : checking
-              ? t('media.converting')
-              : (label ?? t('media.add'))}
-          <input
-            type="file"
-            aria-label={t('media.fileInputLabel')}
-            accept={ACCEPT[kind]}
-            hidden
-            disabled={checking}
-            onChange={(e) => {
-              void onFile(e.target.files?.[0]);
-              e.target.value = ''; // the same file can be picked again after an error
-            }}
-          />
-        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
+            <Icon className="size-4" />
+            {upload.isPending
+              ? t('media.uploading')
+              : checking
+                ? t('media.converting')
+                : (label ?? t('media.add'))}
+            <input
+              type="file"
+              aria-label={t('media.fileInputLabel')}
+              accept={ACCEPT[kind]}
+              hidden
+              disabled={checking}
+              onChange={(e) => {
+                void onFile(e.target.files?.[0]);
+                e.target.value = ''; // the same file can be picked again after an error
+              }}
+            />
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={checking || reuse.isPending}
+            onClick={() => setLibraryOpen(true)}
+          >
+            <FolderOpen className="size-4" />
+            {t(`media.library.openKind.${kind}`)}
+          </Button>
+        </div>
       )}
-      {value && kind === 'image' ? <AltField mediaId={value} /> : null}
+      {value ? <MediaDetailsFields mediaId={value} withAlt={kind === 'image'} /> : null}
+      <MediaLibraryDialog
+        open={libraryOpen}
+        kind={kind}
+        onPick={(item) => void onPick(item)}
+        onClose={() => setLibraryOpen(false)}
+      />
       {notices.map((notice) => (
         <p key={notice} className="text-sm text-muted-foreground">
           {t(notice)}
@@ -167,48 +208,76 @@ export function MediaUpload({
 }
 
 /**
- * The alternative text of the attached media (#43). Saved on blur, on the media
- * itself, so it follows the image everywhere it is used and travels in a bundle.
- * Leaving it empty is a legitimate answer for decoration — the help says so,
- * because a wrong description is worse than none.
+ * What goes with the attached media, saved on blur on the media itself (so it
+ * travels in a bundle): its alternative text for an image (#43) — empty is a
+ * legitimate answer for decoration, a wrong description is worse than none —
+ * and, for any kind, its credit (#53): who made it, under which licence, from
+ * where, shown with the quiz and at the end of a session.
  */
-function AltField({ mediaId }: { mediaId: string }) {
+function MediaDetailsFields({ mediaId, withAlt }: { mediaId: string; withAlt: boolean }) {
   const { t } = useTranslation('editor');
   const setAlt = useMediaControllerSetAlt();
+  const setCredit = useMediaControllerSetCredit();
   const [alt, setAltValue] = useState('');
-  const [saved, setSaved] = useState('');
+  const [credit, setCreditValue] = useState('');
+  const saved = useRef({ alt: '', credit: '' });
 
   useEffect(() => {
     let cancelled = false;
     void mediaControllerDescribe(mediaId)
       .then(({ data }) => {
         if (cancelled) return;
-        setAltValue(data.alt ?? '');
-        setSaved(data.alt ?? '');
+        saved.current = { alt: data.alt ?? '', credit: data.credit ?? '' };
+        setAltValue(saved.current.alt);
+        setCreditValue(saved.current.credit);
       })
-      .catch(() => undefined); // a media we cannot describe simply shows an empty field
+      .catch(() => undefined); // a media we cannot describe simply shows empty fields
     return () => {
       cancelled = true;
     };
   }, [mediaId]);
 
-  const save = () => {
-    if (alt === saved) return;
-    setSaved(alt);
-    void setAlt.mutateAsync({ id: mediaId, data: { alt } }).catch(() => setSaved(''));
+  const saveAlt = () => {
+    if (alt === saved.current.alt) return;
+    saved.current.alt = alt;
+    void setAlt.mutateAsync({ id: mediaId, data: { alt } }).catch(() => {
+      saved.current.alt = '';
+    });
+  };
+  const saveCredit = () => {
+    if (credit === saved.current.credit) return;
+    saved.current.credit = credit;
+    void setCredit.mutateAsync({ id: mediaId, data: { credit } }).catch(() => {
+      saved.current.credit = '';
+    });
   };
 
   return (
-    <Label className="text-muted-foreground text-sm">
-      {t('media.altLabel')}
-      <Input
-        value={alt}
-        maxLength={300}
-        onChange={(e) => setAltValue(e.target.value)}
-        onBlur={save}
-        placeholder={t('media.altPlaceholder')}
-      />
-      <span className="text-xs">{t('media.altHelp')}</span>
-    </Label>
+    <div className="flex flex-col gap-2">
+      {withAlt ? (
+        <Label className="text-muted-foreground text-sm">
+          {t('media.altLabel')}
+          <Input
+            value={alt}
+            maxLength={300}
+            onChange={(e) => setAltValue(e.target.value)}
+            onBlur={saveAlt}
+            placeholder={t('media.altPlaceholder')}
+          />
+          <span className="text-xs">{t('media.altHelp')}</span>
+        </Label>
+      ) : null}
+      <Label className="text-muted-foreground text-sm">
+        {t('media.creditLabel')}
+        <Input
+          value={credit}
+          maxLength={300}
+          onChange={(e) => setCreditValue(e.target.value)}
+          onBlur={saveCredit}
+          placeholder={t('media.creditPlaceholder')}
+        />
+        <span className="text-xs">{t('media.creditHelp')}</span>
+      </Label>
+    </div>
   );
 }

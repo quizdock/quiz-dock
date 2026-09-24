@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Res,
   StreamableFile,
   UploadedFile,
@@ -29,7 +30,15 @@ import type { Response } from 'express';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
 import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
+import {
+  MediaCreditDto,
+  MediaLibraryItemDto,
+  MediaLibraryLinkDto,
+  MediaLibraryQueryDto,
+  QuizCreditsDto,
+} from './dto/media-library.dto';
 import { MediaLimitsDto } from './dto/media-limits.dto';
+import { MediaLibraryService } from './media-library.service';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
 import { mediaLimits, uploadCeiling } from './media.config';
 import { MediaService } from './media.service';
@@ -44,7 +53,40 @@ interface UploadedMediaFile {
 @ApiTags('media')
 @Controller('media')
 export class MediaController {
-  constructor(private readonly media: MediaService) {}
+  constructor(
+    private readonly media: MediaService,
+    private readonly library: MediaLibraryService,
+  ) {}
+
+  /** The caller's media, one entry per file, newest first (#53). */
+  @Get()
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: [MediaLibraryItemDto] })
+  list(
+    @CurrentUser() user: User,
+    @Query() query: MediaLibraryQueryDto,
+  ): Promise<MediaLibraryItemDto[]> {
+    return this.library.list(user.id, query);
+  }
+
+  /** The free libraries the editor points to (`MEDIA_LIBRARY_LINKS`). */
+  @Get('links')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: [MediaLibraryLinkDto] })
+  links(): MediaLibraryLinkDto[] {
+    return this.library.links();
+  }
+
+  /** The credits of the media one of the caller's quizzes uses. */
+  @Get('credits/:quizId')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: QuizCreditsDto })
+  async credits(
+    @CurrentUser() user: User,
+    @Param('quizId') quizId: string,
+  ): Promise<QuizCreditsDto> {
+    return { credits: await this.library.creditsOfOwned(user.id, quizId) };
+  }
 
   @Post()
   @ApiBearerAuth()
@@ -102,6 +144,25 @@ export class MediaController {
     return this.media.setAlt(user.id, id, body.alt);
   }
 
+  @Put(':id/credit')
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: MediaDescriptionDto })
+  setCredit(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() body: MediaCreditDto,
+  ): Promise<MediaDescriptionDto> {
+    return this.media.setCredit(user.id, id, body.credit);
+  }
+
+  /** One of the caller's media put to a new use: a new media on the same file. */
+  @Post(':id/reuse')
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: MediaUploadResultDto })
+  reuse(@CurrentUser() user: User, @Param('id') id: string): Promise<MediaUploadResultDto> {
+    return this.media.reuse(user.id, id);
+  }
+
   /**
    * The bytes of a media, whole or by `Range` — Safari plays no video it cannot
    * seek into. An id names one file forever (a replaced media gets a new id), so
@@ -142,10 +203,12 @@ export class MediaController {
     return new StreamableFile(stream);
   }
 
+  /** Deletes a library entry; 409 `media.in_use` while a quiz or a session uses it. */
   @Delete(':id')
   @ApiBearerAuth()
   @HttpCode(204)
   @ApiNoContentResponse()
+  @ApiResponse({ status: 409, description: 'Still used by a quiz or a session.' })
   remove(@CurrentUser() user: User, @Param('id') id: string) {
     return this.media.remove(user.id, id);
   }

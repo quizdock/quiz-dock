@@ -149,7 +149,8 @@
     "readiness": "{{ready}} / {{total}} 已就緒",
     "mediaLoading": "題目即將出現…",
     "readinessLeft": "還剩 {{seconds}} 秒",
-    "listening": "正在收聽"
+    "listening": "正在收聽",
+    "credits": "出處："
   },
   "player": {
     "joinFailed": "無法加入會話。",

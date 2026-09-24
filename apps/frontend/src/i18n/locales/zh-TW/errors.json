@@ -60,7 +60,8 @@
     "cannot_convert_video": "此瀏覽器無法將這段影片轉換為 MP4 H.264。請使用 Chrome、Edge 或 Safari，或先用 HandBrake（handbrake.fr）轉換。",
     "cannot_convert_audio": "此瀏覽器無法將這段聲音轉換為 AAC。請改用其他瀏覽器，或先用 Audacity（audacityteam.org）轉換。",
     "too_long": "即使壓縮後也超出此類媒體 {{maxMb}} MB 的上限。請先剪短。",
-    "canceled": "已取消轉換。"
+    "canceled": "已取消轉換。",
+    "in_use": "這個媒體仍被測驗或遊戲使用：請先從那裡移除。"
   },
   "import": {
     "file_missing": "缺少檔案（「file」欄位）。",

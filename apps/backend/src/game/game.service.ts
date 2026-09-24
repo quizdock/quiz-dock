@@ -15,6 +15,7 @@ import {
 } from '@quiz-dock/contracts';
 import { QuizStatus } from '@prisma/client';
 import { isOidcMode } from '../auth/auth-mode';
+import { MediaLibraryService } from '../media/media-library.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import { RedisService } from '../redis/redis.service';
@@ -72,6 +73,7 @@ export class GameService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly mediaLibrary?: MediaLibraryService,
   ) {}
 
   /**
@@ -102,6 +104,9 @@ export class GameService {
     }
 
     const snapshot = buildSnapshot(quiz);
+    // Frozen with the rest: a licence's attribution is owed for what was played.
+    const credits = (await this.mediaLibrary?.creditsOf(quiz.id)) ?? [];
+    if (credits.length > 0) snapshot.credits = credits;
     const id = randomBytes(16).toString('hex');
     const pin = await this.allocatePin(id);
 

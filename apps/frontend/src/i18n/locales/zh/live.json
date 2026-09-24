@@ -149,7 +149,8 @@
     "readiness": "{{ready}} / {{total}} 已就绪",
     "mediaLoading": "题目即将出现…",
     "readinessLeft": "还剩 {{seconds}} 秒",
-    "listening": "正在收听"
+    "listening": "正在收听",
+    "credits": "署名："
   },
   "player": {
     "joinFailed": "无法加入会话。",

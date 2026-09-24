@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -35,7 +36,23 @@ interface UploadFile {
   buffer: Buffer;
   mimetype: string;
   size: number;
+  /** The name the browser gave the file: kept to find the media again (#53). */
+  originalname?: string;
 }
+
+/** What the editor reads back of one of its media. */
+export interface MediaDetails {
+  id: string;
+  alt: string | null;
+  credit: string | null;
+  durationMs: number | null;
+}
+
+const DETAILS = { id: true, alt: true, credit: true, durationMs: true } as const;
+
+/** Bornes d'un crédit : l'auteur, la licence, la source — une ligne. */
+const CREDIT_MAX = 300;
+const NAME_MAX = 200;
 
 /** How long an unused media may wait for the form it was uploaded from. */
 export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
@@ -150,6 +167,7 @@ export class MediaService implements OnModuleInit {
           sizeBytes: BigInt(file.size),
           kind: sniffed.kind,
           blobSha256: sha256,
+          name: file.originalname?.trim().slice(0, NAME_MAX) || null,
           ...meta,
         },
       });
@@ -230,33 +248,83 @@ export class MediaService implements OnModuleInit {
    * Texte alternatif d'un média possédé (#43). Une chaîne vide efface : pour une
    * image décorative, c'est la bonne réponse — un mauvais texte vaut moins que rien.
    */
-  async setAlt(
-    ownerId: string,
-    id: string,
-    alt: string,
-  ): Promise<{ id: string; alt: string | null; durationMs: number | null }> {
-    const asset = await this.prisma.mediaAsset.findFirst({ where: { id, ownerId } });
+  async setAlt(ownerId: string, id: string, alt: string): Promise<MediaDetails> {
+    await this.owned(ownerId, id);
+    return this.prisma.mediaAsset.update({
+      where: { id },
+      data: { alt: alt.trim().slice(0, ALT_MAX) || null },
+      select: DETAILS,
+    });
+  }
+
+  /**
+   * The credit of an owned media (#53): who made it, under which licence, from
+   * where. A CC-BY sound or picture asks for one; empty clears it.
+   */
+  async setCredit(ownerId: string, id: string, credit: string): Promise<MediaDetails> {
+    await this.owned(ownerId, id);
+    return this.prisma.mediaAsset.update({
+      where: { id },
+      data: { credit: credit.trim().slice(0, CREDIT_MAX) || null },
+      select: DETAILS,
+    });
+  }
+
+  /** Métadonnées d'un média possédé (l'éditeur relit l'alternative et le crédit saisis). */
+  async describe(ownerId: string, id: string): Promise<MediaDetails> {
+    const asset = await this.prisma.mediaAsset.findFirst({
+      where: { id, ownerId },
+      select: DETAILS,
+    });
     if (!asset) {
       throw new NotFoundException('media.not_found');
     }
-    const trimmed = alt.trim().slice(0, ALT_MAX);
-    const updated = await this.prisma.mediaAsset.update({
-      where: { id },
-      data: { alt: trimmed || null },
-      select: { id: true, alt: true, durationMs: true },
-    });
-    return updated;
+    return asset;
   }
 
-  /** Métadonnées d'un média possédé (l'éditeur relit l'alternative saisie). */
-  async describe(
+  /**
+   * One of the author's media put to a new use: a new media on the same file,
+   * with its alt text and credit to start from — so changing them here never
+   * changes them there. A media from before files were shared has no file of
+   * its own to share yet: it is used as it is.
+   */
+  async reuse(
     ownerId: string,
     id: string,
-  ): Promise<{ id: string; alt: string | null; durationMs: number | null }> {
-    const asset = await this.prisma.mediaAsset.findFirst({
-      where: { id, ownerId },
-      select: { id: true, alt: true, durationMs: true },
+  ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
+    const source = await this.owned(ownerId, id);
+    if (!source.blobSha256) return { mediaId: source.id, url: source.url, kind: source.kind };
+    const created = await this.prisma.mediaAsset.create({
+      data: {
+        ownerId,
+        url: '',
+        blobSha256: source.blobSha256,
+        name: source.name,
+        alt: source.alt,
+        credit: source.credit,
+        mime: source.mime,
+        sizeBytes: source.sizeBytes,
+        kind: source.kind,
+        durationMs: source.durationMs,
+        peaks: source.peaks,
+        audioOrigin: source.audioOrigin,
+        loudnessLufs: source.loudnessLufs,
+        peakDbfs: source.peakDbfs,
+      },
     });
+    const url = `/api/v1/media/${created.id}`;
+    await this.prisma.mediaAsset.update({ where: { id: created.id }, data: { url } });
+    return { mediaId: created.id, url, kind: created.kind };
+  }
+
+  /** Whether a media is held by a quiz, an archived session or a session being played. */
+  async inUse(id: string): Promise<boolean> {
+    const live = await this.liveSnapshots();
+    return live.some((snap) => snap.includes(id)) || (await this.isReferenced(id));
+  }
+
+  private async owned(ownerId: string, id: string): Promise<MediaAsset> {
+    const asset = await this.prisma.mediaAsset.findFirst({ where: { id, ownerId } });
     if (!asset) {
       throw new NotFoundException('media.not_found');
     }
@@ -541,14 +609,23 @@ export class MediaService implements OnModuleInit {
   }
 
   /** Supprime un média possédé (ligne + fichier). */
+  /**
+   * Removes an entry of the author's library: every media of theirs on the
+   * same file (a reused media is one entry). Refused while any of them is
+   * used — deleting it would leave a hole in a quiz or a past session's results.
+   */
   async remove(ownerId: string, id: string): Promise<void> {
-    const asset = await this.prisma.mediaAsset.findFirst({
-      where: { id, ownerId },
-    });
-    if (!asset) {
-      throw new NotFoundException('media.not_found');
+    const asset = await this.owned(ownerId, id);
+    const group = asset.blobSha256
+      ? await this.prisma.mediaAsset.findMany({
+          where: { ownerId, blobSha256: asset.blobSha256 },
+          select: { id: true },
+        })
+      : [{ id }];
+    for (const { id: member } of group) {
+      if (await this.inUse(member)) throw new ConflictException('media.in_use');
     }
-    await this.deleteAsset(id);
+    for (const { id: member } of group) await this.deleteAsset(member);
   }
 
   /** Empties the media directory (demo reset — the rows go with the users). */

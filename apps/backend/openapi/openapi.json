@@ -694,6 +694,56 @@
       }
     },
     "/api/v1/media": {
+      "get": {
+        "operationId": "MediaController_list",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "image",
+                "video",
+                "audio"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaLibraryItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      },
       "post": {
         "operationId": "MediaController_upload",
         "parameters": [],
@@ -743,6 +793,70 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MediaUploadResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/links": {
+      "get": {
+        "operationId": "MediaController_links",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaLibraryLinkDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/credits/{quizId}": {
+      "get": {
+        "operationId": "MediaController_credits",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuizCreditsDto"
                 }
               }
             }
@@ -864,6 +978,86 @@
         ]
       }
     },
+    "/api/v1/media/{id}/credit": {
+      "put": {
+        "operationId": "MediaController_setCredit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaCreditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaDescriptionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
+    "/api/v1/media/{id}/reuse": {
+      "post": {
+        "operationId": "MediaController_reuse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
     "/api/v1/media/{id}": {
       "get": {
         "operationId": "MediaController_serve",
@@ -907,6 +1101,9 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "409": {
+            "description": "Still used by a quiz or a session."
           }
         },
         "security": [
@@ -3188,6 +3385,116 @@
           "status"
         ]
       },
+      "MediaLibraryItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "image",
+              "video",
+              "audio"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "alt": {
+            "type": "string",
+            "nullable": true
+          },
+          "credit": {
+            "type": "string",
+            "nullable": true
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "peaks": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "usedIn": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "kind",
+          "name",
+          "alt",
+          "credit",
+          "durationMs",
+          "peaks",
+          "sizeBytes",
+          "createdAt",
+          "usedIn"
+        ]
+      },
+      "MediaLibraryLinkDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "image",
+                "video",
+                "audio"
+              ]
+            }
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "kinds"
+        ]
+      },
+      "QuizCreditsDto": {
+        "type": "object",
+        "properties": {
+          "credits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "credits"
+        ]
+      },
       "MediaUploadResultDto": {
         "type": "object",
         "properties": {
@@ -3247,6 +3554,10 @@
             "type": "string",
             "nullable": true
           },
+          "credit": {
+            "type": "string",
+            "nullable": true
+          },
           "durationMs": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -3257,6 +3568,7 @@
         "required": [
           "id",
           "alt",
+          "credit",
           "durationMs"
         ]
       },
@@ -3270,6 +3582,18 @@
         },
         "required": [
           "alt"
+        ]
+      },
+      "MediaCreditDto": {
+        "type": "object",
+        "properties": {
+          "credit": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "credit"
         ]
       },
       "StoreEntryDto": {

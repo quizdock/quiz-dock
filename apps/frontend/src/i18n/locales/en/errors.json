@@ -60,7 +60,8 @@
     "cannot_convert_video": "This browser cannot convert this video to MP4 H.264. Use Chrome, Edge or Safari, or convert it first with HandBrake (handbrake.fr).",
     "cannot_convert_audio": "This browser cannot convert this sound to AAC. Try another browser, or convert it first with Audacity (audacityteam.org).",
     "too_long": "Too long to fit the {{maxMb}} MB limit for this kind of media, even compressed. Shorten it first.",
-    "canceled": "Conversion cancelled."
+    "canceled": "Conversion cancelled.",
+    "in_use": "This media is still used by a quiz or a session: remove it from there first."
   },
   "import": {
     "file_missing": "Missing file (“file” field).",

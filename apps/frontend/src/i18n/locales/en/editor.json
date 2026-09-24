@@ -272,7 +272,8 @@
     "correctAnswer": "correct answer",
     "optionFallback": "Option {{index}}",
     "acceptedAnswers": "Accepted answers: {{answers}}",
-    "numericTarget": "Target: {{value}} (± {{tolerance}})"
+    "numericTarget": "Target: {{value}} (± {{tolerance}})",
+    "credits": "Credits"
   },
   "media": {
     "alt": "question media",
@@ -301,7 +302,38 @@
     "cancelConversion": "Cancel",
     "notice": {
       "gifFirstFrame": "Animated GIF: only its first frame is kept."
-    }
+    },
+    "library": {
+      "close": "Close",
+      "search": "Search by name, alt text or credit",
+      "loading": "Loading…",
+      "empty": "Nothing here yet: the media you upload are kept here, to use again.",
+      "noMatch": "No media matches this search.",
+      "pick": "Use {{name}}",
+      "unused": "Unused",
+      "delete": "Delete {{name}}",
+      "deleteTitle": "Delete this media?",
+      "deleteDescription": "It is used by no quiz. Its file is deleted for good.",
+      "deleteConfirm": "Delete",
+      "deleteError": "The media could not be deleted.",
+      "findElsewhere": "Find elsewhere:",
+      "creditReminder": "Under a CC-BY licence, write the author and the licence in the media's credit.",
+      "title": {
+        "image": "My media · images",
+        "video": "My media · videos",
+        "audio": "My media · sounds"
+      },
+      "usedIn_one": "Used in {{count}} quiz",
+      "usedIn_other": "Used in {{count}} quizzes",
+      "openKind": {
+        "image": "My images",
+        "video": "My videos",
+        "audio": "My sounds"
+      }
+    },
+    "creditLabel": "Credit",
+    "creditPlaceholder": "e.g. Photo: Lin Wei, CC BY 4.0, openverse.org",
+    "creditHelp": "Author, licence and source. Shown in the preview and at the end of a session — a CC-BY licence asks for it."
   },
   "background": {
     "legend": "Background",

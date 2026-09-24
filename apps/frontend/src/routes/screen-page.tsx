@@ -163,6 +163,12 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
             <LeaderboardList rows={view.leaderboard.top} />
           </div>
         ) : null}
+        {view.podium.credits?.length ? (
+          // Small, but seen by the room: the attribution a CC-BY licence asks for.
+          <p className="text-muted-foreground text-center text-[0.8em]">
+            {t('screen.credits')} {view.podium.credits.join(' · ')}
+          </p>
+        ) : null}
       </div>
     );
   } else if ((view.state === 'REVEAL' || view.state === 'LEADERBOARD') && view.question) {

@@ -272,7 +272,8 @@
     "correctAnswer": "正確答案",
     "optionFallback": "選項 {{index}}",
     "acceptedAnswers": "可接受的答案：{{answers}}",
-    "numericTarget": "目標：{{value}}（± {{tolerance}}）"
+    "numericTarget": "目標：{{value}}（± {{tolerance}}）",
+    "credits": "出處"
   },
   "media": {
     "alt": "題目媒體",
@@ -301,7 +302,38 @@
     "cancelConversion": "取消",
     "notice": {
       "gifFirstFrame": "動態 GIF：只保留第一格畫面。"
-    }
+    },
+    "library": {
+      "close": "關閉",
+      "search": "依名稱、替代文字或出處搜尋",
+      "loading": "載入中…",
+      "empty": "目前沒有內容：你上傳的媒體會保留在這裡，方便再次使用。",
+      "noMatch": "沒有符合搜尋的媒體。",
+      "pick": "使用 {{name}}",
+      "unused": "未使用",
+      "delete": "刪除 {{name}}",
+      "deleteTitle": "刪除這個媒體？",
+      "deleteDescription": "沒有測驗使用它。其檔案將被永久刪除。",
+      "deleteConfirm": "刪除",
+      "deleteError": "無法刪除這個媒體。",
+      "findElsewhere": "在其他地方尋找：",
+      "creditReminder": "採用 CC-BY 授權時，請在媒體出處中註明作者與授權。",
+      "title": {
+        "image": "我的媒體 · 圖片",
+        "video": "我的媒體 · 影片",
+        "audio": "我的媒體 · 聲音"
+      },
+      "usedIn_one": "用於 {{count}} 個測驗",
+      "usedIn_other": "用於 {{count}} 個測驗",
+      "openKind": {
+        "image": "我的圖片",
+        "video": "我的影片",
+        "audio": "我的聲音"
+      }
+    },
+    "creditLabel": "出處",
+    "creditPlaceholder": "例如 照片：林偉，CC BY 4.0，openverse.org",
+    "creditHelp": "作者、授權與來源。顯示在預覽與遊戲結束時——CC-BY 授權要求這樣做。"
   },
   "background": {
     "legend": "背景",
