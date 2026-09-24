@@ -1,5 +1,15 @@
-import { AlertTriangle, Film, Image as ImageIcon, Music, RefreshCw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import {
+  AlertTriangle,
+  Film,
+  Image as ImageIcon,
+  Library,
+  Music,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,22 +18,45 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
+import { formatDimensions } from '@/lib/dimensions';
 import { formatAgo, formatBytes } from '@/lib/format';
+import { readyForUpload } from '@/lib/media-pipeline';
+import { type MediaKind, MediaCheckError } from '@/lib/media-prepare';
+import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import {
+  mediaAdminControllerAddUpload,
+  useMediaAdminControllerAddFile,
   useMediaAdminControllerDeleteFile,
   useMediaAdminControllerFiles,
   useMediaAdminControllerOverview,
+  useMediaAdminControllerRemove,
+  useMediaAdminControllerSetDetails,
   useMediaAdminControllerSweep,
   useMediaAdminControllerUsages,
 } from '../api/generated/admin/admin';
+import { useMediaControllerInstance } from '../api/generated/media/media';
 import type {
   MediaAdminControllerFilesParams,
   MediaFilesPageDtoItemsItem,
+  MediaLibraryItemDto,
 } from '../api/generated/model';
 import { useRole } from '../auth/use-role';
 
 const PAGE_SIZE = 25;
+
+/**
+ * After anything that changes the volume (a clean-up pass, the catalogue): every
+ * block of the page reads it again — the figures, the files, the instance's media.
+ */
+function useRefreshAll() {
+  const queryClient = useQueryClient();
+  return () =>
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        /\/media\/(instance|limits)|\/admin\/media/.test(String(query.queryKey[0])),
+    });
+}
 
 /** A format as people know it: `audio/mpeg` is an MP3. */
 const formatName = (mime: string) =>
@@ -47,6 +80,7 @@ export function AdminMediaPage() {
     <div className="content-lg flex flex-col gap-6">
       <h1 className="text-2xl font-bold">{t('mediaAdmin.title')}</h1>
       <Overview />
+      <InstanceMedia />
       <Files />
     </div>
   );
@@ -56,6 +90,7 @@ function Overview() {
   const { t, i18n } = useTranslation('dashboard');
   const overview = useMediaAdminControllerOverview();
   const sweep = useMediaAdminControllerSweep();
+  const refreshAll = useRefreshAll();
   const [notice, setNotice] = useState<string | null>(null);
   const data = overview.data?.data;
   const bytes = (n: number) => formatBytes(n, i18n.language);
@@ -69,7 +104,7 @@ function Overview() {
           ? t('mediaAdmin.cleanup.done', res.result)
           : t('mediaAdmin.cleanup.busy'),
       );
-      await overview.refetch();
+      await refreshAll();
     } catch (err) {
       setNotice(apiErrorText(err, t('mediaAdmin.cleanup.failed')));
     }
@@ -179,6 +214,7 @@ function Files() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState<MediaFilesPageDtoItemsItem | null>(null);
+  const refreshAll = useRefreshAll();
 
   useEffect(() => {
     const timer = setTimeout(() => setQ(search.trim()), 250);
@@ -264,6 +300,7 @@ function Files() {
               file={file}
               locale={i18n.language}
               onDelete={() => setToDelete(file)}
+              onAdded={() => void refreshAll()}
             />
           ))}
         </ul>
@@ -276,7 +313,7 @@ function Files() {
           onClose={() => setToDelete(null)}
           onDeleted={async () => {
             setToDelete(null);
-            await Promise.all([files.refetch(), overview.refetch()]);
+            await refreshAll();
           }}
         />
       ) : null}
@@ -288,13 +325,17 @@ function FileRow({
   file,
   locale,
   onDelete,
+  onAdded,
 }: {
   file: MediaFilesPageDtoItemsItem;
   locale: string;
   onDelete: () => void;
+  onAdded: () => void;
 }) {
   const { t } = useTranslation('dashboard');
   const Icon = KIND_ICON[file.kind];
+  const add = useMediaAdminControllerAddFile();
+  const size = formatDimensions(file.width, file.height);
   return (
     <li className="flex items-center gap-3 p-2">
       <span className="bg-muted flex size-14 shrink-0 items-center justify-center overflow-hidden rounded">
@@ -309,11 +350,28 @@ function FileRow({
           {file.name ?? new Date(file.createdAt).toLocaleDateString(locale)}
         </span>
         <span className="text-muted-foreground truncate text-xs">
-          {file.mime} · {formatBytes(file.sizeBytes, locale)} · {file.owners.join(', ')}
+          {[file.mime, size, formatBytes(file.sizeBytes, locale), file.owners.join(', ')]
+            .filter(Boolean)
+            .join(' · ')}
         </span>
       </div>
       <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 text-xs">
         {file.legacy ? <Badge variant="muted">{t('mediaAdmin.files.legacy')}</Badge> : null}
+        {file.inCatalog ? (
+          <Badge variant="success">{t('mediaAdmin.files.inCatalog')}</Badge>
+        ) : (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={add.isPending}
+            onClick={() => void add.mutateAsync({ id: file.id }).then(onAdded)}
+            title={t('mediaAdmin.files.addToCatalog')}
+            aria-label={t('mediaAdmin.files.addToCatalogNamed', { name: file.name ?? file.mime })}
+          >
+            <Library className="size-4" />
+          </Button>
+        )}
         <span className="text-muted-foreground">
           {file.quizCount > 0
             ? t('mediaAdmin.files.usedIn', { count: file.quizCount })
@@ -412,5 +470,198 @@ function DeleteFileDialog({
         </div>
       )}
     </ConfirmDialog>
+  );
+}
+
+/**
+ * The instance's media (#62): what administrators provide to every host, who
+ * find it in their library dialog. Uploaded here (converted like any media) or
+ * added from the file list; alt text and credit edited here; withdrawn without
+ * breaking a quiz — the hosts use copies of their own.
+ */
+function InstanceMedia() {
+  const { t } = useTranslation('dashboard');
+  const catalogue = useMediaControllerInstance({});
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [toRemove, setToRemove] = useState<MediaLibraryItemDto | null>(null);
+  const remove = useMediaAdminControllerRemove();
+  const refreshAll = useRefreshAll();
+  const items = catalogue.data?.data ?? [];
+
+  const addFile = async (kind: MediaKind, file: File | undefined) => {
+    if (!file) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const ready = await readyForUpload(file, kind);
+      await mediaAdminControllerAddUpload({ file: ready.file, ...ready.prepared.fields });
+      await refreshAll();
+    } catch (err) {
+      setError(
+        err instanceof MediaCheckError
+          ? errorText(err.code, err.params)
+          : apiErrorText(err, t('mediaAdmin.instance.addFailed')),
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold">{t('mediaAdmin.instance.title')}</h2>
+          <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.help')}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {(['image', 'video', 'audio'] as const).map((kind) => (
+            <AddButton
+              key={kind}
+              kind={kind}
+              disabled={busy}
+              onFile={(f) => void addFile(kind, f)}
+            />
+          ))}
+        </div>
+      </div>
+      {busy ? (
+        <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.adding')}</p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      ) : null}
+      {items.length === 0 ? (
+        <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.empty')}</p>
+      ) : (
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <InstanceItem key={item.id} item={item} onRemove={() => setToRemove(item)} />
+          ))}
+        </ul>
+      )}
+      <ConfirmDialog
+        open={toRemove !== null}
+        destructive
+        title={t('mediaAdmin.instance.removeTitle')}
+        description={t('mediaAdmin.instance.removeDescription')}
+        confirmLabel={t('mediaAdmin.instance.remove')}
+        onCancel={() => setToRemove(null)}
+        onConfirm={() => {
+          const item = toRemove;
+          setToRemove(null);
+          if (item) void remove.mutateAsync({ id: item.id }).then(refreshAll);
+        }}
+      />
+    </section>
+  );
+}
+
+function AddButton({
+  kind,
+  disabled,
+  onFile,
+}: {
+  kind: MediaKind;
+  disabled: boolean;
+  onFile: (file: File | undefined) => void;
+}) {
+  const { t } = useTranslation('dashboard');
+  const input = useRef<HTMLInputElement>(null);
+  const ACCEPT = { image: 'image/*', video: 'video/*,.mkv,.mov', audio: 'audio/*' };
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={disabled}
+        onClick={() => input.current?.click()}
+      >
+        <Plus className="size-4" />
+        {t(`mediaAdmin.instance.add.${kind}`)}
+      </Button>
+      <input
+        ref={input}
+        type="file"
+        hidden
+        accept={ACCEPT[kind]}
+        aria-label={t(`mediaAdmin.instance.add.${kind}`)}
+        onChange={(e) => {
+          onFile(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
+    </>
+  );
+}
+
+function InstanceItem({ item, onRemove }: { item: MediaLibraryItemDto; onRemove: () => void }) {
+  const { t, i18n } = useTranslation('dashboard');
+  const setDetails = useMediaAdminControllerSetDetails();
+  const [alt, setAlt] = useState(item.alt ?? '');
+  const [credit, setCredit] = useState(item.credit ?? '');
+  const saved = useRef({ alt: item.alt ?? '', credit: item.credit ?? '' });
+  const Icon = KIND_ICON[item.kind];
+  const save = (field: 'alt' | 'credit', value: string) => {
+    if (value === saved.current[field]) return;
+    saved.current[field] = value;
+    void setDetails.mutateAsync({ id: item.id, data: { [field]: value } });
+  };
+  return (
+    <li className="flex gap-3 rounded-lg border p-2">
+      <span className="bg-muted flex size-20 shrink-0 items-center justify-center overflow-hidden rounded">
+        {item.kind === 'image' ? (
+          <img src={item.url} alt="" loading="lazy" className="size-full object-cover" />
+        ) : (
+          <Icon className="text-muted-foreground size-6" />
+        )}
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-start justify-between gap-1">
+          <span className="truncate text-sm font-medium">
+            {item.name ?? new Date(item.createdAt).toLocaleDateString(i18n.language)}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-6 px-1"
+            onClick={onRemove}
+            aria-label={t('mediaAdmin.instance.removeNamed', { name: item.name ?? '' })}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        </div>
+        <span className="text-muted-foreground text-xs">
+          {[formatDimensions(item.width, item.height), formatBytes(item.sizeBytes, i18n.language)]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>
+        {item.kind === 'image' ? (
+          <Input
+            className="h-7 text-xs"
+            value={alt}
+            maxLength={300}
+            placeholder={t('mediaAdmin.instance.alt')}
+            aria-label={t('mediaAdmin.instance.alt')}
+            onChange={(e) => setAlt(e.target.value)}
+            onBlur={() => save('alt', alt)}
+          />
+        ) : null}
+        <Input
+          className="h-7 text-xs"
+          value={credit}
+          maxLength={300}
+          placeholder={t('mediaAdmin.instance.credit')}
+          aria-label={t('mediaAdmin.instance.credit')}
+          onChange={(e) => setCredit(e.target.value)}
+          onBlur={() => save('credit', credit)}
+        />
+      </div>
+    </li>
   );
 }

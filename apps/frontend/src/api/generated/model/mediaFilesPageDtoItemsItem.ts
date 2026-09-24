@@ -32,5 +32,18 @@ export type MediaFilesPageDtoItemsItem = {
   quizCount: number;
   inHistory: boolean;
   legacy: boolean;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  width: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  height: number | null;
+  inCatalog: boolean;
   createdAt: string;
 };

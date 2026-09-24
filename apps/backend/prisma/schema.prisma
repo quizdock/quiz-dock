@@ -369,6 +369,12 @@ model MediaAsset {
   credit       String?
   /// The file name the author picked (with the extension of the stored format), for finding it again.
   name         String?
+  /// Displayed size of an image or a video, read from the bytes (rotation applied).
+  width        Int?
+  height       Int?
+  /// One of the instance's media (#62): provided by an administrator to every host, never swept.
+  /// Hosts reuse it as a media of their own on the same file; the quizzes never point at it.
+  instance     Boolean      @default(false)
   mime         String
   sizeBytes    BigInt       @map("size_bytes")
   kind         MediaKind

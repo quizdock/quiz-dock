@@ -10,6 +10,7 @@ import type { MediaService } from './media.service';
 describe('MediaJanitor', () => {
   const media = {
     adoptLegacyFiles: jest.fn(async () => ({ adopted: 1, failed: 0 })),
+    fillDimensions: jest.fn(async () => 0),
     sweepOrphans: jest.fn(async () => 2),
     sweepUnusedBlobs: jest.fn(async () => 4),
     purgeStrayFiles: jest.fn(async () => 3),

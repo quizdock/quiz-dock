@@ -161,6 +161,8 @@ describe('MediaUpload', () => {
       createdAt: '2026-09-24T10:00:00.000Z',
       usedIn: 2,
       inHistory: false,
+      width: 1920,
+      height: 1080,
       ...over,
     });
     const fetchMock = mockApi([
@@ -220,6 +222,48 @@ describe('MediaUpload', () => {
             String((opts as RequestInit | undefined)?.body).includes('CC BY 4.0'),
         ),
       ).toBe(true),
+    );
+  });
+
+  it("offers the instance's media in their own tab, reused like one's own (#62)", async () => {
+    const logo = {
+      id: 'm-inst',
+      url: '/api/v1/media/m-inst',
+      kind: 'image',
+      name: 'logo.webp',
+      alt: 'Logo',
+      credit: 'In-house',
+      durationMs: null,
+      peaks: [],
+      width: 512,
+      height: 512,
+      sizeBytes: 900,
+      createdAt: '2026-09-24T10:00:00.000Z',
+      usedIn: 0,
+      inHistory: false,
+    };
+    mockApi([
+      { method: 'GET', path: /\/media\?kind=image/, body: [] },
+      { method: 'GET', path: /\/media\/instance\?kind=image/, body: [logo] },
+      { method: 'GET', path: '/media/links', body: [] },
+      {
+        method: 'POST',
+        path: '/media/m-inst/reuse',
+        status: 201,
+        body: { mediaId: 'm-copy', url: '/api/v1/media/m-copy', kind: 'image' },
+      },
+    ]);
+    const { onChange } = renderUpload(null);
+    fireEvent.click(screen.getByRole('button', { name: 'Mes images' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Médias de l’instance' }));
+    const pick = await screen.findByRole('button', { name: 'Utiliser logo.webp' });
+    expect(screen.getByText('512 × 512')).toBeInTheDocument();
+    expect(screen.getByText('In-house')).toBeInTheDocument();
+    // Nothing of the instance's can be deleted from here.
+    expect(screen.queryByRole('button', { name: /^Supprimer/ })).toBeNull();
+    fireEvent.click(pick);
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith('m-copy', expect.objectContaining({ kind: 'image' })),
     );
   });
 });

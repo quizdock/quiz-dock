@@ -179,6 +179,25 @@ the scale of an instance, not meant for millions of media.
 
 ---
 
+## 8 bis. Dimensions and the instance's media (#62)
+
+Asked for once the page existed:
+
+- **Dimensions** — `media_asset.width` / `height`, read **server-side from the bytes** at upload (PNG, JPEG, GIF, WebP,
+  AVIF headers; the MP4 video track's `tkhd`, a quarter-turn swapping the sides) and carried on reuse. Media stored
+  before are filled in by the hourly job, a batch per pass; one whose bytes do not say gets 0 × 0 (unknown). Shown in
+  the author's library and on the administration page.
+- **Instance media** — `media_asset.instance`: images, videos and sounds an administrator provides to every host,
+  uploaded on the administration page (converted in the browser like any media; `POST /admin/media/instance`) or
+  added from any file (`POST /admin/media/files/:id/instance`: a new media, owned by the administrator, on the same
+  file — the author keeps theirs). Hosts see them in an *Instance media* tab of the library dialog
+  (`GET /media/instance`); picking one **creates a media of their own on the same file**, alt text and credit
+  carried over, so the quizzes never point at the instance's media. Never swept by the clean-up, never listed in an
+  author's own library, changed and withdrawn by administrators only (`PUT` / `DELETE /admin/media/instance/:id`);
+  withdrawing one leaves the hosts' copies — and so the file — in place.
+
+---
+
 ## 9. Phases
 
 | # | Subject | Side |

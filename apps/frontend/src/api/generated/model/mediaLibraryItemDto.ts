@@ -27,6 +27,18 @@ export interface MediaLibraryItemDto {
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
+     * @nullable
+     */
+  width: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  height: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
      */
   sizeBytes: number;
   createdAt: string;

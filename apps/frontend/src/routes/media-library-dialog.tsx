@@ -8,10 +8,12 @@ import type { MediaKind } from '@/lib/media-prepare';
 import { apiErrorText } from '../api/http';
 import {
   useMediaControllerLinks,
+  useMediaControllerInstance,
   useMediaControllerList,
   useMediaControllerRemove,
 } from '../api/generated/media/media';
 import type { MediaLibraryItemDto } from '../api/generated/model';
+import { formatDimensions } from '@/lib/dimensions';
 import { Waveform } from '../game/media/waveform';
 
 const SEARCH_DELAY_MS = 250;
@@ -70,7 +72,14 @@ export function MediaLibraryDialog({
     }
   }, [open]);
 
-  const list = useMediaControllerList({ kind, ...(q ? { q } : {}) }, { query: { enabled: open } });
+  // The author's own media, or the instance's (#62), provided by its administrators.
+  const [source, setSource] = useState<'mine' | 'instance'>('mine');
+  const filter = { kind, ...(q ? { q } : {}) };
+  const mine = useMediaControllerList(filter, { query: { enabled: open && source === 'mine' } });
+  const shared = useMediaControllerInstance(filter, {
+    query: { enabled: open && source === 'instance' },
+  });
+  const list = source === 'mine' ? mine : shared;
   const links = useMediaControllerLinks({ query: { enabled: open, staleTime: Infinity } });
   const remove = useMediaControllerRemove();
   const items = list.data?.data ?? [];
@@ -83,7 +92,7 @@ export function MediaLibraryDialog({
     setError(null);
     try {
       await remove.mutateAsync({ id: item.id });
-      await list.refetch();
+      await mine.refetch();
     } catch (err) {
       setError(apiErrorText(err, t('media.library.deleteError')));
     }
@@ -114,6 +123,25 @@ export function MediaLibraryDialog({
           </Button>
         </header>
 
+        <div role="tablist" className="bg-muted flex w-fit gap-1 rounded-md p-1 text-sm">
+          {(['mine', 'instance'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              role="tab"
+              aria-selected={source === tab}
+              onClick={() => setSource(tab)}
+              className={
+                source === tab
+                  ? 'bg-background rounded px-3 py-1 font-medium shadow-sm'
+                  : 'text-muted-foreground rounded px-3 py-1'
+              }
+            >
+              {t(`media.library.tab.${tab}`)}
+            </button>
+          ))}
+        </div>
+
         <label className="relative">
           <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
@@ -136,7 +164,11 @@ export function MediaLibraryDialog({
             <p className="text-muted-foreground text-sm">{t('media.library.loading')}</p>
           ) : items.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              {q ? t('media.library.noMatch') : t('media.library.empty')}
+              {q
+                ? t('media.library.noMatch')
+                : source === 'instance'
+                  ? t('media.library.instanceEmpty')
+                  : t('media.library.empty')}
             </p>
           ) : (
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
@@ -153,23 +185,36 @@ export function MediaLibraryDialog({
                   <span className="truncate text-sm" title={item.name ?? undefined}>
                     {labelOf(item)}
                   </span>
-                  <span className="text-muted-foreground flex items-center justify-between gap-1 text-xs">
-                    {item.usedIn > 0
-                      ? t('media.library.usedIn', { count: item.usedIn })
-                      : item.inHistory
-                        ? t('media.library.inHistory')
-                        : t('media.library.unused')}
-                    {item.usedIn === 0 && !item.inHistory ? (
-                      <button
-                        type="button"
-                        onClick={() => setToDelete(item)}
-                        className="hover:text-destructive"
-                        aria-label={t('media.library.delete', { name: labelOf(item) })}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    ) : null}
-                  </span>
+                  {formatDimensions(item.width, item.height) ? (
+                    <span className="text-muted-foreground text-xs tabular-nums">
+                      {formatDimensions(item.width, item.height)}
+                    </span>
+                  ) : null}
+                  {source === 'instance' ? (
+                    item.credit ? (
+                      <span className="text-muted-foreground truncate text-xs" title={item.credit}>
+                        {item.credit}
+                      </span>
+                    ) : null
+                  ) : (
+                    <span className="text-muted-foreground flex items-center justify-between gap-1 text-xs">
+                      {item.usedIn > 0
+                        ? t('media.library.usedIn', { count: item.usedIn })
+                        : item.inHistory
+                          ? t('media.library.inHistory')
+                          : t('media.library.unused')}
+                      {item.usedIn === 0 && !item.inHistory ? (
+                        <button
+                          type="button"
+                          onClick={() => setToDelete(item)}
+                          className="hover:text-destructive"
+                          aria-label={t('media.library.delete', { name: labelOf(item) })}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      ) : null}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

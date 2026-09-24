@@ -113,7 +113,10 @@
       "usedIn_other": "en {{count}} quizzes",
       "inHistory": "solo resultados anteriores",
       "unused": "sin usar",
-      "delete": "Eliminar {{name}}"
+      "delete": "Eliminar {{name}}",
+      "inCatalog": "medio de la instancia",
+      "addToCatalog": "Añadir a los medios de la instancia",
+      "addToCatalogNamed": "Añadir {{name}} a los medios de la instancia"
     },
     "delete": {
       "title": "¿Eliminar este archivo?",
@@ -128,6 +131,24 @@
       "quizzesLose": "Las preguntas pierden este medio.",
       "resultsLose": "Los resultados anteriores ya no lo muestran.",
       "everyCopy": "Se eliminan todas las copias de este archivo, sea quien sea su propietario."
+    },
+    "instance": {
+      "title": "Medios de la instancia",
+      "help": "Se ofrecen a todos los anfitriones, que los encuentran en su biblioteca de medios. Nunca se limpian; retirar uno no rompe ningún quiz.",
+      "add": {
+        "image": "Añadir una imagen",
+        "video": "Añadir un vídeo",
+        "audio": "Añadir un sonido"
+      },
+      "adding": "Convirtiendo y enviando…",
+      "addFailed": "No se pudo añadir el medio.",
+      "empty": "Aún no hay medios de la instancia: añádelos aquí o desde la lista de archivos.",
+      "alt": "Texto alternativo",
+      "credit": "Crédito (autor, licencia, fuente)",
+      "remove": "Retirar",
+      "removeNamed": "Retirar {{name}}",
+      "removeTitle": "¿Retirar este medio?",
+      "removeDescription": "Los anfitriones ya no lo encuentran en su biblioteca. Los quizzes que lo usan conservan su copia."
     }
   }
 }

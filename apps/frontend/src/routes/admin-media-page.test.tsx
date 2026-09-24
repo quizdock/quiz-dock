@@ -49,6 +49,9 @@ const files = {
         quizCount: 2,
         inHistory: true,
         legacy: false,
+        width: 1920,
+        height: 1080,
+        inCatalog: false,
         createdAt: '2026-09-24T10:00:00.000Z',
       },
     ],
@@ -115,5 +118,57 @@ describe('AdminMediaPage', () => {
     mockApi([me(['host']), overview, files]);
     renderPage();
     expect(await screen.findByText(/réservée aux administrateurs/)).toBeInTheDocument();
+  });
+
+  it('shows sizes, lists the instance media and adds a file to them (#62)', async () => {
+    const fetchMock = mockApi([
+      me(['admin']),
+      overview,
+      files,
+      {
+        method: 'GET',
+        path: /\/media\/instance$/,
+        body: [
+          {
+            id: 'i1',
+            url: '/api/v1/media/i1',
+            kind: 'image',
+            name: 'logo.webp',
+            alt: 'Logo',
+            credit: null,
+            durationMs: null,
+            peaks: [],
+            width: 512,
+            height: 512,
+            sizeBytes: 900,
+            createdAt: '2026-09-24T10:00:00.000Z',
+            usedIn: 0,
+            inHistory: false,
+          },
+        ],
+      },
+      {
+        method: 'POST',
+        path: '/admin/media/files/m1/instance',
+        status: 201,
+        body: { mediaId: 'i2', url: '', kind: 'image' },
+      },
+    ]);
+    renderPage();
+    expect(await screen.findByText('logo.webp')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Logo')).toBeInTheDocument();
+    expect(await screen.findByText(/1920 × 1080/)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Ajouter night-market.webp aux médias de l’instance' }),
+    );
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, opts]) =>
+            String(url).includes('/admin/media/files/m1/instance') &&
+            (opts as RequestInit | undefined)?.method === 'POST',
+        ),
+      ).toBe(true),
+    );
   });
 });

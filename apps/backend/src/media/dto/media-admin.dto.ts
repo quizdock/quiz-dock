@@ -70,6 +70,10 @@ export const mediaFileRowSchema = z.object({
   inHistory: z.boolean(),
   /** Stored before the converter (MP3, PNG, JPEG…). */
   legacy: z.boolean(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  /** Among the instance's media (#62). */
+  inCatalog: z.boolean(),
   createdAt: z.string(),
 });
 
@@ -96,3 +100,11 @@ export const mediaSweepResultSchema = z.object({
 });
 
 export class MediaSweepResultDto extends createZodDto(mediaSweepResultSchema) {}
+
+/** What an administrator edits on one of the instance's media. */
+export const instanceMediaDetailsSchema = z.object({
+  alt: z.string().max(300).optional(),
+  credit: z.string().max(300).optional(),
+});
+
+export class InstanceMediaDetailsDto extends createZodDto(instanceMediaDetailsSchema) {}

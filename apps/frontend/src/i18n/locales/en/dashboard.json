@@ -113,7 +113,10 @@
       "usedIn_other": "in {{count}} quizzes",
       "inHistory": "past results only",
       "unused": "unused",
-      "delete": "Delete {{name}}"
+      "delete": "Delete {{name}}",
+      "inCatalog": "instance media",
+      "addToCatalog": "Add to the instance media",
+      "addToCatalogNamed": "Add {{name}} to the instance media"
     },
     "delete": {
       "title": "Delete this file?",
@@ -128,6 +131,24 @@
       "quizzesLose": "The questions lose this media.",
       "resultsLose": "Past results no longer show it.",
       "everyCopy": "Every copy of this file goes, whoever owns it."
+    },
+    "instance": {
+      "title": "Instance media",
+      "help": "Provided to every host, who find them in their media library. Never cleaned up; withdrawing one never breaks a quiz.",
+      "add": {
+        "image": "Add an image",
+        "video": "Add a video",
+        "audio": "Add a sound"
+      },
+      "adding": "Converting and sending…",
+      "addFailed": "The media could not be added.",
+      "empty": "No instance media yet: add some here, or from the file list below.",
+      "alt": "Alternative text",
+      "credit": "Credit (author, licence, source)",
+      "remove": "Withdraw",
+      "removeNamed": "Withdraw {{name}}",
+      "removeTitle": "Withdraw this media?",
+      "removeDescription": "Hosts no longer find it in their library. The quizzes that use it keep their copy."
     }
   }
 }

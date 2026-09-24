@@ -31,6 +31,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { parseUploadMeta } from './dto/media-upload-meta';
 import { mediaLimits, uploadCeiling } from './media.config';
+import { mediaDimensions } from './media-dimensions';
 
 interface UploadFile {
   buffer: Buffer;
@@ -142,6 +143,8 @@ export class MediaService implements OnModuleInit {
     ownerId: string,
     file: UploadFile | undefined,
     fields: Record<string, unknown> = {},
+    /** Straight into the instance's media (#62): an administrator's upload. */
+    options: { instance?: boolean } = {},
   ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
     if (isDemoMode()) {
       throw new ForbiddenException('media.demo_disabled');
@@ -185,6 +188,8 @@ export class MediaService implements OnModuleInit {
           kind: sniffed.kind,
           blobSha256: sha256,
           name: uploadName(file.originalname),
+          ...(mediaDimensions(file.buffer, sniffed.mime) ?? {}),
+          instance: options.instance ?? false,
           ...meta,
         },
       });
@@ -290,7 +295,7 @@ export class MediaService implements OnModuleInit {
   /** Métadonnées d'un média possédé (l'éditeur relit l'alternative et le crédit saisis). */
   async describe(ownerId: string, id: string): Promise<MediaDetails> {
     const asset = await this.prisma.mediaAsset.findFirst({
-      where: { id, ownerId },
+      where: { id, ownerId, instance: false },
       select: DETAILS,
     });
     if (!asset) {
@@ -300,20 +305,85 @@ export class MediaService implements OnModuleInit {
   }
 
   /**
-   * One of the author's media put to a new use: a new media on the same file,
-   * with its alt text and credit to start from — so changing them here never
-   * changes them there. A media from before files were shared has no file of
-   * its own to share yet: it is used as it is.
+   * One of the author's media — or one of the instance's (#62) — put to a new
+   * use: a new media of theirs on the same file, with its alt text and credit
+   * to start from, so changing them here never changes them there. A media of
+   * their own from before files were shared has no file to share yet: it is
+   * used as it is.
    */
   async reuse(
     ownerId: string,
     id: string,
   ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
-    const source = await this.owned(ownerId, id);
+    const source = await this.prisma.mediaAsset.findFirst({
+      where: {
+        id,
+        OR: [
+          { ownerId, instance: false },
+          { instance: true, blobSha256: { not: null } },
+        ],
+      },
+    });
+    if (!source) throw new NotFoundException('media.not_found');
     if (!source.blobSha256) return { mediaId: source.id, url: source.url, kind: source.kind };
+    return this.copyOf(source, ownerId);
+  }
+
+  /**
+   * Puts a file among the instance's media (#62): a new media owned by the
+   * administrator and marked as the instance's, on the same file — the media it
+   * comes from stays its author's. A file already there is not added twice.
+   */
+  async addToInstance(
+    adminId: string,
+    id: string,
+  ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
+    const source = await this.prisma.mediaAsset.findUnique({ where: { id } });
+    if (!source) throw new NotFoundException('media.not_found');
+    if (!source.blobSha256) throw new BadRequestException('media.not_adopted_yet');
+    const already = await this.prisma.mediaAsset.findFirst({
+      where: { blobSha256: source.blobSha256, instance: true },
+    });
+    if (already) return { mediaId: already.id, url: already.url, kind: already.kind };
+    return this.copyOf(source, adminId, true);
+  }
+
+  /** Takes a media out of the instance's (#62); the hosts' own copies stay theirs. */
+  async removeFromInstance(id: string): Promise<void> {
+    const asset = await this.prisma.mediaAsset.findFirst({ where: { id, instance: true } });
+    if (!asset) throw new NotFoundException('media.not_found');
+    await this.deleteAsset(id);
+  }
+
+  /** Alt text and credit of one of the instance's media, set by an administrator. */
+  async setInstanceDetails(
+    id: string,
+    details: { alt?: string; credit?: string },
+  ): Promise<MediaDetails> {
+    const asset = await this.prisma.mediaAsset.findFirst({ where: { id, instance: true } });
+    if (!asset) throw new NotFoundException('media.not_found');
+    return this.prisma.mediaAsset.update({
+      where: { id },
+      data: {
+        ...(details.alt !== undefined ? { alt: details.alt.trim().slice(0, ALT_MAX) || null } : {}),
+        ...(details.credit !== undefined
+          ? { credit: details.credit.trim().slice(0, CREDIT_MAX) || null }
+          : {}),
+      },
+      select: DETAILS,
+    });
+  }
+
+  /** A new media on the same file as `source`, with what it carries. */
+  private async copyOf(
+    source: MediaAsset,
+    ownerId: string,
+    instance = false,
+  ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
     const created = await this.prisma.mediaAsset.create({
       data: {
         ownerId,
+        instance,
         url: '',
         blobSha256: source.blobSha256,
         name: source.name,
@@ -327,6 +397,8 @@ export class MediaService implements OnModuleInit {
         audioOrigin: source.audioOrigin,
         loudnessLufs: source.loudnessLufs,
         peakDbfs: source.peakDbfs,
+        width: source.width,
+        height: source.height,
       },
     });
     const url = `/api/v1/media/${created.id}`;
@@ -355,8 +427,11 @@ export class MediaService implements OnModuleInit {
     return live.some((snap) => snap.includes(id)) || (await this.isReferenced(id));
   }
 
+  /** One of the author's own media (the instance's are the administrators' to change). */
   private async owned(ownerId: string, id: string): Promise<MediaAsset> {
-    const asset = await this.prisma.mediaAsset.findFirst({ where: { id, ownerId } });
+    const asset = await this.prisma.mediaAsset.findFirst({
+      where: { id, ownerId, instance: false },
+    });
     if (!asset) {
       throw new NotFoundException('media.not_found');
     }
@@ -396,6 +471,8 @@ export class MediaService implements OnModuleInit {
     const orphans = await this.prisma.mediaAsset.findMany({
       where: {
         createdAt: { lt: new Date(Date.now() - olderThanMs) },
+        // The instance's media are kept for the hosts, used or not (#62).
+        instance: false,
         coverForQuizzes: { none: {} },
         questionVisuals: { none: {} },
         questionAudios: { none: {} },
@@ -431,6 +508,36 @@ export class MediaService implements OnModuleInit {
       if (await this.releaseBlob(sha256)) removed++;
     }
     return removed;
+  }
+
+  /**
+   * Reads the size of the images and videos stored before it was kept, from
+   * their files, a batch per pass. One whose bytes do not say (or whose file
+   * is gone) gets 0 × 0 — unknown — so the next pass moves on.
+   */
+  async fillDimensions(batch = 100, ownerIds?: string[]): Promise<number> {
+    const missing = await this.prisma.mediaAsset.findMany({
+      where: {
+        kind: { in: ['image', 'video'] },
+        width: null,
+        ...(ownerIds ? { ownerId: { in: ownerIds } } : {}),
+      },
+      select: { id: true, blobSha256: true, mime: true },
+      orderBy: { createdAt: 'desc' },
+      take: batch,
+    });
+    let filled = 0;
+    for (const asset of missing) {
+      const bytes = await readFile(this.fileOf(asset)).catch(() => null);
+      const size = bytes && mediaDimensions(bytes, asset.mime);
+      // A media deleted meanwhile is simply not updated.
+      await this.prisma.mediaAsset.updateMany({
+        where: { id: asset.id, width: null },
+        data: size ?? { width: 0, height: 0 },
+      });
+      if (size) filled++;
+    }
+    return filled;
   }
 
   /**
@@ -581,6 +688,7 @@ export class MediaService implements OnModuleInit {
     const direct = await this.prisma.mediaAsset.findUnique({
       where: { id },
       select: {
+        instance: true,
         _count: {
           select: {
             coverForQuizzes: true,
@@ -594,6 +702,7 @@ export class MediaService implements OnModuleInit {
       },
     });
     if (!direct) return true; // already gone: nothing to delete
+    if (direct.instance) return true; // the instance's: only an administrator removes it
     if (Object.values(direct._count).some((n) => n > 0)) return true;
     // Images typed into Markdown or placed in slide blocks point at the id as text.
     const pattern = `%${id}%`;
@@ -666,7 +775,7 @@ export class MediaService implements OnModuleInit {
     const asset = await this.owned(ownerId, id);
     const group = asset.blobSha256
       ? await this.prisma.mediaAsset.findMany({
-          where: { ownerId, blobSha256: asset.blobSha256 },
+          where: { ownerId, blobSha256: asset.blobSha256, instance: false },
           select: { id: true },
         })
       : [{ id }];

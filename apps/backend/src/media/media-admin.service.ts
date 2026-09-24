@@ -54,6 +54,10 @@ export interface MediaFileRow {
   quizCount: number;
   inHistory: boolean;
   legacy: boolean;
+  width: number | null;
+  height: number | null;
+  /** Among the instance's media (#62). */
+  inCatalog: boolean;
   createdAt: string;
 }
 
@@ -120,7 +124,8 @@ export class MediaAdminService {
         WITH ${REFS},
         m AS (
           SELECT m.*, ${FILE_KEY} AS k,
-                 NOT (m.id IN (SELECT media_id FROM qr) OR m.id IN (SELECT media_id FROM ar)) AS unused
+                 NOT (m.instance OR m.id IN (SELECT media_id FROM qr)
+                      OR m.id IN (SELECT media_id FROM ar)) AS unused
           FROM media_asset m ${scope}
         )
         SELECT COUNT(*) FILTER (WHERE unused)::int AS count,
@@ -198,11 +203,13 @@ export class MediaAdminService {
                ARRAY_AGG(DISTINCT u.display_name) AS owners,
                COUNT(*)::int AS "mediaCount",
                MIN(m.created_at) AS created_at,
+               MAX(m.width) AS width, MAX(m.height) AS height,
+               BOOL_OR(m.instance) AS "inCatalog",
                BOOL_OR(m.mime <> ALL (${CURRENT_MIMES})) AS legacy
         FROM media_asset m JOIN "user" u ON u.id = m.owner_id
         GROUP BY 1
       )
-      SELECT f.id, f.url, f.kind, f.mime, f.name, f.bytes, f.owners, f."mediaCount", f.legacy,
+      SELECT f.id, f.url, f.kind, f.mime, f.name, f.bytes, f.width, f.height, f."inCatalog", f.owners, f."mediaCount", f.legacy,
              f.created_at,
              COALESCE(used.n, 0) AS "quizCount",
              shown.k IS NOT NULL AS "inHistory",
@@ -224,6 +231,9 @@ export class MediaAdminService {
         quizCount: r.quizCount,
         inHistory: r.inHistory,
         legacy: r.legacy,
+        width: r.width,
+        height: r.height,
+        inCatalog: r.inCatalog,
         createdAt: r.created_at.toISOString(),
       })),
     };

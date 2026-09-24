@@ -14,6 +14,9 @@ export const mediaLibraryItemSchema = z.object({
   durationMs: z.number().int().nullable(),
   /** A sound's waveform (empty otherwise). */
   peaks: z.array(z.number()),
+  /** Displayed size of an image or a video; 0 × 0 when unknown, null not read yet. */
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
   sizeBytes: z.number().int(),
   createdAt: z.string(),
   /** How many of the author's quizzes use it: an unused one can be deleted. */

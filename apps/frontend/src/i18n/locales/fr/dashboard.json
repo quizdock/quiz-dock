@@ -113,7 +113,10 @@
       "usedIn_other": "dans {{count}} quiz",
       "inHistory": "résultats passés seulement",
       "unused": "inutilisé",
-      "delete": "Supprimer {{name}}"
+      "delete": "Supprimer {{name}}",
+      "inCatalog": "média de l’instance",
+      "addToCatalog": "Ajouter aux médias de l’instance",
+      "addToCatalogNamed": "Ajouter {{name}} aux médias de l’instance"
     },
     "delete": {
       "title": "Supprimer ce fichier ?",
@@ -128,6 +131,24 @@
       "quizzesLose": "Les questions perdent ce média.",
       "resultsLose": "Les résultats passés ne l’affichent plus.",
       "everyCopy": "Toutes les copies de ce fichier partent, quel qu’en soit le propriétaire."
+    },
+    "instance": {
+      "title": "Médias de l’instance",
+      "help": "Fournis à tous les hôtes, qui les trouvent dans leur bibliothèque de médias. Jamais nettoyés ; en retirer un ne casse aucun quiz.",
+      "add": {
+        "image": "Ajouter une image",
+        "video": "Ajouter une vidéo",
+        "audio": "Ajouter un son"
+      },
+      "adding": "Conversion et envoi…",
+      "addFailed": "Le média n’a pas pu être ajouté.",
+      "empty": "Aucun média de l’instance pour l’instant : ajoutez-en ici, ou depuis la liste des fichiers ci-dessous.",
+      "alt": "Texte alternatif",
+      "credit": "Crédit (auteur, licence, source)",
+      "remove": "Retirer",
+      "removeNamed": "Retirer {{name}}",
+      "removeTitle": "Retirer ce média ?",
+      "removeDescription": "Les hôtes ne le trouvent plus dans leur bibliothèque. Les quiz qui l’utilisent gardent leur copie."
     }
   }
 }

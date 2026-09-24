@@ -167,6 +167,8 @@ CHECKs, in SQL or in the application, depending on the type:
 | `alt` | text | nullable | **Alternative text**, written by whoever attached the media and read aloud by screen readers. Carried by the media rather than by each use: typed once, valid everywhere the image serves, and it travels in a bundle (`media` section, format version 2). Null or empty is legitimate — for a decorative image it is the right answer, and a wrong description is worse than none. When it is missing, the live screens fall back to a generic label rather than an empty `alt`, which would hide an image that carries the question. |
 | `credit` | text | nullable, ≤ 300 (app) | Who made it, under which licence, from where (#53) — a CC-BY licence asks for it. Listed on the quiz's preview page and under the podium |
 | `name` | text | nullable, ≤ 200 (app) | The file name the author picked, with the extension of the stored format: what the library searches. Null for media uploaded before #53 |
+| `width`, `height` | int | nullable | Displayed size of an image or a video, read from the bytes (rotation applied); 0 × 0 when the bytes do not say; null for a sound, or not read yet (filled in by the clean-up job) |
+| `instance` | boolean | NN, DEF false | One of the **instance's media** (#62): provided by an administrator to every host, never swept by the clean-up. Hosts reuse it as a media of their own on the same file; no quiz points at it |
 | `mime` | text | NN | `image/png`, `audio/mpeg`, … |
 | `size_bytes` | bigint | NN, CHECK ≤ the limit | Size |
 | `kind` | enum `media_kind` | NN | `image` \| `audio` |
