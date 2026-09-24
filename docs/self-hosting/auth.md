@@ -26,6 +26,8 @@ Authorization Code flow with PKCE, JWKS-signed JWTs and the Core 1.0 claims — 
 compliant IdP works without product-specific glue. Participants sign in too: see
 [who may take part](#who-may-take-part) below.
 
+A commented starting point: [`env/oidc.env.example`](../../env/oidc.env.example).
+
 ## How it works
 
 1. The SPA calls `GET /auth/config` → `{ mode: "oidc", oidc: { authority, clientId } }`.

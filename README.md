@@ -155,7 +155,10 @@ restart → doctor). Full procedure:
 
 ## ⚙️ Configuration
 
-Copy `.env.example` to `.env` and adjust. The settings you are most likely to touch:
+Start from the example that fits — [one container](https://github.com/quizdock/quiz-dock/blob/main/env/standalone.env.example),
+[Compose in local mode](https://github.com/quizdock/quiz-dock/blob/main/env/local.env.example) or
+[Compose with your identity provider](https://github.com/quizdock/quiz-dock/blob/main/env/oidc.env.example) —
+copy it to `.env` and adjust. The settings you are most likely to touch:
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -168,7 +171,7 @@ Copy `.env.example` to `.env` and adjust. The settings you are most likely to to
 | `HTTP_PORT` | `18080` | Host port for the app |
 | `APP_PUBLIC_URL` | — | Public address of the instance, offered first as the invitation address (QR code, join link) |
 | `DEMO_MODE` | `false` | Guards for an instance open to strangers: one shared host account, read-only templates, no uploads, hourly wipe |
-| `MEDIA_LIBRARY_LINKS` | *(four libraries)* | Free media libraries the editor links to (JSON list), or `none` |
+| `MEDIA_LIBRARY_LINKS` | *(seven free libraries)* | Free media libraries the editor links to (JSON list), or `none` |
 
 Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.<svg|avif|webp|png|jpg|jpeg|gif>`
 + `override.css` into the mounted `branding/` folder (or point `APP_LOGO_URL` at a logo

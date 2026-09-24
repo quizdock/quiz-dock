@@ -22,6 +22,18 @@ docker compose -f docker-compose.prod.yml up -d          # reads the .env next t
 ./quizdock init && ./quizdock up
 ```
 
+**Start from an example.** Copy the one that fits into `.env` and adjust it — each is
+commented, with only what that setup reads:
+
+| File | For |
+|---|---|
+| [`env/standalone.env.example`](../../env/standalone.env.example) | one container (`:standalone`), the database inside; local mode — a first try, a laptop |
+| [`env/local.env.example`](../../env/local.env.example) | Docker Compose with its own PostgreSQL, local mode — a classroom, a trusted network |
+| [`env/oidc.env.example`](../../env/oidc.env.example) | Docker Compose with your identity provider — an organisation |
+
+`./quizdock init` writes a `.env` of its own by asking; the root `.env.example` is the
+development stack's, for contributors.
+
 The examples in these guides use `:standalone` because it is the shortest to type; with
 compose, the same variables go in the `.env` file next to `docker-compose.prod.yml` and
 the container paths are identical. See the [CLI guide](cli.md) for the script, and the
@@ -108,16 +120,17 @@ Which setup offers what: [where participants connect](invitation-address.md).
 | `MEDIA_MAX_BYTES` | `10485760` | Max size of an uploaded **image** (bytes). Default 10 MiB. |
 | `MEDIA_MAX_VIDEO_MB` | `50` | Max size of an uploaded **video** (MB). The editor converts to MP4 H.264 + AAC and compresses a long video to fit. |
 | `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). The editor converts to M4A (AAC). |
-| `MEDIA_LIBRARY_LINKS` | *(four free libraries)* | The free media libraries the editor links to: a JSON list of `{"name", "url", "kinds"}` (`kinds` among `image`, `video`, `audio`), or `none` to hide them (an instance without Internet). Default: OpenSoundLibrary, Freesound, Openverse, Wikimedia Commons. |
+| `MEDIA_LIBRARY_LINKS` | *(seven free libraries)* | The free media libraries the editor links to: a JSON list of `{"name", "url", "kinds"}` (`kinds` among `image`, `video`, `audio`), or `none` to hide them (an instance without Internet). Default, open licences only and several per kind: OpenSoundLibrary, Freesound, ccMixter, Openverse, Wikimedia Commons, NASA Image and Video Library, Internet Archive. |
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
+
+| `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
+| `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |
+| `GAME_MEDIA_WAIT_S` | `10` | How long the room waits at most, before a question, for the devices that play its sound or video to load it (the host can start anyway). `0` never waits. See [audio & video](audio-video.md#waiting-for-media). |
 
 Formats, conversion and playback are detailed in [Audio & video](audio-video.md).
 The editor converts each media in the author's browser to one format per kind; the server
 still reads a file's type from its content, never from its name. **Behind a reverse proxy, raise its request body limit to the largest of these
 sizes** — nginx refuses anything over 1 MB by default (`client_max_body_size 50m;`).
-| `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
-| `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |
-| `GAME_MEDIA_WAIT_S` | `10` | How long the room waits at most, before a question, for the devices that play its sound or video to load it (the host can start anyway). `0` never waits. See [audio & video](audio-video.md#waiting-for-media). |
 
 ---
 
