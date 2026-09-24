@@ -6,22 +6,28 @@
  * OpenAPI spec version: 0.1.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  MeResponseDto
+  MeResponseDto,
+  UpdatePreferencesDto,
+  UserPreferencesDto
 } from '../model';
 
 import { customFetch } from '../../http';
@@ -137,3 +143,184 @@ export function useMeControllerMe<TData = Awaited<ReturnType<typeof meController
 
 
 
+export type meControllerGetPreferencesResponse200 = {
+  data: UserPreferencesDto
+  status: 200
+}
+
+export type meControllerGetPreferencesResponseSuccess = (meControllerGetPreferencesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type meControllerGetPreferencesResponse = (meControllerGetPreferencesResponseSuccess)
+
+export const getMeControllerGetPreferencesUrl = () => {
+
+
+
+
+  return `/api/v1/me/preferences`
+}
+
+export const meControllerGetPreferences = async ( options?: RequestInit): Promise<meControllerGetPreferencesResponse> => {
+
+  return customFetch<meControllerGetPreferencesResponse>(getMeControllerGetPreferencesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMeControllerGetPreferencesQueryKey = () => {
+    return [
+    `/api/v1/me/preferences`
+    ] as const;
+    }
+
+
+export const getMeControllerGetPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof meControllerGetPreferences>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerGetPreferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMeControllerGetPreferencesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof meControllerGetPreferences>>> = ({ signal }) => meControllerGetPreferences({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof meControllerGetPreferences>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MeControllerGetPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof meControllerGetPreferences>>>
+export type MeControllerGetPreferencesQueryError = unknown
+
+
+export function useMeControllerGetPreferences<TData = Awaited<ReturnType<typeof meControllerGetPreferences>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerGetPreferences>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof meControllerGetPreferences>>,
+          TError,
+          Awaited<ReturnType<typeof meControllerGetPreferences>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMeControllerGetPreferences<TData = Awaited<ReturnType<typeof meControllerGetPreferences>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerGetPreferences>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof meControllerGetPreferences>>,
+          TError,
+          Awaited<ReturnType<typeof meControllerGetPreferences>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMeControllerGetPreferences<TData = Awaited<ReturnType<typeof meControllerGetPreferences>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerGetPreferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMeControllerGetPreferences<TData = Awaited<ReturnType<typeof meControllerGetPreferences>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof meControllerGetPreferences>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMeControllerGetPreferencesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type meControllerUpdatePreferencesResponse200 = {
+  data: UserPreferencesDto
+  status: 200
+}
+
+export type meControllerUpdatePreferencesResponseSuccess = (meControllerUpdatePreferencesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type meControllerUpdatePreferencesResponse = (meControllerUpdatePreferencesResponseSuccess)
+
+export const getMeControllerUpdatePreferencesUrl = () => {
+
+
+
+
+  return `/api/v1/me/preferences`
+}
+
+export const meControllerUpdatePreferences = async (updatePreferencesDto: UpdatePreferencesDto, options?: RequestInit): Promise<meControllerUpdatePreferencesResponse> => {
+
+  return customFetch<meControllerUpdatePreferencesResponse>(getMeControllerUpdatePreferencesUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updatePreferencesDto)
+  }
+);}
+
+
+
+
+export const getMeControllerUpdatePreferencesMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof meControllerUpdatePreferences>>, TError,{data: UpdatePreferencesDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof meControllerUpdatePreferences>>, TError,{data: UpdatePreferencesDto}, TContext> => {
+
+const mutationKey = ['meControllerUpdatePreferences'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof meControllerUpdatePreferences>>, {data: UpdatePreferencesDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  meControllerUpdatePreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MeControllerUpdatePreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof meControllerUpdatePreferences>>>
+    export type MeControllerUpdatePreferencesMutationBody = UpdatePreferencesDto
+    export type MeControllerUpdatePreferencesMutationError = unknown
+
+    export const useMeControllerUpdatePreferences = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof meControllerUpdatePreferences>>, TError,{data: UpdatePreferencesDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof meControllerUpdatePreferences>>,
+        TError,
+        {data: UpdatePreferencesDto},
+        TContext
+      > => {
+      return useMutation(getMeControllerUpdatePreferencesMutationOptions(options), queryClient);
+    }

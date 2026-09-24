@@ -54,6 +54,7 @@ The key cardinalities:
 | `roles` | enum `user_role`[] | NN, DEF `{}` | The **set** of effective roles, recomputed on every request: the union of what was assigned and what the context derives (claims, host seat). Empty = participant; `{admin, host}` manages *and* hosts *(RG-14)* |
 | `assigned_roles` | enum `user_role`[] | NN, DEF `{}` | What an operator granted (CLI). Sticky: provisioning never takes it away |
 | `locale` | text | DEF `fr` | The preferred language (`fr`/`en`) |
+| `preferences` | jsonb | NN, DEF `{}` | What the account remembers wherever it signs in: the choices that follow the person (the participant access picked at the last launch), never the layout of one screen, which stays in the browser. Read key by key: an unknown or stale key falls back to its default. Shape: `UserPreferences` in the contracts |
 | `created_at` | timestamptz | NN, DEF now() | Created |
 | `updated_at` | timestamptz | NN | Last modified |
 | `deleted_at` | timestamptz | nullable | Anonymised for data protection (see §6) |

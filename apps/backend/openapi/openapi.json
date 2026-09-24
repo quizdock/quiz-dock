@@ -41,6 +41,66 @@
         ]
       }
     },
+    "/api/v1/me/preferences": {
+      "get": {
+        "operationId": "MeController_getPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "MeController_updatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePreferencesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPreferencesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/api/v1/auth/config": {
       "get": {
         "operationId": "AuthConfigController_config",
@@ -2247,6 +2307,33 @@
           "roles",
           "subject"
         ]
+      },
+      "UserPreferencesDto": {
+        "type": "object",
+        "properties": {
+          "participantAccess": {
+            "type": "string",
+            "enum": [
+              "account",
+              "open"
+            ]
+          }
+        }
+      },
+      "UpdatePreferencesDto": {
+        "type": "object",
+        "properties": {
+          "participantAccess": {
+            "type": "string",
+            "enum": [
+              "account",
+              "open",
+              null
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "AuthConfigDto": {
         "type": "object",
