@@ -49,6 +49,7 @@ export type QuizDetailDtoQuestionsItem = {
   /** @nullable */
   audioTarget: QuizDetailDtoQuestionsItemAudioTarget;
   waveformSize: QuizDetailDtoQuestionsItemWaveformSize;
+  timerAfterMedia: boolean;
   pointsMode: QuizDetailDtoQuestionsItemPointsMode;
   scoring: QuizDetailDtoQuestionsItemScoring;
   /** @nullable */

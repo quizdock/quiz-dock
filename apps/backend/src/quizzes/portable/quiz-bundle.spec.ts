@@ -56,6 +56,7 @@ function makeQuiz(): ExportableQuiz {
         revealDelayS: 8,
         audioTarget: 'everyone',
         waveformSize: 'S',
+        timerAfterMedia: true,
         pointsMode: 'double',
         scoring: 'standard',
         numericValue: null,
@@ -217,6 +218,7 @@ describe('quiz bundle', () => {
       revealDelayS: 8,
       audioTarget: 'everyone',
       waveformSize: 'S',
+      timerAfterMedia: true,
       pointsMode: 'double',
     });
     expect(q1.options.map((o) => [o.text, o.mediaId, o.isCorrect])).toEqual([
@@ -230,6 +232,7 @@ describe('quiz bundle', () => {
       backgroundMediaId: BG,
       audioTarget: null,
       waveformSize: 'M', // absent from the bundle: the default
+      timerAfterMedia: false,
     });
     expect(imported.slides.map((s) => [s.beforeQuestion, s.orderIndex])).toEqual([
       [0, 0],

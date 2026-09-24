@@ -10,6 +10,13 @@ export const READ_DELAY_MS = 3_000;
  */
 export const MEDIA_WAIT_S = 10;
 
+/**
+ * How far ahead the server sets the common start of a question's media (ms):
+ * enough for the question to reach every device, which then starts on the
+ * same instant of the server's clock.
+ */
+export const MEDIA_LEAD_MS = 600;
+
 /** Tolérance serveur : réponses reçues après `endsAt + grace` rejetées (§6). */
 export const GRACE_MS = 300;
 

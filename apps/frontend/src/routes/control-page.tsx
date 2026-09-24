@@ -37,6 +37,7 @@ import { Markdown } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { ReadinessMeter } from '../game/media/readiness-meter';
+import { serverNow } from '../game/clock';
 import { Switch } from '@/components/ui/switch';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Tooltip } from '@/components/ui/tooltip';
@@ -649,9 +650,9 @@ function ActionBar({
  */
 function AutoAdvanceCountdown({ deadline, totalMs }: { deadline: number; totalMs: number }) {
   const { t } = useTranslation('live');
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => serverNow());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 100);
+    const id = setInterval(() => setNow(serverNow()), 100);
     return () => clearInterval(id);
   }, []);
   const remainingMs = Math.max(0, deadline - now);

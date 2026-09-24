@@ -104,6 +104,8 @@ export const questionBundleSchema = z.object({
   audioTarget: z.enum(AUDIO_TARGETS).optional(),
   /** How thick its waveform is drawn (version 3); absent = M. */
   waveformSize: z.enum(WAVEFORM_SIZES).optional(),
+  /** The timer starts when the media ends (version 3); absent = with the question. */
+  timerAfterMedia: z.boolean().optional(),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).optional(),
   scoring: z.enum(['standard', 'closest', 'partial', 'lenient']).optional(),
   numericValue: z.number().optional(),

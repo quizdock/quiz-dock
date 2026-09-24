@@ -130,6 +130,34 @@ describe('PlayerPage (client participant)', () => {
     expect(claimMediaElements).toHaveBeenCalled();
   });
 
+  it('listen first: the phone says to listen, and counts down to the answers', async () => {
+    loadPlayerSession.mockReturnValue({
+      pin: '771122',
+      nickname: 'Bob',
+      sessionToken: 't',
+      playerId: 'p1',
+    });
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      question: {
+        questionIndex: 0,
+        type: 'single_choice',
+        prompt: 'Quel morceau ?',
+        options: [PARIS],
+        timeLimitS: 5,
+        basePoints: 1000,
+        startedAt: Date.now() + 8000,
+        endsAt: Date.now() + 13000,
+        listenFirst: true,
+        media: { visual: null, audio: null },
+      } as never,
+    });
+    renderApp('/join/771122');
+    expect(await screen.findByText(/Écoute jusqu’au bout/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Écoute en cours')).toHaveTextContent('🎧');
+  });
+
   it('MEDIA_LOADING: the phone says the question is coming', async () => {
     loadPlayerSession.mockReturnValue({
       pin: '771122',

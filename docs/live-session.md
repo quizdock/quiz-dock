@@ -61,6 +61,16 @@ The media brief (`specifications/SPECIFICATIONS-MEDIA.md` §5) as built:
   (`media:wait` carries the deadline). One way out per question
   (`media-wait-lock`); re-armed after a restart; a host coming back starts the
   question.
+- **Clock** — every client estimates its offset to the server's clock from
+  `ping`/`pong` (shortest round trip wins, `clock.ts`); countdowns and media starts
+  compare server times with `serverNow()`.
+- **Common start** — `question:start` / `question:time` carry `mediaStartAt`, a
+  moment ahead of the question's opening; the engine keeps it as a distance from
+  `questionStartedAt` (`mediaLeadMs`), so pauses, a host coming back and restarts
+  move it with the timer. Devices wait for it, or seek to it when late.
+- **Listen first** — `timerAfterMedia` (frozen in the snapshot): `startedAt` is the
+  media's end, the time limit is not stretched, answers before it are refused;
+  `listenFirst` tells the screens to count the listening down.
 - **Position** — the projection reports where it is in the media
   (`media:position`, about once a second and on play / pause / seek); the server
   relays it. Screens showing a sound without playing it move their playhead with

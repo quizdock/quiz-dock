@@ -2098,6 +2098,9 @@
                     "L"
                   ]
                 },
+                "timerAfterMedia": {
+                  "type": "boolean"
+                },
                 "pointsMode": {
                   "type": "string",
                   "enum": [
@@ -2232,6 +2235,7 @@
                 "revealDelayS",
                 "audioTarget",
                 "waveformSize",
+                "timerAfterMedia",
                 "pointsMode",
                 "scoring",
                 "numericValue",
@@ -3761,6 +3765,10 @@
               "L"
             ]
           },
+          "timerAfterMedia": {
+            "default": false,
+            "type": "boolean"
+          },
           "pointsMode": {
             "default": "standard",
             "type": "string",
@@ -4115,6 +4123,9 @@
               "L"
             ]
           },
+          "timerAfterMedia": {
+            "type": "boolean"
+          },
           "pointsMode": {
             "type": "string",
             "enum": [
@@ -4249,6 +4260,7 @@
           "revealDelayS",
           "audioTarget",
           "waveformSize",
+          "timerAfterMedia",
           "pointsMode",
           "scoring",
           "numericValue",
@@ -4530,6 +4542,10 @@
               "M",
               "L"
             ]
+          },
+          "timerAfterMedia": {
+            "default": false,
+            "type": "boolean"
           },
           "pointsMode": {
             "default": "standard",

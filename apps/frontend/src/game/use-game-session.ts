@@ -230,7 +230,15 @@ export function useGameSession(pin: string, role: LiveRole) {
     const onTime = (p: QuestionTimePayload) =>
       setView((prev) =>
         prev.question && prev.question.questionIndex === p.questionIndex
-          ? { ...prev, question: { ...prev.question, startedAt: p.startedAt, endsAt: p.endsAt } }
+          ? {
+              ...prev,
+              question: {
+                ...prev.question,
+                startedAt: p.startedAt,
+                endsAt: p.endsAt,
+                ...(p.mediaStartAt !== undefined ? { mediaStartAt: p.mediaStartAt } : {}),
+              },
+            }
           : prev,
       );
     const onCount = (p: { answered: number; total: number }) => patch({ answerCount: p });

@@ -148,7 +148,8 @@
     "review": "Retour en arrière",
     "readiness": "{{ready}} / {{total}} prêts",
     "mediaLoading": "La question arrive…",
-    "readinessLeft": "encore {{seconds}} s"
+    "readinessLeft": "encore {{seconds}} s",
+    "listening": "Écoute en cours"
   },
   "player": {
     "joinFailed": "Impossible de rejoindre la session.",
@@ -208,7 +209,9 @@
     "yourCredit": "{{percent}} % des points",
     "dragToReorder": "Glisser pour réordonner",
     "pollThanks": "Merci pour ton avis !",
-    "questionComing": "La question arrive…"
+    "questionComing": "La question arrive…",
+    "listenFirst": "🎧 Écoute jusqu’au bout…",
+    "listening": "Écoute en cours"
   },
   "reveal": {
     "explanation": "Explication",

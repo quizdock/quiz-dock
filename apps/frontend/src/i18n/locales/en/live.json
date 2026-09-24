@@ -148,7 +148,8 @@
     "review": "Looking back",
     "readiness": "{{ready}} / {{total}} ready",
     "mediaLoading": "The question is on its way…",
-    "readinessLeft": "{{seconds}} s left"
+    "readinessLeft": "{{seconds}} s left",
+    "listening": "Listening"
   },
   "player": {
     "joinFailed": "Could not join the session.",
@@ -208,7 +209,9 @@
     "yourCredit": "{{percent}} % of the points",
     "dragToReorder": "Drag to reorder",
     "pollThanks": "Thanks for your opinion!",
-    "questionComing": "The question is on its way…"
+    "questionComing": "The question is on its way…",
+    "listenFirst": "🎧 Listen to the end…",
+    "listening": "Listening"
   },
   "reveal": {
     "explanation": "Explanation",

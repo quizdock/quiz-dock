@@ -43,6 +43,8 @@ export interface SnapshotQuestion {
   timeLimitS: number;
   /** Auto-mode delay on this REVEAL in seconds (#6); null = engine default. */
   revealDelayS: number | null;
+  /** Listen first: the answers open when the media ends (frozen with the substance). */
+  timerAfterMedia?: boolean;
   /** Which devices play its sound; null (or absent, older snapshots) = the game's default. */
   audioTarget?: AudioTarget | null;
   /** Markdown shown at REVEAL only (#5) — never part of `question:start`. */
@@ -125,6 +127,12 @@ export interface GameMeta {
   personalTracking: boolean;
   /** Les participants choisissent leur nom affiché ; sinon il vient du compte (RG-15). */
   pickOwnName: boolean;
+  /**
+   * `questionStartedAt − mediaStartAt` for the current question, null when it plays
+   * nothing: kept as a distance so a pause, which moves `questionStartedAt`, moves
+   * the media's start with it.
+   */
+  mediaLeadMs?: number | null;
   /** End of the media wait (ms epoch) while in `MEDIA_LOADING`, 0 otherwise. */
   mediaWaitUntil?: number;
   /** The host's lobby choice replacing the quiz's default audio target; empty = the quiz's. */

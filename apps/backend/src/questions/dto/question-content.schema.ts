@@ -78,6 +78,8 @@ export const questionContentSchema = z
     audioTarget: z.enum(AUDIO_TARGETS).nullable().optional(),
     // How thick its waveform is drawn on the screens.
     waveformSize: z.enum(WAVEFORM_SIZES).default('M'),
+    // Listen first: the timer starts when the media ends (a known duration is needed).
+    timerAfterMedia: z.boolean().default(false),
     pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).default('standard'),
     // Per-type scoring rule (see `SCORING_BY_TYPE`); `standard` everywhere by default.
     scoring: z.enum(['standard', 'closest', 'partial', 'lenient']).default('standard'),

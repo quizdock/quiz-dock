@@ -251,7 +251,10 @@
     },
     "titleEdit": "编辑题目",
     "titleAdd": "新建题目",
-    "stretchedTime": "媒体时长 {{media}} 秒：此题将持续 {{total}} 秒（媒体结束 + 测验设置的 {{tail}} 秒停顿）。"
+    "stretchedTime": "媒体时长 {{media}} 秒：此题将持续 {{total}} 秒（媒体结束 + 测验设置的 {{tail}} 秒停顿）。",
+    "listenFirstLabel": "媒体结束后再开始计时",
+    "listenFirstHint": "先听后答：播放声音或视频期间无法作答，之后每个人都有相同的思考时间。",
+    "listenFirstTime": "媒体播放 {{media}} 秒，然后开始 {{time}} 秒的作答时间。"
   },
   "preview": {
     "view": "预览（玩家视图）",

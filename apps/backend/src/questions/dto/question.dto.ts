@@ -47,6 +47,8 @@ export const questionSchema = z.object({
   audioTarget: z.enum(AUDIO_TARGETS).nullable(),
   /** How thick its waveform is drawn on the screens. */
   waveformSize: z.enum(WAVEFORM_SIZES),
+  /** The timer starts when the media ends. */
+  timerAfterMedia: z.boolean(),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']),
   scoring: z.enum(['standard', 'closest', 'partial', 'lenient']),
   numericValue: z.string().nullable(),

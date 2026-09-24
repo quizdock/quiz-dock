@@ -251,7 +251,10 @@
     },
     "titleEdit": "Modifier la question",
     "titleAdd": "Nouvelle question",
-    "stretchedTime": "Le média dure {{media}} s : la question durera {{total}} s (fin du média + pause de {{tail}} s réglée sur le quiz)."
+    "stretchedTime": "Le média dure {{media}} s : la question durera {{total}} s (fin du média + pause de {{tail}} s réglée sur le quiz).",
+    "listenFirstLabel": "Lancer le chrono à la fin du média",
+    "listenFirstHint": "Écouter d’abord, répondre ensuite : personne ne peut répondre pendant le son ou la vidéo, et tout le monde a ensuite le même temps de réflexion.",
+    "listenFirstTime": "Le média joue {{media}} s, puis les {{time}} s de réponse commencent."
   },
   "preview": {
     "view": "Aperçu (vue participant)",

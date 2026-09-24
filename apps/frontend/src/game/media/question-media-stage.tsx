@@ -8,6 +8,7 @@ import { applyGain, unlockAudio, useAudioUnlocked } from './audio-unlock';
 import { releaseMedia, takeMedia } from './media-pool';
 import { clearPosition, readPosition, resumeAt, writePosition } from './media-position';
 import { Waveform } from './waveform';
+import { serverNow } from '../clock';
 
 /**
  * - `play`: the projection plays the media as the question appears;
@@ -77,6 +78,19 @@ function usePositionReport(
   }, [el, onPosition]);
 }
 
+/** A late device jumps to the common position only when this far from it (s). */
+const SYNC_TOLERANCE_S = 0.3;
+
+/** Puts the element at `t` seconds — once its length is known, and within it. */
+function seekTo(el: HTMLMediaElement, t: number) {
+  const apply = () => {
+    const end = Number.isFinite(el.duration) ? el.duration : Infinity;
+    if (t < end && Math.abs(el.currentTime - t) > SYNC_TOLERANCE_S) el.currentTime = t;
+  };
+  if (el.readyState >= HTMLMediaElement.HAVE_METADATA) apply();
+  else el.addEventListener('loadedmetadata', apply, { once: true });
+}
+
 /** How long a media may take to start before the screen says it is late. */
 const SLOW_MS = 4000;
 
@@ -95,6 +109,8 @@ function usePlayback(
   positionKey: string | null,
   /** Plays without sound: the device is not targeted, or its owner muted it. */
   silent = false,
+  /** The common start of the media, on the server's clock (null: start at once). */
+  startAt: number | null = null,
 ) {
   const [blocked, setBlocked] = useState<Blocked>(null);
   const [slow, setSlow] = useState(false);
@@ -120,6 +136,17 @@ function usePlayback(
     // Played to its end before an interruption: it does not start again on its own.
     if (positionKey && readPosition(positionKey)?.ended) return;
     let cancelled = false;
+    // The common start: every device plays from the same instant of the server's
+    // clock. Early, wait for it; late (still loading, joined mid-question), start
+    // where the media is. Only a first start: a resumed media keeps its own place.
+    let wait = 0;
+    // (A position of a few tenths — written as the element loads — is not a resume.)
+    const resumed = positionKey !== null && resumeAt(readPosition(positionKey)) !== null;
+    if (startAt !== null && !resumed) {
+      const ahead = startAt - serverNow();
+      if (ahead > 0) wait = ahead;
+      else seekTo(el, -ahead / 1000);
+    }
     const start = async () => {
       if (silent) el.muted = true;
       else if (unlocked && el.muted) el.muted = false; // the video that went on muted gets its sound
@@ -127,17 +154,21 @@ function usePlayback(
       if (!cancelled) await el.play();
       if (!cancelled) setBlocked(null);
     };
-    start().catch((err: DOMException) => {
-      if (cancelled || err.name !== 'NotAllowedError') return;
-      if (el instanceof HTMLVideoElement) {
-        // Picture without sound beats nothing: the room still sees the question.
-        el.muted = true;
-        void el.play().catch(() => undefined);
-        setBlocked('video');
-      } else {
-        setBlocked('audio');
-      }
-    });
+    const go = () =>
+      start().catch((err: DOMException) => {
+        if (cancelled || err.name !== 'NotAllowedError') return;
+        if (el instanceof HTMLVideoElement) {
+          // Picture without sound beats nothing: the room still sees the question.
+          el.muted = true;
+          void el.play().catch(() => undefined);
+          setBlocked('video');
+        } else {
+          setBlocked('audio');
+        }
+      });
+    let startTimer = 0;
+    if (wait > 0) startTimer = window.setTimeout(go, wait);
+    else void go();
     const timer = window.setTimeout(() => {
       if (!cancelled && el.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) setSlow(true);
     }, SLOW_MS);
@@ -146,9 +177,10 @@ function usePlayback(
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
+      window.clearTimeout(startTimer);
       el.removeEventListener('playing', onPlaying);
     };
-  }, [el, mode, gainDb, positionKey, unlocked, silent]);
+  }, [el, mode, gainDb, positionKey, unlocked, silent, startAt]);
 
   const enableSound = async () => {
     if (!el) return;
@@ -236,6 +268,7 @@ function VideoBox({
   silent,
   catchUp,
   onPosition,
+  startAt,
 }: {
   url: string;
   mode: StageMode;
@@ -246,12 +279,22 @@ function VideoBox({
   silent: boolean;
   catchUp?: FollowedPosition | null;
   onPosition?: (t: number, playing: boolean) => void;
+  startAt: number | null;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const key = resumeKey && `${resumeKey}:${url}`;
   const el = useMediaElement('video', url, mode === 'still', key);
-  const { blocked, slow, enableSound } = usePlayback(el, mode, gainDb, restartSignal, key, silent);
-  useCatchUp(el, catchUp);
+  const { blocked, slow, enableSound } = usePlayback(
+    el,
+    mode,
+    gainDb,
+    restartSignal,
+    key,
+    silent,
+    startAt,
+  );
+  // Without a common start (an older server), a late device follows the projection instead.
+  useCatchUp(el, startAt === null ? catchUp : null);
   usePositionReport(el, onPosition);
 
   useEffect(() => {
@@ -277,6 +320,7 @@ function AudioTrack({
   silent,
   onPosition,
   catchUp,
+  startAt,
 }: {
   audio: LiveAudio;
   mode: StageMode;
@@ -285,6 +329,7 @@ function AudioTrack({
   silent: boolean;
   onPosition?: (t: number, playing: boolean) => void;
   catchUp?: FollowedPosition | null;
+  startAt: number | null;
 }) {
   const { t } = useTranslation('live');
   const key = resumeKey && `${resumeKey}:${audio.url}`;
@@ -296,8 +341,9 @@ function AudioTrack({
     restartSignal,
     key,
     silent,
+    startAt,
   );
-  useCatchUp(el, catchUp);
+  useCatchUp(el, startAt === null ? catchUp : null);
   const [progress, setProgress] = useState(0);
 
   // The filled part follows the sound, frame by frame, only while it plays.
@@ -402,6 +448,7 @@ export function QuestionMediaStage({
   follow,
   onPosition,
   catchUp,
+  startAt = null,
 }: {
   media: LiveQuestionMedia | null | undefined;
   mode: StageMode;
@@ -418,6 +465,8 @@ export function QuestionMediaStage({
   onPosition?: (t: number, playing: boolean) => void;
   /** A device that plays too: the projection's position, to jump to when it starts late. */
   catchUp?: FollowedPosition | null;
+  /** The common start of the media on the server's clock (`question:start.mediaStartAt`). */
+  startAt?: number | null;
   /** Session + question: where the position is kept across an interruption (projection only). */
   resumeKey?: string | null;
   /** Changes when the host restarts the media from the top. */
@@ -452,6 +501,7 @@ export function QuestionMediaStage({
           silent={muted || !audible}
           catchUp={catchUp}
           onPosition={onPosition}
+          startAt={startAt}
         />
       ) : null}
       {audio && (mode === 'still' || !audible) && follow !== undefined ? (
@@ -466,6 +516,7 @@ export function QuestionMediaStage({
             silent={muted}
             onPosition={onPosition}
             catchUp={catchUp}
+            startAt={startAt}
           />
         </div>
       ) : null}

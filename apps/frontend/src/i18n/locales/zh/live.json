@@ -148,7 +148,8 @@
     "review": "回顾",
     "readiness": "{{ready}} / {{total}} 已就绪",
     "mediaLoading": "题目即将出现…",
-    "readinessLeft": "还剩 {{seconds}} 秒"
+    "readinessLeft": "还剩 {{seconds}} 秒",
+    "listening": "正在收听"
   },
   "player": {
     "joinFailed": "无法加入会话。",
@@ -208,7 +209,9 @@
     "yourCredit": "{{percent}} % 的分数",
     "dragToReorder": "拖动以排序",
     "pollThanks": "感谢你的意见！",
-    "questionComing": "题目即将出现…"
+    "questionComing": "题目即将出现…",
+    "listenFirst": "🎧 请听完…",
+    "listening": "正在收听"
   },
   "reveal": {
     "explanation": "解析",

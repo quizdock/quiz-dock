@@ -585,9 +585,11 @@ export function PlayerPage() {
         {remaining !== null ? (
           <span
             className="shrink-0 pt-[0.5em] text-[2.5em] font-bold tabular-nums"
-            aria-label={t('player.timeRemaining')}
+            aria-label={
+              reading && question.listenFirst ? t('player.listening') : t('player.timeRemaining')
+            }
           >
-            ⏱ {remaining}
+            {reading && question.listenFirst ? `🎧 ${readingLeft}` : `⏱ ${remaining}`}
           </span>
         ) : null}
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[1em]">
@@ -602,6 +604,7 @@ export function PlayerPage() {
               muted={muted}
               follow={hears ? undefined : followed(view, question.questionIndex)}
               catchUp={followed(view, question.questionIndex)}
+              startAt={question.mediaStartAt ?? null}
               boxClassName="w-full max-h-[35dvh]"
               resumeKey={`${pin}:${question.questionIndex}`}
               restartSignal={
@@ -634,7 +637,8 @@ export function PlayerPage() {
           <AnswerRules question={question} />
           {reading ? (
             <p className="text-muted-foreground text-[1.1em] font-medium">
-              {t('player.readQuestion')} <span className="tabular-nums">{readingLeft}</span>
+              {question.listenFirst ? t('player.listenFirst') : t('player.readQuestion')}{' '}
+              <span className="tabular-nums">{readingLeft}</span>
             </p>
           ) : done ? (
             <p className="text-[1.25em] font-semibold">{t('player.answerSaved')}</p>

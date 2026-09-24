@@ -246,4 +246,41 @@ describe('QuestionForm — media timing', () => {
       'Le média dure 42 s : la question durera 42 s',
     );
   });
+
+  it('listen first: the timer starts after the sound, and the hint says so', async () => {
+    localStorage.setItem(
+      'draft:quiz:q1:question:new',
+      JSON.stringify({
+        type: 'poll',
+        prompt: 'Q ?',
+        media: {
+          visual: null,
+          audio: {
+            assetId: 'A'.repeat(26),
+            origin: 'upload',
+            durationMs: 42_000,
+            peaks: new Array(200).fill(0.5),
+          },
+        },
+        answerExplanation: '',
+        background: { mediaId: null, gradient: null, textTone: 'light', textOutline: true },
+        timeLimitS: 20,
+        revealDelayS: null,
+        pointsMode: 'none',
+        scoring: 'standard',
+        numericValue: 0,
+        numericTolerance: 0,
+        options: [],
+        acceptedAnswers: [],
+      }),
+    );
+    mockApi([]);
+    renderForm();
+    fireEvent.click(
+      await screen.findByRole('checkbox', { name: /Lancer le chrono à la fin du média/ }),
+    );
+    expect(screen.getByRole('note', { name: '' })).toHaveTextContent(
+      'Le média joue 42 s, puis les 20 s de réponse commencent.',
+    );
+  });
 });

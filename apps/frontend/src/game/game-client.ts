@@ -6,6 +6,7 @@ import type {
 import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
 import { errorText } from '../api/error-text';
+import { calibrateClock } from './clock';
 import { getAccessToken, getLocalUser } from '../auth/auth-context';
 
 /** Socket typé bout-en-bout (écoute serveur→client, émet client→serveur). */
@@ -99,12 +100,14 @@ export async function connectHost(): Promise<GameSocket> {
     },
     forceNew: true,
   });
+  calibrateClock(socket);
   return socket;
 }
 
 /** Connexion **joueur** : aucune auth (invité — le backend l'accepte tel quel). */
 export function connectPlayer(): GameSocket {
   socket = io('/game', { forceNew: true });
+  calibrateClock(socket);
   return socket;
 }
 

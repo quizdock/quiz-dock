@@ -200,6 +200,13 @@ export interface QuestionStartPayload {
   scoring?: QuestionScoring;
   startedAt: number; // ms epoch serveur (§6)
   endsAt: number;
+  /**
+   * When every device starts the sound or video (server ms epoch; present when
+   * the question has one). A device reaching it late starts where the media is.
+   */
+  mediaStartAt?: number;
+  /** Listen first: the answers open when the media ends (`startedAt`), not before. */
+  listenFirst?: boolean;
   /** Optional full-cover background (image or gradient), like a slide's. */
   background?: SlideBackground | null;
   textTone?: SlideTextTone;
@@ -348,6 +355,8 @@ export interface QuestionTimePayload {
   questionIndex: number;
   startedAt: number;
   endsAt: number;
+  /** The media's start, moved with the rest (present when the question has a sound or a video). */
+  mediaStartAt?: number;
 }
 
 /**

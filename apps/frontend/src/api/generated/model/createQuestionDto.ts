@@ -53,6 +53,7 @@ export interface CreateQuestionDto {
   /** @nullable */
   audioTarget?: CreateQuestionDtoAudioTarget;
   waveformSize?: CreateQuestionDtoWaveformSize;
+  timerAfterMedia?: boolean;
   pointsMode?: CreateQuestionDtoPointsMode;
   scoring?: CreateQuestionDtoScoring;
   numericValue?: number;
