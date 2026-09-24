@@ -37,11 +37,13 @@ the results never leave your servers.
 </p>
 
 > [!NOTE]
-> **New in 0.7 — 🎧 video & sound in questions** *(experimental)*. MP4 videos and MP3
-> sounds, loudness-matched, with a waveform; played on the projection **and** on the
-> devices of remote participants, started on the same instant everywhere; *listen first*
-> questions open the answers once the media has played. Tested in Chromium browsers, not
-> yet on iPhone — see the
+> **New in 0.7 — 🎧 video & sound in questions** *(experimental)*. Videos and sounds,
+> loudness-matched, with a waveform; played on the projection **and** on the devices of
+> remote participants, started on the same instant everywhere; *listen first* questions
+> open the answers once the media has played. Since then, a **media library**: whatever
+> your browser reads is converted there (WebP, MP4, M4A), reused from *My media* or from
+> the instance's **global media**, credited, and managed on an administration page.
+> Tested in Chromium browsers, not yet on iPhone — see the
 > [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
 
 ## 🎮 Try it online
@@ -65,13 +67,19 @@ your phone to play.
 - 🧩 **A real quiz builder** — seven question types (single/multi choice, true-false,
   text, numeric, reorder, poll), images with alternative text, Markdown everywhere, content
   slides between questions, backgrounds, answer explanations at the reveal.
-- 🎧 **Video & sound — _experimental_** — MP4 videos and MP3 sounds in questions,
+- 🎧 **Video & sound — _experimental_** — videos and sounds in questions,
   loudness-matched, drawn as a waveform with a playhead; played on the projection and on
   the devices of **remote participants** (who hears what is set per quiz, per question and
   per session), started on the same instant everywhere, fetched ahead from the lobby, and
   the room waits a moment for a device still loading. *Listen first* questions open the
   answers only once the media has played. Tested in Chromium browsers, not yet on iPhone:
   [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
+- 🗂️ **A media library** — drop any image, video or sound your browser reads: it is
+  converted **in the browser** to one format per kind (WebP, MP4 H.264/AAC, M4A) and
+  stored once, whoever uploads it again. *My images / videos / sounds* reuse what you
+  uploaded; **global media** are what the instance provides to every host; each media
+  carries its **credit** (author, licence, source), shown with the quiz and under the
+  podium. Links to free libraries (Openverse, Wikimedia Commons, Freesound…).
 - 🏆 **Scoring that rewards speed** — time-weighted points, streak bonuses, leaderboard
   between questions, final podium; per-question rules (*closest answer wins*, partial
   credit, typo-tolerant text, double or fixed points).
@@ -153,10 +161,12 @@ Copy `.env.example` to `.env` and adjust. The settings you are most likely to to
 | `APP_NAME` | `QuizDock` | App name shown in the UI (white-label) |
 | `APP_LANG` | `en` | Instance language: `en` · `fr` · `es` · `zh` · `zh-TW` |
 | `APP_LOGO_URL` | — | Logo served from elsewhere; empty = look in the mounted `branding/` folder |
+| `APP_FEEDBACK_URL` | — | Where the home page's *report a bug / suggest a feature…* links lead; empty = this repository, `none` = hidden |
 | `AUTH_MODE` | `none` | `none` (local mode) or `oidc` (any OpenID Connect provider) |
 | `HTTP_PORT` | `18080` | Host port for the app |
 | `APP_PUBLIC_URL` | — | Public address of the instance, offered first as the invitation address (QR code, join link) |
 | `DEMO_MODE` | `false` | Guards for an instance open to strangers: one shared host account, read-only templates, no uploads, hourly wipe |
+| `MEDIA_LIBRARY_LINKS` | *(four libraries)* | Free media libraries the editor links to (JSON list), or `none` |
 
 Rebrand without rebuilding: set `APP_NAME` / `APP_LANG` and drop a `logo.<svg|avif|webp|png|jpg|jpeg|gif>`
 + `override.css` into the mounted `branding/` folder (or point `APP_LOGO_URL` at a logo
@@ -177,8 +187,12 @@ hosted elsewhere).
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/console-lobby.png" alt="Host console — lobby" /><br /><sub><b>Host console</b> — lobby: PIN, QR code, players in the room or remote, who hears the sound</sub></td>
   </tr>
   <tr>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/media-library.png" alt="My media" /><br /><sub><b>My media</b> — reuse what you uploaded, sizes and usages; global media one tab away</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/admin-media.png" alt="Instance media" /><br /><sub><b>Instance media</b> — disk, clean-up, every file with its owners, the global media</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join.png" alt="Join by PIN, nickname and avatar" /><br /><sub><b>Join</b> — PIN or QR code, nickname &amp; avatar, in the room or remote, no account</sub></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/projection-question.png" alt="Projection — question" /><br /><sub><b>Projection</b> — live question on the big screen</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/projection-media.png" alt="Projection — question with a picture" /><br /><sub><b>Projection</b> — live question on the big screen, with its picture</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/player-play.png" alt="Player — question and reveal" /><br /><sub><b>Player</b> — colour tiles to tap, then own result</sub></td>
@@ -187,7 +201,8 @@ hosted elsewhere).
 </table>
 
 More — content slides, the console during a question and at the reveal,
-the podium, the player's ordering and feedback screens:
+the podium, the player's ordering and feedback screens, the global media, the preview
+of a sound on its waveform:
 [full gallery](https://github.com/quizdock/quiz-dock/blob/main/docs/screenshots/README.md).
 
 ## 📋 More features
@@ -198,6 +213,9 @@ the podium, the player's ordering and feedback screens:
 - 📝 **Rich text** — prompts, options and descriptions in Markdown with a visual editor (bold, lists, code, inline images).
 - 🎞️ **Content slides** — headings, text, images, 2–3 columns between questions; image or gradient backgrounds for slides and questions, with a faithful 16:9 preview.
 - 💡 **Answer explanations** — shown at the reveal, with a per-question reveal delay in automatic mode.
+- 🧾 **Credits** — author, licence and source on every media, carried with a quiz when it is exported or shared; listed on the preview page and in small print under the podium, as a CC-BY licence asks.
+- 🗄️ **Instance media** _(administrators)_ — disk used by kind and by owner, the clean-up (unused media, stray files, run it now), every file with its size in pixels, owners and usages, as a list or a grid with a preview (sound on its waveform); global media uploaded or added from any file; a file deleted even when used (moderation), once its usages are listed.
+- 🧹 **Media housekeeping** — each file stored once (SHA-256), unused media and stray files cleaned up hourly, older formats kept playing.
 - 🎛️ **Host in control** — Console / Projection / Participant views, look back over played questions without replaying anything, layout edits reach a running session at its next step, sessions survive a server restart.
 - 🌐 **Remote participants** _(experimental)_ — a participant following from home says so when joining and gets the whole question on their device, sound and video included; the console shows who is remote and whose media are loaded.
 - 📡 **Invitation address** — the QR code and join link point where participants can actually reach the instance (public URL, LAN IP, or any address), chosen from the console.
@@ -208,6 +226,7 @@ the podium, the player's ordering and feedback screens:
 - 📦 **Quiz import / export** — a quiz travels as a [portable bundle](https://github.com/quizdock/quiz-dock/blob/main/docs/quiz-bundle.md) (`quiz.json` + `media/`, zipped): back it up, move it between instances, share it — from the app or the operator CLI.
 - 🌍 **Multilingual** — one language per instance; a [glossary](https://github.com/quizdock/quiz-dock/blob/main/apps/frontend/src/i18n/GLOSSARY.md) keeps the wording consistent across the five.
 - 🎨 **White-label** — name, logo and CSS via env + a mounted folder, no rebuild.
+- 💬 **Feedback** — under the version on the home page, links to report a bug, suggest a feature, fix a translation or ask a question, pre-filled with the version and the browser; pointed at your own repository or hidden with `APP_FEEDBACK_URL`.
 - 🔒 **Hardened runtime** — distroless image, non-root, read-only root FS, all Linux capabilities dropped, `no-new-privileges`.
 
 </details>
