@@ -46,10 +46,14 @@ describe('StoreService', () => {
     process.env = env;
   });
 
-  function makeService(found: unknown = quiz, revision = 1) {
+  function makeService(
+    found: unknown = quiz,
+    revision = 1,
+    manifest: unknown = { title: 'Ports' },
+  ) {
     const zip = Buffer.from(
       zipSync({
-        'quiz.json': new Uint8Array(Buffer.from(JSON.stringify({ title: 'Ports' }))),
+        'quiz.json': new Uint8Array(Buffer.from(JSON.stringify(manifest))),
         'media/pic.jpg': new Uint8Array([1, 2, 3]),
       }),
     );
@@ -144,6 +148,62 @@ describe('StoreService', () => {
     expect(Array.isArray(preview.items)).toBe(true);
   });
 
+  it('la carte reçoit la première diapositive entière, médias servis par le catalogue', async () => {
+    const { service } = makeService(quiz, 1, {
+      items: [
+        {
+          kind: 'slide',
+          backgroundImage: 'media/bg.webp',
+          textTone: 'dark',
+          blocks: [
+            { type: 'heading', id: 'h', text: 'Ports', level: 1 },
+            {
+              type: 'columns',
+              id: 'c',
+              columns: [
+                [{ type: 'image', id: 'i', media: 'media/pic.jpg', size: 'full', align: 'center' }],
+                [{ type: 'text', id: 't', md: 'See ![map](media/map.webp)' }],
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const entry = await service.share(alice, 'q1');
+    const [listed] = await service.list();
+    const base = `/api/v1/store/${entry.id}/media`;
+
+    expect(listed.first).toMatchObject({ kind: 'slide', text: 'Ports', media: `${base}/bg.webp` });
+    expect(listed.first?.slide).toEqual({
+      blocks: [
+        { type: 'heading', id: 'h', text: 'Ports', level: 1 },
+        {
+          type: 'columns',
+          id: 'c',
+          columns: [
+            [
+              {
+                type: 'image',
+                id: 'i',
+                mediaId: '',
+                url: `${base}/pic.jpg`,
+                size: 'full',
+                align: 'center',
+              },
+            ],
+            [{ type: 'text', id: 't', md: `See ![map](${base}/map.webp)` }],
+          ],
+        },
+      ],
+      background: { url: `${base}/bg.webp` },
+      textTone: 'dark',
+      textOutline: true,
+    });
+    // The template page draws the same slide.
+    const preview = await service.preview(entry.id);
+    expect(preview.items[0].slide).toEqual(listed.first?.slide);
+  });
+
   it('un média du catalogue ne se lit que par un nom sans traversée', async () => {
     const { service } = makeService();
     const entry = await service.share(alice, 'q1');
@@ -166,6 +226,15 @@ describe('StoreService', () => {
     const seeded = await service.list();
     expect(seeded.length).toBeGreaterThan(0);
     expect(seeded.every((e) => e.author.name === 'fchaussin')).toBe(true);
+    // Their cards draw the intro slide itself: title, subtitle, gradient, outline.
+    for (const entry of seeded) {
+      expect(entry.first?.slide?.blocks).toHaveLength(2);
+      expect(entry.first?.slide).toMatchObject({
+        background: { gradient: { angle: 135 } },
+        textTone: 'light',
+        textOutline: true,
+      });
+    }
 
     for (const entry of seeded) {
       const manifest = JSON.parse(

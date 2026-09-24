@@ -108,13 +108,27 @@ function sampleBundle(sample: SampleQuiz): unknown {
 /** Un élément de bundle, tel que l'aperçu a besoin de le lire (lecture tolérante). */
 interface BundleItem {
   kind: 'question' | 'slide';
+  backgroundImage?: string | null;
   backgroundGradient?: { angle: number; colors: string[] } | null;
+  textTone?: 'light' | 'dark';
+  textOutline?: boolean;
   prompt?: string;
   type?: string;
   timeLimitS?: number;
   media?: string;
   blocks?: unknown[];
   options?: { text?: string; color?: string; shape?: string }[];
+}
+
+/**
+ * The first slide as the stage draws it: blocks with their media served by the
+ * catalogue, background, text tone and outline — the card shows the slide itself.
+ */
+export interface ServedSlide {
+  blocks: unknown[];
+  background: { url: string } | { gradient: { angle: number; colors: string[] } } | null;
+  textTone: 'light' | 'dark';
+  textOutline: boolean;
 }
 
 /** Une entrée telle que l'API la rend : les chemins deviennent des URL servies. */
@@ -125,22 +139,68 @@ export type ListedEntry = Omit<StoreEntry, 'first'> & {
     text: string;
     media: string | null;
     gradient: { angle: number; colors: string[] } | null;
+    /** Present when the first item is a slide. */
+    slide: ServedSlide | null;
   } | null;
 };
 
-function served(entry: StoreEntry): ListedEntry {
+/**
+ * `item` is the first item read from the bundle, when it could be read: the card
+ * is drawn from the folder, not from the summary `index.json` kept at share time.
+ */
+function served(entry: StoreEntry, item?: BundleItem): ListedEntry {
+  const first = item ? firstItemOf([item]) : entry.first;
   return {
     ...entry,
     coverUrl: mediaUrl(entry.id, entry.cover),
-    first: entry.first
+    first: first
       ? {
-          kind: entry.first.kind,
-          text: entry.first.text,
-          media: mediaUrl(entry.id, entry.first.media),
-          gradient: entry.first.gradient ?? null,
+          kind: first.kind,
+          text: first.text,
+          media: mediaUrl(entry.id, first.media),
+          gradient: first.gradient ?? null,
+          slide: item?.kind === 'slide' ? servedSlide(entry.id, item) : null,
         }
       : null,
   };
+}
+
+function servedSlide(id: string, item: BundleItem): ServedSlide {
+  const image = mediaUrl(id, item.backgroundImage);
+  return {
+    blocks: servedBlocks(id, item.blocks ?? []) as unknown[],
+    background: image
+      ? { url: image }
+      : item.backgroundGradient
+        ? { gradient: item.backgroundGradient }
+        : null,
+    textTone: item.textTone ?? 'light',
+    textOutline: item.textOutline ?? true,
+  };
+}
+
+/** An inline Markdown image in a bundle: `](media/…)`. */
+const BUNDLE_MD_MEDIA_RE = /\]\((media\/[A-Za-z0-9][A-Za-z0-9._-]{0,120})\)/g;
+
+/** Slide blocks with their bundle media paths turned into catalogue URLs. */
+function servedBlocks(id: string, blocks: unknown): unknown {
+  if (Array.isArray(blocks)) return blocks.map((b) => servedBlocks(id, b));
+  if (!blocks || typeof blocks !== 'object') return blocks;
+  const b = blocks as Record<string, unknown>;
+  if (b.type === 'image' && typeof b.media === 'string') {
+    const { media, ...rest } = b;
+    return { ...rest, mediaId: '', url: mediaUrl(id, media) };
+  }
+  if (b.type === 'text' && typeof b.md === 'string') {
+    return {
+      ...b,
+      md: b.md.replace(BUNDLE_MD_MEDIA_RE, (_m, path: string) => `](${mediaUrl(id, path)})`),
+    };
+  }
+  if (b.type === 'columns' && Array.isArray(b.columns)) {
+    return { ...b, columns: b.columns.map((c) => servedBlocks(id, c)) };
+  }
+  return b;
 }
 
 /** Ce qu'une carte montre d'un modèle : son premier élément, en compact. */
@@ -150,7 +210,7 @@ function firstItemOf(items: BundleItem[] | undefined): StoreEntry['first'] {
   return {
     kind: first.kind,
     text: first.kind === 'question' ? (first.prompt ?? '') : firstText(first.blocks),
-    media: first.media ?? null,
+    media: (first.kind === 'slide' ? first.backgroundImage : first.media) ?? null,
     gradient: first.backgroundGradient ?? null,
   };
 }
@@ -183,6 +243,8 @@ export type StorePreview = StoreEntry & {
     mediaAlt: string | null;
     gradient: { angle: number; colors: string[] } | null;
     options: { text: string; color: string; shape: string }[];
+    /** A slide as the stage draws it; null for a question. */
+    slide: ServedSlide | null;
   }[];
 };
 const MANIFEST = 'quiz.json';
@@ -264,7 +326,19 @@ export class StoreService implements OnModuleInit {
   /** The catalogue, newest first. Reads the folder, which is the only truth. */
   async list(): Promise<ListedEntry[]> {
     const entries = await this.readIndex();
-    return [...entries].sort((a, b) => b.sharedAt.localeCompare(a.sharedAt)).map(served);
+    const sorted = [...entries].sort((a, b) => b.sharedAt.localeCompare(a.sharedAt));
+    return Promise.all(sorted.map(async (e) => served(e, await this.firstOnDisk(e.id))));
+  }
+
+  /** The first item of a template's bundle; undefined when the manifest cannot be read. */
+  private async firstOnDisk(id: string): Promise<BundleItem | undefined> {
+    const raw = await readFile(join(this.dir, id, MANIFEST), 'utf8').catch(() => null);
+    if (!raw) return undefined;
+    try {
+      return (JSON.parse(raw) as { items?: BundleItem[] }).items?.[0];
+    } catch {
+      return undefined;
+    }
   }
 
   /**
@@ -338,7 +412,7 @@ export class StoreService implements OnModuleInit {
     };
     await this.writeIndex([...(await this.readIndex()).filter((e) => e.id !== id), entry]);
     this.log.log(`Template shared: ${entry.title} (${id}, revision ${entry.revision})`);
-    return served(entry);
+    return served(entry, parsed?.items?.[0]);
   }
 
   /**
@@ -393,6 +467,7 @@ export class StoreService implements OnModuleInit {
         color: o.color ?? 'blue',
         shape: o.shape ?? 'circle',
       })),
+      slide: item.kind === 'slide' ? servedSlide(id, item) : null,
     }));
     return {
       ...entry,

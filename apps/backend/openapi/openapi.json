@@ -4741,13 +4741,82 @@
                   "colors"
                 ],
                 "nullable": true
+              },
+              "slide": {
+                "type": "object",
+                "properties": {
+                  "blocks": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "background": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "url"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "gradient": {
+                            "type": "object",
+                            "properties": {
+                              "angle": {
+                                "type": "number"
+                              },
+                              "colors": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "angle",
+                              "colors"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "gradient"
+                        ]
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "textTone": {
+                    "type": "string",
+                    "enum": [
+                      "light",
+                      "dark"
+                    ]
+                  },
+                  "textOutline": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "blocks",
+                  "background",
+                  "textTone",
+                  "textOutline"
+                ],
+                "nullable": true
               }
             },
             "required": [
               "kind",
               "text",
               "media",
-              "gradient"
+              "gradient",
+              "slide"
             ],
             "nullable": true
           }
@@ -4916,6 +4985,74 @@
                       "shape"
                     ]
                   }
+                },
+                "slide": {
+                  "type": "object",
+                  "properties": {
+                    "blocks": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "background": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "url": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "url"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "gradient": {
+                              "type": "object",
+                              "properties": {
+                                "angle": {
+                                  "type": "number"
+                                },
+                                "colors": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "angle",
+                                "colors"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "gradient"
+                          ]
+                        }
+                      ],
+                      "nullable": true
+                    },
+                    "textTone": {
+                      "type": "string",
+                      "enum": [
+                        "light",
+                        "dark"
+                      ]
+                    },
+                    "textOutline": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "blocks",
+                    "background",
+                    "textTone",
+                    "textOutline"
+                  ],
+                  "nullable": true
                 }
               },
               "required": [
@@ -4926,7 +5063,8 @@
                 "mediaUrl",
                 "mediaAlt",
                 "gradient",
-                "options"
+                "options",
+                "slide"
               ]
             }
           }

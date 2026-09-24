@@ -8,6 +8,7 @@
 import type { StorePreviewDtoItemsItemGradient } from './storePreviewDtoItemsItemGradient';
 import type { StorePreviewDtoItemsItemKind } from './storePreviewDtoItemsItemKind';
 import type { StorePreviewDtoItemsItemOptionsItem } from './storePreviewDtoItemsItemOptionsItem';
+import type { StorePreviewDtoItemsItemSlide } from './storePreviewDtoItemsItemSlide';
 
 export type StorePreviewDtoItemsItem = {
   kind: StorePreviewDtoItemsItemKind;
@@ -27,4 +28,6 @@ export type StorePreviewDtoItemsItem = {
   /** @nullable */
   gradient: StorePreviewDtoItemsItemGradient;
   options: StorePreviewDtoItemsItemOptionsItem[];
+  /** @nullable */
+  slide: StorePreviewDtoItemsItemSlide;
 };

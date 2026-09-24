@@ -1,6 +1,20 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
+/** A slide as the stage draws it, its media served by the catalogue. */
+export const servedSlideSchema = z.object({
+  /** Slide blocks, image URLs served by the catalogue (`SlideBlock[]`). */
+  blocks: z.array(z.unknown()),
+  background: z
+    .union([
+      z.object({ url: z.string() }),
+      z.object({ gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }) }),
+    ])
+    .nullable(),
+  textTone: z.enum(['light', 'dark']),
+  textOutline: z.boolean(),
+});
+
 /** One template in the catalogue (#39) — what browsing shows without opening a bundle. */
 export const storeEntrySchema = z.object({
   /** ULID of the template: names the entry and its folder, stable across a re-share. */
@@ -23,6 +37,8 @@ export const storeEntrySchema = z.object({
       text: z.string(),
       media: z.string().nullable(),
       gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }).nullable(),
+      /** Quand le premier élément est une diapositive : de quoi la dessiner telle quelle. */
+      slide: servedSlideSchema.nullable(),
     })
     .nullable(),
 });
