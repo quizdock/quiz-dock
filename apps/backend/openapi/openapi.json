@@ -2371,11 +2371,19 @@
               },
               "clientId": {
                 "type": "string"
+              },
+              "sessionScope": {
+                "type": "string",
+                "enum": [
+                  "browser",
+                  "tab"
+                ]
               }
             },
             "required": [
               "authority",
-              "clientId"
+              "clientId",
+              "sessionScope"
             ],
             "nullable": true
           }

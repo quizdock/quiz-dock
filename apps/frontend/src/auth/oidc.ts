@@ -8,7 +8,13 @@ import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
  */
 let manager: UserManager | null = null;
 
-export function initOidc(authority: string, clientId: string): UserManager {
+export type SessionScope = 'browser' | 'tab';
+
+export function initOidc(
+  authority: string,
+  clientId: string,
+  sessionScope: SessionScope = 'browser',
+): UserManager {
   manager = new UserManager({
     authority,
     client_id: clientId,
@@ -19,9 +25,12 @@ export function initOidc(authority: string, clientId: string): UserManager {
     // issues one, silent iframe otherwise); consumers listen to `userLoaded`.
     automaticSilentRenew: true,
     silent_redirect_uri: `${window.location.origin}/auth/callback`,
-    // The session lives in localStorage, not the default sessionStorage: that one
-    // is per tab, so a preview or a console opened in a new tab came up signed out.
-    userStore: new WebStorageStateStore({ store: window.localStorage }),
+    // `browser` (default): the session lives in localStorage, shared by the tabs —
+    // a preview or a console opened in a new tab stays signed in. `tab`: in
+    // sessionStorage, each tab signing in on its own (shared computers).
+    userStore: new WebStorageStateStore({
+      store: sessionScope === 'tab' ? window.sessionStorage : window.localStorage,
+    }),
   });
   return manager;
 }

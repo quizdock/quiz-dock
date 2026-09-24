@@ -60,6 +60,7 @@ How to replace the logo and the stylesheet: **[branding](branding.md)**.
 | `ALLOW_ANONYMOUS_PARTICIPANTS` | `false` | `AUTH_MODE=oidc` only: `true` lets hosts open a game to participants without an account, the PIN and a nickname alone — chosen at each launch ([open access](auth.md#open-access-oidc)) |
 | `OIDC_ISSUER` | — | `iss` expected in tokens (your provider's issuer URL). Required when `AUTH_MODE=oidc`. |
 | `OIDC_JWKS_URI` | _(discovery)_ | JWKS endpoint. Default: `jwks_uri` from `${OIDC_ISSUER}/.well-known/openid-configuration`. Set it to target an internal host in Docker. |
+| `OIDC_SESSION_SCOPE` | `browser` | Where the browser keeps the OIDC session: `browser` = shared by the tabs (a preview or a console opened in a new tab stays signed in); `tab` = each tab signs in on its own, e.g. on shared computers. |
 | `OIDC_CLIENT_ID` | `quiz-dock-frontend` | Public SPA client id (sent to the browser via `GET /auth/config`). |
 | `OIDC_AUDIENCE` | _(unset)_ | Expected `aud`. Left unset = audience check skipped. |
 | `OIDC_ROLES_CLAIM` | `roles` | Dotted path to the roles array in the JWT (e.g. `groups`, `realm_access.roles`). |
