@@ -602,6 +602,7 @@ export function PlayerPage() {
               muted={muted}
               follow={hears ? undefined : followed(view, question.questionIndex)}
               catchUp={followed(view, question.questionIndex)}
+              startAt={question.mediaStartAt ?? null}
               boxClassName="w-full max-h-[35dvh]"
               resumeKey={`${pin}:${question.questionIndex}`}
               restartSignal={

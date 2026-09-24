@@ -201,6 +201,8 @@ export function buildQuestionStart(
   endsAt: number,
   /** The game's default audio target (see {@link gameAudioTarget}). */
   gameTarget: AudioTarget,
+  /** `startedAt − mediaStartAt`, null when the question plays nothing (see `GameMeta`). */
+  mediaLeadMs: number | null,
 ): QuestionStartPayload {
   const hasOptions = question.options.length > 0;
   const options: PublicOption[] | undefined = hasOptions
@@ -226,6 +228,7 @@ export function buildQuestionStart(
     scoring: question.scoring ?? 'standard',
     startedAt,
     endsAt,
+    ...(mediaLeadMs !== null && startedAt > 0 ? { mediaStartAt: startedAt - mediaLeadMs } : {}),
     background: question.background,
     textTone: question.textTone,
     textOutline: question.textOutline,

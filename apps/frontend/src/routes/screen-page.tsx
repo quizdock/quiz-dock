@@ -204,6 +204,7 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
           follow={playMedia ? undefined : followed(view, view.question.questionIndex)}
           onPosition={playMedia ? sayPosition : undefined}
+          startAt={view.question.mediaStartAt ?? null}
           restartSignal={
             view.mediaControl?.questionIndex === view.question.questionIndex
               ? view.mediaControl.seq

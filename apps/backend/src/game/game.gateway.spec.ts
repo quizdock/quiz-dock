@@ -774,6 +774,74 @@ describe('GameGateway (intégration socket)', () => {
     }
   }, 20_000);
 
+  it('gives a question with sound one start instant for every device, moved by a pause', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/start-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 4000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Media start test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 20,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: withSound.id });
+      const player = connect();
+      await player.emitWithAck('player:join', { pin, nickname: 'Ada' }); // in the room: not waited for
+      const q = new Promise<{ startedAt: number; mediaStartAt?: number }>((resolve) =>
+        player.once('question:start', resolve),
+      );
+      const sent = Date.now();
+      host.emit('host:start', { pin });
+      await new Promise((r) => setTimeout(r, 1200)); // no projection open: nobody to wait for
+      const start = await q;
+      expect(start.mediaStartAt).toBeGreaterThanOrEqual(sent + 500);
+      const lead = start.startedAt - start.mediaStartAt!;
+
+      // A pause and a resume move the start with the chrono, at the same distance.
+      host.emit('host:pause', { pin, paused: true });
+      await new Promise((r) => setTimeout(r, 300));
+      const time = new Promise<{ startedAt: number; mediaStartAt?: number }>((resolve) =>
+        player.once('question:time', resolve),
+      );
+      host.emit('host:pause', { pin, paused: false });
+      const moved = await time;
+      expect(moved.startedAt - moved.mediaStartAt!).toBe(lead);
+      expect(moved.mediaStartAt! - start.mediaStartAt!).toBeGreaterThanOrEqual(250);
+      host.emit('host:end', { pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

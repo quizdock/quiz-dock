@@ -125,6 +125,12 @@ export interface GameMeta {
   personalTracking: boolean;
   /** Les participants choisissent leur nom affiché ; sinon il vient du compte (RG-15). */
   pickOwnName: boolean;
+  /**
+   * `questionStartedAt − mediaStartAt` for the current question, null when it plays
+   * nothing: kept as a distance so a pause, which moves `questionStartedAt`, moves
+   * the media's start with it.
+   */
+  mediaLeadMs?: number | null;
   /** End of the media wait (ms epoch) while in `MEDIA_LOADING`, 0 otherwise. */
   mediaWaitUntil?: number;
   /** The host's lobby choice replacing the quiz's default audio target; empty = the quiz's. */

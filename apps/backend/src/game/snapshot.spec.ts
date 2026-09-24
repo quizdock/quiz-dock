@@ -227,7 +227,7 @@ describe('buildSnapshot', () => {
       } as never),
     );
     const start = (i: number, lobby: 'projection_remote' | '') =>
-      buildQuestionStart(snap.questions[i], i, 0, 0, gameAudioTarget(snap, lobby));
+      buildQuestionStart(snap.questions[i], i, 0, 0, gameAudioTarget(snap, lobby), null);
     expect(start(0, '').audioTarget).toBe('projection');
     expect(start(0, 'projection_remote').audioTarget).toBe('projection_remote');
     // A question's own choice wins over the host's.

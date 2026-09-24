@@ -167,4 +167,29 @@ describe('QuestionMediaStage', () => {
     el.dispatchEvent(new Event('playing'));
     expect(el.currentTime).toBeGreaterThanOrEqual(5);
   });
+  it('waits for the common start, on the server’s clock', async () => {
+    render(<QuestionMediaStage media={sound} mode="play" startAt={Date.now() + 300} />);
+    await act(async () => undefined);
+    expect(play).not.toHaveBeenCalled();
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1), { timeout: 1000 });
+  });
+
+  it('arriving late, starts where the media is', async () => {
+    render(<QuestionMediaStage media={sound} mode="play" startAt={Date.now() - 5000} />);
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    el.dispatchEvent(new Event('loadedmetadata'));
+    expect(el.currentTime).toBeGreaterThanOrEqual(5);
+    expect(el.currentTime).toBeLessThan(5.5);
+  });
+  it('a position written as the element loads is not a resume: it still waits for the start', async () => {
+    sessionStorage.setItem('media.pos:1:0:/api/v1/media/a', JSON.stringify({ t: 0, ended: false }));
+    render(
+      <QuestionMediaStage media={sound} mode="play" resumeKey="1:0" startAt={Date.now() + 300} />,
+    );
+    await act(async () => undefined);
+    expect(play).not.toHaveBeenCalled();
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1), { timeout: 1000 });
+    sessionStorage.clear();
+  });
 });

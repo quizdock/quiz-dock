@@ -25,6 +25,7 @@ import {
   GRACE_MS,
   HOST_GRACE_MS,
   HOST_RECONNECT_WINDOW_MS,
+  MEDIA_LEAD_MS,
   MEDIA_WAIT_S,
   READ_DELAY_MS,
   gameKeys,
@@ -68,6 +69,14 @@ const defaultAutoAdvanceMs = () => Number(process.env.GAME_AUTO_ADVANCE_MS ?? AU
  * et un `RemoteSocket` (`fetchSockets()`). Permet de partager le calcul du reveal
  * personnel entre la diffusion live et la relecture d'état (reconnexion / late join).
  */
+/** The media's start derived from `startedAt`, as a payload fragment (empty when silent). */
+function mediaStartOf(
+  mediaLeadMs: number | null | undefined,
+  startedAt: number,
+): { mediaStartAt?: number } {
+  return mediaLeadMs == null ? {} : { mediaStartAt: startedAt - mediaLeadMs };
+}
+
 interface Emitter {
   data: { playerId?: string };
   emit<E extends keyof ServerToClientEvents>(
@@ -456,6 +465,8 @@ export class GameEngine {
     const readDelay = Number(process.env.GAME_READ_DELAY_MS ?? READ_DELAY_MS);
     const startedAt = now + readDelay; // fenêtre de lecture côté client
     const endsAt = startedAt + question.timeLimitS * 1000;
+    // Every device starts the sound or video on the same instant of the server's clock.
+    const mediaLeadMs = hasSoundOrVideo(question.media) ? startedAt - (now + MEDIA_LEAD_MS) : null;
 
     // Nouvelle question : chrono qui tourne, ni gelé ni en pause (un enchaînement
     // manuel pendant une pause reprend implicitement la main).
@@ -467,6 +478,7 @@ export class GameEngine {
       slideIndex: '-1',
       questionStartedAt: String(startedAt),
       questionEndsAt: String(endsAt),
+      mediaLeadMs: mediaLeadMs === null ? '' : String(mediaLeadMs),
       clockFrozen: '0',
       paused: '0',
       pausedRemainingMs: '',
@@ -487,6 +499,7 @@ export class GameEngine {
           startedAt,
           endsAt,
           await this.gameTarget(pin, snapshot),
+          mediaLeadMs,
         ),
       );
     this.server.to(pin).emit('game:mode', await this.readMode(pin));
@@ -823,7 +836,7 @@ export class GameEngine {
     // The question itself (prompt, options) with a chrono already over, then its reveal.
     socket.emit(
       'question:start',
-      buildQuestionStart(question, index, 0, 0, gameAudioTarget(snapshot, meta.audioTarget)),
+      buildQuestionStart(question, index, 0, 0, gameAudioTarget(snapshot, meta.audioTarget), null),
     );
     socket.emit('game:state', {
       state: GameState.Reveal,
@@ -1012,6 +1025,7 @@ export class GameEngine {
           startedAt,
           endsAt,
           gameAudioTarget(snapshot, meta.audioTarget),
+          meta.mediaLeadMs ?? null,
         ),
       );
       // Compteur courant : sinon un (re)attache mid-question afficherait « 0/N ».
@@ -1029,6 +1043,7 @@ export class GameEngine {
           meta.questionStartedAt,
           meta.questionEndsAt,
           gameAudioTarget(snapshot, meta.audioTarget),
+          meta.mediaLeadMs ?? null,
         ),
       );
       const records = await this.readAnswers(pin, index);
@@ -1306,6 +1321,7 @@ export class GameEngine {
               startedAt,
               endsAt,
               gameAudioTarget(snapshot, meta.audioTarget),
+              meta.mediaLeadMs ?? null,
             ),
           );
       }
@@ -1440,6 +1456,7 @@ export class GameEngine {
             questionIndex: meta.currentIndex,
             startedAt: t.startedAt,
             endsAt: t.endsAt,
+            ...mediaStartOf(meta.mediaLeadMs, t.startedAt),
           });
         }
       }
@@ -1481,6 +1498,7 @@ export class GameEngine {
       questionIndex: meta.currentIndex,
       startedAt: meta.questionStartedAt,
       endsAt: newEndsAt,
+      ...mediaStartOf(meta.mediaLeadMs, meta.questionStartedAt),
     });
   }
 
