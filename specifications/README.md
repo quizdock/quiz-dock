@@ -22,6 +22,7 @@ Read them in this order to discover the project:
 | 6 | **[SPECIFICATIONS-ROADMAP.md](./SPECIFICATIONS-ROADMAP.md)** | Milestones from v0.1.0 on (an open `0.x` series), tasks per phase, dependencies; v1.0.0 **not planned** (it is earned) | Lead, product, the whole team |
 | 7 | **[SPECIFICATIONS-LIVE.md](./SPECIFICATIONS-LIVE.md)** | The live game: a presenter across several windows (projection + control, cross-device), player screens, late join, reconnect and persistence, `HOST_DISCONNECTED`, the state→screen matrix | Frontend, backend |
 | 8 | **[SPECIFICATIONS-MEDIA.md](./SPECIFICATIONS-MEDIA.md)** | Audio & video in questions: the phased brief, the decisions taken, the phases to come, the idea box (microphone) | Frontend, backend, product |
+| 9 | **[SPECIFICATIONS-MEDIA-LIBRARY.md](./SPECIFICATIONS-MEDIA-LIBRARY.md)** | Media library & converter: target formats encoded in the browser, file/use split and deduplication, the media input module, credits, the admin page | Frontend, backend, product |
 
 > The documents refer to one another (for instance `technique §5`, `RG-13`, `données §2.10`). Any change of behaviour must update **the document it concerns, in the same commit** (see the "test & document" policy, technique §18).
 

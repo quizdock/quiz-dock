@@ -179,7 +179,5 @@ The projection's "media not loaded in time" (`media.slow`).
 
 ## 8. After the brief — a media library (a separate project)
 
-- The author's media library: reuse, where each file is used.
-- **Jobs** that delete orphans (replacing today's opportunistic sweep, run at start-up and after saving).
-- A content hash to share one file between several uses (deduplication).
-- Purging the old audio files the migration left on disk.
+Specified in [SPECIFICATIONS-MEDIA-LIBRARY.md](./SPECIFICATIONS-MEDIA-LIBRARY.md): one format per kind converted in the
+author's browser, files shared between uses, a media input module, an administration page.
