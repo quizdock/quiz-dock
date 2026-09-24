@@ -4,6 +4,53 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [Unreleased]
+
+### Bug Fixes
+
+- The OIDC session survives a new tab *(auth)*
+- The wrong-PIN window opens with SET NX, on any Redis version *(game)*
+- An original uploaded again is reused, not converted into a duplicate *(media)*
+- The administration page says when an action on the instance media fails *(media)*
+- Keep file names as typed, and a library entry kept for past results *(media)*
+- Judge a conversion on the tracks that play, and word what the codecs throw *(media)*
+- Adopting older files never holds up the clean-up, nor empties a restored volume *(media)*
+
+### Documentation
+
+- A technical debt register, starting with the OIDC tokens in the browser
+- The media library in the README (and on Docker Hub), new screenshots
+- Name the multi-arch builder instead of making it the default *(releasing)*
+- Media library and in-browser converter *(spec)*
+
+### Features
+
+- A Content-Security-Policy on every page *(security)*
+- The OIDC session shared by the tabs or per tab (OIDC_SESSION_SCOPE) *(auth)*
+- Navigation above the stage, questions in 16:9 like the projection *(preview)*
+- "remember my choice" in the launch dialog, set in the profile *(live)*
+- Close or reopen the game to newcomers during play *(live)*
+- Launch dialog for participant access, lobby lock, docs *(live)*
+- Open access for participants, lobby lock, wrong-PIN limit *(game)*
+- Account preferences, remembered wherever one signs in *(users)*
+- An empty state like the editor's when no template is shared *(templates)*
+- Invite bug reports, feature ideas, translation fixes and questions *(home)*
+- One file list with Global, list or grid, and a preview *(media)*
+- Sizes in pixels, and media the instance provides to every host *(media)*
+- An administration page for the instance's media *(media)*
+- The author's library, credits, and free libraries to look in *(media)*
+- Convert every media in the browser to one format per kind *(media)*
+- Store each file once, named after its SHA-256 *(media)*
+- An hourly job deletes unused media and stray files *(media)*
+
+### Performance
+
+- Read every media's uses once per admin page, not once per media *(media)*
+
+### Contributors
+
+- fchaussin
+
 ## [0.7.1] - 2026-09-24
 
 ### Documentation

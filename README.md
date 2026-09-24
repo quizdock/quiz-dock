@@ -42,7 +42,9 @@ the results never leave your servers.
 > remote participants, started on the same instant everywhere; *listen first* questions
 > open the answers once the media has played. Since then, a **media library**: whatever
 > your browser reads is converted there (WebP, MP4, M4A), reused from *My media* or from
-> the instance's **global media**, credited, and managed on an administration page.
+> the instance's **global media**, credited, and managed on an administration page; under
+> OIDC, **open access** for participants (the PIN and a nickname, no account) and a lock
+> on the game.
 > Tested in Chromium browsers, not yet on iPhone — see the
 > [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
 
@@ -193,6 +195,10 @@ hosted elsewhere).
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/admin-media.png" alt="Instance media" /><br /><sub><b>Instance media</b> — disk, clean-up, every file with its owners, the global media</sub></td>
   </tr>
   <tr>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/participant-access.png" alt="Participant access at launch" /><br /><sub><b>Participant access</b> <i>(OIDC)</i> — accounts required or open access, for the whole game; remembered if you like</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/console-lobby-access.png" alt="Host console — open access and lock" /><br /><sub><b>Open access</b> — PIN and nickname, no personal tracking; the game closed to newcomers</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join.png" alt="Join by PIN, nickname and avatar" /><br /><sub><b>Join</b> — PIN or QR code, nickname &amp; avatar, in the room or remote, no account</sub></td>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/projection-media.png" alt="Projection — question with a picture" /><br /><sub><b>Projection</b> — live question on the big screen, with its picture</sub></td>
   </tr>
@@ -204,7 +210,7 @@ hosted elsewhere).
 
 More — content slides, the console during a question and at the reveal,
 the podium, the player's ordering and feedback screens, the global media, the preview
-of a sound on its waveform:
+of a sound on its waveform, the account preferences:
 [full gallery](https://github.com/quizdock/quiz-dock/blob/main/docs/screenshots/README.md).
 
 ## 📋 More features
@@ -215,11 +221,15 @@ of a sound on its waveform:
 - 📝 **Rich text** — prompts, options and descriptions in Markdown with a visual editor (bold, lists, code, inline images).
 - 🎞️ **Content slides** — headings, text, images, 2–3 columns between questions; image or gradient backgrounds for slides and questions, with a faithful 16:9 preview.
 - 💡 **Answer explanations** — shown at the reveal, with a per-question reveal delay in automatic mode.
+- 👁️ **Preview** — walk the quiz, slides and questions alike, in 16:9 as on the big screen, correct answers shown; full screen for a rehearsal.
 - 🧾 **Credits** — author, licence and source on every media, carried with a quiz when it is exported or shared; listed on the preview page and in small print under the podium, as a CC-BY licence asks.
 - 🗄️ **Instance media** _(administrators)_ — disk used by kind and by owner, the clean-up (unused media, stray files, run it now), every file with its size in pixels, owners and usages, as a list or a grid with a preview (sound on its waveform); global media uploaded or added from any file; a file deleted even when used (moderation), once its usages are listed.
 - 🧹 **Media housekeeping** — each file stored once (SHA-256), unused media and stray files cleaned up hourly, older formats kept playing.
 - 🎛️ **Host in control** — Console / Projection / Participant views, look back over played questions without replaying anything, layout edits reach a running session at its next step, sessions survive a server restart.
 - 🌐 **Remote participants** _(experimental)_ — a participant following from home says so when joining and gets the whole question on their device, sound and video included; the console shows who is remote and whose media are loaded.
+- 🔓 **Participant access** _(OIDC)_ — accounts required, or open access with the PIN and a nickname alone, chosen at each launch — or remembered under *My account → Preferences* — once the admin allows it (`ALLOW_ANONYMOUS_PARTICIPANTS`).
+- 🛡️ **Safeguards** — close the game to new participants from the lobby or during play, remove a participant, wrong PINs rate-limited per address.
+- 🔑 **OIDC session across tabs** — the console, the projection and a preview in their own tabs, one sign-in; or each tab on its own for shared computers (`OIDC_SESSION_SCOPE`).
 - 📡 **Invitation address** — the QR code and join link point where participants can actually reach the instance (public URL, LAN IP, or any address), chosen from the console.
 - ⭐ **Player feedback** — players rate the quiz (stars + optional comment) at the end; hosts see the distribution and browse the reviews. Can be switched off per quiz.
 - 💾 **Answer capture** — optionally record every player's individual answers for audit, certification or individual follow-up.
