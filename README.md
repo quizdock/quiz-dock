@@ -219,7 +219,7 @@ of a sound on its waveform, the account preferences:
 - 📝 **Rich text** — prompts, options and descriptions in Markdown with a visual editor (bold, lists, code, inline images).
 - 🎞️ **Content slides** — headings, text, images, 2–3 columns between questions; image or gradient backgrounds for slides and questions, with a faithful 16:9 preview.
 - 💡 **Answer explanations** — shown at the reveal, with a per-question reveal delay in automatic mode.
-- 👁️ **Preview** — walk the quiz, slides and questions alike, in 16:9 as on the big screen, correct answers shown; full screen for a rehearsal.
+- 👁️ **Preview** — rehearse your quiz exactly as it will look on the big screen, answers shown.
 - 🧾 **Credits** — author, licence and source on every media, carried with a quiz when it is exported or shared; listed on the preview page and in small print under the podium, as a CC-BY licence asks.
 - 🗄️ **Instance media** _(administrators)_ — disk used by kind and by owner, the clean-up (unused media, stray files, run it now), every file with its size in pixels, owners and usages, as a list or a grid with a preview (sound on its waveform); global media uploaded or added from any file; a file deleted even when used (moderation), once its usages are listed.
 - 🧹 **Media housekeeping** — each file stored once (SHA-256), unused media and stray files cleaned up hourly, older formats kept playing.
