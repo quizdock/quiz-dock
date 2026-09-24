@@ -12,6 +12,7 @@ import type { Request } from 'express';
 import { UsersService } from '../users/users.service';
 import { ALLOW_ANY_ROLE_KEY } from './allow-any-role.decorator';
 import { ALLOW_MANAGER_KEY } from './allow-manager.decorator';
+import { MANAGER_ONLY_KEY } from './manager-only.decorator';
 import { AUTH_PROVIDER, type AuthProvider } from './auth-provider';
 import { IS_PUBLIC_KEY } from './public.decorator';
 import { isHost, isManager } from './roles';
@@ -41,6 +42,12 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('auth.required');
     }
     const user = await this.users.upsertFromPrincipal(principal);
+    // The instance's own administration (`@ManagerOnly`): the `admin` role, nothing else.
+    if (this.reflector.getAllAndOverride<boolean>(MANAGER_ONLY_KEY, targets)) {
+      if (!isManager(user.roles)) throw new ForbiddenException('auth.admin_required');
+      req.user = user;
+      return true;
+    }
     const anyRole = this.reflector.getAllAndOverride<boolean>(ALLOW_ANY_ROLE_KEY, targets);
     // Une route ouverte au gestionnaire (`@AllowManager`) accepte l'`admin` en plus
     // de l'hôte : il voit l'instance, il ne l'anime pas (RG-14).

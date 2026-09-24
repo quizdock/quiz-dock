@@ -2,7 +2,8 @@
   "auth": {
     "required": "需要身份验证。",
     "host_required": "需要主持人角色。",
-    "host_only": "此操作仅限主持人：管理员管理实例，不进行主持。"
+    "host_only": "此操作仅限主持人：管理员管理实例，不进行主持。",
+    "admin_required": "需要管理员角色。"
   },
   "host": {
     "auth_required": "需要主持人身份验证。",
@@ -61,7 +62,8 @@
     "cannot_convert_audio": "此浏览器无法将该声音转换为 AAC。请换一个浏览器，或先用 Audacity（audacityteam.org）转换。",
     "too_long": "即使压缩后也超出此类媒体 {{maxMb}} MB 的上限。请先剪短。",
     "canceled": "转换已取消。",
-    "in_use": "此媒体仍被测验或游戏使用：请先从那里移除。"
+    "in_use": "此媒体仍被测验或游戏使用：请先从那里移除。",
+    "playing": "有游戏正在播放此媒体：请在游戏结束后重试。"
   },
   "import": {
     "file_missing": "缺少文件（“file”字段）。",

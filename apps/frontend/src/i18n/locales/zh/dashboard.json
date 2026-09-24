@@ -58,5 +58,76 @@
   "ownedBy": "来自 {{name}}",
   "view": "查看",
   "browseTemplates": "浏览模板库",
-  "browseTemplatesHint": "现成的测验，可据此创建自己的；不主动取用则不会进入你的题库。"
+  "browseTemplatesHint": "现成的测验，可据此创建自己的；不主动取用则不会进入你的题库。",
+  "mediaAdmin": {
+    "title": "实例媒体",
+    "adminOnly": "此页面仅供管理员使用。",
+    "loading": "加载中…",
+    "kind": {
+      "image": "图片",
+      "video": "视频",
+      "audio": "声音"
+    },
+    "disk": {
+      "title": "磁盘",
+      "files_one": "{{count}} 个文件",
+      "files_other": "{{count}} 个文件",
+      "byOwner": "按所有者：",
+      "legacy_one": "{{count}} 个旧格式文件（{{mimes}}），{{size}}",
+      "legacy_other": "{{count}} 个旧格式文件（{{mimes}}），{{size}}"
+    },
+    "cleanup": {
+      "title": "清理",
+      "orphans_one": "{{count}} 个未使用的媒体（{{size}}）",
+      "orphans_other": "{{count}} 个未使用的媒体（{{size}}）",
+      "waiting_one": "— 其中 {{count}} 个仍在一天宽限期内。",
+      "waiting_other": "— 其中 {{count}} 个仍在一天宽限期内。",
+      "stray_one": "磁盘上 {{count}} 个无对应媒体的文件（{{size}}）",
+      "stray_other": "磁盘上 {{count}} 个无对应媒体的文件（{{size}}）",
+      "guard": {
+        "empty_database": "数据库中没有媒体，但卷中有文件：不会清除任何内容。请检查数据库与媒体卷是否匹配。",
+        "database_older": "部分媒体丢失了文件：数据库似乎比媒体卷旧（单独恢复？）。在两者一致之前，存储的文件都会保留。"
+      },
+      "lastRun": "上次清理：{{ago}}",
+      "neverRun": "后端启动后尚未清理。",
+      "runNow": "立即清理",
+      "done": "完成：移动 {{adopted}} 个，删除 {{media}} 个媒体、{{blobs}} 个文件和 {{files}} 个孤立文件。",
+      "busy": "已有清理正在进行：请稍后重试。",
+      "failed": "清理无法执行。"
+    },
+    "files": {
+      "title": "文件",
+      "kind": "类型",
+      "allKinds": "所有类型",
+      "owner": "所有者",
+      "allOwners": "所有所有者",
+      "sort": "排序",
+      "bySize": "最大优先",
+      "byUsage": "最常用优先",
+      "byDate": "最新优先",
+      "legacyOnly": "仅旧格式",
+      "search": "按文件名搜索",
+      "none": "没有匹配的文件。",
+      "legacy": "旧格式",
+      "usedIn_one": "用于 {{count}} 个测验",
+      "usedIn_other": "用于 {{count}} 个测验",
+      "inHistory": "仅用于以往结果",
+      "unused": "未使用",
+      "delete": "删除 {{name}}"
+    },
+    "delete": {
+      "title": "删除此文件？",
+      "confirm": "删除",
+      "usedBy": "使用者：",
+      "quiz": "「{{title}}」（{{owner}}）",
+      "sessions_one": "{{count}} 场已归档游戏",
+      "sessions_other": "{{count}} 场已归档游戏",
+      "unused": "没有任何内容使用它。",
+      "playing": "有游戏正在播放它：游戏结束前无法删除。",
+      "failed": "无法删除该文件。",
+      "quizzesLose": "相关问题将失去此媒体。",
+      "resultsLose": "以往结果不再显示它。",
+      "everyCopy": "此文件的所有副本都会被删除，无论所有者是谁。"
+    }
+  }
 }

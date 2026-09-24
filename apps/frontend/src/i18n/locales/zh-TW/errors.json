@@ -2,7 +2,8 @@
   "auth": {
     "required": "需要身份驗證。",
     "host_required": "需要主持人角色。",
-    "host_only": "此操作僅限主持人：管理員管理執行個體，不進行主持。"
+    "host_only": "此操作僅限主持人：管理員管理執行個體，不進行主持。",
+    "admin_required": "需要管理員角色。"
   },
   "host": {
     "auth_required": "需要主持人身份驗證。",
@@ -61,7 +62,8 @@
     "cannot_convert_audio": "此瀏覽器無法將這段聲音轉換為 AAC。請改用其他瀏覽器，或先用 Audacity（audacityteam.org）轉換。",
     "too_long": "即使壓縮後也超出此類媒體 {{maxMb}} MB 的上限。請先剪短。",
     "canceled": "已取消轉換。",
-    "in_use": "這個媒體仍被測驗或遊戲使用：請先從那裡移除。"
+    "in_use": "這個媒體仍被測驗或遊戲使用：請先從那裡移除。",
+    "playing": "有遊戲正在播放這個媒體：請在遊戲結束後再試。"
   },
   "import": {
     "file_missing": "缺少檔案（「file」欄位）。",

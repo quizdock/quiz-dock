@@ -2,7 +2,8 @@
   "auth": {
     "required": "Authentification requise.",
     "host_required": "Rôle animateur requis.",
-    "host_only": "Action réservée aux animateurs : un administrateur gère l’instance, il ne présente pas."
+    "host_only": "Action réservée aux animateurs : un administrateur gère l’instance, il ne présente pas.",
+    "admin_required": "Rôle administrateur requis."
   },
   "host": {
     "auth_required": "Authentification animateur requise.",
@@ -61,7 +62,8 @@
     "cannot_convert_audio": "Ce navigateur ne sait pas convertir ce son en AAC. Essayez un autre navigateur, ou convertissez-le d’abord avec Audacity (audacityteam.org).",
     "too_long": "Trop long pour tenir dans la limite de {{maxMb}} Mo de ce type de média, même compressé. Raccourcissez-le d’abord.",
     "canceled": "Conversion annulée.",
-    "in_use": "Ce média est encore utilisé par un quiz ou une partie : retirez-le d’abord de là."
+    "in_use": "Ce média est encore utilisé par un quiz ou une partie : retirez-le d’abord de là.",
+    "playing": "Une partie joue ce média en ce moment : réessayez quand elle sera terminée."
   },
   "import": {
     "file_missing": "Fichier manquant (champ « file »).",

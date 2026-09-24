@@ -98,6 +98,13 @@ After an upgrade from 0.7, the first pass moves the existing files under their
 new names (`older files moved to shared storage` in the log); the media are
 served throughout.
 
+**Instance media** (account menu, `admin` role only — see
+[`user:set-role`](cli.md)) shows what the volume holds, by kind and by owner,
+the files in older formats, what the clean-up has to do and what holds it back,
+and runs it at once. Every file is listed with its owners and usages, and can be
+deleted even when used — for moderation: the page lists the quizzes and past
+sessions it breaks first, and refuses while a session is playing it.
+
 ## Loudness levelling
 
 When a sound or a video is added, the editor measures its loudness

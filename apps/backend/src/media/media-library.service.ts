@@ -47,7 +47,7 @@ const LIST_MAX = 300;
  * slot, an option, a slide, or as text (a Markdown image, a slide's image block).
  * The same places `MediaService.isReferenced` looks, per quiz.
  */
-const USED_BY_QUIZ = Prisma.sql`(
+export const USED_BY_QUIZ = Prisma.sql`(
   q.cover_media_id = m.id
   OR q.description LIKE '%' || m.id || '%'
   OR EXISTS (SELECT 1 FROM question x WHERE x.quiz_id = q.id AND (

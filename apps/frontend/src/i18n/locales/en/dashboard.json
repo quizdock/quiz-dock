@@ -58,5 +58,76 @@
   "ownedBy": "by {{name}}",
   "view": "View",
   "browseTemplates": "Browse the templates",
-  "browseTemplatesHint": "Ready-made quizzes to create yours from — nothing is added to your bank until you ask."
+  "browseTemplatesHint": "Ready-made quizzes to create yours from — nothing is added to your bank until you ask.",
+  "mediaAdmin": {
+    "title": "Instance media",
+    "adminOnly": "This page is for administrators.",
+    "loading": "Loading…",
+    "kind": {
+      "image": "Images",
+      "video": "Videos",
+      "audio": "Sounds"
+    },
+    "disk": {
+      "title": "Disk",
+      "files_one": "{{count}} file",
+      "files_other": "{{count}} files",
+      "byOwner": "By owner:",
+      "legacy_one": "{{count}} file in an older format ({{mimes}}), {{size}}",
+      "legacy_other": "{{count}} files in older formats ({{mimes}}), {{size}}"
+    },
+    "cleanup": {
+      "title": "Clean-up",
+      "orphans_one": "{{count}} media used by nothing ({{size}})",
+      "orphans_other": "{{count}} media used by nothing ({{size}})",
+      "waiting_one": "— {{count}} still within its day of grace.",
+      "waiting_other": "— {{count}} still within their day of grace.",
+      "stray_one": "{{count}} file on disk with no media ({{size}})",
+      "stray_other": "{{count}} files on disk with no media ({{size}})",
+      "guard": {
+        "empty_database": "The database holds no media but the volume holds files: nothing is purged. Check that the database and the media volume belong together.",
+        "database_older": "Some media have lost their file: the database looks older than the media volume (restored alone?). Stored files are kept until they match."
+      },
+      "lastRun": "Last pass {{ago}}",
+      "neverRun": "No pass yet since the backend started.",
+      "runNow": "Run now",
+      "done": "Done: {{adopted}} moved, {{media}} media, {{blobs}} files and {{files}} stray files deleted.",
+      "busy": "A pass is already running: try again in a moment.",
+      "failed": "The clean-up could not run."
+    },
+    "files": {
+      "title": "Files",
+      "kind": "Kind",
+      "allKinds": "All kinds",
+      "owner": "Owner",
+      "allOwners": "All owners",
+      "sort": "Sort",
+      "bySize": "Largest first",
+      "byUsage": "Most used first",
+      "byDate": "Newest first",
+      "legacyOnly": "Older formats only",
+      "search": "Search by file name",
+      "none": "No file matches.",
+      "legacy": "older format",
+      "usedIn_one": "in {{count}} quiz",
+      "usedIn_other": "in {{count}} quizzes",
+      "inHistory": "past results only",
+      "unused": "unused",
+      "delete": "Delete {{name}}"
+    },
+    "delete": {
+      "title": "Delete this file?",
+      "confirm": "Delete",
+      "usedBy": "Used by:",
+      "quiz": "“{{title}}” ({{owner}})",
+      "sessions_one": "{{count}} archived session",
+      "sessions_other": "{{count}} archived sessions",
+      "unused": "Nothing uses it.",
+      "playing": "A session is playing it: it cannot be deleted until the session ends.",
+      "failed": "The file could not be deleted.",
+      "quizzesLose": "The questions lose this media.",
+      "resultsLose": "Past results no longer show it.",
+      "everyCopy": "Every copy of this file goes, whoever owns it."
+    }
+  }
 }

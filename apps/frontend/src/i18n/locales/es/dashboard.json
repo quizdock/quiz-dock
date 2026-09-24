@@ -58,5 +58,76 @@
   "ownedBy": "de {{name}}",
   "view": "Ver",
   "browseTemplates": "Explorar las plantillas",
-  "browseTemplatesHint": "Cuestionarios listos para crear el tuyo; nada llega a tu banco sin que lo pidas."
+  "browseTemplatesHint": "Cuestionarios listos para crear el tuyo; nada llega a tu banco sin que lo pidas.",
+  "mediaAdmin": {
+    "title": "Medios de la instancia",
+    "adminOnly": "Esta página es para administradores.",
+    "loading": "Cargando…",
+    "kind": {
+      "image": "Imágenes",
+      "video": "Vídeos",
+      "audio": "Sonidos"
+    },
+    "disk": {
+      "title": "Disco",
+      "files_one": "{{count}} archivo",
+      "files_other": "{{count}} archivos",
+      "byOwner": "Por propietario:",
+      "legacy_one": "{{count}} archivo en un formato antiguo ({{mimes}}), {{size}}",
+      "legacy_other": "{{count}} archivos en formatos antiguos ({{mimes}}), {{size}}"
+    },
+    "cleanup": {
+      "title": "Limpieza",
+      "orphans_one": "{{count}} medio sin usar ({{size}})",
+      "orphans_other": "{{count}} medios sin usar ({{size}})",
+      "waiting_one": "— {{count}} aún en su día de gracia.",
+      "waiting_other": "— {{count}} aún en su día de gracia.",
+      "stray_one": "{{count}} archivo en disco sin medio ({{size}})",
+      "stray_other": "{{count}} archivos en disco sin medio ({{size}})",
+      "guard": {
+        "empty_database": "La base de datos no tiene medios pero el volumen tiene archivos: no se purga nada. Comprueba que la base de datos y el volumen de medios corresponden.",
+        "database_older": "Algunos medios han perdido su archivo: la base de datos parece más antigua que el volumen de medios (¿restaurada sola?). Los archivos se conservan hasta que coincidan."
+      },
+      "lastRun": "Última pasada {{ago}}",
+      "neverRun": "Ninguna pasada desde que arrancó el backend.",
+      "runNow": "Ejecutar ahora",
+      "done": "Hecho: {{adopted}} movidos, {{media}} medios, {{blobs}} archivos y {{files}} archivos huérfanos eliminados.",
+      "busy": "Ya hay una pasada en curso: vuelve a intentarlo en un momento.",
+      "failed": "No se pudo ejecutar la limpieza."
+    },
+    "files": {
+      "title": "Archivos",
+      "kind": "Tipo",
+      "allKinds": "Todos los tipos",
+      "owner": "Propietario",
+      "allOwners": "Todos los propietarios",
+      "sort": "Orden",
+      "bySize": "Los más pesados",
+      "byUsage": "Los más usados",
+      "byDate": "Los más recientes",
+      "legacyOnly": "Solo formatos antiguos",
+      "search": "Buscar por nombre de archivo",
+      "none": "Ningún archivo coincide.",
+      "legacy": "formato antiguo",
+      "usedIn_one": "en {{count}} quiz",
+      "usedIn_other": "en {{count}} quizzes",
+      "inHistory": "solo resultados anteriores",
+      "unused": "sin usar",
+      "delete": "Eliminar {{name}}"
+    },
+    "delete": {
+      "title": "¿Eliminar este archivo?",
+      "confirm": "Eliminar",
+      "usedBy": "Usado por:",
+      "quiz": "«{{title}}» ({{owner}})",
+      "sessions_one": "{{count}} partida archivada",
+      "sessions_other": "{{count}} partidas archivadas",
+      "unused": "Nada lo usa.",
+      "playing": "Una partida lo está reproduciendo: no se puede eliminar hasta que termine.",
+      "failed": "No se pudo eliminar el archivo.",
+      "quizzesLose": "Las preguntas pierden este medio.",
+      "resultsLose": "Los resultados anteriores ya no lo muestran.",
+      "everyCopy": "Se eliminan todas las copias de este archivo, sea quien sea su propietario."
+    }
+  }
 }

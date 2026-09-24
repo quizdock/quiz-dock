@@ -58,5 +58,76 @@
   "ownedBy": "de {{name}}",
   "view": "Consulter",
   "browseTemplates": "Parcourir les modèles",
-  "browseTemplatesHint": "Des quiz tout faits pour créer le vôtre — rien n’arrive dans votre banque sans que vous le demandiez."
+  "browseTemplatesHint": "Des quiz tout faits pour créer le vôtre — rien n’arrive dans votre banque sans que vous le demandiez.",
+  "mediaAdmin": {
+    "title": "Médias de l’instance",
+    "adminOnly": "Cette page est réservée aux administrateurs.",
+    "loading": "Chargement…",
+    "kind": {
+      "image": "Images",
+      "video": "Vidéos",
+      "audio": "Sons"
+    },
+    "disk": {
+      "title": "Espace disque",
+      "files_one": "{{count}} fichier",
+      "files_other": "{{count}} fichiers",
+      "byOwner": "Par propriétaire :",
+      "legacy_one": "{{count}} fichier dans un ancien format ({{mimes}}), {{size}}",
+      "legacy_other": "{{count}} fichiers dans d’anciens formats ({{mimes}}), {{size}}"
+    },
+    "cleanup": {
+      "title": "Nettoyage",
+      "orphans_one": "{{count}} média inutilisé ({{size}})",
+      "orphans_other": "{{count}} médias inutilisés ({{size}})",
+      "waiting_one": "— {{count}} encore dans son jour de grâce.",
+      "waiting_other": "— {{count}} encore dans leur jour de grâce.",
+      "stray_one": "{{count}} fichier sur le disque sans média ({{size}})",
+      "stray_other": "{{count}} fichiers sur le disque sans média ({{size}})",
+      "guard": {
+        "empty_database": "La base ne contient aucun média mais le volume contient des fichiers : rien n’est purgé. Vérifiez que la base et le volume médias vont ensemble.",
+        "database_older": "Des médias ont perdu leur fichier : la base semble plus ancienne que le volume médias (restaurée seule ?). Les fichiers stockés sont gardés tant qu’ils ne correspondent pas."
+      },
+      "lastRun": "Dernier passage {{ago}}",
+      "neverRun": "Aucun passage depuis le démarrage du backend.",
+      "runNow": "Lancer maintenant",
+      "done": "Terminé : {{adopted}} déplacés, {{media}} médias, {{blobs}} fichiers et {{files}} fichiers orphelins supprimés.",
+      "busy": "Un passage est déjà en cours : réessayez dans un instant.",
+      "failed": "Le nettoyage n’a pas pu s’exécuter."
+    },
+    "files": {
+      "title": "Fichiers",
+      "kind": "Type",
+      "allKinds": "Tous les types",
+      "owner": "Propriétaire",
+      "allOwners": "Tous les propriétaires",
+      "sort": "Tri",
+      "bySize": "Les plus lourds",
+      "byUsage": "Les plus utilisés",
+      "byDate": "Les plus récents",
+      "legacyOnly": "Anciens formats seulement",
+      "search": "Chercher par nom de fichier",
+      "none": "Aucun fichier ne correspond.",
+      "legacy": "ancien format",
+      "usedIn_one": "dans {{count}} quiz",
+      "usedIn_other": "dans {{count}} quiz",
+      "inHistory": "résultats passés seulement",
+      "unused": "inutilisé",
+      "delete": "Supprimer {{name}}"
+    },
+    "delete": {
+      "title": "Supprimer ce fichier ?",
+      "confirm": "Supprimer",
+      "usedBy": "Utilisé par :",
+      "quiz": "« {{title}} » ({{owner}})",
+      "sessions_one": "{{count}} partie archivée",
+      "sessions_other": "{{count}} parties archivées",
+      "unused": "Rien ne l’utilise.",
+      "playing": "Une partie le joue : il ne peut pas être supprimé avant la fin de la partie.",
+      "failed": "Le fichier n’a pas pu être supprimé.",
+      "quizzesLose": "Les questions perdent ce média.",
+      "resultsLose": "Les résultats passés ne l’affichent plus.",
+      "everyCopy": "Toutes les copies de ce fichier partent, quel qu’en soit le propriétaire."
+    }
+  }
 }

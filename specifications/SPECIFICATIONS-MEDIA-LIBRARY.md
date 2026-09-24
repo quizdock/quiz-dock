@@ -158,14 +158,24 @@ attribution. Importing by URL or through these libraries' APIs is not in scope (
 
 ## 8. The administration page
 
-For the `admin` role only. It shows and acts on the instance's media:
+For the `admin` role only — `@ManagerOnly()` routes under `/api/v1/admin/media`, which a host is refused
+(`auth.admin_required`); the page is `/admin/media`, reached from the account menu. Delivered in #54, one page in
+three blocks:
 
-- disk used, by kind and by owner; files in legacy formats;
-- orphans waiting for the job and files on disk with no blob; "run now" for the job of §7;
-- the largest files and the most shared ones, with their usages;
-- deleting a media of any owner, with the usages it breaks listed first.
+- **Disk**: size and file count (a file shared by several media counted once), by kind and by owner (a file shared
+  by two authors counts for both), files in older formats (stored before the converter: MP3, PNG, JPEG…).
+- **Clean-up**: media nothing uses (a quiz of any owner or an archived session), those still within their day of
+  grace, and the space the sweep will free; files on disk nothing points to; what holds the purge back, when a
+  guard of §7 is on; the last pass; **run now** — the job of §7 at once, never two passes at the same time.
+- **Files**: one row per file with its owners, how many quizzes use it, whether past results show it; sorted by
+  size, usage or date, filtered by kind, owner, older formats, file name; a page at a time.
+- **Delete** any file, used or not (moderation), once the dialog has listed what it breaks — the quizzes and their
+  owners, the archived sessions: every media on that file goes, whoever owns it; the database empties the quiz
+  slots, a text showing it no longer does, past results no longer show it. Refused (`409 media.playing`) only
+  while a session plays it.
 
-No conversion queue: conversion happens in the author's browser.
+No conversion queue: conversion happens in the author's browser. The usage counts scan the quizzes' texts: fine at
+the scale of an instance, not meant for millions of media.
 
 ---
 
