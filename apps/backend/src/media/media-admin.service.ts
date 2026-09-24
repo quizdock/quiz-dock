@@ -3,6 +3,7 @@ import { type MediaKind, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { type LastSweep, MediaJanitor, type SweepResult } from './media-janitor.service';
 import { USED_BY_QUIZ } from './media-library.service';
+import { ARCHIVED_MEDIA_REFS, QUIZ_MEDIA_REFS } from './media-usage.sql';
 import { ORPHAN_GRACE_MS, MediaService } from './media.service';
 
 /** What the editor stores today; anything else was stored before the converter. */
@@ -13,11 +14,12 @@ const PAGE_MAX = 100;
 /** A file on the volume: a blob, or a media from before sharing with a file of its own. */
 const FILE_KEY = Prisma.sql`COALESCE(m.blob_sha256, m.id)`;
 
-/** Whether the media `m` is used anywhere: a quiz (any owner) or an archived session. */
-const USED_ANYWHERE = Prisma.sql`(
-  EXISTS (SELECT 1 FROM quiz q WHERE ${USED_BY_QUIZ})
-  OR EXISTS (SELECT 1 FROM game_session_log g WHERE g.quiz_snapshot::text LIKE '%' || m.id || '%')
-)`;
+/**
+ * The uses of every media, read once per request (a `LIKE` per media would scan
+ * every text and snapshot again for each): `qr` (quiz, media), `ar` (media shown
+ * by archived sessions).
+ */
+const REFS = Prisma.sql`qr AS (${QUIZ_MEDIA_REFS}), ar AS (${ARCHIVED_MEDIA_REFS})`;
 
 export interface MediaOverview {
   files: number;
@@ -115,8 +117,11 @@ export class MediaAdminService {
       // Media rows nothing uses; the bytes are those of the files every media of which is
       // unused — what the sweep will actually free, a shared file counted once.
       this.prisma.$queryRaw<Array<{ count: number; bytes: bigint; waiting: number }>>`
-        WITH m AS (
-          SELECT m.*, ${FILE_KEY} AS k, NOT ${USED_ANYWHERE} AS unused FROM media_asset m ${scope}
+        WITH ${REFS},
+        m AS (
+          SELECT m.*, ${FILE_KEY} AS k,
+                 NOT (m.id IN (SELECT media_id FROM qr) OR m.id IN (SELECT media_id FROM ar)) AS unused
+          FROM media_asset m ${scope}
         )
         SELECT COUNT(*) FILTER (WHERE unused)::int AS count,
                COUNT(*) FILTER (
@@ -175,7 +180,15 @@ export class MediaAdminService {
         }
       >
     >`
-      WITH f AS (
+      WITH ${REFS},
+      used AS (
+        SELECT ${FILE_KEY} AS k, COUNT(DISTINCT qr.quiz_id)::int AS n
+        FROM qr JOIN media_asset m ON m.id = qr.media_id GROUP BY 1
+      ),
+      shown AS (
+        SELECT DISTINCT ${FILE_KEY} AS k FROM ar JOIN media_asset m ON m.id = ar.media_id
+      ),
+      f AS (
         SELECT ${FILE_KEY} AS k,
                (ARRAY_AGG(m.id ORDER BY m.created_at DESC))[1] AS id,
                (ARRAY_AGG(m.url ORDER BY m.created_at DESC))[1] AS url,
@@ -191,13 +204,10 @@ export class MediaAdminService {
       )
       SELECT f.id, f.url, f.kind, f.mime, f.name, f.bytes, f.owners, f."mediaCount", f.legacy,
              f.created_at,
-             (SELECT COUNT(DISTINCT q.id)::int FROM media_asset m JOIN quiz q ON ${USED_BY_QUIZ}
-              WHERE ${FILE_KEY} = f.k) AS "quizCount",
-             EXISTS (SELECT 1 FROM media_asset m JOIN game_session_log g
-                       ON g.quiz_snapshot::text LIKE '%' || m.id || '%'
-                     WHERE ${FILE_KEY} = f.k) AS "inHistory",
+             COALESCE(used.n, 0) AS "quizCount",
+             shown.k IS NOT NULL AS "inHistory",
              COUNT(*) OVER ()::int AS total
-      FROM f ${filtered}
+      FROM f LEFT JOIN used ON used.k = f.k LEFT JOIN shown ON shown.k = f.k ${filtered}
       ORDER BY ${order}
       LIMIT ${limit} OFFSET ${offset}`;
     return {
