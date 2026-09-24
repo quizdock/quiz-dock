@@ -22,6 +22,20 @@
     "trackingHint": "ⓘ 开启时，成绩会记录在每位参与者的账号下（归档排行榜、历史）。关闭时，不保存任何个人成绩，只保留小组的整体结果。直播中的会话不受影响。",
     "ownNameLabel": "允许参与者自选显示名称",
     "ownNameHint": "ⓘ 关闭时，显示名称来自其账号。无论哪种情况，成绩都仍与账号关联——自选名称并非匿名。",
+    "audioTargetLabel": "本次会话中谁能听到声音",
+    "audioTargetHint": "在本次会话中取代测验的设置。有自己设置的题目保持不变。",
+    "preloadNotice": "为避免等待，参与者的设备会在下一题出现前几秒收到其图片、声音或视频——但绝不包括题目文字和选项。好奇的参与者可能会提前打开它们。",
+    "readiness": "下一题媒体已加载：{{ready}} / {{total}} 台设备",
+    "readinessNoProjection": "投影未打开",
+    "readinessProjectionReady": "投影已就绪",
+    "readinessProjectionLoading": "投影加载中",
+    "mediaReady": "媒体已加载",
+    "mediaLoading": "媒体加载中",
+    "audioTarget": {
+      "projection": "仅投影",
+      "projection_remote": "投影和远程参与者",
+      "everyone": "所有设备"
+    },
     "stopSession": "停止会话",
     "startTooltip": "请等待大多数玩家连接后再开始",
     "start": "开始会话",
@@ -49,6 +63,7 @@
     "modeAutoTooltip": "自动模式：每次出结果后自动切换到下一题",
     "modeAuto": "自动",
     "noParticipants": "没有玩家连接。",
+    "remote": "远程参与",
     "banTooltip": "移除 {{nickname}}",
     "banAria": "封禁 {{nickname}}",
     "banConfirmTitle": "封禁 {{nickname}}？",
@@ -109,7 +124,10 @@
       "https": "本页通过 HTTPS 提供：http:// 的本地地址会在手机上显示警告——带证书的公开地址才是正解。"
     },
     "backToLive": "回到当前",
-    "restartMedia": "从头重新播放媒体"
+    "restartMedia": "从头重新播放媒体",
+    "mediaLoadingTitle": "正在加载本题的媒体",
+    "mediaLate": "仍在加载：{{names}}",
+    "startAnyway": "仍然开始"
   },
   "screen": {
     "sessionUnavailable": "会话不可用。",
@@ -127,7 +145,10 @@
     "joinAt": "加入地址",
     "participants_one": "名玩家",
     "participants_other": "名玩家",
-    "review": "回顾"
+    "review": "回顾",
+    "readiness": "{{ready}} / {{total}} 已就绪",
+    "mediaLoading": "题目即将出现…",
+    "readinessLeft": "还剩 {{seconds}} 秒"
   },
   "player": {
     "joinFailed": "无法加入会话。",
@@ -135,6 +156,11 @@
     "randomAvatar": "随机头像",
     "nickname": "昵称",
     "nicknamePlaceholder": "你的昵称",
+    "presenceLegend": "你在哪里参与？",
+    "presenceRoom": "在现场",
+    "presenceRoomHint": "我能看到大屏幕",
+    "presenceRemote": "远程",
+    "presenceRemoteHint": "题目及其视频和声音会发送到这台设备",
     "connecting": "连接中…",
     "letsGo": "开始吧！",
     "connectingToSession": "正在连接会话…",
@@ -173,13 +199,16 @@
     "moveDown": "下移",
     "unsupportedType": "不支持的题目类型。",
     "leave": "退出",
+    "mute": "关闭声音",
+    "unmute": "打开声音",
     "leaveConfirmTitle": "退出本场？",
     "leaveConfirmDescription": "你将失去席位和分数。要回来需要再次用 PIN 加入。",
     "joinAnother": "加入另一场",
     "yourClosest": "第 {{rank}} 接近——±{{distance}}",
     "yourCredit": "{{percent}} % 的分数",
     "dragToReorder": "拖动以排序",
-    "pollThanks": "感谢你的意见！"
+    "pollThanks": "感谢你的意见！",
+    "questionComing": "题目即将出现…"
   },
   "reveal": {
     "explanation": "解析",

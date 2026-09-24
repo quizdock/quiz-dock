@@ -55,9 +55,14 @@ your phone to play.
 - 🖥️ **Made for the big screen** — bright, high-contrast projection screens, with
   separate projection and control windows; manual or automatic pacing.
 - 🧩 **A real quiz builder** — seven question types (single/multi choice, true-false,
-  text, numeric, reorder, poll), images with alternative text, MP4 videos and MP3 sounds played
-  on the projection (loudness-matched, waveform shown), Markdown everywhere, content slides
-  between questions, backgrounds, answer explanations at the reveal.
+  text, numeric, reorder, poll), images with alternative text, Markdown everywhere, content
+  slides between questions, backgrounds, answer explanations at the reveal.
+- 🎧 **Video & sound — _experimental_** — MP4 videos and MP3 sounds in questions,
+  loudness-matched, drawn as a waveform with a playhead; played on the projection and on
+  the devices of **remote participants** (who hears what is set per quiz, per question and
+  per session), fetched ahead from the lobby, and the room waits a moment for a device
+  still loading. Tested in Chromium browsers, not yet on iPhone:
+  [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
 - 🏆 **Scoring that rewards speed** — time-weighted points, streak bonuses, leaderboard
   between questions, final podium; per-question rules (*closest answer wins*, partial
   credit, typo-tolerant text, double or fixed points).
@@ -181,6 +186,7 @@ the podium, the player's ordering and feedback screens:
 - 🎞️ **Content slides** — headings, text, images, 2–3 columns between questions; image or gradient backgrounds for slides and questions, with a faithful 16:9 preview.
 - 💡 **Answer explanations** — shown at the reveal, with a per-question reveal delay in automatic mode.
 - 🎛️ **Host in control** — Console / Projection / Participant views, look back over played questions without replaying anything, layout edits reach a running session at its next step, sessions survive a server restart.
+- 🌐 **Remote participants** _(experimental)_ — a participant following from home says so when joining and gets the whole question on their device, sound and video included; the console shows who is remote and whose media are loaded.
 - 📡 **Invitation address** — the QR code and join link point where participants can actually reach the instance (public URL, LAN IP, or any address), chosen from the console.
 - ⭐ **Player feedback** — players rate the quiz (stars + optional comment) at the end; hosts see the distribution and browse the reviews. Can be switched off per quiz.
 - 💾 **Answer capture** — optionally record every player's individual answers for audit, certification or individual follow-up.

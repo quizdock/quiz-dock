@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { QuizDetailDtoQuestionsItemAcceptedAnswersItem } from './quizDetailDtoQuestionsItemAcceptedAnswersItem';
+import type { QuizDetailDtoQuestionsItemAudioTarget } from './quizDetailDtoQuestionsItemAudioTarget';
 import type { QuizDetailDtoQuestionsItemBackgroundGradient } from './quizDetailDtoQuestionsItemBackgroundGradient';
 import type { QuizDetailDtoQuestionsItemMedia } from './quizDetailDtoQuestionsItemMedia';
 import type { QuizDetailDtoQuestionsItemOptionsItem } from './quizDetailDtoQuestionsItemOptionsItem';
@@ -13,6 +14,7 @@ import type { QuizDetailDtoQuestionsItemPointsMode } from './quizDetailDtoQuesti
 import type { QuizDetailDtoQuestionsItemScoring } from './quizDetailDtoQuestionsItemScoring';
 import type { QuizDetailDtoQuestionsItemTextTone } from './quizDetailDtoQuestionsItemTextTone';
 import type { QuizDetailDtoQuestionsItemType } from './quizDetailDtoQuestionsItemType';
+import type { QuizDetailDtoQuestionsItemWaveformSize } from './quizDetailDtoQuestionsItemWaveformSize';
 
 export type QuizDetailDtoQuestionsItem = {
   id: string;
@@ -44,6 +46,9 @@ export type QuizDetailDtoQuestionsItem = {
      * @nullable
      */
   revealDelayS: number | null;
+  /** @nullable */
+  audioTarget: QuizDetailDtoQuestionsItemAudioTarget;
+  waveformSize: QuizDetailDtoQuestionsItemWaveformSize;
   pointsMode: QuizDetailDtoQuestionsItemPointsMode;
   scoring: QuizDetailDtoQuestionsItemScoring;
   /** @nullable */

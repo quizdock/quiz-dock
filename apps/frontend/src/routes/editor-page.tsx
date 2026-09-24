@@ -39,7 +39,13 @@ import {
   Sparkles,
   Trash2,
 } from 'lucide-react';
-import { LOUDNESS_TARGETS, type LoudnessTarget, MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  type AudioTarget,
+  LOUDNESS_TARGETS,
+  type LoudnessTarget,
+  MEDIA_TAIL_MAX_S,
+} from '@quiz-dock/contracts';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
@@ -229,6 +235,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
   const setLoudness = async (loudnessTargetLufs: LoudnessTarget) => {
     await update.mutateAsync({ id: quiz.id, data: { loudnessTargetLufs } });
+    await invalidate();
+  };
+
+  const setAudioTarget = async (audioTarget: AudioTarget) => {
+    await update.mutateAsync({ id: quiz.id, data: { audioTarget } });
     await invalidate();
   };
 
@@ -519,6 +530,24 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     {LOUDNESS_TARGETS.map((lufs) => (
                       <option key={lufs} value={lufs}>
                         {t(`settings.loudness.${-lufs}`)}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
+                <label
+                  className="mt-2 flex flex-wrap items-center gap-2 text-sm"
+                  title={t('settings.audioTargetHelp')}
+                >
+                  <span className="font-medium">{t('settings.audioTargetLabel')}</span>
+                  <Select
+                    className="h-8 w-auto"
+                    value={quiz.audioTarget}
+                    disabled={update.isPending}
+                    onChange={(e) => void setAudioTarget(e.target.value as AudioTarget)}
+                  >
+                    {AUDIO_TARGETS.map((target) => (
+                      <option key={target} value={target}>
+                        {t(`settings.audioTarget.${target}`)}
                       </option>
                     ))}
                   </Select>

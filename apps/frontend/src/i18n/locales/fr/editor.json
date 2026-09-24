@@ -33,6 +33,13 @@
       "14": "Fort (−14 LUFS, streaming)",
       "16": "Équilibré (−16 LUFS)",
       "23": "Calme (−23 LUFS, télévision)"
+    },
+    "audioTargetLabel": "Qui entend le son",
+    "audioTargetHelp": "Quels appareils jouent les sons et vidéos du quiz. Les participants dans la salle voient la projection : leurs téléphones restent muets, sauf avec « Tous les appareils », qui fait écho s’ils partagent une salle. Une question peut choisir autrement, et l’animateur peut le changer pour une session.",
+    "audioTarget": {
+      "projection": "Projection seulement",
+      "projection_remote": "Projection et participants à distance",
+      "everyone": "Tous les appareils"
     }
   },
   "broadcast": {
@@ -175,6 +182,17 @@
     "revealDelayLabel": "Délai de révélation (s)",
     "revealDelayPlaceholder": "auto",
     "revealDelayHint": "En mode automatique : temps laissé sur la réponse avant la question suivante. Vide = réglage par défaut.",
+    "audioTargetLabel": "Qui entend ce son",
+    "audioTargetHint": "Quels appareils jouent le son ou la vidéo de cette question. « Tous les appareils » inclut les téléphones dans la salle, qui font écho s’ils la partagent.",
+    "audioTargetDefault": "Réglage de la session",
+    "waveformSizeLabel": "Taille de la forme d’onde",
+    "waveformSizeHint": "Épaisseur de la forme d’onde du son sur la projection et les téléphones.",
+    "waveformPreview": "Aperçu de la forme d’onde",
+    "waveformSize": {
+      "S": "Petite",
+      "M": "Moyenne",
+      "L": "Grande"
+    },
     "pointsLabel": "Points",
     "pointsMode": {
       "standard": "Standard",

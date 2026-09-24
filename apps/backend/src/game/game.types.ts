@@ -1,5 +1,7 @@
 import type {
   AnswerValue,
+  AudioTarget,
+  PlayerPresence,
   GameMode,
   LiveQuestionMedia,
   OptionColor,
@@ -41,6 +43,8 @@ export interface SnapshotQuestion {
   timeLimitS: number;
   /** Auto-mode delay on this REVEAL in seconds (#6); null = engine default. */
   revealDelayS: number | null;
+  /** Which devices play its sound; null (or absent, older snapshots) = the game's default. */
+  audioTarget?: AudioTarget | null;
   /** Markdown shown at REVEAL only (#5) — never part of `question:start`. */
   answerExplanation: string | null;
   /** Optional full-cover background (image or gradient) with its text contrast. */
@@ -83,6 +87,8 @@ export interface QuizSnapshot {
   language: string;
   /** End-of-session rating allowed (§2.11). */
   feedbackEnabled: boolean;
+  /** The quiz's default audio target (absent in snapshots from before it). */
+  audioTarget?: AudioTarget;
   questions: SnapshotQuestion[];
   /** Sorted by (beforeQuestionIndex, orderIndex). */
   slides: SnapshotSlide[];
@@ -102,6 +108,8 @@ export interface PlayerRecord {
   joinedAt: number;
   /** RTT/2 mesuré au join (compensation latence §6). */
   latencyMs: number;
+  /** Where they follow the game from; `room` when absent (records made before it existed). */
+  presence?: PlayerPresence;
 }
 
 /** État scalaire d'une partie (Redis hash `game:{pin}`). */
@@ -117,6 +125,10 @@ export interface GameMeta {
   personalTracking: boolean;
   /** Les participants choisissent leur nom affiché ; sinon il vient du compte (RG-15). */
   pickOwnName: boolean;
+  /** End of the media wait (ms epoch) while in `MEDIA_LOADING`, 0 otherwise. */
+  mediaWaitUntil?: number;
+  /** The host's lobby choice replacing the quiz's default audio target; empty = the quiz's. */
+  audioTarget?: AudioTarget | '';
   title: string;
   language: string;
   createdAt: number;

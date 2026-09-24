@@ -7,7 +7,12 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { GameState } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  type AudioTarget,
+  GameState,
+  type PlayerPresence,
+} from '@quiz-dock/contracts';
 import { QuizStatus } from '@prisma/client';
 import { isOidcMode } from '../auth/auth-mode';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,7 +20,12 @@ import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import { RedisService } from '../redis/redis.service';
 import { GAME_TTL_S, gameKeys } from './game.keys';
 import type { GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
-import { QUIZ_SNAPSHOT_INCLUDE, buildSnapshot, refreshSnapshotForm } from './snapshot';
+import {
+  QUIZ_SNAPSHOT_INCLUDE,
+  buildSnapshot,
+  refreshSnapshotForm,
+  snapshotHasSound,
+} from './snapshot';
 
 const PIN_ALLOC_ATTEMPTS = 10;
 const NICKNAME_MIN = 2;
@@ -35,6 +45,7 @@ export interface JoinSessionResult {
   sessionToken: string;
   nickname: string;
   avatar: string;
+  presence: PlayerPresence;
   playerCount: number;
 }
 
@@ -138,6 +149,7 @@ export class GameService {
     rawNickname: string,
     user: { id: string; displayName: string } | null,
     rawAvatar?: string,
+    wantedPresence?: PlayerPresence,
   ): Promise<JoinSessionResult> {
     const userId = user?.id ?? null;
     const meta = await this.getMeta(pin);
@@ -169,6 +181,9 @@ export class GameService {
     const sessionToken = randomBytes(24).toString('base64url');
     // Graine d'avatar : bornée (client-fournie, stockée + diffusée), défaut = pseudo.
     const avatar = (rawAvatar ?? '').trim().slice(0, AVATAR_SEED_MAX) || nickname;
+    // Remote only means something when the quiz plays sound; the room otherwise.
+    const presence: PlayerPresence =
+      wantedPresence === 'remote' && (await this.hasSound(pin)) ? 'remote' : 'room';
     const record: PlayerRecord = {
       nickname,
       avatar,
@@ -178,6 +193,7 @@ export class GameService {
       connected: true,
       joinedAt: Date.now(),
       latencyMs: 0,
+      presence,
     };
 
     const pipe = this.redis.multi();
@@ -197,7 +213,19 @@ export class GameService {
     // Compteur = joueurs **connectés** (§8), pas le total jamais joint.
     const playerCount = await this.connectedCount(pin);
 
-    return { pin, playerId, sessionToken, nickname, avatar, playerCount };
+    return { pin, playerId, sessionToken, nickname, avatar, presence, playerCount };
+  }
+
+  /**
+   * Whether the quiz of a live game plays any sound or video — what a player is
+   * told before joining. Throws for a game that does not exist or is over.
+   */
+  async hasSound(pin: string): Promise<boolean> {
+    const meta = await this.getMeta(pin);
+    if (!meta) throw new NotFoundException('session.not_found');
+    if (meta.state === GameState.Ended) throw new BadRequestException('session.ended');
+    const snapshot = await this.getSnapshot(pin);
+    return !!snapshot && snapshotHasSound(snapshot);
   }
 
   /**
@@ -477,6 +505,8 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     fullCapture: meta.fullCapture ? '1' : '0',
     personalTracking: meta.personalTracking ? '1' : '0',
     pickOwnName: meta.pickOwnName ? '1' : '0',
+    audioTarget: meta.audioTarget ?? '',
+    mediaWaitUntil: String(meta.mediaWaitUntil ?? 0),
     title: meta.title,
     language: meta.language,
     createdAt: String(meta.createdAt),
@@ -508,6 +538,10 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     // une nouvelle (sous OIDC, le nom vient du compte).
     personalTracking: raw.personalTracking !== '0',
     pickOwnName: raw.pickOwnName === undefined ? !isOidcMode() : raw.pickOwnName === '1',
+    audioTarget: (AUDIO_TARGETS as readonly string[]).includes(raw.audioTarget ?? '')
+      ? (raw.audioTarget as AudioTarget)
+      : '',
+    mediaWaitUntil: raw.mediaWaitUntil ? Number(raw.mediaWaitUntil) : 0,
     title: raw.title,
     language: raw.language,
     createdAt: Number(raw.createdAt),

@@ -11,7 +11,7 @@
 
 export * from './media-sniff';
 export * from './question-media';
-import type { LiveQuestionMedia } from './question-media';
+import type { AudioTarget, LiveQuestionMedia } from './question-media';
 
 export const CONTRACTS_VERSION = '0.3.0' as const;
 
@@ -24,6 +24,12 @@ export enum GameState {
   Leaderboard = 'LEADERBOARD',
   /** A content slide (#7) is on screen: no answer; advances on host click or, in auto mode, by `displayDelayS`. */
   SlideShow = 'SLIDE_SHOW',
+  /**
+   * A question is due but a device that plays its sound or video has not loaded
+   * it: the room waits, at most `GAME_MEDIA_WAIT_S` seconds; the host may start
+   * anyway (`host:next`). `questionIndex` is the question that comes.
+   */
+  MediaLoading = 'MEDIA_LOADING',
   Podium = 'PODIUM',
   Ended = 'ENDED',
   HostDisconnected = 'HOST_DISCONNECTED',
@@ -108,11 +114,17 @@ export const ClientEvents = {
   /** Ajoute/retire du temps au chrono de la question courante (± secondes). */
   HostAdjustTime: 'host:adjust-time',
   SpectatorJoin: 'spectator:join',
+  /** What a player needs to know before joining (whether the quiz plays sound). */
+  PlayerPeek: 'player:peek',
   PlayerJoin: 'player:join',
   PlayerReconnect: 'player:reconnect',
   /** Change la graine d'avatar avant le démarrage (cosmétique). */
   PlayerAvatar: 'player:avatar',
   PlayerSubmit: 'player:submit',
+  /** A device has loaded what it fetched ahead of a question. */
+  MediaReady: 'media:ready',
+  /** The projection's playback position (relayed to the room). */
+  MediaPosition: 'media:position',
   /** Avis du joueur en fin de partie (note Likert 5 + commentaire facultatif). */
   PlayerRate: 'player:rate',
   Ping: 'ping',
@@ -139,6 +151,8 @@ export const ServerEvents = {
   QuestionTime: 'question:time',
   /** Media of the next question, to fetch ahead (projection and console only). */
   MediaPreload: 'media:preload',
+  /** Which devices have loaded the upcoming question's sound or video (screens only). */
+  MediaReadiness: 'media:readiness',
   /** A host command on the current question's media, relayed to the screens. */
   MediaControl: 'media:control',
   /** What the quiz's media need from a screen (sent on attach, not to players). */
@@ -150,6 +164,13 @@ export const ServerEvents = {
 
 // ─── Payloads WebSocket (technique §9) ──────────────────────────────────────
 // Source de vérité du contrat temps réel, typée bout-en-bout (back + front).
+
+/**
+ * Where a player follows the game from. `room`: they see the projection, their
+ * device stays silent. `remote`: they get the whole question on their device.
+ * Only offered when the quiz plays sound; `room` otherwise.
+ */
+export type PlayerPresence = 'room' | 'remote';
 
 /** Réponse d'un joueur : option(s), texte, nombre, ou séquence d'ordre. */
 export type AnswerValue = string | string[] | number;
@@ -170,6 +191,8 @@ export interface QuestionStartPayload {
   prompt: string;
   /** Visual and sound of the question; both null when it has none. */
   media: LiveQuestionMedia;
+  /** Which devices play its sound, resolved for this game (present when it has one). */
+  audioTarget?: AudioTarget;
   options?: PublicOption[];
   timeLimitS: number;
   basePoints: number;
@@ -249,9 +272,46 @@ export interface SlideShowPayload {
 }
 
 /** The media of question `questionIndex`, to fetch ahead of it. */
+/**
+ * What a device fetches ahead: the next question's media — only those this
+ * device will show or play — and the images of the slides before it. Never
+ * the prompt nor the options: the question itself stays unknown.
+ */
 export interface MediaPreloadPayload {
   questionIndex: number;
   media: LiveQuestionMedia;
+  /** Which devices will play its sound (present when it has one). */
+  audioTarget?: AudioTarget;
+  /** Images of the slides shown before that question. */
+  images?: string[];
+}
+
+/**
+ * Who has loaded the sound or video of an upcoming question. Counted: the
+ * projection windows, and the participants whose device will play a sound or
+ * a video (remote ones; in the room, only when the sound is for every device).
+ * Images are not waited for.
+ */
+export interface MediaReadinessPayload {
+  questionIndex: number;
+  /** Counted devices ready, out of all of them (screens and participants). */
+  ready: number;
+  total: number;
+  /** The participants counted, ready or not (the console lists them). */
+  players: { playerId: string; ready: boolean }[];
+  /** The projection windows counted. */
+  screens: { ready: number; total: number };
+}
+
+/**
+ * Where the projection is in a question's sound: seconds played, and whether it
+ * plays on. Sent about once a second and at each play, pause or jump, so the
+ * screens that do not play the sound move their playhead with the room's.
+ */
+export interface MediaPositionPayload {
+  questionIndex: number;
+  t: number;
+  playing: boolean;
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -412,7 +472,13 @@ export interface ClientToServerEvents {
    * démarrage (RG-15, RG-16) : suivi individuel et nom affiché choisi. Refusé une
    * fois la partie lancée ; les joueurs connectés voient l'avis changer (`notice`).
    */
-  'host:options': (p: { pin: string; personalTracking?: boolean; pickOwnName?: boolean }) => void;
+  'host:options': (p: {
+    pin: string;
+    personalTracking?: boolean;
+    pickOwnName?: boolean;
+    /** Replaces the quiz's default audio target for this game (questions with their own keep it). */
+    audioTarget?: AudioTarget;
+  }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
@@ -423,8 +489,17 @@ export interface ClientToServerEvents {
   'host:adjust-time': (p: { pin: string; deltaS: number }) => void;
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
   'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
+  /** Before joining: whether the quiz plays sound, so the join form offers the presence choice. */
+  'player:peek': (p: { pin: string }, ack: (res: { hasSound: boolean }) => void) => void;
   'player:join': (
-    p: { pin: string; nickname: string; authToken?: string; avatar?: string },
+    p: {
+      pin: string;
+      nickname: string;
+      authToken?: string;
+      avatar?: string;
+      /** `room` when absent, and whenever the quiz plays no sound. */
+      presence?: PlayerPresence;
+    },
     /**
      * `nickname` est celui **retenu par le serveur** : le pseudo saisi, ou le nom
      * du compte quand l'hôte n'ouvre pas le choix (RG-15), suffixé en cas
@@ -445,6 +520,10 @@ export interface ClientToServerEvents {
     p: { pin: string; rating: number; comment?: string },
     ack: (res: { ok: boolean }) => void,
   ) => void;
+  /** A device has loaded the sound or video it fetched ahead of `questionIndex`. */
+  'media:ready': (p: { pin: string; questionIndex: number }) => void;
+  /** The projection's playback position of the current sound (relayed to the room). */
+  'media:position': (p: { pin: string } & MediaPositionPayload) => void;
   ping: (p: { t0: number }) => void;
 }
 
@@ -461,13 +540,14 @@ export interface ServerToClientEvents {
     nickname: string;
     playerCount: number;
     avatar?: string;
+    presence?: PlayerPresence;
   }) => void;
   'player:left': (p: { playerId: string; playerCount: number }) => void;
   /** Le joueur a été banni par l'hôte : son client affiche l'exclusion (durée en minutes). */
   kicked: (p: { minutes: number }) => void;
   /** Instantané du lobby (joueurs connectés) renvoyé à un socket qui se (ré)attache (§6). */
   'game:roster': (p: {
-    players: { playerId: string; nickname: string; avatar?: string }[];
+    players: { playerId: string; nickname: string; avatar?: string; presence?: PlayerPresence }[];
   }) => void;
   'game:state': (p: GameStatePayload) => void;
   'question:start': (p: QuestionStartPayload) => void;
@@ -488,11 +568,17 @@ export interface ServerToClientEvents {
   /** Timing recalculé de la question courante (ajustement du chrono). */
   'question:time': (p: QuestionTimePayload) => void;
   /**
-   * The media of the next question, sent with the reveal of the current one so
-   * a screen fetches them while the leaderboard is up and plays them at once.
-   * Only to sockets that are not players: the next question is not theirs yet.
+   * The media of the next question, sent in the lobby (the first one) and with
+   * the reveal of the current one, so a device fetches them while the room waits
+   * and plays them at once. Each device gets only what it will show or play.
    */
   'media:preload': (p: MediaPreloadPayload) => void;
+  /** Who has loaded the upcoming question's sound or video (screens only). */
+  'media:readiness': (p: MediaReadinessPayload) => void;
+  /** The room waits for media before question `questionIndex`, until `until` (server ms epoch). */
+  'media:wait': (p: { questionIndex: number; until: number }) => void;
+  /** Where the projection is in the current sound: the other screens draw their playhead there. */
+  'media:position': (p: MediaPositionPayload) => void;
   /** The host restarts the current question's media from the top. */
   'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
   /**
@@ -500,7 +586,13 @@ export interface ServerToClientEvents {
    * screens that are not players: the projection then asks for the click that
    * unlocks sound as soon as it opens, whatever the moment of the session.
    */
-  'game:media': (p: { hasSound: boolean }) => void;
+  'game:media': (p: {
+    hasSound: boolean;
+    /** Whether any question or slide carries a media (the lobby then says they are sent ahead). */
+    hasMedia: boolean;
+    /** The game's default audio target: the host's lobby choice, else the quiz's. */
+    audioTarget: AudioTarget;
+  }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
    * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le

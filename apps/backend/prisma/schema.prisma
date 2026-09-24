@@ -117,6 +117,20 @@ enum AudioOrigin {
   @@map("audio_origin")
 }
 
+/// How thick a question's waveform is drawn: S 1em, M 2.5em, L 5em.
+enum WaveformSize {
+  S
+  M
+  L
+}
+
+/// Which devices play a question's sound (see AudioTarget in @quiz-dock/contracts).
+enum AudioTarget {
+  projection
+  projection_remote
+  everyone
+}
+
 enum SessionStatus {
   lobby
   in_progress
@@ -205,6 +219,8 @@ model Quiz {
   mediaTailS         Int            @default(3) @map("media_tail_s")
   /// Level every sound and video is brought to at playback (LUFS): -14 loud, -16 balanced, -23 calm.
   loudnessTargetLufs Int            @default(-16) @map("loudness_target_lufs")
+  /// Which devices play the sounds, unless a question or the game says otherwise.
+  audioTarget        AudioTarget    @default(projection_remote) @map("audio_target")
   createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
   archivedAt         DateTime?      @map("archived_at") @db.Timestamptz(6)
@@ -241,6 +257,10 @@ model Question {
   timeLimitS         Int             @default(20) @map("time_limit_s")
   /// Auto-mode delay on this question's REVEAL, seconds (#6); null = engine default.
   revealDelayS       Int?            @map("reveal_delay_s")
+  /// Which devices play this question's sound; null = the game's default.
+  audioTarget        AudioTarget?    @map("audio_target")
+  /// How thick its waveform is drawn on the screens.
+  waveformSize       WaveformSize    @default(M) @map("waveform_size")
   pointsMode         PointsMode      @default(standard) @map("points_mode")
   scoring            QuestionScoring @default(standard)
   numericValue       Decimal?        @map("numeric_value")

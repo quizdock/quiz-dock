@@ -1,5 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
-import { questionMediaSchema } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, WAVEFORM_SIZES, questionMediaSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { backgroundOutputFields } from '../../common/background.schema';
 
@@ -43,6 +43,10 @@ export const questionSchema = z.object({
   ...backgroundOutputFields,
   timeLimitS: z.number().int(),
   revealDelayS: z.number().int().nullable(),
+  /** Which devices play its sound; null = the game's default. */
+  audioTarget: z.enum(AUDIO_TARGETS).nullable(),
+  /** How thick its waveform is drawn on the screens. */
+  waveformSize: z.enum(WAVEFORM_SIZES),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']),
   scoring: z.enum(['standard', 'closest', 'partial', 'lenient']),
   numericValue: z.string().nullable(),

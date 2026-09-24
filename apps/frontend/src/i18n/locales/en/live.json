@@ -22,6 +22,20 @@
     "trackingHint": "ⓘ On, results are recorded under each participant’s account (archived leaderboard, history). Off, no individual result is kept — only the group’s overall results. The live game is unaffected.",
     "ownNameLabel": "Let participants pick their display name",
     "ownNameHint": "ⓘ Off, the name shown comes from their account. Either way their results stay attached to it — a chosen name is not anonymity.",
+    "audioTargetLabel": "Who hears the sound in this session",
+    "audioTargetHint": "Replaces the quiz's setting for this session. Questions with their own setting keep it.",
+    "preloadNotice": "So that nothing waits, the participants' devices receive the next question's image, sound or video a few seconds before it appears — never its text nor its answers. A curious participant could open them early.",
+    "readiness": "Next media loaded: {{ready}} / {{total}} devices",
+    "readinessNoProjection": "projection not open",
+    "readinessProjectionReady": "projection ready",
+    "readinessProjectionLoading": "projection loading",
+    "mediaReady": "Media loaded",
+    "mediaLoading": "Loading the media",
+    "audioTarget": {
+      "projection": "Projection only",
+      "projection_remote": "Projection and remote participants",
+      "everyone": "Every device"
+    },
     "stopSession": "Stop the session",
     "startTooltip": "Wait until most players are connected before starting",
     "start": "Start the session",
@@ -49,6 +63,7 @@
     "modeAutoTooltip": "Auto mode: automatically moves to the next question after each result",
     "modeAuto": "Auto",
     "noParticipants": "No players connected.",
+    "remote": "Participating remotely",
     "banTooltip": "Remove {{nickname}}",
     "banAria": "Ban {{nickname}}",
     "banConfirmTitle": "Ban {{nickname}}?",
@@ -109,7 +124,10 @@
       "https": "This page is served over HTTPS: an http:// local address will show a warning on phones — a public address with a certificate is the clean way."
     },
     "backToLive": "Back to live",
-    "restartMedia": "Restart the media from the top"
+    "restartMedia": "Restart the media from the top",
+    "mediaLoadingTitle": "Loading the question’s media",
+    "mediaLate": "Still loading: {{names}}",
+    "startAnyway": "Start anyway"
   },
   "screen": {
     "sessionUnavailable": "Session unavailable.",
@@ -127,7 +145,10 @@
     "joinAt": "Join at",
     "participants_one": "player",
     "participants_other": "players",
-    "review": "Looking back"
+    "review": "Looking back",
+    "readiness": "{{ready}} / {{total}} ready",
+    "mediaLoading": "The question is on its way…",
+    "readinessLeft": "{{seconds}} s left"
   },
   "player": {
     "joinFailed": "Could not join the session.",
@@ -135,6 +156,11 @@
     "randomAvatar": "Random avatar",
     "nickname": "Nickname",
     "nicknamePlaceholder": "Your nickname",
+    "presenceLegend": "Where are you playing from?",
+    "presenceRoom": "In the room",
+    "presenceRoomHint": "I can see the big screen",
+    "presenceRemote": "Remote",
+    "presenceRemoteHint": "The question, its video and its sound come to this device",
     "connecting": "Connecting…",
     "letsGo": "Let's go!",
     "connectingToSession": "Connecting to the session…",
@@ -173,13 +199,16 @@
     "moveDown": "Move down",
     "unsupportedType": "Unsupported question type.",
     "leave": "Leave",
+    "mute": "Turn the sound off",
+    "unmute": "Turn the sound on",
     "leaveConfirmTitle": "Leave the session?",
     "leaveConfirmDescription": "You will lose your seat and your score. To come back you will have to join again with the PIN.",
     "joinAnother": "Join another game",
     "yourClosest": "{{rank}}. closest — ±{{distance}}",
     "yourCredit": "{{percent}} % of the points",
     "dragToReorder": "Drag to reorder",
-    "pollThanks": "Thanks for your opinion!"
+    "pollThanks": "Thanks for your opinion!",
+    "questionComing": "The question is on its way…"
   },
   "reveal": {
     "explanation": "Explanation",

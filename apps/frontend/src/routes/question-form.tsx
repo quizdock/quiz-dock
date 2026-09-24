@@ -16,6 +16,11 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
+  AUDIO_TARGETS,
+  type AudioTarget,
+  WAVEFORM_SIZES,
+  WAVEFORM_SIZE_DEFAULT,
+  type WaveformSize,
   MEDIA_TAIL_DEFAULT_S,
   NO_QUESTION_MEDIA,
   effectiveTimeLimitS,
@@ -44,6 +49,7 @@ import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { BackgroundField, NO_BACKGROUND, type BackgroundValue } from './background-field';
+import { Waveform } from '../game/media/waveform';
 import { QuestionMediaField, useMediaDurationMs } from './question-media-field';
 import {
   useQuestionsControllerAdd,
@@ -120,6 +126,10 @@ interface FormValues {
   background: BackgroundValue;
   timeLimitS: number;
   revealDelayS: number | null;
+  /** Which devices play its sound; null = the game's default. */
+  audioTarget: AudioTarget | null;
+  /** How thick the sound's waveform is drawn on the screens. */
+  waveformSize: WaveformSize;
   pointsMode: 'standard' | 'double' | 'none' | 'fixed';
   scoring: Scoring;
   numericValue: number;
@@ -152,6 +162,8 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
       background: NO_BACKGROUND,
       timeLimitS: 20,
       revealDelayS: null,
+      audioTarget: null,
+      waveformSize: WAVEFORM_SIZE_DEFAULT,
       pointsMode: 'standard',
       scoring: 'standard',
       numericValue: 0,
@@ -173,6 +185,8 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     },
     timeLimitS: q.timeLimitS,
     revealDelayS: q.revealDelayS ?? null,
+    audioTarget: (q.audioTarget as AudioTarget | null | undefined) ?? null,
+    waveformSize: (q.waveformSize as WaveformSize | undefined) ?? WAVEFORM_SIZE_DEFAULT,
     pointsMode: q.pointsMode as FormValues['pointsMode'],
     scoring: (q.scoring ?? 'standard') as Scoring,
     numericValue: q.numericValue ? Number(q.numericValue) : 0,
@@ -376,6 +390,57 @@ export function QuestionForm({
       </form.Field>
 
       <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)} />
+      {media.audio ? (
+        <form.Field name="waveformSize">
+          {(field) => (
+            <div className="flex flex-col gap-1.5">
+              <Label title={t('questionForm.waveformSizeHint')}>
+                {t('questionForm.waveformSizeLabel')}
+                <Select
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value as WaveformSize)}
+                >
+                  {WAVEFORM_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {t(`questionForm.waveformSize.${size}`)}
+                    </option>
+                  ))}
+                </Select>
+              </Label>
+              {/* As the screens will draw it, at their type size. */}
+              <Waveform
+                peaks={media.audio?.peaks ?? []}
+                progress={0}
+                size={field.state.value}
+                className="text-base"
+                label={t('questionForm.waveformPreview')}
+              />
+            </div>
+          )}
+        </form.Field>
+      ) : null}
+      {mediaHasSound(media) ? (
+        <form.Field name="audioTarget">
+          {(field) => (
+            <Label title={t('questionForm.audioTargetHint')}>
+              {t('questionForm.audioTargetLabel')}
+              <Select
+                value={field.state.value ?? ''}
+                onChange={(e) =>
+                  field.handleChange(e.target.value === '' ? null : (e.target.value as AudioTarget))
+                }
+              >
+                <option value="">{t('questionForm.audioTargetDefault')}</option>
+                {AUDIO_TARGETS.map((target) => (
+                  <option key={target} value={target}>
+                    {t(`settings.audioTarget.${target}`)}
+                  </option>
+                ))}
+              </Select>
+            </Label>
+          )}
+        </form.Field>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <form.Field name="timeLimitS">
@@ -693,6 +758,11 @@ export function QuestionForm({
   );
 }
 
+/** Whether the media play a sound: an MP3, or a video's own track. */
+function mediaHasSound(media: QuestionMedia): boolean {
+  return !!media.audio || media.visual?.kind === 'video';
+}
+
 /** The engine's default reading window before answers open (GAME_READ_DELAY_MS), for the hint. */
 const READ_DELAY_DEFAULT_MS = 3000;
 
@@ -703,6 +773,9 @@ function buildPayload(v: FormValues) {
     prompt: v.prompt,
     timeLimitS: v.timeLimitS,
     revealDelayS: v.revealDelayS,
+    // Nothing to hear, nothing to target: a removed sound takes its setting with it.
+    audioTarget: mediaHasSound(v.media) ? v.audioTarget : null,
+    waveformSize: v.waveformSize,
     pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
     scoring: SCORING_BY_TYPE[v.type].includes(v.scoring) ? v.scoring : ('standard' as const),
     media: v.media,

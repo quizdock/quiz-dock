@@ -13,6 +13,7 @@ vi.mock('../game/use-game-session', () => ({
 }));
 vi.mock('../game/game-client', () => ({
   joinSession: vi.fn(),
+  peekSession: () => Promise.resolve({ hasSound: false }),
   loadPlayerSession: () => null,
   loadAvatarSeed: () => null,
   loadNickname: () => '',

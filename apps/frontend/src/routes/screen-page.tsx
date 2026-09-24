@@ -1,6 +1,6 @@
 import { useParams } from '@tanstack/react-router';
 import { Maximize, Minimize, Users } from 'lucide-react';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { Markdown } from '@/components/markdown';
@@ -19,8 +19,10 @@ import {
   TYPE_BASE,
 } from '../game/live-components';
 import { useAudioUnlocked } from '../game/media/audio-unlock';
-import { preloadMedia } from '../game/media/media-pool';
+import { preloadMedia, waitedFor } from '../game/media/media-pool';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
+import { ReadinessMeter } from '../game/media/readiness-meter';
+import { followed } from '../game/media/followed';
 import { SoundUnlockOverlay } from '../game/media/sound-unlock-overlay';
 import { Surface } from '../game/surface';
 import { useGameRemaining } from '../game/use-countdown';
@@ -46,13 +48,31 @@ export function ScreenPage() {
  */
 export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?: boolean }) {
   const { t } = useTranslation('live');
-  const { view } = useGameSession(pin, 'spectator');
+  const { view, socket } = useGameSession(pin, 'spectator');
+  // The projection tells the room where it is in the sound (the playheads elsewhere follow).
+  const questionIndex = view.question?.questionIndex ?? -1;
+  const sayPosition = useCallback(
+    (t: number, playing: boolean) =>
+      socket?.emit('media:position', { pin, questionIndex, t, playing }),
+    [socket, pin, questionIndex],
+  );
   const soundUnlocked = useAudioUnlocked();
 
-  // While the leaderboard is up, the next question's media buffer here.
+  // In the lobby and while the leaderboard is up, what comes next buffers here;
+  // the console hears when it is ready to play.
   useEffect(() => {
-    if (playMedia && view.preload) preloadMedia(view.preload.media);
-  }, [playMedia, view.preload]);
+    const next = view.preload;
+    if (!playMedia || !next) return;
+    let cancelled = false;
+    void preloadMedia(next.media, next.images).then(() => {
+      if (!cancelled && waitedFor(next.media)) {
+        socket?.emit('media:ready', { pin, questionIndex: next.questionIndex });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [playMedia, view.preload, socket, pin]);
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
   const remaining = useGameRemaining(view);
 
@@ -105,6 +125,18 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
     body = <p className="text-muted-foreground">{view.error ?? t('screen.sessionUnavailable')}</p>;
   } else if (view.state === 'HOST_DISCONNECTED') {
     body = <p className="text-[2em] font-semibold">{t('screen.paused')}</p>;
+  } else if (view.state === 'MEDIA_LOADING') {
+    // A device that plays the coming question's sound or video is still loading it.
+    body = (
+      <div className="flex flex-col items-center gap-[1em]">
+        <p className="text-[2em] font-semibold">{t('screen.mediaLoading')}</p>
+        <ReadinessMeter
+          readiness={view.readiness}
+          until={view.mediaWait?.until ?? null}
+          className="text-[1.25em]"
+        />
+      </div>
+    );
   } else if (view.state === 'ENDED') {
     body = <p className="text-[2em] font-semibold">{t('screen.thanks')}</p>;
   } else if (view.state === 'SLIDE_SHOW' && view.slide) {
@@ -170,6 +202,8 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           mode={!playMedia || view.nav?.review ? 'still' : view.paused ? 'pause' : 'play'}
           boxClassName="h-[35vh]"
           resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
+          follow={playMedia ? undefined : followed(view, view.question.questionIndex)}
+          onPosition={playMedia ? sayPosition : undefined}
           restartSignal={
             view.mediaControl?.questionIndex === view.question.questionIndex
               ? view.mediaControl.seq
@@ -204,6 +238,10 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
           <span data-testid="player-count">{view.players.length}</span>
           <span>{t('screen.participants', { count: view.players.length })}</span>
         </div>
+        {/* The first question's sound or video, loaded on the devices that will play it. */}
+        {view.readiness?.questionIndex === 0 ? (
+          <ReadinessMeter readiness={view.readiness} className="text-[1em]" />
+        ) : null}
         <ul className="flex max-w-[40em] flex-wrap justify-center gap-[0.5em]">
           {view.players.map((p) => (
             <li

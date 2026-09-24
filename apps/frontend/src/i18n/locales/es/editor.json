@@ -33,6 +33,13 @@
       "14": "Fuerte (−14 LUFS, streaming)",
       "16": "Equilibrado (−16 LUFS)",
       "23": "Suave (−23 LUFS, televisión)"
+    },
+    "audioTargetLabel": "Quién oye el sonido",
+    "audioTargetHelp": "Qué dispositivos reproducen los sonidos y vídeos del quiz. Los participantes en la sala ven la proyección: sus móviles quedan en silencio, salvo con «Todos los dispositivos», que produce eco si comparten sala. Una pregunta puede elegir otra cosa y el anfitrión puede cambiarlo para una sesión.",
+    "audioTarget": {
+      "projection": "Solo la proyección",
+      "projection_remote": "Proyección y participantes a distancia",
+      "everyone": "Todos los dispositivos"
     }
   },
   "broadcast": {
@@ -175,6 +182,17 @@
     "revealDelayLabel": "Retraso de revelación (s)",
     "revealDelayPlaceholder": "auto",
     "revealDelayHint": "En modo automático: tiempo en la respuesta antes de la siguiente pregunta. Vacío = ajuste por defecto.",
+    "audioTargetLabel": "Quién oye este sonido",
+    "audioTargetHint": "Qué dispositivos reproducen el sonido o el vídeo de esta pregunta. «Todos los dispositivos» incluye los móviles de la sala, que producen eco si la comparten.",
+    "audioTargetDefault": "Ajuste de la sesión",
+    "waveformSizeLabel": "Tamaño de la forma de onda",
+    "waveformSizeHint": "Grosor de la forma de onda del sonido en la proyección y los móviles.",
+    "waveformPreview": "Vista previa de la forma de onda",
+    "waveformSize": {
+      "S": "Pequeña",
+      "M": "Mediana",
+      "L": "Grande"
+    },
     "pointsLabel": "Puntos",
     "pointsMode": {
       "standard": "Estándar",

@@ -3,11 +3,18 @@
 > Part of the [self-hosting guides](README.md). The variables are in
 > [configuration → limits](configuration.md#limits--game-pacing).
 
+> 🧪 **Experimental.** Video and sound in questions, remote participants and the
+> wait for media are new. They are built and tested in Chromium browsers (Chrome,
+> Edge); **Safari on iPhone has not been tested yet**. Settings, formats and
+> behaviour may still change between releases — feedback is welcome in the
+> [issues](https://github.com/quizdock/quiz-dock/issues).
+
 A question has two media slots: a **visual** (an image or a video) and a
 **sound** (an MP3). A video brings its own sound, so a question never has both a
-video and a separate sound. Media play in the **projection window** only: the
-console and the participants' phones stay silent, so the room hears everything
-once (phones show the question's image).
+video and a separate sound. Media play in the **projection window**; the
+console stays silent, and so do the phones in the room (they show the question's
+image), so the room hears everything once. A participant who joins **remotely**
+gets the whole question on their device — see [Remote participants](#remote-participants).
 
 ## Formats
 
@@ -70,12 +77,72 @@ longer than its question stretches the question to the end of the media plus a
 pause set once per quiz (**Pause after a media**, 3 s by default, 0–30): nothing
 is cut mid-play. The editor shows the resulting time under the question's own.
 
-While the leaderboard of a question is up, the projection already fetches the
-next question's media, so it plays at once. The host's pause holds the media
+From the lobby, and then while the leaderboard of a question is up, every
+device already fetches what the next question will show or play there (see
+[Fetched ahead](#fetched-ahead)), so it plays at once. The host's pause holds the media
 and resumes it where it was; if the projection loses a media without the
 question being over (the host dropping out, the window reloaded), it resumes a
 second before the point it had reached, and the console's **Restart the media**
 takes it back to the top.
+
+## Remote participants
+
+When a quiz has a sound or a video, the join form asks each participant where
+they play from: **in the room** (they see the projection) or **remote** (a video
+call, from home). The console marks the remote ones in its participant list.
+
+**Who hears the sound** is set per quiz in the editor, and per question when a
+question needs otherwise; the host can replace the quiz's setting for one
+session from the lobby:
+
+| Setting | Projection | Remote participants | Phones in the room |
+| --- | --- | --- | --- |
+| Projection only | ✔ | the video, muted | the image |
+| Projection and remote participants (default) | ✔ | ✔ | the image |
+| Every device | ✔ | ✔ | ✔ — echoes if they share a room |
+
+A phone plays sound only after a click in its page; the **Join** click counts,
+and the phone keeps the two media elements it started then for the whole
+session (iOS lets only those play sound). A participant who reloads the page
+mid-session sees **Sound blocked** with a button, as on the projection. Each
+participant can mute their own device.
+
+A sound is drawn as its waveform, as thick as the question asks (S, M or L in
+the editor), with a playhead. The projection tells the room where it is about
+once a second and at each pause or jump: the screens that show the sound
+without playing it — the console, the phones in the room — move their playhead
+with it.
+
+## Fetched ahead
+
+To start at once, each device fetches the next question's media a few seconds
+before it appears: in the lobby for the first question, then while the
+leaderboard of each question is up. A device fetches only what it will show or
+play (the table above): a phone in the room never downloads a video it will not
+play, and nothing goes further than one question ahead, to spare mobile data.
+
+**Accepted risk:** the participants' devices thus hold the next question's
+image, sound or video before it shows — never its text nor its answers. A
+curious participant could open them early; the console's lobby says so.
+
+## Waiting for media
+
+Each device that will play a question's sound or video tells the server once it
+has loaded it: the projection, and the participants whose device plays it
+(remote ones; in the room, only with **Every device**). Images are not waited
+for. In the lobby, the console marks each participant ready or loading and says
+whether the projection is ready; the projection shows how many are.
+
+When a question is due and one of these devices is not ready, the room waits: the
+projection shows **The question is on its way…** with the count and the seconds
+left, the phones say so too, and the console names who is still loading, with
+**Start anyway**. The wait ends as soon as every device is ready, when the host
+starts anyway, or after `GAME_MEDIA_WAIT_S` seconds (10 by default; `0` never
+waits). A device still loading then starts late and jumps to where the
+projection is, so the room hears the same moment.
+
+Safari on iPhone often fetches only the start of a file ahead: an iPhone may stay
+"loading" until the question opens, and the cap keeps it from holding the room.
 
 ## Sound on the projection
 

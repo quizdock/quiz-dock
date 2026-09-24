@@ -8,7 +8,12 @@ import type {
   QuestionStartPayload,
   QuestionType,
 } from '@quiz-dock/contracts';
-import { effectiveTimeLimitS, mediaDurationMs } from '@quiz-dock/contracts';
+import {
+  type AudioTarget,
+  effectiveTimeLimitS,
+  mediaDurationMs,
+  resolveAudioTarget,
+} from '@quiz-dock/contracts';
 import { QUESTION_MEDIA_INCLUDE, liveMediaOf } from '../questions/question-media';
 import { READ_DELAY_MS } from './game.keys';
 import { basePointsFor } from './scoring';
@@ -36,6 +41,29 @@ const quizWithContent = Prisma.validator<Prisma.QuizDefaultArgs>()({
     slides: { orderBy: { orderIndex: 'asc' }, include: { media: true } },
   },
 });
+/** Whether a question plays a sound: an MP3, or a video's own track. */
+export function questionHasSound(q: SnapshotQuestion): boolean {
+  return !!q.media?.audio || q.media?.visual?.kind === 'video';
+}
+
+/** Whether any question plays a sound or a video: the screens ask for sound, players pick a presence. */
+export function snapshotHasSound(snapshot: QuizSnapshot): boolean {
+  return snapshot.questions.some(questionHasSound);
+}
+
+/** The game's default audio target: the host's lobby choice, else the quiz's. */
+export function gameAudioTarget(
+  snapshot: QuizSnapshot,
+  sessionTarget: AudioTarget | '' | null | undefined,
+): AudioTarget {
+  return resolveAudioTarget(null, sessionTarget || null, snapshot.audioTarget);
+}
+
+/** Which devices play this question's sound: its own target, else the game's. */
+export function questionAudioTarget(q: SnapshotQuestion, gameTarget: AudioTarget): AudioTarget {
+  return resolveAudioTarget(q.audioTarget, gameTarget, null);
+}
+
 export type QuizWithContent = Prisma.QuizGetPayload<typeof quizWithContent>;
 export const QUIZ_SNAPSHOT_INCLUDE = quizWithContent.include;
 
@@ -59,6 +87,7 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
     description: quiz.description,
     language: quiz.language,
     feedbackEnabled: quiz.feedbackEnabled,
+    audioTarget: quiz.audioTarget,
     questions: quiz.questions.map(
       (q): SnapshotQuestion => ({
         id: q.id,
@@ -83,6 +112,7 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
           readDelayMs(),
         ),
         revealDelayS: q.revealDelayS ?? null,
+        audioTarget: q.audioTarget ?? null,
         basePoints: basePointsFor(q.pointsMode as PointsMode),
         pointsMode: q.pointsMode as PointsMode,
         scoring: q.scoring as QuestionScoring,
@@ -169,6 +199,8 @@ export function buildQuestionStart(
   questionIndex: number,
   startedAt: number,
   endsAt: number,
+  /** The game's default audio target (see {@link gameAudioTarget}). */
+  gameTarget: AudioTarget,
 ): QuestionStartPayload {
   const hasOptions = question.options.length > 0;
   const options: PublicOption[] | undefined = hasOptions
@@ -185,6 +217,9 @@ export function buildQuestionStart(
     type: question.type,
     prompt: question.prompt,
     media: question.media,
+    ...(questionHasSound(question)
+      ? { audioTarget: questionAudioTarget(question, gameTarget) }
+      : {}),
     options,
     timeLimitS: question.timeLimitS,
     basePoints: question.basePoints,
@@ -202,7 +237,7 @@ export function buildQuestionStart(
  * questions (list and order, type, prompt, media, options, right answers,
  * scoring, timing) stays frozen from the launch so statistics remain
  * consistent; what only affects the display follows the editor — backgrounds,
- * text contrast, answer explanation, reveal delay — and the slides in full
+ * text contrast, answer explanation, reveal delay, who hears the sound — and the slides in full
  * (they carry no history). Questions are matched by id; a question deleted
  * meanwhile keeps its frozen version.
  */
@@ -219,6 +254,7 @@ export function refreshSnapshotForm(frozen: QuizSnapshot, current: QuizWithConte
       textOutline: now.textOutline,
       answerExplanation: now.answerExplanation,
       revealDelayS: now.revealDelayS,
+      audioTarget: now.audioTarget,
     };
   });
   // Slides anchor on question ids in the editor; resolve them onto the frozen order.
@@ -237,6 +273,7 @@ export function refreshSnapshotForm(frozen: QuizSnapshot, current: QuizWithConte
     title: fresh.title,
     description: fresh.description,
     feedbackEnabled: fresh.feedbackEnabled,
+    audioTarget: fresh.audioTarget,
     questions,
     slides,
   };

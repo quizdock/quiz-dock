@@ -14,8 +14,10 @@ meanwhile keeps its frozen version.
 
 ## States
 
-`LOBBY → (SLIDE_SHOW | ANSWERING → REVEAL)* → PODIUM → ENDED`, plus
-`HOST_DISCONNECTED` (chrono frozen, 2 min to come back). The host paces by
+`LOBBY → (SLIDE_SHOW | [MEDIA_LOADING →] ANSWERING → REVEAL)* → PODIUM → ENDED`,
+plus `HOST_DISCONNECTED` (chrono frozen, 2 min to come back). `MEDIA_LOADING`
+only happens before a question whose sound or video a device has not loaded
+(see below). The host paces by
 hand or in automatic mode (per-slide display time, per-question reveal delay,
 engine defaults `GAME_AUTO_ADVANCE_MS` / `GAME_READ_DELAY_MS`), and can pause.
 
@@ -33,6 +35,36 @@ Timers live in the server process: at boot the engine re-arms them from Redis
 (question deadlines, automatic pace). A socket that reconnects on its own
 re-attaches (host, projection, participant) and catches up on the current
 state — including the question when attaching at a reveal.
+
+## Media on every device (experimental)
+
+The media brief (`specifications/SPECIFICATIONS-MEDIA.md` §5) as built:
+
+- **Presence** — a participant joins *in the room* or *remote*
+  (`player:peek` tells the join form whether the quiz plays sound; `presence`
+  on `player:join`, kept on the player record).
+- **Audio target** — which devices play a question's sound: the question's own,
+  else the host's lobby choice (`host:options.audioTarget`, stored on the
+  session), else the quiz's. Resolved into `question:start` and
+  `media:preload`; the screens get the session default in `game:media`.
+- **Preload** — `media:preload` goes to every device with only what it will
+  show or play (`preload.ts`): the first question from the lobby, then the next
+  one with each reveal, plus the images of the slides before it. Phones load
+  into the two elements the Join click started (iOS).
+- **Readiness** — a device sends `media:ready` once what it fetched can play
+  through; the server counts the projection windows and the participants whose
+  device plays a sound or a video (`game:{pin}:ready:{q}`), and tells the screens
+  (`media:readiness`). The console's embedded tabs share the host socket and are
+  not counted.
+- **Wait** — `beginQuestion` enters `MEDIA_LOADING` when a counted device is not
+  ready; it ends when all are, on `host:next`, or after `GAME_MEDIA_WAIT_S`
+  (`media:wait` carries the deadline). One way out per question
+  (`media-wait-lock`); re-armed after a restart; a host coming back starts the
+  question.
+- **Position** — the projection reports where it is in the media
+  (`media:position`, about once a second and on play / pause / seek); the server
+  relays it. Screens showing a sound without playing it move their playhead with
+  it; a device starting late jumps there.
 
 ## Invitation address
 

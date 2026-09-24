@@ -1,4 +1,5 @@
 import type {
+  AudioTarget,
   GameMode,
   GameModePayload,
   GameOutlinePayload,
@@ -7,8 +8,11 @@ import type {
   GameStep,
   LeaderboardPayload,
   MediaPreloadPayload,
+  MediaPositionPayload,
+  MediaReadinessPayload,
   OutlineQuestion,
   PersonalResult,
+  PlayerPresence,
   PodiumPayload,
   QuestionRevealPayload,
   QuestionStartPayload,
@@ -16,6 +20,7 @@ import type {
   SlideShowPayload,
 } from '@quiz-dock/contracts';
 import { useEffect, useRef, useState } from 'react';
+import type { FollowedPosition } from './media/question-media-stage';
 import { useTranslation } from 'react-i18next';
 import {
   type GameSocket,
@@ -38,6 +43,8 @@ export interface RosterPlayer {
   nickname: string;
   /** Graine d'avatar (multiavatar) — défaut côté rendu = pseudo si absent. */
   avatar?: string;
+  /** In the room when absent. */
+  presence?: PlayerPresence;
 }
 
 /** Vue unifiée de la partie live, consommée par les trois surfaces (§9). */
@@ -91,6 +98,16 @@ export interface GameView {
   mediaControl: { questionIndex: number; action: 'restart'; seq: number } | null;
   /** Whether the quiz plays any sound (projection and console only; null until told). */
   quizHasSound: boolean | null;
+  /** The room waits for media before `questionIndex`, until `until` (state `MEDIA_LOADING`). */
+  mediaWait: { questionIndex: number; until: number } | null;
+  /** Where the projection is in the current sound (for the screens that do not play it). */
+  mediaPosition: FollowedPosition | null;
+  /** Who has loaded the upcoming question's sound or video (projection and console only). */
+  readiness: MediaReadinessPayload | null;
+  /** Whether the quiz has any media fetched ahead (projection and console only). */
+  quizHasMedia: boolean | null;
+  /** The game's default audio target (projection and console only; null until told). */
+  gameAudioTarget: AudioTarget | null;
   /** Host navigation over played steps (`game:state.nav`); `review` = a past step is on screen. */
   nav: { prev: GameStep | null; next: GameStep | null; review: boolean } | null;
 }
@@ -128,6 +145,11 @@ const INITIAL: GameView = {
   preload: null,
   mediaControl: null,
   quizHasSound: null,
+  gameAudioTarget: null,
+  quizHasMedia: null,
+  readiness: null,
+  mediaPosition: null,
+  mediaWait: null,
   nav: null,
 };
 
@@ -164,7 +186,7 @@ export function useGameSession(pin: string, role: LiveRole) {
         ...(p.state === 'ANSWERING' ? { reveal: null, result: null, answerAccepted: null } : {}),
       });
     const onRoster = (p: { players: RosterPlayer[] }) => patch({ players: p.players });
-    const onJoined = (p: { playerId: string; nickname: string; avatar?: string }) =>
+    const onJoined = (p: RosterPlayer) =>
       setView((prev) =>
         prev.players.some((x) => x.playerId === p.playerId)
           ? prev
@@ -172,7 +194,12 @@ export function useGameSession(pin: string, role: LiveRole) {
               ...prev,
               players: [
                 ...prev.players,
-                { playerId: p.playerId, nickname: p.nickname, avatar: p.avatar },
+                {
+                  playerId: p.playerId,
+                  nickname: p.nickname,
+                  avatar: p.avatar,
+                  presence: p.presence,
+                },
               ],
             },
       );
@@ -213,7 +240,12 @@ export function useGameSession(pin: string, role: LiveRole) {
       patch({ reveal: p, result: p.yourResult ?? null });
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
     const onPreload = (p: MediaPreloadPayload) => patch({ preload: p });
-    const onGameMedia = (p: { hasSound: boolean }) => patch({ quizHasSound: p.hasSound });
+    const onReadiness = (p: MediaReadinessPayload) => patch({ readiness: p });
+    const onMediaWait = (p: { questionIndex: number; until: number }) => patch({ mediaWait: p });
+    const onPosition = (p: MediaPositionPayload) =>
+      patch({ mediaPosition: { ...p, receivedAt: performance.now() } });
+    const onGameMedia = (p: { hasSound: boolean; hasMedia: boolean; audioTarget: AudioTarget }) =>
+      patch({ quizHasSound: p.hasSound, quizHasMedia: p.hasMedia, gameAudioTarget: p.audioTarget });
     const onMediaControl = (p: { questionIndex: number; action: 'restart' }) =>
       setView((prev) => ({
         ...prev,
@@ -264,6 +296,9 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('slide:show', onSlide);
       sock.on('leaderboard', onLeaderboard);
       sock.on('media:preload', onPreload);
+      sock.on('media:readiness', onReadiness);
+      sock.on('media:position', onPosition);
+      sock.on('media:wait', onMediaWait);
       sock.on('media:control', onMediaControl);
       sock.on('game:media', onGameMedia);
       sock.on('game:podium', onPodium);
@@ -328,6 +363,9 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('slide:show', onSlide);
       s.off('leaderboard', onLeaderboard);
       s.off('media:preload', onPreload);
+      s.off('media:readiness', onReadiness);
+      s.off('media:position', onPosition);
+      s.off('media:wait', onMediaWait);
       s.off('media:control', onMediaControl);
       s.off('game:media', onGameMedia);
       s.off('game:podium', onPodium);

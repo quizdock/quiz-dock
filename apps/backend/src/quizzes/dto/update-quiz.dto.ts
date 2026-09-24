@@ -1,5 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
-import { MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
 import { z } from 'zod';
 
 /** Mise à jour partielle d'un quiz. `null` sur description/cover = effacement. */
@@ -12,6 +12,8 @@ export const updateQuizSchema = z.object({
   mediaTailS: z.number().int().min(0).max(MEDIA_TAIL_MAX_S).optional(),
   /** Level sounds and videos are brought to (LUFS): -14 loud, -16 balanced, -23 calm. */
   loudnessTargetLufs: z.union([z.literal(-14), z.literal(-16), z.literal(-23)]).optional(),
+  /** Which devices play the sounds, unless a question says otherwise. */
+  audioTarget: z.enum(AUDIO_TARGETS).optional(),
   coverMediaId: z.string().length(26).nullable().optional(),
 });
 
