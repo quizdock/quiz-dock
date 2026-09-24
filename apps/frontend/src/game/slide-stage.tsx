@@ -1,5 +1,5 @@
 import type { SlideShowPayload } from '@quiz-dock/contracts';
-import { useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { SlideView, TYPE_BASE } from './live-components';
 
@@ -7,10 +7,11 @@ const STAGE_W = 1280;
 const STAGE_H = 720;
 
 /**
- * A faithful miniature of the projected slide: the slide is laid out on a
- * 1280×720 canvas exactly as on the big screen, then scaled to the box width.
+ * A 16:9 box that lays its content out on a 1280×720 canvas, exactly as on the
+ * big screen, then scales it to the box width — whatever is drawn keeps the
+ * projection's proportions at any size.
  */
-export function SlideStage({ slide, className }: { slide: SlideShowPayload; className?: string }) {
+export function ScaledStage({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
 
@@ -34,8 +35,17 @@ export function SlideStage({ slide, className }: { slide: SlideShowPayload; clas
         className={cn('absolute top-0 left-0 flex origin-top-left', TYPE_BASE.stage)}
         style={{ width: STAGE_W, height: STAGE_H, transform: `scale(${scale})` }}
       >
-        <SlideView slide={slide} />
+        {children}
       </div>
     </div>
+  );
+}
+
+/** A faithful miniature of the projected slide. */
+export function SlideStage({ slide, className }: { slide: SlideShowPayload; className?: string }) {
+  return (
+    <ScaledStage className={className}>
+      <SlideView slide={slide} />
+    </ScaledStage>
   );
 }
