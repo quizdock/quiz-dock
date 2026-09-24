@@ -67,8 +67,21 @@ function videoDurationMs(file: File): Promise<number | undefined> {
  * the players need: immediate feedback for the author, and a sound decoded
  * once here rather than on every screen. `expect` is the slot being filled.
  */
-export async function prepareMediaUpload(file: File, expect: MediaKind): Promise<PreparedUpload> {
+export async function prepareMediaUpload(
+  file: File,
+  expect: MediaKind,
+  /** The file it was converted from: measured instead when this browser cannot decode the result. */
+  source?: File,
+): Promise<PreparedUpload> {
   const bytes = await readBytes(file);
+  // A browser may encode AAC and yet have no decoder for it (Firefox without the system's codecs):
+  // a sound is then measured on its original. Not a video, which may weigh a gigabyte and plays
+  // well enough at its own level.
+  const decodeSound = () =>
+    decode(bytes).catch(async (err: unknown) => {
+      if (!source || source === file || expect !== 'audio') throw err;
+      return decode(await readBytes(source));
+    });
   const sniffed = sniffMedia(bytes, expect);
   if (!sniffed.ok) {
     throw new MediaCheckError(
@@ -80,7 +93,7 @@ export async function prepareMediaUpload(file: File, expect: MediaKind): Promise
   if (sniffed.kind === 'audio') {
     let analysis;
     try {
-      analysis = analyseAudio(await decode(bytes));
+      analysis = analyseAudio(await decodeSound());
     } catch {
       throw new MediaCheckError('media.unreadable_mp3');
     }
@@ -101,7 +114,7 @@ export async function prepareMediaUpload(file: File, expect: MediaKind): Promise
   if (durationMs) fields.durationMs = durationMs;
   if (sniffed.hasAudio) {
     try {
-      const analysis = analyseAudio(await decode(bytes));
+      const analysis = analyseAudio(await decodeSound());
       fields.durationMs ??= analysis.durationMs;
       if (analysis.loudnessLufs !== null) fields.loudnessLufs = analysis.loudnessLufs;
       if (analysis.peakDbfs !== null) fields.peakDbfs = analysis.peakDbfs;

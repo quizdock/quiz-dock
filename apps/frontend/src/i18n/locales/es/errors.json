@@ -41,7 +41,7 @@
     "unavailable": "No se pudo asignar un PIN, inténtalo de nuevo."
   },
   "media": {
-    "unsupported_type": "Formato no admitido: imagen (PNG, JPEG, GIF, WebP, AVIF), vídeo MP4 (H.264) o audio MP3.",
+    "unsupported_type": "Formato no admitido: una imagen, un vídeo MP4 (H.264) o un sonido (MP3, M4A). El editor convierte los demás archivos que este navegador puede leer; no se admite SVG.",
     "file_missing": "Falta el archivo (campo «file»).",
     "file_too_large": "Archivo demasiado grande (máximo {{maxMb}} MB para este tipo de medio).",
     "not_found": "Medio no encontrado.",
@@ -53,9 +53,14 @@
     "quicktime": "No se aceptan archivos QuickTime (.mov). Exporta el vídeo en MP4 (H.264), por ejemplo con HandBrake (handbrake.fr).",
     "unsupported_video_codec": "Códec de vídeo no admitido ({{codec}}). Solo el H.264 se reproduce en todas partes. Un vídeo grabado con un iPhone suele estar en HEVC: conviértelo a MP4 H.264, por ejemplo con HandBrake (handbrake.fr), o ajusta la cámara en «Más compatible».",
     "unsupported_audio_codec": "El sonido de este vídeo ({{codec}}) no está en AAC. Vuelve a exportarlo en MP4 H.264 + AAC, por ejemplo con HandBrake (handbrake.fr).",
-    "no_video_track": "Este archivo MP4 no contiene vídeo. Para un sonido solo, usa un MP3.",
-    "unreadable_mp3": "Este MP3 no se puede leer: el archivo parece dañado o no es un MP3 real.",
-    "metadata_invalid": "Los datos calculados sobre el sonido no son válidos ({{field}}). Vuelve a intentar el envío."
+    "no_video_track": "Este archivo no contiene vídeo. Para un sonido solo, usa la ranura de sonido.",
+    "unreadable_mp3": "Este sonido no se puede leer: el archivo parece dañado.",
+    "metadata_invalid": "Los datos calculados sobre el sonido no son válidos ({{field}}). Vuelve a intentar el envío.",
+    "cannot_read": "Este navegador no puede leer este archivo. Prueba otro navegador o conviértelo antes con una herramienta dedicada (HandBrake para vídeos, Audacity para sonidos).",
+    "cannot_convert_video": "Este navegador no puede convertir este vídeo a MP4 H.264. Usa Chrome, Edge o Safari, o conviértelo antes con HandBrake (handbrake.fr).",
+    "cannot_convert_audio": "Este navegador no puede convertir este sonido a AAC. Prueba otro navegador o conviértelo antes con Audacity (audacityteam.org).",
+    "too_long": "Demasiado largo para caber en el límite de {{maxMb}} MB de este tipo de medio, incluso comprimido. Acórtalo antes.",
+    "canceled": "Conversión cancelada."
   },
   "import": {
     "file_missing": "Falta el archivo (campo “file”).",

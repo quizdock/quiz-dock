@@ -41,7 +41,7 @@
     "unavailable": "無法分配 PIN，請重試。"
   },
   "media": {
-    "unsupported_type": "不支援的格式：圖片（PNG、JPEG、GIF、WebP、AVIF）、MP4 影片（H.264）或 MP3 音訊。",
+    "unsupported_type": "不支援的格式：圖片、MP4 影片（H.264）或聲音（MP3、M4A）。編輯器會轉換此瀏覽器能讀取的其他檔案；不接受 SVG。",
     "file_missing": "缺少文件（「file」欄位）。",
     "file_too_large": "檔案過大（此類媒體上限 {{maxMb}} MB）。",
     "not_found": "未找到媒體。",
@@ -53,9 +53,14 @@
     "quicktime": "不接受 QuickTime 檔案（.mov）。請將影片匯出為 MP4（H.264），例如使用 HandBrake（handbrake.fr）。",
     "unsupported_video_codec": "不支援的影片編碼（{{codec}}）。只有 H.264 能在所有裝置播放。iPhone 拍攝的影片通常是 HEVC：請轉換為 MP4 H.264，例如使用 HandBrake（handbrake.fr），或將相機設定為「最相容」。",
     "unsupported_audio_codec": "此影片的聲音（{{codec}}）不是 AAC。請重新匯出為 MP4 H.264 + AAC，例如使用 HandBrake（handbrake.fr）。",
-    "no_video_track": "此 MP4 檔案不含影片。只有聲音時請使用 MP3。",
-    "unreadable_mp3": "無法讀取此 MP3：檔案可能已損毀或不是真正的 MP3。",
-    "metadata_invalid": "對聲音的量測資料無效（{{field}}）。請重新上傳。"
+    "no_video_track": "此檔案不含影片。只有聲音時請使用聲音欄位。",
+    "unreadable_mp3": "無法讀取此聲音：檔案可能已損毀。",
+    "metadata_invalid": "對聲音的量測資料無效（{{field}}）。請重新上傳。",
+    "cannot_read": "此瀏覽器無法讀取這個檔案。請改用其他瀏覽器，或先用專用工具轉換（影片用 HandBrake，聲音用 Audacity）。",
+    "cannot_convert_video": "此瀏覽器無法將這段影片轉換為 MP4 H.264。請使用 Chrome、Edge 或 Safari，或先用 HandBrake（handbrake.fr）轉換。",
+    "cannot_convert_audio": "此瀏覽器無法將這段聲音轉換為 AAC。請改用其他瀏覽器，或先用 Audacity（audacityteam.org）轉換。",
+    "too_long": "即使壓縮後也超出此類媒體 {{maxMb}} MB 的上限。請先剪短。",
+    "canceled": "已取消轉換。"
   },
   "import": {
     "file_missing": "缺少檔案（「file」欄位）。",

@@ -1,10 +1,12 @@
-import { Film, ImagePlus, Music, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Film, ImagePlus, Music, Trash2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { type MediaKind, MediaCheckError, prepareMediaUpload } from '@/lib/media-prepare';
+import type { ConversionNotice } from '@/lib/media-convert';
+import { readyForUpload } from '@/lib/media-pipeline';
+import { type MediaKind, MediaCheckError } from '@/lib/media-prepare';
 import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import {
@@ -14,11 +16,14 @@ import {
 } from '../api/generated/media/media';
 import { getDemo } from '../config';
 
-/** What the picker takes for each kind — a hint only, the content is checked anyway. */
+/**
+ * What the picker offers for each kind — a hint only: whatever this browser can
+ * read is converted (WebP, MP4 H.264/AAC, M4A), the rest is refused with the way out.
+ */
 const ACCEPT: Record<MediaKind, string> = {
-  image: 'image/png,image/jpeg,image/gif,image/webp,image/avif',
-  video: 'video/mp4',
-  audio: 'audio/mpeg,.mp3',
+  image: 'image/*',
+  video: 'video/*,.mkv,.mov',
+  audio: 'audio/*,.mp3,.m4a,.aac,.flac,.ogg,.opus,.wav',
 };
 
 const ADD_ICON: Record<MediaKind, typeof ImagePlus> = {
@@ -36,8 +41,9 @@ export interface UploadedMedia {
 
 /**
  * Upload of one media of a given kind → its id goes back to the parent. The file
- * is checked by its content before it leaves the browser (the server checks it
- * again): an iPhone film in HEVC is turned away at once, with the way out.
+ * is converted in the browser to its kind's format, then checked by its content
+ * before it leaves (the server checks it again). A long conversion shows its
+ * progress and can be cancelled.
  */
 export function MediaUpload({
   value,
@@ -54,14 +60,26 @@ export function MediaUpload({
   const { t } = useTranslation('editor');
   const upload = useMediaControllerUpload();
   const [checking, setChecking] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notices, setNotices] = useState<ConversionNotice[]>([]);
+  const abort = useRef<AbortController | null>(null);
 
-  const onFile = async (file: File | undefined) => {
-    if (!file) return;
+  useEffect(() => () => abort.current?.abort(), []);
+
+  const onFile = async (picked: File | undefined) => {
+    if (!picked) return;
     setError(null);
+    setNotices([]);
     setChecking(true);
+    abort.current = new AbortController();
     try {
-      const prepared = await prepareMediaUpload(file, kind);
+      const { file, prepared, notices } = await readyForUpload(picked, kind, {
+        onProgress: setProgress,
+        signal: abort.current.signal,
+      });
+      setProgress(null);
+      setNotices(notices);
       const res = await upload.mutateAsync({ data: { file, ...prepared.fields } });
       onChange(res.data.mediaId, {
         kind: prepared.kind,
@@ -69,12 +87,15 @@ export function MediaUpload({
         peaks: prepared.fields.peaks ? (JSON.parse(prepared.fields.peaks) as number[]) : undefined,
       });
     } catch (err) {
+      if (err instanceof MediaCheckError && err.code === 'media.canceled') return;
       setError(
         err instanceof MediaCheckError
           ? errorText(err.code, err.params)
           : apiErrorText(err, t('media.uploadError')),
       );
     } finally {
+      abort.current = null;
+      setProgress(null);
       setChecking(false);
     }
   };
@@ -100,10 +121,23 @@ export function MediaUpload({
             {t('media.remove')}
           </Button>
         </div>
+      ) : progress !== null ? (
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <progress value={progress} max={1} className="w-40" aria-label={t('media.converting')} />
+          <span>{t('media.convertingPercent', { percent: Math.round(progress * 100) })}</span>
+          <Button type="button" variant="outline" size="sm" onClick={() => abort.current?.abort()}>
+            <X className="size-4" />
+            {t('media.cancelConversion')}
+          </Button>
+        </div>
       ) : (
         <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
           <Icon className="size-4" />
-          {checking || upload.isPending ? t('media.uploading') : (label ?? t('media.add'))}
+          {upload.isPending
+            ? t('media.uploading')
+            : checking
+              ? t('media.converting')
+              : (label ?? t('media.add'))}
           <input
             type="file"
             aria-label={t('media.fileInputLabel')}
@@ -118,6 +152,11 @@ export function MediaUpload({
         </label>
       )}
       {value && kind === 'image' ? <AltField mediaId={value} /> : null}
+      {notices.map((notice) => (
+        <p key={notice} className="text-sm text-muted-foreground">
+          {t(notice)}
+        </p>
+      ))}
       {error && (
         <p role="alert" className="text-sm text-destructive">
           {error}

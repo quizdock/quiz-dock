@@ -5,7 +5,7 @@
  *
  * Nothing is decoded: an MP4 is read as its box tree, an MP3 as its frame
  * headers. The accepted set is what every browser plays, WebKit included:
- * MP4 with H.264 video and AAC or no audio, and MP3.
+ * MP4 with H.264 video and AAC or no audio, M4A (AAC alone in an MP4), and MP3.
  */
 
 /** Why a file was turned away; each reason has its own message for the author. */
@@ -18,14 +18,14 @@ export type MediaRejection =
   | 'unsupported_video_codec'
   /** An audio track in another codec than AAC. */
   | 'unsupported_audio_codec'
-  /** An MP4 with no video track at all. */
+  /** An MP4 with neither a video nor a sound track, or a sound given for a video. */
   | 'no_video_track'
   /** Looks like an MP3 but its frames do not hold together. */
   | 'unreadable_mp3';
 
 export type SniffResult =
   | { ok: true; kind: 'video'; mime: 'video/mp4'; hasAudio: boolean }
-  | { ok: true; kind: 'audio'; mime: 'audio/mpeg' }
+  | { ok: true; kind: 'audio'; mime: 'audio/mpeg' | 'audio/mp4' }
   | { ok: true; kind: 'image'; mime: ImageMime }
   | { ok: false; reason: MediaRejection; codec?: string };
 
@@ -122,8 +122,10 @@ function sniffMp4(b: Uint8Array): SniffResult | null {
     if (handler === 'vide') video = true;
     else audio = true;
   }
-  if (!video) return { ok: false, reason: 'no_video_track' };
-  return { ok: true, kind: 'video', mime: 'video/mp4', hasAudio: audio };
+  if (video) return { ok: true, kind: 'video', mime: 'video/mp4', hasAudio: audio };
+  // AAC alone: an M4A, the sound format the editor converts to.
+  if (audio) return { ok: true, kind: 'audio', mime: 'audio/mp4' };
+  return { ok: false, reason: 'no_video_track' };
 }
 
 // ─── MP3 ──────────────────────────────────────────────────────────────────
@@ -227,5 +229,10 @@ export function sniffMedia(bytes: Uint8Array, expect?: 'image' | 'video' | 'audi
   if (!result) return { ok: false, reason: 'unsupported_type' };
   if (!expect) return result;
   const kind = result.ok ? result.kind : REJECTION_KIND[result.reason];
-  return kind === expect ? result : { ok: false, reason: 'unsupported_type' };
+  if (kind === expect) return result;
+  // A sound in an MP4 handed to a video slot: say it holds no picture.
+  if (expect === 'video' && result.ok && result.mime === 'audio/mp4') {
+    return { ok: false, reason: 'no_video_track' };
+  }
+  return { ok: false, reason: 'unsupported_type' };
 }

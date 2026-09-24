@@ -91,9 +91,18 @@ describe('sniffMedia — MP4', () => {
     expect(sniffMedia(file)).toMatchObject({ ok: true, kind: 'video' });
   });
 
-  it('refuses an MP4 without any video track, and a truncated one', () => {
-    expect(sniffMedia(mp4(ftyp('M4A '), movie(trak('soun', 'mp4a'))))).toMatchObject({
-      reason: 'no_video_track',
+  it('takes AAC alone as a sound (M4A), and says a video slot got no picture', () => {
+    const m4a = mp4(ftyp('M4A '), movie(trak('soun', 'mp4a')));
+    expect(sniffMedia(m4a)).toEqual({ ok: true, kind: 'audio', mime: 'audio/mp4' });
+    expect(sniffMedia(m4a, 'audio')).toEqual({ ok: true, kind: 'audio', mime: 'audio/mp4' });
+    expect(sniffMedia(m4a, 'video')).toEqual({ ok: false, reason: 'no_video_track' });
+  });
+
+  it('refuses an MP4 without any track it plays, a sound not in AAC, and a truncated one', () => {
+    expect(sniffMedia(mp4(ftyp(), movie()))).toMatchObject({ reason: 'no_video_track' });
+    expect(sniffMedia(mp4(ftyp('M4A '), movie(trak('soun', 'Opus'))))).toMatchObject({
+      reason: 'unsupported_audio_codec',
+      codec: 'Opus',
     });
     expect(sniffMedia(mp4(ftyp()))).toMatchObject({ reason: 'unsupported_type' });
   });

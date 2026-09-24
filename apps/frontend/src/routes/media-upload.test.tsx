@@ -1,23 +1,23 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { convertMedia } from '@/lib/media-convert';
+import { MediaCheckError } from '@/lib/media-prepare';
 import { mockApi } from '../test/harness';
 import { MediaUpload } from './media-upload';
 
-/** The smallest MP4 an iPhone could have written: one HEVC video track. */
-function hevcMp4(): Uint8Array {
-  const ascii = (s: string) => Array.from(s, (c) => c.charCodeAt(0));
-  const u32 = (n: number) => [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255];
-  const box = (type: string, ...parts: number[][]): number[] => {
-    const body = parts.flat();
-    return [...u32(8 + body.length), ...ascii(type), ...body];
-  };
-  const full = (type: string, ...parts: number[][]) => box(type, [0, 0, 0, 0], ...parts);
-  const stsd = full('stsd', u32(1), box('hvc1', new Array(8).fill(0)));
-  const hdlr = full('hdlr', u32(0), ascii('vide'), new Array(12).fill(0));
-  const trak = box('trak', box('mdia', hdlr, box('minf', box('stbl', stsd))));
-  return Uint8Array.from([...box('ftyp', ascii('isom'), u32(0)), ...box('moov', trak)]);
-}
+// The converter needs WebCodecs and a canvas: its decisions are tested in media-plan.
+vi.mock('@/lib/media-convert', () => ({
+  convertMedia: vi.fn(async (file: File) => ({ file, notices: [] })),
+}));
+
+const LIMITS = {
+  method: 'GET',
+  path: '/media/limits',
+  body: { image: 10_485_760, video: 52_428_800, audio: 10_485_760 },
+};
+const posted = (fetchMock: ReturnType<typeof mockApi>) =>
+  fetchMock.mock.calls.some(([, opts]) => (opts as RequestInit | undefined)?.method === 'POST');
 
 function renderUpload(value: string | null, onChange = vi.fn()) {
   const queryClient = new QueryClient({
@@ -36,6 +36,7 @@ describe('MediaUpload', () => {
 
   it('uploade un fichier et renvoie le mediaId', async () => {
     mockApi([
+      LIMITS,
       {
         method: 'POST',
         path: '/media',
@@ -56,8 +57,11 @@ describe('MediaUpload', () => {
     );
   });
 
-  it('turns an HEVC film away before sending it, with the way out', async () => {
-    const fetchMock = mockApi([]);
+  it('turns away a video this browser cannot convert, with the way out, before sending it', async () => {
+    const fetchMock = mockApi([LIMITS]);
+    vi.mocked(convertMedia).mockRejectedValueOnce(
+      new MediaCheckError('media.cannot_convert_video'),
+    );
     const queryClient = new QueryClient();
     const onChange = vi.fn();
     render(
@@ -66,21 +70,49 @@ describe('MediaUpload', () => {
       </QueryClientProvider>,
     );
     fireEvent.change(screen.getByLabelText('Fichier média'), {
-      target: { files: [new File([hevcMp4() as BlobPart], 'IMG_0042.mp4', { type: 'video/mp4' })] },
+      target: {
+        files: [new File([new Uint8Array(8)], 'IMG_0042.mov', { type: 'video/quicktime' })],
+      },
     });
-    expect(await screen.findByRole('alert')).toHaveTextContent(/HEVC.*HandBrake/);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Chrome, Edge ou Safari.*HandBrake/);
+    expect(posted(fetchMock)).toBe(false);
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('tells the author an animated GIF kept only its first frame', async () => {
+    mockApi([
+      LIMITS,
+      {
+        method: 'POST',
+        path: '/media',
+        status: 201,
+        body: { mediaId: 'm-gif', url: '/api/v1/media/m-gif' },
+      },
+    ]);
+    const webp = new File(
+      [new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50])],
+      'dance.webp',
+      { type: 'image/webp' },
+    );
+    vi.mocked(convertMedia).mockResolvedValueOnce({
+      file: webp,
+      notices: ['media.notice.gifFirstFrame'],
+    });
+    renderUpload(null);
+    fireEvent.change(screen.getByLabelText('Fichier média'), {
+      target: { files: [new File([new Uint8Array(8)], 'dance.gif', { type: 'image/gif' })] },
+    });
+    expect(await screen.findByText(/seule sa première image/)).toBeInTheDocument();
+  });
+
   it('turns away a file whose content is not what its name says', async () => {
-    const fetchMock = mockApi([]);
+    const fetchMock = mockApi([LIMITS]);
     renderUpload(null);
     fireEvent.change(screen.getByLabelText('Fichier média'), {
       target: { files: [new File(['<svg/>'], 'photo.png', { type: 'image/png' })] },
     });
     expect(await screen.findByRole('alert')).toHaveTextContent(/Format non pris en charge/);
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(posted(fetchMock)).toBe(false);
   });
 
   it('affiche l’aperçu et permet de retirer le média', () => {

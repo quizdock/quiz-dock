@@ -758,6 +758,32 @@
         ]
       }
     },
+    "/api/v1/media/limits": {
+      "get": {
+        "operationId": "MediaController_limits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLimitsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
     "/api/v1/media/{id}/meta": {
       "get": {
         "operationId": "MediaController_describe",
@@ -3184,6 +3210,31 @@
           "mediaId",
           "url",
           "kind"
+        ]
+      },
+      "MediaLimitsDto": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "video": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "audio": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "image",
+          "video",
+          "audio"
         ]
       },
       "MediaDescriptionDto": {

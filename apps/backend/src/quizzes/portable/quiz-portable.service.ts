@@ -35,6 +35,7 @@ const MIME_BY_EXT: Record<string, string> = {
   avif: 'image/avif',
   mp4: 'video/mp4',
   mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
 };
 /** Reverse map; the first extension listed for a mime wins (`jpg` over `jpeg`). */
 const EXT_BY_MIME: Record<string, string> = {};

@@ -8,6 +8,8 @@ export default defineConfig({
   // The release tag, passed as APP_VERSION at image build time; "dev" otherwise.
   define: { __APP_VERSION__: JSON.stringify(process.env.APP_VERSION ?? 'dev') },
   plugins: [react(), tailwindcss()],
+  // jSquash loads its WASM relative to its own module: pre-bundling would lose the file.
+  optimizeDeps: { exclude: ['@jsquash/webp'] },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
