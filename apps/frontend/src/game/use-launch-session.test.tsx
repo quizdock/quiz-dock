@@ -54,17 +54,19 @@ describe('useLaunchSession (#57)', () => {
     expect(api).not.toHaveBeenCalled();
   });
 
-  it('asks how participants get in, preselecting the last choice', async () => {
+  it('asks each time when nothing is remembered, and remembers nothing unasked', async () => {
     configureAuth('oidc', true);
     configureAnonymousParticipants(true);
-    const api = mockApi([
-      { method: 'GET', path: '/me/preferences', body: { participantAccess: 'open' } },
-    ]);
+    const api = mockApi([{ method: 'GET', path: '/me/preferences', body: {} }]);
     render(<Launcher />);
     fireEvent.click(screen.getByRole('button', { name: 'Présenter' }));
 
-    const open = await screen.findByRole('radio', { name: /Accès libre/ });
-    await waitFor(() => expect(open).toBeChecked());
+    // Accounts required unless the host picks otherwise.
+    await waitFor(() =>
+      expect(screen.getByRole('radio', { name: /Comptes requis/ })).toBeChecked(),
+    );
+    expect(screen.getByRole('checkbox', { name: /Se souvenir de mon choix/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole('radio', { name: /Accès libre/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Lancer' }));
 
     await waitFor(() =>
@@ -73,7 +75,6 @@ describe('useLaunchSession (#57)', () => {
         participantAccess: 'open',
       }),
     );
-    // Same choice as last time: nothing to remember.
     expect(api.mock.calls.some(([, o]) => (o as RequestInit | undefined)?.method === 'PATCH')).toBe(
       false,
     );
@@ -83,7 +84,7 @@ describe('useLaunchSession (#57)', () => {
     });
   });
 
-  it('remembers a new choice for the next launch', async () => {
+  it('stores the choice when asked to remember it', async () => {
     configureAuth('oidc', true);
     configureAnonymousParticipants(true);
     const api = mockApi([
@@ -93,11 +94,8 @@ describe('useLaunchSession (#57)', () => {
     render(<Launcher />);
     fireEvent.click(screen.getByRole('button', { name: 'Présenter' }));
 
-    // First time: accounts required.
-    await waitFor(() =>
-      expect(screen.getByRole('radio', { name: /Comptes requis/ })).toBeChecked(),
-    );
-    fireEvent.click(screen.getByRole('radio', { name: /Accès libre/ }));
+    fireEvent.click(await screen.findByRole('radio', { name: /Accès libre/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Se souvenir de mon choix/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Lancer' }));
 
     await waitFor(() =>
@@ -109,5 +107,21 @@ describe('useLaunchSession (#57)', () => {
       fullCapture: true,
       participantAccess: 'open',
     });
+  });
+
+  it('starts at once with a remembered choice, without asking', async () => {
+    configureAuth('oidc', true);
+    configureAnonymousParticipants(true);
+    mockApi([{ method: 'GET', path: '/me/preferences', body: { participantAccess: 'open' } }]);
+    render(<Launcher />);
+    fireEvent.click(screen.getByRole('button', { name: 'Présenter' }));
+
+    await waitFor(() =>
+      expect(createSession).toHaveBeenCalledWith('quiz1', {
+        fullCapture: true,
+        participantAccess: 'open',
+      }),
+    );
+    expect(screen.queryByRole('radio', { name: /Accès libre/ })).toBeNull();
   });
 });

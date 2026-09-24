@@ -131,7 +131,8 @@ the IdP, but each launch then asks how participants get in, for the whole game:
   guest, signed in or not, so there is no personal tracking and no name taken from an
   account.
 
-The dialog preselects the host's last choice, remembered with their account. Until an
+A *Remember my choice* box skips the question from then on: the choice is kept with the
+host's account and changed back under *My account → Preferences*. Until an
 admin sets the variable, every game requires accounts and a client asking otherwise is
 refused (`session.open_access_forbidden`).
 

@@ -292,6 +292,8 @@
     "open": {
       "label": "Open access",
       "hint": "The PIN and a nickname are enough, no account. No personal tracking."
-    }
+    },
+    "remember": "Remember my choice",
+    "rememberHint": "Next launches will use it without asking. Change it in My account."
   }
 }

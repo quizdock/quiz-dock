@@ -1,19 +1,27 @@
+import type { ParticipantAccess } from '@quiz-dock/contracts';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select } from '@/components/ui/select';
 import { SeatCountdown, SeatMenuRow } from '@/components/seat-status';
-import { useMeControllerMe } from '../api/generated/me/me';
+import {
+  getMeControllerGetPreferencesQueryKey,
+  useMeControllerGetPreferences,
+  useMeControllerMe,
+  useMeControllerUpdatePreferences,
+} from '../api/generated/me/me';
 import { useAuth } from '../auth/auth-context';
-import { APP_NAME, getDemo } from '../config';
+import { APP_NAME, allowsAnonymousParticipants, getDemo } from '../config';
 
 /**
  * Le compte, vu par la personne à qui il appartient : qui elle est pour cette
  * instance, ce que son rôle l'autorise à faire, et — en mode local — l'état du
- * siège d'animateur. Rien n'est modifiable ici : le nom et le courriel viennent
- * du fournisseur d'identité ou du nom saisi, et le rôle est un octroi
- * d'opérateur (RG-14). La page dit d'où vient chaque chose plutôt que de
- * laisser croire qu'elle se change.
+ * siège d'animateur. Le nom et le courriel viennent du fournisseur d'identité ou
+ * du nom saisi, et le rôle est un octroi d'opérateur (RG-14) : la page dit d'où
+ * vient chaque chose plutôt que de laisser croire qu'elle se change. Seules les
+ * préférences du compte s'y règlent.
  */
 export function ProfilePage() {
   const { t } = useTranslation(['auth', 'common']);
@@ -70,6 +78,11 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
+          {/* The only preference so far only exists when a host may open a game to all. */}
+          {mode === 'oidc' && allowsAnonymousParticipants() && me.roles.includes('host') ? (
+            <PreferencesCard />
+          ) : null}
+
           {/* Le siège n'existe qu'en mode local, et seul son titulaire le voit ; sur
               une démo, il appartient pour de bon au compte partagé. */}
           {mode === 'none' && user && !getDemo() ? (
@@ -87,6 +100,50 @@ export function ProfilePage() {
         </>
       ) : null}
     </section>
+  );
+}
+
+const ASK = 'ask';
+
+/**
+ * What the account remembers wherever it signs in (#69): the participant access a
+ * launch uses without asking (#57), or asking each time.
+ */
+function PreferencesCard() {
+  const { t } = useTranslation('auth');
+  const queryClient = useQueryClient();
+  const { data } = useMeControllerGetPreferences();
+  const update = useMeControllerUpdatePreferences();
+  const current = data?.data.participantAccess ?? ASK;
+
+  const onChange = async (value: string) => {
+    const participantAccess = value === ASK ? null : (value as ParticipantAccess);
+    await update.mutateAsync({ data: { participantAccess } });
+    await queryClient.invalidateQueries({ queryKey: getMeControllerGetPreferencesQueryKey() });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('profile.preferences')}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2 text-sm">
+        <label className="flex flex-col gap-1">
+          <span className="font-medium">{t('profile.participantAccess')}</span>
+          <Select
+            value={current}
+            disabled={!data || update.isPending}
+            onChange={(e) => void onChange(e.target.value)}
+            className="max-w-xs"
+          >
+            <option value={ASK}>{t('profile.participantAccessAsk')}</option>
+            <option value="account">{t('profile.participantAccessAccount')}</option>
+            <option value="open">{t('profile.participantAccessOpen')}</option>
+          </Select>
+        </label>
+        <p className="text-muted-foreground text-xs">{t('profile.participantAccessHelp')}</p>
+      </CardContent>
+    </Card>
   );
 }
 

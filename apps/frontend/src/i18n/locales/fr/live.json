@@ -292,6 +292,8 @@
     "open": {
       "label": "Accès libre",
       "hint": "Le PIN et un pseudo suffisent, sans compte. Aucun suivi individuel."
-    }
+    },
+    "remember": "Se souvenir de mon choix",
+    "rememberHint": "Les prochains lancements l’utiliseront sans demander. Modifiable dans Mon compte."
   }
 }

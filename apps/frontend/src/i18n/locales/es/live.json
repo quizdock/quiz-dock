@@ -292,6 +292,8 @@
     "open": {
       "label": "Acceso libre",
       "hint": "Basta con el PIN y un apodo, sin cuenta. Sin seguimiento individual."
-    }
+    },
+    "remember": "Recordar mi elección",
+    "rememberHint": "Los próximos lanzamientos la usarán sin preguntar. Se cambia en Mi cuenta."
   }
 }
