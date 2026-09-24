@@ -169,11 +169,15 @@ hosted elsewhere).
 
 <table>
   <tr>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/my-quizzes.png" alt="My quizzes" /><br /><sub><b>My quizzes</b> — your bank: search, filter, import / export, one click to present</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/templates.png" alt="Shared templates" /><br /><sub><b>Templates</b> — quizzes shared on the instance; take an independent copy</sub></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/editor.png" alt="Quiz builder" /><br /><sub><b>Quiz builder</b> — 7 question types, video &amp; sound, slides, backgrounds, scoring rules</sub></td>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/console-lobby.png" alt="Host console — lobby" /><br /><sub><b>Host console</b> — lobby: PIN, QR code, players in the room or remote, who hears the sound</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join.png" alt="Join by PIN, nickname and avatar" /><br /><sub><b>Join</b> — PIN or QR code, nickname &amp; avatar, no account</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join.png" alt="Join by PIN, nickname and avatar" /><br /><sub><b>Join</b> — PIN or QR code, nickname &amp; avatar, in the room or remote, no account</sub></td>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/projection-question.png" alt="Projection — question" /><br /><sub><b>Projection</b> — live question on the big screen</sub></td>
   </tr>
   <tr>
@@ -182,7 +186,7 @@ hosted elsewhere).
   </tr>
 </table>
 
-More — my quizzes, content slides, the console during a question and at the reveal,
+More — content slides, the console during a question and at the reveal,
 the podium, the player's ordering and feedback screens:
 [full gallery](https://github.com/quizdock/quiz-dock/blob/main/docs/screenshots/README.md).
 
