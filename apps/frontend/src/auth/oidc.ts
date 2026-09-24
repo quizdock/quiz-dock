@@ -1,4 +1,4 @@
-import { UserManager } from 'oidc-client-ts';
+import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
 /**
  * OIDC user manager (Authorization Code + PKCE, public SPA client). Initialised
@@ -19,6 +19,9 @@ export function initOidc(authority: string, clientId: string): UserManager {
     // issues one, silent iframe otherwise); consumers listen to `userLoaded`.
     automaticSilentRenew: true,
     silent_redirect_uri: `${window.location.origin}/auth/callback`,
+    // The session lives in localStorage, not the default sessionStorage: that one
+    // is per tab, so a preview or a console opened in a new tab came up signed out.
+    userStore: new WebStorageStateStore({ store: window.localStorage }),
   });
   return manager;
 }

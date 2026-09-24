@@ -1,6 +1,13 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AuthProvider, bindOidcSession, getLocalUser, useAuth } from './auth-context';
+import {
+  AuthProvider,
+  bindOidcSession,
+  configureAuth,
+  getLocalUser,
+  isAuthenticated,
+  useAuth,
+} from './auth-context';
 import { customFetch, setAuthHeaders } from '../api/http';
 import { getOidc } from './oidc';
 
@@ -124,6 +131,27 @@ describe('OIDC session lifecycle', () => {
 
     vi.unstubAllGlobals();
     setAuthHeaders({});
+  });
+
+  it('follows a sign-out from another tab, which shares the session', () => {
+    vi.mocked(getOidc).mockReturnValue({
+      removeUser: vi.fn(),
+      events: { addUserLoaded: vi.fn(), addAccessTokenExpired: vi.fn(), addUserSignedOut: vi.fn() },
+    } as unknown as ReturnType<typeof getOidc>);
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, pathname: '/quizzes', assign });
+    configureAuth('oidc', true);
+    bindOidcSession();
+
+    // Another tab renewing the token is no sign-out.
+    window.dispatchEvent(new StorageEvent('storage', { key: 'oidc.user:x:y', newValue: '{}' }));
+    expect(assign).not.toHaveBeenCalled();
+    window.dispatchEvent(new StorageEvent('storage', { key: 'oidc.user:x:y', newValue: null }));
+    expect(assign).toHaveBeenCalledWith('/login');
+    expect(isAuthenticated()).toBe(false);
+
+    vi.unstubAllGlobals();
+    configureAuth('none');
   });
 
   it('logout in oidc mode is RP-initiated (signoutRedirect), with a local fallback', async () => {
