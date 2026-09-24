@@ -13,6 +13,7 @@ function makeService(games: Record<string, string>) {
     gameSessionLog: { deleteMany },
     quiz: { deleteMany },
     mediaAsset: { deleteMany },
+    mediaBlob: { deleteMany },
     hostSeat: { deleteMany },
     user: { deleteMany },
   } as unknown as PrismaService;
@@ -44,8 +45,8 @@ describe('DemoResetService', () => {
   it('reset: every table, the media files, the live state, then the shared host', async () => {
     const { service, prisma, redis, media, seat, demoUser, deleteMany } = makeService({});
     await service.reset();
-    expect(deleteMany).toHaveBeenCalledTimes(5);
-    expect(prisma.$transaction).toHaveBeenCalledWith(['op', 'op', 'op', 'op', 'op']);
+    expect(deleteMany).toHaveBeenCalledTimes(6);
+    expect(prisma.$transaction).toHaveBeenCalledWith(new Array(6).fill('op'));
     expect(media.removeAllFiles).toHaveBeenCalled();
     expect(redis.flushdb).toHaveBeenCalled();
     expect(seat.provision).toHaveBeenCalledWith(

@@ -64,11 +64,11 @@ Special cases:
 1. The author drops or picks a file. The module checks the input limits (size, duration) **before** any work.
 2. The browser probes, converts (progress bar, cancel button, the tab must stay open), then measures on the
    **converted** file what it measures today: the waveform and the loudness (BS.1770, SPECIFICATIONS-MEDIA §2).
-3. It computes the **SHA-256** of the converted file (SubtleCrypto has no MD5) and asks the server whether it
-   already holds that content; if so, nothing is uploaded.
-4. Otherwise it uploads. The server **does not trust the client**: it sniffs the container and codecs, checks the
-   kind, the size (`MEDIA_MAX_BYTES`) and the dimensions, recomputes the hash, and refuses a mismatch.
-5. The server creates the media row (§4) and returns it.
+3. It uploads the file — **always**, even when the server may hold the same content already: a "send the hash
+   first" shortcut would hand a file to anyone who knows its hash. The bandwidth of a duplicate is the price.
+4. The server **does not trust the client**: it sniffs the container and codecs, checks the kind, the size
+   (`MEDIA_MAX_BYTES`) and the dimensions, and computes the SHA-256 itself.
+5. It stores the file unless that content is there already (§4), creates the media row and returns it.
 
 The limits (input size, video and audio duration) come from the backend configuration, like the other
 instance settings.
@@ -77,24 +77,28 @@ instance settings.
 
 ## 4. Data model — file and media apart
 
-Today `media_asset` mixes what belongs to the **file** (mime, size, duration, waveform, loudness) and what
-belongs to its **use** (`alt`, #43). Sharing one file between several uses needs them apart.
+`media_asset` used to be both the file and its **use** (`alt`, #43), so one file could not serve several uses.
+Delivered in #51:
 
-- **`media_blob`** — one row per content: `sha256` (unique), path on disk, mime, size, width/height, duration,
-  peaks, loudness, sample peak, created at. No owner: two authors uploading the same file share one blob, which
-  nobody can observe (the hash is checked for the uploader's own request only — no "does this exist" oracle
-  beyond "skip the upload").
-- **`media_asset`** — the author's media: owner, `alt`, **credit** (§6), link to the blob. What quizzes,
-  questions, slides and options reference, as today.
+- **`media_blob`** — one row per content: `sha256` (primary key), mime, size, created at. The file is
+  `MEDIA_DIR/<sha256>`. No owner: two authors uploading the same file share one blob, which nobody can observe
+  (the upload is always sent and hashed server-side, §3).
+- **`media_asset`** — the author's media: owner, `alt`, **credit** (§6, phase 4), link to the blob
+  (`blob_sha256`). What quizzes, questions, slides and options reference, as today. It **keeps what the file
+  is** — kind, mime, size, duration, waveform, loudness, sample peak: the bytes never change, so these copies
+  cannot drift, and every reader (game snapshot, editor, export, playback gain) stays as it was.
 
 Rules:
 
 - Picking a file from the library creates a **new** asset on the same blob, `alt` and credit pre-filled: changing
   the alt text of one use never changes another. Duplicating a quiz keeps sharing its assets, as today.
 - A blob is deleted when no asset holds it any more (§7).
-- Migration: one blob per existing asset, hashed from the file on disk; blobs with the same hash merged, files
-  removed. Existing URLs (`/api/v1/media/:assetId`) keep working.
-- Bundles export one file per blob; import hashes each file and reuses what exists.
+- Migration: SQL cannot hash files, so the schema migration only adds `media_blob` and a nullable
+  `blob_sha256`; the clean-up job (§7) then **adopts** each older file — hash, link under its blob name, point
+  the media at it, remove the old name — in an order that survives an interruption. Until then a media is served
+  from its old file. A media whose file is lost keeps a null blob. URLs (`/api/v1/media/:assetId`) do not change.
+- Bundles keep their format (one file per media); import goes through the upload, so identical files are
+  shared on arrival.
 
 ---
 

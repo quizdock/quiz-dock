@@ -10,8 +10,9 @@ export const MEDIA_SWEEP_LOCK = 'media:sweep-lock';
 
 /**
  * The media housekeeping job: every hour, and once at start-up for whatever an
- * earlier run left behind, it deletes the media nothing uses any more, then the
- * files on disk no media row points to. A save still releases the media it
+ * earlier run left behind, it moves the files of older media under their blob
+ * name, deletes the media nothing uses any more, then the blobs no media holds
+ * and the files on disk nothing points to. A save still releases the media it
  * replaced right away (`MediaService.releaseUnused`); this job catches the rest.
  */
 @Injectable()
@@ -34,8 +35,20 @@ export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
+  /** Moving older files is a step of its own: it never keeps the sweeps from running. */
+  private async adoptLegacyFiles(): Promise<number> {
+    try {
+      const { adopted, failed } = await this.media.adoptLegacyFiles();
+      if (failed > 0) this.log.warn(`Media sweep: ${failed} older files could not be moved yet`);
+      return adopted;
+    } catch (err) {
+      this.log.warn(`Moving older media files skipped: ${(err as Error).message}`);
+      return 0;
+    }
+  }
+
   /** One pass, unless another instance holds the lock. Never throws. */
-  async run(): Promise<{ media: number; files: number } | null> {
+  async run(): Promise<{ adopted: number; media: number; blobs: number; files: number } | null> {
     try {
       const won = await this.redis.set(
         MEDIA_SWEEP_LOCK,
@@ -45,12 +58,17 @@ export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
         'NX',
       );
       if (!won) return null;
+      const adopted = await this.adoptLegacyFiles();
       const media = await this.media.sweepOrphans();
+      const blobs = await this.media.sweepUnusedBlobs();
       const files = await this.media.purgeStrayFiles();
-      if (media + files > 0) {
-        this.log.log(`Media sweep: ${media} unused media, ${files} stray files deleted`);
+      if (adopted > 0) this.log.log(`Media sweep: ${adopted} older files moved to shared storage`);
+      if (media + blobs + files > 0) {
+        this.log.log(
+          `Media sweep: ${media} unused media, ${blobs} unused files, ${files} stray files deleted`,
+        );
       }
-      return { media, files };
+      return { adopted, media, blobs, files };
     } catch (err) {
       this.log.warn(`Media sweep skipped: ${(err as Error).message}`);
       return null;

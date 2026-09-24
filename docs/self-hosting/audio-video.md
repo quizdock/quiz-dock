@@ -60,8 +60,14 @@ whose form was abandoned, a media replaced in a question, an image taken out of
 a text. A media stays as long as a quiz, a session being played or an **archived
 session** (its results show the questions as they were) still refers to it. The
 same pass deletes the files in `MEDIA_DIR` no media points to any more, such as
-the sounds left behind by the 0.7 audio migration; only files named like a media
-id are touched. With several backend instances, one of them runs each pass.
+the sounds left behind by the 0.7 audio migration; only the names the backend
+gives (a media id, a SHA-256) are touched. With several backend instances, one of them runs each pass.
+
+Files are stored once per content, named after their SHA-256: the same image or
+sound uploaded twice, or brought back by importing a quiz, takes the room of one.
+After an upgrade from 0.7, the first pass moves the existing files under their
+new names (`older files moved to shared storage` in the log); the media are
+served throughout.
 
 ## Loudness levelling
 

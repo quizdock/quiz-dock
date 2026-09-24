@@ -85,6 +85,7 @@ export class DemoResetService implements OnModuleInit, OnModuleDestroy {
       this.prisma.gameSessionLog.deleteMany(),
       this.prisma.quiz.deleteMany(),
       this.prisma.mediaAsset.deleteMany(),
+      this.prisma.mediaBlob.deleteMany(),
       this.prisma.hostSeat.deleteMany(),
       this.prisma.user.deleteMany(),
     ]);

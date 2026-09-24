@@ -377,9 +377,14 @@ model MediaAsset {
   loudnessLufs Float?       @map("loudness_lufs")
   /// Sample peak, dBFS: how far the playback gain may raise the sound without clipping.
   peakDbfs     Float?       @map("peak_dbfs")
+  /// The stored file (content-addressed, shared between the media that carry the
+  /// same bytes). Null for a media uploaded before files were shared, until the
+  /// backend adopts its file, and for one whose file is lost.
+  blobSha256   String?      @map("blob_sha256") @db.Char(64)
   createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
   owner               User           @relation(fields: [ownerId], references: [id])
+  blob                MediaBlob?     @relation(fields: [blobSha256], references: [sha256], onDelete: Restrict)
   coverForQuizzes     Quiz[]         @relation("QuizCover")
   questionVisuals     Question[]     @relation("QuestionVisual")
   questionAudios      Question[]     @relation("QuestionAudio")
@@ -388,7 +393,21 @@ model MediaAsset {
   options             AnswerOption[] @relation("OptionMedia")
 
   @@index([ownerId])
+  @@index([blobSha256])
   @@map("media_asset")
+}
+
+/// A stored file, named after the SHA-256 of its bytes (MEDIA_DIR/<sha256>).
+/// What a file *is* stays on each media that uses it (kind, length, waveform,
+/// loudness): the bytes never change, so the copies cannot drift.
+model MediaBlob {
+  sha256    String       @id @db.Char(64)
+  mime      String
+  sizeBytes BigInt       @map("size_bytes")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  assets    MediaAsset[]
+
+  @@map("media_blob")
 }
 
 /// §2.7 — session jouée (trace durable).
