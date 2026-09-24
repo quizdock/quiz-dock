@@ -6,7 +6,9 @@ import { AppModule } from '../app.module';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
+import { RedisService } from '../redis/redis.service';
 import { GameService } from './game.service';
+import { PIN_ATTEMPTS_MAX } from './pin-attempts';
 
 /**
  * Test d'INTÉGRATION : vraie connexion socket.io-client → gateway /game.
@@ -543,9 +545,11 @@ describe('GameGateway (intégration socket)', () => {
       const guest = connect();
       expect(await guest.emitWithAck('player:peek', { pin: silent.pin })).toEqual({
         hasSound: false,
+        participantAccess: 'account',
       });
       expect(await guest.emitWithAck('player:peek', { pin: loud.pin })).toEqual({
         hasSound: true,
+        participantAccess: 'account',
       });
 
       // Remote asked for a silent quiz: nothing to play, the player is in the room.
@@ -1774,4 +1778,113 @@ describe('GameGateway (intégration socket)', () => {
 
     await endedP; // doit survenir avant le timeout (grâce 200 ms + fenêtre 1500 ms)
   }, 15_000);
+
+  describe('participant access and lobby lock (#57)', () => {
+    const env = process.env;
+    afterEach(() => {
+      process.env = env;
+    });
+
+    const errorOf = (socket: Socket, event: string, payload: unknown) =>
+      Promise.race([
+        new Promise<{ code: string }>((resolve) => socket.once('error', resolve)),
+        socket.emitWithAck(event, payload).then(() => ({ code: 'accepted' as const })),
+      ]);
+
+    it('refuses open access unless the server allows it', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const err = await errorOf(host, 'host:create', { quizId, participantAccess: 'open' });
+      expect(err.code).toBe('session.open_access_forbidden');
+    }, 15_000);
+
+    it('opens a game to guests under oidc once allowed: no tracking, a chosen name', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      await new Promise<void>((resolve) => host.on('connect', () => resolve()));
+      // The host socket authenticated at the handshake; the policy is read per event.
+      process.env = { ...env, AUTH_MODE: 'oidc', ALLOW_ANONYMOUS_PARTICIPANTS: 'true' };
+      const notice = new Promise<{ personalTracking: boolean; participantAccess: string }>(
+        (resolve) => host.on('notice', resolve),
+      );
+      const { pin } = await host.emitWithAck('host:create', {
+        quizId,
+        participantAccess: 'open',
+        personalTracking: true,
+      });
+      expect(await notice).toMatchObject({ personalTracking: false, participantAccess: 'open' });
+
+      const guest = connect();
+      expect(await guest.emitWithAck('player:peek', { pin })).toMatchObject({
+        participantAccess: 'open',
+      });
+      const ack = await guest.emitWithAck('player:join', { pin, nickname: 'Guest' });
+      expect(ack.nickname).toBe('Guest');
+
+      // Tracking stays off while the game is open to all.
+      const err = await errorOf(host, 'host:options', { pin, personalTracking: true });
+      expect(err.code).toBe('session.open_access_guests_only');
+    }, 15_000);
+
+    it('tells a player before joining that the game requires accounts', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId });
+      const player = connect();
+      expect(await player.emitWithAck('player:peek', { pin })).toEqual({
+        hasSound: false,
+        participantAccess: 'account',
+      });
+    }, 15_000);
+
+    it('makes an address wait after too many wrong PINs, for one window', async () => {
+      const redis = app.get(RedisService);
+      // Every socket of this suite shares one address: start clean, leave clean.
+      const clear = async () => {
+        const keys = await redis.keys('pin-attempts:*');
+        if (keys.length) await redis.del(...keys);
+      };
+      await clear();
+      try {
+        const guest = connect();
+        // Every event that takes a PIN without authentication counts.
+        expect((await errorOf(guest, 'spectator:join', { pin: '000000' })).code).toBe(
+          'session.not_found',
+        );
+        for (let i = 1; i < PIN_ATTEMPTS_MAX; i++) {
+          expect((await errorOf(guest, 'player:peek', { pin: '000000' })).code).toBe(
+            'session.not_found',
+          );
+        }
+        const host = connect({ localUser: 'Animateur' });
+        const { pin } = await host.emitWithAck('host:create', { quizId });
+        // Right PIN or not, the address now waits for the end of the window.
+        expect((await errorOf(guest, 'player:peek', { pin })).code).toBe('pin.too_many_attempts');
+        const [key] = await redis.keys('pin-attempts:*');
+        expect(await redis.ttl(key)).toBeGreaterThan(0);
+      } finally {
+        await clear();
+      }
+    }, 20_000);
+
+    it('closes the game to newcomers, not to those already in', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId });
+      const player = connect();
+      const { sessionToken } = await player.emitWithAck('player:join', { pin, nickname: 'Early' });
+
+      const locked = new Promise<{ joinLocked: boolean }>((resolve) =>
+        host.on('notice', (n: { joinLocked: boolean }) => n.joinLocked && resolve(n)),
+      );
+      host.emit('host:lock', { pin, locked: true });
+      await locked;
+
+      const late = connect();
+      expect((await errorOf(late, 'player:join', { pin, nickname: 'Late' })).code).toBe(
+        'session.locked',
+      );
+
+      player.disconnect();
+      await new Promise((r) => setTimeout(r, 100));
+      const back = connect();
+      expect((await back.emitWithAck('player:reconnect', { sessionToken })).ok).toBe(true);
+    }, 15_000);
+  });
 });

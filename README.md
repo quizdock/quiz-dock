@@ -99,7 +99,8 @@ Same image, one switch: `AUTH_MODE` decides who can host.
 | Host rights | whoever holds the seat | the `host` role, granted from the IdP |
 | Sample quizzes | included | — |
 
-Players never sign in, in either mode. Details: [authentication](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/auth.md).
+Players sign in only in OIDC mode, and there too a host can open a game to the PIN and a
+nickname alone once the admin allows it (`ALLOW_ANONYMOUS_PARTICIPANTS=true`). Details: [authentication](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/auth.md).
 
 ## 🚀 Quick start (self-host)
 
@@ -163,6 +164,7 @@ Copy `.env.example` to `.env` and adjust. The settings you are most likely to to
 | `APP_LOGO_URL` | — | Logo served from elsewhere; empty = look in the mounted `branding/` folder |
 | `APP_FEEDBACK_URL` | — | Where the home page's *report a bug / suggest a feature…* links lead; empty = this repository, `none` = hidden |
 | `AUTH_MODE` | `none` | `none` (local mode) or `oidc` (any OpenID Connect provider) |
+| `ALLOW_ANONYMOUS_PARTICIPANTS` | `false` | OIDC mode: let hosts open a game to participants without an account |
 | `HTTP_PORT` | `18080` | Host port for the app |
 | `APP_PUBLIC_URL` | — | Public address of the instance, offered first as the invitation address (QR code, join link) |
 | `DEMO_MODE` | `false` | Guards for an instance open to strangers: one shared host account, read-only templates, no uploads, hourly wipe |

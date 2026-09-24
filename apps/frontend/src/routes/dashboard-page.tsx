@@ -37,7 +37,7 @@ export function DashboardPage() {
   const importQuiz = useQuizzesControllerImportQuiz();
   const navigate = useNavigate();
   const fileInput = useRef<HTMLInputElement>(null);
-  const { launch, isLaunching, error: launchError } = useLaunchSession();
+  const { launch, isLaunching, error: launchError, dialog: launchDialog } = useLaunchSession();
   // Un gestionnaire lit l'instance ; s'il n'anime pas, il ne crée, n'importe ni ne
   // présente rien. Un compte qui cumule garde tout (RG-14).
   const { isManager, isHost } = useRole();
@@ -156,6 +156,7 @@ export function DashboardPage() {
         </p>
       ) : null}
       {launchError ? <p className="text-destructive">{launchError}</p> : null}
+      {launchDialog}
 
       {!isLoading && !error && quizzes.length === 0 && !managerOnly && (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">

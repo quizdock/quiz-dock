@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { configureAnonymousParticipants } from '../config';
 import { mockApi, renderApp } from '../test/harness';
 
 describe('Garde de route', () => {
@@ -13,6 +14,14 @@ describe('Garde de route', () => {
     renderApp('/join/123456', 'oidc');
     expect(await screen.findByText('Connectez-vous pour participer')).toBeInTheDocument();
     expect(screen.queryByLabelText('Votre pseudo')).not.toBeInTheDocument();
+  });
+
+  it('keeps the join pages public under OIDC when hosts may open a game to all (#57)', async () => {
+    configureAnonymousParticipants(true);
+    mockApi([]);
+    renderApp('/join', 'oidc');
+    expect(await screen.findByLabelText('Code PIN')).toBeInTheDocument();
+    configureAnonymousParticipants(false);
   });
 
   it('keeps the join pages public in local mode', async () => {

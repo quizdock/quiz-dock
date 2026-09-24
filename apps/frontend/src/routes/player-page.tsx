@@ -40,19 +40,20 @@ import { followed } from '../game/media/followed';
 import { RatingPanel } from '../game/rating-panel';
 import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
-import { getAuthMode } from '../auth/auth-context';
+import { getAuthMode, isAuthenticated, rememberAfterLogin } from '../auth/auth-context';
 
 /**
  * Avis de transparence (§2.10, RG-16) : ce que la session enregistre de ce
- * participant. Sans compte (mode local) rien n'est rattaché à un compte : le texte
- * parle du pseudo, faute de quoi il promettrait l'inverse de ce qui se passe.
+ * participant. Sans compte (mode local, ou partie en accès libre #57) rien n'est
+ * rattaché à un compte : le texte parle du pseudo, faute de quoi il promettrait
+ * l'inverse de ce qui se passe.
  */
 function trackingNotice(
   t: (key: string) => string,
-  view: Pick<GameView, 'personalTracking' | 'fullCapture'>,
+  view: Pick<GameView, 'personalTracking' | 'fullCapture' | 'participantAccess'>,
 ): string {
   if (!view.personalTracking) return t('player.noTrackingNotice');
-  const account = getAuthMode() === 'oidc';
+  const account = getAuthMode() === 'oidc' && view.participantAccess === 'account';
   if (view.fullCapture) return t(account ? 'player.captureNotice' : 'player.captureNoticeGuest');
   return t(account ? 'player.trackingNotice' : 'player.trackingNoticeGuest');
 }
@@ -159,12 +160,23 @@ export function PlayerPage() {
     let cancelled = false;
     // No answer (game over, network): the form stays as it was, the join says why.
     peekSession(pin)
-      .then((res) => !cancelled && setHasSound(res.hasSound))
+      .then((res) => {
+        if (cancelled) return;
+        // A game that requires accounts, and no session here: sign in first, then
+        // back to this invitation (RG-15). Only reachable when open access is
+        // offered — otherwise the route guard already sent them (#57).
+        if (res.participantAccess === 'account' && getAuthMode() === 'oidc' && !isAuthenticated()) {
+          rememberAfterLogin(window.location.pathname + window.location.search);
+          void navigate({ to: '/login' });
+          return;
+        }
+        setHasSound(res.hasSound);
+      })
       .catch(() => undefined);
     return () => {
       cancelled = true;
     };
-  }, [needsJoin, pin]);
+  }, [needsJoin, pin, navigate]);
 
   const onJoin = async (e: FormEvent) => {
     e.preventDefault();

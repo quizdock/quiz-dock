@@ -14,7 +14,10 @@ export type ParticipantAccess = (typeof PARTICIPANT_ACCESS)[number];
  * means the application's default.
  */
 export const userPreferencesSchema = z.object({
-  /** The participant access picked at the last launch, preselected at the next one. */
+  /**
+   * The participant access a launch uses without asking (#57), set by the dialog's
+   * "remember" box or the profile page; absent = ask at each launch.
+   */
   participantAccess: z.enum(PARTICIPANT_ACCESS).optional(),
 });
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;

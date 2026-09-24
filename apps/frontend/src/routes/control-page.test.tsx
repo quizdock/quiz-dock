@@ -32,6 +32,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   fullCapture: false,
   personalTracking: true,
   pickOwnName: true,
+  participantAccess: 'account',
+  joinLocked: false,
   kicked: null,
   mode: 'manual',
   paused: false,
@@ -179,5 +181,46 @@ describe('ControlPage (console hôte)', () => {
     expect(share.mock.calls[0][0]).not.toHaveProperty('files');
     expect(share.mock.calls[0][0].text).toContain('482913');
     vi.unstubAllGlobals();
+  });
+
+  it('LOBBY: closes the game to newcomers from the console (#57)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({});
+    renderApp('/session/482913/console');
+
+    const lock = await screen.findByRole('switch', {
+      name: 'Fermer la partie aux nouveaux participants',
+    });
+    act(() => fireEvent.click(lock));
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:lock', { pin: '482913', locked: true });
+  });
+
+  it('LOBBY: open access greys personal tracking out, and says why (#57)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({ participantAccess: 'open', personalTracking: false });
+    renderApp('/session/482913/console');
+
+    expect(await screen.findByRole('switch', { name: 'Suivi individuel' })).toBeDisabled();
+    expect(screen.getByText(/Indisponible en accès libre/)).toBeInTheDocument();
+  });
+
+  it('ANSWERING: the lock set in the lobby can be lifted during the game (#57)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      totalQuestions: 3,
+      question: { prompt: 'Capitale ?' } as never,
+      answerCount: { answered: 0, total: 1 },
+      joinLocked: true,
+    });
+    renderApp('/session/482913/console');
+
+    const lock = await screen.findByRole('button', {
+      name: 'Fermer la partie aux nouveaux participants',
+    });
+    expect(lock).toHaveAttribute('aria-pressed', 'true');
+    act(() => lock.click());
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:lock', { pin: '482913', locked: false });
   });
 });

@@ -15,6 +15,7 @@ describe('AuthConfigController', () => {
       demo: null,
       oidc: null,
       standalone: false,
+      anonymousParticipants: false,
     });
   });
 
@@ -33,7 +34,15 @@ describe('AuthConfigController', () => {
         clientId: 'quiz-dock-frontend',
       },
       standalone: false,
+      anonymousParticipants: false,
     });
+  });
+
+  it('offers open access only under OIDC with ALLOW_ANONYMOUS_PARTICIPANTS=true', () => {
+    process.env = { ...env, AUTH_MODE: 'oidc', ALLOW_ANONYMOUS_PARTICIPANTS: 'true' };
+    expect(controller.config().anonymousParticipants).toBe(true);
+    process.env = { ...env, AUTH_MODE: 'none', ALLOW_ANONYMOUS_PARTICIPANTS: 'true' };
+    expect(controller.config().anonymousParticipants).toBe(false);
   });
 
   it('announces the shared demo account when DEMO_MODE=true', () => {
@@ -43,6 +52,7 @@ describe('AuthConfigController', () => {
       demo: { user: 'demo_user' },
       oidc: null,
       standalone: false,
+      anonymousParticipants: false,
     });
   });
 

@@ -33,7 +33,7 @@ Full authentication is **optional**: the project must run in development or in a
 | `none` | Local mode with no IdP; the host identifies with a plain local name (no JWT), and the `keycloak` service is not started | Development, demos, a light deployment |
 | `oidc` | JWT validation through an OIDC provider (Keycloak as the reference): hosts through OIDC JWTs, signed-in players possible | Production / secured multi-user |
 
-The backend exposes an **auth interface** (`AuthProvider`) with two implementations (`NoAuthProvider`, `OidcProvider`) selected by `AUTH_MODE`; the rest of the code does not depend on the provider. `OidcProvider` validates the JWTs (signature through JWKS, issuer, audience) of **any** compliant OIDC provider — Keycloak ships as the **reference OIDC IdP** for development and demos, behind a **Compose profile** (`--profile keycloak`) so it is never imposed.
+The backend exposes an **auth interface** (`AuthProvider`) with two implementations (`NoAuthProvider`, `OidcProvider`) selected by `AUTH_MODE`; the rest of the code does not depend on the provider. `OidcProvider` validates the JWTs (signature through JWKS, issuer, audience) of **any** compliant OIDC provider — Keycloak ships as the **reference OIDC IdP** for development and demos, behind a **Compose profile** (`--profile keycloak`) so it is never imposed; the dev override starts it always.
 
 ### Out of scope for v1
 - Solo mode / asynchronous challenges.
@@ -287,14 +287,16 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 
 | Event | Payload | Sender | Effect |
 |-------|---------|----------|-------|
-| `host:create` | `{ quizId, fullCapture?, personalTracking?, pickOwnName? }` | the host | Creates the game and returns the PIN; the three options are what the session records and how participants are named (RG-15, RG-16) |
+| `host:create` | `{ quizId, fullCapture?, personalTracking?, pickOwnName?, participantAccess? }` | the host | Creates the game and returns the PIN; the options are what the session records, how participants are named and how they get in (`account` by default, `open` only when the server allows it — fixed for the whole game) (RG-15, RG-16) |
 | `host:options` | `{ pin, personalTracking?, pickOwnName? }` | the host | Adjusts those two from the lobby, before the start (like `host:capture`) |
+| `host:lock` | `{ pin, locked }` | the host | Closes the game to new participants, or reopens it, until it ends; reconnections still get in (RG-15) |
 | `host:start` | `{ pin }` | the host | LOBBY → QUESTION_SHOW |
 | `host:next` | `{ pin }` | the host | The next question / the podium |
 | `host:reveal` | `{ pin }` | the host | Forces the reveal |
 | `host:kick` | `{ pin, playerId }` | the host | Throws a player out |
 | `host:end` | `{ pin }` | the host | Ends the game |
-| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken` and the **nickname the server retained** (the account's name when the host did not open the choice, a suffix when a homonym was already there). Refused without a valid token under `AUTH_MODE=oidc` (RG-15) |
+| `player:join` | `{ pin, nickname, authToken? }` | a player | Joins the LOBBY; returns a `sessionToken` and the **nickname the server retained** (the account's name when the host did not open the choice, a suffix when a homonym was already there). Refused without a valid token under `AUTH_MODE=oidc` unless the game is in open access, where everyone joins as a guest; refused once the host closed the game (RG-15) |
+| `player:peek` | `{ pin }` | a player | Before joining: whether the quiz plays sound and whether an account is needed (`participantAccess`) |
 | `player:reconnect` | `{ sessionToken }` | a player | Takes back their seat and score |
 | `player:submit` | `{ pin, questionIndex, answer }` | a player | Submits an answer |
 | `ping` | `{ t0 }` | anyone | Measures the latency (answered by `pong`) |
@@ -304,7 +306,7 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 | Event | Payload | Recipients |
 |-------|---------|---------------|
 | `game:created` | `{ pin }` | the host |
-| `notice` | `{ fullCapture, personalTracking, pickOwnName }` | a player (on joining, before anything is collected — its wording follows the two first flags) |
+| `notice` | `{ fullCapture, personalTracking, pickOwnName, participantAccess, joinLocked }` | the room (a player on joining, before anything is collected — its wording follows the first flags and the access; the console reflects the access and the lock) |
 | `player:joined` | `{ playerId, nickname, playerCount }` | the host + the players (the lobby list) |
 | `player:left` | `{ playerId, playerCount }` | the room |
 | `game:state` | `{ state, questionIndex, totalQuestions }` | the room |

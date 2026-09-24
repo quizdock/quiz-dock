@@ -20,8 +20,17 @@
     "captureHint": "ⓘ Les participants en seront informés au démarrage. Conserve le détail des réponses de chaque participant pour le suivi individuel.",
     "trackingLabel": "Suivi individuel",
     "trackingHint": "ⓘ Activé, les résultats sont enregistrés sous le compte de chaque participant (classement archivé, historique). Désactivé, aucun résultat individuel n’est conservé — seuls les résultats d’ensemble du groupe. La partie en direct ne change pas.",
+    "trackingOpenAccessHint": "ⓘ Indisponible en accès libre : les participants n’ont pas de compte, rien d’individuel n’est conservé.",
     "ownNameLabel": "Laisser les participants choisir leur nom affiché",
     "ownNameHint": "ⓘ Désactivé, le nom affiché vient de leur compte. Dans les deux cas leurs résultats y restent rattachés : un nom choisi n’est pas l’anonymat.",
+    "accessAccount": "Comptes requis : chaque participant se connecte avant de rejoindre.",
+    "accessOpen": "Accès libre : le PIN et un pseudo suffisent, sans compte.",
+    "lockLabel": "Fermer la partie aux nouveaux participants",
+    "lockHint": "ⓘ Personne d’autre ne peut rejoindre, même avec le PIN. Ceux déjà là reviennent après une coupure. Jusqu’à la fin de la partie.",
+    "lock": "Fermer",
+    "locked": "Fermée",
+    "lockTooltip": "Fermer la partie : plus personne ne peut rejoindre, même avec le PIN",
+    "unlockTooltip": "Rouvrir la partie aux nouveaux participants",
     "audioTargetLabel": "Qui entend le son dans cette session",
     "audioTargetHint": "Remplace le réglage du quiz pour cette session. Les questions qui ont leur propre réglage le gardent.",
     "preloadNotice": "Pour que rien n’attende, les appareils des participants reçoivent l’image, le son ou la vidéo de la question suivante quelques secondes avant qu’elle s’affiche — jamais son texte ni ses réponses. Un participant féru de technique pourrait les ouvrir en avance.",
@@ -271,5 +280,20 @@
     "videoMuted": "Vidéo lancée sans le son (bloqué par le navigateur)",
     "slow": "Le média n’est pas encore chargé…",
     "waveform": "Forme d’onde du son de la question"
+  },
+  "launchAccess": {
+    "title": "Accès des participants",
+    "description": "Comment les participants rejoignent-ils cette partie ? Le choix vaut pour toute la partie.",
+    "confirm": "Lancer",
+    "account": {
+      "label": "Comptes requis",
+      "hint": "Chaque participant se connecte. Le suivi individuel reste possible."
+    },
+    "open": {
+      "label": "Accès libre",
+      "hint": "Le PIN et un pseudo suffisent, sans compte. Aucun suivi individuel."
+    },
+    "remember": "Se souvenir de mon choix",
+    "rememberHint": "Les prochains lancements l’utiliseront sans demander. Modifiable dans Mon compte."
   }
 }

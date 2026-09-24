@@ -53,7 +53,6 @@
     "backToDraft": "Volver a borrador",
     "archive": "Archivar",
     "restore": "Restaurar",
-    "presentError": "No se pudo iniciar la sesión.",
     "archiveTitle": "Archivo",
     "archiveHelp": "Un cuestionario archivado sale de la lista principal; se puede restaurar.",
     "fullCaptureNext": "Captura completa de respuestas para la próxima sesión"

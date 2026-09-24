@@ -57,6 +57,7 @@ How to replace the logo and the stylesheet: **[branding](branding.md)**.
 |---|---|---|
 | `AUTH_MODE` | `none` | `none` = local mode (no IdP, single host seat); `oidc` = validate JWTs from any OpenID Connect provider. |
 | `DEMO_MODE` | `false` | `true` = public demo guards: the host seat lasts 5 min (renewable), media uploads are refused, and everything is wiped every hour. See below. |
+| `ALLOW_ANONYMOUS_PARTICIPANTS` | `false` | `AUTH_MODE=oidc` only: `true` lets hosts open a game to participants without an account, the PIN and a nickname alone — chosen at each launch ([open access](auth.md#open-access-oidc)) |
 | `OIDC_ISSUER` | — | `iss` expected in tokens (your provider's issuer URL). Required when `AUTH_MODE=oidc`. |
 | `OIDC_JWKS_URI` | _(discovery)_ | JWKS endpoint. Default: `jwks_uri` from `${OIDC_ISSUER}/.well-known/openid-configuration`. Set it to target an internal host in Docker. |
 | `OIDC_CLIENT_ID` | `quiz-dock-frontend` | Public SPA client id (sent to the browser via `GET /auth/config`). |

@@ -129,6 +129,13 @@ The `⋯` menu: Edit · Duplicate · Archive · Delete · See past sessions.
 > **full-capture mode** (RG-13); the other two are personalised tracking (RG-16) and the
 > chosen display name (RG-15). These three lock once the session has started. With media
 > in the quiz, the host is told that the devices fetch them ahead (media brief §5.3).
+> When the server allows open access (RG-15), the launch first asks how participants get
+> in — accounts required or open access — unless the host ticked *Remember my choice* before
+> (then kept with the account, changed back in *My account → Preferences*); the
+> lobby then states it, and in open access personalised tracking is greyed out with the
+> reason and the display-name switch is gone. A last switch closes the session to new
+> participants; the in-game control bar carries the same toggle, since late joins stay
+> open during play.
 
 ### 3.2 During a question (host side)
 ```

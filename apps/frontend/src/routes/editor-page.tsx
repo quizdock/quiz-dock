@@ -57,7 +57,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { createSession } from '../game/game-client';
+import { useLaunchSession } from '../game/use-launch-session';
 import { downloadFile } from '../api/download';
 import { apiErrorText } from '../api/http';
 import type { QuizDetailDto } from '../api/generated/model';
@@ -160,19 +160,26 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       setEditing(next);
     }
   };
-  const [presenting, setPresenting] = useState(false);
-  const [presentError, setPresentError] = useState<string | null>(null);
+  // The session lives in its console; the editor stays about the content.
+  const {
+    launch,
+    isLaunching: presenting,
+    error: presentError,
+    dialog: launchDialog,
+  } = useLaunchSession();
   const [confirmDelete, setConfirmDelete] = useState(false);
   // Deleting an item of the sequence asks first (a question takes its stats history with it).
   const [pendingDelete, setPendingDelete] = useState<QuizItem | null>(null);
   // Portable bundle (zip: quiz.json + media/) — the same file the Quiz Store shares.
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const onExport = async () => {
+    setExportError(null);
     setExporting(true);
     try {
       await downloadFile(`/api/v1/quizzes/${quiz.id}/export`, 'quiz.quizdock.zip');
     } catch (e) {
-      setPresentError(apiErrorText(e, t('header.exportError')));
+      setExportError(apiErrorText(e, t('header.exportError')));
     } finally {
       setExporting(false);
     }
@@ -255,19 +262,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     await invalidate();
   };
 
-  const onPresent = async () => {
-    setPresentError(null);
-    setPresenting(true);
-    try {
-      const { pin } = await createSession(quiz.id, { fullCapture });
-      // The session lives in its console; the editor stays about the content.
-      await navigate({ to: '/session/$pin/console', params: { pin } });
-    } catch (e) {
-      setPresentError(e instanceof Error ? e.message : t('broadcast.presentError'));
-    } finally {
-      setPresenting(false);
-    }
-  };
+  const onPresent = () => launch(quiz.id, { fullCapture });
 
   const onDeleteQuiz = async () => {
     await removeQuiz.mutateAsync({ id: quiz.id });
@@ -573,7 +568,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
           <StatusBar
             quiz={quiz}
             presenting={presenting}
-            presentError={presentError}
+            presentError={presentError ?? exportError}
             fullCapture={fullCapture}
             onFullCapture={setFullCapture}
             onPublish={() => void changeStatus('ready')}
@@ -582,6 +577,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             onRestore={() => void changeStatus('draft')}
             busy={transition.isPending}
           />
+          {launchDialog}
           {quizDraft && isDirty ? (
             <DraftNotice
               onDiscard={() => {

@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { config as loadEnv } from 'dotenv';
+import { parse } from 'dotenv';
 import { Client } from 'pg';
 
 const BACKEND_DIR = join(__dirname, '..');
@@ -11,9 +12,21 @@ const BACKEND_DIR = join(__dirname, '..');
  * root `.env` like the Prisma CLI does — created and migrated here, and against
  * Redis database 1. The development stack keeps its host seat, its quizzes and
  * its live games.
+ *
+ * Only where the databases are is read from `.env`: the rest (`AUTH_MODE`, open
+ * access, demo mode…) is the development stack's choice, and each test sets what
+ * it depends on — a stack switched to OIDC must not change what the tests see.
  */
+function loadConnectionEnv(): void {
+  const path = join(BACKEND_DIR, '../../.env');
+  if (!existsSync(path)) return;
+  for (const [key, value] of Object.entries(parse(readFileSync(path)))) {
+    if (/^(DATABASE_URL|POSTGRES_|REDIS_)/.test(key)) process.env[key] ??= value;
+  }
+}
+
 export default async function globalSetup(): Promise<void> {
-  loadEnv({ path: join(BACKEND_DIR, '../../.env'), quiet: true });
+  loadConnectionEnv();
   const base = new URL(
     process.env.DATABASE_URL ??
       `postgresql://${process.env.POSTGRES_USER ?? 'live'}:${process.env.POSTGRES_PASSWORD ?? 'live'}` +

@@ -53,7 +53,6 @@
     "backToDraft": "退回草稿",
     "archive": "歸檔",
     "restore": "恢復",
-    "presentError": "啟動會話失敗。",
     "archiveTitle": "歸檔",
     "archiveHelp": "歸檔的測驗會從主清單中隱藏，可以隨時還原。",
     "fullCaptureNext": "下一場次完整記錄回答"

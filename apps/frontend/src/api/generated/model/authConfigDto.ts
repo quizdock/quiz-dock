@@ -14,6 +14,7 @@ export interface AuthConfigDto {
   /** @nullable */
   demo: AuthConfigDtoDemo;
   standalone: boolean;
+  anonymousParticipants: boolean;
   /** @nullable */
   oidc: AuthConfigDtoOidc;
 }

@@ -64,6 +64,8 @@ describe('SessionArchiveService', () => {
     fullCapture: true,
     personalTracking: true,
     pickOwnName: true,
+    participantAccess: 'account',
+    joinLocked: false,
     title: 'Q',
     language: 'fr',
     createdAt: 1_000,

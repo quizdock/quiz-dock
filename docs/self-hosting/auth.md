@@ -120,6 +120,30 @@ Each participant's results are then attached to their account.
 Under `AUTH_MODE=none` nothing changes: the PIN stays the only barrier, which is the
 point of that mode.
 
+### Open access (OIDC)
+
+Some rooms have no accounts to give: trainees who change every session, visitors at
+an event. Set **`ALLOW_ANONYMOUS_PARTICIPANTS=true`** and hosts keep signing in through
+the IdP, but each launch then asks how participants get in, for the whole game:
+
+- **Accounts required** (the default, as above);
+- **Open access**: the PIN and a nickname are enough, as in local mode. Everyone is a
+  guest, signed in or not, so there is no personal tracking and no name taken from an
+  account.
+
+A *Remember my choice* box skips the question from then on: the choice is kept with the
+host's account and changed back under *My account → Preferences*. Until an
+admin sets the variable, every game requires accounts and a client asking otherwise is
+refused (`session.open_access_forbidden`).
+
+Whatever the access, the host can **close the game to new participants**, from the
+lobby or during the game (those already in come back after a lost connection) and remove one, and each
+address may try 30 wrong PINs a minute — generous, since a whole room shares one
+public address. Behind a reverse proxy on a private address, the client's address is
+read from `X-Forwarded-For`. Published directly with no proxy in front, where Docker
+hides the client's address (Docker Desktop, the userland proxy), every connection looks
+private and that header could be forged: put a reverse proxy in front that sets it.
+
 ## The display name (OIDC)
 
 What the lobby, the leaderboard and the podium show for an authenticated account
@@ -153,10 +177,13 @@ The repository ships one worked example so you can try OIDC locally: a Keycloak
 realm in [`keycloak/realm-export.json`](../../keycloak/realm-export.json) (realm
 `quiz-dock`, public client `quiz-dock-frontend`, roles `host`/`player`, exposed under
 `realm_access.roles`). It is only an example — nothing in QuizDock depends on it.
-Start it with the `keycloak` compose profile:
+Two accounts: `animateur` (host) and `participant` (no role), the password being the
+username. In the repository's dev stack (with `docker-compose.override.yml`) it always
+runs, and OIDC is one variable away; elsewhere, start it with the `keycloak` profile:
 
 ```bash
-AUTH_MODE=oidc docker compose --profile keycloak up -d
+AUTH_MODE=oidc docker compose up -d backend                  # dev stack
+AUTH_MODE=oidc docker compose --profile keycloak up -d       # base file alone
 ```
 
 The dev compose file then defaults `OIDC_ISSUER` to `http://localhost:18080/realms/quiz-dock`,

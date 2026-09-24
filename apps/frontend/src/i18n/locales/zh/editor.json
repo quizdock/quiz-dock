@@ -53,7 +53,6 @@
     "backToDraft": "退回草稿",
     "archive": "归档",
     "restore": "恢复",
-    "presentError": "启动会话失败。",
     "archiveTitle": "归档",
     "archiveHelp": "归档的测验会从主列表中隐藏，可以随时恢复。",
     "fullCaptureNext": "下一场次完整记录回答"

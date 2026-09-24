@@ -6,9 +6,11 @@ import type {
   LiveQuestionMedia,
   OptionColor,
   OptionShape,
+  ParticipantAccess,
   PointsMode,
   QuestionScoring,
   QuestionType,
+  SessionNotice,
   SlideBackground,
   SlideBlock,
   SlideTextTone,
@@ -130,6 +132,13 @@ export interface GameMeta {
   /** Les participants choisissent leur nom affiché ; sinon il vient du compte (RG-15). */
   pickOwnName: boolean;
   /**
+   * How participants get in, fixed at creation (#57): `open` = the PIN and a
+   * nickname alone, every player a guest even when signed in.
+   */
+  participantAccess: ParticipantAccess;
+  /** Closed to new participants by the host (reconnections still get in). */
+  joinLocked: boolean;
+  /**
    * `questionStartedAt − mediaStartAt` for the current question, null when it plays
    * nothing: kept as a distance so a pause, which moves `questionStartedAt`, moves
    * the media's start with it.
@@ -204,15 +213,16 @@ export type { AnswerValue };
  * envoyé aux participants (et reflété par la console).
  */
 export function noticeOf(
-  meta: Pick<GameMeta, 'fullCapture' | 'personalTracking' | 'pickOwnName'>,
-): {
-  fullCapture: boolean;
-  personalTracking: boolean;
-  pickOwnName: boolean;
-} {
+  meta: Pick<
+    GameMeta,
+    'fullCapture' | 'personalTracking' | 'pickOwnName' | 'participantAccess' | 'joinLocked'
+  >,
+): SessionNotice {
   return {
     fullCapture: meta.fullCapture,
     personalTracking: meta.personalTracking,
     pickOwnName: meta.pickOwnName,
+    participantAccess: meta.participantAccess,
+    joinLocked: meta.joinLocked,
   };
 }

@@ -31,6 +31,16 @@
       "lastName": "Démo",
       "credentials": [{ "type": "password", "value": "animateur", "temporary": false }],
       "realmRoles": ["host"]
+    },
+    {
+      "username": "participant",
+      "enabled": true,
+      "email": "participant@quiz-dock.test",
+      "emailVerified": true,
+      "firstName": "Participant",
+      "lastName": "Démo",
+      "credentials": [{ "type": "password", "value": "participant", "temporary": false }],
+      "realmRoles": []
     }
   ]
 }

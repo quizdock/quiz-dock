@@ -2,6 +2,7 @@ import { GameState } from '@quiz-dock/contracts';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameView } from '../game/use-game-session';
+import { configureAnonymousParticipants } from '../config';
 import { renderApp } from '../test/harness';
 
 const { fakeSocket, hookState } = vi.hoisted(() => ({
@@ -26,7 +27,9 @@ vi.mock('../game/media/question-media-stage', () => ({
 }));
 const joinSession = vi.fn();
 const loadPlayerSession = vi.fn();
-const peekSession = vi.fn(() => Promise.resolve({ hasSound: false }));
+const peekSession = vi.fn(() =>
+  Promise.resolve({ hasSound: false, participantAccess: 'account' as 'account' | 'open' }),
+);
 
 vi.mock('../game/use-game-session', () => ({
   useGameSession: () => ({ view: hookState.value, socket: fakeSocket, markJoined }),
@@ -61,6 +64,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   fullCapture: false,
   personalTracking: true,
   pickOwnName: true,
+  participantAccess: 'account',
+  joinLocked: false,
   kicked: null,
   mode: 'manual',
   paused: false,
@@ -112,7 +117,7 @@ describe('PlayerPage (client participant)', () => {
 
   it('no-session, quiz with sound: asks where the player is and joins remote', async () => {
     hookState.value = view({ status: 'no-session' });
-    peekSession.mockResolvedValueOnce({ hasSound: true });
+    peekSession.mockResolvedValueOnce({ hasSound: true, participantAccess: 'account' });
     joinSession.mockResolvedValue({ sessionToken: 't', playerId: 'p1', nickname: 'Alice' });
     renderApp('/join/771122');
 
@@ -423,5 +428,26 @@ describe('PlayerPage (client participant)', () => {
 
     await screen.findByText(/réponses/i);
     expect(screen.queryByRole('region', { name: 'Explication' })).toBeNull();
+  });
+
+  describe('participant access (#57)', () => {
+    afterEach(() => configureAnonymousParticipants(false));
+
+    it('sends to the sign-in a guest whose game requires accounts', async () => {
+      configureAnonymousParticipants(true);
+      hookState.value = view({ status: 'no-session' });
+      const { router } = renderApp('/join/771122', 'oidc');
+      await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
+    });
+
+    it('lets a guest join a game in open access, without signing in', async () => {
+      configureAnonymousParticipants(true);
+      peekSession.mockResolvedValueOnce({ hasSound: false, participantAccess: 'open' });
+      hookState.value = view({ status: 'no-session' });
+      const { router } = renderApp('/join/771122', 'oidc');
+      expect(await screen.findByPlaceholderText('Votre pseudo')).toBeInTheDocument();
+      await waitFor(() => expect(peekSession).toHaveBeenCalled());
+      expect(router.state.location.pathname).toBe('/join/771122');
+    });
   });
 });

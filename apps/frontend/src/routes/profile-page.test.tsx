@@ -1,5 +1,6 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { configureAnonymousParticipants } from '../config';
 import { mockApi, renderApp } from '../test/harness';
 
 const me = (over: Record<string, unknown> = {}) => ({
@@ -50,5 +51,35 @@ describe('ProfilePage', () => {
 
     expect(await screen.findByText('Gestionnaire')).toBeInTheDocument();
     expect(screen.getByText('Animateur')).toBeInTheDocument();
+  });
+
+  describe('preferences (#57)', () => {
+    afterEach(() => configureAnonymousParticipants(false));
+
+    it('changes the participant access used at launch, back to asking too', async () => {
+      configureAnonymousParticipants(true);
+      const api = mockApi([
+        { method: 'GET', path: '/me/preferences', body: { participantAccess: 'open' } },
+        { method: 'PATCH', path: '/me/preferences', body: {} },
+        { method: 'GET', path: '/me', body: me({ subject: 'kc-sub' }) },
+      ]);
+      renderApp('/profile', 'oidc', true);
+
+      const select = await screen.findByLabelText('Accès des participants au lancement');
+      await waitFor(() => expect(select).toHaveValue('open'));
+      fireEvent.change(select, { target: { value: 'ask' } });
+      await waitFor(() =>
+        expect(
+          api.mock.calls.find(([, o]) => (o as RequestInit | undefined)?.method === 'PATCH')?.[1],
+        ).toMatchObject({ body: JSON.stringify({ participantAccess: null }) }),
+      );
+    });
+
+    it('shows no preference when open access is not offered', async () => {
+      mockApi([{ method: 'GET', path: '/me', body: me() }]);
+      renderApp('/profile');
+      expect(await screen.findByText('Animateur')).toBeInTheDocument();
+      expect(screen.queryByText('Préférences')).toBeNull();
+    });
   });
 });

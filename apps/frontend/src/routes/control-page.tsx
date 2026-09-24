@@ -15,6 +15,8 @@ import {
   ExternalLink,
   Info,
   Loader2,
+  Lock,
+  LockOpen,
   Eye,
   Gauge,
   Hand,
@@ -27,6 +29,7 @@ import {
   SkipForward,
   Smartphone,
   Square,
+  UserCheck,
   Users,
   Wifi,
 } from 'lucide-react';
@@ -118,6 +121,9 @@ export function ControlPage() {
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
   const setCapture = (fullCapture: boolean) => socket?.emit('host:capture', { pin, fullCapture });
+  const setJoinLocked = (locked: boolean) => socket?.emit('host:lock', { pin, locked });
+  // Open access (#57): guests only — nothing personal to track, no account name.
+  const openAccess = view.participantAccess === 'open';
   const setOptions = (opts: {
     personalTracking?: boolean;
     pickOwnName?: boolean;
@@ -207,6 +213,7 @@ export function ControlPage() {
         onMode={setMode}
         onPause={setPaused}
         onBan={banPlayer}
+        onLock={setJoinLocked}
         screenButton={screenButton}
       />
     </>
@@ -311,22 +318,30 @@ export function ControlPage() {
 
         {/* Suivi individuel (RG-16) : coupé, la partie se joue à l'identique mais rien
             d'individuel n'est archivé. Même fenêtre de décision que la capture. */}
-        <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+        <label
+          className={cn(
+            'flex items-start gap-3 rounded-lg border p-4 text-sm',
+            openAccess && 'opacity-60',
+          )}
+        >
           <Switch
             className="mt-0.5"
             checked={view.personalTracking}
+            disabled={openAccess}
             onCheckedChange={(personalTracking) => setOptions({ personalTracking })}
             aria-label={t('control.trackingLabel')}
           />
           <span>
             <span className="font-medium">{t('control.trackingLabel')}</span>
-            <span className="text-muted-foreground block">{t('control.trackingHint')}</span>
+            <span className="text-muted-foreground block">
+              {openAccess ? t('control.trackingOpenAccessHint') : t('control.trackingHint')}
+            </span>
           </span>
         </label>
 
         {/* Nom affiché (RG-15) : n'a de sens que si les participants ont un compte
             d'où le tirer — en mode local ils saisissent toujours un pseudo. */}
-        {authMode === 'oidc' ? (
+        {authMode === 'oidc' && !openAccess ? (
           <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
             <Switch
               className="mt-0.5"
@@ -340,6 +355,33 @@ export function ControlPage() {
             </span>
           </label>
         ) : null}
+
+        {/* How participants get in (#57): chosen at launch, fixed for the game. */}
+        {authMode === 'oidc' ? (
+          <p className="text-muted-foreground flex items-start gap-2 text-sm">
+            {openAccess ? (
+              <LockOpen className="mt-0.5 size-4 shrink-0" />
+            ) : (
+              <UserCheck className="mt-0.5 size-4 shrink-0" />
+            )}
+            {openAccess ? t('control.accessOpen') : t('control.accessAccount')}
+          </p>
+        ) : null}
+
+        {/* Safeguard: once everyone is in, nobody else — those already in still come
+            back after a lost connection. Stays until the game ends. */}
+        <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+          <Switch
+            className="mt-0.5"
+            checked={view.joinLocked}
+            onCheckedChange={setJoinLocked}
+            aria-label={t('control.lockLabel')}
+          />
+          <span>
+            <span className="font-medium">{t('control.lockLabel')}</span>
+            <span className="text-muted-foreground block">{t('control.lockHint')}</span>
+          </span>
+        </label>
 
         {/* Accepted risk (media brief §5.3): the phones get the next question's media
             ahead, without its prompt — the host is told, once, here. */}
@@ -726,6 +768,7 @@ function ControlBar({
   onMode,
   onPause,
   onBan,
+  onLock,
   screenButton,
 }: {
   view: GameView;
@@ -733,6 +776,7 @@ function ControlBar({
   onMode: (mode: GameMode) => void;
   onPause: (paused: boolean) => void;
   onBan: (playerId: string, minutes: number) => void;
+  onLock: (locked: boolean) => void;
   screenButton: React.ReactNode;
 }) {
   return (
@@ -740,6 +784,8 @@ function ControlBar({
       <RecapHeader view={view} pin={pin} />
       <div className="flex flex-wrap items-center gap-2">
         <ParticipantsControl players={view.players} readiness={view.readiness} onBan={onBan} />
+        {/* Late joins stay open during the game: the lock set in the lobby follows here. */}
+        <LockButton locked={view.joinLocked} onToggle={onLock} />
         <ModeToggle mode={view.mode} onChange={onMode} />
         {/* Pause utile dès qu'il y a quelque chose à figer : le chrono d'une question
             en cours (ANSWERING, tous modes) ou l'enchaînement auto (mode auto). */}
@@ -1024,6 +1070,32 @@ function PauseButton({
       {paused ? <Play className="size-4" /> : <Pause className="size-4" />}
       {paused ? t('control.resume') : t('control.pause')}
     </Button>
+  );
+}
+
+/** Closes the game to new participants, or reopens it — same switch as the lobby's. */
+function LockButton({
+  locked,
+  onToggle,
+}: {
+  locked: boolean;
+  onToggle: (locked: boolean) => void;
+}) {
+  const { t } = useTranslation('live');
+  return (
+    <Tooltip label={locked ? t('control.unlockTooltip') : t('control.lockTooltip')}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        aria-pressed={locked}
+        aria-label={t('control.lockLabel')}
+        onClick={() => onToggle(!locked)}
+      >
+        {locked ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
+        {locked ? t('control.locked') : t('control.lock')}
+      </Button>
+    </Tooltip>
   );
 }
 

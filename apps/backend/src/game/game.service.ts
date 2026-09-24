@@ -6,15 +6,17 @@ import {
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   AUDIO_TARGETS,
   type AudioTarget,
   GameState,
+  type ParticipantAccess,
   type PlayerPresence,
 } from '@quiz-dock/contracts';
 import { QuizStatus } from '@prisma/client';
-import { isOidcMode } from '../auth/auth-mode';
+import { allowsAnonymousParticipants, isOidcMode } from '../auth/auth-mode';
 import { MediaLibraryService } from '../media/media-library.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
@@ -87,8 +89,14 @@ export class GameService {
       fullCapture?: boolean;
       personalTracking?: boolean;
       pickOwnName?: boolean;
+      participantAccess?: ParticipantAccess;
     },
   ): Promise<CreateSessionResult> {
+    // Open access is the admin's to allow (#57): a client asking for it anyway is refused.
+    const open = dto.participantAccess === 'open';
+    if (open && !allowsAnonymousParticipants()) {
+      throw new ForbiddenException('session.open_access_forbidden');
+    }
     const quiz = await this.prisma.quiz.findFirst({
       where: { id: dto.quizId, ownerId: hostUserId },
       include: QUIZ_SNAPSHOT_INCLUDE,
@@ -120,8 +128,12 @@ export class GameService {
       fullCapture: dto.fullCapture === true,
       // Suivi individuel : par défaut oui (RG-16). Nom choisi : par défaut oui, sauf
       // sous OIDC où le nom vient du compte tant que l'hôte n'ouvre pas le choix.
-      personalTracking: dto.personalTracking !== false,
-      pickOwnName: dto.pickOwnName ?? !isOidcMode(),
+      // Open access: guests only, so nothing personal to track and no account to
+      // take a name from.
+      personalTracking: !open && dto.personalTracking !== false,
+      pickOwnName: open || (dto.pickOwnName ?? !isOidcMode()),
+      participantAccess: open ? 'open' : 'account',
+      joinLocked: false,
       title: quiz.title,
       language: quiz.language,
       createdAt: Date.now(),
@@ -156,7 +168,6 @@ export class GameService {
     rawAvatar?: string,
     wantedPresence?: PlayerPresence,
   ): Promise<JoinSessionResult> {
-    const userId = user?.id ?? null;
     const meta = await this.getMeta(pin);
     if (!meta) {
       throw new NotFoundException('session.not_found');
@@ -166,10 +177,23 @@ export class GameService {
     if (meta.state === GameState.Ended) {
       throw new BadRequestException('session.ended');
     }
+    // Under `AUTH_MODE=oidc` the account opens the application and the PIN one
+    // game (RG-15) — unless the host opened this one to all (#57). There everyone
+    // is a guest, signed in or not: no account attached, no name taken from one.
+    const open = meta.participantAccess === 'open';
+    if (isOidcMode() && !open && !user) {
+      throw new UnauthorizedException('auth.required');
+    }
+    const account = open ? null : user;
+    const userId = account?.id ?? null;
+    // Closed by the host: those already in come back through `player:reconnect`.
+    if (meta.joinLocked) {
+      throw new ForbiddenException('session.locked');
+    }
 
     // Nom affiché (RG-15) : celui du compte tant que l'hôte n'ouvre pas le choix,
     // celui saisi sinon (et toujours, faute de compte).
-    const fromAccount = !meta.pickOwnName && user ? accountNickname(user.displayName) : null;
+    const fromAccount = !meta.pickOwnName && account ? accountNickname(account.displayName) : null;
     const wanted = fromAccount ?? sanitizeNickname(rawNickname);
     const normalized = normalizeAnswer(wanted);
     // Exclusion (RG-12) : pseudo banni tant que la clé court (durée fixée par l'hôte).
@@ -219,6 +243,16 @@ export class GameService {
     const playerCount = await this.connectedCount(pin);
 
     return { pin, playerId, sessionToken, nickname, avatar, presence, playerCount };
+  }
+
+  /**
+   * What a player is told before joining: whether the quiz plays sound, and
+   * whether an account is needed to get in (#57). Throws like `hasSound`.
+   */
+  async peek(pin: string): Promise<{ hasSound: boolean; participantAccess: ParticipantAccess }> {
+    const hasSound = await this.hasSound(pin);
+    const meta = await this.getMeta(pin);
+    return { hasSound, participantAccess: meta?.participantAccess ?? 'account' };
   }
 
   /**
@@ -510,6 +544,8 @@ function serializeMeta(meta: GameMeta): Record<string, string> {
     fullCapture: meta.fullCapture ? '1' : '0',
     personalTracking: meta.personalTracking ? '1' : '0',
     pickOwnName: meta.pickOwnName ? '1' : '0',
+    participantAccess: meta.participantAccess,
+    joinLocked: meta.joinLocked ? '1' : '0',
     audioTarget: meta.audioTarget ?? '',
     mediaWaitUntil: String(meta.mediaWaitUntil ?? 0),
     mediaLeadMs: meta.mediaLeadMs == null ? '' : String(meta.mediaLeadMs),
@@ -544,6 +580,9 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     // une nouvelle (sous OIDC, le nom vient du compte).
     personalTracking: raw.personalTracking !== '0',
     pickOwnName: raw.pickOwnName === undefined ? !isOidcMode() : raw.pickOwnName === '1',
+    // Games in flight before #57 required accounts, as every game did.
+    participantAccess: raw.participantAccess === 'open' ? 'open' : 'account',
+    joinLocked: raw.joinLocked === '1',
     audioTarget: (AUDIO_TARGETS as readonly string[]).includes(raw.audioTarget ?? '')
       ? (raw.audioTarget as AudioTarget)
       : '',

@@ -12,6 +12,7 @@
 export * from './media-sniff';
 export * from './preferences';
 export * from './question-media';
+import type { ParticipantAccess } from './preferences';
 import type { AudioTarget, LiveQuestionMedia } from './question-media';
 
 export const CONTRACTS_VERSION = '0.3.0' as const;
@@ -106,6 +107,8 @@ export const ClientEvents = {
   HostBan: 'host:ban',
   /** (Dé)active la capture intégrale depuis le lobby, avant le démarrage (RG-13). */
   HostCapture: 'host:capture',
+  /** Closes (or reopens) the game to new participants; those already in stay. */
+  HostLock: 'host:lock',
   /** Bascule manuel/auto en cours de partie (le présentateur reprend la main). */
   HostMode: 'host:mode',
   /** Suspend/reprend l'auto-progression (et gèle le chrono en ANSWERING). */
@@ -453,6 +456,13 @@ export interface ClientToServerEvents {
        * est `false` (le nom vient du compte). Sans compte, ils le saisissent toujours.
        */
       pickOwnName?: boolean;
+      /**
+       * How participants get in (#57), fixed for the whole game: `account` (the
+       * default) or `open`, the PIN and a nickname alone — offered only when the
+       * server allows it (`ALLOW_ANONYMOUS_PARTICIPANTS`). Open access means no
+       * personal tracking and a chosen name.
+       */
+      participantAccess?: ParticipantAccess;
     },
     ack: (res: { pin: string }) => void,
   ) => void;
@@ -480,6 +490,11 @@ export interface ClientToServerEvents {
    */
   'host:capture': (p: { pin: string; fullCapture: boolean }) => void;
   /**
+   * Closes the game to new participants (`locked:true`), or reopens it. Those
+   * already in, reconnections included, are not affected. Until the game ends.
+   */
+  'host:lock': (p: { pin: string; locked: boolean }) => void;
+  /**
    * Règle les deux autres options de session depuis le lobby, **avant** le
    * démarrage (RG-15, RG-16) : suivi individuel et nom affiché choisi. Refusé une
    * fois la partie lancée ; les joueurs connectés voient l'avis changer (`notice`).
@@ -501,8 +516,14 @@ export interface ClientToServerEvents {
   'host:adjust-time': (p: { pin: string; deltaS: number }) => void;
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
   'spectator:join': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
-  /** Before joining: whether the quiz plays sound, so the join form offers the presence choice. */
-  'player:peek': (p: { pin: string }, ack: (res: { hasSound: boolean }) => void) => void;
+  /**
+   * Before joining: whether the quiz plays sound, so the join form offers the
+   * presence choice, and whether an account is needed to get in.
+   */
+  'player:peek': (
+    p: { pin: string },
+    ack: (res: { hasSound: boolean; participantAccess: ParticipantAccess }) => void,
+  ) => void;
   'player:join': (
     p: {
       pin: string;
@@ -539,6 +560,17 @@ export interface ClientToServerEvents {
   ping: (p: { t0: number }) => void;
 }
 
+/** What a game records and who may get in: the notice every screen of the room receives. */
+export interface SessionNotice {
+  fullCapture: boolean;
+  personalTracking: boolean;
+  pickOwnName: boolean;
+  /** Fixed at creation (#57). */
+  participantAccess: ParticipantAccess;
+  /** Closed to new participants by the host. */
+  joinLocked: boolean;
+}
+
 /** Map des events serveur → client. */
 export interface ServerToClientEvents {
   'game:created': (p: { pin: string }) => void;
@@ -546,7 +578,7 @@ export interface ServerToClientEvents {
    * Avis de transparence (§2.10, RG-16) : ce que la session enregistre. Les deux
    * drapeaux décident du texte affiché aux participants.
    */
-  notice: (p: { fullCapture: boolean; personalTracking: boolean; pickOwnName: boolean }) => void;
+  notice: (p: SessionNotice) => void;
   'player:joined': (p: {
     playerId: string;
     nickname: string;
