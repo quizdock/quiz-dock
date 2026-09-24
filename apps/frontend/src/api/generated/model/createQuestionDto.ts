@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CreateQuestionDtoAcceptedAnswersItem } from './createQuestionDtoAcceptedAnswersItem';
+import type { CreateQuestionDtoAudioTarget } from './createQuestionDtoAudioTarget';
 import type { CreateQuestionDtoBackgroundGradient } from './createQuestionDtoBackgroundGradient';
 import type { CreateQuestionDtoMedia } from './createQuestionDtoMedia';
 import type { CreateQuestionDtoOptionsItem } from './createQuestionDtoOptionsItem';
@@ -13,6 +14,7 @@ import type { CreateQuestionDtoPointsMode } from './createQuestionDtoPointsMode'
 import type { CreateQuestionDtoScoring } from './createQuestionDtoScoring';
 import type { CreateQuestionDtoTextTone } from './createQuestionDtoTextTone';
 import type { CreateQuestionDtoType } from './createQuestionDtoType';
+import type { CreateQuestionDtoWaveformSize } from './createQuestionDtoWaveformSize';
 
 export interface CreateQuestionDto {
   type: CreateQuestionDtoType;
@@ -48,6 +50,9 @@ export interface CreateQuestionDto {
      * @nullable
      */
   revealDelayS?: number | null;
+  /** @nullable */
+  audioTarget?: CreateQuestionDtoAudioTarget;
+  waveformSize?: CreateQuestionDtoWaveformSize;
   pointsMode?: CreateQuestionDtoPointsMode;
   scoring?: CreateQuestionDtoScoring;
   numericValue?: number;

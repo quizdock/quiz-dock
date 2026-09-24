@@ -22,6 +22,20 @@
     "trackingHint": "ⓘ 開啟時，成績會記錄在每位參與者的帳號下（封存排行榜、歷史）。關閉時，不保存任何個人成績，只保留團體的整體結果。進行中的會話不受影響。",
     "ownNameLabel": "允許參與者自選顯示名稱",
     "ownNameHint": "ⓘ 關閉時，顯示名稱來自其帳號。無論哪種情況，成績都仍與帳號關聯——自選名稱並非匿名。",
+    "audioTargetLabel": "本次會話中誰聽得到聲音",
+    "audioTargetHint": "在本次會話中取代測驗的設定。有自己設定的題目維持不變。",
+    "preloadNotice": "為避免等待，參與者的裝置會在下一題出現前幾秒收到其圖片、聲音或影片——但絕不包含題目文字與選項。好奇的參與者可能會提前開啟它們。",
+    "readiness": "下一題媒體已載入：{{ready}} / {{total}} 台裝置",
+    "readinessNoProjection": "投影未開啟",
+    "readinessProjectionReady": "投影已就緒",
+    "readinessProjectionLoading": "投影載入中",
+    "mediaReady": "媒體已載入",
+    "mediaLoading": "媒體載入中",
+    "audioTarget": {
+      "projection": "僅投影",
+      "projection_remote": "投影與遠端參與者",
+      "everyone": "所有裝置"
+    },
     "stopSession": "停止會話",
     "startTooltip": "請等待大多數玩家連線後再開始",
     "start": "開始會話",
@@ -49,6 +63,7 @@
     "modeAutoTooltip": "自動模式：每次出結果後自動切換到下一題",
     "modeAuto": "自動",
     "noParticipants": "沒有玩家連線。",
+    "remote": "遠端參與",
     "banTooltip": "移除 {{nickname}}",
     "banAria": "停權 {{nickname}}",
     "banConfirmTitle": "停權 {{nickname}}？",
@@ -109,7 +124,10 @@
       "https": "本頁透過 HTTPS 提供：http:// 的本機位址會在手機上顯示警告——帶憑證的公開位址才是正解。"
     },
     "backToLive": "回到目前",
-    "restartMedia": "從頭重新播放媒體"
+    "restartMedia": "從頭重新播放媒體",
+    "mediaLoadingTitle": "正在載入本題的媒體",
+    "mediaLate": "仍在載入：{{names}}",
+    "startAnyway": "仍然開始"
   },
   "screen": {
     "sessionUnavailable": "會話不可用。",
@@ -127,7 +145,10 @@
     "joinAt": "加入網址",
     "participants_one": "名玩家",
     "participants_other": "名玩家",
-    "review": "回顧"
+    "review": "回顧",
+    "readiness": "{{ready}} / {{total}} 已就緒",
+    "mediaLoading": "題目即將出現…",
+    "readinessLeft": "還剩 {{seconds}} 秒"
   },
   "player": {
     "joinFailed": "無法加入會話。",
@@ -135,6 +156,11 @@
     "randomAvatar": "隨機頭像",
     "nickname": "匿稱",
     "nicknamePlaceholder": "你的匿稱",
+    "presenceLegend": "你在哪裡參與？",
+    "presenceRoom": "在現場",
+    "presenceRoomHint": "我看得到大螢幕",
+    "presenceRemote": "遠端",
+    "presenceRemoteHint": "題目及其影片與聲音會傳到這台裝置",
     "connecting": "連線中…",
     "letsGo": "開始吧！",
     "connectingToSession": "正在連線會話…",
@@ -173,13 +199,16 @@
     "moveDown": "下移",
     "unsupportedType": "不支援的題目類型。",
     "leave": "離開",
+    "mute": "關閉聲音",
+    "unmute": "開啟聲音",
     "leaveConfirmTitle": "離開本場會話？",
     "leaveConfirmDescription": "你將失去你的位置和分數。可使用 PIN 碼再次加入會話。",
     "joinAnother": "加入另一場遊戲",
     "yourClosest": "第 {{rank}} 接近——±{{distance}}",
     "yourCredit": "{{percent}} % 的分數",
     "dragToReorder": "拖曳以重新排序",
-    "pollThanks": "感謝你的意見！"
+    "pollThanks": "感謝你的意見！",
+    "questionComing": "題目即將出現…"
   },
   "reveal": {
     "explanation": "解析",

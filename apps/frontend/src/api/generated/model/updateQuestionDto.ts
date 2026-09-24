@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UpdateQuestionDtoAcceptedAnswersItem } from './updateQuestionDtoAcceptedAnswersItem';
+import type { UpdateQuestionDtoAudioTarget } from './updateQuestionDtoAudioTarget';
 import type { UpdateQuestionDtoBackgroundGradient } from './updateQuestionDtoBackgroundGradient';
 import type { UpdateQuestionDtoMedia } from './updateQuestionDtoMedia';
 import type { UpdateQuestionDtoOptionsItem } from './updateQuestionDtoOptionsItem';
@@ -13,6 +14,7 @@ import type { UpdateQuestionDtoPointsMode } from './updateQuestionDtoPointsMode'
 import type { UpdateQuestionDtoScoring } from './updateQuestionDtoScoring';
 import type { UpdateQuestionDtoTextTone } from './updateQuestionDtoTextTone';
 import type { UpdateQuestionDtoType } from './updateQuestionDtoType';
+import type { UpdateQuestionDtoWaveformSize } from './updateQuestionDtoWaveformSize';
 
 export interface UpdateQuestionDto {
   type: UpdateQuestionDtoType;
@@ -48,6 +50,9 @@ export interface UpdateQuestionDto {
      * @nullable
      */
   revealDelayS?: number | null;
+  /** @nullable */
+  audioTarget?: UpdateQuestionDtoAudioTarget;
+  waveformSize?: UpdateQuestionDtoWaveformSize;
   pointsMode?: UpdateQuestionDtoPointsMode;
   scoring?: UpdateQuestionDtoScoring;
   numericValue?: number;

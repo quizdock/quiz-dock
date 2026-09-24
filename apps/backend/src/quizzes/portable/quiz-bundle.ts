@@ -1,5 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import {
+  AUDIO_TARGET_DEFAULT,
+  type AudioTarget,
   LOUDNESS_TARGET_LUFS,
   type LoudnessTarget,
   MEDIA_TAIL_DEFAULT_S,
@@ -153,6 +155,8 @@ function questionOut(q: ExportableQuiz['questions'][number], pathFor: PathFor): 
     item.backgroundGradient = q.backgroundGradient as QuestionBundleItem['backgroundGradient'];
   if (q.scoring !== 'standard') item.scoring = q.scoring;
   if (q.revealDelayS !== null) item.revealDelayS = q.revealDelayS;
+  if (q.audioTarget) item.audioTarget = q.audioTarget;
+  if (q.waveformSize && q.waveformSize !== 'M') item.waveformSize = q.waveformSize;
   if (q.numericValue !== null) item.numericValue = Number(q.numericValue);
   if (q.numericTolerance !== null) item.numericTolerance = Number(q.numericTolerance);
   if (q.options.length > 0) {
@@ -221,6 +225,7 @@ export function toBundle(
       feedbackEnabled: quiz.feedbackEnabled,
       mediaTailS: quiz.mediaTailS,
       loudnessTargetLufs: quiz.loudnessTargetLufs as LoudnessTarget,
+      audioTarget: quiz.audioTarget,
       cover: quiz.coverMediaId ? pathFor(quiz.coverMediaId) : null,
     },
     media: Object.fromEntries(
@@ -260,6 +265,7 @@ export interface ImportedQuiz {
   feedbackEnabled: boolean;
   mediaTailS: number;
   loudnessTargetLufs: LoudnessTarget;
+  audioTarget: AudioTarget;
   coverMediaId: string | null;
   /** Store fields, defaulted when the bundle predates them (`docs/quiz-bundle.md`). */
   slug: string;
@@ -405,6 +411,8 @@ export function fromBundle(
           textOutline: it.textOutline,
           timeLimitS: it.timeLimitS,
           revealDelayS: it.revealDelayS,
+          audioTarget: it.audioTarget ?? null,
+          waveformSize: it.waveformSize,
           pointsMode: it.pointsMode,
           scoring: it.scoring,
           numericValue: it.numericValue,
@@ -438,6 +446,7 @@ export function fromBundle(
     feedbackEnabled: quiz.feedbackEnabled ?? true,
     mediaTailS: quiz.mediaTailS ?? MEDIA_TAIL_DEFAULT_S,
     loudnessTargetLufs: quiz.loudnessTargetLufs ?? LOUDNESS_TARGET_LUFS,
+    audioTarget: quiz.audioTarget ?? AUDIO_TARGET_DEFAULT,
     coverMediaId: quiz.cover ? idFor(quiz.cover) : null,
     slug: quiz.slug ?? slugOf({ slug: null, title: quiz.title }),
     namespace: quiz.namespace ?? null,

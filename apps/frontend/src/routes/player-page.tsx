@@ -1,5 +1,6 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { Check, LogIn, LogOut, Shuffle } from 'lucide-react';
+import { type PlayerPresence, playsSound } from '@quiz-dock/contracts';
+import { Check, LogIn, LogOut, Shuffle, Users, Volume2, VolumeX, Wifi } from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ import {
   loadAvatarSeed,
   loadNickname,
   loadPlayerSession,
+  peekSession,
   saveAvatarSeed,
 } from '../game/game-client';
 import { ResultMark } from '../game/result-mark';
@@ -31,6 +33,10 @@ import {
 } from '../game/live-components';
 import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
+import { unlockAudio } from '../game/media/audio-unlock';
+import { claimMediaElements, preloadMedia, waitedFor } from '../game/media/media-pool';
+import { FollowedWaveform, QuestionMediaStage } from '../game/media/question-media-stage';
+import { followed } from '../game/media/followed';
 import { RatingPanel } from '../game/rating-panel';
 import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { type GameView, useGameSession } from '../game/use-game-session';
@@ -63,6 +69,14 @@ export function PlayerPage() {
   const { view, socket, markJoined } = useGameSession(pin, 'player');
   const [nickname, setNickname] = useState(() => loadPlayerSession()?.nickname ?? loadNickname());
   const [joining, setJoining] = useState(false);
+  // Asked only when the quiz plays sound: a remote player then gets it on their device.
+  const [hasSound, setHasSound] = useState(false);
+  const [wantedPresence, setPresence] = useState<PlayerPresence>('room');
+  const [muted, setMuted] = useState(loadMuted);
+  const toggleMuted = () => {
+    setMuted(!muted);
+    saveMuted(!muted);
+  };
   // Leaving on purpose: the seat and the score are gone, so it is confirmed first.
   const [confirmLeave, setConfirmLeave] = useState(false);
   const navigate = useNavigate();
@@ -123,12 +137,51 @@ export function PlayerPage() {
     setOrder(question?.options?.map((o) => o.id) ?? []);
   }, [question]);
 
+  // What the next question will show or play here, fetched while the room waits;
+  // the host's console hears when this device is ready to play it.
+  useEffect(() => {
+    const next = view.preload;
+    if (!next) return;
+    let cancelled = false;
+    void preloadMedia(next.media, next.images).then(() => {
+      if (!cancelled && waitedFor(next.media)) {
+        socket?.emit('media:ready', { pin, questionIndex: next.questionIndex });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [view.preload, socket, pin]);
+
+  const needsJoin = view.status === 'no-session';
+  useEffect(() => {
+    if (!needsJoin) return;
+    let cancelled = false;
+    // No answer (game over, network): the form stays as it was, the join says why.
+    peekSession(pin)
+      .then((res) => !cancelled && setHasSound(res.hasSound))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [needsJoin, pin]);
+
   const onJoin = async (e: FormEvent) => {
     e.preventDefault();
+    // Inside the click: the only moment a phone lets its media start with sound later.
+    if (hasSound) {
+      claimMediaElements();
+      void unlockAudio();
+    }
     setError(null);
     setJoining(true);
     try {
-      const joined = await joinSession(pin, nickname.trim(), avatarSeed || undefined);
+      const joined = await joinSession(
+        pin,
+        nickname.trim(),
+        avatarSeed || undefined,
+        hasSound ? wantedPresence : undefined,
+      );
       // Le serveur a pu retenir un autre nom (compte, homonyme) : l'écran suit.
       if (joined.nickname && joined.nickname !== nickname.trim()) setNickname(joined.nickname);
       markJoined();
@@ -230,6 +283,14 @@ export function PlayerPage() {
   // The slot exists once the layout is in the DOM (after the first commit), hence the effect.
   const [topbarSlot, setTopbarSlot] = useState<HTMLElement | null>(null);
   useEffect(() => setTopbarSlot(document.getElementById('participant-topbar')), []);
+  // Where this device follows from, and whether the current question sounds here.
+  const presence = view.players.find((p) => p.playerId === myId)?.presence ?? 'room';
+  const device = presence === 'remote' ? 'remote' : 'room';
+  const hears = !!question?.audioTarget && playsSound(question.audioTarget, device);
+  // A remote participant gets the whole question (a muted video when the sound is not
+  // theirs); in the room, the phone shows the image unless the sound is meant for it too.
+  const playsHere = presence === 'remote' || hears;
+
   const participantBar =
     topbarSlot && view.status === 'ready' && view.state !== 'ENDED' && !view.kicked
       ? createPortal(
@@ -244,6 +305,19 @@ export function PlayerPage() {
               <LogOut className="size-4" />
               {t('player.leave')}
             </Button>
+            {hears ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                aria-pressed={muted}
+                aria-label={muted ? t('player.unmute') : t('player.mute')}
+                onClick={() => toggleMuted()}
+              >
+                {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </Button>
+            ) : null}
             <span className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline">
               {nickname}
             </span>
@@ -321,6 +395,7 @@ export function PlayerPage() {
                 required
               />
             </Label>
+            {hasSound ? <PresenceChoice value={wantedPresence} onChange={setPresence} /> : null}
             {error ? <p className="text-destructive text-sm">{error}</p> : null}
             <Button type="submit" disabled={joining || !nickname.trim()}>
               <LogIn className="size-4" />
@@ -366,6 +441,9 @@ export function PlayerPage() {
   }
   if (view.state === 'HOST_DISCONNECTED') {
     return wrap(<p className="text-xl font-semibold">{t('player.hostDisconnected')}</p>);
+  }
+  if (view.state === 'MEDIA_LOADING') {
+    return wrap(<p className="text-xl font-semibold">{t('player.questionComing')}</p>);
   }
   // Fin de partie (podium ou terminée) : on propose de noter le quiz. Les deux états
   // partagent la même structure pour que le panneau d'avis (et le commentaire en
@@ -515,7 +593,35 @@ export function PlayerPage() {
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[1em]">
           {/* #41: capped at ~a third of the viewport so the answer zone below
               stays where the thumb expects it, whatever the image's ratio. */}
-          <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+          {playsHere ? (
+            <QuestionMediaStage
+              key={question.questionIndex}
+              media={question.media}
+              mode={view.paused ? 'pause' : 'play'}
+              audible={hears}
+              muted={muted}
+              follow={hears ? undefined : followed(view, question.questionIndex)}
+              catchUp={followed(view, question.questionIndex)}
+              boxClassName="w-full max-h-[35dvh]"
+              resumeKey={`${pin}:${question.questionIndex}`}
+              restartSignal={
+                view.mediaControl?.questionIndex === question.questionIndex
+                  ? view.mediaControl.seq
+                  : 0
+              }
+            />
+          ) : (
+            <>
+              <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+              {/* In the room: the sound plays on the projection, its playhead moves here too. */}
+              {question.media?.audio ? (
+                <FollowedWaveform
+                  audio={question.media.audio}
+                  follow={followed(view, question.questionIndex)}
+                />
+              ) : null}
+            </>
+          )}
           <Markdown
             role="heading"
             aria-level={1}
@@ -576,4 +682,74 @@ export function PlayerPage() {
       </CardContent>
     </Card>,
   );
+}
+
+/** "In the room" or "remote": whether this device will get the question's video and sound. */
+function PresenceChoice({
+  value,
+  onChange,
+}: {
+  value: PlayerPresence;
+  onChange: (presence: PlayerPresence) => void;
+}) {
+  const { t } = useTranslation('live');
+  const choices = [
+    {
+      id: 'room',
+      icon: Users,
+      label: t('player.presenceRoom'),
+      hint: t('player.presenceRoomHint'),
+    },
+    {
+      id: 'remote',
+      icon: Wifi,
+      label: t('player.presenceRemote'),
+      hint: t('player.presenceRemoteHint'),
+    },
+  ] as const;
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="mb-1 text-sm font-medium">{t('player.presenceLegend')}</legend>
+      {choices.map(({ id, icon: Icon, label, hint }) => (
+        <label
+          key={id}
+          className={cn(
+            'flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors',
+            value === id ? 'border-primary bg-primary/5' : 'hover:bg-accent',
+          )}
+        >
+          <input
+            type="radio"
+            name="presence"
+            value={id}
+            checked={value === id}
+            onChange={() => onChange(id)}
+            className="accent-primary mt-1"
+          />
+          <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+          <span className="flex flex-col">
+            <span className="text-sm font-medium">{label}</span>
+            <span className="text-muted-foreground text-xs">{hint}</span>
+          </span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+/** The participant's own mute, kept for the tab's life (a reload keeps it). */
+const MUTED_KEY = 'live.muted';
+function loadMuted(): boolean {
+  try {
+    return sessionStorage.getItem(MUTED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function saveMuted(muted: boolean): void {
+  try {
+    sessionStorage.setItem(MUTED_KEY, muted ? '1' : '0');
+  } catch {
+    /* storage unavailable: the choice lasts until the page closes */
+  }
 }

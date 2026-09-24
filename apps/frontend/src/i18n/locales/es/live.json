@@ -22,6 +22,20 @@
     "trackingHint": "ⓘ Activado, los resultados se registran en la cuenta de cada participante (clasificación archivada, historial). Desactivado, no se conserva ningún resultado individual: solo los resultados globales del grupo. La sesión en directo no cambia.",
     "ownNameLabel": "Permitir que los participantes elijan su nombre visible",
     "ownNameHint": "ⓘ Desactivado, el nombre visible procede de su cuenta. En ambos casos sus resultados siguen vinculados a ella: un nombre elegido no es anonimato.",
+    "audioTargetLabel": "Quién oye el sonido en esta sesión",
+    "audioTargetHint": "Sustituye el ajuste del quiz para esta sesión. Las preguntas con su propio ajuste lo conservan.",
+    "preloadNotice": "Para que nada tenga que esperar, los dispositivos de los participantes reciben la imagen, el sonido o el vídeo de la siguiente pregunta unos segundos antes de que aparezca, nunca su texto ni sus respuestas. Un participante curioso podría abrirlos antes.",
+    "readiness": "Siguientes medios cargados: {{ready}} / {{total}} dispositivos",
+    "readinessNoProjection": "proyección no abierta",
+    "readinessProjectionReady": "proyección lista",
+    "readinessProjectionLoading": "proyección cargando",
+    "mediaReady": "Medios cargados",
+    "mediaLoading": "Cargando los medios",
+    "audioTarget": {
+      "projection": "Solo la proyección",
+      "projection_remote": "Proyección y participantes a distancia",
+      "everyone": "Todos los dispositivos"
+    },
     "stopSession": "Detener la sesión",
     "startTooltip": "Espera a que se conecten la mayoría de los jugadores antes de empezar",
     "start": "Iniciar la sesión",
@@ -49,6 +63,7 @@
     "modeAutoTooltip": "Modo automático: pasa automáticamente a la siguiente pregunta tras cada resultado",
     "modeAuto": "Auto",
     "noParticipants": "No hay jugadores conectados.",
+    "remote": "Participa a distancia",
     "banTooltip": "Expulsar a {{nickname}}",
     "banAria": "Banear a {{nickname}}",
     "banConfirmTitle": "¿Banear a {{nickname}}?",
@@ -109,7 +124,10 @@
       "https": "Esta página se sirve por HTTPS: una dirección local en http:// mostrará un aviso en los teléfonos — una dirección pública con certificado es la vía limpia."
     },
     "backToLive": "Volver al directo",
-    "restartMedia": "Reiniciar el medio desde el principio"
+    "restartMedia": "Reiniciar el medio desde el principio",
+    "mediaLoadingTitle": "Cargando los medios de la pregunta",
+    "mediaLate": "Aún cargando: {{names}}",
+    "startAnyway": "Empezar de todos modos"
   },
   "screen": {
     "sessionUnavailable": "Sesión no disponible.",
@@ -127,7 +145,10 @@
     "joinAt": "Únete en",
     "participants_one": "jugador",
     "participants_other": "jugadores",
-    "review": "Mirando atrás"
+    "review": "Mirando atrás",
+    "readiness": "{{ready}} / {{total}} listos",
+    "mediaLoading": "La pregunta está en camino…",
+    "readinessLeft": "quedan {{seconds}} s"
   },
   "player": {
     "joinFailed": "No se pudo unir a la sesión.",
@@ -135,6 +156,11 @@
     "randomAvatar": "Avatar aleatorio",
     "nickname": "Apodo",
     "nicknamePlaceholder": "Tu apodo",
+    "presenceLegend": "¿Desde dónde juegas?",
+    "presenceRoom": "En la sala",
+    "presenceRoomHint": "Veo la pantalla grande",
+    "presenceRemote": "A distancia",
+    "presenceRemoteHint": "La pregunta, su vídeo y su sonido llegan a este dispositivo",
     "connecting": "Conectando…",
     "letsGo": "¡Vamos!",
     "connectingToSession": "Conectando a la sesión…",
@@ -173,13 +199,16 @@
     "moveDown": "Bajar",
     "unsupportedType": "Tipo de pregunta no compatible.",
     "leave": "Salir",
+    "mute": "Silenciar",
+    "unmute": "Activar el sonido",
     "leaveConfirmTitle": "¿Salir de la sesión?",
     "leaveConfirmDescription": "Perderás tu sitio y tu puntuación. Para volver tendrás que unirte de nuevo con el PIN.",
     "joinAnother": "Unirse a otra partida",
     "yourClosest": "{{rank}}.º más cercano — ±{{distance}}",
     "yourCredit": "{{percent}} % de los puntos",
     "dragToReorder": "Arrastra para reordenar",
-    "pollThanks": "¡Gracias por tu opinión!"
+    "pollThanks": "¡Gracias por tu opinión!",
+    "questionComing": "La pregunta está en camino…"
   },
   "reveal": {
     "explanation": "Explicación",

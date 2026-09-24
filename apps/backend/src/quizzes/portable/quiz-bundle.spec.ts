@@ -28,6 +28,7 @@ function makeQuiz(): ExportableQuiz {
     language: 'fr',
     questionCount: 2,
     feedbackEnabled: false,
+    audioTarget: 'projection',
     slug: 'geo-and-co',
     namespace: null,
     revision: 4,
@@ -53,6 +54,8 @@ function makeQuiz(): ExportableQuiz {
         textOutline: true,
         timeLimitS: 30,
         revealDelayS: 8,
+        audioTarget: 'everyone',
+        waveformSize: 'S',
         pointsMode: 'double',
         scoring: 'standard',
         numericValue: null,
@@ -99,6 +102,7 @@ function makeQuiz(): ExportableQuiz {
         textOutline: false,
         timeLimitS: 20,
         revealDelayS: null,
+        audioTarget: null,
         pointsMode: 'standard',
         scoring: 'standard',
         numericValue: new Prisma.Decimal('3.14'),
@@ -197,6 +201,7 @@ describe('quiz bundle', () => {
       domain: 'geography',
       tags: ['capitals', 'europe'],
       license: 'CC-BY-4.0',
+      audioTarget: 'projection',
     });
     expect(imported.description).toBe(src.description);
     expect(imported.questions).toHaveLength(2);
@@ -210,6 +215,8 @@ describe('quiz bundle', () => {
       textOutline: true,
       timeLimitS: 30,
       revealDelayS: 8,
+      audioTarget: 'everyone',
+      waveformSize: 'S',
       pointsMode: 'double',
     });
     expect(q1.options.map((o) => [o.text, o.mediaId, o.isCorrect])).toEqual([
@@ -221,6 +228,8 @@ describe('quiz bundle', () => {
       numericValue: 3.14,
       numericTolerance: 0.01,
       backgroundMediaId: BG,
+      audioTarget: null,
+      waveformSize: 'M', // absent from the bundle: the default
     });
     expect(imported.slides.map((s) => [s.beforeQuestion, s.orderIndex])).toEqual([
       [0, 0],
@@ -257,7 +266,16 @@ describe('quiz bundle', () => {
     const bundle: Record<string, unknown> = { ...toBundle(makeQuiz(), pathFor) };
     const old: Record<string, unknown> = { ...(bundle.quiz as object) };
     delete bundle.version;
-    for (const k of ['slug', 'namespace', 'revision', 'updatedAt', 'domain', 'tags', 'license']) {
+    for (const k of [
+      'slug',
+      'namespace',
+      'revision',
+      'updatedAt',
+      'domain',
+      'tags',
+      'license',
+      'audioTarget',
+    ]) {
       delete old[k];
     }
     const rest = { ...bundle, quiz: old };
@@ -271,6 +289,7 @@ describe('quiz bundle', () => {
       domain: null,
       tags: [],
       license: null,
+      audioTarget: 'projection_remote', // the default
     });
     // But never a bundle from a schema newer than this build.
     expect(quizBundleSchema.safeParse({ ...rest, version: 4 }).success).toBe(false);

@@ -1670,6 +1670,14 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
+            ]
+          },
           "questionCount": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -1700,6 +1708,7 @@
           "feedbackEnabled",
           "mediaTailS",
           "loudnessTargetLufs",
+          "audioTarget",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -1752,6 +1761,14 @@
                   -23
                 ]
               }
+            ]
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
             ]
           },
           "coverMediaId": {
@@ -1807,6 +1824,14 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
+            ]
           },
           "questionCount": {
             "type": "integer",
@@ -2055,6 +2080,24 @@
                   "maximum": 9007199254740991,
                   "nullable": true
                 },
+                "audioTarget": {
+                  "type": "string",
+                  "enum": [
+                    "projection",
+                    "projection_remote",
+                    "everyone",
+                    null
+                  ],
+                  "nullable": true
+                },
+                "waveformSize": {
+                  "type": "string",
+                  "enum": [
+                    "S",
+                    "M",
+                    "L"
+                  ]
+                },
                 "pointsMode": {
                   "type": "string",
                   "enum": [
@@ -2187,6 +2230,8 @@
                 "textOutline",
                 "timeLimitS",
                 "revealDelayS",
+                "audioTarget",
+                "waveformSize",
                 "pointsMode",
                 "scoring",
                 "numericValue",
@@ -2616,6 +2661,7 @@
           "feedbackEnabled",
           "mediaTailS",
           "loudnessTargetLufs",
+          "audioTarget",
           "questionCount",
           "createdAt",
           "updatedAt",
@@ -3080,6 +3126,14 @@
                   -23
                 ]
               }
+            ]
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
             ]
           },
           "coverMediaId": {
@@ -3688,6 +3742,25 @@
             "maximum": 300,
             "nullable": true
           },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone",
+              null
+            ],
+            "nullable": true
+          },
+          "waveformSize": {
+            "default": "M",
+            "type": "string",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
+          },
           "pointsMode": {
             "default": "standard",
             "type": "string",
@@ -4024,6 +4097,24 @@
             "maximum": 9007199254740991,
             "nullable": true
           },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone",
+              null
+            ],
+            "nullable": true
+          },
+          "waveformSize": {
+            "type": "string",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
+          },
           "pointsMode": {
             "type": "string",
             "enum": [
@@ -4156,6 +4247,8 @@
           "textOutline",
           "timeLimitS",
           "revealDelayS",
+          "audioTarget",
+          "waveformSize",
           "pointsMode",
           "scoring",
           "numericValue",
@@ -4418,6 +4511,25 @@
             "minimum": 1,
             "maximum": 300,
             "nullable": true
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone",
+              null
+            ],
+            "nullable": true
+          },
+          "waveformSize": {
+            "default": "M",
+            "type": "string",
+            "enum": [
+              "S",
+              "M",
+              "L"
+            ]
           },
           "pointsMode": {
             "default": "standard",

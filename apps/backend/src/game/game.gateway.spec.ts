@@ -9,7 +9,8 @@ import { GameService } from './game.service';
 
 /**
  * Test d'INTÉGRATION : vraie connexion socket.io-client → gateway /game.
- * Requiert Postgres + Redis joignables (dev compose / services CI).
+ * Requiert Postgres + Redis joignables (dev compose / services CI) ; la base est
+ * `<db>_test`, créée par le global setup de Jest.
  * Couvre : ping/pong, host:create (PIN + snapshot) et player:join (lobby).
  */
 /** L'appelant d'une lecture de quiz : un hôte ordinaire (RG-14). */
@@ -31,12 +32,15 @@ describe('GameGateway (intégration socket)', () => {
   };
 
   beforeAll(async () => {
-    process.env.DATABASE_URL ??= 'postgresql://live:live@localhost:15432/quizdock?schema=public';
-    process.env.REDIS_URL ??= 'redis://localhost:16379';
+    // Set by the Jest global setup: a test database and Redis database 1, never the dev ones.
+    if (!process.env.DATABASE_URL?.includes('_test')) {
+      throw new Error('DATABASE_URL must point at a test database (see test/jest.global-setup.ts)');
+    }
     process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
     process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
     process.env.GAME_HOST_WINDOW_MS = '1500'; // fenêtre de reconnexion hôte courte (§7.3)
     process.env.GAME_AUTO_ADVANCE_MS = '300'; // enchaînement auto rapide (§8) en test
+    process.env.GAME_MEDIA_WAIT_S = '1'; // a short wait for media, capped fast
     app = await NestFactory.create(AppModule, { logger: false });
     await app.listen(0);
     prisma = app.get(PrismaService);
@@ -90,6 +94,9 @@ describe('GameGateway (intégration socket)', () => {
 
   afterAll(async () => {
     for (const s of sockets) s.disconnect();
+    // The server handles those departures asynchronously (roster, readiness): let it
+    // finish while Redis is still open, or a late read fails the suite after the tests.
+    await new Promise((r) => setTimeout(r, 500));
     if (quizId) await prisma.quiz.delete({ where: { id: quizId } }).catch(() => undefined);
     if (previousSeat) {
       await prisma.hostSeat
@@ -290,7 +297,11 @@ describe('GameGateway (intégration socket)', () => {
     const screen = connect();
     const media = new Promise((resolve) => screen.once('game:media', resolve));
     await screen.emitWithAck('spectator:join', { pin });
-    expect(await media).toEqual({ hasSound: false }); // the seeded quiz is silent
+    expect(await media).toEqual({
+      hasSound: false,
+      hasMedia: false,
+      audioTarget: 'projection_remote',
+    }); // the seeded quiz is silent
     const player = connect();
     let told = false;
     player.on('game:media', () => (told = true));
@@ -318,7 +329,7 @@ describe('GameGateway (intégration socket)', () => {
     host.emit('host:end', { pin });
   }, 15_000);
 
-  it('sends the next question’s media ahead to the projection, never to players', async () => {
+  it('sends each device what it needs of the next question: the sound to the projection and to remote participants, not to phones in the room', async () => {
     const asset = await prisma.mediaAsset.create({
       data: {
         ownerId: hostUserId,
@@ -363,6 +374,11 @@ describe('GameGateway (intégration socket)', () => {
       await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
       let playerPreloads = 0;
       player.on('media:preload', () => playerPreloads++);
+      const remote = connect();
+      await remote.emitWithAck('player:join', { pin, nickname: 'Grace', presence: 'remote' });
+      const remotePreload = new Promise<{ questionIndex: number; media: { audio: unknown } }>(
+        (resolve) => remote.once('media:preload', (p) => resolve(p as never)),
+      );
       const preload = new Promise<{ questionIndex: number; media: { audio: { url: string } } }>(
         (resolve) => screen.once('media:preload', (p) => resolve(p as never)),
       );
@@ -379,13 +395,384 @@ describe('GameGateway (intégration socket)', () => {
       const next = await preload;
       expect(next.questionIndex).toBe(1);
       expect(next.media.audio.url).toBe('/api/v1/media/preload-test');
+      expect(await remotePreload).toMatchObject({
+        questionIndex: 1,
+        media: { audio: { url: '/api/v1/media/preload-test' } },
+        audioTarget: 'projection_remote',
+      });
       await new Promise((r) => setTimeout(r, 100));
-      expect(playerPreloads).toBe(0);
+      expect(playerPreloads).toBe(0); // in the room, nothing of a sound meant for the projection
     } finally {
       await prisma.quiz.delete({ where: { id: twoQuestions.id } });
       await prisma.mediaAsset.delete({ where: { id: asset.id } });
     }
   }, 15_000);
+
+  it('offers remote play only when the quiz has sound, and tells the roster', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/presence-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Presence test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const silent = await host.emitWithAck('host:create', { quizId });
+      const loud = await host.emitWithAck('host:create', { quizId: withSound.id });
+
+      const guest = connect();
+      expect(await guest.emitWithAck('player:peek', { pin: silent.pin })).toEqual({
+        hasSound: false,
+      });
+      expect(await guest.emitWithAck('player:peek', { pin: loud.pin })).toEqual({
+        hasSound: true,
+      });
+
+      // Remote asked for a silent quiz: nothing to play, the player is in the room.
+      const ignored = new Promise<{ presence?: string }>((resolve) =>
+        host.once('player:joined', resolve),
+      );
+      await guest.emitWithAck('player:join', {
+        pin: silent.pin,
+        nickname: 'Ada',
+        presence: 'remote',
+      });
+      expect((await ignored).presence).toBe('room');
+
+      const remote = connect();
+      const joined = new Promise<{ presence?: string }>((resolve) =>
+        host.once('player:joined', resolve),
+      );
+      await remote.emitWithAck('player:join', {
+        pin: loud.pin,
+        nickname: 'Grace',
+        presence: 'remote',
+      });
+      expect((await joined).presence).toBe('remote');
+
+      // A console that attaches again reads it from the roster.
+      const console2 = connect({ localUser: 'Animateur' });
+      const roster = new Promise<{ players: { nickname: string; presence?: string }[] }>(
+        (resolve) => console2.once('game:roster', resolve),
+      );
+      await console2.emitWithAck('host:attach', { pin: loud.pin });
+      expect((await roster).players).toEqual([
+        expect.objectContaining({ nickname: 'Grace', presence: 'remote' }),
+      ]);
+      host.emit('host:end', { pin: silent.pin });
+      host.emit('host:end', { pin: loud.pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
+  it('lets the host pick who hears the sound in the lobby, and no longer once started', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/target-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Audio target test',
+        status: 'ready',
+        questionCount: 1,
+        audioTarget: 'projection',
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: withSound.id });
+      const screen = connect();
+      const attached = new Promise<{ audioTarget: string }>((resolve) =>
+        screen.once('game:media', resolve),
+      );
+      await screen.emitWithAck('spectator:join', { pin });
+      expect((await attached).audioTarget).toBe('projection'); // the quiz's
+
+      const changed = new Promise<{ audioTarget: string }>((resolve) =>
+        screen.once('game:media', resolve),
+      );
+      host.emit('host:options', { pin, audioTarget: 'everyone' });
+      expect((await changed).audioTarget).toBe('everyone');
+
+      // Every device, the room's included, gets the sound meant for every device — from the lobby.
+      const player = connect();
+      const lobbyPreload = new Promise<{ questionIndex: number; media: { audio: unknown } }>(
+        (resolve) => player.once('media:preload', (p) => resolve(p as never)),
+      );
+      await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+      expect(await lobbyPreload).toMatchObject({
+        questionIndex: 0,
+        media: { audio: { url: '/api/v1/media/target-test' } },
+      });
+      const started = new Promise<{ audioTarget?: string }>((resolve) =>
+        player.once('question:start', resolve),
+      );
+      host.emit('host:start', { pin });
+      expect((await started).audioTarget).toBe('everyone');
+
+      const refused = new Promise<{ code: string }>((resolve) => host.once('error', resolve));
+      host.emit('host:options', { pin, audioTarget: 'projection' });
+      expect((await refused).code).toBe('session.options_locked');
+      host.emit('host:end', { pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
+  it('counts who has loaded the first question’s sound in the lobby: the projection and remote participants', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/ready-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Readiness test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    type Readiness = {
+      ready: number;
+      total: number;
+      players: { playerId: string; ready: boolean }[];
+      screens: { ready: number; total: number };
+    };
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: withSound.id });
+      let last: Readiness | null = null;
+      host.on('media:readiness', (p: Readiness) => (last = p));
+      const until = async (check: (r: Readiness) => boolean) => {
+        for (let i = 0; i < 50 && !(last && check(last)); i++) {
+          await new Promise((r) => setTimeout(r, 40));
+        }
+        return last as unknown as Readiness;
+      };
+
+      const screen = connect();
+      await screen.emitWithAck('spectator:join', { pin });
+      const room = connect();
+      await room.emitWithAck('player:join', { pin, nickname: 'Ada' });
+      const remote = connect();
+      const { playerId } = await remote.emitWithAck('player:join', {
+        pin,
+        nickname: 'Grace',
+        presence: 'remote',
+      });
+      // The projection and the remote phone are waited for; the phone in the room is not.
+      let r = await until((x) => x.total === 2);
+      expect(r).toMatchObject({ ready: 0, total: 2, screens: { ready: 0, total: 1 } });
+      expect(r.players).toEqual([{ playerId, ready: false }]);
+
+      screen.emit('media:ready', { pin, questionIndex: 0 });
+      r = await until((x) => x.ready === 1);
+      expect(r.screens).toEqual({ ready: 1, total: 1 });
+      remote.emit('media:ready', { pin, questionIndex: 0 });
+      r = await until((x) => x.ready === 2);
+      expect(r.players).toEqual([{ playerId, ready: true }]);
+
+      // A socket of another game cannot mark this one.
+      const stranger = connect();
+      stranger.emit('media:ready', { pin, questionIndex: 0 });
+      host.emit('host:end', { pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
+  it('relays the projection’s position in the sound to the room, and nobody else’s', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const screen = connect();
+    await screen.emitWithAck('spectator:join', { pin });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+    const heard: unknown[] = [];
+    host.on('media:position', (p) => heard.push(p));
+    const atPlayer = new Promise((resolve) => player.once('media:position', resolve));
+
+    player.emit('media:position', { pin, questionIndex: 0, t: 9, playing: true }); // ignored
+    screen.emit('media:position', { pin, questionIndex: 0, t: 1.5, playing: true });
+    expect(await atPlayer).toEqual({ questionIndex: 0, t: 1.5, playing: true });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(heard).toEqual([{ questionIndex: 0, t: 1.5, playing: true }]);
+    host.emit('host:end', { pin });
+  }, 15_000);
+
+  it('waits for the devices that play the sound before opening the question: until ready, the cap, or the host', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/wait-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 1000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const withSound = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Media wait test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            audioMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    const game = async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: withSound.id });
+      const screen = connect();
+      await screen.emitWithAck('spectator:join', { pin });
+      const states: string[] = [];
+      host.on('game:state', (p: { state: string }) => states.push(p.state));
+      const answering = new Promise<number>((resolve) =>
+        host.on('game:state', (p: { state: string }) => {
+          if (p.state === 'ANSWERING') resolve(Date.now());
+        }),
+      );
+      return { host, pin, screen, states, answering };
+    };
+    try {
+      // Ready before the start: no wait at all.
+      const ready = await game();
+      ready.screen.emit('media:ready', { pin: ready.pin, questionIndex: 0 });
+      await new Promise((r) => setTimeout(r, 150));
+      ready.host.emit('host:start', { pin: ready.pin });
+      await ready.answering;
+      expect(ready.states).not.toContain('MEDIA_LOADING');
+      ready.host.emit('host:end', { pin: ready.pin });
+
+      // Not ready: the room waits, and goes as soon as the projection is.
+      const late = await game();
+      const wait = new Promise<{ questionIndex: number; until: number }>((resolve) =>
+        late.screen.once('media:wait', resolve),
+      );
+      late.host.emit('host:start', { pin: late.pin });
+      expect((await wait).questionIndex).toBe(0);
+      expect(late.states).toContain('MEDIA_LOADING');
+      late.screen.emit('media:ready', { pin: late.pin, questionIndex: 0 });
+      await late.answering;
+      late.host.emit('host:end', { pin: late.pin });
+
+      // Never ready: the host starts anyway…
+      const forced = await game();
+      const forcedWait = new Promise((resolve) => forced.screen.once('media:wait', resolve));
+      forced.host.emit('host:start', { pin: forced.pin });
+      await forcedWait;
+      const asked = Date.now();
+      forced.host.emit('host:next', { pin: forced.pin });
+      expect((await forced.answering) - asked).toBeLessThan(800);
+      forced.host.emit('host:end', { pin: forced.pin });
+
+      // …or the cap does it (1 s here).
+      const capped = await game();
+      const started = Date.now();
+      capped.host.emit('host:start', { pin: capped.pin });
+      expect((await capped.answering) - started).toBeGreaterThanOrEqual(900);
+      capped.host.emit('host:end', { pin: capped.pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: withSound.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 20_000);
 
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });

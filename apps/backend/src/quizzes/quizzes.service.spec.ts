@@ -409,6 +409,7 @@ describe('QuizzesService', () => {
       prisma.quiz.findFirst.mockResolvedValue(
         makeQuiz({
           title: 'Orig',
+          audioTarget: 'projection',
           questions: [
             {
               orderIndex: 0,
@@ -416,6 +417,7 @@ describe('QuizzesService', () => {
               prompt: 'Q',
               mediaId: null,
               timeLimitS: 20,
+              audioTarget: 'everyone',
               pointsMode: 'standard',
               numericValue: null,
               numericTolerance: null,
@@ -444,6 +446,9 @@ describe('QuizzesService', () => {
       expect(data.questionCount).toBe(1);
       expect(data.questions.create).toHaveLength(1);
       expect(data.questions.create[0].options.create).toHaveLength(1);
+      // Who hears the sound travels with the copy.
+      expect(data.audioTarget).toBe('projection');
+      expect(data.questions.create[0].audioTarget).toBe('everyone');
     });
   });
 });

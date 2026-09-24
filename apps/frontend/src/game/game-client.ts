@@ -1,4 +1,8 @@
-import type { ClientToServerEvents, ServerToClientEvents } from '@quiz-dock/contracts';
+import type {
+  ClientToServerEvents,
+  PlayerPresence,
+  ServerToClientEvents,
+} from '@quiz-dock/contracts';
 import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
 import { errorText } from '../api/error-text';
@@ -163,19 +167,26 @@ export async function joinSession(
   pin: string,
   nickname: string,
   avatar?: string,
+  presence?: PlayerPresence,
 ): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
   const s = await ensureGameSocket('guest');
   const res = await emitWithAckOrError<{
     sessionToken: string;
     playerId: string;
     nickname: string;
-  }>(s, 'player:join', { pin, nickname, avatar });
+  }>(s, 'player:join', { pin, nickname, avatar, presence });
   // Le serveur peut avoir retenu un autre nom (nom du compte, homonyme suffixé) :
   // c'est le sien qu'on garde, sinon l'écran du participant contredirait la salle.
   const retained = res.nickname || nickname;
   savePlayerSession({ pin, ...res, nickname: retained }); // reprise après fermeture (§6.1)
   saveNickname(retained);
   return res;
+}
+
+/** Before joining: whether the quiz plays sound (the join form then asks where the player is). */
+export async function peekSession(pin: string): Promise<{ hasSound: boolean }> {
+  const s = await ensureGameSocket('guest');
+  return emitWithAckOrError<{ hasSound: boolean }>(s, 'player:peek', { pin });
 }
 
 /**

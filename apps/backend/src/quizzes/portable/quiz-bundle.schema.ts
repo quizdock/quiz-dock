@@ -1,4 +1,10 @@
-import { audioPeaksSchema, loudnessSchema, peakDbfsSchema } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  WAVEFORM_SIZES,
+  audioPeaksSchema,
+  loudnessSchema,
+  peakDbfsSchema,
+} from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { gradientSchema } from '../../common/background.schema';
 import { QUESTION_TYPES } from '../../questions/dto/question-content.schema';
@@ -94,6 +100,10 @@ export const questionBundleSchema = z.object({
   ...backgroundBundleFields,
   timeLimitS: z.number().int().optional(),
   revealDelayS: z.number().int().nullable().optional(),
+  /** Which devices play its sound (version 3); absent = the quiz's default. */
+  audioTarget: z.enum(AUDIO_TARGETS).optional(),
+  /** How thick its waveform is drawn (version 3); absent = M. */
+  waveformSize: z.enum(WAVEFORM_SIZES).optional(),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).optional(),
   scoring: z.enum(['standard', 'closest', 'partial', 'lenient']).optional(),
   numericValue: z.number().optional(),
@@ -123,6 +133,8 @@ export const quizBundleSchema = z.object({
     mediaTailS: z.number().int().min(0).max(30).optional(),
     /** Playback level, LUFS: -14 loud, -16 balanced, -23 calm (version 3). */
     loudnessTargetLufs: z.union([z.literal(-14), z.literal(-16), z.literal(-23)]).optional(),
+    /** Which devices play the sounds (version 3); absent = projection and remote players. */
+    audioTarget: z.enum(AUDIO_TARGETS).optional(),
     cover: mediaPathSchema.nullable().optional(),
     ...storeBundleFields,
   }),

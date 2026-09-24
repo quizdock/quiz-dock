@@ -4,6 +4,12 @@ export const GAME_TTL_S = 4 * 60 * 60;
 /** Délai de lecture de l'énoncé avant ouverture des réponses (§8, défaut 3 s). */
 export const READ_DELAY_MS = 3_000;
 
+/**
+ * How long the room waits at most for the devices that play a question's sound
+ * or video to load it (`GAME_MEDIA_WAIT_S`, 0 = never wait).
+ */
+export const MEDIA_WAIT_S = 10;
+
 /** Tolérance serveur : réponses reçues après `endsAt + grace` rejetées (§6). */
 export const GRACE_MS = 300;
 
@@ -56,6 +62,11 @@ export const gameKeys = {
   session: (token: string) => `session:${token}`,
   /** Set des PINs des parties en cours d'un hôte (reprise depuis le dashboard §6.2). */
   hostGames: (userId: string) => `host:${userId}:games`,
+  /** Set of the devices (playerId, or `screen:<socket id>`) that loaded a question's sound or video. */
+  ready: (pin: string, questionIndex: number) => `game:${pin}:ready:${questionIndex}`,
+  /** One way out of the media wait of a question (all ready, cap, host, resumed). */
+  mediaWaitLock: (pin: string, questionIndex: number) =>
+    `game:${pin}:media-wait-lock:${questionIndex}`,
   /** Verrou atomique de passage en REVEAL (1 seul gagnant, anti double-reveal). */
   revealLock: (pin: string, questionIndex: number) => `game:${pin}:reveal-lock:${questionIndex}`,
   /** Verrou atomique de passage à la question suivante (anti double-clic). */

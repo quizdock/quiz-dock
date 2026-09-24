@@ -1,4 +1,10 @@
-import { buildSnapshot, type QuizWithContent } from './snapshot';
+import {
+  buildQuestionStart,
+  buildSnapshot,
+  gameAudioTarget,
+  refreshSnapshotForm,
+  type QuizWithContent,
+} from './snapshot';
 
 /** Construit un quiz Prisma minimal (champs utiles au snapshot uniquement). */
 const quiz = (over: Partial<QuizWithContent> = {}): QuizWithContent =>
@@ -139,6 +145,7 @@ describe('buildSnapshot', () => {
             pointsMode: 'none',
             visualMedia: { url: '/media/x', kind: 'image', alt: null },
             audioMedia: { ...audio, loudnessLufs: -23, peakDbfs: -12 },
+            waveformSize: 'L',
           },
         ] as never,
       }),
@@ -148,6 +155,7 @@ describe('buildSnapshot', () => {
       durationMs: 8000,
       peaks,
       gainDb: 7,
+      size: 'L',
     });
   });
 
@@ -196,6 +204,51 @@ describe('buildSnapshot', () => {
       } as never),
     );
     expect(snap.questions[0].media.audio?.gainDb).toBe(-5);
+  });
+
+  it('tells who hears a question: its own target, else the host’s lobby choice, else the quiz’s', () => {
+    const peaks = new Array(200).fill(0.4);
+    const sound = { url: '/a', kind: 'audio', durationMs: 1000, peaks };
+    const snap = buildSnapshot(
+      quiz({
+        audioTarget: 'projection',
+        questions: [
+          { ...baseQuestion, type: 'poll', pointsMode: 'none', audioMedia: sound },
+          {
+            ...baseQuestion,
+            id: 'q2',
+            type: 'poll',
+            pointsMode: 'none',
+            audioMedia: sound,
+            audioTarget: 'everyone',
+          },
+          { ...baseQuestion, id: 'q3', type: 'poll', pointsMode: 'none' },
+        ],
+      } as never),
+    );
+    const start = (i: number, lobby: 'projection_remote' | '') =>
+      buildQuestionStart(snap.questions[i], i, 0, 0, gameAudioTarget(snap, lobby));
+    expect(start(0, '').audioTarget).toBe('projection');
+    expect(start(0, 'projection_remote').audioTarget).toBe('projection_remote');
+    // A question's own choice wins over the host's.
+    expect(start(1, 'projection_remote').audioTarget).toBe('everyone');
+    // Nothing to hear, nothing said.
+    expect(start(2, '')).not.toHaveProperty('audioTarget');
+    // Older snapshots, without the field: the default.
+    expect(gameAudioTarget({ ...snap, audioTarget: undefined }, '')).toBe('projection_remote');
+  });
+
+  it('follows the editor’s audio targets in a running game', () => {
+    const sound = { url: '/a', kind: 'audio', durationMs: 1000, peaks: new Array(200).fill(0) };
+    const q = { ...baseQuestion, type: 'poll', pointsMode: 'none', audioMedia: sound };
+    const frozen = buildSnapshot(quiz({ questions: [q] } as never));
+    const edited = quiz({
+      audioTarget: 'everyone',
+      questions: [{ ...q, audioTarget: 'projection' }],
+    } as never);
+    const fresh = refreshSnapshotForm(frozen, edited);
+    expect(fresh.audioTarget).toBe('everyone');
+    expect(fresh.questions[0].audioTarget).toBe('projection');
   });
 
   it('plays a video with its own gain', () => {

@@ -1,9 +1,13 @@
+import { WAVEFORM_SIZE_DEFAULT, type WaveformSize } from '@quiz-dock/contracts';
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
+/** The thickness the author picked, relative to the screen's type size. */
+const HEIGHT: Record<WaveformSize, string> = { S: 'h-[1em]', M: 'h-[2.5em]', L: 'h-[5em]' };
+
 /**
  * A sound drawn from its stored peaks, SoundCloud-style: one bar per value,
- * the part already played filled, the rest faint. Nothing is decoded — the
+ * the part already played filled, the rest faint, a playhead where it is. Nothing is decoded — the
  * peaks were measured once in the editor.
  */
 export function Waveform({
@@ -11,12 +15,14 @@ export function Waveform({
   progress,
   className,
   label,
+  size = WAVEFORM_SIZE_DEFAULT,
 }: {
   peaks: number[];
   /** 0–1: how much has played. */
   progress: number;
   className?: string;
   label?: string;
+  size?: WaveformSize;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
@@ -44,14 +50,19 @@ export function Waveform({
       ctx.fillRect(i * step + (step - bar) / 2, (height - h) / 2, bar, h);
     });
     ctx.globalAlpha = 1;
-  }, [peaks, progress]);
+    // The playhead: where the sound is now, the same on every screen.
+    if (progress > 0) {
+      const x = Math.min(width - ratio, progress * width);
+      ctx.fillRect(x - ratio, 0, 2 * ratio, height);
+    }
+  }, [peaks, progress, size]);
 
   return (
     <canvas
       ref={ref}
       role="img"
       aria-label={label}
-      className={cn('text-primary block h-[4em] w-full', className)}
+      className={cn('text-primary block w-full', HEIGHT[size], className)}
     />
   );
 }

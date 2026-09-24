@@ -108,4 +108,63 @@ describe('QuestionMediaStage', () => {
     await waitFor(() => expect(play).toHaveBeenCalledTimes(2));
     expect(el.currentTime).toBe(0);
   });
+  it('on a device the sound is not meant for: the video plays muted, a sound is left out', async () => {
+    render(<QuestionMediaStage media={video} mode="play" audible={false} />);
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    expect((play.mock.calls[0][0] as HTMLMediaElement).muted).toBe(true);
+    cleanup();
+    play.mockClear();
+    const { container } = render(<QuestionMediaStage media={sound} mode="play" audible={false} />);
+    await act(async () => undefined);
+    expect(play).not.toHaveBeenCalled();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('muted by its owner, it plays on silently, and gets its sound back', async () => {
+    const { rerender } = render(<QuestionMediaStage media={sound} mode="play" muted />);
+    await waitFor(() => expect(play).toHaveBeenCalledTimes(1));
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    expect(el.muted).toBe(true);
+    rerender(<QuestionMediaStage media={sound} mode="play" muted={false} />);
+    await waitFor(() => expect(el.muted).toBe(false));
+  });
+  it('draws the waveform at the size the author picked', async () => {
+    const large = { ...sound, audio: { ...sound.audio!, size: 'L' as const } };
+    render(<QuestionMediaStage media={large} mode="still" />);
+    expect(screen.getByRole('img', { name: /Forme d’onde/ })).toHaveClass('h-[5em]');
+  });
+  it('the projection says where it is in the sound, for the other screens', async () => {
+    const onPosition = vi.fn();
+    render(<QuestionMediaStage media={sound} mode="play" onPosition={onPosition} />);
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    el.dispatchEvent(new Event('pause'));
+    expect(onPosition).toHaveBeenCalledWith(0, expect.any(Boolean));
+  });
+
+  it('a screen that does not play the sound draws it where the projection is, without loading it', async () => {
+    render(
+      <QuestionMediaStage
+        media={sound}
+        mode="still"
+        follow={{ questionIndex: 0, t: 2, playing: false, receivedAt: performance.now() }}
+      />,
+    );
+    await act(async () => undefined);
+    expect(play).not.toHaveBeenCalled();
+    expect(screen.getByRole('img', { name: /Forme d’onde/ })).toBeInTheDocument();
+  });
+  it('a device that starts late jumps to where the projection is', async () => {
+    render(
+      <QuestionMediaStage
+        media={sound}
+        mode="play"
+        catchUp={{ questionIndex: 0, t: 5, playing: true, receivedAt: performance.now() }}
+      />,
+    );
+    await waitFor(() => expect(play).toHaveBeenCalled());
+    const el = play.mock.calls[0][0] as HTMLMediaElement;
+    el.dispatchEvent(new Event('playing'));
+    expect(el.currentTime).toBeGreaterThanOrEqual(5);
+  });
 });
