@@ -24,6 +24,17 @@ The image runs **non-root** (uid 65532), **read-only** root filesystem, all Linu
 capabilities dropped, `no-new-privileges`; media on a volume, `/tmp` on tmpfs. See
 [`../self-hosting/configuration.md`](../self-hosting/configuration.md).
 
+## Content-Security-Policy
+
+Every page of the application is sent with a `Content-Security-Policy`
+(`apps/backend/src/common/csp.ts`), built from the configuration: scripts, frames and
+requests from this origin only, plus the OIDC provider when `AUTH_MODE=oidc` (its
+endpoints and the silent-renew iframe) and a logo served elsewhere (`APP_LOGO_URL`). No
+inline script and no `eval`; `'wasm-unsafe-eval'` and `blob:` workers for the in-browser
+media converter; `object-src 'none'`, `frame-ancestors 'self'`. The API (`/api`, Swagger
+included) and the socket are left out. What stays loose, and why, is in
+[`../tech-debt.md`](../tech-debt.md).
+
 ## Reporting a vulnerability
 
 See [`SECURITY.md`](../../SECURITY.md) at the repository root.

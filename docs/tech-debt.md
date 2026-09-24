@@ -21,8 +21,12 @@ entry in the PR that pays it back.
 - **Mitigations in place**: access tokens renewed silently (their lifetime is the IdP's); Markdown
   rendered as React elements with raw HTML dropped (`skipHtml`) and unsafe URLs
   neutralised; a sign-out in one tab signs the others out.
-- **Missing**: no `Content-Security-Policy` is sent yet — the first line of defence against
-  the XSS this storage is exposed to. Worth adding whatever the way out.
+- **Content-Security-Policy**: every page carries one (no inline script, no `eval`,
+  requests limited to this origin and the IdP), the first line of defence against the XSS
+  this storage is exposed to. It stays loose on two points: `style-src 'unsafe-inline'`
+  (style attributes and the style tags libraries insert) and `img-src https:` (an author's
+  Markdown may show an image from the web). Tightening them means nonces for styles and a
+  proxy or an allow-list for images.
 - **Way out**, by increasing effort:
   1. **Tokens per tab, session from the IdP**: back to `sessionStorage` (or memory), and a
      tab without a session asks the IdP silently (`signinSilent`, `prompt=none`) — the
