@@ -212,6 +212,7 @@ export class QuizPortableService {
                 revealDelayS: dto.revealDelayS ?? null,
                 audioTarget: dto.audioTarget ?? null,
                 waveformSize: dto.waveformSize,
+                timerAfterMedia: dto.timerAfterMedia,
                 pointsMode: dto.type === 'poll' ? 'none' : dto.pointsMode,
                 scoring: dto.scoring,
                 numericValue: isNumeric ? dto.numericValue : null,

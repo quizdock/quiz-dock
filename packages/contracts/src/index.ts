@@ -205,6 +205,8 @@ export interface QuestionStartPayload {
    * the question has one). A device reaching it late starts where the media is.
    */
   mediaStartAt?: number;
+  /** Listen first: the answers open when the media ends (`startedAt`), not before. */
+  listenFirst?: boolean;
   /** Optional full-cover background (image or gradient), like a slide's. */
   background?: SlideBackground | null;
   textTone?: SlideTextTone;

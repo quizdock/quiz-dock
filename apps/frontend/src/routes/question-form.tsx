@@ -130,6 +130,8 @@ interface FormValues {
   audioTarget: AudioTarget | null;
   /** How thick the sound's waveform is drawn on the screens. */
   waveformSize: WaveformSize;
+  /** Listen first: the timer starts when the media ends. */
+  timerAfterMedia: boolean;
   pointsMode: 'standard' | 'double' | 'none' | 'fixed';
   scoring: Scoring;
   numericValue: number;
@@ -164,6 +166,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
       revealDelayS: null,
       audioTarget: null,
       waveformSize: WAVEFORM_SIZE_DEFAULT,
+      timerAfterMedia: false,
       pointsMode: 'standard',
       scoring: 'standard',
       numericValue: 0,
@@ -187,6 +190,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     revealDelayS: q.revealDelayS ?? null,
     audioTarget: (q.audioTarget as AudioTarget | null | undefined) ?? null,
     waveformSize: (q.waveformSize as WaveformSize | undefined) ?? WAVEFORM_SIZE_DEFAULT,
+    timerAfterMedia: q.timerAfterMedia ?? false,
     pointsMode: q.pointsMode as FormValues['pointsMode'],
     scoring: (q.scoring ?? 'standard') as Scoring,
     numericValue: q.numericValue ? Number(q.numericValue) : 0,
@@ -283,7 +287,12 @@ export function QuestionForm({
   const timeLimitS = useStore(form.store, (s) => s.values.timeLimitS);
   const mediaMs = useMediaDurationMs(media);
   // What the session will really give this question (the server computes the same).
-  const stretchedS = effectiveTimeLimitS(timeLimitS, mediaMs, mediaTailS, READ_DELAY_DEFAULT_MS);
+  const listenFirst = useStore(form.store, (s) => s.values.timerAfterMedia);
+  const canListenFirst = mediaHasSound(media) && mediaMs !== null;
+  const stretchedS =
+    canListenFirst && listenFirst
+      ? timeLimitS
+      : effectiveTimeLimitS(timeLimitS, mediaMs, mediaTailS, READ_DELAY_DEFAULT_MS);
   const options = useStore(form.store, (s) => s.values.options);
   // Index of the option whose removal awaits confirmation.
   const [pendingRemoval, setPendingRemoval] = useState<number | null>(null);
@@ -390,6 +399,29 @@ export function QuestionForm({
       </form.Field>
 
       <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)} />
+      {canListenFirst ? (
+        <form.Field name="timerAfterMedia">
+          {(field) => (
+            <label
+              className="flex items-start gap-2 text-sm"
+              title={t('questionForm.listenFirstHint')}
+            >
+              <input
+                type="checkbox"
+                className="accent-primary mt-0.5"
+                checked={field.state.value}
+                onChange={(e) => field.handleChange(e.target.checked)}
+              />
+              <span>
+                <span className="font-medium">{t('questionForm.listenFirstLabel')}</span>
+                <span className="text-muted-foreground block">
+                  {t('questionForm.listenFirstHint')}
+                </span>
+              </span>
+            </label>
+          )}
+        </form.Field>
+      ) : null}
       {media.audio ? (
         <form.Field name="waveformSize">
           {(field) => (
@@ -491,7 +523,14 @@ export function QuestionForm({
             )}
           </form.Field>
         )}
-        {stretchedS > timeLimitS ? (
+        {canListenFirst && listenFirst ? (
+          <p className="text-muted-foreground col-span-full text-sm" role="note">
+            {t('questionForm.listenFirstTime', {
+              media: Math.ceil((mediaMs ?? 0) / 1000),
+              time: timeLimitS,
+            })}
+          </p>
+        ) : stretchedS > timeLimitS ? (
           <p className="text-muted-foreground col-span-full text-sm" role="note">
             {t('questionForm.stretchedTime', {
               media: Math.ceil((mediaMs ?? 0) / 1000),
@@ -776,6 +815,8 @@ function buildPayload(v: FormValues) {
     // Nothing to hear, nothing to target: a removed sound takes its setting with it.
     audioTarget: mediaHasSound(v.media) ? v.audioTarget : null,
     waveformSize: v.waveformSize,
+    // Only with a media to wait for; the server also falls back when its length is unknown.
+    timerAfterMedia: mediaHasSound(v.media) && v.timerAfterMedia,
     pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
     scoring: SCORING_BY_TYPE[v.type].includes(v.scoring) ? v.scoring : ('standard' as const),
     media: v.media,

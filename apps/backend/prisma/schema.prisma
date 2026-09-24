@@ -261,6 +261,8 @@ model Question {
   audioTarget        AudioTarget?    @map("audio_target")
   /// How thick its waveform is drawn on the screens.
   waveformSize       WaveformSize    @default(M) @map("waveform_size")
+  /// The timer starts when the media ends (listen first, then answer); needs a known duration.
+  timerAfterMedia    Boolean         @default(false) @map("timer_after_media")
   pointsMode         PointsMode      @default(standard) @map("points_mode")
   scoring            QuestionScoring @default(standard)
   numericValue       Decimal?        @map("numeric_value")

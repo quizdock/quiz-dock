@@ -842,6 +842,74 @@ describe('GameGateway (intégration socket)', () => {
     }
   }, 15_000);
 
+  it('listen first: the answers open when the media ends, not before', async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/listen-test',
+        mime: 'audio/mpeg',
+        sizeBytes: 1n,
+        kind: 'audio',
+        durationMs: 2000,
+        peaks: new Array(200).fill(0.5),
+      },
+    });
+    const quiz = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Listen first test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'single_choice',
+            prompt: 'Which tune?',
+            timeLimitS: 5,
+            audioMediaId: asset.id,
+            timerAfterMedia: true,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle', isCorrect: true },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: quiz.id });
+      const player = connect();
+      await player.emitWithAck('player:join', { pin, nickname: 'Ada' });
+      const q = new Promise<{
+        startedAt: number;
+        endsAt: number;
+        mediaStartAt?: number;
+        listenFirst?: boolean;
+        options: { id: string }[];
+      }>((resolve) => player.once('question:start', resolve));
+      host.emit('host:start', { pin });
+      const start = await q;
+      expect(start.listenFirst).toBe(true);
+      // The sound plays 2 s, then the 5 s of answering — no stretch on top.
+      expect(start.startedAt - start.mediaStartAt!).toBe(2000);
+      expect(start.endsAt - start.startedAt).toBe(5000);
+
+      // An answer while the sound still plays is refused.
+      const early = new Promise<{ accepted: boolean }>((resolve) =>
+        player.once('answer:ack', resolve),
+      );
+      player.emit('player:submit', { pin, questionIndex: 0, answer: start.options[0].id });
+      expect((await early).accepted).toBe(false);
+      host.emit('host:end', { pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: quiz.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
+  }, 15_000);
+
   it('host:review shows a played question again (no replay), host:next resumes the live position', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

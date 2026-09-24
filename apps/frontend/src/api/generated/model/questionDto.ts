@@ -49,6 +49,7 @@ export interface QuestionDto {
   /** @nullable */
   audioTarget: QuestionDtoAudioTarget;
   waveformSize: QuestionDtoWaveformSize;
+  timerAfterMedia: boolean;
   pointsMode: QuestionDtoPointsMode;
   scoring: QuestionDtoScoring;
   /** @nullable */

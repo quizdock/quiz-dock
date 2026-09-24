@@ -181,6 +181,37 @@ describe('buildSnapshot', () => {
     expect(snap.questions[1].timeLimitS).toBe(20);
   });
 
+  it('listen first: no stretch, the timer starts after the media — only when its length is known', () => {
+    const peaks = new Array(200).fill(0.4);
+    const sound = { url: '/media/a', kind: 'audio', durationMs: 42_000, peaks };
+    const snap = buildSnapshot(
+      quiz({
+        mediaTailS: 3,
+        questions: [
+          {
+            ...baseQuestion,
+            type: 'poll',
+            pointsMode: 'none',
+            timeLimitS: 20,
+            audioMedia: sound,
+            timerAfterMedia: true,
+          },
+          // No media to wait for: the usual timing.
+          {
+            ...baseQuestion,
+            id: 'q2',
+            type: 'poll',
+            pointsMode: 'none',
+            timeLimitS: 20,
+            timerAfterMedia: true,
+          },
+        ],
+      } as never),
+    );
+    expect(snap.questions[0]).toMatchObject({ timeLimitS: 20, timerAfterMedia: true });
+    expect(snap.questions[1]).toMatchObject({ timeLimitS: 20, timerAfterMedia: false });
+  });
+
   it('brings sounds to the quiz’s level', () => {
     const peaks = new Array(200).fill(0.4);
     const snap = buildSnapshot(

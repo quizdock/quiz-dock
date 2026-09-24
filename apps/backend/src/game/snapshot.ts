@@ -64,6 +64,11 @@ export function questionAudioTarget(q: SnapshotQuestion, gameTarget: AudioTarget
   return resolveAudioTarget(q.audioTarget, gameTarget, null);
 }
 
+/** Listen first applies only when the media's length is known (else: the usual timing). */
+function listensFirst(q: QuizWithContent['questions'][number]): boolean {
+  return q.timerAfterMedia && mediaDurationMs(liveMediaOf(q)) !== null;
+}
+
 export type QuizWithContent = Prisma.QuizGetPayload<typeof quizWithContent>;
 export const QUIZ_SNAPSHOT_INCLUDE = quizWithContent.include;
 
@@ -105,12 +110,16 @@ export function buildSnapshot(quiz: QuizWithContent): QuizSnapshot {
         textOutline: q.textOutline,
         // Stretched when the media would still be playing (quiz-wide pause after it):
         // the timer, the display and the speed weighting all read this one value.
-        timeLimitS: effectiveTimeLimitS(
-          q.timeLimitS,
-          mediaDurationMs(liveMediaOf(q)),
-          quiz.mediaTailS,
-          readDelayMs(),
-        ),
+        // Listen first: the timer only starts once the media has played, nothing to stretch.
+        timeLimitS: listensFirst(q)
+          ? q.timeLimitS
+          : effectiveTimeLimitS(
+              q.timeLimitS,
+              mediaDurationMs(liveMediaOf(q)),
+              quiz.mediaTailS,
+              readDelayMs(),
+            ),
+        timerAfterMedia: listensFirst(q),
         revealDelayS: q.revealDelayS ?? null,
         audioTarget: q.audioTarget ?? null,
         basePoints: basePointsFor(q.pointsMode as PointsMode),
@@ -229,6 +238,7 @@ export function buildQuestionStart(
     startedAt,
     endsAt,
     ...(mediaLeadMs !== null && startedAt > 0 ? { mediaStartAt: startedAt - mediaLeadMs } : {}),
+    ...(question.timerAfterMedia ? { listenFirst: true } : {}),
     background: question.background,
     textTone: question.textTone,
     textOutline: question.textOutline,

@@ -43,6 +43,8 @@ export interface SnapshotQuestion {
   timeLimitS: number;
   /** Auto-mode delay on this REVEAL in seconds (#6); null = engine default. */
   revealDelayS: number | null;
+  /** Listen first: the answers open when the media ends (frozen with the substance). */
+  timerAfterMedia?: boolean;
   /** Which devices play its sound; null (or absent, older snapshots) = the game's default. */
   audioTarget?: AudioTarget | null;
   /** Markdown shown at REVEAL only (#5) — never part of `question:start`. */

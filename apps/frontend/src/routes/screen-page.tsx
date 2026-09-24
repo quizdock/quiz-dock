@@ -25,7 +25,7 @@ import { ReadinessMeter } from '../game/media/readiness-meter';
 import { followed } from '../game/media/followed';
 import { SoundUnlockOverlay } from '../game/media/sound-unlock-overlay';
 import { Surface } from '../game/surface';
-import { useGameRemaining } from '../game/use-countdown';
+import { useCountdown, useGameRemaining } from '../game/use-countdown';
 import { joinHostLabel, joinUrlFor } from '../game/join-url';
 import { useGameSession } from '../game/use-game-session';
 
@@ -75,6 +75,11 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
   }, [playMedia, view.preload, socket, pin]);
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
   const remaining = useGameRemaining(view);
+  // Listen first: until the media has played, the count is to the answers' opening.
+  const listenLeft = useCountdown(
+    view.question?.listenFirst && !view.paused ? view.question.startedAt : null,
+  );
+  const listening = listenLeft !== null && listenLeft > 0;
 
   const joinUrl = joinUrlFor(view, pin);
   const joinHost = joinHostLabel(view);
@@ -189,9 +194,9 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
                 'shrink-0 text-[2.5em] font-bold whitespace-nowrap tabular-nums',
                 view.paused && 'opacity-50',
               )}
-              aria-label={t('screen.timeRemaining')}
+              aria-label={listening ? t('screen.listening') : t('screen.timeRemaining')}
             >
-              {view.paused ? '⏸' : '⏱'} {remaining}
+              {listening ? `🎧 ${listenLeft}` : `${view.paused ? '⏸' : '⏱'} ${remaining}`}
             </span>
           ) : null}
         </div>

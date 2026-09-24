@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { AUDIO_TARGETS, GameState } from '@quiz-dock/contracts';
+import { AUDIO_TARGETS, GameState, mediaDurationMs } from '@quiz-dock/contracts';
 import type {
   AnswerValue,
   AudioTarget,
@@ -463,10 +463,13 @@ export class GameEngine {
     const now = Date.now();
     // Délai de lecture configurable (§8, défaut 3 s) — lu au runtime (tests rapides).
     const readDelay = Number(process.env.GAME_READ_DELAY_MS ?? READ_DELAY_MS);
-    const startedAt = now + readDelay; // fenêtre de lecture côté client
-    const endsAt = startedAt + question.timeLimitS * 1000;
     // Every device starts the sound or video on the same instant of the server's clock.
-    const mediaLeadMs = hasSoundOrVideo(question.media) ? startedAt - (now + MEDIA_LEAD_MS) : null;
+    const mediaStartAt = now + MEDIA_LEAD_MS;
+    // Listen first: the answers open once the media has played, not after the reading.
+    const listenMs = question.timerAfterMedia ? (mediaDurationMs(question.media) ?? 0) : 0;
+    const startedAt = Math.max(now + readDelay, mediaStartAt + listenMs); // fenêtre de lecture
+    const endsAt = startedAt + question.timeLimitS * 1000;
+    const mediaLeadMs = hasSoundOrVideo(question.media) ? startedAt - mediaStartAt : null;
 
     // Nouvelle question : chrono qui tourne, ni gelé ni en pause (un enchaînement
     // manuel pendant une pause reprend implicitement la main).

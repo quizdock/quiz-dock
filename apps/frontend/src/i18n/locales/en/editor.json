@@ -251,7 +251,10 @@
     },
     "titleEdit": "Edit question",
     "titleAdd": "New question",
-    "stretchedTime": "The media lasts {{media}} s: the question will last {{total}} s (end of the media + the quiz’s {{tail}} s pause)."
+    "stretchedTime": "The media lasts {{media}} s: the question will last {{total}} s (end of the media + the quiz’s {{tail}} s pause).",
+    "listenFirstLabel": "Start the timer when the media ends",
+    "listenFirstHint": "Listen first, then answer: nobody can answer while the sound or video plays, and everyone gets the full time to think afterwards.",
+    "listenFirstTime": "The media plays {{media}} s, then the {{time}} s of answering start."
   },
   "preview": {
     "view": "Preview (player view)",

@@ -317,6 +317,7 @@ export class QuizzesService {
             revealDelayS: q.revealDelayS,
             audioTarget: q.audioTarget,
             waveformSize: q.waveformSize,
+            timerAfterMedia: q.timerAfterMedia,
             numericValue: q.numericValue,
             numericTolerance: q.numericTolerance,
             options: {
