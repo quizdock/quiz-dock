@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { serverNow } from './clock';
 
 /**
  * Chrono visuel dérivé des **timestamps serveur** (P3-FRONT-4). On ne compte pas
@@ -7,12 +8,12 @@ import { useEffect, useState } from 'react';
  * `endsAt = null` (hors question) → `null`. Compensation de latence = P4 (`latencyMs=0`).
  */
 export function useCountdown(endsAt: number | null): number | null {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => serverNow());
 
   useEffect(() => {
     if (endsAt === null) return;
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 250);
+    setNow(serverNow());
+    const id = setInterval(() => setNow(serverNow()), 250);
     return () => clearInterval(id);
   }, [endsAt]);
 
