@@ -36,6 +36,14 @@ the results never leave your servers.
   <img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/demo.gif" width="800" alt="A session on the big screen: players join with the PIN, a question with its timer, the reveal with the leaderboard, the podium" />
 </p>
 
+> [!NOTE]
+> **New in 0.7 — 🎧 video & sound in questions** *(experimental)*. MP4 videos and MP3
+> sounds, loudness-matched, with a waveform; played on the projection **and** on the
+> devices of remote participants, started on the same instant everywhere; *listen first*
+> questions open the answers once the media has played. Tested in Chromium browsers, not
+> yet on iPhone — see the
+> [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
+
 ## 🎮 Try it online
 
 **https://quizdock-standalone.onrender.com** — a public instance in demo mode: enter a
