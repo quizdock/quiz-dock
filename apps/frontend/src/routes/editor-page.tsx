@@ -517,47 +517,50 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     tail: quiz.mediaTailS,
                   })}
                 >
-                  <MediaTailField
-                    value={quiz.mediaTailS}
-                    disabled={update.isPending}
-                    onSave={(mediaTailS) => void setMediaTailS(mediaTailS)}
-                  />
-                  <label
-                    className="flex items-center gap-2 text-sm"
-                    title={t('settings.loudnessHelp')}
-                  >
-                    <span className="font-medium">{t('settings.loudnessLabel')}</span>
-                    <Select
-                      className="h-8 w-auto"
-                      value={String(quiz.loudnessTargetLufs)}
+                  {/* Ouvert, les trois réglages se lisent sur une ligne. */}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <MediaTailField
+                      value={quiz.mediaTailS}
                       disabled={update.isPending}
-                      onChange={(e) => void setLoudness(Number(e.target.value) as LoudnessTarget)}
+                      onSave={(mediaTailS) => void setMediaTailS(mediaTailS)}
+                    />
+                    <label
+                      className="flex items-center gap-2 text-sm"
+                      title={t('settings.loudnessHelp')}
                     >
-                      {LOUDNESS_TARGETS.map((lufs) => (
-                        <option key={lufs} value={lufs}>
-                          {t(`settings.loudness.${-lufs}`)}
-                        </option>
-                      ))}
-                    </Select>
-                  </label>
-                  <label
-                    className="flex flex-wrap items-center gap-2 text-sm"
-                    title={t('settings.audioTargetHelp')}
-                  >
-                    <span className="font-medium">{t('settings.audioTargetLabel')}</span>
-                    <Select
-                      className="h-8 w-auto"
-                      value={quiz.audioTarget}
-                      disabled={update.isPending}
-                      onChange={(e) => void setAudioTarget(e.target.value as AudioTarget)}
+                      <span className="font-medium">{t('settings.loudnessLabel')}</span>
+                      <Select
+                        className="h-8 w-auto"
+                        value={String(quiz.loudnessTargetLufs)}
+                        disabled={update.isPending}
+                        onChange={(e) => void setLoudness(Number(e.target.value) as LoudnessTarget)}
+                      >
+                        {LOUDNESS_TARGETS.map((lufs) => (
+                          <option key={lufs} value={lufs}>
+                            {t(`settings.loudness.${-lufs}`)}
+                          </option>
+                        ))}
+                      </Select>
+                    </label>
+                    <label
+                      className="flex flex-wrap items-center gap-2 text-sm"
+                      title={t('settings.audioTargetHelp')}
                     >
-                      {AUDIO_TARGETS.map((target) => (
-                        <option key={target} value={target}>
-                          {t(`settings.audioTarget.${target}`)}
-                        </option>
-                      ))}
-                    </Select>
-                  </label>
+                      <span className="font-medium">{t('settings.audioTargetLabel')}</span>
+                      <Select
+                        className="h-8 w-auto"
+                        value={quiz.audioTarget}
+                        disabled={update.isPending}
+                        onChange={(e) => void setAudioTarget(e.target.value as AudioTarget)}
+                      >
+                        {AUDIO_TARGETS.map((target) => (
+                          <option key={target} value={target}>
+                            {t(`settings.audioTarget.${target}`)}
+                          </option>
+                        ))}
+                      </Select>
+                    </label>
+                  </div>
                 </Disclosure>
               </div>
             </Section>

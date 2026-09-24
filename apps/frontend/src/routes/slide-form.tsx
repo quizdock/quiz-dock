@@ -357,7 +357,7 @@ function DisplayTimeField({
             max={600}
             className="w-24"
             value={value ?? ''}
-            onChange={(e) => onChange(Math.max(1, Number(e.target.value) || 1))}
+            onChange={(e) => onChange(Math.min(600, Math.max(1, Number(e.target.value) || 1)))}
           />
         ) : null}
       </div>
