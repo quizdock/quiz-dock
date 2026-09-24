@@ -6,6 +6,7 @@ import type {
   GameStatePayload,
   GameStep,
   LeaderboardPayload,
+  MediaPreloadPayload,
   OutlineQuestion,
   PersonalResult,
   PodiumPayload,
@@ -84,6 +85,12 @@ export interface GameView {
   joinBaseUrl: string | null;
   /** Sommaire des questions (console hôte uniquement). */
   outline: OutlineQuestion[];
+  /** Media of the next question, to fetch ahead (projection and console only). */
+  preload: MediaPreloadPayload | null;
+  /** Last host command on the current media; `seq` changes with each one. */
+  mediaControl: { questionIndex: number; action: 'restart'; seq: number } | null;
+  /** Whether the quiz plays any sound (projection and console only; null until told). */
+  quizHasSound: boolean | null;
   /** Host navigation over played steps (`game:state.nav`); `review` = a past step is on screen. */
   nav: { prev: GameStep | null; next: GameStep | null; review: boolean } | null;
 }
@@ -118,6 +125,9 @@ const INITIAL: GameView = {
   quizDescription: null,
   joinBaseUrl: null,
   outline: [],
+  preload: null,
+  mediaControl: null,
+  quizHasSound: null,
   nav: null,
 };
 
@@ -202,6 +212,13 @@ export function useGameSession(pin: string, role: LiveRole) {
     const onReveal = (p: QuestionRevealPayload) =>
       patch({ reveal: p, result: p.yourResult ?? null });
     const onLeaderboard = (p: LeaderboardPayload) => patch({ leaderboard: p });
+    const onPreload = (p: MediaPreloadPayload) => patch({ preload: p });
+    const onGameMedia = (p: { hasSound: boolean }) => patch({ quizHasSound: p.hasSound });
+    const onMediaControl = (p: { questionIndex: number; action: 'restart' }) =>
+      setView((prev) => ({
+        ...prev,
+        mediaControl: { ...p, seq: (prev.mediaControl?.seq ?? 0) + 1 },
+      }));
     const onPodium = (p: PodiumPayload) =>
       patch({
         podium: p,
@@ -246,6 +263,9 @@ export function useGameSession(pin: string, role: LiveRole) {
       sock.on('question:reveal', onReveal);
       sock.on('slide:show', onSlide);
       sock.on('leaderboard', onLeaderboard);
+      sock.on('media:preload', onPreload);
+      sock.on('media:control', onMediaControl);
+      sock.on('game:media', onGameMedia);
       sock.on('game:podium', onPodium);
       sock.on('game:ended', onEnded);
       sock.on('notice', onNotice);
@@ -307,6 +327,9 @@ export function useGameSession(pin: string, role: LiveRole) {
       s.off('question:reveal', onReveal);
       s.off('slide:show', onSlide);
       s.off('leaderboard', onLeaderboard);
+      s.off('media:preload', onPreload);
+      s.off('media:control', onMediaControl);
+      s.off('game:media', onGameMedia);
       s.off('game:podium', onPodium);
       s.off('game:ended', onEnded);
       s.off('notice', onNotice);

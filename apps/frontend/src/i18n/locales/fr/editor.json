@@ -23,7 +23,17 @@
     "titleLabel": "Titre",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Description (facultative)…",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "mediaTailLabel": "Pause après un média",
+    "mediaTailHelp": "Quand le son ou la vidéo d’une question dure plus longtemps que son chrono, la question est prolongée jusqu’à la fin du média plus cette pause : aucune lecture n’est coupée.",
+    "seconds": "s",
+    "loudnessLabel": "Égalisation du son",
+    "loudnessHelp": "Niveau auquel chaque son et chaque vidéo du quiz sont ramenés à la lecture, pour que le volume ne change pas d’une question à l’autre. Les fichiers ne sont pas modifiés.",
+    "loudness": {
+      "14": "Fort (−14 LUFS, streaming)",
+      "16": "Équilibré (−16 LUFS)",
+      "23": "Calme (−23 LUFS, télévision)"
+    }
   },
   "broadcast": {
     "title": "Diffusion",
@@ -222,7 +232,8 @@
       "confirmLabel": "Supprimer"
     },
     "titleEdit": "Modifier la question",
-    "titleAdd": "Nouvelle question"
+    "titleAdd": "Nouvelle question",
+    "stretchedTime": "Le média dure {{media}} s : la question durera {{total}} s (fin du média + pause de {{tail}} s réglée sur le quiz)."
   },
   "preview": {
     "view": "Aperçu (vue participant)",
@@ -247,7 +258,15 @@
     "demoDisabled": "L'envoi de médias est désactivé sur l'instance de démo.",
     "altLabel": "Texte alternatif",
     "altPlaceholder": "ex. Kylian Mbappé en maillot de l’équipe de France",
-    "altHelp": "Lu par les lecteurs d’écran. Décrivez ce que montre l’image quand elle porte une partie de la question ; laissez vide si elle est décorative."
+    "altHelp": "Lu par les lecteurs d’écran. Décrivez ce que montre l’image quand elle porte une partie de la question ; laissez vide si elle est décorative.",
+    "slotsLegend": "Médias de la question",
+    "visualLabel": "Visuel",
+    "audioLabel": "Son",
+    "addImage": "Ajouter une image",
+    "addVideo": "Ajouter une vidéo (MP4)",
+    "addAudio": "Ajouter un son (MP3)",
+    "videoExcludesAudio": "La vidéo a déjà son propre son : pas de piste audio en plus. Retirez la vidéo pour ajouter un son.",
+    "audioExcludesVideo": "Une vidéo a déjà son propre son : retirez le son pour pouvoir choisir une vidéo."
   },
   "background": {
     "legend": "Fond",

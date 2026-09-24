@@ -44,6 +44,22 @@ describe('toErrorResponse (enveloppe tokenisée, ADR 0001)', () => {
     expect(r.body.errors).toEqual([{ field: 'title', code: 'invalid_type' }]);
   });
 
+  it('a refinement carrying a domain code answers with that code', () => {
+    const schema = z.object({ a: z.number() }).superRefine((_d, ctx) => {
+      ctx.addIssue({ code: 'custom', message: 'media.video_with_audio', path: ['a'] });
+    });
+    let zerr: unknown;
+    try {
+      schema.parse({ a: 1 });
+    } catch (e) {
+      zerr = e;
+    }
+    expect(toErrorResponse(new ZodValidationException(zerr as never))).toEqual({
+      status: 400,
+      body: { code: 'media.video_with_audio' },
+    });
+  });
+
   it('exception inconnue → internal / 500', () => {
     expect(toErrorResponse(new Error('boom'))).toEqual({
       status: 500,

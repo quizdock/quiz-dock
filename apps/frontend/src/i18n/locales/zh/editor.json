@@ -23,7 +23,17 @@
     "titleLabel": "标题",
     "descriptionLabel": "描述",
     "descriptionPlaceholder": "描述（可选）…",
-    "save": "保存"
+    "save": "保存",
+    "mediaTailLabel": "媒体播放后的停顿",
+    "mediaTailHelp": "当题目的声音或视频比计时更长时，题目时间会延长到媒体结束再加上此停顿：播放不会被中途打断。",
+    "seconds": "秒",
+    "loudnessLabel": "声音均衡",
+    "loudnessHelp": "播放时将测验中每个声音和视频调整到的响度，使各题之间音量一致。文件本身不会被修改。",
+    "loudness": {
+      "14": "响亮（−14 LUFS，流媒体）",
+      "16": "均衡（−16 LUFS）",
+      "23": "柔和（−23 LUFS，电视广播）"
+    }
   },
   "broadcast": {
     "title": "广播",
@@ -222,7 +232,8 @@
       "confirmLabel": "删除"
     },
     "titleEdit": "编辑题目",
-    "titleAdd": "新建题目"
+    "titleAdd": "新建题目",
+    "stretchedTime": "媒体时长 {{media}} 秒：此题将持续 {{total}} 秒（媒体结束 + 测验设置的 {{tail}} 秒停顿）。"
   },
   "preview": {
     "view": "预览（玩家视图）",
@@ -247,7 +258,15 @@
     "demoDisabled": "演示实例已禁用媒体上传。",
     "altLabel": "替代文字",
     "altPlaceholder": "例如：身穿法国队球衣的姆巴佩",
-    "altHelp": "供屏幕阅读器朗读。当图片本身是题目的一部分时，请描述图片内容；纯装饰性图片可留空。"
+    "altHelp": "供屏幕阅读器朗读。当图片本身是题目的一部分时，请描述图片内容；纯装饰性图片可留空。",
+    "slotsLegend": "题目媒体",
+    "visualLabel": "画面",
+    "audioLabel": "声音",
+    "addImage": "添加图片",
+    "addVideo": "添加视频（MP4）",
+    "addAudio": "添加声音（MP3）",
+    "videoExcludesAudio": "视频自带声音：不能再加音轨。移除视频后才能添加声音。",
+    "audioExcludesVideo": "视频自带声音：移除声音后才能选择视频。"
   },
   "background": {
     "legend": "背景",

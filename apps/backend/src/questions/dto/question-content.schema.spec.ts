@@ -183,3 +183,28 @@ describe('questionContentSchema — validation par type (§4)', () => {
     expect(ok(q('x'.repeat(2001)))).toBe(false);
   });
 });
+
+describe('questionContentSchema — media slots', () => {
+  const id = (c: string) => c.repeat(26);
+  const poll = { ...base, type: 'poll', options: [opt(), opt({ color: 'blue', shape: 'circle' })] };
+  const video = { kind: 'video', source: 'upload', assetId: id('V') };
+  const audio = {
+    assetId: id('A'),
+    origin: 'upload',
+    durationMs: 5000,
+    peaks: new Array(200).fill(0.3),
+  };
+
+  it('takes an image with a sound, or a video alone', () => {
+    expect(ok({ ...poll, media: { visual: { kind: 'image', assetId: id('I') }, audio } })).toBe(
+      true,
+    );
+    expect(ok({ ...poll, media: { visual: video, audio: null } })).toBe(true);
+  });
+
+  it('refuses a video with an audio track', () => {
+    const res = questionContentSchema.safeParse({ ...poll, media: { visual: video, audio } });
+    expect(res.success).toBe(false);
+    expect(res.error?.issues.map((i) => i.message)).toContain('media.video_with_audio');
+  });
+});

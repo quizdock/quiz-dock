@@ -13,6 +13,7 @@ import {
   Pause,
   Play,
   Radio,
+  RotateCcw,
   Share2,
   SkipForward,
   Smartphone,
@@ -36,11 +37,12 @@ import {
   LeaderboardList,
   OptionGrid,
   Podium,
-  QuestionMedia,
   RevealAnswer,
   SlideView,
 } from '../game/live-components';
 import { useGameRemaining } from '../game/use-countdown';
+import { ChromiumNotice } from '@/components/chromium-notice';
+import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { ParticipantPreview } from '../game/participant-preview';
 import { joinBase, joinHostLabel, joinUrlFor } from '../game/join-url';
 import { JoinAddressPicker } from '../game/join-address-picker';
@@ -197,6 +199,7 @@ export function ControlPage() {
   const controlBar = (
     <>
       {tabs}
+      <ChromiumNotice />
       <ControlBar
         view={view}
         pin={pin}
@@ -487,7 +490,26 @@ export function ControlPage() {
 
         <ProgressBar pct={timePct} barClassName={timeTone} />
 
-        <QuestionMedia media={view.question?.media} className="max-h-56" />
+        {/* Shown still: the projection is the one place that plays the sound. */}
+        <QuestionMediaStage
+          key={view.question?.questionIndex}
+          media={view.question?.media}
+          mode="still"
+          boxClassName="h-56"
+        />
+        {view.state === 'ANSWERING' &&
+        (view.question?.media?.audio || view.question?.media?.visual?.kind === 'video') ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="self-center"
+            onClick={() => socket?.emit('host:media', { pin, action: 'restart' })}
+          >
+            <RotateCcw className="size-4" />
+            {t('control.restartMedia')}
+          </Button>
+        ) : null}
 
         <Markdown
           role="heading"

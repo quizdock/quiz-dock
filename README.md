@@ -55,7 +55,8 @@ your phone to play.
 - 🖥️ **Made for the big screen** — bright, high-contrast projection screens, with
   separate projection and control windows; manual or automatic pacing.
 - 🧩 **A real quiz builder** — seven question types (single/multi choice, true-false,
-  text, numeric, reorder, poll), images with alternative text, Markdown everywhere, content slides
+  text, numeric, reorder, poll), images with alternative text, MP4 videos and MP3 sounds played
+  on the projection (loudness-matched, waveform shown), Markdown everywhere, content slides
   between questions, backgrounds, answer explanations at the reveal.
 - 🏆 **Scoring that rewards speed** — time-weighted points, streak bonuses, leaderboard
   between questions, final podium; per-question rules (*closest answer wins*, partial

@@ -23,7 +23,17 @@
     "titleLabel": "Título",
     "descriptionLabel": "Descripción",
     "descriptionPlaceholder": "Descripción (opcional)…",
-    "save": "Guardar"
+    "save": "Guardar",
+    "mediaTailLabel": "Pausa tras un medio",
+    "mediaTailHelp": "Cuando el sonido o el vídeo de una pregunta dura más que su cronómetro, la pregunta se alarga hasta el final del medio más esta pausa: nada se corta a mitad.",
+    "seconds": "s",
+    "loudnessLabel": "Nivelación del sonido",
+    "loudnessHelp": "Nivel al que se lleva cada sonido y cada vídeo del quiz al reproducirse, para que el volumen no cambie de una pregunta a otra. Los archivos no se modifican.",
+    "loudness": {
+      "14": "Fuerte (−14 LUFS, streaming)",
+      "16": "Equilibrado (−16 LUFS)",
+      "23": "Suave (−23 LUFS, televisión)"
+    }
   },
   "broadcast": {
     "title": "Difusión",
@@ -222,7 +232,8 @@
       "confirmLabel": "Eliminar"
     },
     "titleEdit": "Editar la pregunta",
-    "titleAdd": "Nueva pregunta"
+    "titleAdd": "Nueva pregunta",
+    "stretchedTime": "El medio dura {{media}} s: la pregunta durará {{total}} s (final del medio + pausa de {{tail}} s del quiz)."
   },
   "preview": {
     "view": "Vista previa (vista del jugador)",
@@ -247,7 +258,15 @@
     "demoDisabled": "La subida de medios está desactivada en la instancia de demo.",
     "altLabel": "Texto alternativo",
     "altPlaceholder": "p. ej. Kylian Mbappé con la camiseta de Francia",
-    "altHelp": "Lo leen los lectores de pantalla. Describe lo que muestra la imagen cuando forma parte de la pregunta; déjalo vacío si es decorativa."
+    "altHelp": "Lo leen los lectores de pantalla. Describe lo que muestra la imagen cuando forma parte de la pregunta; déjalo vacío si es decorativa.",
+    "slotsLegend": "Medios de la pregunta",
+    "visualLabel": "Visual",
+    "audioLabel": "Sonido",
+    "addImage": "Añadir una imagen",
+    "addVideo": "Añadir un vídeo (MP4)",
+    "addAudio": "Añadir un sonido (MP3)",
+    "videoExcludesAudio": "El vídeo ya tiene su propio sonido: no hay pista de audio adicional. Quita el vídeo para añadir un sonido.",
+    "audioExcludesVideo": "Un vídeo ya tiene su propio sonido: quita el sonido para poder elegir un vídeo."
   },
   "background": {
     "legend": "Fondo",

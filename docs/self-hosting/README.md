@@ -18,6 +18,9 @@ infrastructure — for operators and integrators (not contributors).
   without rebuilding the image.
 - **[Authentication](auth.md)** — the local host seat, or wiring your own OIDC
   identity provider.
+- **[Audio & video](audio-video.md)** — accepted formats and how to convert,
+  sizes and the reverse proxy, loudness levelling, timing, and sound on the
+  projection (including skipping the unlock click on a dedicated computer).
 - **[Where participants connect](invitation-address.md)** — which address the
   QR code and the join link carry, per setup, and what to configure.
 - **[Upgrading](upgrading.md)** — backup, pull, migrations, and the rules.

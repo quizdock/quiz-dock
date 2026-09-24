@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  PayloadTooLargeException,
+} from '@nestjs/common';
 import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { MediaService } from '../../media/media.service';
@@ -14,7 +19,7 @@ import {
   slugOf,
   toBundle,
 } from './quiz-bundle';
-import { type QuizBundle, quizBundleSchema } from './quiz-bundle.schema';
+import { type BundleMediaMeta, type QuizBundle, quizBundleSchema } from './quiz-bundle.schema';
 
 export { slugify };
 
@@ -28,21 +33,12 @@ const MIME_BY_EXT: Record<string, string> = {
   gif: 'image/gif',
   webp: 'image/webp',
   avif: 'image/avif',
-  // Audio is not accepted for now (#42): a bundle carrying a sound file is
-  // refused as a whole, naming it, rather than importing a quiz whose media
-  // would never be heard.
+  mp4: 'video/mp4',
+  mp3: 'audio/mpeg',
 };
 /** Reverse map; the first extension listed for a mime wins (`jpg` over `jpeg`). */
 const EXT_BY_MIME: Record<string, string> = {};
 for (const [ext, mime] of Object.entries(MIME_BY_EXT)) EXT_BY_MIME[mime] ??= ext;
-// Sound files stored before audio was suspended still leave under their own name,
-// so a backup keeps meaningful files; only the way back in is closed (#42).
-Object.assign(EXT_BY_MIME, {
-  'audio/mpeg': 'mp3',
-  'audio/ogg': 'ogg',
-  'audio/wav': 'wav',
-  'audio/mp4': 'm4a',
-});
 
 export interface BundleFile {
   buffer: Buffer;
@@ -84,20 +80,28 @@ export class QuizPortableService {
 
     const files: Record<string, Uint8Array> = {};
     const pathById = new Map<string, string>();
-    const altByPath: Record<string, string | null> = {};
+    const metaByPath: Record<string, BundleMediaMeta> = {};
     for (const mediaId of collectMediaIds(quiz)) {
       const asset = await this.media.readAsset(mediaId);
       if (!asset) continue; // dangling reference: the export simply drops it
       const path = `media/${mediaId}.${EXT_BY_MIME[asset.mime] ?? 'bin'}`;
       pathById.set(mediaId, path);
       files[path] = new Uint8Array(asset.buffer);
-      altByPath[path] = asset.alt;
+      const row = asset.asset;
+      metaByPath[path] = {
+        alt: row.alt,
+        durationMs: row.durationMs ?? undefined,
+        peaks: row.kind === 'audio' ? row.peaks : undefined,
+        origin: row.audioOrigin ?? undefined,
+        loudnessLufs: row.loudnessLufs ?? undefined,
+        peakDbfs: row.peakDbfs ?? undefined,
+      };
     }
     // A media that could not be read keeps its route: harmless on re-import (rejected as missing).
     const bundle = toBundle(
       quiz,
       (mediaId) => pathById.get(mediaId) ?? `/api/v1/media/${mediaId}`,
-      altByPath,
+      metaByPath,
     );
     files[MANIFEST] = strToU8(JSON.stringify(bundle, null, 2));
     const zip = Buffer.from(zipSync(files, { level: 6 }));
@@ -112,6 +116,7 @@ export class QuizPortableService {
 
     // Media first: everything referenced must be in the zip and of a known type.
     const idByPath = new Map<string, string>();
+    const kindByPath = new Map<string, 'image' | 'video' | 'audio'>();
     for (const path of collectMediaPaths(bundle)) {
       const bytes = files[path];
       if (!bytes) throw new BadRequestException({ code: 'import.media_missing', params: { path } });
@@ -120,20 +125,40 @@ export class QuizPortableService {
         throw new BadRequestException({ code: 'import.media_unsupported', params: { path } });
       }
       const buffer = Buffer.from(bytes);
-      const { mediaId } = await this.media.upload(ownerId, {
-        buffer,
-        mimetype,
-        size: buffer.length,
-      });
+      const meta = bundle.media?.[path];
+      let uploaded;
+      try {
+        // Checked by content like any upload; a sound brings its measures (version 3).
+        uploaded = await this.media.upload(
+          ownerId,
+          { buffer, mimetype, size: buffer.length },
+          {
+            durationMs: meta?.durationMs,
+            peaks: meta?.peaks ? JSON.stringify(meta.peaks) : undefined,
+            origin: meta?.origin,
+            loudnessLufs: meta?.loudnessLufs,
+            peakDbfs: meta?.peakDbfs,
+          },
+        );
+      } catch (err) {
+        if (err instanceof BadRequestException || err instanceof PayloadTooLargeException) {
+          throw new BadRequestException({ code: 'import.media_unsupported', params: { path } });
+        }
+        throw err;
+      }
       // The alternative text travels with the file (#43, bundle version 2).
-      const alt = bundle.media?.[path]?.alt;
-      if (alt) await this.media.setAlt(ownerId, mediaId, alt);
-      idByPath.set(path, mediaId);
+      if (meta?.alt) await this.media.setAlt(ownerId, uploaded.mediaId, meta.alt);
+      idByPath.set(path, uploaded.mediaId);
+      kindByPath.set(path, uploaded.kind);
     }
 
     let imported;
     try {
-      imported = fromBundle(bundle, (path) => idByPath.get(path) as string);
+      imported = fromBundle(
+        bundle,
+        (path) => idByPath.get(path) as string,
+        (path) => kindByPath.get(path) ?? 'image',
+      );
     } catch (err) {
       if (err instanceof BundleContentError) {
         throw new BadRequestException({
@@ -152,6 +177,8 @@ export class QuizPortableService {
           description: imported.description,
           language: imported.language,
           feedbackEnabled: imported.feedbackEnabled,
+          mediaTailS: imported.mediaTailS,
+          loudnessTargetLufs: imported.loudnessTargetLufs,
           coverMediaId: imported.coverMediaId,
           slug: imported.slug,
           namespace: imported.namespace,
@@ -170,7 +197,11 @@ export class QuizPortableService {
                 orderIndex,
                 type: dto.type,
                 prompt: dto.prompt,
-                mediaId: dto.mediaId,
+                visualMediaId:
+                  dto.media?.visual && 'assetId' in dto.media.visual
+                    ? dto.media.visual.assetId
+                    : null,
+                audioMediaId: dto.media?.audio?.assetId ?? null,
                 answerExplanation: dto.answerExplanation || null,
                 backgroundMediaId: dto.backgroundMediaId || null,
                 backgroundGradient: dto.backgroundGradient ?? Prisma.JsonNull,

@@ -5,7 +5,14 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
+import type { MediaControllerUploadBodyOrigin } from './mediaControllerUploadBodyOrigin';
 
 export type MediaControllerUploadBody = {
   file: Blob;
+  durationMs?: number;
+  /** JSON array of AUDIO_PEAK_COUNT values in 0–1. */
+  peaks?: string;
+  origin?: MediaControllerUploadBodyOrigin;
+  loudnessLufs?: number;
+  peakDbfs?: number;
 };

@@ -19,7 +19,7 @@ const question = (over: Partial<SnapshotQuestion> = {}): SnapshotQuestion => ({
   orderIndex: 0,
   type: QuestionType.SingleChoice,
   prompt: 'Q ?',
-  media: null,
+  media: { visual: null, audio: null },
   answerExplanation: null,
   background: null,
   textTone: 'light',

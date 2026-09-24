@@ -41,11 +41,21 @@
     "unavailable": "Could not allocate a PIN, please try again."
   },
   "media": {
-    "unsupported_type": "Unsupported media type: images only for now.",
+    "unsupported_type": "Unsupported format: image (PNG, JPEG, GIF, WebP, AVIF), MP4 video (H.264) or MP3 audio.",
     "file_missing": "Missing file (“file” field).",
-    "file_too_large": "File too large (max {{max}} bytes).",
+    "file_too_large": "File too large (at most {{maxMb}} MB for this kind of media).",
     "not_found": "Media not found.",
-    "demo_disabled": "Media uploads are disabled on the demo instance."
+    "demo_disabled": "Media uploads are disabled on the demo instance.",
+    "video_with_audio": "A video already carries its own sound: remove the audio track or the video.",
+    "wrong_kind": "This media is not of the kind this slot takes.",
+    "embeds_disabled": "YouTube and Vimeo videos are turned off on this instance.",
+    "invalid": "The question’s media are not valid.",
+    "quicktime": "QuickTime files (.mov) are not accepted. Export the video as MP4 (H.264), for instance with HandBrake (handbrake.fr).",
+    "unsupported_video_codec": "Unsupported video codec ({{codec}}). Only H.264 plays everywhere. A video shot on an iPhone is often HEVC: convert it to MP4 H.264, for instance with HandBrake (handbrake.fr), or set the camera to “Most Compatible”.",
+    "unsupported_audio_codec": "The sound of this video ({{codec}}) is not AAC. Export it again as MP4 H.264 + AAC, for instance with HandBrake (handbrake.fr).",
+    "no_video_track": "This MP4 file holds no video. For a sound on its own, use an MP3.",
+    "unreadable_mp3": "This MP3 cannot be read: the file looks damaged or is not a real MP3.",
+    "metadata_invalid": "What was measured on the sound is not valid ({{field}}). Try the upload again."
   },
   "import": {
     "file_missing": "Missing file (“file” field).",

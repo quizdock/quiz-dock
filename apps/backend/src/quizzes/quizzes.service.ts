@@ -7,7 +7,9 @@ import {
 import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
 import { isManager, type RoleSet } from '../auth/roles';
 import { gameKeys } from '../game/game.keys';
+import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { QUESTION_INCLUDE, toQuestionOutput } from '../questions/questions.service';
 import { RedisService } from '../redis/redis.service';
 import type { CreateQuizDto } from './dto/create-quiz.dto';
 import type { QuizFeedbackQueryDto } from './dto/quiz-feedback.dto';
@@ -28,6 +30,7 @@ export class QuizzesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly media: MediaService,
   ) {}
 
   /**
@@ -67,6 +70,8 @@ export class QuizzesService {
         language: dto.language,
         coverMediaId: dto.coverMediaId,
         feedbackEnabled: dto.feedbackEnabled,
+        mediaTailS: dto.mediaTailS,
+        loudnessTargetLufs: dto.loudnessTargetLufs,
       },
     });
   }
@@ -77,20 +82,14 @@ export class QuizzesService {
     const quiz = await this.prisma.quiz.findFirst({
       where: { id, ownerId },
       include: {
-        questions: {
-          orderBy: { orderIndex: 'asc' },
-          include: {
-            options: { orderBy: { orderIndex: 'asc' } },
-            acceptedAnswers: true,
-          },
-        },
+        questions: { orderBy: { orderIndex: 'asc' }, include: QUESTION_INCLUDE },
         slides: { orderBy: { orderIndex: 'asc' } },
       },
     });
     if (!quiz) {
       throw new NotFoundException('quiz.not_found');
     }
-    return quiz;
+    return { ...quiz, questions: quiz.questions.map(toQuestionOutput) };
   }
 
   /**
@@ -295,13 +294,16 @@ export class QuizzesService {
         description: src.description,
         coverMediaId: src.coverMediaId,
         language: src.language,
+        mediaTailS: src.mediaTailS,
+        loudnessTargetLufs: src.loudnessTargetLufs,
         questionCount: src.questions.length,
         questions: {
           create: src.questions.map((q) => ({
             orderIndex: q.orderIndex,
             type: q.type,
             prompt: q.prompt,
-            mediaId: q.mediaId,
+            visualMediaId: q.visualMediaId,
+            audioMediaId: q.audioMediaId,
             answerExplanation: q.answerExplanation,
             backgroundMediaId: q.backgroundMediaId,
             backgroundGradient: q.backgroundGradient ?? Prisma.JsonNull,
@@ -369,6 +371,8 @@ export class QuizzesService {
         language: dto.language,
         coverMediaId: dto.coverMediaId,
         feedbackEnabled: dto.feedbackEnabled,
+        mediaTailS: dto.mediaTailS,
+        loudnessTargetLufs: dto.loudnessTargetLufs,
       },
     });
   }
@@ -379,7 +383,13 @@ export class QuizzesService {
     if (await this.hasLiveSession(ownerId, id)) {
       throw new ConflictException('quiz.in_use');
     }
+    const slots = await this.prisma.question.findMany({
+      where: { quizId: id },
+      select: { visualMediaId: true, audioMediaId: true },
+    });
     await this.prisma.quiz.delete({ where: { id } });
+    // Its videos and sounds go with it, unless another quiz (a copy) still plays them.
+    await this.media.releaseUnused(slots.flatMap((q) => [q.visualMediaId, q.audioMediaId]));
   }
 
   /** Whether one of the owner's live sessions (Redis index) plays this quiz. */

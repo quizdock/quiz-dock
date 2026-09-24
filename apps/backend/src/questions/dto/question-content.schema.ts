@@ -1,3 +1,4 @@
+import { questionMediaSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { backgroundFields, noBackgroundConflict } from '../../common/background.schema';
 
@@ -68,7 +69,8 @@ export const questionContentSchema = z
     // Markdown, shown at REVEAL only (#5). `null` clears it.
     answerExplanation: z.string().trim().max(2000).nullable().optional(),
     ...backgroundFields,
-    mediaId: z.string().length(26).optional(),
+    // Visual + audio slots (shared contract: never a video with an audio track).
+    media: questionMediaSchema.optional(),
     timeLimitS: z.number().int().min(5).max(120).default(20),
     // Auto-mode delay on REVEAL (#6); null = engine default. Bounds match the SQL CHECK.
     revealDelayS: z.number().int().min(1).max(300).nullable().optional(),

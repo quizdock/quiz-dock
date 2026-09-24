@@ -4,12 +4,10 @@ A quiz leaves and enters QuizDock as a **bundle**: a `quiz.json` manifest next
 to a `media/` folder, zipped (`<slug>.quizdock.zip`). The same layout, unzipped,
 is what a Quiz Store repository holds.
 
-> **Sound files are not accepted for now.** Audio could be attached to a question
-> but no screen ever played it, so it is refused at the door until that is
-> designed properly ([#42](https://github.com/quizdock/quiz-dock/issues/42)). A
-> bundle carrying one is refused as a whole, naming the file — including a bundle
-> exported from an older version. Sorry for the disruption if you were relying on
-> it: the sound is still in your database, and nothing was deleted.
+> **Videos and sounds (version 3).** A question's visual may be an MP4 video
+> (H.264, AAC or no audio) and its audio slot an MP3. The formats of the audio
+> suspended in [#42](https://github.com/quizdock/quiz-dock/issues/42) (ogg, wav,
+> m4a) are still refused.
 
 - **Export** — editor header → *Export*, `GET /api/v1/quizzes/:id/export`, or
   `qd quiz:export <id> <file.zip>` from the operator CLI
@@ -27,7 +25,7 @@ is what a Quiz Store repository holds.
 ```json
 {
   "format": "quizdock/quiz",
-  "version": 2,
+  "version": 3,
   "quiz": {
     "slug": "capitals",
     "namespace": null,
@@ -40,10 +38,13 @@ is what a Quiz Store repository holds.
     "tags": ["capitals", "europe"],
     "license": "CC-BY-4.0",
     "feedbackEnabled": true,
+    "mediaTailS": 3,
+    "loudnessTargetLufs": -16,
     "cover": "media/cover.jpg"
   },
   "media": {
-    "media/cover.jpg": { "alt": "The port of Rotterdam at dusk" }
+    "media/cover.jpg": { "alt": "The port of Rotterdam at dusk" },
+    "media/anthem.mp3": { "durationMs": 31000, "peaks": [0.12, 0.4, "… 200 values in 0–1"], "loudnessLufs": -17.2, "peakDbfs": -0.9 }
   },
   "items": [
     {
@@ -80,8 +81,18 @@ is what a Quiz Store repository holds.
   the next question, or at the end.
 - Media are referenced by relative path under `media/` (flat, no
   sub-folders), including inline Markdown images. Accepted types: png, jpg,
-  gif, webp, avif, mp3, ogg, wav, m4a — each within `MEDIA_MAX_BYTES`, the
-  whole zip within `IMPORT_MAX_BYTES`.
+  gif, webp, avif, mp4, mp3 — checked by content like any upload, each within
+  its kind's limit (`MEDIA_MAX_BYTES`, `MEDIA_MAX_VIDEO_MB`,
+  `MEDIA_MAX_AUDIO_MB`), the whole zip within `IMPORT_MAX_BYTES` (raise it for
+  quizzes carrying videos).
+- `quiz.mediaTailS` (version 3, 0–30, default 3): the pause kept after a
+  question's sound or video. A media longer than its question stretches the
+  question to the end of the media plus this pause — nothing is cut mid-play.
+- `quiz.loudnessTargetLufs` (version 3): the level sounds and videos are
+  brought to at playback — `-14` loud (streaming), `-16` balanced (default),
+  `-23` calm (broadcast). The files are never re-encoded.
+- A question's `media` is its visual (an image or an MP4), `audio` its sound
+  (an MP3). Never both a video and a sound: the video carries its own.
 - Questions and slides follow the API content rules (question types and their
   fields, block types, colour/shape names, limits). Defaults apply when a
   field is omitted: `timeLimitS` 20, `pointsMode` standard, `textTone` light,
@@ -102,8 +113,8 @@ and `tags` empty; an imported bundle keeps whatever it carried.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `version` (top level) | integer | Manifest schema version, currently `2`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
-| `media` (top level) | object | Version 2: what each media file carries beyond its bytes, keyed by the same path the items reference — today an `alt`, the description read aloud by screen readers. Absent in a version 1 bundle, and a file with no alternative text simply has no entry. |
+| `version` (top level) | integer | Manifest schema version, currently `3`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
+| `media` (top level) | object | What each media file carries beyond its bytes, keyed by the same path the items reference: an `alt`, the description read aloud by screen readers (version 2); for a sound or a video, what the editor measured (version 3) — `durationMs`, `peaks` (200 values in 0–1, the waveform the screens draw), `origin` (`upload` or `recording`), `loudnessLufs` and `peakDbfs` (the playback gain). A sound needs `durationMs` and `peaks`. Absent in a version 1 bundle, and an image with no alternative text simply has no entry. |
 | `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Derived from the title at first export or import when absent; the zip is named after it. |
 | `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. |
 | `revision` | integer ≥ 0 | Publication counter of the quiz the bundle came from: **+1 every time it is shared** to a template catalogue. An import starts the copy back at 0 — it has never been shared itself. An integer, not semver. |

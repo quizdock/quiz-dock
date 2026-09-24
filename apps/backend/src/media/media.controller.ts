@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   Param,
   Post,
@@ -20,6 +21,7 @@ import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
@@ -28,9 +30,9 @@ import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
 import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
+import { uploadCeiling } from './media.config';
 import { MediaService } from './media.service';
-
-const MAX_BYTES = Number(process.env.MEDIA_MAX_BYTES ?? 10 * 1024 * 1024);
+import { parseRange } from './range';
 
 interface UploadedMediaFile {
   buffer: Buffer;
@@ -49,14 +51,27 @@ export class MediaController {
   @ApiBody({
     schema: {
       type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        // Measured by the editor while decoding a sound or a video (see `parseUploadMeta`).
+        durationMs: { type: 'integer' },
+        peaks: { type: 'string', description: 'JSON array of AUDIO_PEAK_COUNT values in 0–1.' },
+        origin: { type: 'string', enum: ['upload', 'recording'] },
+        loudnessLufs: { type: 'number' },
+        peakDbfs: { type: 'number' },
+      },
       required: ['file'],
     },
   })
   @ApiCreatedResponse({ type: MediaUploadResultDto })
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_BYTES } }))
-  upload(@CurrentUser() user: User, @UploadedFile() file: UploadedMediaFile | undefined) {
-    return this.media.upload(user.id, file);
+  // The stream stops at the largest kind's limit; the service applies the one of the kind found.
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: uploadCeiling() } }))
+  upload(
+    @CurrentUser() user: User,
+    @UploadedFile() file: UploadedMediaFile | undefined,
+    @Body() fields: Record<string, unknown>,
+  ) {
+    return this.media.upload(user.id, file, fields);
   }
 
   /** The alternative text of one of the caller's media (#43). */
@@ -78,15 +93,43 @@ export class MediaController {
     return this.media.setAlt(user.id, id, body.alt);
   }
 
+  /**
+   * The bytes of a media, whole or by `Range` — Safari plays no video it cannot
+   * seek into. An id names one file forever (a replaced media gets a new id), so
+   * the response may be cached for good; `nosniff` keeps the browser to the type
+   * the server decided.
+   */
   @Get(':id')
   @Public()
   @ApiOkResponse({ description: 'Contenu binaire du média.' })
+  @ApiResponse({ status: 206, description: 'Partie demandée par `Range`.' })
+  @ApiResponse({ status: 416, description: 'Plage hors du fichier.' })
   async serve(
     @Param('id') id: string,
+    @Headers('range') rangeHeader: string | undefined,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<StreamableFile> {
-    const { stream, mime, sizeBytes } = await this.media.openStream(id);
-    res.set({ 'Content-Type': mime, 'Content-Length': String(sizeBytes) });
+  ): Promise<StreamableFile | undefined> {
+    const size = await this.media.sizeOf(id);
+    res.set({
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    const range = parseRange(rangeHeader, size);
+    if (range === 'unsatisfiable') {
+      res.status(416).set('Content-Range', `bytes */${size}`);
+      return undefined;
+    }
+    const { stream, mime } = await this.media.openStream(id, range ?? undefined);
+    if (range) {
+      res.status(206).set({
+        'Content-Range': `bytes ${range.start}-${range.end}/${size}`,
+        'Content-Length': String(range.end - range.start + 1),
+      });
+    } else {
+      res.set('Content-Length', String(size));
+    }
+    res.set('Content-Type', mime);
     return new StreamableFile(stream);
   }
 

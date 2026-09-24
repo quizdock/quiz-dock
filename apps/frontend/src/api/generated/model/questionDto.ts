@@ -7,6 +7,7 @@
  */
 import type { QuestionDtoAcceptedAnswersItem } from './questionDtoAcceptedAnswersItem';
 import type { QuestionDtoBackgroundGradient } from './questionDtoBackgroundGradient';
+import type { QuestionDtoMedia } from './questionDtoMedia';
 import type { QuestionDtoOptionsItem } from './questionDtoOptionsItem';
 import type { QuestionDtoPointsMode } from './questionDtoPointsMode';
 import type { QuestionDtoScoring } from './questionDtoScoring';
@@ -23,8 +24,7 @@ export interface QuestionDto {
   orderIndex: number;
   type: QuestionDtoType;
   prompt: string;
-  /** @nullable */
-  mediaId: string | null;
+  media: QuestionDtoMedia;
   /** @nullable */
   answerExplanation: string | null;
   /** @nullable */

@@ -1,5 +1,6 @@
 import { useParams } from '@tanstack/react-router';
 import { Maximize, Minimize, Users } from 'lucide-react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { Markdown } from '@/components/markdown';
@@ -10,7 +11,6 @@ import { Avatar } from '../game/avatar';
 import {
   AnswerExplanation,
   AnswerRules,
-  QuestionMedia,
   LeaderboardList,
   OptionGrid,
   Podium,
@@ -18,6 +18,10 @@ import {
   SlideView,
   TYPE_BASE,
 } from '../game/live-components';
+import { useAudioUnlocked } from '../game/media/audio-unlock';
+import { preloadMedia } from '../game/media/media-pool';
+import { QuestionMediaStage } from '../game/media/question-media-stage';
+import { SoundUnlockOverlay } from '../game/media/sound-unlock-overlay';
 import { Surface } from '../game/surface';
 import { useGameRemaining } from '../game/use-countdown';
 import { joinHostLabel, joinUrlFor } from '../game/join-url';
@@ -31,13 +35,24 @@ import { useGameSession } from '../game/use-game-session';
  */
 export function ScreenPage() {
   const { pin } = useParams({ from: '/session/$pin/projection' });
-  return <ScreenView pin={pin} />;
+  return <ScreenView pin={pin} playMedia />;
 }
 
-/** The projected screen itself; also embedded in the host console's Projection tab. */
-export function ScreenView({ pin }: { pin: string }) {
+/**
+ * The projected screen itself; also embedded in the host console's Projection
+ * tab. Only the projection window (`playMedia`) plays the questions' videos and
+ * sounds — the console's copy shows them still, or the room would hear
+ * everything twice.
+ */
+export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?: boolean }) {
   const { t } = useTranslation('live');
   const { view } = useGameSession(pin, 'spectator');
+  const soundUnlocked = useAudioUnlocked();
+
+  // While the leaderboard is up, the next question's media buffer here.
+  useEffect(() => {
+    if (playMedia && view.preload) preloadMedia(view.preload.media);
+  }, [playMedia, view.preload]);
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
   const remaining = useGameRemaining(view);
 
@@ -148,8 +163,19 @@ export function ScreenView({ pin }: { pin: string }) {
             </span>
           ) : null}
         </div>
-        {/* #41: the projected screen showed everything but the image. */}
-        <QuestionMedia media={view.question.media} className="max-h-[35vh] w-auto" />
+        {/* Image or video in one box, the sound as its waveform; played here only. */}
+        <QuestionMediaStage
+          key={view.question.questionIndex}
+          media={view.question.media}
+          mode={!playMedia || view.nav?.review ? 'still' : view.paused ? 'pause' : 'play'}
+          boxClassName="h-[35vh]"
+          resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
+          restartSignal={
+            view.mediaControl?.questionIndex === view.question.questionIndex
+              ? view.mediaControl.seq
+              : 0
+          }
+        />
         <AnswerRules question={view.question} />
         {view.question.options?.length ? (
           <OptionGrid options={view.question.options} />
@@ -207,6 +233,11 @@ export function ScreenView({ pin }: { pin: string }) {
       )}
     >
       {fullscreenBtn}
+      {/* A quiz with sound asks for the unlocking click as soon as this window opens,
+          whatever the moment of the session; a silent quiz never asks. */}
+      {playMedia && !soundUnlocked && view.quizHasSound && view.state !== 'ENDED' ? (
+        <SoundUnlockOverlay />
+      ) : null}
       {view.nav?.review ? (
         <span className="bg-muted text-muted-foreground absolute left-[1em] top-[1em] z-20 rounded-full px-[0.8em] py-[0.3em] text-[0.8em] font-medium">
           {t('screen.review')}

@@ -1,6 +1,7 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, PayloadTooLargeException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { ZodValidationException } from 'nestjs-zod';
+import { uploadCeiling } from '../media/media.config';
 
 /**
  * Corps d'erreur **tokenisé** (ADR 0001) : le backend n'expose que des codes
@@ -16,6 +17,9 @@ export interface ErrorBody {
   params?: Record<string, string | number>;
   errors?: { field: string; code: string }[];
 }
+
+/** A domain error code: dotted lowercase words (`media.video_with_audio`). */
+const DOMAIN_CODE = /^[a-z][a-z_]*(\.[a-z][a-z_]*)+$/;
 
 /** Lit le code (+ params) porté par le payload d'une exception applicative. */
 function fromPayload(payload: unknown): ErrorBody {
@@ -39,8 +43,17 @@ function fromPayload(payload: unknown): ErrorBody {
 export function toErrorResponse(exception: unknown): { status: number; body: ErrorBody } {
   if (exception instanceof ZodValidationException) {
     const issues =
-      (exception.getResponse() as { errors?: { code: string; path: (string | number)[] }[] })
-        .errors ?? [];
+      (
+        exception.getResponse() as {
+          errors?: { code: string; message?: string; path: (string | number)[] }[];
+        }
+      ).errors ?? [];
+    // A rule of the domain written as a refinement (`media.video_with_audio`)
+    // carries its own code: it says more than a generic `custom` field error.
+    const domain = issues.find((i) => i.code === 'custom' && DOMAIN_CODE.test(i.message ?? ''));
+    if (domain) {
+      return { status: exception.getStatus(), body: { code: domain.message as string } };
+    }
     return {
       status: exception.getStatus(),
       body: {
@@ -50,7 +63,16 @@ export function toErrorResponse(exception: unknown): { status: number; body: Err
     };
   }
   if (exception instanceof HttpException) {
-    return { status: exception.getStatus(), body: fromPayload(exception.getResponse()) };
+    const body = fromPayload(exception.getResponse());
+    // Multer stops a stream past the largest limit with its own English message.
+    if (exception instanceof PayloadTooLargeException && body.code === 'File too large') {
+      const max = uploadCeiling();
+      return {
+        status: exception.getStatus(),
+        body: { code: 'media.file_too_large', params: { max, maxMb: Math.floor(max / 1048576) } },
+      };
+    }
+    return { status: exception.getStatus(), body };
   }
   if (exception instanceof WsException) {
     return { status: HttpStatus.BAD_REQUEST, body: fromPayload(exception.getError()) };

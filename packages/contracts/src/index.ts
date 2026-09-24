@@ -9,6 +9,10 @@
  * (maps `ClientToServerEvents`/`ServerToClientEvents`) du contrat temps réel.
  */
 
+export * from './media-sniff';
+export * from './question-media';
+import type { LiveQuestionMedia } from './question-media';
+
 export const CONTRACTS_VERSION = '0.3.0' as const;
 
 /** États de la partie (machine à états — technique §8). */
@@ -99,6 +103,8 @@ export const ClientEvents = {
   HostMode: 'host:mode',
   /** Suspend/reprend l'auto-progression (et gèle le chrono en ANSWERING). */
   HostPause: 'host:pause',
+  /** Host control over the current question's media (restart it from the top). */
+  HostMedia: 'host:media',
   /** Ajoute/retire du temps au chrono de la question courante (± secondes). */
   HostAdjustTime: 'host:adjust-time',
   SpectatorJoin: 'spectator:join',
@@ -131,6 +137,12 @@ export const ServerEvents = {
   GameOutline: 'game:outline',
   /** Nouveau timing de la question courante (ajustement du chrono). */
   QuestionTime: 'question:time',
+  /** Media of the next question, to fetch ahead (projection and console only). */
+  MediaPreload: 'media:preload',
+  /** A host command on the current question's media, relayed to the screens. */
+  MediaControl: 'media:control',
+  /** What the quiz's media need from a screen (sent on attach, not to players). */
+  GameMedia: 'game:media',
   Notice: 'notice',
   Error: 'error',
   Pong: 'pong',
@@ -149,14 +161,15 @@ export interface PublicOption {
   color: OptionColor;
   shape: OptionShape;
   /** `alt` is what the author wrote for screen readers (#43); null = none. */
-  media?: { url: string; kind: 'image' | 'audio'; alt?: string | null } | null;
+  media?: { url: string; kind: 'image'; alt?: string | null } | null;
 }
 
 export interface QuestionStartPayload {
   questionIndex: number;
   type: QuestionType;
   prompt: string;
-  media?: { url: string; kind: 'image' | 'audio'; alt?: string | null } | null;
+  /** Visual and sound of the question; both null when it has none. */
+  media: LiveQuestionMedia;
   options?: PublicOption[];
   timeLimitS: number;
   basePoints: number;
@@ -233,6 +246,12 @@ export interface SlideShowPayload {
   textOutline: boolean;
   /** Auto-mode display time: null = engine default, 0 = the host clicks, else seconds. */
   displayDelayS: number | null;
+}
+
+/** The media of question `questionIndex`, to fetch ahead of it. */
+export interface MediaPreloadPayload {
+  questionIndex: number;
+  media: LiveQuestionMedia;
 }
 
 /** A step of the sequence the host can jump back to: a played question (its reveal) or a shown slide. */
@@ -398,6 +417,8 @@ export interface ClientToServerEvents {
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
   /** Suspend (`paused:true`) ou reprend (`paused:false`) l'auto-progression. */
   'host:pause': (p: { pin: string; paused: boolean }) => void;
+  /** Restart the current question's sound or video from the top, on the projection. */
+  'host:media': (p: { pin: string; action: 'restart' }) => void;
   /** Ajoute/retire `deltaS` secondes au chrono de la question courante. */
   'host:adjust-time': (p: { pin: string; deltaS: number }) => void;
   /** Rejoint la room en lecture seule (fenêtre projetée) — aucune auth, le PIN suffit. */
@@ -466,6 +487,20 @@ export interface ServerToClientEvents {
   'game:outline': (p: GameOutlinePayload) => void;
   /** Timing recalculé de la question courante (ajustement du chrono). */
   'question:time': (p: QuestionTimePayload) => void;
+  /**
+   * The media of the next question, sent with the reveal of the current one so
+   * a screen fetches them while the leaderboard is up and plays them at once.
+   * Only to sockets that are not players: the next question is not theirs yet.
+   */
+  'media:preload': (p: MediaPreloadPayload) => void;
+  /** The host restarts the current question's media from the top. */
+  'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
+  /**
+   * Whether the quiz plays any sound (an MP3, a video), sent on attach to the
+   * screens that are not players: the projection then asks for the click that
+   * unlocks sound as soon as it opens, whatever the moment of the session.
+   */
+  'game:media': (p: { hasSound: boolean }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine
    * stable (ex. `session.not_found`) + d'éventuels `params` d'interpolation ; le

@@ -44,7 +44,8 @@ function makeQuiz(): ExportableQuiz {
         orderIndex: 0,
         type: 'single_choice',
         prompt: 'Capital of France?',
-        mediaId: IMG,
+        visualMediaId: IMG,
+        audioMediaId: null,
         answerExplanation: `Because. ![why](/api/v1/media/${INLINE})`,
         backgroundMediaId: null,
         backgroundGradient: { angle: 90, colors: ['#000000', '#ffffff'] },
@@ -202,7 +203,7 @@ describe('quiz bundle', () => {
     const [q1, q2] = imported.questions;
     expect(q1).toMatchObject({
       type: 'single_choice',
-      mediaId: IMG,
+      media: { visual: { kind: 'image', assetId: IMG }, audio: null },
       answerExplanation: src.questions[0].answerExplanation,
       backgroundGradient: { angle: 90, colors: ['#000000', '#ffffff'] },
       textTone: 'dark',
@@ -272,7 +273,7 @@ describe('quiz bundle', () => {
       license: null,
     });
     // But never a bundle from a schema newer than this build.
-    expect(quizBundleSchema.safeParse({ ...rest, version: 3 }).success).toBe(false);
+    expect(quizBundleSchema.safeParse({ ...rest, version: 4 }).success).toBe(false);
   });
 
   it('validates the Store fields: kebab-case slug and tags, five tags at most, SPDX-like license', () => {

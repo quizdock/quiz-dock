@@ -5,6 +5,7 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateQuizDtoLoudnessTargetLufs } from './createQuizDtoLoudnessTargetLufs';
 
 export interface CreateQuizDto {
   /**
@@ -20,6 +21,12 @@ export interface CreateQuizDto {
      */
   language?: string;
   feedbackEnabled?: boolean;
+  /**
+     * @minimum 0
+     * @maximum 30
+     */
+  mediaTailS?: number;
+  loudnessTargetLufs?: typeof CreateQuizDtoLoudnessTargetLufs[keyof typeof CreateQuizDtoLoudnessTargetLufs];
   /**
      * @minLength 26
      * @maxLength 26

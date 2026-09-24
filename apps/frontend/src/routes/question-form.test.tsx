@@ -145,3 +145,105 @@ describe('QuestionForm', () => {
     expect(screen.queryByText(/Brouillon restauré/)).toBeNull();
   });
 });
+
+describe('QuestionForm — media slots', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  it('refuses to save a video with an audio track, before asking the server', async () => {
+    const id = (c: string) => c.repeat(26);
+    localStorage.setItem(
+      'draft:quiz:q1:question:new',
+      JSON.stringify({
+        type: 'poll',
+        prompt: 'Q ?',
+        media: {
+          visual: { kind: 'video', source: 'upload', assetId: id('V') },
+          audio: {
+            assetId: id('A'),
+            origin: 'upload',
+            durationMs: 1000,
+            peaks: new Array(200).fill(0.5),
+          },
+        },
+        answerExplanation: '',
+        background: { mediaId: null, gradient: null, textTone: 'light', textOutline: true },
+        timeLimitS: 20,
+        revealDelayS: null,
+        pointsMode: 'none',
+        scoring: 'standard',
+        numericValue: 0,
+        numericTolerance: 0,
+        options: [
+          {
+            key: 'a',
+            text: 'A',
+            color: 'red',
+            shape: 'triangle',
+            isCorrect: false,
+            correctOrderIndex: 0,
+          },
+          {
+            key: 'b',
+            text: 'B',
+            color: 'blue',
+            shape: 'diamond',
+            isCorrect: false,
+            correctOrderIndex: 1,
+          },
+        ],
+        acceptedAnswers: [],
+      }),
+    );
+    const fetchMock = mockApi([]);
+    const { onClose } = renderForm();
+    fireEvent.click(screen.getByText('Ajouter'));
+    expect(await screen.findByText(/Une vidéo a déjà son propre son/)).toBeInTheDocument();
+    expect(lastPost(fetchMock)).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
+
+describe('QuestionForm — media timing', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  it('says when a long sound stretches the question, and by how much', async () => {
+    localStorage.setItem(
+      'draft:quiz:q1:question:new',
+      JSON.stringify({
+        type: 'poll',
+        prompt: 'Q ?',
+        media: {
+          visual: null,
+          audio: {
+            assetId: 'A'.repeat(26),
+            origin: 'upload',
+            durationMs: 42_000,
+            peaks: new Array(200).fill(0.5),
+          },
+        },
+        answerExplanation: '',
+        background: { mediaId: null, gradient: null, textTone: 'light', textOutline: true },
+        timeLimitS: 20,
+        revealDelayS: null,
+        pointsMode: 'none',
+        scoring: 'standard',
+        numericValue: 0,
+        numericTolerance: 0,
+        options: [],
+        acceptedAnswers: [],
+      }),
+    );
+    mockApi([]);
+    renderForm();
+    // 42 s of sound starting 3 s before the answers, + the default 3 s pause → 42 s.
+    expect(await screen.findByRole('note', { name: '' })).toHaveTextContent(
+      'Le média dure 42 s : la question durera 42 s',
+    );
+  });
+});

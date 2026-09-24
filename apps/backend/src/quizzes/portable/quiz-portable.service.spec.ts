@@ -43,8 +43,12 @@ function makePrisma() {
 function makeMedia() {
   let n = 0;
   return {
-    maxUploadBytes: 1024,
-    upload: jest.fn(async () => ({ mediaId: `01ARZ3NDEKTSV4RRFFQ69G5FA${n++}`, url: '' })),
+    maxUploadBytes: 64 * 1024, // roomy enough for a manifest carrying a waveform
+    upload: jest.fn(async (_owner: string, file: { mimetype: string }) => ({
+      mediaId: `01ARZ3NDEKTSV4RRFFQ69G5FA${n++}`,
+      url: '',
+      kind: file.mimetype.split('/')[0] as 'image' | 'video' | 'audio',
+    })),
     readAsset: jest.fn(),
   };
 }
@@ -74,6 +78,71 @@ describe('QuizPortableService', () => {
   });
 
   describe('import', () => {
+    it('brings back a video and a sound with its measures (version 3)', async () => {
+      const peaks = new Array(200).fill(0.25);
+      const options = [
+        { text: 'A', color: 'red', shape: 'triangle' },
+        { text: 'B', color: 'blue', shape: 'diamond' },
+      ];
+      const buffer = zipOf(
+        {
+          format: 'quizdock/quiz',
+          version: 3,
+          quiz: { title: 'Media' },
+          media: {
+            'media/tone.mp3': { durationMs: 8000, peaks, loudnessLufs: -18, peakDbfs: -3 },
+          },
+          items: [
+            { kind: 'question', type: 'poll', prompt: 'Film', media: 'media/clip.mp4', options },
+            { kind: 'question', type: 'poll', prompt: 'Song', audio: 'media/tone.mp3', options },
+          ],
+        },
+        { 'media/clip.mp4': new Uint8Array([1]), 'media/tone.mp3': new Uint8Array([2]) },
+      );
+      await service.importBundle(OWNER, { buffer, mimetype: 'application/zip' });
+      expect(media.upload).toHaveBeenCalledWith(
+        OWNER,
+        expect.objectContaining({ mimetype: 'audio/mpeg' }),
+        expect.objectContaining({
+          durationMs: 8000,
+          peaks: JSON.stringify(peaks),
+          loudnessLufs: -18,
+          peakDbfs: -3,
+        }),
+      );
+      const created = prisma.tx.quiz.create.mock.calls[0][0] as {
+        data: {
+          questions: { create: { visualMediaId: string | null; audioMediaId: string | null }[] };
+        };
+      };
+      const [film, song] = created.data.questions.create;
+      expect(film.visualMediaId).toMatch(/^01ARZ/);
+      expect(film.audioMediaId).toBeNull();
+      expect(song.visualMediaId).toBeNull();
+      expect(song.audioMediaId).toMatch(/^01ARZ/);
+    });
+
+    it('refuses a sound that comes without its measures', async () => {
+      const options = [
+        { text: 'A', color: 'red', shape: 'triangle' },
+        { text: 'B', color: 'blue', shape: 'diamond' },
+      ];
+      const buffer = zipOf(
+        {
+          format: 'quizdock/quiz',
+          version: 3,
+          quiz: { title: 'Media' },
+          items: [
+            { kind: 'question', type: 'poll', prompt: 'Song', audio: 'media/t.mp3', options },
+          ],
+        },
+        { 'media/t.mp3': new Uint8Array([2]) },
+      );
+      await expect(
+        service.importBundle(OWNER, { buffer, mimetype: 'application/zip' }),
+      ).rejects.toMatchObject({ response: { code: 'import.invalid_item' } });
+    });
+
     it('uploads the media, creates a draft and anchors the slides', async () => {
       const buffer = zipOf(manifest(), { 'media/a.png': new Uint8Array([1, 2, 3]) });
       const quiz = await service.importBundle(OWNER, { buffer, mimetype: 'application/zip' });
@@ -82,6 +151,7 @@ describe('QuizPortableService', () => {
       expect(media.upload).toHaveBeenCalledWith(
         OWNER,
         expect.objectContaining({ mimetype: 'image/png', size: 3 }),
+        expect.anything(),
       );
       const data = prisma.tx.quiz.create.mock.calls[0][0].data;
       expect(data).toMatchObject({
@@ -154,7 +224,7 @@ describe('QuizPortableService', () => {
     it('refuses a bundle from a newer schema, a bad slug, too many tags', async () => {
       const only = [manifest().items[1]];
       for (const json of [
-        manifest({ items: only, version: 3 }),
+        manifest({ items: only, version: 4 }),
         manifest({ items: only, quiz: { title: 'X', slug: 'Not A Slug' } }),
         manifest({ items: only, quiz: { title: 'X', tags: ['a', 'b', 'c', 'd', 'e', 'f'] } }),
       ]) {
@@ -238,7 +308,8 @@ describe('QuizPortableService', () => {
             orderIndex: 0,
             type: 'poll',
             prompt: 'Hi',
-            mediaId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+            visualMediaId: '01ARZ3NDEKTSV4RRFFQ69G5FAV',
+            audioMediaId: null,
             answerExplanation: null,
             backgroundMediaId: null,
             backgroundGradient: null,
@@ -265,7 +336,11 @@ describe('QuizPortableService', () => {
         ],
         slides: [],
       });
-      media.readAsset.mockResolvedValue({ buffer: Buffer.from([9]), mime: 'image/jpeg' });
+      media.readAsset.mockResolvedValue({
+        buffer: Buffer.from([9]),
+        mime: 'image/jpeg',
+        asset: { kind: 'image', alt: null, peaks: [] },
+      });
       const exportedAt = new Date('2026-09-20T12:00:00Z');
       prisma.quiz.update.mockResolvedValue({
         slug: 'ete-a-paris',
@@ -289,7 +364,7 @@ describe('QuizPortableService', () => {
         'quiz.json',
       ]);
       const json = JSON.parse(Buffer.from(files['quiz.json']).toString());
-      expect(json.version).toBe(2);
+      expect(json.version).toBe(3);
       expect(json.quiz).toMatchObject({
         slug: 'ete-a-paris',
         namespace: null,

@@ -14,6 +14,8 @@ export class MediaAltDto extends createZodDto(mediaAltSchema) {}
 export const mediaDescriptionSchema = z.object({
   id: z.string(),
   alt: z.string().nullable(),
+  /** Length of a video or a sound (ms), for the editor's timing hint. */
+  durationMs: z.number().int().nullable(),
 });
 
 export class MediaDescriptionDto extends createZodDto(mediaDescriptionSchema) {}

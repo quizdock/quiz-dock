@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import { GameState } from '@quiz-dock/contracts';
+import { GameState, liveMediaUrls } from '@quiz-dock/contracts';
 import type {
   AnswerValue,
   GameMode,
@@ -332,6 +332,10 @@ export class GameEngine {
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
     const top = this.topRows(ranked);
 
+    // The next question's media, fetched by the screens while the leaderboard is up.
+    const next = snapshot.questions[index + 1];
+    const preload = next && liveMediaUrls(next.media).length > 0 ? next.media : null;
+
     const sockets = await this.server.in(pin).fetchSockets();
     for (const socket of sockets) {
       const playerId = (socket.data as { playerId?: string }).playerId;
@@ -340,6 +344,9 @@ export class GameEngine {
         this.personalReveal(common, records, ranked, rankOf, playerId),
       );
       socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
+      if (!playerId && preload) {
+        socket.emit('media:preload', { questionIndex: index + 1, media: preload });
+      }
     }
   }
 
@@ -699,6 +706,13 @@ export class GameEngine {
     // le host:create — doit voir ce que la session enregistre de lui.
     socket.emit('notice', noticeOf(meta));
     const snapshotForNav = await this.game.getSnapshot(pin);
+    if (!playerId && snapshotForNav) {
+      // The projection asks for sound at once when the quiz will need it.
+      const hasSound = snapshotForNav.questions.some(
+        (q) => !!q.media?.audio || q.media?.visual?.kind === 'video',
+      );
+      socket.emit('game:media', { hasSound });
+    }
     socket.emit('game:state', {
       state: meta.state as GameState,
       questionIndex: meta.currentIndex,
@@ -1108,6 +1122,17 @@ export class GameEngine {
    * le chrono (nouveau timing diffusé) et ré-arme l'enchaînement auto si besoin.
    * Idempotent : re-pauser/re-reprendre est sans effet (hors diffusion d'état).
    */
+  /**
+   * `host:media` : relays a host command on the current question's media to
+   * the screens — after an interruption the projection resumes a second before
+   * where it was, and this lets the host take the room back to the top.
+   */
+  async mediaControl(pin: string, hostUserId: string, action: 'restart'): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Answering) return;
+    this.server.to(pin).emit('media:control', { questionIndex: meta.currentIndex, action });
+  }
+
   async setPaused(pin: string, hostUserId: string, paused: boolean): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     await this.redis.hset(gameKeys.game(pin), { paused: paused ? '1' : '0' });

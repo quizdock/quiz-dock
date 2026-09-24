@@ -108,7 +108,8 @@
       "lanHidden": "此實例執行在 Docker Desktop（或 bridge 網路的容器）中，看不到電腦的網路：無法偵測本機位址。請在下方輸入——或在 .env 檔案中加入 HOST_LAN_IPS=<你的 IP>（或 docker run 時加「-e HOST_LAN_IPS=…」），下次即會列出。",
       "https": "本頁透過 HTTPS 提供：http:// 的本機位址會在手機上顯示警告——帶憑證的公開位址才是正解。"
     },
-    "backToLive": "回到目前"
+    "backToLive": "回到目前",
+    "restartMedia": "從頭重新播放媒體"
   },
   "screen": {
     "sessionUnavailable": "會話不可用。",
@@ -229,5 +230,13 @@
   },
   "question": {
     "mediaAlt": "題目配圖"
+  },
+  "media": {
+    "enableSound": "開啟聲音",
+    "unlockHint": "在此視窗任意處點一下：瀏覽器只有在這個視窗內點擊後才允許播放聲音，在控制台點擊無效。整個會話只需一次。",
+    "soundBlocked": "聲音被瀏覽器封鎖",
+    "videoMuted": "影片已靜音播放（聲音被瀏覽器封鎖）",
+    "slow": "媒體尚未載入完成…",
+    "waveform": "題目聲音的波形"
   }
 }

@@ -104,12 +104,16 @@ export function MarkdownEditor({
   const isEmpty = useEditorState({ editor, selector: ({ editor: e }) => e?.isEmpty ?? true });
 
   return (
-    <div data-markdown-editor className={cn('group flex flex-col gap-1', className)}>
-      {/* The toolbar stays out of the way until the field has focus (source mode keeps its toggle). */}
+    <div data-markdown-editor className={cn('group relative flex flex-col gap-1', className)}>
+      {/* The toolbar stays out of the way until the field has focus (source mode keeps its toggle).
+          In visual mode it floats over the field's top edge instead of pushing it down: a
+          toolbar that took space on focus and gave it back on blur moved everything under
+          the pointer — a click on "correct" right after typing an option landed elsewhere. */}
       <div
         className={cn(
           'flex flex-wrap items-center gap-1',
-          !source && 'hidden group-focus-within:flex',
+          !source &&
+            'bg-background absolute right-0 bottom-full z-10 mb-1 hidden rounded-md border px-1 py-0.5 shadow-sm group-focus-within:flex',
         )}
       >
         {editor && !source ? <Toolbar editor={editor} profile={profile} /> : null}

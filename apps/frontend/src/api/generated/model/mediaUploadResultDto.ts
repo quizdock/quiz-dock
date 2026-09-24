@@ -5,8 +5,10 @@
  * API REST du builder de quiz et des restitutions
  * OpenAPI spec version: 0.1.0
  */
+import type { MediaUploadResultDtoKind } from './mediaUploadResultDtoKind';
 
 export interface MediaUploadResultDto {
   mediaId: string;
   url: string;
+  kind: MediaUploadResultDtoKind;
 }

@@ -61,6 +61,21 @@ export const getMediaControllerUploadUrl = () => {
 export const mediaControllerUpload = async (mediaControllerUploadBody: MediaControllerUploadBody, options?: RequestInit): Promise<mediaControllerUploadResponse> => {
     const formData = new FormData();
 formData.append(`file`, mediaControllerUploadBody.file);
+if(mediaControllerUploadBody.durationMs !== undefined) {
+ formData.append(`durationMs`, mediaControllerUploadBody.durationMs.toString())
+ }
+if(mediaControllerUploadBody.peaks !== undefined) {
+ formData.append(`peaks`, mediaControllerUploadBody.peaks);
+ }
+if(mediaControllerUploadBody.origin !== undefined) {
+ formData.append(`origin`, mediaControllerUploadBody.origin);
+ }
+if(mediaControllerUploadBody.loudnessLufs !== undefined) {
+ formData.append(`loudnessLufs`, mediaControllerUploadBody.loudnessLufs.toString())
+ }
+if(mediaControllerUploadBody.peakDbfs !== undefined) {
+ formData.append(`peakDbfs`, mediaControllerUploadBody.peakDbfs.toString())
+ }
 
   return customFetch<mediaControllerUploadResponse>(getMediaControllerUploadUrl(),
   {
@@ -302,12 +317,24 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   status: 200
 }
 
-export type mediaControllerServeResponseSuccess = (mediaControllerServeResponse200) & {
+export type mediaControllerServeResponse206 = {
+  data: void
+  status: 206
+}
+
+export type mediaControllerServeResponse416 = {
+  data: void
+  status: 416
+}
+
+export type mediaControllerServeResponseSuccess = (mediaControllerServeResponse200 | mediaControllerServeResponse206) & {
   headers: Headers;
 };
-;
+export type mediaControllerServeResponseError = (mediaControllerServeResponse416) & {
+  headers: Headers;
+};
 
-export type mediaControllerServeResponse = (mediaControllerServeResponseSuccess)
+export type mediaControllerServeResponse = (mediaControllerServeResponseSuccess | mediaControllerServeResponseError)
 
 export const getMediaControllerServeUrl = (id: string,) => {
 
@@ -339,7 +366,7 @@ export const getMediaControllerServeQueryKey = (id: string,) => {
     }
 
 
-export const getMediaControllerServeQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getMediaControllerServeQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = void>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -358,10 +385,10 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type MediaControllerServeQueryResult = NonNullable<Awaited<ReturnType<typeof mediaControllerServe>>>
-export type MediaControllerServeQueryError = unknown
+export type MediaControllerServeQueryError = void
 
 
-export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
+export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = void>(
  id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof mediaControllerServe>>,
@@ -371,7 +398,7 @@ export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaC
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
+export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = void>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof mediaControllerServe>>,
@@ -381,12 +408,12 @@ export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaC
       >, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
+export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = void>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = unknown>(
+export function useMediaControllerServe<TData = Awaited<ReturnType<typeof mediaControllerServe>>, TError = void>(
  id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerServe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {

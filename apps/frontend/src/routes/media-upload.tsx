@@ -1,9 +1,11 @@
-import { ImagePlus, Trash2 } from 'lucide-react';
+import { Film, ImagePlus, Music, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { type MediaKind, MediaCheckError, prepareMediaUpload } from '@/lib/media-prepare';
+import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import {
   mediaControllerDescribe,
@@ -12,41 +14,87 @@ import {
 } from '../api/generated/media/media';
 import { getDemo } from '../config';
 
-/** Upload d'une image → renvoie le mediaId au parent. (Audio suspendu, #42.) */
+/** What the picker takes for each kind — a hint only, the content is checked anyway. */
+const ACCEPT: Record<MediaKind, string> = {
+  image: 'image/png,image/jpeg,image/gif,image/webp,image/avif',
+  video: 'video/mp4',
+  audio: 'audio/mpeg,.mp3',
+};
+
+const ADD_ICON: Record<MediaKind, typeof ImagePlus> = {
+  image: ImagePlus,
+  video: Film,
+  audio: Music,
+};
+
+/** A media just sent, with what the editor measured on it (a sound's waveform and length). */
+export interface UploadedMedia {
+  kind: MediaKind;
+  durationMs?: number;
+  peaks?: number[];
+}
+
+/**
+ * Upload of one media of a given kind → its id goes back to the parent. The file
+ * is checked by its content before it leaves the browser (the server checks it
+ * again): an iPhone film in HEVC is turned away at once, with the way out.
+ */
 export function MediaUpload({
   value,
   onChange,
+  kind = 'image',
+  label,
 }: {
   value: string | null;
-  onChange: (mediaId: string | null) => void;
+  onChange: (mediaId: string | null, uploaded?: UploadedMedia) => void;
+  kind?: MediaKind;
+  /** Wording of the add button; the image one by default. */
+  label?: string;
 }) {
   const { t } = useTranslation('editor');
   const upload = useMediaControllerUpload();
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
     setError(null);
+    setChecking(true);
     try {
-      const res = await upload.mutateAsync({ data: { file } });
-      onChange(res.data.mediaId);
+      const prepared = await prepareMediaUpload(file, kind);
+      const res = await upload.mutateAsync({ data: { file, ...prepared.fields } });
+      onChange(res.data.mediaId, {
+        kind: prepared.kind,
+        durationMs: prepared.fields.durationMs,
+        peaks: prepared.fields.peaks ? (JSON.parse(prepared.fields.peaks) as number[]) : undefined,
+      });
     } catch (err) {
-      setError(apiErrorText(err, t('media.uploadError')));
+      setError(
+        err instanceof MediaCheckError
+          ? errorText(err.code, err.params)
+          : apiErrorText(err, t('media.uploadError')),
+      );
+    } finally {
+      setChecking(false);
     }
   };
 
   if (getDemo()) {
     return <p className="text-muted-foreground text-sm">{t('media.demoDisabled')}</p>;
   }
+  const Icon = ADD_ICON[kind];
+  const src = value ? `/api/v1/media/${value}` : null;
   return (
     <div className="flex flex-col gap-1.5">
-      {value ? (
-        <div className="flex items-center gap-3">
-          <img
-            src={`/api/v1/media/${value}`}
-            alt={t('media.alt')}
-            className="max-h-20 rounded-md border"
-          />
+      {src ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {kind === 'image' ? (
+            <img src={src} alt={t('media.alt')} className="max-h-20 rounded-md border" />
+          ) : kind === 'video' ? (
+            <video src={src} controls preload="metadata" className="max-h-32 rounded-md border" />
+          ) : (
+            <audio src={src} controls preload="metadata" className="max-w-full" />
+          )}
           <Button type="button" variant="outline" size="sm" onClick={() => onChange(null)}>
             <Trash2 className="size-4" />
             {t('media.remove')}
@@ -54,19 +102,27 @@ export function MediaUpload({
         </div>
       ) : (
         <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
-          <ImagePlus className="size-4" />
-          {upload.isPending ? t('media.uploading') : t('media.add')}
+          <Icon className="size-4" />
+          {checking || upload.isPending ? t('media.uploading') : (label ?? t('media.add'))}
           <input
             type="file"
             aria-label={t('media.fileInputLabel')}
-            accept="image/*"
+            accept={ACCEPT[kind]}
             hidden
-            onChange={(e) => void onFile(e.target.files?.[0])}
+            disabled={checking}
+            onChange={(e) => {
+              void onFile(e.target.files?.[0]);
+              e.target.value = ''; // the same file can be picked again after an error
+            }}
           />
         </label>
       )}
-      {value ? <AltField mediaId={value} /> : null}
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {value && kind === 'image' ? <AltField mediaId={value} /> : null}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

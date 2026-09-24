@@ -104,8 +104,17 @@ enum OptionShape {
 enum MediaKind {
   image
   audio
+  video
 
   @@map("media_kind")
+}
+
+/// Where a sound comes from: a file the author uploaded, or the editor's microphone.
+enum AudioOrigin {
+  upload
+  recording
+
+  @@map("audio_origin")
 }
 
 enum SessionStatus {
@@ -165,35 +174,40 @@ model HostSeat {
 
 /// §2.2 — quiz (banque privée du animateur).
 model Quiz {
-  id              String         @id @default(ulid()) @db.Char(26)
-  ownerId         String         @map("owner_id") @db.Char(26)
-  title           String
-  description     String?
-  coverMediaId    String?        @map("cover_media_id") @db.Char(26)
-  status          QuizStatus     @default(draft)
-  visibility      QuizVisibility @default(private)
-  language        String         @default("fr")
-  questionCount   Int            @default(0) @map("question_count")
+  id                 String         @id @default(ulid()) @db.Char(26)
+  ownerId            String         @map("owner_id") @db.Char(26)
+  title              String
+  description        String?
+  coverMediaId       String?        @map("cover_media_id") @db.Char(26)
+  status             QuizStatus     @default(draft)
+  visibility         QuizVisibility @default(private)
+  language           String         @default("fr")
+  questionCount      Int            @default(0) @map("question_count")
   /// Quiz Store identity (docs/quiz-bundle.md): kebab-case, taken from an imported bundle or set at first export.
-  slug            String?
+  slug               String?
   /// `<username>/<slug>` once submitted to a Quiz Store; null for a quiz that never left this instance.
-  namespace       String?
+  namespace          String?
   /// Publication counter: bumped every time the quiz is shared to the template
   /// catalogue (#39), carried over by import. An export does not move it.
-  revision        Int            @default(0)
+  revision           Int            @default(0)
   /// ULID of the template this quiz is shared as, minted at the first share and
   /// never rewritten — withdrawing the entry and sharing again keeps the same
   /// template for everyone holding a copy (RG-17). Null when never shared, and
   /// on an imported copy: a copy carries nothing of its origin.
-  publicationId   String?        @map("publication_id") @db.Char(26)
-  domain          String?
-  tags            String[]       @default([])
-  license         String?
+  publicationId      String?        @map("publication_id") @db.Char(26)
+  domain             String?
+  tags               String[]       @default([])
+  license            String?
   /// Players may rate the quiz at the end of a session (§2.11); off = no panel, `player:rate` refused.
-  feedbackEnabled Boolean        @default(true) @map("feedback_enabled")
-  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
-  archivedAt      DateTime?      @map("archived_at") @db.Timestamptz(6)
+  feedbackEnabled    Boolean        @default(true) @map("feedback_enabled")
+  /// Pause kept after a question's sound or video before its time can run out (s, 0–30):
+  /// a question whose media outlasts its timer is stretched, never cut mid-play.
+  mediaTailS         Int            @default(3) @map("media_tail_s")
+  /// Level every sound and video is brought to at playback (LUFS): -14 loud, -16 balanced, -23 calm.
+  loudnessTargetLufs Int            @default(-16) @map("loudness_target_lufs")
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  archivedAt         DateTime?      @map("archived_at") @db.Timestamptz(6)
 
   owner       User             @relation(fields: [ownerId], references: [id])
   coverMedia  MediaAsset?      @relation("QuizCover", fields: [coverMediaId], references: [id])
@@ -213,7 +227,10 @@ model Question {
   orderIndex         Int             @map("order_index")
   type               QuestionType
   prompt             String
-  mediaId            String?         @map("media_id") @db.Char(26)
+  /// Visual slot: an image or an uploaded video (the asset's kind tells which).
+  visualMediaId      String?         @map("visual_media_id") @db.Char(26)
+  /// Audio slot: an MP3. Never alongside a video — checked by the API, the kinds live on the asset.
+  audioMediaId       String?         @map("audio_media_id") @db.Char(26)
   /// Markdown shown at REVEAL only (#5) — never sent before.
   answerExplanation  String?         @map("answer_explanation")
   /// Optional full-cover background, like a slide's: image or generated gradient (exclusive).
@@ -232,7 +249,8 @@ model Question {
   updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   quiz            Quiz                 @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  media           MediaAsset?          @relation("QuestionMedia", fields: [mediaId], references: [id])
+  visualMedia     MediaAsset?          @relation("QuestionVisual", fields: [visualMediaId], references: [id])
+  audioMedia      MediaAsset?          @relation("QuestionAudio", fields: [audioMediaId], references: [id])
   backgroundMedia MediaAsset?          @relation("QuestionBackground", fields: [backgroundMediaId], references: [id])
   options         AnswerOption[]
   acceptedAnswers AcceptedAnswer[]
@@ -318,21 +336,31 @@ model Slide {
 
 /// §2.6 — médias.
 model MediaAsset {
-  id        String    @id @default(ulid()) @db.Char(26)
-  ownerId   String    @map("owner_id") @db.Char(26)
-  url       String
+  id           String       @id @default(ulid()) @db.Char(26)
+  ownerId      String       @map("owner_id") @db.Char(26)
+  url          String
   /// Alternative text, written by whoever attached the media (#43). Empty is a
   /// valid answer for decoration; for a question whose image *is* the question,
   /// it is what a screen reader has to work with.
-  alt       String?
-  mime      String
-  sizeBytes BigInt    @map("size_bytes")
-  kind      MediaKind
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  alt          String?
+  mime         String
+  sizeBytes    BigInt       @map("size_bytes")
+  kind         MediaKind
+  /// Audio and video: length, measured in the editor when the file was chosen.
+  durationMs   Int?         @map("duration_ms")
+  /// Audio: the waveform drawn by the player (AUDIO_PEAK_COUNT values, 0–1).
+  peaks        Float[]      @default([])
+  audioOrigin  AudioOrigin? @map("audio_origin")
+  /// Integrated loudness (EBU R128), for the playback gain — the file itself is never re-encoded.
+  loudnessLufs Float?       @map("loudness_lufs")
+  /// Sample peak, dBFS: how far the playback gain may raise the sound without clipping.
+  peakDbfs     Float?       @map("peak_dbfs")
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
   owner               User           @relation(fields: [ownerId], references: [id])
   coverForQuizzes     Quiz[]         @relation("QuizCover")
-  questions           Question[]     @relation("QuestionMedia")
+  questionVisuals     Question[]     @relation("QuestionVisual")
+  questionAudios      Question[]     @relation("QuestionAudio")
   questionBackgrounds Question[]     @relation("QuestionBackground")
   slides              Slide[]        @relation("SlideMedia")
   options             AnswerOption[] @relation("OptionMedia")

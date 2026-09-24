@@ -108,7 +108,8 @@
       "lanHidden": "Esta instancia corre en Docker Desktop (o un contenedor en red bridge), que oculta la red del ordenador: no se pudo detectar ninguna dirección local. Escríbela abajo — o añade HOST_LAN_IPS=<tu IP> al archivo .env (o «-e HOST_LAN_IPS=…» en docker run) para que aparezca aquí la próxima vez.",
       "https": "Esta página se sirve por HTTPS: una dirección local en http:// mostrará un aviso en los teléfonos — una dirección pública con certificado es la vía limpia."
     },
-    "backToLive": "Volver al directo"
+    "backToLive": "Volver al directo",
+    "restartMedia": "Reiniciar el medio desde el principio"
   },
   "screen": {
     "sessionUnavailable": "Sesión no disponible.",
@@ -229,5 +230,13 @@
   },
   "question": {
     "mediaAlt": "Ilustración de la pregunta"
+  },
+  "media": {
+    "enableSound": "Activar el sonido",
+    "unlockHint": "Haz clic en cualquier parte de esta ventana: el navegador solo permite el sonido tras un clic aquí mismo, no en la consola. Una vez basta para toda la sesión.",
+    "soundBlocked": "Sonido bloqueado por el navegador",
+    "videoMuted": "Vídeo iniciado sin sonido (bloqueado por el navegador)",
+    "slow": "El medio aún no se ha cargado…",
+    "waveform": "Forma de onda del sonido de la pregunta"
   }
 }

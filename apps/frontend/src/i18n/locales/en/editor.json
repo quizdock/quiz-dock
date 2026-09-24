@@ -23,7 +23,17 @@
     "titleLabel": "Title",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Description (optional)…",
-    "save": "Save"
+    "save": "Save",
+    "mediaTailLabel": "Pause after a media",
+    "mediaTailHelp": "When a question’s sound or video lasts longer than its timer, the question is stretched to the end of the media plus this pause: nothing is cut mid-play.",
+    "seconds": "s",
+    "loudnessLabel": "Sound levelling",
+    "loudnessHelp": "The level every sound and video of the quiz is brought to at playback, so the volume stays the same from one question to the next. The files are not changed.",
+    "loudness": {
+      "14": "Loud (−14 LUFS, streaming)",
+      "16": "Balanced (−16 LUFS)",
+      "23": "Calm (−23 LUFS, broadcast)"
+    }
   },
   "broadcast": {
     "title": "Broadcast",
@@ -222,7 +232,8 @@
       "confirmLabel": "Remove"
     },
     "titleEdit": "Edit question",
-    "titleAdd": "New question"
+    "titleAdd": "New question",
+    "stretchedTime": "The media lasts {{media}} s: the question will last {{total}} s (end of the media + the quiz’s {{tail}} s pause)."
   },
   "preview": {
     "view": "Preview (player view)",
@@ -247,7 +258,15 @@
     "demoDisabled": "Media uploads are disabled on the demo instance.",
     "altLabel": "Alternative text",
     "altPlaceholder": "e.g. Kylian Mbappé in a France shirt",
-    "altHelp": "Read aloud by screen readers. Describe what the image shows when it carries part of the question; leave it empty when the image is decoration."
+    "altHelp": "Read aloud by screen readers. Describe what the image shows when it carries part of the question; leave it empty when the image is decoration.",
+    "slotsLegend": "Question media",
+    "visualLabel": "Visual",
+    "audioLabel": "Sound",
+    "addImage": "Add an image",
+    "addVideo": "Add a video (MP4)",
+    "addAudio": "Add a sound (MP3)",
+    "videoExcludesAudio": "The video already has its own sound: no extra audio track. Remove the video to add a sound.",
+    "audioExcludesVideo": "A video already has its own sound: remove the sound to choose a video."
   },
   "background": {
     "legend": "Background",

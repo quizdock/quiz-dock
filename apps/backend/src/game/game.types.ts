@@ -1,6 +1,7 @@
 import type {
   AnswerValue,
   GameMode,
+  LiveQuestionMedia,
   OptionColor,
   OptionShape,
   PointsMode,
@@ -24,7 +25,7 @@ export interface SnapshotOption {
   text: string | null;
   color: OptionColor;
   shape: OptionShape;
-  media: { url: string; kind: 'image' | 'audio' } | null;
+  media: { url: string; kind: 'image'; alt?: string | null } | null;
   /** Secret serveur — JAMAIS envoyé au client avant `question:reveal`. */
   isCorrect: boolean;
   /** Position correcte (type `ordering`) — secret serveur. */
@@ -36,7 +37,7 @@ export interface SnapshotQuestion {
   orderIndex: number;
   type: QuestionType;
   prompt: string;
-  media: { url: string; kind: 'image' | 'audio' } | null;
+  media: LiveQuestionMedia;
   timeLimitS: number;
   /** Auto-mode delay on this REVEAL in seconds (#6); null = engine default. */
   revealDelayS: number | null;

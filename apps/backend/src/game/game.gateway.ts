@@ -394,6 +394,16 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   /** `host:pause` : suspend/reprend l'auto-progression (gèle le chrono en ANSWERING). */
+  /** `host:media` : restart the current question's media on the screens. */
+  @SubscribeMessage('host:media')
+  async hostMedia(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; action: 'restart' },
+  ): Promise<void> {
+    if (payload?.action !== 'restart') return;
+    await this.engine.mediaControl(payload.pin, this.requireHostId(socket), payload.action);
+  }
+
   @SubscribeMessage('host:pause')
   async hostPause(
     @ConnectedSocket() socket: GameSocket,
