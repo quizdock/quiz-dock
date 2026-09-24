@@ -176,10 +176,13 @@ The repository ships one worked example so you can try OIDC locally: a Keycloak
 realm in [`keycloak/realm-export.json`](../../keycloak/realm-export.json) (realm
 `quiz-dock`, public client `quiz-dock-frontend`, roles `host`/`player`, exposed under
 `realm_access.roles`). It is only an example — nothing in QuizDock depends on it.
-Start it with the `keycloak` compose profile:
+Two accounts: `animateur` (host) and `participant` (no role), the password being the
+username. In the repository's dev stack (with `docker-compose.override.yml`) it always
+runs, and OIDC is one variable away; elsewhere, start it with the `keycloak` profile:
 
 ```bash
-AUTH_MODE=oidc docker compose --profile keycloak up -d
+AUTH_MODE=oidc docker compose up -d backend                  # dev stack
+AUTH_MODE=oidc docker compose --profile keycloak up -d       # base file alone
 ```
 
 The dev compose file then defaults `OIDC_ISSUER` to `http://localhost:18080/realms/quiz-dock`,

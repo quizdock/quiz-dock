@@ -10,6 +10,12 @@ services:
     ports:
       - '${POSTGRES_PORT:-15432}:5432'
 
+  # The sample IdP always runs in dev, so OIDC is one variable away:
+  # `AUTH_MODE=oidc docker compose up -d backend` (and back without it). The base
+  # file keeps it behind the `keycloak` profile for everyone else.
+  keycloak:
+    profiles: !reset []
+
   # Exposé en dev pour les tests d'intégration WS/Redis depuis l'hôte.
   redis:
     ports:

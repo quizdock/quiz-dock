@@ -33,7 +33,7 @@ Full authentication is **optional**: the project must run in development or in a
 | `none` | Local mode with no IdP; the host identifies with a plain local name (no JWT), and the `keycloak` service is not started | Development, demos, a light deployment |
 | `oidc` | JWT validation through an OIDC provider (Keycloak as the reference): hosts through OIDC JWTs, signed-in players possible | Production / secured multi-user |
 
-The backend exposes an **auth interface** (`AuthProvider`) with two implementations (`NoAuthProvider`, `OidcProvider`) selected by `AUTH_MODE`; the rest of the code does not depend on the provider. `OidcProvider` validates the JWTs (signature through JWKS, issuer, audience) of **any** compliant OIDC provider — Keycloak ships as the **reference OIDC IdP** for development and demos, behind a **Compose profile** (`--profile keycloak`) so it is never imposed.
+The backend exposes an **auth interface** (`AuthProvider`) with two implementations (`NoAuthProvider`, `OidcProvider`) selected by `AUTH_MODE`; the rest of the code does not depend on the provider. `OidcProvider` validates the JWTs (signature through JWKS, issuer, audience) of **any** compliant OIDC provider — Keycloak ships as the **reference OIDC IdP** for development and demos, behind a **Compose profile** (`--profile keycloak`) so it is never imposed; the dev override starts it always.
 
 ### Out of scope for v1
 - Solo mode / asynchronous challenges.
