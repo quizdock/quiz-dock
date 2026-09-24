@@ -1,0 +1,38 @@
+name: Translation
+description: A wrong, clumsy or missing text in one of the languages.
+labels: [translation]
+body:
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - English (en)
+        - Français (fr)
+        - Español (es)
+        - 简体中文 (zh)
+        - 繁體中文 (zh-TW)
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Where
+      description: The screen, and what is around the text.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: Current text
+    validations:
+      required: true
+  - type: textarea
+    id: proposed
+    attributes:
+      label: Proposed text
+      description: And why, if it is not obvious.
+  - type: input
+    id: version
+    attributes:
+      label: QuizDock version

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question
+    url: https://github.com/quizdock/quiz-dock/discussions/new?category=q-a
+    about: How to do something, how to set it up — ask in the discussions.

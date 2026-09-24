@@ -1,7 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { APP_NAME, APP_VERSION, getDemo, isStandalone } from '../config';
+import { APP_NAME, APP_VERSION, appConfig, getDemo, isStandalone } from '../config';
+import { feedbackLinks } from '@/lib/feedback';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,7 +47,46 @@ export function LandingPage() {
       <small className="text-muted-foreground">
         {t('landing.version', { name: APP_NAME, version: APP_VERSION })}
       </small>
+      <Feedback />
     </section>
+  );
+}
+
+/**
+ * An invitation to report a bug, suggest a feature, fix a translation or ask
+ * a question — as GitHub forms filled in with the version, browser and
+ * language. The operator points it elsewhere, or hides it, with `APP_FEEDBACK_URL`.
+ */
+function Feedback() {
+  const { t, i18n } = useTranslation('auth');
+  const links = feedbackLinks(appConfig.feedbackUrl, {
+    version: APP_VERSION,
+    lang: i18n.language,
+    userAgent: typeof navigator === 'undefined' ? '' : navigator.userAgent,
+  });
+  if (links.length === 0) return null;
+  const single = links.length === 1;
+  return (
+    <nav
+      aria-label={t('landing.feedback.label')}
+      className="text-muted-foreground flex flex-col items-center gap-1 text-xs"
+    >
+      <span>{t('landing.feedback.intro')}</span>
+      <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+        {links.map((link) => (
+          <li key={link.kind}>
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground underline underline-offset-2"
+            >
+              {single ? t('landing.feedback.other') : t(`landing.feedback.${link.kind}`)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 

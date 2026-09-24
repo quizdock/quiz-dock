@@ -80,6 +80,7 @@ services:
       APP_LANG: ${APP_LANG:-en}
       # Vide = logo cherché dans `branding/` (tous formats web), sinon celui de l'image.
       APP_LOGO_URL: ${APP_LOGO_URL:-}
+      APP_FEEDBACK_URL: ${APP_FEEDBACK_URL:-}
       CLIENT_DIR: /app/client
       # Auth OIDC (si AUTH_MODE=oidc).
       OIDC_ISSUER: ${OIDC_ISSUER:-}

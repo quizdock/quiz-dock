@@ -1,0 +1,60 @@
+name: Bug report
+description: Something does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time. The version and the browser are filled in when you come from the app's home page.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you saw.
+      placeholder: "1. Open a quiz in the editor\n2. Add a video\n3. …"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: QuizDock version
+      placeholder: '0.7.1'
+    validations:
+      required: true
+  - type: dropdown
+    id: instance
+    attributes:
+      label: Where
+      options:
+        - The public demo
+        - A self-hosted instance (Docker Compose)
+        - A self-hosted instance (standalone image)
+        - Another setup
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: 'Chrome 143 on Windows 11, Safari on iPhone…'
+  - type: dropdown
+    id: screen
+    attributes:
+      label: Which screen
+      multiple: true
+      options:
+        - Editor
+        - Host console
+        - Projection
+        - Participant's phone
+        - Results / history
+        - Administration
+        - Other
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Screenshots, the browser console's errors, the backend log…

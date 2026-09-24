@@ -47,3 +47,23 @@ describe('LandingPage — demo limitations', () => {
     expect(await screen.findByText(/Image tout-en-un/i)).toBeInTheDocument();
   });
 });
+
+describe('LandingPage — feedback', () => {
+  it('invites bug reports, feature ideas, translation fixes and questions, as filled-in forms', async () => {
+    mockApi([]);
+    renderApp('/');
+    const bug = await screen.findByRole('link', { name: 'Signaler un bug' });
+    expect(bug.getAttribute('href')).toMatch(
+      /^https:\/\/github\.com\/quizdock\/quiz-dock\/issues\/new\?template=bug\.yml&version=/,
+    );
+    expect(bug).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: 'Proposer une fonctionnalité' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'Corriger une traduction' }).getAttribute('href'),
+    ).toContain('language=Fran%C3%A7ais+%28fr%29');
+    expect(screen.getByRole('link', { name: 'Poser une question' })).toHaveAttribute(
+      'href',
+      'https://github.com/quizdock/quiz-dock/discussions/new?category=q-a',
+    );
+  });
+});

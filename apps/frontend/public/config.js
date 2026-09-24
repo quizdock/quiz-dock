@@ -6,4 +6,6 @@ window.__APP_CONFIG__ = {
   lang: 'en',
   // Vide = logo cherché dans `branding/` (tous formats web), sinon celui du build.
   logoUrl: '',
+  // Home page's feedback links: '' = the QuizDock repository, a URL = yours, 'none' = hidden.
+  feedbackUrl: '',
 };
