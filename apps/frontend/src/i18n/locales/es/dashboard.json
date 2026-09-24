@@ -130,7 +130,8 @@
       "failed": "No se pudo eliminar el archivo.",
       "quizzesLose": "Las preguntas pierden este medio.",
       "resultsLose": "Los resultados anteriores ya no lo muestran.",
-      "everyCopy": "Se eliminan todas las copias de este archivo, sea quien sea su propietario."
+      "everyCopy": "Se eliminan todas las copias de este archivo, sea quien sea su propietario.",
+      "inCatalog": "Este archivo es uno de los medios de la instancia: eliminarlo también quita las copias que los anfitriones tomaron, y sus quizzes lo pierden. Para dejar de ofrecerlo sin tocar ningún quiz, retíralo de los medios de la instancia."
     },
     "instance": {
       "title": "Medios de la instancia",
@@ -148,7 +149,9 @@
       "remove": "Retirar",
       "removeNamed": "Retirar {{name}}",
       "removeTitle": "¿Retirar este medio?",
-      "removeDescription": "Los anfitriones ya no lo encuentran en su biblioteca. Los quizzes que lo usan conservan su copia."
+      "removeDescription": "Los anfitriones ya no lo encuentran en su biblioteca. Los quizzes que lo usan conservan su copia.",
+      "removeFailed": "No se pudo retirar el medio.",
+      "saveFailed": "No se pudo guardar el cambio."
     }
   }
 }

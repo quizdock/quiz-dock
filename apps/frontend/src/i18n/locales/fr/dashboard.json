@@ -130,7 +130,8 @@
       "failed": "Le fichier n’a pas pu être supprimé.",
       "quizzesLose": "Les questions perdent ce média.",
       "resultsLose": "Les résultats passés ne l’affichent plus.",
-      "everyCopy": "Toutes les copies de ce fichier partent, quel qu’en soit le propriétaire."
+      "everyCopy": "Toutes les copies de ce fichier partent, quel qu’en soit le propriétaire.",
+      "inCatalog": "Ce fichier fait partie des médias de l’instance : le supprimer retire aussi les copies que les hôtes en ont prises, et leurs quiz le perdent. Pour ne plus le proposer sans toucher aux quiz, retirez-le plutôt des médias de l’instance."
     },
     "instance": {
       "title": "Médias de l’instance",
@@ -148,7 +149,9 @@
       "remove": "Retirer",
       "removeNamed": "Retirer {{name}}",
       "removeTitle": "Retirer ce média ?",
-      "removeDescription": "Les hôtes ne le trouvent plus dans leur bibliothèque. Les quiz qui l’utilisent gardent leur copie."
+      "removeDescription": "Les hôtes ne le trouvent plus dans leur bibliothèque. Les quiz qui l’utilisent gardent leur copie.",
+      "removeFailed": "Le média n’a pas pu être retiré.",
+      "saveFailed": "La modification n’a pas pu être enregistrée."
     }
   }
 }

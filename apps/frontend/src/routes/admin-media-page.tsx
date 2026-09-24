@@ -214,6 +214,7 @@ function Files() {
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState<MediaFilesPageDtoItemsItem | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const refreshAll = useRefreshAll();
 
   useEffect(() => {
@@ -288,6 +289,11 @@ function Files() {
         />
       </div>
 
+      {error ? (
+        <p role="alert" className="text-destructive text-sm">
+          {error}
+        </p>
+      ) : null}
       {!list ? (
         <p className="text-muted-foreground text-sm">{t('mediaAdmin.loading')}</p>
       ) : list.items.length === 0 ? (
@@ -301,6 +307,7 @@ function Files() {
               locale={i18n.language}
               onDelete={() => setToDelete(file)}
               onAdded={() => void refreshAll()}
+              onError={setError}
             />
           ))}
         </ul>
@@ -326,11 +333,13 @@ function FileRow({
   locale,
   onDelete,
   onAdded,
+  onError,
 }: {
   file: MediaFilesPageDtoItemsItem;
   locale: string;
   onDelete: () => void;
   onAdded: () => void;
+  onError: (message: string | null) => void;
 }) {
   const { t } = useTranslation('dashboard');
   const Icon = KIND_ICON[file.kind];
@@ -365,7 +374,15 @@ function FileRow({
             size="sm"
             variant="ghost"
             disabled={add.isPending}
-            onClick={() => void add.mutateAsync({ id: file.id }).then(onAdded)}
+            onClick={() => {
+              onError(null);
+              add
+                .mutateAsync({ id: file.id })
+                .then(onAdded)
+                .catch((err: unknown) =>
+                  onError(apiErrorText(err, t('mediaAdmin.instance.addFailed'))),
+                );
+            }}
             title={t('mediaAdmin.files.addToCatalog')}
             aria-label={t('mediaAdmin.files.addToCatalogNamed', { name: file.name ?? file.mime })}
           >
@@ -435,6 +452,9 @@ function DeleteFileDialog({
         <div className="flex flex-col gap-2 text-sm">
           {info.playing ? (
             <p className="text-destructive">{t('mediaAdmin.delete.playing')}</p>
+          ) : null}
+          {file.inCatalog ? (
+            <p className="text-amber-700 dark:text-amber-400">{t('mediaAdmin.delete.inCatalog')}</p>
           ) : null}
           {info.quizzes.length > 0 || info.archivedSessions > 0 ? (
             <>
@@ -539,7 +559,12 @@ function InstanceMedia() {
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <InstanceItem key={item.id} item={item} onRemove={() => setToRemove(item)} />
+            <InstanceItem
+              key={item.id}
+              item={item}
+              onRemove={() => setToRemove(item)}
+              onError={setError}
+            />
           ))}
         </ul>
       )}
@@ -553,7 +578,14 @@ function InstanceMedia() {
         onConfirm={() => {
           const item = toRemove;
           setToRemove(null);
-          if (item) void remove.mutateAsync({ id: item.id }).then(refreshAll);
+          if (!item) return;
+          setError(null);
+          remove
+            .mutateAsync({ id: item.id })
+            .then(refreshAll)
+            .catch((err: unknown) =>
+              setError(apiErrorText(err, t('mediaAdmin.instance.removeFailed'))),
+            );
         }}
       />
     </section>
@@ -599,17 +631,31 @@ function AddButton({
   );
 }
 
-function InstanceItem({ item, onRemove }: { item: MediaLibraryItemDto; onRemove: () => void }) {
+function InstanceItem({
+  item,
+  onRemove,
+  onError,
+}: {
+  item: MediaLibraryItemDto;
+  onRemove: () => void;
+  onError: (message: string | null) => void;
+}) {
   const { t, i18n } = useTranslation('dashboard');
   const setDetails = useMediaAdminControllerSetDetails();
   const [alt, setAlt] = useState(item.alt ?? '');
   const [credit, setCredit] = useState(item.credit ?? '');
   const saved = useRef({ alt: item.alt ?? '', credit: item.credit ?? '' });
   const Icon = KIND_ICON[item.kind];
+  // Recorded as saved only once the server has it: a failed save is tried again on the next blur.
   const save = (field: 'alt' | 'credit', value: string) => {
     if (value === saved.current[field]) return;
-    saved.current[field] = value;
-    void setDetails.mutateAsync({ id: item.id, data: { [field]: value } });
+    onError(null);
+    setDetails
+      .mutateAsync({ id: item.id, data: { [field]: value } })
+      .then(() => {
+        saved.current[field] = value;
+      })
+      .catch((err: unknown) => onError(apiErrorText(err, t('mediaAdmin.instance.saveFailed'))));
   };
   return (
     <li className="flex gap-3 rounded-lg border p-2">

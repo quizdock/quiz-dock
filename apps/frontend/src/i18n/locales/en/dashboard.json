@@ -130,7 +130,8 @@
       "failed": "The file could not be deleted.",
       "quizzesLose": "The questions lose this media.",
       "resultsLose": "Past results no longer show it.",
-      "everyCopy": "Every copy of this file goes, whoever owns it."
+      "everyCopy": "Every copy of this file goes, whoever owns it.",
+      "inCatalog": "This file is one of the instance media: deleting it also removes the copies hosts took of it, and their quizzes lose it. To stop offering it without touching any quiz, withdraw it from the instance media instead."
     },
     "instance": {
       "title": "Instance media",
@@ -148,7 +149,9 @@
       "remove": "Withdraw",
       "removeNamed": "Withdraw {{name}}",
       "removeTitle": "Withdraw this media?",
-      "removeDescription": "Hosts no longer find it in their library. The quizzes that use it keep their copy."
+      "removeDescription": "Hosts no longer find it in their library. The quizzes that use it keep their copy.",
+      "removeFailed": "The media could not be withdrawn.",
+      "saveFailed": "The change could not be saved."
     }
   }
 }
