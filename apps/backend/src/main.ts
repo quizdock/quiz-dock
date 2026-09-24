@@ -4,6 +4,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
+import { cspMiddleware } from './common/csp';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { buildSwaggerDocument } from './swagger';
 
@@ -13,6 +14,8 @@ async function bootstrap(): Promise<void> {
   });
 
   app.enableCors();
+  // The pages say where their scripts, styles, frames and requests may come from.
+  app.use(cspMiddleware());
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'config.js', 'branding/override.css'] });
   // Validation runtime des DTO Zod (createZodDto) sur toutes les routes.
   app.useGlobalPipes(new ZodValidationPipe());

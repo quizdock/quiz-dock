@@ -24,4 +24,6 @@ fixes are prioritized and disclosed once a patched release is available.
   scans the filesystem and the published image (SARIF → Security tab).
 - **Hardened runtime** — non-root, read-only root FS, dropped capabilities,
   `no-new-privileges`.
+- **Content-Security-Policy** on every page — no inline script, no `eval`, frames and
+  requests limited to this origin and the configured OIDC provider.
 - **Point-in-time audits** are recorded under [`docs/security/`](docs/security/).
