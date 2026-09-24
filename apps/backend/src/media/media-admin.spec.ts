@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -154,6 +155,23 @@ describe('MediaAdminService (integration)', () => {
     });
     expect(question.visualMediaId).toBeNull();
     expect(await readdir(dir)).toEqual([]);
+  });
+
+  it('refuses to delete a file while a session plays it', async () => {
+    const a = await upload(alice, 'playing.webp');
+    const playing = {
+      keys: jest.fn(async () => ['game:123456:snapshot']),
+      hget: jest.fn(async () => 'ANSWERING'),
+      mget: jest.fn(async () => [`{"media":{"url":"/api/v1/media/${a.mediaId}"}}`]),
+    } as unknown as RedisService;
+    const live = new MediaAdminService(
+      prisma,
+      new MediaService(prisma, playing),
+      janitor as unknown as MediaJanitor,
+    );
+    expect(await live.usages(a.mediaId)).toMatchObject({ playing: true });
+    await expect(live.deleteFile(a.mediaId)).rejects.toThrow(ConflictException);
+    expect(await prisma.mediaAsset.count({ where: { id: a.mediaId } })).toBe(1);
   });
 
   it('counts the stray files on the volume without deleting them', async () => {
