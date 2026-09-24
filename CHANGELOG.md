@@ -4,6 +4,21 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [0.7.1] - 2026-09-24
+
+### Documentation
+
+- My quizzes and the shared templates; the Docker Hub overview follows main *(screenshots)*
+- New in 0.7, video and sound, right under the pitch *(readme)*
+
+### Features
+
+- One shared host account instead of a 5-minute seat *(demo)*
+
+### Contributors
+
+- fchaussin
+
 ## [0.7.0] - 2026-09-24
 
 ### Breaking changes
