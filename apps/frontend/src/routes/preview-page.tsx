@@ -8,7 +8,7 @@ import { COLOR_BG, OPTION_BG_FALLBACK, SHAPE_GLYPH } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
 import { quizItems } from '@/lib/quiz-items';
 import { useFullscreen } from '@/lib/use-fullscreen';
-import { SlideStage } from '../game/slide-stage';
+import { ScaledStage, SlideStage } from '../game/slide-stage';
 import type { QuizDetailDto, QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { useQuizzesControllerGet } from '../api/generated/quizzes/quizzes';
 import { previewRoute } from '../router';
@@ -63,26 +63,7 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
         <p className="text-muted-foreground">{t('preview.noQuestions')}</p>
       ) : (
         <>
-          {item.kind === 'question' ? (
-            <QuestionPreview question={item.question} large={isFullscreen} />
-          ) : (
-            <SlideStage
-              className="rounded-xl border"
-              slide={{
-                slideIndex: index,
-                questionIndex: 0,
-                blocks: item.slide.blocks as SlideBlock[],
-                background: item.slide.mediaId
-                  ? { url: `/api/v1/media/${item.slide.mediaId}` }
-                  : item.slide.gradient
-                    ? { gradient: item.slide.gradient as SlideGradient }
-                    : null,
-                textTone: item.slide.textTone,
-                textOutline: item.slide.textOutline,
-                displayDelayS: item.slide.displayDelayS,
-              }}
-            />
-          )}
+          {/* Above the stage: the buttons stay put whatever the step shows. */}
           <nav className="flex items-center justify-between">
             <Button
               type="button"
@@ -106,6 +87,35 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
               <ChevronRight className="size-4" />
             </Button>
           </nav>
+          {/* 16:9 like the projection, questions and slides alike, as wide as the
+              window's height allows: the whole stage stays in view under the buttons. */}
+          <div
+            className="mx-auto w-full"
+            style={{ maxWidth: `calc((100dvh - ${isFullscreen ? 10 : 16}rem) * 16 / 9)` }}
+          >
+            {item.kind === 'question' ? (
+              <ScaledStage className="rounded-xl border">
+                <QuestionPreview question={item.question} />
+              </ScaledStage>
+            ) : (
+              <SlideStage
+                className="rounded-xl border"
+                slide={{
+                  slideIndex: index,
+                  questionIndex: 0,
+                  blocks: item.slide.blocks as SlideBlock[],
+                  background: item.slide.mediaId
+                    ? { url: `/api/v1/media/${item.slide.mediaId}` }
+                    : item.slide.gradient
+                      ? { gradient: item.slide.gradient as SlideGradient }
+                      : null,
+                  textTone: item.slide.textTone,
+                  textOutline: item.slide.textOutline,
+                  displayDelayS: item.slide.displayDelayS,
+                }}
+              />
+            )}
+          </div>
         </>
       )}
       <QuizCredits quizId={quiz.id} />
@@ -113,55 +123,39 @@ function QuizPreview({ quiz }: { quiz: QuizDetailDto }) {
   );
 }
 
-function QuestionPreview({
-  question,
-  large = false,
-}: {
-  question: QuizDetailDtoQuestionsItem;
-  large?: boolean;
-}) {
+/** A question laid out on the 1280×720 stage: fixed sizes, scaled with the box. */
+function QuestionPreview({ question }: { question: QuizDetailDtoQuestionsItem }) {
   const { t } = useTranslation('editor');
   return (
-    <article
-      className={cn(
-        'flex flex-col gap-4 rounded-xl border p-4 sm:p-6',
-        large && 'content-lg gap-6',
-      )}
-    >
+    <article className="flex h-full w-full flex-col justify-center gap-5 p-12">
       <div className="text-xs uppercase tracking-wide text-muted-foreground">
         {t(`questionType.${question.type}`, { defaultValue: question.type })}
       </div>
       {question.media.visual?.kind === 'image' && (
         <img
-          className={cn('self-center object-contain', large ? 'max-h-[40vh]' : 'max-h-56')}
+          className="max-h-[260px] self-center object-contain"
           src={`/api/v1/media/${question.media.visual.assetId}`}
           alt=""
         />
       )}
-      <Markdown
-        role="heading"
-        aria-level={2}
-        className={cn('font-semibold', large ? 'text-3xl md:text-5xl' : 'text-xl sm:text-2xl')}
-      >
+      <Markdown role="heading" aria-level={2} className="text-4xl font-semibold">
         {question.prompt}
       </Markdown>
-      <div className={cn('text-muted-foreground', large && 'text-2xl')}>
-        ⏱ {question.timeLimitS} s
-      </div>
+      <div className="text-muted-foreground text-xl">⏱ {question.timeLimitS} s</div>
 
       {question.options.length > 0 && (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <ul className="grid grid-cols-2 gap-4">
           {question.options.map((opt) => (
             <li
               key={opt.id}
               className={cn(
                 'flex items-center gap-3 rounded-lg font-semibold text-white',
-                large ? 'px-6 py-6 text-xl md:text-2xl' : 'px-4 py-3',
+                'px-6 py-4 text-2xl',
                 COLOR_BG[opt.color] ?? OPTION_BG_FALLBACK,
                 opt.isCorrect && 'outline outline-2 outline-offset-2 outline-success',
               )}
             >
-              <span className={cn(large ? 'text-3xl' : 'text-lg')} aria-hidden="true">
+              <span className="text-3xl" aria-hidden="true">
                 {SHAPE_GLYPH[opt.shape] ?? '◆'}
               </span>
               <span className="flex-1">
@@ -177,7 +171,7 @@ function QuestionPreview({
       )}
 
       {question.acceptedAnswers.length > 0 && (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-lg text-muted-foreground">
           {t('preview.acceptedAnswers', {
             answers: question.acceptedAnswers.map((a) => a.text).join(', '),
           })}
@@ -185,7 +179,7 @@ function QuestionPreview({
       )}
 
       {question.type === 'numeric' && question.numericValue != null && (
-        <div className="text-sm text-muted-foreground">
+        <div className="text-lg text-muted-foreground">
           {t('preview.numericTarget', {
             value: question.numericValue,
             tolerance: question.numericTolerance ?? 0,
