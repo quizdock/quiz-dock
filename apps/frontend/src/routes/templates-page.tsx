@@ -1,10 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Plus, Search } from 'lucide-react';
+import { LibraryBig, ListChecks, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
@@ -78,9 +78,7 @@ export function TemplatesPage() {
 
       {list.isPending ? <p className="text-muted-foreground">{t('common:loading')}</p> : null}
 
-      {!list.isPending && entries.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-6">{t('empty')}</p>
-      ) : null}
+      {!list.isPending && entries.length === 0 ? <EmptyCatalogue /> : null}
 
       {entries.length > 0 ? (
         <>
@@ -209,5 +207,28 @@ function TemplateThumb({ entry }: { entry: StoreEntryDto }) {
         </span>
       )}
     </span>
+  );
+}
+
+/**
+ * No template on the instance yet: the same empty state as the editor's — what
+ * is missing, how to fill it, and the way to the quizzes a template is shared from.
+ */
+function EmptyCatalogue() {
+  const { t } = useTranslation(['store', 'auth']);
+  return (
+    <div className="flex min-h-[20rem] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed px-6 py-10 text-center">
+      <span className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
+        <LibraryBig className="size-8" />
+      </span>
+      <div className="flex flex-col gap-1">
+        <p className="font-semibold">{t('emptyTitle')}</p>
+        <p className="text-muted-foreground max-w-sm text-sm">{t('empty')}</p>
+      </div>
+      <Link to="/quizzes" className={buttonVariants({ variant: 'outline' })}>
+        <ListChecks className="size-4" />
+        {t('auth:nav.myQuizzes')}
+      </Link>
+    </div>
   );
 }

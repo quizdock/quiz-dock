@@ -34,6 +34,19 @@ describe('TemplatesPage (galerie)', () => {
     localStorage.clear();
   });
 
+  it('dit qu’aucun modèle n’est partagé, et mène aux quiz d’où l’on en partage un', async () => {
+    localStorage.setItem('live.localUser', 'Marc');
+    mockApi([{ method: 'GET', path: '/store', body: [] }]);
+    renderApp('/templates');
+
+    expect(await screen.findByText('Aucun modèle pour l’instant')).toBeInTheDocument();
+    expect(screen.getByText(/Partagez-en un depuis un quiz « prêt »/)).toBeInTheDocument();
+    // The header has its own "My quizzes": the empty state's is the last one.
+    const links = screen.getAllByRole('link', { name: 'Mes quiz' });
+    expect(links.at(-1)).toHaveAttribute('href', '/quizzes');
+    localStorage.clear();
+  });
+
   it('permet de créer depuis la carte, sans ouvrir le modèle', async () => {
     localStorage.setItem('live.localUser', 'Marc');
     mockApi([

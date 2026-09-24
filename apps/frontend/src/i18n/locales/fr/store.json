@@ -1,6 +1,7 @@
 {
   "title": "Modèles partagés",
   "intro": "Les quiz que les animateurs de cette instance ont partagés. En prendre un place une copie indépendante dans votre banque — à vous de la renommer, la couper, la présenter. Rien ne vous sera poussé ensuite.",
+  "emptyTitle": "Aucun modèle pour l’instant",
   "empty": "Aucun modèle n’a encore été partagé sur cette instance. Partagez-en un depuis un quiz « prêt ».",
   "take": "Créer à partir de ce modèle",
   "withdraw": "Retirer",
