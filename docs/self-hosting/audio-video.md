@@ -3,6 +3,12 @@
 > Part of the [self-hosting guides](README.md). The variables are in
 > [configuration → limits](configuration.md#limits--game-pacing).
 
+> 🧪 **Experimental.** Video and sound in questions, remote participants and the
+> wait for media are new. They are built and tested in Chromium browsers (Chrome,
+> Edge); **Safari on iPhone has not been tested yet**. Settings, formats and
+> behaviour may still change between releases — feedback is welcome in the
+> [issues](https://github.com/quizdock/quiz-dock/issues).
+
 A question has two media slots: a **visual** (an image or a video) and a
 **sound** (an MP3). A video brings its own sound, so a question never has both a
 video and a separate sound. Media play in the **projection window**; the
