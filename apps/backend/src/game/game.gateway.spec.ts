@@ -94,6 +94,9 @@ describe('GameGateway (intégration socket)', () => {
 
   afterAll(async () => {
     for (const s of sockets) s.disconnect();
+    // The server handles those departures asynchronously (roster, readiness): let it
+    // finish while Redis is still open, or a late read fails the suite after the tests.
+    await new Promise((r) => setTimeout(r, 500));
     if (quizId) await prisma.quiz.delete({ where: { id: quizId } }).catch(() => undefined);
     if (previousSeat) {
       await prisma.hostSeat
