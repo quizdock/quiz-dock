@@ -86,6 +86,9 @@ export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
         (await this.redis.set(MEDIA_SWEEP_RUNNING, '1', 'PX', RUNNING_TTL_MS, 'NX')) !== null;
       if (!running) return null;
       const adopted = await this.adoptLegacyFiles();
+      await this.media
+        .fillDimensions()
+        .catch((err: Error) => this.log.warn(`Reading media sizes skipped: ${err.message}`));
       const media = await this.media.sweepOrphans();
       const blobs = await this.media.sweepUnusedBlobs();
       const files = await this.media.purgeStrayFiles();

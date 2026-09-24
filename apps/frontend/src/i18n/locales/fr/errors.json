@@ -63,7 +63,8 @@
     "too_long": "Trop long pour tenir dans la limite de {{maxMb}} Mo de ce type de média, même compressé. Raccourcissez-le d’abord.",
     "canceled": "Conversion annulée.",
     "in_use": "Ce média est encore utilisé par un quiz ou une partie : retirez-le d’abord de là.",
-    "playing": "Une partie joue ce média en ce moment : réessayez quand elle sera terminée."
+    "playing": "Une partie joue ce média en ce moment : réessayez quand elle sera terminée.",
+    "not_adopted_yet": "Ce fichier est en cours de déplacement vers le stockage partagé : réessayez dans un instant."
   },
   "import": {
     "file_missing": "Fichier manquant (champ « file »).",

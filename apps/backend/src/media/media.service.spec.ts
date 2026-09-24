@@ -202,11 +202,11 @@ describe('MediaService', () => {
     await expect(service.openStream('x')).rejects.toThrow(NotFoundException);
   });
 
-  it('remove : 404 si non possédé (isolation), pas de delete', async () => {
+  it("remove : 404 si non possédé (isolation), ni pour un média de l'instance, pas de delete", async () => {
     prisma.mediaAsset.findFirst.mockResolvedValue(null);
     await expect(service.remove('o1', 'm1')).rejects.toThrow(NotFoundException);
     expect(prisma.mediaAsset.findFirst).toHaveBeenCalledWith({
-      where: { id: 'm1', ownerId: 'o1' },
+      where: { id: 'm1', ownerId: 'o1', instance: false },
     });
     expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
   });

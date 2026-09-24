@@ -49,5 +49,8 @@
   "demo": {
     "banner": "Demo pública — una sola cuenta de anfitrión compartida por todos los visitantes; todo se borra cada hora."
   },
-  "chromiumOnly": "Esta página está pensada para Chrome, Edge u otro navegador Chromium. En este navegador, el envío y la reproducción de vídeos y sonidos pueden fallar."
+  "chromiumOnly": "Esta página está pensada para Chrome, Edge u otro navegador Chromium. En este navegador, el envío y la reproducción de vídeos y sonidos pueden fallar.",
+  "play": "Reproducir",
+  "pause": "Pausa",
+  "position": "Posición en el sonido"
 }

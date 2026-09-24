@@ -808,6 +808,58 @@
         ]
       }
     },
+    "/api/v1/media/instance": {
+      "get": {
+        "operationId": "MediaController_instance",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "image",
+                "video",
+                "audio"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaLibraryItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "media"
+        ]
+      }
+    },
     "/api/v1/media/links": {
       "get": {
         "operationId": "MediaController_links",
@@ -1113,6 +1165,169 @@
         ],
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/api/v1/admin/media/instance": {
+      "post": {
+        "operationId": "MediaAdminController_addUpload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "durationMs": {
+                    "type": "integer"
+                  },
+                  "peaks": {
+                    "type": "string"
+                  },
+                  "loudnessLufs": {
+                    "type": "number"
+                  },
+                  "peakDbfs": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/media/files/{id}/instance": {
+      "post": {
+        "operationId": "MediaAdminController_addFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadResultDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/media/instance/{id}": {
+      "put": {
+        "operationId": "MediaAdminController_setCredit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceMediaCreditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaDescriptionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "MediaAdminController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
         ]
       }
     },
@@ -3647,6 +3862,18 @@
               "type": "number"
             }
           },
+          "width": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "height": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
           "sizeBytes": {
             "type": "integer",
             "minimum": -9007199254740991,
@@ -3673,6 +3900,8 @@
           "credit",
           "durationMs",
           "peaks",
+          "width",
+          "height",
           "sizeBytes",
           "createdAt",
           "usedIn",
@@ -3810,6 +4039,18 @@
         ]
       },
       "MediaCreditDto": {
+        "type": "object",
+        "properties": {
+          "credit": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "credit"
+        ]
+      },
+      "InstanceMediaCreditDto": {
         "type": "object",
         "properties": {
           "credit": {
@@ -4092,6 +4333,41 @@
                 "legacy": {
                   "type": "boolean"
                 },
+                "width": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "height": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "peaks": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "inCatalog": {
+                  "type": "boolean"
+                },
+                "instanceId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "instanceCredit": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "createdAt": {
                   "type": "string"
                 }
@@ -4108,6 +4384,13 @@
                 "quizCount",
                 "inHistory",
                 "legacy",
+                "width",
+                "height",
+                "durationMs",
+                "peaks",
+                "inCatalog",
+                "instanceId",
+                "instanceCredit",
                 "createdAt"
               ]
             }

@@ -330,7 +330,12 @@
         "video": "Mes vidéos",
         "audio": "Mes sons"
       },
-      "inHistory": "Gardé pour les résultats passés"
+      "inHistory": "Gardé pour les résultats passés",
+      "tab": {
+        "mine": "Mes médias",
+        "instance": "Médias globaux"
+      },
+      "instanceEmpty": "Les administrateurs n’ont encore fourni aucun média global de ce type."
     },
     "creditLabel": "Crédit",
     "creditPlaceholder": "ex. Photo : Lin Wei, CC BY 4.0, openverse.org",

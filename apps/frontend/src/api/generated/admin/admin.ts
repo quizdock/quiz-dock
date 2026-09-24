@@ -25,11 +25,15 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  InstanceMediaCreditDto,
+  MediaAdminControllerAddUploadBody,
   MediaAdminControllerFilesParams,
+  MediaDescriptionDto,
   MediaFileUsagesDto,
   MediaFilesPageDto,
   MediaOverviewDto,
-  MediaSweepResultDto
+  MediaSweepResultDto,
+  MediaUploadResultDto
 } from '../model';
 
 import { customFetch } from '../../http';
@@ -39,7 +43,322 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export type mediaAdminControllerOverviewResponse200 = {
+export type mediaAdminControllerAddUploadResponse201 = {
+  data: MediaUploadResultDto
+  status: 201
+}
+
+export type mediaAdminControllerAddUploadResponseSuccess = (mediaAdminControllerAddUploadResponse201) & {
+  headers: Headers;
+};
+;
+
+export type mediaAdminControllerAddUploadResponse = (mediaAdminControllerAddUploadResponseSuccess)
+
+export const getMediaAdminControllerAddUploadUrl = () => {
+
+
+
+
+  return `/api/v1/admin/media/instance`
+}
+
+export const mediaAdminControllerAddUpload = async (mediaAdminControllerAddUploadBody: MediaAdminControllerAddUploadBody, options?: RequestInit): Promise<mediaAdminControllerAddUploadResponse> => {
+    const formData = new FormData();
+formData.append(`file`, mediaAdminControllerAddUploadBody.file);
+if(mediaAdminControllerAddUploadBody.durationMs !== undefined) {
+ formData.append(`durationMs`, mediaAdminControllerAddUploadBody.durationMs.toString())
+ }
+if(mediaAdminControllerAddUploadBody.peaks !== undefined) {
+ formData.append(`peaks`, mediaAdminControllerAddUploadBody.peaks);
+ }
+if(mediaAdminControllerAddUploadBody.loudnessLufs !== undefined) {
+ formData.append(`loudnessLufs`, mediaAdminControllerAddUploadBody.loudnessLufs.toString())
+ }
+if(mediaAdminControllerAddUploadBody.peakDbfs !== undefined) {
+ formData.append(`peakDbfs`, mediaAdminControllerAddUploadBody.peakDbfs.toString())
+ }
+
+  return customFetch<mediaAdminControllerAddUploadResponse>(getMediaAdminControllerAddUploadUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+export const getMediaAdminControllerAddUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerAddUpload>>, TError,{data: MediaAdminControllerAddUploadBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerAddUpload>>, TError,{data: MediaAdminControllerAddUploadBody}, TContext> => {
+
+const mutationKey = ['mediaAdminControllerAddUpload'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaAdminControllerAddUpload>>, {data: MediaAdminControllerAddUploadBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  mediaAdminControllerAddUpload(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MediaAdminControllerAddUploadMutationResult = NonNullable<Awaited<ReturnType<typeof mediaAdminControllerAddUpload>>>
+    export type MediaAdminControllerAddUploadMutationBody = MediaAdminControllerAddUploadBody
+    export type MediaAdminControllerAddUploadMutationError = unknown
+
+    export const useMediaAdminControllerAddUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerAddUpload>>, TError,{data: MediaAdminControllerAddUploadBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mediaAdminControllerAddUpload>>,
+        TError,
+        {data: MediaAdminControllerAddUploadBody},
+        TContext
+      > => {
+      return useMutation(getMediaAdminControllerAddUploadMutationOptions(options), queryClient);
+    }
+    export type mediaAdminControllerAddFileResponse201 = {
+  data: MediaUploadResultDto
+  status: 201
+}
+
+export type mediaAdminControllerAddFileResponseSuccess = (mediaAdminControllerAddFileResponse201) & {
+  headers: Headers;
+};
+;
+
+export type mediaAdminControllerAddFileResponse = (mediaAdminControllerAddFileResponseSuccess)
+
+export const getMediaAdminControllerAddFileUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/admin/media/files/${id}/instance`
+}
+
+export const mediaAdminControllerAddFile = async (id: string, options?: RequestInit): Promise<mediaAdminControllerAddFileResponse> => {
+
+  return customFetch<mediaAdminControllerAddFileResponse>(getMediaAdminControllerAddFileUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getMediaAdminControllerAddFileMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerAddFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerAddFile>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mediaAdminControllerAddFile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaAdminControllerAddFile>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mediaAdminControllerAddFile(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MediaAdminControllerAddFileMutationResult = NonNullable<Awaited<ReturnType<typeof mediaAdminControllerAddFile>>>
+
+    export type MediaAdminControllerAddFileMutationError = unknown
+
+    export const useMediaAdminControllerAddFile = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerAddFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mediaAdminControllerAddFile>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getMediaAdminControllerAddFileMutationOptions(options), queryClient);
+    }
+    export type mediaAdminControllerSetCreditResponse200 = {
+  data: MediaDescriptionDto
+  status: 200
+}
+
+export type mediaAdminControllerSetCreditResponseSuccess = (mediaAdminControllerSetCreditResponse200) & {
+  headers: Headers;
+};
+;
+
+export type mediaAdminControllerSetCreditResponse = (mediaAdminControllerSetCreditResponseSuccess)
+
+export const getMediaAdminControllerSetCreditUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/admin/media/instance/${id}`
+}
+
+export const mediaAdminControllerSetCredit = async (id: string,
+    instanceMediaCreditDto: InstanceMediaCreditDto, options?: RequestInit): Promise<mediaAdminControllerSetCreditResponse> => {
+
+  return customFetch<mediaAdminControllerSetCreditResponse>(getMediaAdminControllerSetCreditUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(instanceMediaCreditDto)
+  }
+);}
+
+
+
+
+export const getMediaAdminControllerSetCreditMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, TError,{id: string;data: InstanceMediaCreditDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, TError,{id: string;data: InstanceMediaCreditDto}, TContext> => {
+
+const mutationKey = ['mediaAdminControllerSetCredit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, {id: string;data: InstanceMediaCreditDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  mediaAdminControllerSetCredit(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MediaAdminControllerSetCreditMutationResult = NonNullable<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>>
+    export type MediaAdminControllerSetCreditMutationBody = InstanceMediaCreditDto
+    export type MediaAdminControllerSetCreditMutationError = unknown
+
+    export const useMediaAdminControllerSetCredit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, TError,{id: string;data: InstanceMediaCreditDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>,
+        TError,
+        {id: string;data: InstanceMediaCreditDto},
+        TContext
+      > => {
+      return useMutation(getMediaAdminControllerSetCreditMutationOptions(options), queryClient);
+    }
+    export type mediaAdminControllerRemoveResponse204 = {
+  data: void
+  status: 204
+}
+
+export type mediaAdminControllerRemoveResponseSuccess = (mediaAdminControllerRemoveResponse204) & {
+  headers: Headers;
+};
+;
+
+export type mediaAdminControllerRemoveResponse = (mediaAdminControllerRemoveResponseSuccess)
+
+export const getMediaAdminControllerRemoveUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/admin/media/instance/${id}`
+}
+
+export const mediaAdminControllerRemove = async (id: string, options?: RequestInit): Promise<mediaAdminControllerRemoveResponse> => {
+
+  return customFetch<mediaAdminControllerRemoveResponse>(getMediaAdminControllerRemoveUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getMediaAdminControllerRemoveMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerRemove>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['mediaAdminControllerRemove'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaAdminControllerRemove>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  mediaAdminControllerRemove(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MediaAdminControllerRemoveMutationResult = NonNullable<Awaited<ReturnType<typeof mediaAdminControllerRemove>>>
+
+    export type MediaAdminControllerRemoveMutationError = unknown
+
+    export const useMediaAdminControllerRemove = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerRemove>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mediaAdminControllerRemove>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getMediaAdminControllerRemoveMutationOptions(options), queryClient);
+    }
+    export type mediaAdminControllerOverviewResponse200 = {
   data: MediaOverviewDto
   status: 200
 }

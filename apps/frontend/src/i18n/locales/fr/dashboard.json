@@ -113,7 +113,14 @@
       "usedIn_other": "dans {{count}} quiz",
       "inHistory": "résultats passés seulement",
       "unused": "inutilisé",
-      "delete": "Supprimer {{name}}"
+      "delete": "Supprimer {{name}}",
+      "addToCatalog": "Ajouter aux médias globaux",
+      "addToCatalogNamed": "Ajouter {{name}} aux médias globaux",
+      "scope": "Quels fichiers",
+      "scopeAll": "Tous",
+      "view": "Affichage",
+      "viewList": "Liste",
+      "viewGrid": "Grille"
     },
     "delete": {
       "title": "Supprimer ce fichier ?",
@@ -127,7 +134,42 @@
       "failed": "Le fichier n’a pas pu être supprimé.",
       "quizzesLose": "Les questions perdent ce média.",
       "resultsLose": "Les résultats passés ne l’affichent plus.",
-      "everyCopy": "Toutes les copies de ce fichier partent, quel qu’en soit le propriétaire."
+      "everyCopy": "Toutes les copies de ce fichier partent, quel qu’en soit le propriétaire.",
+      "inCatalog": "Ce fichier fait partie des médias globaux : le supprimer retire aussi les copies que les hôtes en ont prises, et leurs quiz le perdent. Pour ne plus le proposer sans toucher aux quiz, retirez-le plutôt depuis la vue Global."
+    },
+    "instance": {
+      "help": "Fournis à tous les hôtes, qui les trouvent sous « Médias globaux » dans leur bibliothèque. Jamais nettoyés ; en retirer un ne casse aucun quiz. Pas de texte alternatif ici : l’hôte l’écrit pour son quiz, dans sa langue.",
+      "add": {
+        "image": "Ajouter une image",
+        "video": "Ajouter une vidéo",
+        "audio": "Ajouter un son"
+      },
+      "adding": "Conversion et envoi…",
+      "addFailed": "Le média n’a pas pu être ajouté.",
+      "empty": "Aucun média global pour l’instant : ajoutez-en avec les boutons ci-dessus, ou depuis la vue Tous.",
+      "credit": "Crédit (auteur, licence, source)",
+      "remove": "Retirer",
+      "removeNamed": "Retirer {{name}}",
+      "removeTitle": "Retirer ce média global ?",
+      "removeDescription": "Les hôtes ne le trouvent plus dans leur bibliothèque. Les quiz qui l’utilisent gardent leur copie.",
+      "removeFailed": "Le média n’a pas pu être retiré.",
+      "saveFailed": "La modification n’a pas pu être enregistrée."
+    },
+    "global": "Global",
+    "preview": {
+      "open": "Aperçu de {{name}}",
+      "format": "Format",
+      "dimensions": "Dimensions",
+      "duration": "Durée",
+      "size": "Taille",
+      "owners": "Propriétaires",
+      "usages": "Utilisation",
+      "credit": "Crédit",
+      "added": "Ajouté",
+      "openFile": "Ouvrir le fichier dans un nouvel onglet",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "close": "Fermer"
     }
   }
 }

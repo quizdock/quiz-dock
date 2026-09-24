@@ -13,6 +13,9 @@ export interface MediaLibraryItem {
   credit: string | null;
   durationMs: number | null;
   peaks: number[];
+  /** Displayed size of an image or a video; 0 × 0 when unknown, null not read yet. */
+  width: number | null;
+  height: number | null;
   sizeBytes: number;
   createdAt: string;
   /** How many of the author's quizzes use it. */
@@ -87,7 +90,7 @@ export class MediaLibraryService {
       WITH mine AS (
         SELECT m.*, COALESCE(m.blob_sha256, m.id) AS file
         FROM media_asset m
-        WHERE m.owner_id = ${ownerId}
+        WHERE m.owner_id = ${ownerId} AND NOT m.instance
           ${kind ? Prisma.sql`AND m.kind = ${kind}::media_kind` : Prisma.empty}
       ),
       used AS (
@@ -99,7 +102,7 @@ export class MediaLibraryService {
         SELECT DISTINCT ON (file) * FROM mine ORDER BY file, created_at DESC
       )
       SELECT l.id, l.url, l.kind, l.name, l.alt, l.credit, l.duration_ms AS "durationMs",
-             l.peaks, l.size_bytes AS "sizeBytes", l.created_at AS "createdAt",
+             l.peaks, l.width, l.height, l.size_bytes AS "sizeBytes", l.created_at AS "createdAt",
              COALESCE(u.n, 0) AS "usedIn",
              EXISTS (
                SELECT 1 FROM mine m JOIN game_session_log g
@@ -118,6 +121,48 @@ export class MediaLibraryService {
       ...r,
       sizeBytes: Number(r.sizeBytes),
       createdAt: r.createdAt.toISOString(),
+    }));
+  }
+
+  /**
+   * The instance's media (#62), for every host to reuse: newest first, narrowed
+   * to a kind and to a search on name, alt text and credit.
+   */
+  async instanceMedia(filter: { kind?: MediaKind; q?: string } = {}): Promise<MediaLibraryItem[]> {
+    const kind = filter.kind && KINDS.includes(filter.kind) ? filter.kind : null;
+    const q = filter.q?.trim() || null;
+    const rows = await this.prisma.mediaAsset.findMany({
+      where: {
+        instance: true,
+        ...(kind ? { kind } : {}),
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, mode: 'insensitive' as const } },
+                { alt: { contains: q, mode: 'insensitive' as const } },
+                { credit: { contains: q, mode: 'insensitive' as const } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: { createdAt: 'desc' },
+      take: LIST_MAX,
+    });
+    return rows.map((m) => ({
+      id: m.id,
+      url: m.url,
+      kind: m.kind,
+      name: m.name,
+      alt: m.alt,
+      credit: m.credit,
+      durationMs: m.durationMs,
+      peaks: m.peaks,
+      width: m.width,
+      height: m.height,
+      sizeBytes: Number(m.sizeBytes),
+      createdAt: m.createdAt.toISOString(),
+      usedIn: 0,
+      inHistory: false,
     }));
   }
 

@@ -28,6 +28,7 @@ import {
 import type { User } from '@prisma/client';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { AllowManager } from '../auth/allow-manager.decorator';
 import { Public } from '../auth/public.decorator';
 import { MediaAltDto, MediaDescriptionDto } from './dto/media-alt.dto';
 import {
@@ -67,6 +68,15 @@ export class MediaController {
     @Query() query: MediaLibraryQueryDto,
   ): Promise<MediaLibraryItemDto[]> {
     return this.library.list(user.id, query);
+  }
+
+  /** The instance's media (#62), for every host to reuse; administrators read it too. */
+  @Get('instance')
+  @AllowManager()
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: [MediaLibraryItemDto] })
+  instance(@Query() query: MediaLibraryQueryDto): Promise<MediaLibraryItemDto[]> {
+    return this.library.instanceMedia(query);
   }
 
   /** The free libraries the editor points to (`MEDIA_LIBRARY_LINKS`). */
@@ -119,6 +129,7 @@ export class MediaController {
 
   /** Largest file per kind: the editor checks a conversion will fit before running it. */
   @Get('limits')
+  @AllowManager() // an administrator converts the instance's media too (#62)
   @ApiBearerAuth()
   @ApiOkResponse({ type: MediaLimitsDto })
   limits(): MediaLimitsDto {

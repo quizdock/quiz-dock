@@ -63,7 +63,8 @@
     "too_long": "Too long to fit the {{maxMb}} MB limit for this kind of media, even compressed. Shorten it first.",
     "canceled": "Conversion cancelled.",
     "in_use": "This media is still used by a quiz or a session: remove it from there first.",
-    "playing": "A session is playing this media right now: try again once it ends."
+    "playing": "A session is playing this media right now: try again once it ends.",
+    "not_adopted_yet": "This file is being moved to shared storage: try again in a moment."
   },
   "import": {
     "file_missing": "Missing file (“file” field).",

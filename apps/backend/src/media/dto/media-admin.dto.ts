@@ -70,6 +70,17 @@ export const mediaFileRowSchema = z.object({
   inHistory: z.boolean(),
   /** Stored before the converter (MP3, PNG, JPEG…). */
   legacy: z.boolean(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
+  /** Length of a sound or a video (ms). */
+  durationMs: z.number().int().nullable(),
+  /** A sound's waveform, for the preview's player (empty otherwise). */
+  peaks: z.array(z.number()),
+  /** Among the global media (#62). */
+  inCatalog: z.boolean(),
+  /** The global media on this file, and its credit: what the Global view edits and withdraws. */
+  instanceId: z.string().nullable(),
+  instanceCredit: z.string().nullable(),
   createdAt: z.string(),
 });
 
@@ -96,3 +107,10 @@ export const mediaSweepResultSchema = z.object({
 });
 
 export class MediaSweepResultDto extends createZodDto(mediaSweepResultSchema) {}
+
+/** The credit of a global media (no alt text: the host writes it for their quiz). */
+export const instanceMediaCreditSchema = z.object({
+  credit: z.string().max(300),
+});
+
+export class InstanceMediaCreditDto extends createZodDto(instanceMediaCreditSchema) {}

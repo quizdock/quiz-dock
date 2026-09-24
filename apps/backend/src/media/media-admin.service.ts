@@ -14,6 +14,10 @@ const PAGE_MAX = 100;
 /** A file on the volume: a blob, or a media from before sharing with a file of its own. */
 const FILE_KEY = Prisma.sql`COALESCE(m.blob_sha256, m.id)`;
 
+/** Who a media counts for: its author, or `global` for the instance's own (#62). */
+export const GLOBAL_OWNER = 'global';
+const OWNER_KEY = Prisma.sql`CASE WHEN m.instance THEN ${GLOBAL_OWNER} ELSE m.owner_id END`;
+
 /**
  * The uses of every media, read once per request (a `LIKE` per media would scan
  * every text and snapshot again for each): `qr` (quiz, media), `ar` (media shown
@@ -54,6 +58,16 @@ export interface MediaFileRow {
   quizCount: number;
   inHistory: boolean;
   legacy: boolean;
+  width: number | null;
+  height: number | null;
+  /** Length of a sound or a video, for the preview. */
+  durationMs: number | null;
+  /** A sound's waveform (empty otherwise). */
+  peaks: number[];
+  /** Among the global media (#62). */
+  inCatalog: boolean;
+  instanceId: string | null;
+  instanceCredit: string | null;
   createdAt: string;
 }
 
@@ -104,11 +118,11 @@ export class MediaAdminService {
       this.prisma.$queryRaw<
         Array<{ ownerId: string; displayName: string; files: number; bytes: bigint }>
       >`
-        SELECT o.owner_id AS "ownerId", u.display_name AS "displayName",
+        SELECT o.owner AS "ownerId", COALESCE(u.display_name, '') AS "displayName",
                COUNT(*)::int AS files, SUM(o.bytes)::bigint AS bytes
-        FROM (SELECT m.owner_id, ${FILE_KEY} AS k, MAX(m.size_bytes) AS bytes
+        FROM (SELECT ${OWNER_KEY} AS owner, ${FILE_KEY} AS k, MAX(m.size_bytes) AS bytes
               FROM media_asset m ${scope} GROUP BY 1, 2) o
-        JOIN "user" u ON u.id = o.owner_id
+        LEFT JOIN "user" u ON u.id = o.owner
         GROUP BY 1, 2 ORDER BY bytes DESC LIMIT ${TOP_OWNERS}`,
       this.prisma.$queryRaw<Array<{ files: number; bytes: bigint; mimes: string[] }>>`
         SELECT COUNT(*)::int AS files, COALESCE(SUM(f.bytes), 0)::bigint AS bytes,
@@ -120,7 +134,8 @@ export class MediaAdminService {
         WITH ${REFS},
         m AS (
           SELECT m.*, ${FILE_KEY} AS k,
-                 NOT (m.id IN (SELECT media_id FROM qr) OR m.id IN (SELECT media_id FROM ar)) AS unused
+                 NOT (m.instance OR m.id IN (SELECT media_id FROM qr)
+                      OR m.id IN (SELECT media_id FROM ar)) AS unused
           FROM media_asset m ${scope}
         )
         SELECT COUNT(*) FILTER (WHERE unused)::int AS count,
@@ -156,7 +171,8 @@ export class MediaAdminService {
   async files(filter: MediaFileFilter = {}): Promise<{ total: number; items: MediaFileRow[] }> {
     const where: Prisma.Sql[] = [];
     if (filter.kind) where.push(Prisma.sql`f.kind = ${filter.kind}`);
-    if (filter.ownerId) where.push(Prisma.sql`${filter.ownerId} = ANY (f.owner_ids)`);
+    if (filter.ownerId === GLOBAL_OWNER) where.push(Prisma.sql`f."inCatalog"`);
+    else if (filter.ownerId) where.push(Prisma.sql`${filter.ownerId} = ANY (f.owner_ids)`);
     if (filter.legacy) where.push(Prisma.sql`f.legacy`);
     if (filter.q?.trim()) {
       const q = `%${filter.q.trim().replace(/[\\%_]/g, '\\$&')}%`;
@@ -194,15 +210,25 @@ export class MediaAdminService {
                (ARRAY_AGG(m.url ORDER BY m.created_at DESC))[1] AS url,
                (ARRAY_AGG(m.name ORDER BY m.created_at DESC) FILTER (WHERE m.name IS NOT NULL))[1] AS name,
                MIN(m.kind::text) AS kind, MIN(m.mime) AS mime, MAX(m.size_bytes) AS bytes,
-               ARRAY_AGG(DISTINCT m.owner_id) AS owner_ids,
-               ARRAY_AGG(DISTINCT u.display_name) AS owners,
+               ARRAY_AGG(DISTINCT m.owner_id) FILTER (WHERE NOT m.instance) AS owner_ids,
+               COALESCE(ARRAY_AGG(DISTINCT u.display_name) FILTER (WHERE NOT m.instance), '{}') AS owners,
+               (ARRAY_AGG(m.id) FILTER (WHERE m.instance))[1] AS "instanceId",
+               (ARRAY_AGG(m.credit) FILTER (WHERE m.instance))[1] AS "instanceCredit",
                COUNT(*)::int AS "mediaCount",
                MIN(m.created_at) AS created_at,
+               MAX(m.width) AS width, MAX(m.height) AS height,
+               MAX(m.duration_ms) AS "durationMs",
+               BOOL_OR(m.instance) AS "inCatalog",
                BOOL_OR(m.mime <> ALL (${CURRENT_MIMES})) AS legacy
         FROM media_asset m JOIN "user" u ON u.id = m.owner_id
         GROUP BY 1
       )
-      SELECT f.id, f.url, f.kind, f.mime, f.name, f.bytes, f.owners, f."mediaCount", f.legacy,
+      SELECT f.id, f.url, f.kind, f.mime, f.name, f.bytes, f.width, f.height, f."durationMs",
+             -- A sound's waveform, for the preview's player (indexed by blob).
+             COALESCE((SELECT w.peaks FROM media_asset w
+                       WHERE COALESCE(w.blob_sha256, w.id) = f.k AND cardinality(w.peaks) > 0
+                       LIMIT 1), '{}') AS peaks,
+             f."inCatalog", f."instanceId", f."instanceCredit", f.owners, f."mediaCount", f.legacy,
              f.created_at,
              COALESCE(used.n, 0) AS "quizCount",
              shown.k IS NOT NULL AS "inHistory",
@@ -224,6 +250,13 @@ export class MediaAdminService {
         quizCount: r.quizCount,
         inHistory: r.inHistory,
         legacy: r.legacy,
+        width: r.width,
+        height: r.height,
+        durationMs: r.durationMs,
+        peaks: r.peaks,
+        inCatalog: r.inCatalog,
+        instanceId: r.instanceId,
+        instanceCredit: r.instanceCredit,
         createdAt: r.created_at.toISOString(),
       })),
     };
@@ -281,7 +314,8 @@ export class MediaAdminService {
     const [row] = await this.prisma.$queryRaw<Array<{ n: number }>>`
       WITH f AS (
         SELECT ${FILE_KEY} AS k, MIN(m.kind::text) AS kind, MIN(m.mime) AS mime,
-               ARRAY_AGG(DISTINCT m.owner_id) AS owner_ids,
+               ARRAY_AGG(DISTINCT m.owner_id) FILTER (WHERE NOT m.instance) AS owner_ids,
+               BOOL_OR(m.instance) AS "inCatalog",
                (ARRAY_AGG(m.name ORDER BY m.created_at DESC) FILTER (WHERE m.name IS NOT NULL))[1] AS name,
                BOOL_OR(m.mime <> ALL (${CURRENT_MIMES})) AS legacy
         FROM media_asset m GROUP BY 1

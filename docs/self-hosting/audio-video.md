@@ -101,9 +101,24 @@ served throughout.
 **Instance media** (account menu, `admin` role only — see
 [`user:set-role`](cli.md)) shows what the volume holds, by kind and by owner,
 the files in older formats, what the clean-up has to do and what holds it back,
-and runs it at once. Every file is listed with its owners and usages, and can be
-deleted even when used — for moderation: the page lists the quizzes and past
-sessions it breaks first, and refuses while a session is playing it.
+and runs it at once. Every file is listed with its owners, size in pixels and
+usages, and can be deleted even when used — for moderation: the page lists the
+quizzes and past sessions it breaks first, and refuses while a session is
+playing it.
+
+The same page manages the **global media**: images, videos and sounds an
+administrator provides to every host. The file list shows *All* files or only
+the *Global* ones (owned by "Global"), as a list or a grid; global media are
+uploaded from the *Global* view or added from any file of the *All* view.
+Hosts find them in the *Global media* tab of their media library; picking one
+gives them a media of their own on the same file (nothing is copied on disk)
+with its credit — but no alternative text: that depends on the question and on
+the quiz's language, so the host writes it. Global media are never cleaned up,
+and withdrawing one never breaks a quiz.
+
+The width and height of images and videos are read from the files themselves
+(the rotation a phone records included); for media stored before, the hourly
+pass fills them in.
 
 ## Loudness levelling
 

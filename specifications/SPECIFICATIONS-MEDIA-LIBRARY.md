@@ -179,6 +179,30 @@ the scale of an instance, not meant for millions of media.
 
 ---
 
+## 8 bis. Dimensions and the instance's media (#62)
+
+Asked for once the page existed:
+
+- **Dimensions** — `media_asset.width` / `height`, read **server-side from the bytes** at upload (PNG, JPEG, GIF, WebP,
+  AVIF headers; the MP4 video track's `tkhd`, a quarter-turn swapping the sides) and carried on reuse. Media stored
+  before are filled in by the hourly job, a batch per pass; one whose bytes do not say gets 0 × 0 (unknown). Shown in
+  the author's library and on the administration page.
+- **Instance media** — `media_asset.instance`: images, videos and sounds an administrator provides to every host,
+  uploaded on the administration page (converted in the browser like any media; `POST /admin/media/instance`) or
+  added from any file (`POST /admin/media/files/:id/instance`: a new media, owned by the administrator, on the same
+  file — the author keeps theirs). Hosts see them in a *Global media* tab of the library dialog
+  (`GET /media/instance`); picking one **creates a media of their own on the same file**, the credit carried over,
+  so the quizzes never point at the instance's media. Never swept by the clean-up, never listed in an author's own
+  library, credited and withdrawn by administrators only (`PUT` / `DELETE /admin/media/instance/:id`); withdrawing
+  one leaves the hosts' copies — and so the file — in place.
+- **No alt text on a global media**: it depends on the use (#43) and on the quiz's language, so the host writes it
+  on their copy; only the credit — a name, a licence, a source — is the administrator's.
+- **"Global"** everywhere: the owner of the instance's media on the administration page (by owner, file rows), the
+  host's tab. The administration page has **one file list** — *All* or *Global* — shown as a list or a grid (kept in
+  the browser); the *Global* view uploads, edits credits and withdraws, the *All* view adds any file.
+
+---
+
 ## 9. Phases
 
 | # | Subject | Side |
