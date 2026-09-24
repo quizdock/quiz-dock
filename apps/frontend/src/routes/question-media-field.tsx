@@ -1,7 +1,8 @@
 import type { Audio, QuestionMedia } from '@quiz-dock/contracts';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { Disclosure } from '@/components/ui/disclosure';
 import { mediaControllerDescribe } from '../api/generated/media/media';
 import { MediaUpload, type UploadedMedia } from './media-upload';
 
@@ -14,9 +15,12 @@ import { MediaUpload, type UploadedMedia } from './media-upload';
 export function QuestionMediaField({
   value,
   onChange,
+  children,
 }: {
   value: QuestionMedia;
   onChange: (media: QuestionMedia) => void;
+  /** The sound's own settings (listen first, playback), closing the sound group. */
+  children?: ReactNode;
 }) {
   const { t } = useTranslation('editor');
   const { visual, audio } = value;
@@ -42,10 +46,21 @@ export function QuestionMediaField({
   };
 
   return (
-    <fieldset className="flex flex-col gap-3 rounded-md border p-3">
-      <legend className="px-1 text-sm font-medium">{t('media.slotsLegend')}</legend>
-
-      <div className="flex flex-col gap-1.5">
+    // One fold for all of it; inside, the
+    // visual and the sound each read as their own group.
+    <Disclosure
+      title={t('media.slotsLegend')}
+      value={
+        [
+          visual?.kind === 'image' ? t('media.kindImage') : null,
+          hasVideo ? t('media.kindVideo') : null,
+          audio ? t('media.audioLabel') : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') || t('media.none')
+      }
+    >
+      <div className={GROUP}>
         <span className="text-sm font-medium">{t('media.visualLabel')}</span>
         {visual?.kind === 'image' ? (
           <MediaUpload value={visual.assetId} onChange={setImage} kind="image" />
@@ -86,7 +101,7 @@ export function QuestionMediaField({
         )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
+      <div className={GROUP}>
         <span className="text-sm font-medium">{t('media.audioLabel')}</span>
         {hasVideo ? (
           <p className="text-muted-foreground text-sm">{t('media.videoExcludesAudio')}</p>
@@ -98,10 +113,14 @@ export function QuestionMediaField({
             label={t('media.addAudio')}
           />
         )}
+        {children}
       </div>
-    </fieldset>
+    </Disclosure>
   );
 }
+
+/** A group of the media section, drawn by a rule down its left side. */
+const GROUP = 'flex flex-col gap-1.5 border-l-2 pl-3';
 
 /** The visual slot emptied, the sound kept. */
 const NO_VISUAL = (audio: Audio | null): QuestionMedia => ({ visual: null, audio });

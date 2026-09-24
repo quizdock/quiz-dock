@@ -15,7 +15,7 @@
 | `0.x.y` (PATCH) | Fixes and adjustments, no new scope |
 | `1.0.0` | **A conditional milestone** — see the eligibility criteria below |
 
-> ⚠️ **v1.0.0 is not planned.** It is **not** a step of this roadmap. We know new features will emerge along the way: they land as further `0.x` releases (`0.8.0`, `0.9.0`, `0.10.0`, …), with no fixed destination. **v1.0.0 will only be considered the day a `0.x` version turns out to be stable and complete enough** — by eligibility, never by calendar or delivery pressure. The exact scope of that future v1 is deliberately left open here.
+> ⚠️ **v1.0.0 is not planned.** It is **not** a step of this roadmap. We know new features will emerge along the way: they land as further `0.x` releases, with no fixed destination. **No version number is assigned ahead of time**: a number belongs to what has shipped, and polishing or hardening goes out as patches, never as a milestone of its own. **v1.0.0 will only be considered the day a `0.x` version turns out to be stable and complete enough** — by eligibility, never by calendar or delivery pressure. The exact scope of that future v1 is deliberately left open here.
 
 ### Eligibility criteria (for the day v1.0.0 is considered)
 The criteria below describe **what a version will have to satisfy** to *claim* `1.0.0` — they do not schedule that step. A `0.x` version would only be promoted to `1.0.0` if **all** of these hold:
@@ -43,9 +43,10 @@ A git tag per milestone (`v0.1.0`, `v0.2.0`, …). The CHANGELOG is updated at e
 | **v0.4.0** | Real-time robustness | Player and host reconnection, latency compensation, the multi-instance Redis adapter, load tests with 200 users | v0.3.0 | M |
 | **v0.5.0** | Question types | Multiple answers, true/false, text input, numeric, ordering, polls | v0.3.0 | M |
 | **v0.6.0** | Reporting | Podium, per-question statistics, the report plus CSV export, participant history, **full capture** | v0.5.0 | M |
-| **v0.7.0** | Finishing touches | FR/EN i18n, accessibility, observability, moderation, UX polish | v0.6.0 | M |
-| **v0.8.0** | Hardening & stabilisation | Security review, performance, the full regression suite, documentation and runbook | v0.7.0 | M |
-| **v0.9.0 → 0.x** | *An open series* | **Emergent features** plus continuous stabilisation (not planned here) | v0.8.0 | — |
+| **v0.7.0** | Video & sound | MP4 and MP3 in questions, loudness levelling, waveform, remote participants, who hears the sound, preloading, one common start, *listen first*; an editor that folds what is secondary | v0.6.0 | L |
+| *ongoing* | Finishing touches | Accessibility, observability, UX polish (i18n and moderation already shipped along the way) — **patches** as they come | — | — |
+| *ongoing* | Hardening & stabilisation | Security review, performance, the full regression suite, documentation and runbook — **patches** as they come | — | — |
+| *next `0.x`* | *An open series* | **Emergent features**, each a MINOR when it ships (not planned here) | v0.7.0 | — |
 | ~~v1.0.0~~ | *(not planned)* | Considered **by eligibility** only (see §1), not by calendar | — | — |
 
 \* Relative effort (S/M/L), **not** a duration in days (it depends on the size of the team). See §6.
@@ -193,39 +194,59 @@ A `v0.x.0` milestone is reached when **all** of its tasks are:
 
 ---
 
-### Phase 7 — v0.7.0 · Finishing touches
-**Goal**: product quality and operability.
+### Phase 7 — v0.7.0 · Video & sound
+**Goal**: questions that are heard and watched, in the room and from afar. An emergent milestone, not in the
+first plan: it took the slot of the finishing touches, which now go out continuously as patches. The requirements, the decisions and
+what is left in the idea box are in [SPECIFICATIONS-MEDIA.md](./SPECIFICATIONS-MEDIA.md).
 
 | ID | Task |
 |----|-------|
-| P7-FRONT-1 | **i18n** FR/EN (the labels externalised) (technique §13) |
-| P7-FRONT-2 | **Accessibility**: AA contrast, keyboard, touch target sizes, colour and shape checked |
-| P7-BACK-1 | **Observability**: metrics (active games, sockets, latency), traces, logs |
-| P7-BACK-2 | **Moderation**: a nickname filter, throwing someone out (`host:kick`) (RG-06/12) |
-| P7-ALL-1 | UX polish, error and empty states, cross-cutting messages (UI §8) |
-| P7-QA-1 | Accessibility and i18n tests |
+| P7-MEDIA-1 | **Video (MP4) and sound (MP3)** in questions, carried by the quiz bundle (version 3) (media brief §2) |
+| P7-MEDIA-2 | **Loudness levelling** per quiz (EBU R128), the question stretched to its media plus a pause |
+| P7-MEDIA-3 | The **waveform** with a playhead, the same on every screen; its size per question |
+| P7-MEDIA-4 | **Remote participants** and **who hears the sound**, per quiz, question and session (media brief §5.1–5.2) |
+| P7-MEDIA-5 | **Preloading** from the lobby and **readiness**: the room waits a moment for a device still loading (§5.3–5.4) |
+| P7-MEDIA-6 | **One common start** on the server's clock, and **listen first** questions (media brief §6) |
+| P7-FRONT-1 | The **editor** folds what is set once and read rarely; each fold says what it is set to (UI §2.2) |
 
-**Exit criterion**: a bilingual, accessible, observable, moderatable application.
+**Exit criterion**: a question plays its video or sound on the projection and on remote devices, started together,
+at a steady level; tested in Chromium browsers (iPhone still to test, hence *experimental*).
 
 ---
 
-### Phase 8 — v0.8.0 · Hardening & stabilisation
-**Goal**: make the base solid and operable (without aiming at a frozen "v1 release").
+### Ongoing · Finishing touches (patches)
+**Goal**: product quality and operability, shipped a little at a time as `0.x.Y` patches — no version of its own.
 
 | ID | Task |
 |----|-------|
-| P8-QA-1 | A **security review** (JWT, CORS, rate limiting, anti-cheat, data protection) (technique §13) |
-| P8-QA-2 | **The full regression suite** plus coverage ≥ the thresholds; frozen contract tests |
-| P8-INFRA-1 | **Production** image builds (multi-stage), a production-like `docker-compose.yml`, secrets |
-| P8-INFRA-2 | A **migration** strategy plus backup and purge (retention, RG-11) |
-| P8-DOC-1 | Operational documentation: a runbook, the published OpenAPI, a host guide |
-| P8-QA-3 | An overall acceptance pass across every journey (métier §6) |
+| FIN-FRONT-1 | ~~**i18n** FR/EN (the labels externalised) (technique §13)~~ — shipped early, in five languages |
+| FIN-FRONT-2 | **Accessibility**: AA contrast, keyboard, touch target sizes, colour and shape checked |
+| FIN-BACK-1 | **Observability**: metrics (active games, sockets, latency), traces, logs |
+| FIN-BACK-2 | **Moderation**: a nickname filter, throwing someone out (`host:kick`) (RG-06/12) — throwing out shipped early |
+| FIN-ALL-1 | UX polish, error and empty states, cross-cutting messages (UI §8) |
+| FIN-QA-1 | Accessibility and i18n tests |
 
-**Exit criterion**: a hardened, audited, documented base, tagged **v0.8.0**.
+**Done when**: the application is accessible, observable and moderatable.
 
 ---
 
-### Beyond — v0.9.0 → 0.x · An open series
+### Ongoing · Hardening & stabilisation (patches)
+**Goal**: make the base solid and operable (without aiming at a frozen "v1 release"), as `0.x.Y` patches — no version of its own.
+
+| ID | Task |
+|----|-------|
+| HARD-QA-1 | A **security review** (JWT, CORS, rate limiting, anti-cheat, data protection) (technique §13) |
+| HARD-QA-2 | **The full regression suite** plus coverage ≥ the thresholds; frozen contract tests |
+| HARD-INFRA-1 | **Production** image builds (multi-stage), a production-like `docker-compose.yml`, secrets |
+| HARD-INFRA-2 | A **migration** strategy plus backup and purge (retention, RG-11) |
+| HARD-DOC-1 | Operational documentation: a runbook, the published OpenAPI, a host guide |
+| HARD-QA-3 | An overall acceptance pass across every journey (métier §6) |
+
+**Done when**: the base is hardened, audited and documented.
+
+---
+
+### Beyond — the next `0.x` · An open series
 **Goal**: take in the **emergent features** (found along the way) and keep stabilising, **with no planned release milestone**.
 
 - Each new feature is a `0.x` MINOR with its own tasks, tests and documentation (the same DoD, §3).
@@ -238,15 +259,17 @@ A `v0.x.0` milestone is reached when **all** of its tasks are:
 
 ```
 v0.1.0 ─▶ v0.2.0 ─▶ v0.3.0 ─┬─▶ v0.4.0 ─┐
-                             │           ├─▶ v0.6.0 ─▶ v0.7.0 ─▶ v0.8.0 ─▶ 0.9.0 → 0.x …
-                             └─▶ v0.5.0 ─┘                                  (an open series)
+                             │           ├─▶ v0.6.0 ─▶ v0.7.0 ─▶ next 0.x …
+                             └─▶ v0.5.0 ─┘                   (an open series)
+
+      finishing touches · hardening: continuous, shipped as patches (0.x.Y)
 
                                    (v1.0.0: out of plan, by eligibility only — §1)
 ```
 
 - **The critical path**: Foundations → Builder → The basic game (everything depends on it).
 - **Parallelisable** after v0.3.0: Robustness (v0.4.0) and Question types (v0.5.0) can advance side by side if the team allows; v0.6.0 waits for both.
-- **An open series** after v0.8.0: the `0.x` releases follow one another as features emerge; there is no fixed arrival point.
+- **An open series** after v0.7.0: the `0.x` releases follow one another as features emerge; there is no fixed arrival point.
 - **Cross-cutting** (present in every phase, not a separate milestone): tests, documentation, basic accessibility.
 
 ---

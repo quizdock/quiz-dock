@@ -261,6 +261,27 @@ export function ControlPage() {
           <ParticipantsList players={view.players} readiness={view.readiness} onBan={banPlayer} />
         </div>
 
+        {/* Who hears the sound, for this game: replaces the quiz's default; a question
+            with its own setting keeps it. Only when the quiz has something to hear. */}
+        {view.quizHasSound && view.gameAudioTarget ? (
+          <label className="flex flex-col gap-2 rounded-lg border p-4 text-sm">
+            <span className="font-medium">{t('control.audioTargetLabel')}</span>
+            <Select
+              className="h-8 w-auto"
+              value={view.gameAudioTarget}
+              aria-label={t('control.audioTargetLabel')}
+              onChange={(e) => setOptions({ audioTarget: e.target.value as AudioTarget })}
+            >
+              {AUDIO_TARGETS.map((target) => (
+                <option key={target} value={target}>
+                  {t(`control.audioTarget.${target}`)}
+                </option>
+              ))}
+            </Select>
+            <span className="text-muted-foreground">{t('control.audioTargetHint')}</span>
+          </label>
+        ) : null}
+
         {/* Capture intégrale (§3.1 / RG-13) : choix avant le démarrage, verrouillé une
             fois la partie lancée (cette vue lobby disparaît au start). Les joueurs déjà
             connectés sont informés en direct (avis de consentement §2.10). */}
@@ -327,27 +348,6 @@ export function ControlPage() {
             <Info className="mt-0.5 size-4 shrink-0" />
             {t('control.preloadNotice')}
           </p>
-        ) : null}
-
-        {/* Who hears the sound, for this game: replaces the quiz's default; a question
-            with its own setting keeps it. Only when the quiz has something to hear. */}
-        {view.quizHasSound && view.gameAudioTarget ? (
-          <label className="flex flex-col gap-2 rounded-lg border p-4 text-sm">
-            <span className="font-medium">{t('control.audioTargetLabel')}</span>
-            <Select
-              className="h-8 w-auto"
-              value={view.gameAudioTarget}
-              aria-label={t('control.audioTargetLabel')}
-              onChange={(e) => setOptions({ audioTarget: e.target.value as AudioTarget })}
-            >
-              {AUDIO_TARGETS.map((target) => (
-                <option key={target} value={target}>
-                  {t(`control.audioTarget.${target}`)}
-                </option>
-              ))}
-            </Select>
-            <span className="text-muted-foreground">{t('control.audioTargetHint')}</span>
-          </label>
         ) : null}
 
         <ActionBar

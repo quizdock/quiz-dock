@@ -124,7 +124,7 @@ docker compose -f docker-compose.prod.yml up -d
 # open http://localhost:18080
 ```
 
-Pin a version with `QUIZDOCK_TAG=0.6.0 docker compose -f docker-compose.prod.yml up -d`.
+Pin a version with `QUIZDOCK_TAG=0.7.0 docker compose -f docker-compose.prod.yml up -d`.
 From source: `git clone https://github.com/quizdock/quiz-dock.git`, then the same command
 with `--build`.
 
@@ -132,7 +132,7 @@ with `--build`.
 
 Migrations run **automatically** on every start: pull the new tag and `up` again.
 **Back up PostgreSQL first**, and **don't roll back** an image once its migrations ran —
-restore the backup instead. With the script: `./quizdock upgrade 0.6.0` (backup → pull →
+restore the backup instead. With the script: `./quizdock upgrade 0.7.0` (backup → pull →
 restart → doctor). Full procedure:
 [self-hosting → Upgrading](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrading.md).
 
@@ -161,8 +161,8 @@ hosted elsewhere).
 
 <table>
   <tr>
-    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/editor.png" alt="Quiz builder" /><br /><sub><b>Quiz builder</b> — 7 question types, slides, backgrounds, scoring rules</sub></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/console-lobby.png" alt="Host console — lobby" /><br /><sub><b>Host console</b> — lobby: PIN, QR code, invitation address, players</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/editor.png" alt="Quiz builder" /><br /><sub><b>Quiz builder</b> — 7 question types, video &amp; sound, slides, backgrounds, scoring rules</sub></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/console-lobby.png" alt="Host console — lobby" /><br /><sub><b>Host console</b> — lobby: PIN, QR code, players in the room or remote, who hears the sound</sub></td>
   </tr>
   <tr>
     <td width="50%"><img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/join.png" alt="Join by PIN, nickname and avatar" /><br /><sub><b>Join</b> — PIN or QR code, nickname &amp; avatar, no account</sub></td>
