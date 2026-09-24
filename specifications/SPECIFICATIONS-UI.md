@@ -59,26 +59,32 @@ The `⋯` menu: Edit · Duplicate · Archive · Delete · See past sessions.
 
 ### 2.2 Quiz editor (the builder)
 ```
-┌───────────────────────────────────────────────────────────┐
-│ ◀ Back   Quiz: [ Security onboarding      ]      [ Save ] │
-├──────────────┬────────────────────────────────────────────┤
-│ QUESTIONS    │  Question 3 / 12                           │
-│ 1 ▣ Choice   │  Type: [ Single choice           ▾]        │
-│ 2 ▣ T/F      │  Prompt: [_______________________________] │
-│ 3 ▣ Choice ◀ │  Media : [ ▣ Add an image or sound ]       │
-│ 4 ▣ Text     │  ⏱ Time: [ 20 s ▾]   Points: [1000 ▾]      │
-│ ...          │                                            │
-│ [ + Add ]    │  Answers:                                  │
-│              │   ▲ [ Answer A__________ ] ( ) right       │
-│ (drag to     │   ◆ [ Answer B__________ ] (•) right       │
-│  reorder)    │   ● [ Answer C__________ ] ( ) right       │
-│              │   ■ [ Answer D__________ ] ( ) right       │
-│              │                        [+ option] (max 6)  │
-│              │  [ Preview ]                    [ Delete ] │
-└──────────────┴────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│ Security onboarding   Ready   Preview · History · Export · Share · …  │
+│ DESCRIPTION                   ┌ ☑ Allow player feedback  ★ 4.2 ───┐   │
+│ Onboarding quiz for new…      │ ▸ Sound       −16 LUFS · … · 3 s  │   │
+│                               └───────────────────────────────────┘   │
+│ ┌ Ready to present.  ☐ Full capture   Back to draft  [ ▶ Present ] ┐  │
+│ └ (while a session runs: its PIN, its players, its console)        ┘  │
+├──────────────┬────────────────────────────────────────────────────────┤
+│ QUESTIONS    │  Edit question                  Cancel  [ Save ]       │
+│ 1 ▣ Choice   │  Type: [ Single choice           ▾]                    │
+│ ▤ Slide      │  Prompt: [___________________________________]         │
+│ 2 ▣ T/F ◀    │  ▸ Question media                       Image · Sound  │
+│ ...          │  TIMING   Time [ 20 ]   Reveal delay [ auto ]          │
+│ [ + Add ]    │  OPTIONS                                               │
+│ [ + Slide ]  │   ▲ [ Answer A__________ ] ( ) right                   │
+│              │   ◆ [ Answer B__________ ] (•) right   [+ option]      │
+│ (drag to     │  ▸ Points                          Standard · …        │
+│  reorder)    │  ▸ Answer explanation                                  │
+│              │  ▸ Background                              None        │
+└──────────────┴────────────────────────────────────────────────────────┘
 ```
 - The **type** shapes the answers area (true/false = 2 options; text = a list of accepted answers; numeric = a value plus a tolerance; ordering = a sequence; poll = no "right" answer).
-- Inline validation: a prompt is required, ≥ 1 right answer (RG-03), the time bounds.
+- **What is always in view** is what gets edited for every question: type, prompt, timing, answers. **The rest folds** (`▸`): every fold starts closed and its line says what it is set to, so a setting that differs from the norm never hides.
+- **Question media** folds as one: the *visual* (image or video, with its alternative text) and the *sound* read as two groups; the sound's group ends with *listen first* and a folded *playback* (who hears it, waveform size).
+- The quiz's own settings sit beside its description: player feedback in view, the **sound** (pause after a media, levelling, who hears it) folded on the row below. The status bar, full width, carries the one action that follows the quiz's state.
+- Inline validation: a prompt is required, ≥ 1 right answer (RG-03), the time bounds. A field that refuses the save opens its fold, so the reason shows.
 
 ### 2.3 Previewing a question
 ```
@@ -106,18 +112,23 @@ The `⋯` menu: Edit · Duplicate · Archive · Delete · See past sessions.
 │  marc · sophie · leo · nadia · ...  (click a name to      │
 │                                      throw them out)      │
 │                                                           │
-│  ☐ Record every answer (audit / certification)            │
+│  Who hears the sound in this session  (quiz with sound)   │
+│  [ Projection and remote participants            ▾]       │
+│  ☐ Record all answers                                     │
 │     ⓘ The participants are told when the session starts.  │
 │  ☑ Personalised tracking                                  │
 │     ⓘ Off: the group's results only, nothing individual.  │
 │  ☐ Let participants pick their display name   (OIDC only) │
+│  ⓘ The next question's media reach the devices ahead.     │
 │                                                           │
 │  [ Start the session ]                       [ Cancel ]   │
 └───────────────────────────────────────────────────────────┘
 ```
-> The "Record every answer" checkbox turns on **full-capture mode** (RG-13); the other
-> two are personalised tracking (RG-16) and the chosen display name (RG-15). All three
-> lock once the session has started.
+> The sound comes first: who hears it replaces the quiz's setting for this session (a
+> question with its own setting keeps it). The "Record all answers" checkbox turns on
+> **full-capture mode** (RG-13); the other two are personalised tracking (RG-16) and the
+> chosen display name (RG-15). These three lock once the session has started. With media
+> in the quiz, the host is told that the devices fetch them ahead (media brief §5.3).
 
 ### 3.2 During a question (host side)
 ```

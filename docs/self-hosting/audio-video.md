@@ -58,8 +58,8 @@ When a sound or a video is added, the editor measures its loudness
 (ITU-R BS.1770, the EBU R128 method) and its peak. At playback the projection
 brings it to the quiz's level with a gain, so the volume does not jump from one
 question to the next; the file itself is never modified, and the gain never
-raises a sound so much that it clips. Each quiz picks its level in the editor
-(**Sound levelling**):
+raises a sound so much that it clips. Each quiz picks its level in the editor,
+in the **Sound** fold beside its description (**Sound levelling**):
 
 | Level | LUFS | Suits |
 | --- | --- | --- |
@@ -105,9 +105,9 @@ When a quiz has a sound or a video, the join form asks each participant where
 they play from: **in the room** (they see the projection) or **remote** (a video
 call, from home). The console marks the remote ones in its participant list.
 
-**Who hears the sound** is set per quiz in the editor, and per question when a
-question needs otherwise; the host can replace the quiz's setting for one
-session from the lobby:
+**Who hears the sound** is set per quiz in the editor (the same **Sound** fold),
+and per question when a question needs otherwise (its media, **Playback**); the
+host can replace the quiz's setting for one session, first thing in the lobby:
 
 | Setting | Projection | Remote participants | Phones in the room |
 | --- | --- | --- | --- |
@@ -122,7 +122,7 @@ mid-session sees **Sound blocked** with a button, as on the projection. Each
 participant can mute their own device.
 
 A sound is drawn as its waveform, as thick as the question asks (S, M or L in
-the editor), with a playhead. The projection tells the room where it is about
+the question's **Playback**), with a playhead. The projection tells the room where it is about
 once a second and at each pause or jump: the screens that show the sound
 without playing it — the console, the phones in the room — move their playhead
 with it.
@@ -137,7 +137,7 @@ play, and nothing goes further than one question ahead, to spare mobile data.
 
 **Accepted risk:** the participants' devices thus hold the next question's
 image, sound or video before it shows — never its text nor its answers. A
-curious participant could open them early; the console's lobby says so.
+tech-savvy participant could open them early; the console's lobby says so.
 
 ## Waiting for media
 

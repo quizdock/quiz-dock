@@ -127,7 +127,7 @@ it has not loaded — the waiting part of the former phase 5, brought forward on
   media — remote players, and room phones for the images — and to the **next step**, slide or question.
 - **From the lobby**, every device fetches the media of the first step while people wait for the start.
 - **Accepted risk** (decided 2026-09-23): a player's device holds the next step's media 10–20 s before it shows,
-  without its prompt; a curious player could open them. The host is told so (console lobby, self-hosting guide).
+  without its prompt; a tech-savvy player could open them. The host is told so (console lobby, self-hosting guide).
 - Mobile data is spared: at most **one step ahead**; the images and sounds are light, a video is fetched only by a
   device that will play it.
 
