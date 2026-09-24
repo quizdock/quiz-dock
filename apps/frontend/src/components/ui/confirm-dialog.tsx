@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useId, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './button';
 
@@ -31,6 +31,7 @@ export function ConfirmDialog({
 }) {
   const { t } = useTranslation('common');
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const d = ref.current;
@@ -50,8 +51,11 @@ export function ConfirmDialog({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault(); // Échap → on passe par onCancel (pas de fermeture brutale)
+        // React bubbles it through the component tree: a dialog opened from another must not close that one too.
+        e.stopPropagation();
         onCancel();
       }}
       onClick={(e) => {
@@ -60,7 +64,9 @@ export function ConfirmDialog({
       className="bg-background text-foreground m-auto w-[90vw] max-w-md rounded-lg border p-0 shadow-lg backdrop:bg-black/50"
     >
       <div className="flex flex-col gap-4 p-6">
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 id={titleId} className="text-lg font-semibold">
+          {title}
+        </h2>
         {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         {children}
         <div className="flex justify-end gap-2">

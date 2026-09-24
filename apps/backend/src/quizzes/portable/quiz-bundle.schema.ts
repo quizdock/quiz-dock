@@ -30,6 +30,10 @@ export const BUNDLE_VERSION = 3;
 /** What a bundle says about one media file (all optional: an image carries at most its alt). */
 export const bundleMediaMetaSchema = z.object({
   alt: z.string().max(300).nullable().optional(),
+  /** Author, licence, source (#53): the attribution a licence asks for travels with the file. */
+  credit: z.string().max(300).nullable().optional(),
+  /** The name the author knew the file by, for their library. */
+  name: z.string().max(200).nullable().optional(),
   durationMs: z.number().int().positive().optional(),
   peaks: audioPeaksSchema.optional(),
   origin: z.enum(['upload', 'recording']).optional(),

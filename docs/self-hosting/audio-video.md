@@ -45,6 +45,20 @@ The server still checks every file by its **content**, never by its name. It
 accepts the formats above plus those already stored before the converter (MP3,
 PNG, JPEG, GIF, AVIF), which keep playing — imported quizzes may carry them.
 
+## The author's library and credits
+
+**My images / My videos / My sounds**, next to each media field, list what the
+author has uploaded — one entry per file, with how many of their quizzes use it.
+Picking one puts it to a new use without uploading it again (its alternative
+text and credit are copied, then edited separately); an unused entry can be
+deleted. Below the list, links to free media libraries
+([`MEDIA_LIBRARY_LINKS`](configuration.md#limits--game-pacing); `none` hides
+them on an instance without Internet) — nothing is fetched by the server.
+
+Every media has a **credit** field: author, licence, source. A CC-BY or CC-BY-SA
+licence asks for it. The credits of a quiz's media are listed on its preview
+page and shown in small print under the podium on the projection.
+
 ## Sizes and the reverse proxy
 
 | Variable | Default | Applies to |

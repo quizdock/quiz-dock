@@ -272,7 +272,8 @@
     "correctAnswer": "bonne réponse",
     "optionFallback": "Option {{index}}",
     "acceptedAnswers": "Réponses acceptées : {{answers}}",
-    "numericTarget": "Cible : {{value}} (± {{tolerance}})"
+    "numericTarget": "Cible : {{value}} (± {{tolerance}})",
+    "credits": "Crédits"
   },
   "media": {
     "alt": "média de la question",
@@ -301,7 +302,39 @@
     "cancelConversion": "Annuler",
     "notice": {
       "gifFirstFrame": "GIF animé : seule sa première image est conservée."
-    }
+    },
+    "library": {
+      "close": "Fermer",
+      "search": "Chercher par nom, texte alternatif ou crédit",
+      "loading": "Chargement…",
+      "empty": "Rien pour l’instant : les médias que vous envoyez sont gardés ici, pour resservir.",
+      "noMatch": "Aucun média ne correspond à cette recherche.",
+      "pick": "Utiliser {{name}}",
+      "unused": "Inutilisé",
+      "delete": "Supprimer {{name}}",
+      "deleteTitle": "Supprimer ce média ?",
+      "deleteDescription": "Aucun quiz ne l’utilise. Son fichier est supprimé définitivement.",
+      "deleteConfirm": "Supprimer",
+      "deleteError": "Le média n’a pas pu être supprimé.",
+      "findElsewhere": "Trouver ailleurs :",
+      "creditReminder": "Sous licence CC-BY, indiquez l’auteur et la licence dans le crédit du média.",
+      "title": {
+        "image": "Mes médias · images",
+        "video": "Mes médias · vidéos",
+        "audio": "Mes médias · sons"
+      },
+      "usedIn_one": "Utilisé dans {{count}} quiz",
+      "usedIn_other": "Utilisé dans {{count}} quiz",
+      "openKind": {
+        "image": "Mes images",
+        "video": "Mes vidéos",
+        "audio": "Mes sons"
+      },
+      "inHistory": "Gardé pour les résultats passés"
+    },
+    "creditLabel": "Crédit",
+    "creditPlaceholder": "ex. Photo : Lin Wei, CC BY 4.0, openverse.org",
+    "creditHelp": "Auteur, licence et source. Affiché dans l’aperçu et en fin de partie — une licence CC-BY le demande."
   },
   "background": {
     "legend": "Fond",

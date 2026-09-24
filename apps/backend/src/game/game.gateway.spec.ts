@@ -3,6 +3,7 @@ import { UserRole } from '@prisma/client';
 import { NestFactory } from '@nestjs/core';
 import { type Socket, io } from 'socket.io-client';
 import { AppModule } from '../app.module';
+import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
 import { GameService } from './game.service';
@@ -327,6 +328,88 @@ describe('GameGateway (intégration socket)', () => {
     expect(await control).toEqual({ questionIndex: 0, action: 'restart' });
     expect(controls).toHaveLength(1);
     host.emit('host:end', { pin });
+  }, 15_000);
+
+  it('keeps an uploaded file name as the author typed it, accents and CJK included (#53)', async () => {
+    // Through the real route: multer reads multipart file names as latin1.
+    const png = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x23, 0x35]);
+    const form = new FormData();
+    form.append('file', new Blob([png], { type: 'image/png' }), 'église-台北.png');
+    const res = await fetch(url.replace(/\/game$/, '/media'), {
+      method: 'POST',
+      headers: { 'X-Local-User': 'Animateur' },
+      body: form,
+    });
+    expect(res.status).toBe(201);
+    const { mediaId } = (await res.json()) as { mediaId: string };
+    try {
+      const row = await prisma.mediaAsset.findUniqueOrThrow({ where: { id: mediaId } });
+      expect(row.name).toBe('église-台北.png');
+    } finally {
+      await app.get(MediaService).remove(hostUserId, mediaId);
+    }
+  });
+
+  it("shows the credits of the quiz's media at the podium (#53)", async () => {
+    const asset = await prisma.mediaAsset.create({
+      data: {
+        ownerId: hostUserId,
+        url: '/api/v1/media/credit-test',
+        mime: 'image/webp',
+        sizeBytes: 1n,
+        kind: 'image',
+        credit: 'Photo: Lin Wei, CC BY 4.0',
+      },
+    });
+    const credited = await prisma.quiz.create({
+      data: {
+        ownerId: hostUserId,
+        title: 'Credits test',
+        status: 'ready',
+        questionCount: 1,
+        questions: {
+          create: {
+            orderIndex: 0,
+            type: 'poll',
+            prompt: 'Q',
+            timeLimitS: 5,
+            pointsMode: 'none',
+            visualMediaId: asset.id,
+            options: {
+              create: [
+                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+              ],
+            },
+          },
+        },
+      },
+    });
+    try {
+      const host = connect({ localUser: 'Animateur' });
+      const { pin } = await host.emitWithAck('host:create', { quizId: credited.id });
+      const screen = connect();
+      await screen.emitWithAck('spectator:join', { pin });
+      const started = new Promise<void>((resolve) =>
+        screen.once('question:start', () => resolve()),
+      );
+      const reveal = new Promise<void>((resolve) =>
+        screen.once('question:reveal', () => resolve()),
+      );
+      const podium = new Promise<{ credits?: string[] }>((resolve) =>
+        screen.once('game:podium', (p) => resolve(p as never)),
+      );
+      host.emit('host:start', { pin });
+      await started;
+      host.emit('host:reveal', { pin });
+      await reveal;
+      host.emit('host:next', { pin });
+      expect((await podium).credits).toEqual(['Photo: Lin Wei, CC BY 4.0']);
+      host.emit('host:end', { pin });
+    } finally {
+      await prisma.quiz.delete({ where: { id: credited.id } });
+      await prisma.mediaAsset.delete({ where: { id: asset.id } });
+    }
   }, 15_000);
 
   it('sends each device what it needs of the next question: the sound to the projection and to remote participants, not to phones in the room', async () => {

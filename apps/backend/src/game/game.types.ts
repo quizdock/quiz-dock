@@ -94,6 +94,8 @@ export interface QuizSnapshot {
   questions: SnapshotQuestion[];
   /** Sorted by (beforeQuestionIndex, orderIndex). */
   slides: SnapshotSlide[];
+  /** The credits of the media it plays, shown at the podium (#53; absent before it). */
+  credits?: string[];
 }
 
 /** Enregistrement d'un joueur dans l'état live (Redis hash `:players`). */

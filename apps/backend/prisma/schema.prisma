@@ -365,6 +365,10 @@ model MediaAsset {
   /// valid answer for decoration; for a question whose image *is* the question,
   /// it is what a screen reader has to work with.
   alt          String?
+  /// Who made it, under which licence, from where — free text, shown with the quiz (#53).
+  credit       String?
+  /// The file name the author picked (with the extension of the stored format), for finding it again.
+  name         String?
   mime         String
   sizeBytes    BigInt       @map("size_bytes")
   kind         MediaKind

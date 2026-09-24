@@ -146,4 +146,80 @@ describe('MediaUpload', () => {
       ).toBe(true),
     );
   });
+
+  it('reuses a media from the library: a new media on the same file', async () => {
+    const item = (over: object) => ({
+      id: 'm-old',
+      url: '/api/v1/media/m-old',
+      kind: 'image',
+      name: 'temple.webp',
+      alt: 'Longshan temple',
+      credit: null,
+      durationMs: null,
+      peaks: [],
+      sizeBytes: 1000,
+      createdAt: '2026-09-24T10:00:00.000Z',
+      usedIn: 2,
+      inHistory: false,
+      ...over,
+    });
+    const fetchMock = mockApi([
+      {
+        method: 'GET',
+        path: /\/media\?kind=image/,
+        body: [item({}), item({ id: 'm-free', name: 'free.webp', usedIn: 0 })],
+      },
+      {
+        method: 'GET',
+        path: '/media/links',
+        body: [{ name: 'Openverse', url: 'https://openverse.org/', kinds: ['image'] }],
+      },
+      {
+        method: 'POST',
+        path: '/media/m-old/reuse',
+        status: 201,
+        body: { mediaId: 'm-new', url: '/api/v1/media/m-new', kind: 'image' },
+      },
+    ]);
+    const { onChange } = renderUpload(null);
+    fireEvent.click(screen.getByRole('button', { name: 'Mes images' }));
+    const pick = await screen.findByRole('button', { name: 'Utiliser temple.webp' });
+    // Only an unused media can be deleted from the library.
+    expect(screen.queryByRole('button', { name: 'Supprimer temple.webp' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Supprimer free.webp' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Openverse/ })).toHaveAttribute('target', '_blank');
+    fireEvent.click(pick);
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith('m-new', expect.objectContaining({ kind: 'image' })),
+    );
+    expect(posted(fetchMock)).toBe(true);
+  });
+
+  it('saves the credit of the attached media on blur (#53)', async () => {
+    const fetchMock = mockApi([
+      {
+        method: 'GET',
+        path: '/media/media-123/meta',
+        body: { id: 'media-123', alt: null, credit: null, durationMs: null },
+      },
+      {
+        method: 'PUT',
+        path: '/media/media-123/credit',
+        body: { id: 'media-123', alt: null, credit: 'CC0', durationMs: null },
+      },
+    ]);
+    renderUpload('media-123');
+    const field = await screen.findByLabelText(/Crédit/);
+    fireEvent.change(field, { target: { value: 'Photo : Lin, CC BY 4.0' } });
+    fireEvent.blur(field);
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, opts]) =>
+            String(url).includes('/media/media-123/credit') &&
+            String((opts as RequestInit | undefined)?.body).includes('CC BY 4.0'),
+        ),
+      ).toBe(true),
+    );
+  });
 });

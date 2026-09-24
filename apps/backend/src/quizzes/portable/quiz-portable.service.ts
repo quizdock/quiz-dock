@@ -91,6 +91,8 @@ export class QuizPortableService {
       const row = asset.asset;
       metaByPath[path] = {
         alt: row.alt,
+        ...(row.credit ? { credit: row.credit } : {}),
+        ...(row.name ? { name: row.name } : {}),
         durationMs: row.durationMs ?? undefined,
         peaks: row.kind === 'audio' ? row.peaks : undefined,
         origin: row.audioOrigin ?? undefined,
@@ -132,7 +134,7 @@ export class QuizPortableService {
         // Checked by content like any upload; a sound brings its measures (version 3).
         uploaded = await this.media.upload(
           ownerId,
-          { buffer, mimetype, size: buffer.length },
+          { buffer, mimetype, size: buffer.length, originalname: meta?.name ?? undefined },
           {
             durationMs: meta?.durationMs,
             peaks: meta?.peaks ? JSON.stringify(meta.peaks) : undefined,
@@ -149,6 +151,8 @@ export class QuizPortableService {
       }
       // The alternative text travels with the file (#43, bundle version 2).
       if (meta?.alt) await this.media.setAlt(ownerId, uploaded.mediaId, meta.alt);
+      // So does its credit (#53): a CC-BY licence follows the quiz wherever it is shared.
+      if (meta?.credit) await this.media.setCredit(ownerId, uploaded.mediaId, meta.credit);
       idByPath.set(path, uploaded.mediaId);
       kindByPath.set(path, uploaded.kind);
     }

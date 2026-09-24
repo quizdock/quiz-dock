@@ -103,14 +103,14 @@ Which setup offers what: [where participants connect](invitation-address.md).
 | Variable | Default | Description |
 |---|---|---|
 | `MEDIA_MAX_BYTES` | `10485760` | Max size of an uploaded **image** (bytes). Default 10 MiB. |
-| `MEDIA_MAX_VIDEO_MB` | `50` | Max size of an uploaded **video** (MB). MP4 with H.264 video and AAC (or no) audio only — no transcoding, the file is played as uploaded. |
-| `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). MP3 only. |
+| `MEDIA_MAX_VIDEO_MB` | `50` | Max size of an uploaded **video** (MB). The editor converts to MP4 H.264 + AAC and compresses a long video to fit. |
+| `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). The editor converts to M4A (AAC). |
+| `MEDIA_LIBRARY_LINKS` | *(four free libraries)* | The free media libraries the editor links to: a JSON list of `{"name", "url", "kinds"}` (`kinds` among `image`, `video`, `audio`), or `none` to hide them (an instance without Internet). Default: OpenSoundLibrary, Freesound, Openverse, Wikimedia Commons. |
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
 
 Formats, conversion and playback are detailed in [Audio & video](audio-video.md).
-A file's type is read from its content, never from its name: a renamed file is refused, and so
-is a video in another codec than H.264 (the HEVC an iPhone records by default, AV1) or a
-QuickTime `.mov`. **Behind a reverse proxy, raise its request body limit to the largest of these
+The editor converts each media in the author's browser to one format per kind; the server
+still reads a file's type from its content, never from its name. **Behind a reverse proxy, raise its request body limit to the largest of these
 sizes** — nginx refuses anything over 1 MB by default (`client_max_body_size 50m;`).
 | `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
 | `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |

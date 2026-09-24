@@ -110,25 +110,28 @@ Rules:
 
 ## 5. The media input module (authors)
 
-One component for every media field (question visual, sound, background, slide, answer option, quiz cover), in
-place of today's `media-upload` and its variants. It offers:
+One component for every media field — `MediaUpload`, which every field already used (question visual and sound,
+background, slide image block; the quiz cover and the answer options have no editor field yet). Delivered in #53,
+it offers:
 
 - **Upload** — the flow of §3.
-- **My media** — the author's library: thumbnail or waveform, kind, duration, size, "used in N quizzes", search
-  by name; picking one reuses it (§4).
+- **My images / My videos / My sounds** — a button per field, named after its kind (the visual slot has two), opening
+  the author's library in a dialog: one entry per file (a reused media is listed once), thumbnail or waveform,
+  duration, "used in N quizzes"; search on the file name (`media_asset.name`, kept from #53 on — older media show
+  their date), the alt text and the credit; picking one reuses it (§4); an unused entry can be deleted — every
+  media of the author on that file goes, and the server refuses (`409 media.in_use`) while any is used.
 - **Find elsewhere** — outgoing links to free libraries (§6), opened in a new tab; the author downloads, then
   drops the file here.
 - **Alt text and credit** of the chosen media.
 
-A light "My media" view per author (list, usages, delete when unused) sits behind the same component; the
-management of the whole instance is the admin page (§8).
+The management of the whole instance is the admin page (§8).
 
 ---
 
 ## 6. External libraries and credits
 
-Outgoing links only: nothing is fetched by the server (no SSRF surface, works offline). The list is part of the
-instance configuration, with defaults:
+Outgoing links only: nothing is fetched by the server (no SSRF surface, works offline). The list comes from the
+backend (`GET /api/v1/media/links`, set by `MEDIA_LIBRARY_LINKS`: a JSON list, or `none`), with defaults:
 
 - [OpenSoundLibrary](https://opensoundlibrary.com/) — sounds, CC0 / CC-BY / CC-BY-SA;
 - [Openverse](https://openverse.org/) — images and sounds under Creative Commons;
@@ -136,8 +139,9 @@ instance configuration, with defaults:
 - [Freesound](https://freesound.org/) — sounds (account needed to download).
 
 CC-BY and CC-BY-SA require **crediting the author**, hence a free-text **credit** on the asset (author, licence,
-source). Credits are shown on the quiz's preview page and can be put on a closing slide. Importing by URL or
-through these libraries' APIs is not in scope (idea box).
+source). The credits of every media a quiz uses (slots, options, slides, images typed in text) are listed on its
+preview page and, frozen in the session snapshot, shown in small print under the podium: the audience sees the
+attribution. Importing by URL or through these libraries' APIs is not in scope (idea box).
 
 ---
 

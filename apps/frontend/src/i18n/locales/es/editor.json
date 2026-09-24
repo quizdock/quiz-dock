@@ -272,7 +272,8 @@
     "correctAnswer": "respuesta correcta",
     "optionFallback": "Opción {{index}}",
     "acceptedAnswers": "Respuestas aceptadas: {{answers}}",
-    "numericTarget": "Objetivo: {{value}} (± {{tolerance}})"
+    "numericTarget": "Objetivo: {{value}} (± {{tolerance}})",
+    "credits": "Créditos"
   },
   "media": {
     "alt": "medio de la pregunta",
@@ -301,7 +302,39 @@
     "cancelConversion": "Cancelar",
     "notice": {
       "gifFirstFrame": "GIF animado: solo se conserva su primer fotograma."
-    }
+    },
+    "library": {
+      "close": "Cerrar",
+      "search": "Buscar por nombre, texto alternativo o crédito",
+      "loading": "Cargando…",
+      "empty": "Nada por ahora: los medios que subes se guardan aquí para volver a usarlos.",
+      "noMatch": "Ningún medio coincide con esta búsqueda.",
+      "pick": "Usar {{name}}",
+      "unused": "Sin usar",
+      "delete": "Eliminar {{name}}",
+      "deleteTitle": "¿Eliminar este medio?",
+      "deleteDescription": "Ningún quiz lo usa. Su archivo se elimina definitivamente.",
+      "deleteConfirm": "Eliminar",
+      "deleteError": "No se pudo eliminar el medio.",
+      "findElsewhere": "Buscar en otro sitio:",
+      "creditReminder": "Con licencia CC-BY, indica el autor y la licencia en el crédito del medio.",
+      "title": {
+        "image": "Mis medios · imágenes",
+        "video": "Mis medios · vídeos",
+        "audio": "Mis medios · sonidos"
+      },
+      "usedIn_one": "Usado en {{count}} quiz",
+      "usedIn_other": "Usado en {{count}} quizzes",
+      "openKind": {
+        "image": "Mis imágenes",
+        "video": "Mis vídeos",
+        "audio": "Mis sonidos"
+      },
+      "inHistory": "Guardado para resultados anteriores"
+    },
+    "creditLabel": "Crédito",
+    "creditPlaceholder": "p. ej. Foto: Lin Wei, CC BY 4.0, openverse.org",
+    "creditHelp": "Autor, licencia y fuente. Se muestra en la vista previa y al final de la partida — una licencia CC-BY lo exige."
   },
   "background": {
     "legend": "Fondo",

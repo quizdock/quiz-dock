@@ -50,6 +50,8 @@ function makeMedia() {
       kind: file.mimetype.split('/')[0] as 'image' | 'video' | 'audio',
     })),
     readAsset: jest.fn(),
+    setAlt: jest.fn(async () => ({})),
+    setCredit: jest.fn(async () => ({})),
   };
 }
 
@@ -78,6 +80,42 @@ describe('QuizPortableService', () => {
   });
 
   describe('import', () => {
+    it("brings back a media's credit and name with its file (#53)", async () => {
+      const options = [
+        { text: 'A', color: 'red', shape: 'triangle' },
+        { text: 'B', color: 'blue', shape: 'diamond' },
+      ];
+      const buffer = zipOf(
+        {
+          format: 'quizdock/quiz',
+          version: 3,
+          quiz: { title: 'Credits' },
+          media: {
+            'media/lake.webp': {
+              alt: 'Sun Moon Lake',
+              credit: 'Photo: Lin, CC BY 4.0',
+              name: 'lake.webp',
+            },
+          },
+          items: [
+            { kind: 'question', type: 'poll', prompt: 'Where?', media: 'media/lake.webp', options },
+          ],
+        },
+        { 'media/lake.webp': new Uint8Array([1]) },
+      );
+      await service.importBundle(OWNER, { buffer, mimetype: 'application/zip' });
+      expect(media.upload).toHaveBeenCalledWith(
+        OWNER,
+        expect.objectContaining({ originalname: 'lake.webp' }),
+        expect.anything(),
+      );
+      expect(media.setCredit).toHaveBeenCalledWith(
+        OWNER,
+        expect.any(String),
+        'Photo: Lin, CC BY 4.0',
+      );
+    });
+
     it('brings back a video and a sound with its measures (version 3)', async () => {
       const peaks = new Array(200).fill(0.25);
       const options = [

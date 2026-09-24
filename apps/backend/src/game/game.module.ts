@@ -1,3 +1,4 @@
+import { MediaModule } from '../media/media.module';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
@@ -9,7 +10,7 @@ import { SessionArchiveService } from './session-archive.service';
 
 // PrismaModule / RedisModule sont @Global → injectables sans réimport.
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, UsersModule, MediaModule],
   controllers: [GameController],
   providers: [GameGateway, GameService, GameEngine, SessionArchiveService],
 })
