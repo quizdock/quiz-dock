@@ -404,8 +404,8 @@ export function QuestionForm({
         )}
       </form.Field>
 
-      {/* Le média et ce qui ne vaut que pour lui : écouter d'abord, puis, repliés,
-          la forme d'onde et qui entend le son. */}
+      {/* Les médias, repliés en un seul bloc ; écouter d'abord et la lecture ferment le
+          groupe du son. */}
       <QuestionMediaField value={media} onChange={(m) => form.setFieldValue('media', m)}>
         {canListenFirst ? (
           <form.Field name="timerAfterMedia">
