@@ -1,6 +1,7 @@
 {
   "title": "Shared templates",
   "intro": "Quizzes the hosts of this instance have shared. Taking one puts an independent copy in your bank — yours to rename, cut and present. Nothing is pushed back to you afterwards.",
+  "emptyTitle": "No templates yet",
   "empty": "No template has been shared on this instance yet. Share one from a quiz marked “ready”.",
   "take": "Create from this",
   "withdraw": "Withdraw",

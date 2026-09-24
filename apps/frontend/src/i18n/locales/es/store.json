@@ -1,6 +1,7 @@
 {
   "title": "Plantillas compartidas",
   "intro": "Los cuestionarios que los anfitriones de esta instancia han compartido. Tomar uno coloca una copia independiente en tu banco: tuya para renombrar, recortar y presentar. Después no se te envía nada.",
+  "emptyTitle": "Todavía no hay plantillas",
   "empty": "Todavía no se ha compartido ninguna plantilla en esta instancia. Comparte una desde un cuestionario «listo».",
   "take": "Crear a partir de esta plantilla",
   "withdraw": "Retirar",
