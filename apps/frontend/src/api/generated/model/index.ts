@@ -46,6 +46,8 @@ export * from './mediaAdminControllerFilesLegacy';
 export * from './mediaAdminControllerFilesParams';
 export * from './mediaAdminControllerFilesSort';
 export * from './mediaAltDto';
+export * from './mediaControllerFromSourceKind';
+export * from './mediaControllerFromSourceParams';
 export * from './mediaControllerInstanceKind';
 export * from './mediaControllerInstanceParams';
 export * from './mediaControllerListKind';

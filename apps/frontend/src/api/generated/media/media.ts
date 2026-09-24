@@ -26,6 +26,7 @@ import type {
 
 import type {
   MediaAltDto,
+  MediaControllerFromSourceParams,
   MediaControllerInstanceParams,
   MediaControllerListParams,
   MediaControllerUploadBody,
@@ -196,6 +197,9 @@ if(mediaControllerUploadBody.loudnessLufs !== undefined) {
 if(mediaControllerUploadBody.peakDbfs !== undefined) {
  formData.append(`peakDbfs`, mediaControllerUploadBody.peakDbfs.toString())
  }
+if(mediaControllerUploadBody.sourceSha256 !== undefined) {
+ formData.append(`sourceSha256`, mediaControllerUploadBody.sourceSha256);
+ }
 
   return customFetch<mediaControllerUploadResponse>(getMediaControllerUploadUrl(),
   {
@@ -352,6 +356,127 @@ export function useMediaControllerInstance<TData = Awaited<ReturnType<typeof med
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getMediaControllerInstanceQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type mediaControllerFromSourceResponse200 = {
+  data: MediaLibraryItemDto
+  status: 200
+}
+
+export type mediaControllerFromSourceResponseSuccess = (mediaControllerFromSourceResponse200) & {
+  headers: Headers;
+};
+;
+
+export type mediaControllerFromSourceResponse = (mediaControllerFromSourceResponseSuccess)
+
+export const getMediaControllerFromSourceUrl = (sha256: string,
+    params?: MediaControllerFromSourceParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/media/source/${sha256}?${stringifiedParams}` : `/api/v1/media/source/${sha256}`
+}
+
+export const mediaControllerFromSource = async (sha256: string,
+    params?: MediaControllerFromSourceParams, options?: RequestInit): Promise<mediaControllerFromSourceResponse> => {
+
+  return customFetch<mediaControllerFromSourceResponse>(getMediaControllerFromSourceUrl(sha256,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getMediaControllerFromSourceQueryKey = (sha256: string,
+    params?: MediaControllerFromSourceParams,) => {
+    return [
+    `/api/v1/media/source/${sha256}`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getMediaControllerFromSourceQueryOptions = <TData = Awaited<ReturnType<typeof mediaControllerFromSource>>, TError = unknown>(sha256: string,
+    params?: MediaControllerFromSourceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerFromSource>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMediaControllerFromSourceQueryKey(sha256,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mediaControllerFromSource>>> = ({ signal }) => mediaControllerFromSource(sha256,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: sha256 !== null && sha256 !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mediaControllerFromSource>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MediaControllerFromSourceQueryResult = NonNullable<Awaited<ReturnType<typeof mediaControllerFromSource>>>
+export type MediaControllerFromSourceQueryError = unknown
+
+
+export function useMediaControllerFromSource<TData = Awaited<ReturnType<typeof mediaControllerFromSource>>, TError = unknown>(
+ sha256: string,
+    params: undefined |  MediaControllerFromSourceParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerFromSource>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mediaControllerFromSource>>,
+          TError,
+          Awaited<ReturnType<typeof mediaControllerFromSource>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMediaControllerFromSource<TData = Awaited<ReturnType<typeof mediaControllerFromSource>>, TError = unknown>(
+ sha256: string,
+    params?: MediaControllerFromSourceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerFromSource>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mediaControllerFromSource>>,
+          TError,
+          Awaited<ReturnType<typeof mediaControllerFromSource>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMediaControllerFromSource<TData = Awaited<ReturnType<typeof mediaControllerFromSource>>, TError = unknown>(
+ sha256: string,
+    params?: MediaControllerFromSourceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerFromSource>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMediaControllerFromSource<TData = Awaited<ReturnType<typeof mediaControllerFromSource>>, TError = unknown>(
+ sha256: string,
+    params?: MediaControllerFromSourceParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mediaControllerFromSource>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMediaControllerFromSourceQueryOptions(sha256,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

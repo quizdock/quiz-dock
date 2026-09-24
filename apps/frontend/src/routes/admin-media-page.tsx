@@ -31,6 +31,7 @@ import { type MediaKind, MediaCheckError } from '@/lib/media-prepare';
 import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import {
+  mediaAdminControllerAddFile,
   mediaAdminControllerAddUpload,
   useMediaAdminControllerAddFile,
   useMediaAdminControllerDeleteFile,
@@ -289,7 +290,14 @@ function Files() {
     setBusy(true);
     try {
       const ready = await readyForUpload(file, uploadKind);
-      await mediaAdminControllerAddUpload({ file: ready.file, ...ready.prepared.fields });
+      // An original already among the admin's or the global media is added, not uploaded again.
+      if ('reuse' in ready) await mediaAdminControllerAddFile(ready.reuse.id);
+      else
+        await mediaAdminControllerAddUpload({
+          file: ready.file,
+          ...ready.prepared.fields,
+          sourceSha256: ready.sourceSha256,
+        });
       await refreshAll();
     } catch (err) {
       setError(
