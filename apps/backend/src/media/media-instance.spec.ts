@@ -111,10 +111,11 @@ describe('Instance media and dimensions (integration)', () => {
 
   it('offers the instance media to every host, as a media of their own on the same file', async () => {
     const own = await upload(adminId, 'logo.png', png(512, 512, 'logo'));
+    await media.setAlt(adminId, own.mediaId, 'Le logo de la société');
     const entry = await media.addToInstance(adminId, own.mediaId);
     // Added twice, listed once.
     expect((await media.addToInstance(adminId, own.mediaId)).mediaId).toBe(entry.mediaId);
-    await media.setInstanceDetails(entry.mediaId, { alt: 'Company logo', credit: 'In-house' });
+    await media.setInstanceCredit(entry.mediaId, 'In-house');
 
     const catalogue = await library.instanceMedia({ kind: 'image', q: 'logo' });
     expect(catalogue.map((m) => m.id)).toContain(entry.mediaId);
@@ -123,21 +124,32 @@ describe('Instance media and dimensions (integration)', () => {
 
     const copy = await media.reuse(hostId, entry.mediaId);
     const row = await prisma.mediaAsset.findUniqueOrThrow({ where: { id: copy.mediaId } });
+    // The credit carries over; the alt text does not — it depends on the use and on the
+    // quiz's language, the host writes it on their copy.
     expect(row).toMatchObject({
       ownerId: hostId,
       instance: false,
-      alt: 'Company logo',
+      alt: null,
       credit: 'In-house',
       width: 512,
     });
+    const global = await prisma.mediaAsset.findUniqueOrThrow({ where: { id: entry.mediaId } });
+    expect(global.alt).toBeNull();
     // A host cannot change or delete the instance's copy through their own routes.
     await expect(media.remove(hostId, entry.mediaId)).rejects.toThrow(NotFoundException);
     await expect(media.setAlt(adminId, entry.mediaId, 'x')).rejects.toThrow(NotFoundException);
 
-    const files = await admin.files({ ownerId: adminId });
-    expect(files.items.find((f) => f.id === entry.mediaId || f.inCatalog)).toMatchObject({
-      inCatalog: true,
-    });
+    // On the administration page the global media counts for "global", not for its administrator.
+    const globalFiles = await admin.files({ ownerId: 'global', q: 'logo' });
+    expect(globalFiles.items).toEqual([
+      expect.objectContaining({
+        inCatalog: true,
+        instanceId: entry.mediaId,
+        instanceCredit: 'In-house',
+      }),
+    ]);
+    const overview = await admin.overview([adminId, hostId]);
+    expect(overview.byOwner.map((o) => o.ownerId)).toContain('global');
   });
 
   it('never sweeps the instance media, and withdrawing one leaves the hosts their copies', async () => {

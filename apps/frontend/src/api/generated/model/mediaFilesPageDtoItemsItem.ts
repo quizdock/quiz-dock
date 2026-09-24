@@ -44,6 +44,17 @@ export type MediaFilesPageDtoItemsItem = {
      * @nullable
      */
   height: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  durationMs: number | null;
+  peaks: number[];
   inCatalog: boolean;
+  /** @nullable */
+  instanceId: string | null;
+  /** @nullable */
+  instanceCredit: string | null;
   createdAt: string;
 };

@@ -255,7 +255,7 @@ describe('MediaUpload', () => {
     ]);
     const { onChange } = renderUpload(null);
     fireEvent.click(screen.getByRole('button', { name: 'Mes images' }));
-    fireEvent.click(await screen.findByRole('tab', { name: 'Médias de l’instance' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Médias globaux' }));
     const pick = await screen.findByRole('button', { name: 'Utiliser logo.webp' });
     expect(screen.getByText('512 × 512')).toBeInTheDocument();
     expect(screen.getByText('In-house')).toBeInTheDocument();

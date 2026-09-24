@@ -190,11 +190,16 @@ Asked for once the page existed:
 - **Instance media** — `media_asset.instance`: images, videos and sounds an administrator provides to every host,
   uploaded on the administration page (converted in the browser like any media; `POST /admin/media/instance`) or
   added from any file (`POST /admin/media/files/:id/instance`: a new media, owned by the administrator, on the same
-  file — the author keeps theirs). Hosts see them in an *Instance media* tab of the library dialog
-  (`GET /media/instance`); picking one **creates a media of their own on the same file**, alt text and credit
-  carried over, so the quizzes never point at the instance's media. Never swept by the clean-up, never listed in an
-  author's own library, changed and withdrawn by administrators only (`PUT` / `DELETE /admin/media/instance/:id`);
-  withdrawing one leaves the hosts' copies — and so the file — in place.
+  file — the author keeps theirs). Hosts see them in a *Global media* tab of the library dialog
+  (`GET /media/instance`); picking one **creates a media of their own on the same file**, the credit carried over,
+  so the quizzes never point at the instance's media. Never swept by the clean-up, never listed in an author's own
+  library, credited and withdrawn by administrators only (`PUT` / `DELETE /admin/media/instance/:id`); withdrawing
+  one leaves the hosts' copies — and so the file — in place.
+- **No alt text on a global media**: it depends on the use (#43) and on the quiz's language, so the host writes it
+  on their copy; only the credit — a name, a licence, a source — is the administrator's.
+- **"Global"** everywhere: the owner of the instance's media on the administration page (by owner, file rows), the
+  host's tab. The administration page has **one file list** — *All* or *Global* — shown as a list or a grid (kept in
+  the browser); the *Global* view uploads, edits credits and withdraws, the *All* view adds any file.
 
 ---
 

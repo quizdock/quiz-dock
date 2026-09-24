@@ -168,7 +168,7 @@ CHECKs, in SQL or in the application, depending on the type:
 | `credit` | text | nullable, ≤ 300 (app) | Who made it, under which licence, from where (#53) — a CC-BY licence asks for it. Listed on the quiz's preview page and under the podium |
 | `name` | text | nullable, ≤ 200 (app) | The file name the author picked, with the extension of the stored format: what the library searches. Null for media uploaded before #53 |
 | `width`, `height` | int | nullable | Displayed size of an image or a video, read from the bytes (rotation applied); 0 × 0 when the bytes do not say; null for a sound, or not read yet (filled in by the clean-up job) |
-| `instance` | boolean | NN, DEF false | One of the **instance's media** (#62): provided by an administrator to every host, never swept by the clean-up. Hosts reuse it as a media of their own on the same file; no quiz points at it |
+| `instance` | boolean | NN, DEF false | One of the **global media** (#62): provided by an administrator to every host, never swept by the clean-up, counted under "Global" rather than its administrator. Carries a credit but no alt text (it depends on the use and the quiz's language). Hosts reuse it as a media of their own on the same file; no quiz points at it |
 | `mime` | text | NN | `image/png`, `audio/mpeg`, … |
 | `size_bytes` | bigint | NN, CHECK ≤ the limit | Size |
 | `kind` | enum `media_kind` | NN | `image` \| `audio` |

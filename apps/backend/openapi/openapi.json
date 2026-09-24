@@ -1262,7 +1262,7 @@
     },
     "/api/v1/admin/media/instance/{id}": {
       "put": {
-        "operationId": "MediaAdminController_setDetails",
+        "operationId": "MediaAdminController_setCredit",
         "parameters": [
           {
             "name": "id",
@@ -1278,7 +1278,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InstanceMediaDetailsDto"
+                "$ref": "#/components/schemas/InstanceMediaCreditDto"
               }
             }
           }
@@ -4050,18 +4050,17 @@
           "credit"
         ]
       },
-      "InstanceMediaDetailsDto": {
+      "InstanceMediaCreditDto": {
         "type": "object",
         "properties": {
-          "alt": {
-            "type": "string",
-            "maxLength": 300
-          },
           "credit": {
             "type": "string",
             "maxLength": 300
           }
-        }
+        },
+        "required": [
+          "credit"
+        ]
       },
       "MediaOverviewDto": {
         "type": "object",
@@ -4346,8 +4345,28 @@
                   "maximum": 9007199254740991,
                   "nullable": true
                 },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
+                },
+                "peaks": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
                 "inCatalog": {
                   "type": "boolean"
+                },
+                "instanceId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "instanceCredit": {
+                  "type": "string",
+                  "nullable": true
                 },
                 "createdAt": {
                   "type": "string"
@@ -4367,7 +4386,11 @@
                 "legacy",
                 "width",
                 "height",
+                "durationMs",
+                "peaks",
                 "inCatalog",
+                "instanceId",
+                "instanceCredit",
                 "createdAt"
               ]
             }

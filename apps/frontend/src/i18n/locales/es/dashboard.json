@@ -114,9 +114,13 @@
       "inHistory": "solo resultados anteriores",
       "unused": "sin usar",
       "delete": "Eliminar {{name}}",
-      "inCatalog": "medio de la instancia",
-      "addToCatalog": "Añadir a los medios de la instancia",
-      "addToCatalogNamed": "Añadir {{name}} a los medios de la instancia"
+      "addToCatalog": "Añadir a los medios globales",
+      "addToCatalogNamed": "Añadir {{name}} a los medios globales",
+      "scope": "Qué archivos",
+      "scopeAll": "Todos",
+      "view": "Vista",
+      "viewList": "Lista",
+      "viewGrid": "Cuadrícula"
     },
     "delete": {
       "title": "¿Eliminar este archivo?",
@@ -131,11 +135,10 @@
       "quizzesLose": "Las preguntas pierden este medio.",
       "resultsLose": "Los resultados anteriores ya no lo muestran.",
       "everyCopy": "Se eliminan todas las copias de este archivo, sea quien sea su propietario.",
-      "inCatalog": "Este archivo es uno de los medios de la instancia: eliminarlo también quita las copias que los anfitriones tomaron, y sus quizzes lo pierden. Para dejar de ofrecerlo sin tocar ningún quiz, retíralo de los medios de la instancia."
+      "inCatalog": "Este archivo es uno de los medios globales: eliminarlo también quita las copias que los anfitriones tomaron, y sus quizzes lo pierden. Para dejar de ofrecerlo sin tocar ningún quiz, retíralo desde la vista Global."
     },
     "instance": {
-      "title": "Medios de la instancia",
-      "help": "Se ofrecen a todos los anfitriones, que los encuentran en su biblioteca de medios. Nunca se limpian; retirar uno no rompe ningún quiz.",
+      "help": "Se ofrecen a todos los anfitriones, que los encuentran en «Medios globales» de su biblioteca. Nunca se limpian; retirar uno no rompe ningún quiz. Sin texto alternativo aquí: el anfitrión lo escribe para su quiz, en su idioma.",
       "add": {
         "image": "Añadir una imagen",
         "video": "Añadir un vídeo",
@@ -143,15 +146,30 @@
       },
       "adding": "Convirtiendo y enviando…",
       "addFailed": "No se pudo añadir el medio.",
-      "empty": "Aún no hay medios de la instancia: añádelos aquí o desde la lista de archivos.",
-      "alt": "Texto alternativo",
+      "empty": "Aún no hay medios globales: añádelos con los botones de arriba o desde la vista Todos.",
       "credit": "Crédito (autor, licencia, fuente)",
       "remove": "Retirar",
       "removeNamed": "Retirar {{name}}",
-      "removeTitle": "¿Retirar este medio?",
+      "removeTitle": "¿Retirar este medio global?",
       "removeDescription": "Los anfitriones ya no lo encuentran en su biblioteca. Los quizzes que lo usan conservan su copia.",
       "removeFailed": "No se pudo retirar el medio.",
       "saveFailed": "No se pudo guardar el cambio."
+    },
+    "global": "Global",
+    "preview": {
+      "open": "Vista previa de {{name}}",
+      "format": "Formato",
+      "dimensions": "Dimensiones",
+      "duration": "Duración",
+      "size": "Tamaño",
+      "owners": "Propietarios",
+      "usages": "Uso",
+      "credit": "Crédito",
+      "added": "Añadido",
+      "openFile": "Abrir el archivo en una pestaña nueva",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "close": "Cerrar"
     }
   }
 }

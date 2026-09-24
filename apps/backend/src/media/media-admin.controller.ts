@@ -28,7 +28,7 @@ import { ManagerOnly } from '../auth/manager-only.decorator';
 import { MediaDescriptionDto } from './dto/media-alt.dto';
 import { MediaUploadResultDto } from './dto/media-upload-result.dto';
 import {
-  InstanceMediaDetailsDto,
+  InstanceMediaCreditDto,
   MediaFilesPageDto,
   MediaFilesQueryDto,
   MediaFileUsagesDto,
@@ -84,14 +84,14 @@ export class MediaAdminController {
     return this.media.addToInstance(user.id, id);
   }
 
-  /** Alt text and credit of one of the instance's media. */
+  /** The credit of a global media (no alt text: the host writes it for their quiz). */
   @Put('instance/:id')
   @ApiOkResponse({ type: MediaDescriptionDto })
-  setDetails(
+  setCredit(
     @Param('id') id: string,
-    @Body() body: InstanceMediaDetailsDto,
+    @Body() body: InstanceMediaCreditDto,
   ): Promise<MediaDescriptionDto> {
-    return this.media.setInstanceDetails(id, body);
+    return this.media.setInstanceCredit(id, body.credit);
   }
 
   /** Takes a media out of the instance's; the hosts' copies stay theirs. */

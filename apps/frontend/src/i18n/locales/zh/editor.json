@@ -333,9 +333,9 @@
       "inHistory": "为以往结果保留",
       "tab": {
         "mine": "我的媒体",
-        "instance": "实例媒体"
+        "instance": "全局媒体"
       },
-      "instanceEmpty": "管理员尚未提供此类媒体。"
+      "instanceEmpty": "管理员尚未提供此类全局媒体。"
     },
     "creditLabel": "署名",
     "creditPlaceholder": "例如 照片：林伟，CC BY 4.0，openverse.org",

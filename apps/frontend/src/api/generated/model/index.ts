@@ -37,7 +37,7 @@ export * from './createSlideDtoGradient';
 export * from './createSlideDtoTextTone';
 export * from './hostSeatDto';
 export * from './hostSeatReleaseDto';
-export * from './instanceMediaDetailsDto';
+export * from './instanceMediaCreditDto';
 export * from './joinAddressesDto';
 export * from './joinAddressesDtoLanSource';
 export * from './mediaAdminControllerAddUploadBody';

@@ -333,9 +333,9 @@
       "inHistory": "Guardado para resultados anteriores",
       "tab": {
         "mine": "Mis medios",
-        "instance": "Medios de la instancia"
+        "instance": "Medios globales"
       },
-      "instanceEmpty": "Los administradores aún no han proporcionado medios de este tipo."
+      "instanceEmpty": "Los administradores aún no han proporcionado medios globales de este tipo."
     },
     "creditLabel": "Crédito",
     "creditPlaceholder": "p. ej. Foto: Lin Wei, CC BY 4.0, openverse.org",

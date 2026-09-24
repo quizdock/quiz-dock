@@ -114,9 +114,13 @@
       "inHistory": "past results only",
       "unused": "unused",
       "delete": "Delete {{name}}",
-      "inCatalog": "instance media",
-      "addToCatalog": "Add to the instance media",
-      "addToCatalogNamed": "Add {{name}} to the instance media"
+      "addToCatalog": "Add to the global media",
+      "addToCatalogNamed": "Add {{name}} to the global media",
+      "scope": "Which files",
+      "scopeAll": "All",
+      "view": "Display",
+      "viewList": "List",
+      "viewGrid": "Grid"
     },
     "delete": {
       "title": "Delete this file?",
@@ -131,11 +135,10 @@
       "quizzesLose": "The questions lose this media.",
       "resultsLose": "Past results no longer show it.",
       "everyCopy": "Every copy of this file goes, whoever owns it.",
-      "inCatalog": "This file is one of the instance media: deleting it also removes the copies hosts took of it, and their quizzes lose it. To stop offering it without touching any quiz, withdraw it from the instance media instead."
+      "inCatalog": "This file is one of the global media: deleting it also removes the copies hosts took of it, and their quizzes lose it. To stop offering it without touching any quiz, withdraw it from the Global view instead."
     },
     "instance": {
-      "title": "Instance media",
-      "help": "Provided to every host, who find them in their media library. Never cleaned up; withdrawing one never breaks a quiz.",
+      "help": "Provided to every host, who find them under Global media in their library. Never cleaned up; withdrawing one never breaks a quiz. No alt text here: hosts write it for their quiz, in its language.",
       "add": {
         "image": "Add an image",
         "video": "Add a video",
@@ -143,15 +146,30 @@
       },
       "adding": "Converting and sending…",
       "addFailed": "The media could not be added.",
-      "empty": "No instance media yet: add some here, or from the file list below.",
-      "alt": "Alternative text",
+      "empty": "No global media yet: add some with the buttons above, or from the All view.",
       "credit": "Credit (author, licence, source)",
       "remove": "Withdraw",
       "removeNamed": "Withdraw {{name}}",
-      "removeTitle": "Withdraw this media?",
+      "removeTitle": "Withdraw this global media?",
       "removeDescription": "Hosts no longer find it in their library. The quizzes that use it keep their copy.",
       "removeFailed": "The media could not be withdrawn.",
       "saveFailed": "The change could not be saved."
+    },
+    "global": "Global",
+    "preview": {
+      "open": "Preview {{name}}",
+      "format": "Format",
+      "dimensions": "Dimensions",
+      "duration": "Duration",
+      "size": "Size",
+      "owners": "Owners",
+      "usages": "Used",
+      "credit": "Credit",
+      "added": "Added",
+      "openFile": "Open the file in a new tab",
+      "previous": "Previous",
+      "next": "Next",
+      "close": "Close"
     }
   }
 }

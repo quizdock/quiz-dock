@@ -6,9 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface InstanceMediaDetailsDto {
+export interface InstanceMediaCreditDto {
   /** @maxLength 300 */
-  alt?: string;
-  /** @maxLength 300 */
-  credit?: string;
+  credit: string;
 }

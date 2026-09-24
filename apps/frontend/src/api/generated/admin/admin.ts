@@ -25,7 +25,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  InstanceMediaDetailsDto,
+  InstanceMediaCreditDto,
   MediaAdminControllerAddUploadBody,
   MediaAdminControllerFilesParams,
   MediaDescriptionDto,
@@ -207,19 +207,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getMediaAdminControllerAddFileMutationOptions(options), queryClient);
     }
-    export type mediaAdminControllerSetDetailsResponse200 = {
+    export type mediaAdminControllerSetCreditResponse200 = {
   data: MediaDescriptionDto
   status: 200
 }
 
-export type mediaAdminControllerSetDetailsResponseSuccess = (mediaAdminControllerSetDetailsResponse200) & {
+export type mediaAdminControllerSetCreditResponseSuccess = (mediaAdminControllerSetCreditResponse200) & {
   headers: Headers;
 };
 ;
 
-export type mediaAdminControllerSetDetailsResponse = (mediaAdminControllerSetDetailsResponseSuccess)
+export type mediaAdminControllerSetCreditResponse = (mediaAdminControllerSetCreditResponseSuccess)
 
-export const getMediaAdminControllerSetDetailsUrl = (id: string,) => {
+export const getMediaAdminControllerSetCreditUrl = (id: string,) => {
 
 
 
@@ -227,26 +227,26 @@ export const getMediaAdminControllerSetDetailsUrl = (id: string,) => {
   return `/api/v1/admin/media/instance/${id}`
 }
 
-export const mediaAdminControllerSetDetails = async (id: string,
-    instanceMediaDetailsDto: InstanceMediaDetailsDto, options?: RequestInit): Promise<mediaAdminControllerSetDetailsResponse> => {
+export const mediaAdminControllerSetCredit = async (id: string,
+    instanceMediaCreditDto: InstanceMediaCreditDto, options?: RequestInit): Promise<mediaAdminControllerSetCreditResponse> => {
 
-  return customFetch<mediaAdminControllerSetDetailsResponse>(getMediaAdminControllerSetDetailsUrl(id),
+  return customFetch<mediaAdminControllerSetCreditResponse>(getMediaAdminControllerSetCreditUrl(id),
   {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(instanceMediaDetailsDto)
+    body: JSON.stringify(instanceMediaCreditDto)
   }
 );}
 
 
 
 
-export const getMediaAdminControllerSetDetailsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetDetails>>, TError,{id: string;data: InstanceMediaDetailsDto}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetDetails>>, TError,{id: string;data: InstanceMediaDetailsDto}, TContext> => {
+export const getMediaAdminControllerSetCreditMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, TError,{id: string;data: InstanceMediaCreditDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, TError,{id: string;data: InstanceMediaCreditDto}, TContext> => {
 
-const mutationKey = ['mediaAdminControllerSetDetails'];
+const mutationKey = ['mediaAdminControllerSetCredit'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -256,10 +256,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaAdminControllerSetDetails>>, {id: string;data: InstanceMediaDetailsDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, {id: string;data: InstanceMediaCreditDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  mediaAdminControllerSetDetails(id,data,requestOptions)
+          return  mediaAdminControllerSetCredit(id,data,requestOptions)
         }
 
 
@@ -269,19 +269,19 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type MediaAdminControllerSetDetailsMutationResult = NonNullable<Awaited<ReturnType<typeof mediaAdminControllerSetDetails>>>
-    export type MediaAdminControllerSetDetailsMutationBody = InstanceMediaDetailsDto
-    export type MediaAdminControllerSetDetailsMutationError = unknown
+    export type MediaAdminControllerSetCreditMutationResult = NonNullable<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>>
+    export type MediaAdminControllerSetCreditMutationBody = InstanceMediaCreditDto
+    export type MediaAdminControllerSetCreditMutationError = unknown
 
-    export const useMediaAdminControllerSetDetails = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetDetails>>, TError,{id: string;data: InstanceMediaDetailsDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useMediaAdminControllerSetCredit = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>, TError,{id: string;data: InstanceMediaCreditDto}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof mediaAdminControllerSetDetails>>,
+        Awaited<ReturnType<typeof mediaAdminControllerSetCredit>>,
         TError,
-        {id: string;data: InstanceMediaDetailsDto},
+        {id: string;data: InstanceMediaCreditDto},
         TContext
       > => {
-      return useMutation(getMediaAdminControllerSetDetailsMutationOptions(options), queryClient);
+      return useMutation(getMediaAdminControllerSetCreditMutationOptions(options), queryClient);
     }
     export type mediaAdminControllerRemoveResponse204 = {
   data: void

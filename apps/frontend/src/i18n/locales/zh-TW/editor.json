@@ -333,9 +333,9 @@
       "inHistory": "為過往結果保留",
       "tab": {
         "mine": "我的媒體",
-        "instance": "執行個體媒體"
+        "instance": "全域媒體"
       },
-      "instanceEmpty": "管理員尚未提供這類媒體。"
+      "instanceEmpty": "管理員尚未提供這類全域媒體。"
     },
     "creditLabel": "出處",
     "creditPlaceholder": "例如 照片：林偉，CC BY 4.0，openverse.org",

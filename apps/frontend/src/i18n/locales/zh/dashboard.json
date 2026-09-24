@@ -114,9 +114,13 @@
       "inHistory": "仅用于以往结果",
       "unused": "未使用",
       "delete": "删除 {{name}}",
-      "inCatalog": "实例媒体",
-      "addToCatalog": "添加到实例媒体",
-      "addToCatalogNamed": "将 {{name}} 添加到实例媒体"
+      "addToCatalog": "添加到全局媒体",
+      "addToCatalogNamed": "将 {{name}} 添加到全局媒体",
+      "scope": "哪些文件",
+      "scopeAll": "全部",
+      "view": "显示",
+      "viewList": "列表",
+      "viewGrid": "网格"
     },
     "delete": {
       "title": "删除此文件？",
@@ -131,11 +135,10 @@
       "quizzesLose": "相关问题将失去此媒体。",
       "resultsLose": "以往结果不再显示它。",
       "everyCopy": "此文件的所有副本都会被删除，无论所有者是谁。",
-      "inCatalog": "此文件属于实例媒体：删除它也会移除主持人取用的副本，他们的测验将失去它。若只想不再提供而不影响任何测验，请改为从实例媒体中撤下。"
+      "inCatalog": "此文件属于全局媒体：删除它也会移除主持人取用的副本，他们的测验将失去它。若只想不再提供而不影响任何测验，请改为在「全局」视图中撤下。"
     },
     "instance": {
-      "title": "实例媒体",
-      "help": "提供给所有主持人，他们可以在媒体库中找到。不会被清理；撤下某个媒体不会破坏任何测验。",
+      "help": "提供给所有主持人，他们可在媒体库的「全局媒体」中找到。不会被清理；撤下某个媒体不会破坏任何测验。此处不设替代文本：主持人会为自己的测验以其语言撰写。",
       "add": {
         "image": "添加图片",
         "video": "添加视频",
@@ -143,15 +146,30 @@
       },
       "adding": "转换并上传中…",
       "addFailed": "无法添加该媒体。",
-      "empty": "尚无实例媒体：可在此添加，或从下方文件列表添加。",
-      "alt": "替代文本",
+      "empty": "尚无全局媒体：可用上方按钮添加，或从「全部」视图添加。",
       "credit": "署名（作者、许可、来源）",
       "remove": "撤下",
       "removeNamed": "撤下 {{name}}",
-      "removeTitle": "撤下此媒体？",
+      "removeTitle": "撤下此全局媒体？",
       "removeDescription": "主持人将无法在媒体库中找到它。使用它的测验保留各自的副本。",
       "removeFailed": "无法撤下该媒体。",
       "saveFailed": "无法保存更改。"
+    },
+    "global": "全局",
+    "preview": {
+      "open": "预览 {{name}}",
+      "format": "格式",
+      "dimensions": "尺寸",
+      "duration": "时长",
+      "size": "大小",
+      "owners": "所有者",
+      "usages": "使用情况",
+      "credit": "署名",
+      "added": "添加时间",
+      "openFile": "在新标签页中打开文件",
+      "previous": "上一个",
+      "next": "下一个",
+      "close": "关闭"
     }
   }
 }

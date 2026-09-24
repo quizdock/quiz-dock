@@ -326,7 +326,8 @@ export class MediaService implements OnModuleInit {
     });
     if (!source) throw new NotFoundException('media.not_found');
     if (!source.blobSha256) return { mediaId: source.id, url: source.url, kind: source.kind };
-    return this.copyOf(source, ownerId);
+    // A global media carries no alt text: it depends on the use, and on the quiz's language.
+    return this.copyOf(source, ownerId, { instance: false, keepAlt: !source.instance });
   }
 
   /**
@@ -345,7 +346,7 @@ export class MediaService implements OnModuleInit {
       where: { blobSha256: source.blobSha256, instance: true },
     });
     if (already) return { mediaId: already.id, url: already.url, kind: already.kind };
-    return this.copyOf(source, adminId, true);
+    return this.copyOf(source, adminId, { instance: true, keepAlt: false });
   }
 
   /** Takes a media out of the instance's (#62); the hosts' own copies stay theirs. */
@@ -355,21 +356,17 @@ export class MediaService implements OnModuleInit {
     await this.deleteAsset(id);
   }
 
-  /** Alt text and credit of one of the instance's media, set by an administrator. */
-  async setInstanceDetails(
-    id: string,
-    details: { alt?: string; credit?: string },
-  ): Promise<MediaDetails> {
+  /**
+   * The credit of one of the instance's media, set by an administrator. No alt
+   * text: it depends on the use and on the quiz's language, so the host writes
+   * it on their own copy (#43).
+   */
+  async setInstanceCredit(id: string, credit: string): Promise<MediaDetails> {
     const asset = await this.prisma.mediaAsset.findFirst({ where: { id, instance: true } });
     if (!asset) throw new NotFoundException('media.not_found');
     return this.prisma.mediaAsset.update({
       where: { id },
-      data: {
-        ...(details.alt !== undefined ? { alt: details.alt.trim().slice(0, ALT_MAX) || null } : {}),
-        ...(details.credit !== undefined
-          ? { credit: details.credit.trim().slice(0, CREDIT_MAX) || null }
-          : {}),
-      },
+      data: { credit: credit.trim().slice(0, CREDIT_MAX) || null },
       select: DETAILS,
     });
   }
@@ -378,7 +375,7 @@ export class MediaService implements OnModuleInit {
   private async copyOf(
     source: MediaAsset,
     ownerId: string,
-    instance = false,
+    { instance, keepAlt }: { instance: boolean; keepAlt: boolean },
   ): Promise<{ mediaId: string; url: string; kind: MediaKind }> {
     const created = await this.prisma.mediaAsset.create({
       data: {
@@ -387,7 +384,7 @@ export class MediaService implements OnModuleInit {
         url: '',
         blobSha256: source.blobSha256,
         name: source.name,
-        alt: source.alt,
+        alt: keepAlt ? source.alt : null,
         credit: source.credit,
         mime: source.mime,
         sizeBytes: source.sizeBytes,

@@ -49,5 +49,8 @@
   "demo": {
     "banner": "Public demo — one host account shared by all visitors; everything is wiped every hour."
   },
-  "chromiumOnly": "This page is built for Chrome, Edge or another Chromium browser. In this browser, uploading and playing videos and sounds may not work well."
+  "chromiumOnly": "This page is built for Chrome, Edge or another Chromium browser. In this browser, uploading and playing videos and sounds may not work well.",
+  "play": "Play",
+  "pause": "Pause",
+  "position": "Position in the sound"
 }

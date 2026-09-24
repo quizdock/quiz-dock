@@ -114,9 +114,13 @@
       "inHistory": "僅用於過往結果",
       "unused": "未使用",
       "delete": "刪除 {{name}}",
-      "inCatalog": "執行個體媒體",
-      "addToCatalog": "新增到執行個體媒體",
-      "addToCatalogNamed": "將 {{name}} 新增到執行個體媒體"
+      "addToCatalog": "新增到全域媒體",
+      "addToCatalogNamed": "將 {{name}} 新增到全域媒體",
+      "scope": "哪些檔案",
+      "scopeAll": "全部",
+      "view": "顯示",
+      "viewList": "清單",
+      "viewGrid": "格狀"
     },
     "delete": {
       "title": "刪除這個檔案？",
@@ -131,11 +135,10 @@
       "quizzesLose": "相關問題將失去這個媒體。",
       "resultsLose": "過往結果不再顯示它。",
       "everyCopy": "這個檔案的所有副本都會刪除，不論擁有者是誰。",
-      "inCatalog": "這個檔案屬於執行個體媒體：刪除它也會移除主持人取用的副本，他們的測驗將失去它。若只想不再提供而不影響任何測驗，請改為從執行個體媒體中撤下。"
+      "inCatalog": "這個檔案屬於全域媒體：刪除它也會移除主持人取用的副本，他們的測驗將失去它。若只想不再提供而不影響任何測驗，請改為在「全域」檢視中撤下。"
     },
     "instance": {
-      "title": "執行個體媒體",
-      "help": "提供給所有主持人，他們可以在媒體庫中找到。不會被清理；撤下某個媒體不會破壞任何測驗。",
+      "help": "提供給所有主持人，他們可在媒體庫的「全域媒體」中找到。不會被清理；撤下某個媒體不會破壞任何測驗。此處不設替代文字：主持人會為自己的測驗以其語言撰寫。",
       "add": {
         "image": "新增圖片",
         "video": "新增影片",
@@ -143,15 +146,30 @@
       },
       "adding": "轉換並上傳中…",
       "addFailed": "無法新增這個媒體。",
-      "empty": "目前沒有執行個體媒體：可在此新增，或從下方檔案清單新增。",
-      "alt": "替代文字",
+      "empty": "目前沒有全域媒體：可用上方按鈕新增，或從「全部」檢視新增。",
       "credit": "出處（作者、授權、來源）",
       "remove": "撤下",
       "removeNamed": "撤下 {{name}}",
-      "removeTitle": "撤下這個媒體？",
+      "removeTitle": "撤下這個全域媒體？",
       "removeDescription": "主持人將無法在媒體庫中找到它。使用它的測驗保留各自的副本。",
       "removeFailed": "無法撤下這個媒體。",
       "saveFailed": "無法儲存變更。"
+    },
+    "global": "全域",
+    "preview": {
+      "open": "預覽 {{name}}",
+      "format": "格式",
+      "dimensions": "尺寸",
+      "duration": "時長",
+      "size": "大小",
+      "owners": "擁有者",
+      "usages": "使用情況",
+      "credit": "出處",
+      "added": "新增時間",
+      "openFile": "在新分頁中開啟檔案",
+      "previous": "上一個",
+      "next": "下一個",
+      "close": "關閉"
     }
   }
 }
