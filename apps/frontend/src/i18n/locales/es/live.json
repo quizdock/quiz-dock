@@ -20,8 +20,13 @@
     "captureHint": "ⓘ Se informará a los jugadores al iniciar. Conserva el detalle de las respuestas de cada jugador para el seguimiento individual.",
     "trackingLabel": "Seguimiento individual",
     "trackingHint": "ⓘ Activado, los resultados se registran en la cuenta de cada participante (clasificación archivada, historial). Desactivado, no se conserva ningún resultado individual: solo los resultados globales del grupo. La sesión en directo no cambia.",
+    "trackingOpenAccessHint": "ⓘ No disponible en acceso libre: los participantes no tienen cuenta, no se conserva nada individual.",
     "ownNameLabel": "Permitir que los participantes elijan su nombre visible",
     "ownNameHint": "ⓘ Desactivado, el nombre visible procede de su cuenta. En ambos casos sus resultados siguen vinculados a ella: un nombre elegido no es anonimato.",
+    "accessAccount": "Cuentas obligatorias: cada participante inicia sesión antes de unirse.",
+    "accessOpen": "Acceso libre: basta con el PIN y un apodo, sin cuenta.",
+    "lockLabel": "Cerrar la partida a nuevos participantes",
+    "lockHint": "ⓘ Nadie más puede unirse, ni siquiera con el PIN. Quienes ya están vuelven tras un corte. Hasta el final de la partida.",
     "audioTargetLabel": "Quién oye el sonido en esta sesión",
     "audioTargetHint": "Sustituye el ajuste del quiz para esta sesión. Las preguntas con su propio ajuste lo conservan.",
     "preloadNotice": "Para que nada tenga que esperar, los dispositivos de los participantes reciben la imagen, el sonido o el vídeo de la siguiente pregunta unos segundos antes de que aparezca, nunca su texto ni sus respuestas. Un participante con conocimientos técnicos podría abrirlos antes.",
@@ -271,5 +276,18 @@
     "videoMuted": "Vídeo iniciado sin sonido (bloqueado por el navegador)",
     "slow": "El medio aún no se ha cargado…",
     "waveform": "Forma de onda del sonido de la pregunta"
+  },
+  "launchAccess": {
+    "title": "Acceso de los participantes",
+    "description": "¿Cómo se unen los participantes a esta partida? La elección vale para toda la partida.",
+    "confirm": "Iniciar",
+    "account": {
+      "label": "Cuentas obligatorias",
+      "hint": "Cada participante inicia sesión. El seguimiento individual sigue disponible."
+    },
+    "open": {
+      "label": "Acceso libre",
+      "hint": "Basta con el PIN y un apodo, sin cuenta. Sin seguimiento individual."
+    }
   }
 }

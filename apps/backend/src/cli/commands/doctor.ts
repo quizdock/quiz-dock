@@ -94,8 +94,18 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
     fail(`${mediaDir}: ${(err as Error).message}`);
   }
 
+  const anonymous = env.ALLOW_ANONYMOUS_PARTICIPANTS === 'true';
+  if (anonymous && mode !== 'oidc') {
+    out.warn('ALLOW_ANONYMOUS_PARTICIPANTS=true has no effect outside AUTH_MODE=oidc');
+  }
+
   if (mode === 'oidc') {
     out.line('OIDC');
+    out.ok(
+      anonymous
+        ? 'participants: accounts or open access, chosen at each launch'
+        : 'participants: accounts required (ALLOW_ANONYMOUS_PARTICIPANTS not set)',
+    );
     const issuer = env.OIDC_ISSUER?.replace(/\/+$/, '');
     if (!issuer) fail('OIDC_ISSUER is not set');
     else {

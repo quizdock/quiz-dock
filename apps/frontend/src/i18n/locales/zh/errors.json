@@ -29,7 +29,10 @@
     "capture_locked": "完整记录仅可在会话开始前更改。",
     "options_locked": "会话选项只能在会话开始前更改。",
     "join_url_invalid": "加入地址无效（应为 http(s)://主机[:端口]）。",
-    "archive_quiz_gone": "测验在场次进行中被删除：场次已结束但未归档。"
+    "archive_quiz_gone": "测验在场次进行中被删除：场次已结束但未归档。",
+    "locked": "本场已不再接受新的参与者。",
+    "open_access_forbidden": "此服务器不允许开放访问。",
+    "open_access_guests_only": "开放访问时参与者没有账号：没有个人跟踪，也不使用账号名称。"
   },
   "participant": {
     "not_found": "未找到玩家。"
@@ -39,7 +42,8 @@
     "invalid_length": "昵称长度必须在 {{min}} 到 {{max}} 个字符之间。"
   },
   "pin": {
-    "unavailable": "无法分配 PIN，请重试。"
+    "unavailable": "无法分配 PIN，请重试。",
+    "too_many_attempts": "此地址输入错误的 PIN 次数过多。请一分钟后再试。"
   },
   "media": {
     "unsupported_type": "不支持的格式：图片、MP4 视频（H.264）或声音（MP3、M4A）。编辑器会转换此浏览器能读取的其他文件；不接受 SVG。",

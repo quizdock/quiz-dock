@@ -1,5 +1,6 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { getAuthMode, isAuthenticated, rememberAfterLogin } from './auth/auth-context';
+import { allowsAnonymousParticipants } from './config';
 import { CallbackPage } from './routes/callback-page';
 import { ControlPage } from './routes/control-page';
 import { DashboardPage } from './routes/dashboard-page';
@@ -28,10 +29,12 @@ const requireAuth = () => {
 /**
  * Participants authenticate too under `AUTH_MODE=oidc` (RG-15): the account opens
  * the application, the PIN opens one session. In local mode the join pages stay
- * public — there the PIN is the only barrier.
+ * public — there the PIN is the only barrier. So do they when hosts may open a
+ * game to all (#57): the game then says whether it needs an account, and the
+ * player page sends to the sign-in only when it does.
  */
 const requireAuthWhenOidc = ({ location }: { location: { href: string } }) => {
-  if (getAuthMode() === 'oidc' && !isAuthenticated()) {
+  if (getAuthMode() === 'oidc' && !allowsAnonymousParticipants() && !isAuthenticated()) {
     rememberAfterLogin(location.href);
     throw redirect({ to: '/login' });
   }

@@ -29,7 +29,10 @@
     "capture_locked": "La capture intégrale ne peut être modifiée qu’avant le démarrage.",
     "options_locked": "Les options de la session ne peuvent être modifiées qu’avant le démarrage.",
     "join_url_invalid": "Adresse pour rejoindre invalide (attendu http(s)://hôte[:port]).",
-    "archive_quiz_gone": "Le quiz a été supprimé pendant la session : elle s’est terminée sans archive."
+    "archive_quiz_gone": "Le quiz a été supprimé pendant la session : elle s’est terminée sans archive.",
+    "locked": "Cette partie n’accepte plus de nouveaux participants.",
+    "open_access_forbidden": "L’accès libre n’est pas autorisé sur ce serveur.",
+    "open_access_guests_only": "En accès libre, les participants n’ont pas de compte : ni suivi individuel, ni nom tiré d’un compte."
   },
   "participant": {
     "not_found": "Participant introuvable."
@@ -39,7 +42,8 @@
     "invalid_length": "Le pseudo doit faire entre {{min}} et {{max}} caractères."
   },
   "pin": {
-    "unavailable": "Impossible d’allouer un PIN, réessayez."
+    "unavailable": "Impossible d’allouer un PIN, réessayez.",
+    "too_many_attempts": "Trop de codes PIN erronés depuis cette adresse. Réessayez dans une minute."
   },
   "media": {
     "unsupported_type": "Format non pris en charge : une image, une vidéo MP4 (H.264) ou un son (MP3, M4A). L’éditeur convertit les autres fichiers que ce navigateur sait lire ; le SVG n’est pas accepté.",

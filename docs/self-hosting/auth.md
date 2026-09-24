@@ -120,6 +120,27 @@ Each participant's results are then attached to their account.
 Under `AUTH_MODE=none` nothing changes: the PIN stays the only barrier, which is the
 point of that mode.
 
+### Open access (OIDC)
+
+Some rooms have no accounts to give: trainees who change every session, visitors at
+an event. Set **`ALLOW_ANONYMOUS_PARTICIPANTS=true`** and hosts keep signing in through
+the IdP, but each launch then asks how participants get in, for the whole game:
+
+- **Accounts required** (the default, as above);
+- **Open access**: the PIN and a nickname are enough, as in local mode. Everyone is a
+  guest, signed in or not, so there is no personal tracking and no name taken from an
+  account.
+
+The dialog preselects the host's last choice, remembered with their account. Until an
+admin sets the variable, every game requires accounts and a client asking otherwise is
+refused (`session.open_access_forbidden`).
+
+Whatever the access, the host can **close the game to new participants** from the
+lobby (those already in come back after a lost connection) and remove one, and each
+address may try 30 wrong PINs a minute — generous, since a whole room shares one
+public address. Behind a reverse proxy on a private address, the client's address is
+read from `X-Forwarded-For`.
+
 ## The display name (OIDC)
 
 What the lobby, the leaderboard and the podium show for an authenticated account

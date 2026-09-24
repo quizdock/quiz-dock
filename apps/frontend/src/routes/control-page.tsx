@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Info,
   Loader2,
+  LockOpen,
   Eye,
   Gauge,
   Hand,
@@ -27,6 +28,7 @@ import {
   SkipForward,
   Smartphone,
   Square,
+  UserCheck,
   Users,
   Wifi,
 } from 'lucide-react';
@@ -118,6 +120,9 @@ export function ControlPage() {
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
   const setMode = (mode: GameMode) => socket?.emit('host:mode', { pin, mode });
   const setCapture = (fullCapture: boolean) => socket?.emit('host:capture', { pin, fullCapture });
+  const setJoinLocked = (locked: boolean) => socket?.emit('host:lock', { pin, locked });
+  // Open access (#57): guests only — nothing personal to track, no account name.
+  const openAccess = view.participantAccess === 'open';
   const setOptions = (opts: {
     personalTracking?: boolean;
     pickOwnName?: boolean;
@@ -311,22 +316,30 @@ export function ControlPage() {
 
         {/* Suivi individuel (RG-16) : coupé, la partie se joue à l'identique mais rien
             d'individuel n'est archivé. Même fenêtre de décision que la capture. */}
-        <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+        <label
+          className={cn(
+            'flex items-start gap-3 rounded-lg border p-4 text-sm',
+            openAccess && 'opacity-60',
+          )}
+        >
           <Switch
             className="mt-0.5"
             checked={view.personalTracking}
+            disabled={openAccess}
             onCheckedChange={(personalTracking) => setOptions({ personalTracking })}
             aria-label={t('control.trackingLabel')}
           />
           <span>
             <span className="font-medium">{t('control.trackingLabel')}</span>
-            <span className="text-muted-foreground block">{t('control.trackingHint')}</span>
+            <span className="text-muted-foreground block">
+              {openAccess ? t('control.trackingOpenAccessHint') : t('control.trackingHint')}
+            </span>
           </span>
         </label>
 
         {/* Nom affiché (RG-15) : n'a de sens que si les participants ont un compte
             d'où le tirer — en mode local ils saisissent toujours un pseudo. */}
-        {authMode === 'oidc' ? (
+        {authMode === 'oidc' && !openAccess ? (
           <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
             <Switch
               className="mt-0.5"
@@ -340,6 +353,33 @@ export function ControlPage() {
             </span>
           </label>
         ) : null}
+
+        {/* How participants get in (#57): chosen at launch, fixed for the game. */}
+        {authMode === 'oidc' ? (
+          <p className="text-muted-foreground flex items-start gap-2 text-sm">
+            {openAccess ? (
+              <LockOpen className="mt-0.5 size-4 shrink-0" />
+            ) : (
+              <UserCheck className="mt-0.5 size-4 shrink-0" />
+            )}
+            {openAccess ? t('control.accessOpen') : t('control.accessAccount')}
+          </p>
+        ) : null}
+
+        {/* Safeguard: once everyone is in, nobody else — those already in still come
+            back after a lost connection. Stays until the game ends. */}
+        <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+          <Switch
+            className="mt-0.5"
+            checked={view.joinLocked}
+            onCheckedChange={setJoinLocked}
+            aria-label={t('control.lockLabel')}
+          />
+          <span>
+            <span className="font-medium">{t('control.lockLabel')}</span>
+            <span className="text-muted-foreground block">{t('control.lockHint')}</span>
+          </span>
+        </label>
 
         {/* Accepted risk (media brief §5.3): the phones get the next question's media
             ahead, without its prompt — the host is told, once, here. */}

@@ -7,16 +7,18 @@ import type {
   GameStatePayload,
   GameStep,
   LeaderboardPayload,
-  MediaPreloadPayload,
   MediaPositionPayload,
+  MediaPreloadPayload,
   MediaReadinessPayload,
   OutlineQuestion,
+  ParticipantAccess,
   PersonalResult,
   PlayerPresence,
   PodiumPayload,
   QuestionRevealPayload,
   QuestionStartPayload,
   QuestionTimePayload,
+  SessionNotice,
   SlideShowPayload,
 } from '@quiz-dock/contracts';
 import { useEffect, useRef, useState } from 'react';
@@ -71,6 +73,10 @@ export interface GameView {
   personalTracking: boolean;
   /** Les participants choisissent leur nom affiché ; sinon il vient de leur compte. */
   pickOwnName: boolean;
+  /** How participants get in, fixed at creation (#57). */
+  participantAccess: ParticipantAccess;
+  /** Closed to new participants by the host. */
+  joinLocked: boolean;
   /** Renseigné si l'hôte a banni ce joueur (durée en minutes) — son client l'affiche. */
   kicked: { minutes: number } | null;
   /** Rythme courant (§8) — `manual` par défaut. */
@@ -131,6 +137,8 @@ const INITIAL: GameView = {
   fullCapture: false,
   personalTracking: true,
   pickOwnName: true,
+  participantAccess: 'account',
+  joinLocked: false,
   kicked: null,
   mode: 'manual',
   paused: false,
@@ -267,15 +275,13 @@ export function useGameSession(pin: string, role: LiveRole) {
       });
     const onEnded = (p: { feedbackEnabled?: boolean }) =>
       patch({ state: 'ENDED' as GameState, feedbackEnabled: p?.feedbackEnabled ?? true });
-    const onNotice = (p: {
-      fullCapture: boolean;
-      personalTracking: boolean;
-      pickOwnName: boolean;
-    }) =>
+    const onNotice = (p: SessionNotice) =>
       patch({
         fullCapture: p.fullCapture,
         personalTracking: p.personalTracking,
         pickOwnName: p.pickOwnName,
+        participantAccess: p.participantAccess,
+        joinLocked: p.joinLocked,
       });
     // Banni par l'hôte : on purge la session locale (pas d'auto-reconnexion) et on
     // bascule la vue en écran d'exclusion.

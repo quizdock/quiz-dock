@@ -1,5 +1,6 @@
 import type {
   ClientToServerEvents,
+  ParticipantAccess,
   PlayerPresence,
   ServerToClientEvents,
 } from '@quiz-dock/contracts';
@@ -104,9 +105,20 @@ export async function connectHost(): Promise<GameSocket> {
   return socket;
 }
 
-/** Connexion **joueur** : aucune auth (invité — le backend l'accepte tel quel). */
+/**
+ * Connexion **joueur** : le jeton OIDC quand il y en a un — sous `AUTH_MODE=oidc`
+ * une partie qui exige un compte le lit au handshake (RG-15) —, sinon invité (le
+ * backend l'accepte tel quel). Jamais de nom local : il réclamerait le siège d'hôte.
+ */
 export function connectPlayer(): GameSocket {
-  socket = io('/game', { forceNew: true });
+  socket = io('/game', {
+    auth: (cb) => {
+      void getAccessToken()
+        .catch(() => null)
+        .then((token) => cb(token ? { token } : {}));
+    },
+    forceNew: true,
+  });
   calibrateClock(socket);
   return socket;
 }
@@ -149,6 +161,8 @@ export interface SessionOptions {
   fullCapture?: boolean;
   personalTracking?: boolean;
   pickOwnName?: boolean;
+  /** How participants get in, fixed for the whole game (#57). */
+  participantAccess?: ParticipantAccess;
 }
 
 /** Hôte : ouvre une partie pour `quizId`, renvoie le PIN. */
@@ -186,10 +200,17 @@ export async function joinSession(
   return res;
 }
 
-/** Before joining: whether the quiz plays sound (the join form then asks where the player is). */
-export async function peekSession(pin: string): Promise<{ hasSound: boolean }> {
+/** What a player learns before joining (#57). */
+export interface SessionPeek {
+  /** The join form then asks where the player is. */
+  hasSound: boolean;
+  /** `account`: the page sends to the sign-in first when there is no session. */
+  participantAccess: ParticipantAccess;
+}
+
+export async function peekSession(pin: string): Promise<SessionPeek> {
   const s = await ensureGameSocket('guest');
-  return emitWithAckOrError<{ hasSound: boolean }>(s, 'player:peek', { pin });
+  return emitWithAckOrError<SessionPeek>(s, 'player:peek', { pin });
 }
 
 /**

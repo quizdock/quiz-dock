@@ -96,3 +96,18 @@ export function configureStandalone(value: boolean): void {
 export function isStandalone(): boolean {
   return standalone;
 }
+
+let anonymousParticipants = false;
+
+/**
+ * Hosts may open a game to participants without an account (#57, OIDC only) —
+ * received from `GET /auth/config` at boot. The join pages then stay public: the
+ * game itself says whether it needs an account.
+ */
+export function configureAnonymousParticipants(value: boolean): void {
+  anonymousParticipants = value;
+}
+
+export function allowsAnonymousParticipants(): boolean {
+  return anonymousParticipants;
+}

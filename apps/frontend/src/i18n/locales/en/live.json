@@ -20,8 +20,13 @@
     "captureHint": "ⓘ Players will be informed at startup. Keeps each player's answer details for individual tracking.",
     "trackingLabel": "Personalised tracking",
     "trackingHint": "ⓘ On, results are recorded under each participant’s account (archived leaderboard, history). Off, no individual result is kept — only the group’s overall results. The live game is unaffected.",
+    "trackingOpenAccessHint": "ⓘ Unavailable in open access: participants have no account, nothing individual is kept.",
     "ownNameLabel": "Let participants pick their display name",
     "ownNameHint": "ⓘ Off, the name shown comes from their account. Either way their results stay attached to it — a chosen name is not anonymity.",
+    "accessAccount": "Accounts required: each participant signs in before joining.",
+    "accessOpen": "Open access: the PIN and a nickname are enough, no account.",
+    "lockLabel": "Close the game to new participants",
+    "lockHint": "ⓘ Nobody else can join, even with the PIN. Those already in come back after a lost connection. Until the game ends.",
     "audioTargetLabel": "Who hears the sound in this session",
     "audioTargetHint": "Replaces the quiz's setting for this session. Questions with their own setting keep it.",
     "preloadNotice": "So that nothing waits, the participants' devices receive the next question's image, sound or video a few seconds before it appears — never its text nor its answers. A tech-savvy participant could open them early.",
@@ -271,5 +276,18 @@
     "videoMuted": "Video started without sound (blocked by the browser)",
     "slow": "The media has not loaded yet…",
     "waveform": "Waveform of the question’s sound"
+  },
+  "launchAccess": {
+    "title": "Participant access",
+    "description": "How do participants join this game? The choice holds for the whole game.",
+    "confirm": "Start",
+    "account": {
+      "label": "Accounts required",
+      "hint": "Each participant signs in. Personal tracking stays available."
+    },
+    "open": {
+      "label": "Open access",
+      "hint": "The PIN and a nickname are enough, no account. No personal tracking."
+    }
   }
 }

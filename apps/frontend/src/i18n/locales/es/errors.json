@@ -29,7 +29,10 @@
     "capture_locked": "La captura completa solo se puede cambiar antes de iniciar la sesión.",
     "options_locked": "Las opciones de la sesión solo pueden cambiarse antes de que empiece.",
     "join_url_invalid": "Dirección para unirse no válida (se espera http(s)://host[:puerto]).",
-    "archive_quiz_gone": "El cuestionario se eliminó durante la sesión: terminó sin archivo."
+    "archive_quiz_gone": "El cuestionario se eliminó durante la sesión: terminó sin archivo.",
+    "locked": "Esta partida ya no acepta nuevos participantes.",
+    "open_access_forbidden": "El acceso libre no está permitido en este servidor.",
+    "open_access_guests_only": "En acceso libre los participantes no tienen cuenta: ni seguimiento individual ni nombre tomado de una cuenta."
   },
   "participant": {
     "not_found": "Jugador no encontrado."
@@ -39,7 +42,8 @@
     "invalid_length": "El apodo debe tener entre {{min}} y {{max}} caracteres."
   },
   "pin": {
-    "unavailable": "No se pudo asignar un PIN, inténtalo de nuevo."
+    "unavailable": "No se pudo asignar un PIN, inténtalo de nuevo.",
+    "too_many_attempts": "Demasiados PIN erróneos desde esta dirección. Vuelve a intentarlo en un minuto."
   },
   "media": {
     "unsupported_type": "Formato no admitido: una imagen, un vídeo MP4 (H.264) o un sonido (MP3, M4A). El editor convierte los demás archivos que este navegador puede leer; no se admite SVG.",

@@ -2360,6 +2360,9 @@
           "standalone": {
             "type": "boolean"
           },
+          "anonymousParticipants": {
+            "type": "boolean"
+          },
           "oidc": {
             "type": "object",
             "properties": {
@@ -2381,6 +2384,7 @@
           "mode",
           "demo",
           "standalone",
+          "anonymousParticipants",
           "oidc"
         ]
       },

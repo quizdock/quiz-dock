@@ -29,7 +29,10 @@
     "capture_locked": "Full capture can only be changed before the session starts.",
     "options_locked": "The session options can only be changed before the session starts.",
     "join_url_invalid": "Invalid invitation address (expected http(s)://host[:port]).",
-    "archive_quiz_gone": "The quiz was deleted during the session: it ended without an archive."
+    "archive_quiz_gone": "The quiz was deleted during the session: it ended without an archive.",
+    "locked": "This game no longer accepts new participants.",
+    "open_access_forbidden": "Open access is not allowed on this server.",
+    "open_access_guests_only": "In open access participants have no account: no personal tracking, no name taken from an account."
   },
   "participant": {
     "not_found": "Player not found."
@@ -39,7 +42,8 @@
     "invalid_length": "The nickname must be between {{min}} and {{max}} characters."
   },
   "pin": {
-    "unavailable": "Could not allocate a PIN, please try again."
+    "unavailable": "Could not allocate a PIN, please try again.",
+    "too_many_attempts": "Too many wrong PINs from this address. Try again in a minute."
   },
   "media": {
     "unsupported_type": "Unsupported format: an image, an MP4 video (H.264) or a sound (MP3, M4A). The editor converts the other files this browser can read; SVG is not accepted.",
