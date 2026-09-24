@@ -135,8 +135,8 @@ The dialog preselects the host's last choice, remembered with their account. Unt
 admin sets the variable, every game requires accounts and a client asking otherwise is
 refused (`session.open_access_forbidden`).
 
-Whatever the access, the host can **close the game to new participants** from the
-lobby (those already in come back after a lost connection) and remove one, and each
+Whatever the access, the host can **close the game to new participants**, from the
+lobby or during the game (those already in come back after a lost connection) and remove one, and each
 address may try 30 wrong PINs a minute — generous, since a whole room shares one
 public address. Behind a reverse proxy on a private address, the client's address is
 read from `X-Forwarded-For`. Published directly with no proxy in front, where Docker

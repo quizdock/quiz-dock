@@ -203,4 +203,24 @@ describe('ControlPage (console hôte)', () => {
     expect(await screen.findByRole('switch', { name: 'Suivi individuel' })).toBeDisabled();
     expect(screen.getByText(/Indisponible en accès libre/)).toBeInTheDocument();
   });
+
+  it('ANSWERING: the lock set in the lobby can be lifted during the game (#57)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      totalQuestions: 3,
+      question: { prompt: 'Capitale ?' } as never,
+      answerCount: { answered: 0, total: 1 },
+      joinLocked: true,
+    });
+    renderApp('/session/482913/console');
+
+    const lock = await screen.findByRole('button', {
+      name: 'Fermer la partie aux nouveaux participants',
+    });
+    expect(lock).toHaveAttribute('aria-pressed', 'true');
+    act(() => lock.click());
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:lock', { pin: '482913', locked: false });
+  });
 });

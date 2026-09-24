@@ -133,7 +133,8 @@ The `⋯` menu: Edit · Duplicate · Archive · Delete · See past sessions.
 > in — accounts required or open access — preselected with the host's last choice; the
 > lobby then states it, and in open access personalised tracking is greyed out with the
 > reason and the display-name switch is gone. A last switch closes the session to new
-> participants, until it ends.
+> participants; the in-game control bar carries the same toggle, since late joins stay
+> open during play.
 
 ### 3.2 During a question (host side)
 ```
