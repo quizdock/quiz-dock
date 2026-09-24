@@ -77,6 +77,20 @@ longer than its question stretches the question to the end of the media plus a
 pause set once per quiz (**Pause after a media**, 3 s by default, 0–30): nothing
 is cut mid-play. The editor shows the resulting time under the question's own.
 
+**Listen first, then answer.** A question whose media length is known can tick
+**Start the timer when the media ends** in the editor: the answers open only once
+the sound or video has played, nobody can answer during it, and everyone then gets
+the question's full time (no stretch). The projection and the phones count the
+listening down (🎧) before the usual timer. The console's **Restart the media**
+still replays it, answers stay open meanwhile.
+
+**Starting together.** The server sets a common start a fraction of a second
+ahead, and every device — the projection, the remote phones — starts the media on
+that instant of the **server's** clock: each device measures how far its own clock
+is off (a few ping/pong exchanges when it connects, then one a minute), so a phone
+whose clock is wrong still starts on time. A device that gets the question late
+starts where the media is. A pause moves the start with the timer.
+
 From the lobby, and then while the leaderboard of a question is up, every
 device already fetches what the next question will show or play there (see
 [Fetched ahead](#fetched-ahead)), so it plays at once. The host's pause holds the media

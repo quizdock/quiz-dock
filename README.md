@@ -60,8 +60,9 @@ your phone to play.
 - 🎧 **Video & sound — _experimental_** — MP4 videos and MP3 sounds in questions,
   loudness-matched, drawn as a waveform with a playhead; played on the projection and on
   the devices of **remote participants** (who hears what is set per quiz, per question and
-  per session), fetched ahead from the lobby, and the room waits a moment for a device
-  still loading. Tested in Chromium browsers, not yet on iPhone:
+  per session), started on the same instant everywhere, fetched ahead from the lobby, and
+  the room waits a moment for a device still loading. *Listen first* questions open the
+  answers only once the media has played. Tested in Chromium browsers, not yet on iPhone:
   [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
 - 🏆 **Scoring that rewards speed** — time-weighted points, streak bonuses, leaderboard
   between questions, final podium; per-question rules (*closest answer wins*, partial

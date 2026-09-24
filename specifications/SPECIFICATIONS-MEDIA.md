@@ -20,7 +20,7 @@ A video brings its own sound, so it excludes the sound slot.
 | 2 | Recording a sound with the microphone | **Idea box** — set aside, its value is not settled (§3) |
 | 3 | YouTube / Vimeo embeds | **Idea box** — set aside, it goes against the no-tracking, self-hosted promise (§4) |
 | 4 | Remote players, preloading and readiness | **Built** on `feat/media-remote` (§5); two error messages in the idea box (§5.5) |
-| 5 | Synchronisation and fairness | Planned (§6) |
+| 5 | Synchronisation and fairness | **Built** on `feat/media-sync` (§6) |
 
 ---
 
@@ -161,9 +161,13 @@ it has not loaded — the waiting part of the former phase 5, brought forward on
 
 ## 6. Phase 5 — synchronisation and fairness
 
-- A common start timestamp broadcast once the step starts, so every device starts the media at the same instant.
-- A per-question **play then time** mode: the timer starts when the media ends.
-- Client clock alignment (the server's ping/pong exists, clients do not use it yet).
+- **Common start** (built): `mediaStartAt`, `MEDIA_LEAD_MS` (600 ms) ahead, kept as a distance from the answers'
+  opening so pauses move it; a late device seeks to it. Measured: projection and a phone whose clock is 5 s off
+  start within 1 ms.
+- **Play then time** (built): per question, `timerAfterMedia` — the answers open at the media's end; only with a
+  known duration; no stretch. The host's *Restart the media* still replays it (accepted).
+- **Clock alignment** (built): `ping`/`pong` bursts at each connection then every minute, shortest round trip
+  wins; every countdown uses the server's time.
 
 ---
 
