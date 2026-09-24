@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { servedSlideSchema } from './store-entry.dto';
 
 /**
  * Ce qu'on voit d'un modèle **avant** d'en prendre une copie (#39) : de quoi
@@ -18,6 +19,8 @@ export const storePreviewItemSchema = z.object({
   /** Dégradé de fond d'une diapositive : sans lui, l'aperçu n'en est plus un. */
   gradient: z.object({ angle: z.number(), colors: z.array(z.string()) }).nullable(),
   options: z.array(z.object({ text: z.string(), color: z.string(), shape: z.string() })),
+  /** Une diapositive telle que l'écran la dessine ; null pour une question. */
+  slide: servedSlideSchema.nullable(),
 });
 
 export const storePreviewSchema = z.object({

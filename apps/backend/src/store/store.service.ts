@@ -243,6 +243,8 @@ export type StorePreview = StoreEntry & {
     mediaAlt: string | null;
     gradient: { angle: number; colors: string[] } | null;
     options: { text: string; color: string; shape: string }[];
+    /** A slide as the stage draws it; null for a question. */
+    slide: ServedSlide | null;
   }[];
 };
 const MANIFEST = 'quiz.json';
@@ -465,6 +467,7 @@ export class StoreService implements OnModuleInit {
         color: o.color ?? 'blue',
         shape: o.shape ?? 'circle',
       })),
+      slide: item.kind === 'slide' ? servedSlide(id, item) : null,
     }));
     return {
       ...entry,

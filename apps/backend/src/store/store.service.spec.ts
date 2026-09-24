@@ -199,6 +199,9 @@ describe('StoreService', () => {
       textTone: 'dark',
       textOutline: true,
     });
+    // The template page draws the same slide.
+    const preview = await service.preview(entry.id);
+    expect(preview.items[0].slide).toEqual(listed.first?.slide);
   });
 
   it('un média du catalogue ne se lit que par un nom sans traversée', async () => {

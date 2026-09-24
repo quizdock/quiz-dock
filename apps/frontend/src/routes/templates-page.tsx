@@ -1,4 +1,4 @@
-import type { SlideBlock } from '@quiz-dock/contracts';
+import type { SlideBackground, SlideBlock } from '@quiz-dock/contracts';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { LibraryBig, ListChecks, Plus, Search } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
 import { fold } from '@/lib/text';
+import { cn } from '@/lib/utils';
 import type { StoreEntryDto } from '../api/generated/model';
 import { useStoreControllerList, useStoreControllerTake } from '../api/generated/store/store';
 import { getQuizzesControllerListQueryKey } from '../api/generated/quizzes/quizzes';
@@ -187,21 +188,7 @@ function TemplateThumb({ entry }: { entry: StoreEntryDto }) {
   const slide = entry.first?.slide;
   if (!entry.coverUrl && slide) {
     // The stage is a picture here: the whole card is the link.
-    return (
-      <span aria-hidden="true" className="pointer-events-none block">
-        <SlideStage
-          slide={{
-            slideIndex: 0,
-            questionIndex: 0,
-            blocks: slide.blocks as SlideBlock[],
-            background: slide.background,
-            textTone: slide.textTone,
-            textOutline: slide.textOutline,
-            displayDelayS: null,
-          }}
-        />
-      </span>
-    );
+    return <TemplateSlide slide={slide} />;
   }
   const image = entry.coverUrl ?? entry.first?.media ?? null;
   const gradient = entry.first?.gradient;
@@ -226,6 +213,36 @@ function TemplateThumb({ entry }: { entry: StoreEntryDto }) {
           {entry.title.slice(0, 1).toUpperCase()}
         </span>
       )}
+    </span>
+  );
+}
+
+/** A slide of the catalogue, as the catalogue serves it. */
+export interface ServedSlide {
+  blocks: unknown[];
+  background: SlideBackground | null;
+  textTone: 'light' | 'dark';
+  textOutline: boolean;
+}
+
+/**
+ * A slide of a template drawn as on the big screen — the same miniature as the
+ * quiz preview. A picture, not a control: hidden from assistive tech, no clicks.
+ */
+export function TemplateSlide({ slide, className }: { slide: ServedSlide; className?: string }) {
+  return (
+    <span aria-hidden="true" className={cn('pointer-events-none block', className)}>
+      <SlideStage
+        slide={{
+          slideIndex: 0,
+          questionIndex: 0,
+          blocks: slide.blocks as SlideBlock[],
+          background: slide.background,
+          textTone: slide.textTone,
+          textOutline: slide.textOutline,
+          displayDelayS: null,
+        }}
+      />
     </span>
   );
 }

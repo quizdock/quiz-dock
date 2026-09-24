@@ -16,10 +16,12 @@ import {
   useStoreControllerTake,
   useStoreControllerWithdraw,
 } from '../api/generated/store/store';
+import type { StorePreviewDtoItemsItem } from '../api/generated/model';
 import { apiErrorText } from '../api/http';
 import { useRole } from '../auth/use-role';
 import { getDemo } from '../config';
 import { templateRoute } from '../router';
+import { TemplateSlide } from './templates-page';
 
 /**
  * Un modèle, vu **avant** d'en prendre une copie (#39) : ce qu'il contient,
@@ -122,62 +124,55 @@ export function TemplatePage() {
       <ul className="quiz-items">
         {template.items.map((item, index) => (
           <li key={index} className="quiz-item">
-            {/* Une hauteur plancher commune : sans elle, une diapositive de deux
-                mots et une question à quatre propositions donnent une grille en
-                dents de scie. Une diapositive centre son texte, comme à l'écran. */}
-            <article
-              className={cn(
-                'relative flex h-full min-h-48 flex-col gap-3 rounded-lg border p-4 pt-10',
-                item.kind === 'slide' && 'justify-center text-center',
-              )}
-              style={
-                item.gradient
-                  ? {
-                      backgroundImage: `linear-gradient(${item.gradient.angle}deg, ${item.gradient.colors.join(', ')})`,
-                      color: 'white',
-                    }
-                  : undefined
-              }
-            >
-              {/* Numéro, type et durée tiennent dans le même coin : ce sont les
-                  méta de l'élément, elles ne descendent pas dans le contenu. */}
-              <span className="text-muted-foreground absolute top-2 left-2 flex flex-wrap items-center gap-2 text-xs">
-                <span className="quiz-item-number bg-background/80 text-foreground flex size-6 items-center justify-center rounded-full font-semibold tabular-nums" />
-                <Badge variant={item.kind === 'slide' ? 'muted' : 'default'}>
-                  {item.kind === 'slide'
-                    ? t('slide')
-                    : t(`common:questionType.${item.type}`, item.type ?? '')}
-                </Badge>
-                {item.timeLimitS ? (
-                  <span className="bg-background/80 rounded-full px-2 py-0.5">
-                    {t('seconds', { count: item.timeLimitS })}
-                  </span>
+            {item.slide ? (
+              // A slide is drawn as on the big screen; its number and badge sit on top.
+              <article className="relative overflow-hidden rounded-lg border">
+                <TemplateSlide slide={item.slide} />
+                <ItemMeta item={item} />
+              </article>
+            ) : (
+              // Une hauteur plancher commune : sans elle, une question courte et une
+              // question à quatre propositions donnent une grille en dents de scie.
+              <article
+                className={cn(
+                  'relative flex h-full min-h-48 flex-col gap-3 rounded-lg border p-4 pt-10',
+                  item.kind === 'slide' && 'justify-center text-center',
+                )}
+                style={
+                  item.gradient
+                    ? {
+                        backgroundImage: `linear-gradient(${item.gradient.angle}deg, ${item.gradient.colors.join(', ')})`,
+                        color: 'white',
+                      }
+                    : undefined
+                }
+              >
+                <ItemMeta item={item} />
+                {item.text ? <Markdown className="font-medium">{item.text}</Markdown> : null}
+                {item.mediaUrl ? (
+                  <img
+                    src={item.mediaUrl}
+                    alt={item.mediaAlt ?? ''}
+                    className="max-h-48 w-auto rounded-md object-contain"
+                  />
                 ) : null}
-              </span>
-              {item.text ? <Markdown className="font-medium">{item.text}</Markdown> : null}
-              {item.mediaUrl ? (
-                <img
-                  src={item.mediaUrl}
-                  alt={item.mediaAlt ?? ''}
-                  className="max-h-48 w-auto rounded-md object-contain"
-                />
-              ) : null}
-              {item.options.length > 0 ? (
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {item.options.map((option, i) => (
-                    <li
-                      key={i}
-                      className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white ${
-                        COLOR_BG[option.color] ?? OPTION_BG_FALLBACK
-                      }`}
-                    >
-                      <span aria-hidden>{SHAPE_GLYPH[option.shape] ?? ''}</span>
-                      <span className="min-w-0 truncate">{option.text}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </article>
+                {item.options.length > 0 ? (
+                  <ul className="grid gap-2 sm:grid-cols-2">
+                    {item.options.map((option, i) => (
+                      <li
+                        key={i}
+                        className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white ${
+                          COLOR_BG[option.color] ?? OPTION_BG_FALLBACK
+                        }`}
+                      >
+                        <span aria-hidden>{SHAPE_GLYPH[option.shape] ?? ''}</span>
+                        <span className="min-w-0 truncate">{option.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </article>
+            )}
           </li>
         ))}
       </ul>
@@ -191,5 +186,28 @@ export function TemplatePage() {
         onConfirm={() => void onWithdraw()}
       />
     </section>
+  );
+}
+
+/**
+ * Numéro, type et durée tiennent dans le même coin : ce sont les méta de
+ * l'élément, elles ne descendent pas dans le contenu.
+ */
+function ItemMeta({ item }: { item: StorePreviewDtoItemsItem }) {
+  const { t } = useTranslation(['store', 'common']);
+  return (
+    <span className="text-muted-foreground absolute top-2 left-2 z-10 flex flex-wrap items-center gap-2 text-xs">
+      <span className="quiz-item-number bg-background/80 text-foreground flex size-6 items-center justify-center rounded-full font-semibold tabular-nums" />
+      <Badge variant={item.kind === 'slide' ? 'muted' : 'default'}>
+        {item.kind === 'slide'
+          ? t('slide')
+          : t(`common:questionType.${item.type}`, item.type ?? '')}
+      </Badge>
+      {item.timeLimitS ? (
+        <span className="bg-background/80 rounded-full px-2 py-0.5">
+          {t('seconds', { count: item.timeLimitS })}
+        </span>
+      ) : null}
+    </span>
   );
 }
