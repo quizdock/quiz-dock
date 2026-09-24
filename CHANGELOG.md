@@ -4,6 +4,102 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [0.7.0] - 2026-09-24
+
+### Breaking changes
+
+- Sound files are no longer accepted. Audio could be attached to a question but no screen has ever played it, so it is refused at the door until that gets a proper design (#42). A quiz that already carries a sound keeps it in the database — nothing was deleted — but a bundle carrying one is refused as a whole, including a bundle exported from an older version. Sorry for the disruption if you were relying on it.
+
+### Bug Fixes
+
+- The preload notice speaks of a tech-savvy participant *(console)*
+- The preload notice names the real risk: a malicious participant *(console)*
+- No pause button while the room waits for media *(console)*
+- The lobby folds the address help and shares the link *(console)*
+- A screen attaching at the reveal gets the session's audio target *(live)*
+- The playback effect follows the position key it reads *(live)*
+- The Markdown toolbar floats instead of pushing the field *(editor)*
+- The sound unlock speaks of the session in Chinese, as the glossary does *(i18n)*
+- The sweep spares a video or sound held outside a question slot *(media)*
+- The description reads as a paragraph again *(editor)*
+- A payload without a count is not a rating *(editor)*
+- The reviews state really sits beside the switch *(editor)*
+- A question resumed during its reading delay kept its full length *(game)*
+- A taken copy starts its publication counter at zero (#39) *(store)*
+
+### Documentation
+
+- No version numbers ahead; finishing touches and hardening ship as patches *(roadmap)*
+- The folded editor, the lobby with sound, joining in the room or remote *(screenshots)*
+- V0.7.0 is video and sound; finishing touches and hardening move one step *(roadmap)*
+- The folded editor, the lobby's sound first, upgrade examples at 0.7.0
+- Listen first, the common start and the server clock
+- Video, sound and remote participants, announced as experimental
+- The last phase 4 error messages move to the idea box *(specs)*
+- Phase 4 decisions on presence, default target and preloading *(specs)*
+- Phase 4 brings remote players, preloading and media readiness *(specs)*
+- Embedded videos move to the idea box *(specs)*
+- A dedicated media brief, with microphone recording in the idea box *(specs)*
+- Microphone recording moves to the backlog *(roadmap)*
+- A dedicated guide for audio and video *(self-hosting)*
+- Say plainly that sound files are suspended, and apologise *(media)*
+
+### Features
+
+- Who hears the sound comes first in the lobby settings *(console)*
+- Every fold starts closed; the status bar keeps its card *(editor)*
+- The status bar lines up with the title *(editor)*
+- Sound settings on their own row, under the feedback *(editor)*
+- Question media fold as one, visual and sound as groups *(editor)*
+- Open, the sound settings read on one line *(editor)*
+- Fold secondary settings, group each domain *(editor)*
+- Listen first, then answer — the timer starts when the media ends *(media)*
+- Every device starts a question's media on the same instant *(live)*
+- Every screen reads the server's clock *(live)*
+- The room waits a moment for the devices still loading a question's media *(live)*
+- A playhead on the waveform, the same on every screen *(live)*
+- Each question picks how thick its waveform is drawn *(editor)*
+- The host sees which devices have loaded the next question's media *(live)*
+- Every device fetches the next question's media ahead, from the lobby on *(live)*
+- A remote participant's phone plays the question's video and sound *(live)*
+- Each quiz, question and session says who hears the sound *(media)*
+- A player says whether they play in the room or remotely *(live)*
+- The projection asks for sound as soon as it opens *(live)*
+- An interrupted media resumes a second early; the host can restart it *(live)*
+- Each quiz picks the level its sounds play at *(media)*
+- A question lasts as long as its media, plus a pause *(live)*
+- Carry a question's video and sound (bundle version 3) *(bundle)*
+- Play the question's video and sound on the projection *(live)*
+- Pick an image or a video, and a sound, for a question *(editor)*
+- Accept MP4 video and MP3 sound, checked by their content *(media)*
+- Give a question a visual slot and an audio slot *(media)*
+- Tell a media file by its bytes, not its name *(contracts)*
+- Serve byte ranges so Safari can play a video *(media)*
+- Each form bar says what it is saving *(editor)*
+- An empty bank offers both ways to start *(dashboard)*
+- Read a template as a grid, numbered and even (#39) *(store)*
+- The samples live in the library instead of being handed out (#39) *(store)*
+- A gallery of templates, and a preview to decide on (#39) *(store)*
+- An account holds a set of roles, so managing and hosting cumulate *(auth)*
+- The interface follows the roles, and an account has a page *(ui)*
+- Admin manages the instance, it does not host it (RG-14) *(auth)*
+- A page for running sessions, the menu is just the door *(live)*
+- A top bar that fits a phone — logo only, burger below md *(ui)*
+- The bank is a bank, and running sessions follow the host *(dashboard)*
+- Accept images only until sound has somewhere to play (#42) *(media)*
+- Alternative text, because the image is sometimes the question *(media)*
+- Share a quiz as a template, browse and take copies (#39) *(store)*
+- A catalogue of shared templates, on disk and offline (#39) *(store)*
+- Hand a quiz over to another account with quiz:transfer *(cli)*
+
+### Refactor
+
+- A quiz description is plain text *(editor)*
+
+### Contributors
+
+- fchaussin
+
 ## [0.6.0] - 2026-09-22
 
 ### Bug Fixes
