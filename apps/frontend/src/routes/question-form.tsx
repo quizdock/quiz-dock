@@ -781,14 +781,11 @@ export function QuestionForm({
         </Disclosure>
       )}
 
-      {/* Facultative : repliée tant qu'elle est vide. */}
+      {/* Facultative : repliée, comme tout ce qui est secondaire. */}
       {type !== 'poll' && (
         <form.Field name="answerExplanation">
           {(field) => (
-            <Disclosure
-              title={t('questionForm.answerExplanationLabel')}
-              defaultOpen={field.state.value.trim() !== ''}
-            >
+            <Disclosure title={t('questionForm.answerExplanationLabel')}>
               <MarkdownEditor
                 aria-label={t('questionForm.answerExplanationLabel')}
                 value={field.state.value}

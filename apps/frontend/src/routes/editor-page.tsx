@@ -1063,8 +1063,7 @@ function EmptyPane({
 
 /**
  * Status bar: the quiz's state with the one action that follows it, and — while
- * a session runs — the PIN and the three access screens (§4.1). A band between
- * two rules, not a card: its text lines up with the title and the description.
+ * a session runs — the PIN and the three access screens (§4.1).
  */
 function StatusBar({
   quiz,
@@ -1098,7 +1097,7 @@ function StatusBar({
   const running = (games?.data ?? []).filter((g) => g.quizId === quiz.id);
 
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-y py-3">
+    <div className="bg-muted/40 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl px-5 py-3">
       <p className="text-muted-foreground min-w-0 flex-1 text-sm">{t(`status.${quiz.status}`)}</p>
       {quiz.status === 'draft' ? (
         <Button

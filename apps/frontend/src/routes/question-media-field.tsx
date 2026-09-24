@@ -46,11 +46,10 @@ export function QuestionMediaField({
   };
 
   return (
-    // One fold for all of it, open when the question has media; inside, the
+    // One fold for all of it; inside, the
     // visual and the sound each read as their own group.
     <Disclosure
       title={t('media.slotsLegend')}
-      defaultOpen={!!visual || !!audio}
       value={
         [
           visual?.kind === 'image' ? t('media.kindImage') : null,
