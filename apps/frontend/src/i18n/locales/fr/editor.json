@@ -47,6 +47,8 @@
     "sharingSummary_one": "{{license}} · {{count}} tag",
     "sharingSummary_other": "{{license}} · {{count}} tags",
     "noLicense": "Aucune licence",
+    "languageLabel": "Langue",
+    "languageHelp": "La langue dans laquelle le quiz est rédigé. Les joueurs la voient dans les modèles, et un catalogue filtre par elle.",
     "licenseLabel": "Licence",
     "licenseHelp": "Les conditions auxquelles d’autres peuvent reprendre le quiz. Obligatoire pour le partager comme modèle. Vous devez détenir les droits sur son contenu et ses médias.",
     "license": {

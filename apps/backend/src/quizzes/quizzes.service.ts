@@ -15,6 +15,7 @@ import type { CreateQuizDto } from './dto/create-quiz.dto';
 import type { QuizFeedbackQueryDto } from './dto/quiz-feedback.dto';
 import type { TransitionQuizDto } from './dto/transition-quiz.dto';
 import type { UpdateQuizDto } from './dto/update-quiz.dto';
+import { instanceLanguage } from '../common/instance-language';
 
 type QuizFeedbackQuery = Pick<QuizFeedbackQueryDto, 'page' | 'pageSize' | 'rating'>;
 
@@ -67,7 +68,7 @@ export class QuizzesService {
         ownerId,
         title: dto.title,
         description: dto.description,
-        language: dto.language,
+        language: dto.language ?? instanceLanguage(),
         coverMediaId: dto.coverMediaId,
         feedbackEnabled: dto.feedbackEnabled,
         mediaTailS: dto.mediaTailS,

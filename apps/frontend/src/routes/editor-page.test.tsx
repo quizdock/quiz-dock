@@ -183,6 +183,27 @@ describe('EditorPage', () => {
     await waitFor(() => expect(patches()).toContainEqual({ tags: [] }));
   });
 
+  it('sets the language of the quiz, offered by name with the instance language first (#83)', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/quizzes/q1', body: detail({ language: 'fr' }) },
+      { method: 'PUT', path: '/quizzes/q1', body: detail() },
+    ]);
+    renderApp('/quizzes/q1');
+    const select = await screen.findByLabelText('Langue', { selector: 'select' });
+    const options = within(select).getAllByRole('option');
+    // Tests pin the UI to French: French is the instance's language, listed first.
+    expect(options[0]).toHaveTextContent('français');
+    expect(options.map((o) => (o as HTMLOptionElement).value)).toContain('zh-TW');
+
+    fireEvent.change(select, { target: { value: 'de' } });
+    await waitFor(() => {
+      const bodies = fetchMock.mock.calls
+        .filter(([url, opts]) => String(url).endsWith('/quizzes/q1') && opts?.method === 'PUT')
+        .map(([, opts]) => JSON.parse(String(opts?.body)) as Record<string, unknown>);
+      expect(bodies).toContainEqual({ language: 'de' });
+    });
+  });
+
   it('désactive la publication si aucune question', async () => {
     mockApi([
       {

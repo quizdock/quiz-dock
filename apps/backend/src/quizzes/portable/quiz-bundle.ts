@@ -21,6 +21,7 @@ import {
   type BundleMediaMeta,
   type SlideBundleItem,
 } from './quiz-bundle.schema';
+import { instanceLanguage } from '../../common/instance-language';
 
 /** Rows needed to export a quiz, in the shape `prisma.quiz.findFirst` returns with this include. */
 export const EXPORT_INCLUDE = {
@@ -444,7 +445,7 @@ export function fromBundle(
   return {
     title: quiz.title,
     description: quiz.description ? mdIn(quiz.description, idFor) : null,
-    language: quiz.language ?? 'en',
+    language: quiz.language ?? instanceLanguage(),
     feedbackEnabled: quiz.feedbackEnabled ?? true,
     mediaTailS: quiz.mediaTailS ?? MEDIA_TAIL_DEFAULT_S,
     loudnessTargetLufs: quiz.loudnessTargetLufs ?? LOUDNESS_TARGET_LUFS,

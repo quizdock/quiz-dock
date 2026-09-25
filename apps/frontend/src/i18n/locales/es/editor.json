@@ -47,6 +47,8 @@
     "sharingSummary_one": "{{license}} · {{count}} etiqueta",
     "sharingSummary_other": "{{license}} · {{count}} etiquetas",
     "noLicense": "Sin licencia",
+    "languageLabel": "Idioma",
+    "languageHelp": "El idioma en el que está escrito el cuestionario. Se ve en las plantillas, y un catálogo filtra por él.",
     "licenseLabel": "Licencia",
     "licenseHelp": "Las condiciones con las que otros pueden reutilizar el cuestionario. Obligatoria para compartirlo como plantilla. Debes tener los derechos sobre su contenido y sus medios.",
     "license": {

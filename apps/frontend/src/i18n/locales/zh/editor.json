@@ -47,6 +47,8 @@
     "sharingSummary_one": "{{license}} · {{count}} 个标签",
     "sharingSummary_other": "{{license}} · {{count}} 个标签",
     "noLicense": "无许可协议",
+    "languageLabel": "语言",
+    "languageHelp": "测验所用的语言。模板中会显示，目录也按语言筛选。",
     "licenseLabel": "许可协议",
     "licenseHelp": "他人可以在何种条件下再次使用该测验。作为模板共享前必须选择。你必须拥有其内容和媒体的权利。",
     "license": {

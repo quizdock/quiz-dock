@@ -28,3 +28,24 @@ export function toTag(text: string): string {
     .slice(0, TAG_MAX_LENGTH)
     .replace(/-+$/, '');
 }
+
+/**
+ * A quiz's language, a BCP 47 tag ("en", "zh-TW"). A quiz is monolingual; the
+ * settings offer the common ones below, and an imported quiz may carry another.
+ */
+export const LANGUAGE_RE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
+export const QUIZ_LANGUAGES = [
+  'en',
+  'fr',
+  'es',
+  'de',
+  'it',
+  'pt',
+  'nl',
+  'pl',
+  'zh',
+  'zh-TW',
+  'ja',
+  'ko',
+  'ar',
+] as const;

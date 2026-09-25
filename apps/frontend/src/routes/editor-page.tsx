@@ -46,6 +46,7 @@ import {
   LOUDNESS_TARGETS,
   type LoudnessTarget,
   MEDIA_TAIL_MAX_S,
+  QUIZ_LANGUAGES,
   QUIZ_LICENSES,
   QUIZ_MAX_TAGS,
   isQuizLicense,
@@ -118,7 +119,7 @@ export function EditorPage() {
 }
 
 function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
-  const { t } = useTranslation(['editor', 'common']);
+  const { t, i18n } = useTranslation(['editor', 'common']);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const update = useQuizzesControllerUpdate();
@@ -259,6 +260,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
   const setLicense = async (license: (typeof QUIZ_LICENSES)[number] | null) => {
     await update.mutateAsync({ id: quiz.id, data: { license } });
+    await invalidate();
+  };
+
+  const setLanguage = async (language: string) => {
+    await update.mutateAsync({ id: quiz.id, data: { language } });
     await invalidate();
   };
 
@@ -581,16 +587,35 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                 flush
                 className="-mx-3 border-t px-3 pt-1"
                 title={t('settings.sharingLegend')}
-                value={
+                value={[
+                  languageName(quiz.language, i18n.language),
                   quiz.license
                     ? t('settings.sharingSummary', {
                         license: licenseName(quiz.license),
                         count: quiz.tags.length,
                       })
-                    : t('settings.noLicense')
-                }
+                    : t('settings.noLicense'),
+                ].join(' · ')}
               >
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <label
+                    className="flex items-center gap-2 text-sm"
+                    title={t('settings.languageHelp')}
+                  >
+                    <span className="font-medium">{t('settings.languageLabel')}</span>
+                    <Select
+                      className="h-8 w-auto"
+                      value={quiz.language}
+                      disabled={update.isPending}
+                      onChange={(e) => void setLanguage(e.target.value)}
+                    >
+                      {languageOptions(quiz.language, i18n.language).map(({ code, name }) => (
+                        <option key={code} value={code}>
+                          {name}
+                        </option>
+                      ))}
+                    </Select>
+                  </label>
                   <label
                     className="flex items-center gap-2 text-sm"
                     title={t('settings.licenseHelp')}
@@ -1352,6 +1377,26 @@ const LICENSE_NAMES: Record<string, string> = {
   'CC-BY-4.0': 'CC BY 4.0',
   'CC-BY-SA-4.0': 'CC BY-SA 4.0',
 };
+/** A language by its name, in the UI's language ("zh-TW" → "Chinese (Taiwan)"). */
+function languageName(code: string, uiLanguage: string): string {
+  try {
+    return new Intl.DisplayNames([uiLanguage], { type: 'language' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/**
+ * The languages offered, by name: the instance's first, then the common ones,
+ * plus the quiz's own when it is none of those (an imported quiz), so it is
+ * shown rather than lost.
+ */
+function languageOptions(current: string, uiLanguage: string) {
+  const codes = [...new Set<string>([uiLanguage, ...QUIZ_LANGUAGES, current])];
+  const [first, ...rest] = codes.map((code) => ({ code, name: languageName(code, uiLanguage) }));
+  return [first, ...rest.sort((a, b) => a.name.localeCompare(b.name, uiLanguage))];
+}
+
 /** i18n keys: an SPDX identifier has dots, which i18next reads as nesting. */
 const LICENSE_KEYS = { 'CC0-1.0': 'cc0', 'CC-BY-4.0': 'ccBy', 'CC-BY-SA-4.0': 'ccBySa' } as const;
 function licenseName(spdx: string): string {
