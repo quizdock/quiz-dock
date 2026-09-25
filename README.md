@@ -238,6 +238,7 @@ of a sound on its waveform, the account preferences:
 - 💾 **Answer capture** — optionally record every player's individual answers for audit, certification or individual follow-up.
 - 🔎 **History & exploration** — browse archived sessions: per-question success rates, average times, per-player answer sheets.
 - 📤 **CSV export** — overall results and per-player answer sheets.
+- 🏷️ **Licence, tags and language of a quiz** — set in the quiz settings and carried with it, so whoever receives a copy knows what they may do with it and what it is about.
 - 📦 **Quiz import / export** — a quiz travels as a [portable bundle](https://github.com/quizdock/quiz-dock/blob/main/docs/quiz-bundle.md) (`quiz.json` + `media/`, zipped): back it up, move it between instances, share it — from the app or the operator CLI.
 - 🌍 **Multilingual** — one language per instance; a [glossary](https://github.com/quizdock/quiz-dock/blob/main/apps/frontend/src/i18n/GLOSSARY.md) keeps the wording consistent across the five.
 - 🎨 **White-label** — name, logo and CSS via env + a mounted folder, no rebuild.
