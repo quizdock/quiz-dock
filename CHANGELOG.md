@@ -4,7 +4,7 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
-## [Unreleased]
+## [0.8.0] - 2026-09-25
 
 ### Breaking changes
 
@@ -28,6 +28,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- Unreleased changes *(changelog)*
 - The sample quizzes wait in the templates *(auth)*
 - Unreleased changes, with the OIDC upgrade notes *(changelog)*
 - Upgrade notes for the OIDC session held by the backend *(auth)*
