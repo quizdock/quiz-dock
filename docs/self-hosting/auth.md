@@ -11,7 +11,7 @@ hosts identify with a name, and there is a single **host seat**:
 - While held, the host area is locked: everyone else can only join sessions as a
   participant (`403 auth.host_required` on the host API and `host:*` events).
 - It is released when the holder logs out, or automatically once the expiry is past
-  (checked lazily, no scheduler). The first claim also loads the two sample quizzes.
+  (checked lazily, no scheduler). Two sample quizzes wait in the templates, to copy into the bank.
 - A name is the only key: entering the holder's name again (on any device) resumes
   the seat — handy across devices, and the reason this is *not* a security boundary.
   Use it on trusted networks; use OIDC otherwise. (A public instance is a different
