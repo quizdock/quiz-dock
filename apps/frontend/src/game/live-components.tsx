@@ -150,75 +150,131 @@ function SplitOptions({
   /** Without the tap tiles: the list alone (a participant's reveal). */
   tiles?: boolean;
 }) {
+  return (
+    <div className="flex w-full flex-col gap-[1em]">
+      <OptionKey
+        options={options}
+        selectedIds={selectedIds}
+        correctIds={correctIds}
+        showPick={!onPick}
+      />
+      {tiles ? (
+        <OptionTiles
+          options={options}
+          onPick={onPick}
+          selectedIds={selectedIds}
+          correctIds={correctIds}
+          disabled={disabled}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** The answers, in reading order, keyed by colour and shape (the phone's legend for the tiles). */
+export function OptionKey({
+  options,
+  selectedIds,
+  correctIds,
+  showPick = false,
+}: {
+  options: PublicOption[];
+  selectedIds?: string[];
+  correctIds?: string[];
+  /** Tags this participant's pick (a reveal), rather than only shading it. */
+  showPick?: boolean;
+}) {
   const { t } = useTranslation('live');
   const picked = (id: string) => selectedIds?.includes(id) ?? false;
   return (
-    <div className="flex w-full flex-col gap-[1em]">
-      {/* The answers, in reading order, keyed by colour and shape. */}
-      <ol className="flex w-full flex-col gap-[0.4em] text-left">
-        {options.map((o) => (
-          <li
+    <ol className="flex w-full flex-col gap-[0.4em] text-left">
+      {options.map((o) => (
+        <li
+          key={o.id}
+          className={cn(
+            'flex items-center gap-[0.6em] rounded-[0.5em] px-[0.6em] py-[0.4em] leading-snug',
+            picked(o.id) && 'bg-foreground/10 font-semibold',
+            correctIds && !correctIds.includes(o.id) && 'opacity-50',
+          )}
+        >
+          <span
+            aria-hidden
+            className={cn('shrink-0 text-[1.25em] leading-none', COLOR_TEXT[o.color])}
+          >
+            {SHAPE_GLYPH[o.shape] ?? '●'}
+          </span>
+          {o.text ? (
+            <Markdown profile="inline" className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+              {o.text}
+            </Markdown>
+          ) : null}
+          {/* At the reveal: the right answer(s) and what this participant picked. */}
+          {correctIds?.includes(o.id) ? (
+            <span className="bg-success inline-flex size-[1.3em] shrink-0 items-center justify-center rounded-full text-[0.85em] text-white">
+              ✓
+            </span>
+          ) : null}
+          {showPick && picked(o.id) ? (
+            <span className="text-muted-foreground shrink-0 text-[0.8em]">
+              {t('reveal.yourPick')}
+            </span>
+          ) : null}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// Up to four tiles share one row; past that, two balanced rows (5–6 → 3 per row, 7–8 → 4).
+const TILE_COLUMNS = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
+function tileColumns(count: number): number {
+  return Math.min(4, Math.max(1, count <= 4 ? count : Math.ceil(count / 2)));
+}
+
+/** The tap targets: colour + shape only, big and steady whatever the labels. */
+export function OptionTiles({
+  options,
+  onPick,
+  selectedIds,
+  correctIds,
+  disabled,
+}: {
+  options: PublicOption[];
+  onPick?: (optionId: string) => void;
+  selectedIds?: string[];
+  correctIds?: string[];
+  disabled?: boolean;
+}) {
+  const columns = tileColumns(options.length);
+  return (
+    <div className={cn('grid w-full gap-[0.6em]', TILE_COLUMNS[columns - 1])}>
+      {options.map((o) => {
+        const isCorrect = correctIds?.includes(o.id);
+        const isPicked = selectedIds?.includes(o.id) ?? false;
+        const Tag = onPick ? 'button' : 'div';
+        return (
+          <Tag
             key={o.id}
+            type={onPick ? 'button' : undefined}
+            disabled={onPick ? disabled : undefined}
+            onClick={onPick ? () => onPick(o.id) : undefined}
+            aria-label={o.text ?? o.color}
+            aria-pressed={onPick ? isPicked : undefined}
             className={cn(
-              'flex items-center gap-[0.6em] rounded-[0.5em] px-[0.6em] py-[0.4em] leading-snug',
-              picked(o.id) && 'bg-foreground/10 font-semibold',
-              correctIds && !correctIds.includes(o.id) && 'opacity-50',
+              'flex items-center justify-center rounded-[0.75em] text-[2em] leading-none text-white shadow transition',
+              // Narrow columns get squatter tiles, so two rows of four stay low on the screen.
+              columns >= 3 ? 'min-h-[2.5em]' : 'min-h-[3.5em]',
+              COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
+              onPick && !disabled && 'hover:brightness-110 active:scale-[0.97] cursor-pointer',
+              correctIds && !isCorrect && 'opacity-40',
+              isCorrect && 'ring-4 ring-white',
+              isPicked && 'ring-4 ring-black/60',
             )}
           >
-            <span
-              aria-hidden
-              className={cn('shrink-0 text-[1.25em] leading-none', COLOR_TEXT[o.color])}
-            >
-              {SHAPE_GLYPH[o.shape] ?? '●'}
-            </span>
-            {o.text ? (
-              <Markdown profile="inline" className="min-w-0 flex-1 [overflow-wrap:anywhere]">
-                {o.text}
-              </Markdown>
-            ) : null}
-            {/* At the reveal: the right answer(s) and what this participant picked. */}
-            {correctIds?.includes(o.id) ? (
-              <span className="bg-success inline-flex size-[1.3em] shrink-0 items-center justify-center rounded-full text-[0.85em] text-white">
-                ✓
-              </span>
-            ) : null}
-            {!onPick && picked(o.id) ? (
-              <span className="text-muted-foreground shrink-0 text-[0.8em]">
-                {t('reveal.yourPick')}
-              </span>
-            ) : null}
-          </li>
-        ))}
-      </ol>
-      {/* The tap targets: colour + shape only, big and steady whatever the labels. */}
-      {tiles ? (
-        <div className="grid w-full grid-cols-2 gap-[0.6em]">
-          {options.map((o) => {
-            const isCorrect = correctIds?.includes(o.id);
-            const Tag = onPick ? 'button' : 'div';
-            return (
-              <Tag
-                key={o.id}
-                type={onPick ? 'button' : undefined}
-                disabled={onPick ? disabled : undefined}
-                onClick={onPick ? () => onPick(o.id) : undefined}
-                aria-label={o.text ?? o.color}
-                aria-pressed={onPick ? picked(o.id) : undefined}
-                className={cn(
-                  'flex min-h-[3.5em] items-center justify-center rounded-[0.75em] text-[2em] leading-none text-white shadow transition',
-                  COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
-                  onPick && !disabled && 'hover:brightness-110 active:scale-[0.97] cursor-pointer',
-                  correctIds && !isCorrect && 'opacity-40',
-                  isCorrect && 'ring-4 ring-white',
-                  picked(o.id) && 'ring-4 ring-black/60',
-                )}
-              >
-                <span aria-hidden>{SHAPE_GLYPH[o.shape] ?? '●'}</span>
-              </Tag>
-            );
-          })}
-        </div>
-      ) : null}
+            <span aria-hidden>{SHAPE_GLYPH[o.shape] ?? '●'}</span>
+          </Tag>
+        );
+      })}
     </div>
   );
 }

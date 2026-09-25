@@ -27,6 +27,8 @@ import {
   AnswerRules,
   QuestionMedia,
   OptionGrid,
+  OptionKey,
+  OptionTiles,
   RevealAnswer,
   SlideView,
   TYPE_BASE,
@@ -272,11 +274,12 @@ export function PlayerPage() {
       );
     }
 
-    // À options (QCM unique/multi, V-F, sondage).
+    // À options (QCM unique/multi, V-F, sondage) : the tiles only — their legend
+    // scrolls with the prompt, above.
     if (opts.length) {
       return (
         <>
-          <OptionGrid options={opts} onPick={onPick} selectedIds={selected} layout="split" />
+          <OptionTiles options={opts} onPick={onPick} selectedIds={selected} />
           {isMulti ? (
             <Button type="button" disabled={selected.length === 0} onClick={() => submit(selected)}>
               {t('player.submitAnswer')}
@@ -581,6 +584,13 @@ export function PlayerPage() {
 
   if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && question) {
     const done = submitted || view.answerAccepted === true;
+    // Tap tiles (QCM, V-F, poll): pinned to the bottom of the screen, their legend
+    // above. Typed answers and ordering stay in the flow (the keyboard would fight a pin).
+    const tiled =
+      !!question.options?.length &&
+      question.type !== 'ordering' &&
+      question.type !== 'numeric' &&
+      question.type !== 'text_input';
     // Layout en 3 zones, identique d'une question à l'autre (UX first) : le chrono
     // reste en haut, l'énoncé occupe le centre et **défile** s'il est long, la zone
     // de réponse est ancrée en bas (position constante, jamais repoussée hors écran).
@@ -644,8 +654,17 @@ export function PlayerPage() {
           >
             {question.prompt}
           </Markdown>
+          {tiled && !reading && !done ? (
+            <OptionKey options={question.options ?? []} selectedIds={selected} />
+          ) : null}
         </div>
-        <div className="flex w-full shrink-0 flex-col items-center gap-[0.75em] pb-[0.5em]">
+        <div
+          className={cn(
+            'flex w-full shrink-0 flex-col items-center gap-[0.75em] pb-[0.5em]',
+            tiled &&
+              'bg-background sticky bottom-0 pt-[0.5em] pb-[max(0.5em,env(safe-area-inset-bottom))]',
+          )}
+        >
           <AnswerRules question={question} />
           {reading ? (
             <p className="text-muted-foreground text-[1.1em] font-medium">
