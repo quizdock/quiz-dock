@@ -449,6 +449,79 @@
         ]
       }
     },
+    "/api/v1/quizzes/{id}/publication": {
+      "get": {
+        "operationId": "QuizzesController_publicationReport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
+    "/api/v1/quizzes/{id}/publication/export": {
+      "post": {
+        "operationId": "QuizzesController_publicationExport",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicationExportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Zip bundle (quiz.json + media/), named after the slug."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
     "/api/v1/quizzes/{id}/duplicate": {
       "post": {
         "operationId": "QuizzesController_duplicate",
@@ -2602,6 +2675,16 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "ownerName": {
             "type": "string"
           },
@@ -2629,6 +2712,8 @@
           "loudnessTargetLufs",
           "audioTarget",
           "questionCount",
+          "license",
+          "tags",
           "createdAt",
           "updatedAt",
           "archivedAt"
@@ -2647,10 +2732,9 @@
             "maxLength": 2000
           },
           "language": {
-            "default": "fr",
             "type": "string",
-            "minLength": 2,
-            "maxLength": 5
+            "maxLength": 10,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
           },
           "feedbackEnabled": {
             "type": "boolean"
@@ -2698,6 +2782,167 @@
         },
         "required": [
           "title"
+        ]
+      },
+      "PublicationReportDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "slugSet": {
+            "type": "boolean"
+          },
+          "language": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "estimatedBytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "maxBytes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "enum": [
+                    "not_ready",
+                    "license",
+                    "language",
+                    "tags",
+                    "too_large",
+                    "credit_missing"
+                  ]
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "block",
+                    "warn"
+                  ]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "code",
+                "level"
+              ]
+            }
+          },
+          "heaviest": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "image",
+                    "video",
+                    "audio"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "sizeBytes": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "name",
+                "sizeBytes"
+              ]
+            }
+          },
+          "uncredited": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "image",
+                    "video",
+                    "audio"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "sizeBytes": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "name",
+                "sizeBytes"
+              ]
+            }
+          }
+        },
+        "required": [
+          "slug",
+          "slugSet",
+          "language",
+          "license",
+          "tags",
+          "estimatedBytes",
+          "maxBytes",
+          "issues",
+          "heaviest",
+          "uncredited"
+        ]
+      },
+      "PublicationExportDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 60
+          }
+        },
+        "required": [
+          "slug"
         ]
       },
       "QuizDetailDto": {
@@ -2757,6 +3002,16 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "ownerName": {
             "type": "string"
           },
@@ -2769,6 +3024,9 @@
           "archivedAt": {
             "type": "string",
             "nullable": true
+          },
+          "editable": {
+            "type": "boolean"
           },
           "questions": {
             "type": "array",
@@ -3586,9 +3844,12 @@
           "loudnessTargetLufs",
           "audioTarget",
           "questionCount",
+          "license",
+          "tags",
           "createdAt",
           "updatedAt",
           "archivedAt",
+          "editable",
           "questions",
           "slides"
         ]
@@ -4018,8 +4279,8 @@
           },
           "language": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 5
+            "maxLength": 10,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
           },
           "feedbackEnabled": {
             "type": "boolean"
@@ -4064,6 +4325,25 @@
             "minLength": 26,
             "maxLength": 26,
             "nullable": true
+          },
+          "license": {
+            "type": "string",
+            "enum": [
+              "CC0-1.0",
+              "CC-BY-4.0",
+              "CC-BY-SA-4.0",
+              null
+            ],
+            "nullable": true
+          },
+          "tags": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 30,
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            }
           }
         }
       },

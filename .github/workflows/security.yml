@@ -8,7 +8,7 @@ name: Security
 #                  (SARIF) sans repeindre la CI en rouge à tort.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
   schedule:
     - cron: '27 4 * * 1' # lundi 04:27 UTC — veille hebdo de dérive du base-image

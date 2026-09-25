@@ -42,7 +42,25 @@
       "projection": "Solo la proyección",
       "projection_remote": "Proyección y participantes a distancia",
       "everyone": "Todos los dispositivos"
-    }
+    },
+    "sharingLegend": "Compartir",
+    "sharingSummary_one": "{{license}} · {{count}} etiqueta",
+    "sharingSummary_other": "{{license}} · {{count}} etiquetas",
+    "noLicense": "Sin licencia",
+    "languageLabel": "Idioma",
+    "languageHelp": "El idioma en el que está escrito el cuestionario. Se ve en las plantillas, y un catálogo filtra por él.",
+    "licenseLabel": "Licencia",
+    "licenseHelp": "Las condiciones con las que otros pueden reutilizar el cuestionario. Obligatoria para compartirlo como plantilla. Debes tener los derechos sobre su contenido y sus medios.",
+    "license": {
+      "cc0": "CC0 — sin condiciones",
+      "ccBy": "CC BY 4.0 — citar al autor",
+      "ccBySa": "CC BY-SA 4.0 — citar, compartir igual"
+    },
+    "tagsLabel": "Etiquetas",
+    "tagsPlaceholder": "Añadir una etiqueta…",
+    "tagsHelp": "Hasta 5 palabras clave para encontrar el cuestionario entre las plantillas. Pulsa Intro para añadir una.",
+    "removeTag": "Quitar la etiqueta {{tag}}",
+    "saveError": "No se pudo guardar el cambio."
   },
   "broadcast": {
     "title": "Difusión",
@@ -378,5 +396,43 @@
     "players_one": "{{count}} jugador",
     "players_other": "{{count}} jugadores",
     "liveEditsHint": "Los cambios de forma (fondos, contraste, explicaciones, diapositivas) llegan a las sesiones en curso en su siguiente paso; preguntas y respuestas quedan como se lanzaron."
+  },
+  "publication": {
+    "open": "Exportar para publicar",
+    "title": "Exportar para publicar",
+    "description": "Comprueba el cuestionario según lo que acepta el catálogo comunitario y descarga el archivo que hay que subir a tu repositorio quizdock-quizzes.",
+    "download": "Descargar",
+    "checking": "Comprobando el cuestionario…",
+    "failed": "No se pudo preparar la exportación.",
+    "check": {
+      "ready": "El cuestionario está listo",
+      "notReady": "El cuestionario no está listo",
+      "language": "Idioma: {{language}}",
+      "license": "Licencia: {{license}}",
+      "noLicense": "Sin licencia",
+      "tags": "Etiquetas: {{tags}}",
+      "noTags": "Sin etiquetas",
+      "size": "Tamaño: {{size}} de {{max}}",
+      "uncredited_one": "{{count}} medio sin crédito",
+      "uncredited_other": "{{count}} medios sin crédito",
+      "credited": "Todos los medios tienen crédito"
+    },
+    "fix": {
+      "ready": "Primero marca el cuestionario como listo (Publicar).",
+      "settings": "Configúralo en los ajustes del cuestionario, en Compartir.",
+      "size": "Aligera o quita los medios más pesados:",
+      "credit": "Eres responsable de los derechos de cada imagen, sonido y vídeo que publiques. Acredítalos en tu biblioteca de medios (autor, licencia, fuente)."
+    },
+    "kind": {
+      "image": "Imagen",
+      "video": "Vídeo",
+      "audio": "Sonido"
+    },
+    "slugLabel": "Nombre corto",
+    "slugHelp": "Cómo reconoce el catálogo este cuestionario en tu repositorio. Archivo: {{file}}",
+    "slugChanged": "Cambiarlo (antes «{{previous}}») crea un cuestionario nuevo para el catálogo: borra el archivo antiguo de tu repositorio."
+  },
+  "readOnly": {
+    "notice": "Cuestionario de {{owner}}: puedes consultarlo, no modificarlo."
   }
 }

@@ -42,7 +42,25 @@
       "projection": "仅投影",
       "projection_remote": "投影和远程参与者",
       "everyone": "所有设备"
-    }
+    },
+    "sharingLegend": "共享",
+    "sharingSummary_one": "{{license}} · {{count}} 个标签",
+    "sharingSummary_other": "{{license}} · {{count}} 个标签",
+    "noLicense": "无许可协议",
+    "languageLabel": "语言",
+    "languageHelp": "测验所用的语言。模板中会显示，目录也按语言筛选。",
+    "licenseLabel": "许可协议",
+    "licenseHelp": "他人可以在何种条件下再次使用该测验。作为模板共享前必须选择。你必须拥有其内容和媒体的权利。",
+    "license": {
+      "cc0": "CC0 — 无条件",
+      "ccBy": "CC BY 4.0 — 署名",
+      "ccBySa": "CC BY-SA 4.0 — 署名，相同方式共享"
+    },
+    "tagsLabel": "标签",
+    "tagsPlaceholder": "添加标签…",
+    "tagsHelp": "最多 5 个关键词，便于在模板中找到该测验。按回车添加。",
+    "removeTag": "移除标签 {{tag}}",
+    "saveError": "无法保存更改。"
   },
   "broadcast": {
     "title": "广播",
@@ -378,5 +396,43 @@
     "players_one": "{{count}} 名玩家",
     "players_other": "{{count}} 名玩家",
     "liveEditsHint": "版式修改（背景、对比度、解析、幻灯片）会在进行中的场次下一步生效；题目和答案保持启动时的版本。"
+  },
+  "publication": {
+    "open": "导出以发布",
+    "title": "导出以发布",
+    "description": "按社区目录的要求检查测验，然后下载要上传到你的 quizdock-quizzes 仓库的文件。",
+    "download": "下载",
+    "checking": "正在检查测验…",
+    "failed": "无法准备导出。",
+    "check": {
+      "ready": "测验已就绪",
+      "notReady": "测验尚未就绪",
+      "language": "语言：{{language}}",
+      "license": "许可协议：{{license}}",
+      "noLicense": "无许可协议",
+      "tags": "标签：{{tags}}",
+      "noTags": "无标签",
+      "size": "大小：{{size}} / {{max}}",
+      "uncredited_one": "{{count}} 个媒体没有署名",
+      "uncredited_other": "{{count}} 个媒体没有署名",
+      "credited": "所有媒体都有署名"
+    },
+    "fix": {
+      "ready": "请先将测验设为就绪（发布）。",
+      "settings": "请在测验设置的“共享”中设置。",
+      "size": "请压缩或移除最大的媒体：",
+      "credit": "你须对发布的每张图片、每段声音和视频的权利负责。请在媒体库中为其署名（作者、许可协议、来源）。"
+    },
+    "kind": {
+      "image": "图片",
+      "video": "视频",
+      "audio": "声音"
+    },
+    "slugLabel": "短名称",
+    "slugHelp": "目录在你的仓库中识别此测验的名称。文件：{{file}}",
+    "slugChanged": "更改它（原为“{{previous}}”）会在目录中产生一个新测验：请从仓库中删除旧文件。"
+  },
+  "readOnly": {
+    "notice": "{{owner}} 的测验：你可以查看，但不能修改。"
   }
 }

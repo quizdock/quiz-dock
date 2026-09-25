@@ -37,11 +37,15 @@ export interface QuizDetailDto {
      * @maximum 9007199254740991
      */
   questionCount: number;
+  /** @nullable */
+  license: string | null;
+  tags: string[];
   ownerName?: string;
   createdAt: string;
   updatedAt: string;
   /** @nullable */
   archivedAt: string | null;
+  editable: boolean;
   questions: QuizDetailDtoQuestionsItem[];
   slides: QuizDetailDtoSlidesItem[];
 }

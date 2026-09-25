@@ -57,7 +57,7 @@ Where you set them depends on how you run it:
 | Variable | Default | Description |
 |---|---|---|
 | `APP_NAME` | `QuizDock` | Brand name shown in the header, tab title and share text. |
-| `APP_LANG` | `en` | UI language for the instance: `en` · `fr` · `es` · `zh` · `zh-TW`. One per deployment (no browser detection). |
+| `APP_LANG` | `en` | UI language for the instance: `en` · `fr` · `es` · `zh` · `zh-TW`. One per deployment (no browser detection). New quizzes start in this language; each quiz can be set to another in its settings. |
 | `APP_LOGO_URL` | — | Logo served from somewhere else (a CDN, a path outside `branding/`). Empty by default, which is the usual setup: the logo is then looked up in the mounted `branding/` folder. |
 | `APP_FEEDBACK_URL` | — | Where the home page's *Report a bug · Suggest a feature · Fix a translation · Ask a question* links lead. Empty: the QuizDock repository, its forms filled in with the version, the browser and the language. Another GitHub repository (`https://github.com/owner/repo`): the same forms there — copy `.github/ISSUE_TEMPLATE/` into it. Any other address: a single *Send feedback* link. `none`: no links. |
 
@@ -124,6 +124,7 @@ Which setup offers what: [where participants connect](invitation-address.md).
 | `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). The editor converts to M4A (AAC). |
 | `MEDIA_LIBRARY_LINKS` | *(seven free libraries)* | The free media libraries the editor links to: a JSON list of `{"name", "url", "kinds"}` (`kinds` among `image`, `video`, `audio`), or `none` to hide them (an instance without Internet). Default, open licences only and several per kind: OpenSoundLibrary, Freesound, ccMixter, Openverse, Wikimedia Commons, NASA Image and Video Library, Internet Archive. |
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
+| `PUBLICATION_MAX_MB` | `20` | Largest bundle the editor's *Export for publication* allows (MB): the limit of the community store, kept under GitHub's 25 MB web-upload limit. An organisation running its own store may set another. |
 
 | `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
 | `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |

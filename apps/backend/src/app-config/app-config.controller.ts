@@ -4,6 +4,7 @@ import { Controller, Get, Header, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from '../auth/public.decorator';
+import { instanceLanguage } from '../common/instance-language';
 
 /**
  * Sert `/config.js` (white-label runtime) quand le backend héberge aussi le SPA
@@ -24,7 +25,7 @@ export class AppConfigController {
   @Header('Cache-Control', 'no-store')
   configJs(): string {
     const appName = process.env.APP_NAME ?? 'QuizDock';
-    const lang = process.env.APP_LANG ?? 'en';
+    const lang = instanceLanguage();
     const esc = (s: string): string => s.replace(/[\\"]/g, '\\$&');
     // Vide (le défaut) = le SPA cherche le logo dans `branding/`, tous formats web.
     const logoUrl = process.env.APP_LOGO_URL ?? '';

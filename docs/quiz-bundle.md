@@ -4,6 +4,17 @@ A quiz leaves and enters QuizDock as a **bundle**: a `quiz.json` manifest next
 to a `media/` folder, zipped (`<slug>.quizdock.zip`). The same layout, unzipped,
 is what a Quiz Store repository holds.
 
+**JSON Schema.** The manifest is published as a JSON Schema (draft 2020-12),
+one file per manifest version, in [`schema/`](../schema/) — currently
+[`quiz-bundle.v3.json`](../schema/quiz-bundle.v3.json). It is generated from the
+importer's own schema and a test keeps the two in step, so a tool outside
+QuizDock (a community store, a CI check) validates exactly what an import
+accepts. A published version is never rewritten: a change to the format comes
+with a new manifest version and a new file. The schema is structural, like the
+first step of an import; the per-type rules of each question and slide are
+checked afterwards. Contributors changing the bundle schema run
+`pnpm generate:schema` and commit the result.
+
 > **Videos and sounds (version 3).** A question's visual may be an MP4 video
 > (H.264, AAC or no audio) and its audio slot an MP3. The formats of the audio
 > suspended in [#42](https://github.com/quizdock/quiz-dock/issues/42) (ogg, wav,
@@ -14,6 +25,16 @@ is what a Quiz Store repository holds.
   ([self-hosting/cli.md](self-hosting/cli.md)). An export fixes the quiz's `slug`
   (derived from the title the first time) and leaves its `revision` alone — that
   counter moves when the quiz is *shared* to the template catalogue.
+- **Export for publication** — editor header → *Export for publication*, for a
+  community store (#21). It checks first what a store would refuse: the quiz
+  must be *ready*, with a licence among CC0 / CC BY / CC BY-SA, a language, at
+  least one tag, and a bundle within `PUBLICATION_MAX_MB` (20 MB by default,
+  the heaviest media listed when it is over). Media without a credit are listed
+  as a reminder, never a block: the contributor answers for the rights. The
+  author confirms the `slug`, the name a store knows the quiz by in their
+  repository; changing it later makes a new quiz for the store. The file is
+  `<slug>.quizdock.zip`. `GET /api/v1/quizzes/:id/publication` returns the
+  checks, `POST /api/v1/quizzes/:id/publication/export` (`{"slug"}`) the zip.
 - **Import** — dashboard → *Import* (zip, or a bare `quiz.json` when there is
   no media), `POST /api/v1/quizzes/import` (multipart field `file`), or
   `qd quiz:import <file> <sub|email>`. The result is a **new draft** owned by
@@ -85,7 +106,9 @@ is what a Quiz Store repository holds.
   gif, webp, avif, mp4, mp3 — checked by content like any upload, each within
   its kind's limit (`MEDIA_MAX_BYTES`, `MEDIA_MAX_VIDEO_MB`,
   `MEDIA_MAX_AUDIO_MB`), the whole zip within `IMPORT_MAX_BYTES` (raise it for
-  quizzes carrying videos).
+  quizzes carrying videos). Nothing the archive declares is trusted: sizes are
+  counted on the bytes actually unpacked, which may not exceed twice
+  `IMPORT_MAX_BYTES` in total, over at most 2,000 entries.
 - `quiz.mediaTailS` (version 3, 0–30, default 3): the pause kept after a
   question's sound or video. A media longer than its question stretches the
   question to the end of the media plus this pause — nothing is cut mid-play.
@@ -113,22 +136,23 @@ is what a Quiz Store repository holds.
 ## Store fields
 
 The `quiz` object carries what a Quiz Store catalogue will need, so bundles
-exported today stay valid there. None of it is editable in the app yet: a quiz
-built in the editor exports with `namespace`, `domain` and `license` at `null`
-and `tags` empty; an imported bundle keeps whatever it carried.
+exported today stay valid there. The licence and the tags are set in the quiz
+settings (*Sharing*); `namespace` and `domain` are not editable yet and export
+at `null`. An imported bundle keeps whatever it carried, except its identity
+(`slug`, `namespace`).
 
 | Field | Type | Meaning |
 |---|---|---|
 | `version` (top level) | integer | Manifest schema version, currently `3`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
 | `media` (top level) | object | What each media file carries beyond its bytes, keyed by the same path the items reference: an `alt`, the description read aloud by screen readers (version 2); for a sound or a video, what the editor measured (version 3) — `durationMs`, `peaks` (200 values in 0–1, the waveform the screens draw), `origin` (`upload` or `recording`), `loudnessLufs` and `peakDbfs` (the playback gain). A sound needs `durationMs` and `peaks`. Absent in a version 1 bundle, and an image with no alternative text simply has no entry. |
-| `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Derived from the title at first export or import when absent; the zip is named after it. |
-| `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. |
+| `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Fixed by the owner's first export (derived from the title); the zip is named after it. Ignored on import: a copy carries nothing of its origin and gets its own slug at its first export. |
+| `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. Ignored on import. |
 | `revision` | integer ≥ 0 | Publication counter of the quiz the bundle came from: **+1 every time it is shared** to a template catalogue. An import starts the copy back at 0 — it has never been shared itself. An integer, not semver. |
 | `updatedAt` | ISO 8601 UTC | When the quiz was last saved (the export moment, since the export itself stamps it). Informative: ignored on import. |
-| `language` | BCP 47 | A dedicated field, never a tag. |
+| `language` | BCP 47 | A dedicated field, never a tag. Set in the quiz settings (*Sharing*); a bundle without one imports in the instance's language (`APP_LANG`). |
 | `domain` | string or `null` | Free text until the Store closes the vocabulary. |
 | `tags` | kebab-case strings, 5 at most | Lowercase, `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 30 chars each. |
-| `license` | SPDX identifier or `null` | e.g. `CC-BY-4.0`, `MIT`. |
+| `license` | SPDX identifier or `null` | The quiz settings offer `CC0-1.0`, `CC-BY-4.0` and `CC-BY-SA-4.0`, the three a community store accepts. An imported bundle may carry another identifier: it is kept. Required to share the quiz as a template. |
 
 Every field is optional in the manifest: a bundle exported before they existed
 imports with the defaults above. Nothing about the emitting instance travels —

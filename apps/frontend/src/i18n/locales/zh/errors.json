@@ -75,6 +75,7 @@
   "import": {
     "file_missing": "缺少文件（“file”字段）。",
     "invalid_bundle": "这不是 QuizDock 包（quiz.json + media/，zip 压缩）。",
+    "bundle_too_large": "该包解压后过大，或包含的文件过多。",
     "media_missing": "媒体“{{path}}”被引用但不在包中。",
     "media_unsupported": "不支持的媒体“{{path}}”（png、jpg、gif、webp、avif、mp3、ogg、wav、m4a）。",
     "invalid_item": "包中第 {{item}} 项无效（{{field}}）。"
@@ -100,5 +101,13 @@
     "not_yours": "只有作者或管理员才能撤下模板。",
     "invalid_id": "模板标识无效。",
     "index_unreadable": "无法读取目录索引，请联系管理员。"
+  },
+  "publication": {
+    "slug_invalid": "短名称只能包含小写字母、数字和连字符。",
+    "not_ready": "只有已就绪的测验才能导出以发布。",
+    "license": "导出以发布前请选择许可协议（CC0、CC BY 或 CC BY-SA）。",
+    "language": "测验语言无效。",
+    "tags": "导出以发布前请至少添加一个标签。",
+    "too_large": "测验对社区目录来说过大。"
   }
 }

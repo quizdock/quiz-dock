@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { UpdateQuizDtoAudioTarget } from './updateQuizDtoAudioTarget';
+import type { UpdateQuizDtoLicense } from './updateQuizDtoLicense';
 import type { UpdateQuizDtoLoudnessTargetLufs } from './updateQuizDtoLoudnessTargetLufs';
 
 export interface UpdateQuizDto {
@@ -20,8 +21,8 @@ export interface UpdateQuizDto {
      */
   description?: string | null;
   /**
-     * @minLength 2
-     * @maxLength 5
+     * @maxLength 10
+     * @pattern ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$
      */
   language?: string;
   feedbackEnabled?: boolean;
@@ -38,4 +39,12 @@ export interface UpdateQuizDto {
      * @nullable
      */
   coverMediaId?: string | null;
+  /** @nullable */
+  license?: UpdateQuizDtoLicense;
+  /**
+     * @maxItems 5
+     * @items.maxLength 30
+     * @items.pattern ^[a-z0-9]+(-[a-z0-9]+)*$
+     */
+  tags?: string[];
 }

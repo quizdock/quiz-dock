@@ -15,6 +15,7 @@ import type { CreateQuizDto } from './dto/create-quiz.dto';
 import type { QuizFeedbackQueryDto } from './dto/quiz-feedback.dto';
 import type { TransitionQuizDto } from './dto/transition-quiz.dto';
 import type { UpdateQuizDto } from './dto/update-quiz.dto';
+import { instanceLanguage } from '../common/instance-language';
 
 type QuizFeedbackQuery = Pick<QuizFeedbackQueryDto, 'page' | 'pageSize' | 'rating'>;
 
@@ -67,7 +68,7 @@ export class QuizzesService {
         ownerId,
         title: dto.title,
         description: dto.description,
-        language: dto.language,
+        language: dto.language ?? instanceLanguage(),
         coverMediaId: dto.coverMediaId,
         feedbackEnabled: dto.feedbackEnabled,
         mediaTailS: dto.mediaTailS,
@@ -77,7 +78,12 @@ export class QuizzesService {
     });
   }
 
-  /** Détail d'un quiz, questions ordonnées incluses (404 hors portée, cf. `scopeOf`). */
+  /**
+   * Détail d'un quiz, questions ordonnées incluses (404 hors portée, cf. `scopeOf`).
+   * `editable` dit si l'appelant peut le modifier : son propriétaire seulement. Un
+   * gestionnaire lit le quiz d'un autre sans le modifier (RG-14, #82), et voit
+   * alors à qui il est.
+   */
   async get(user: { id: string; roles: RoleSet }, id: string) {
     const ownerId = this.scopeOf(user);
     const quiz = await this.prisma.quiz.findFirst({
@@ -85,12 +91,20 @@ export class QuizzesService {
       include: {
         questions: { orderBy: { orderIndex: 'asc' }, include: QUESTION_INCLUDE },
         slides: { orderBy: { orderIndex: 'asc' } },
+        owner: { select: { displayName: true } },
       },
     });
     if (!quiz) {
       throw new NotFoundException('quiz.not_found');
     }
-    return { ...quiz, questions: quiz.questions.map(toQuestionOutput) };
+    const { owner, ...rest } = quiz;
+    const editable = quiz.ownerId === user.id;
+    return {
+      ...rest,
+      questions: quiz.questions.map(toQuestionOutput),
+      editable,
+      ...(editable ? {} : { ownerName: owner.displayName }),
+    };
   }
 
   /**
@@ -379,6 +393,8 @@ export class QuizzesService {
         mediaTailS: dto.mediaTailS,
         loudnessTargetLufs: dto.loudnessTargetLufs,
         audioTarget: dto.audioTarget,
+        license: dto.license,
+        tags: dto.tags,
       },
     });
   }

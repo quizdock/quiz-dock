@@ -75,6 +75,7 @@
   "import": {
     "file_missing": "Fichier manquant (champ « file »).",
     "invalid_bundle": "Ce n’est pas un bundle QuizDock (quiz.json + media/, zippé).",
+    "bundle_too_large": "Ce bundle est trop volumineux une fois décompressé, ou contient trop de fichiers.",
     "media_missing": "Le média « {{path}} » est référencé mais absent du bundle.",
     "media_unsupported": "Média « {{path}} » non pris en charge (png, jpg, gif, webp, avif, mp3, ogg, wav, m4a).",
     "invalid_item": "L’élément {{item}} du bundle est invalide ({{field}})."
@@ -100,5 +101,13 @@
     "not_yours": "Seul son auteur, ou un administrateur, peut retirer un modèle.",
     "invalid_id": "Identifiant de modèle invalide.",
     "index_unreadable": "L’index du catalogue est illisible ; prévenez votre administrateur."
+  },
+  "publication": {
+    "slug_invalid": "Le nom court ne peut contenir que des minuscules, des chiffres et des tirets.",
+    "not_ready": "Seul un quiz prêt peut être exporté pour publication.",
+    "license": "Choisissez une licence (CC0, CC BY ou CC BY-SA) avant d’exporter pour publication.",
+    "language": "La langue du quiz n’est pas valide.",
+    "tags": "Ajoutez au moins un tag avant d’exporter pour publication.",
+    "too_large": "Le quiz est trop volumineux pour le catalogue communautaire."
   }
 }

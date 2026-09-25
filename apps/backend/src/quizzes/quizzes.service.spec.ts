@@ -3,6 +3,7 @@ import { type Quiz, QuizStatus, UserRole } from '@prisma/client';
 import type { MediaService } from '../media/media.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
+import { updateQuizSchema } from './dto/update-quiz.dto';
 import { QuizzesService } from './quizzes.service';
 
 /** L'appelant, côté hôte : un id et un rôle (RG-14). */
@@ -354,6 +355,87 @@ describe('QuizzesService', () => {
       const res = await service.sessionPlayerDetail(HOST, 'q1', 's1', 'pr1');
       expect(res.fullCapture).toBe(false);
       expect(res.answers).toEqual([]);
+    });
+  });
+
+  describe('read-only for a manager (#82)', () => {
+    const MANAGER = { id: 'manager-1', roles: [UserRole.admin, UserRole.host] };
+
+    it('the owner may edit, and is not told whose quiz it is', async () => {
+      prisma.quiz.findFirst.mockResolvedValue({
+        ...makeQuiz(),
+        questions: [],
+        slides: [],
+        owner: { displayName: 'Alice' },
+      });
+      const detail = await service.get(HOST, 'q1');
+      expect(detail.editable).toBe(true);
+      expect(detail).not.toHaveProperty('ownerName');
+      expect(detail).not.toHaveProperty('owner');
+    });
+
+    it("a manager reads another host's quiz, not editable, with its owner's name", async () => {
+      prisma.quiz.findFirst.mockResolvedValue({
+        ...makeQuiz(),
+        questions: [],
+        slides: [],
+        owner: { displayName: 'Alice' },
+      });
+      const detail = await service.get(MANAGER, 'q1');
+      expect(prisma.quiz.findFirst.mock.calls[0][0].where).toEqual({
+        id: 'q1',
+        ownerId: undefined,
+      });
+      expect(detail).toMatchObject({ editable: false, ownerName: 'Alice' });
+    });
+  });
+
+  describe('language (#83)', () => {
+    const saved = process.env.APP_LANG;
+    afterEach(() => {
+      if (saved === undefined) delete process.env.APP_LANG;
+      else process.env.APP_LANG = saved;
+    });
+
+    it('a new quiz takes the instance language unless told otherwise', async () => {
+      process.env.APP_LANG = 'zh-TW';
+      prisma.quiz.create.mockResolvedValue(makeQuiz());
+      await service.create(OWNER, { title: 'T' });
+      expect(prisma.quiz.create.mock.calls[0][0].data.language).toBe('zh-TW');
+      await service.create(OWNER, { title: 'T', language: 'de' });
+      expect(prisma.quiz.create.mock.calls[1][0].data.language).toBe('de');
+    });
+
+    it('a language is a BCP 47 tag', () => {
+      expect(updateQuizSchema.safeParse({ language: 'zh-TW' }).success).toBe(true);
+      expect(updateQuizSchema.safeParse({ language: 'French' }).success).toBe(false);
+    });
+  });
+
+  describe('licence and tags (#21, #39)', () => {
+    it('update writes the licence and the tags', async () => {
+      prisma.quiz.findFirst.mockResolvedValue(makeQuiz());
+      prisma.quiz.update.mockResolvedValue(makeQuiz());
+      await service.update(OWNER, 'q1', { license: 'CC-BY-SA-4.0', tags: ['history'] });
+      expect(prisma.quiz.update.mock.calls[0][0].data).toMatchObject({
+        license: 'CC-BY-SA-4.0',
+        tags: ['history'],
+      });
+    });
+
+    it('only the three CC licences are accepted, null clears it', () => {
+      expect(updateQuizSchema.safeParse({ license: 'CC0-1.0' }).success).toBe(true);
+      expect(updateQuizSchema.safeParse({ license: null }).success).toBe(true);
+      expect(updateQuizSchema.safeParse({ license: 'CC-BY-NC-4.0' }).success).toBe(false);
+      expect(updateQuizSchema.safeParse({ license: 'MIT' }).success).toBe(false);
+    });
+
+    it('tags are kebab-case, five at most, duplicates dropped', () => {
+      expect(updateQuizSchema.parse({ tags: ['a', 'b-c', 'a'] }).tags).toEqual(['a', 'b-c']);
+      expect(updateQuizSchema.safeParse({ tags: ['Pop Culture'] }).success).toBe(false);
+      expect(updateQuizSchema.safeParse({ tags: ['a', 'b', 'c', 'd', 'e', 'f'] }).success).toBe(
+        false,
+      );
     });
   });
 

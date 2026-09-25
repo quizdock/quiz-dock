@@ -38,6 +38,7 @@ import {
   Share2,
   Sparkles,
   Trash2,
+  X,
 } from 'lucide-react';
 import {
   AUDIO_TARGETS,
@@ -45,6 +46,11 @@ import {
   LOUDNESS_TARGETS,
   type LoudnessTarget,
   MEDIA_TAIL_MAX_S,
+  QUIZ_LANGUAGES,
+  QUIZ_LICENSES,
+  QUIZ_MAX_TAGS,
+  isQuizLicense,
+  toTag,
 } from '@quiz-dock/contracts';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -60,16 +66,19 @@ import { cn } from '@/lib/utils';
 import { useLaunchSession } from '../game/use-launch-session';
 import { downloadFile } from '../api/download';
 import { apiErrorText } from '../api/http';
-import type { QuizDetailDto } from '../api/generated/model';
+import type { QuizDetailDto, UpdateQuizDto } from '../api/generated/model';
 import { quizItems, moveItem, slideLabel, type QuizItem } from '@/lib/quiz-items';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-store';
+import { languageName, licenseName } from '@/lib/quiz-terms';
 import { ChromiumNotice } from '@/components/chromium-notice';
 import { DraftNotice } from '@/components/draft-notice';
 import { Disclosure } from '@/components/ui/disclosure';
 import { Drawer } from '@/components/ui/drawer';
 import { QuestionForm } from './question-form';
+import { PublicationExport } from './publication-export';
+import { QuizReadOnly } from './quiz-read-only';
 import { SlideForm } from './slide-form';
 import { StarRow } from './feedback-page';
 import {
@@ -109,11 +118,13 @@ export function EditorPage() {
 
   if (isLoading) return <p className="text-muted-foreground">{t('common:loading')}</p>;
   if (error || !data) return <p className="text-destructive">{t('notFound')}</p>;
+  // Another host's quiz, opened by a manager: read, never changed (#82).
+  if (!data.data.editable) return <QuizReadOnly quiz={data.data} />;
   return <QuizEditor quiz={data.data} />;
 }
 
 function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
-  const { t } = useTranslation(['editor', 'common']);
+  const { t, i18n } = useTranslation(['editor', 'common']);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const update = useQuizzesControllerUpdate();
@@ -196,6 +207,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() }),
     ]);
 
+  // A save that fails says so, next to the settings, instead of snapping back
+  // in silence (#82).
+  const [saveError, setSaveError] = useState<string | null>(null);
   // Title/description draft kept in localStorage until saved or discarded.
   const quizDraftKey = `quiz:${quiz.id}:settings`;
   type QuizForm = { title: string; description: string; language: string };
@@ -207,14 +221,21 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       language: quiz.language,
     },
     onSubmit: async ({ value }) => {
-      await update.mutateAsync({
-        id: quiz.id,
-        data: {
-          title: value.title,
-          description: value.description || null,
-          language: value.language,
-        },
-      });
+      setSaveError(null);
+      try {
+        await update.mutateAsync({
+          id: quiz.id,
+          data: {
+            title: value.title,
+            description: value.description || null,
+            language: value.language,
+          },
+        });
+      } catch (e) {
+        // The draft stays: nothing typed is lost.
+        setSaveError(apiErrorText(e, t('settings.saveError')));
+        return;
+      }
       await invalidate();
       clearDraft(quizDraftKey);
       setQuizDraft(null);
@@ -237,58 +258,65 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   }, [isDirty, quizValues, quizDraftKey]);
   useUnsavedGuard(isDirty);
 
-  const setFeedbackEnabled = async (feedbackEnabled: boolean) => {
-    await update.mutateAsync({ id: quiz.id, data: { feedbackEnabled } });
-    await invalidate();
+  const guarded = async (action: () => Promise<unknown>) => {
+    setSaveError(null);
+    try {
+      await action();
+    } catch (e) {
+      setSaveError(apiErrorText(e, t('settings.saveError')));
+    }
   };
+  const saveSettings = (data: UpdateQuizDto) =>
+    guarded(async () => {
+      await update.mutateAsync({ id: quiz.id, data });
+      await invalidate();
+    });
 
-  const setLoudness = async (loudnessTargetLufs: LoudnessTarget) => {
-    await update.mutateAsync({ id: quiz.id, data: { loudnessTargetLufs } });
-    await invalidate();
-  };
+  const setFeedbackEnabled = (feedbackEnabled: boolean) => saveSettings({ feedbackEnabled });
+  const setLoudness = (loudnessTargetLufs: LoudnessTarget) => saveSettings({ loudnessTargetLufs });
+  const setAudioTarget = (audioTarget: AudioTarget) => saveSettings({ audioTarget });
+  const setLicense = (license: (typeof QUIZ_LICENSES)[number] | null) => saveSettings({ license });
+  const setLanguage = (language: string) => saveSettings({ language });
+  const setTags = (tags: string[]) => saveSettings({ tags });
+  const setMediaTailS = (mediaTailS: number) => saveSettings({ mediaTailS });
 
-  const setAudioTarget = async (audioTarget: AudioTarget) => {
-    await update.mutateAsync({ id: quiz.id, data: { audioTarget } });
-    await invalidate();
-  };
-
-  const setMediaTailS = async (mediaTailS: number) => {
-    await update.mutateAsync({ id: quiz.id, data: { mediaTailS } });
-    await invalidate();
-  };
-
-  const changeStatus = async (status: 'draft' | 'ready' | 'archived') => {
-    await transition.mutateAsync({ id: quiz.id, data: { status } });
-    await invalidate();
-  };
+  const changeStatus = (status: 'draft' | 'ready' | 'archived') =>
+    guarded(async () => {
+      await transition.mutateAsync({ id: quiz.id, data: { status } });
+      await invalidate();
+    });
 
   const onPresent = () => launch(quiz.id, { fullCapture });
 
-  const onDeleteQuiz = async () => {
-    await removeQuiz.mutateAsync({ id: quiz.id });
-    await queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
-    void navigate({ to: '/quizzes' });
-  };
+  const onDeleteQuiz = () =>
+    guarded(async () => {
+      await removeQuiz.mutateAsync({ id: quiz.id });
+      await queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
+      void navigate({ to: '/quizzes' });
+    });
 
-  const onDeleteQuestion = async (qid: string) => {
-    await removeQuestion.mutateAsync({ qid });
-    await invalidate();
-  };
+  const onDeleteQuestion = (qid: string) =>
+    guarded(async () => {
+      await removeQuestion.mutateAsync({ qid });
+      await invalidate();
+    });
 
-  const onDeleteSlide = async (sid: string) => {
-    await removeSlide.mutateAsync({ sid });
-    await invalidate();
-  };
+  const onDeleteSlide = (sid: string) =>
+    guarded(async () => {
+      await removeSlide.mutateAsync({ sid });
+      await invalidate();
+    });
 
   // Questions and slides share one sequence (#7): the server re-anchors slides from it.
   const items = quizItems(quiz);
-  const persistOrder = async (next: QuizItem[]) => {
-    await reorder.mutateAsync({
-      id: quiz.id,
-      data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+  const persistOrder = (next: QuizItem[]) =>
+    guarded(async () => {
+      await reorder.mutateAsync({
+        id: quiz.id,
+        data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+      });
+      await invalidate();
     });
-    await invalidate();
-  };
   const move = (index: number, direction: -1 | 1) => {
     const next = moveItem(items, index, direction);
     if (next !== items) void persistOrder(next);
@@ -426,6 +454,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   <Download className="size-4" />
                   {t('header.export')}
                 </Button>
+                <PublicationExport quizId={quiz.id} />
                 {/* A demo catalogue is read-only. */}
                 {quiz.status === 'ready' && !getDemo() ? (
                   <ShareAsTemplate quizId={quiz.id} />
@@ -561,6 +590,75 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   </label>
                 </div>
               </Disclosure>
+              {/* The terms the quiz is shared under: required before sharing it as a template. */}
+              <Disclosure
+                flush
+                className="-mx-3 border-t px-3 pt-1"
+                title={t('settings.sharingLegend')}
+                value={[
+                  languageName(quiz.language, i18n.language),
+                  quiz.license
+                    ? t('settings.sharingSummary', {
+                        license: licenseName(quiz.license),
+                        count: quiz.tags.length,
+                      })
+                    : t('settings.noLicense'),
+                ].join(' · ')}
+              >
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <label
+                    className="flex items-center gap-2 text-sm"
+                    title={t('settings.languageHelp')}
+                  >
+                    <span className="font-medium">{t('settings.languageLabel')}</span>
+                    <Select
+                      className="h-8 w-auto"
+                      value={quiz.language}
+                      disabled={update.isPending}
+                      onChange={(e) => void setLanguage(e.target.value)}
+                    >
+                      {languageOptions(quiz.language, i18n.language).map(({ code, name }) => (
+                        <option key={code} value={code}>
+                          {name}
+                        </option>
+                      ))}
+                    </Select>
+                  </label>
+                  <label
+                    className="flex items-center gap-2 text-sm"
+                    title={t('settings.licenseHelp')}
+                  >
+                    <span className="font-medium">{t('settings.licenseLabel')}</span>
+                    <Select
+                      className="h-8 w-auto"
+                      value={quiz.license ?? ''}
+                      disabled={update.isPending}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || isQuizLicense(value)) void setLicense(value || null);
+                      }}
+                    >
+                      <option value="">{t('settings.noLicense')}</option>
+                      {QUIZ_LICENSES.map((license) => (
+                        <option key={license} value={license}>
+                          {t(`settings.license.${LICENSE_KEYS[license]}`)}
+                        </option>
+                      ))}
+                      {/* An imported quiz may carry a licence no longer offered: shown, not lost. */}
+                      {quiz.license && !isQuizLicense(quiz.license) ? (
+                        <option value={quiz.license} disabled>
+                          {quiz.license}
+                        </option>
+                      ) : null}
+                    </Select>
+                  </label>
+                  <TagsField
+                    value={quiz.tags}
+                    disabled={update.isPending}
+                    onSave={(tags) => void setTags(tags)}
+                  />
+                </div>
+              </Disclosure>
             </Section>
           </div>
           {/* Où en est le quiz, et l'action qui suit : toute la largeur, sous la
@@ -578,6 +676,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             busy={transition.isPending}
           />
           {launchDialog}
+          {saveError ? (
+            <p className="text-destructive text-sm" role="alert">
+              {saveError}
+            </p>
+          ) : null}
           {quizDraft && isDirty ? (
             <DraftNotice
               onDiscard={() => {
@@ -1278,5 +1381,81 @@ function MediaTailField({
       />
       <span className="text-muted-foreground">{t('settings.seconds')}</span>
     </label>
+  );
+}
+
+/**
+ * The languages offered, by name: the instance's first, then the common ones,
+ * plus the quiz's own when it is none of those (an imported quiz), so it is
+ * shown rather than lost.
+ */
+function languageOptions(current: string, uiLanguage: string) {
+  const codes = [...new Set<string>([uiLanguage, ...QUIZ_LANGUAGES, current])];
+  const [first, ...rest] = codes.map((code) => ({ code, name: languageName(code, uiLanguage) }));
+  return [first, ...rest.sort((a, b) => a.name.localeCompare(b.name, uiLanguage))];
+}
+
+/** i18n keys: an SPDX identifier has dots, which i18next reads as nesting. */
+const LICENSE_KEYS = { 'CC0-1.0': 'cc0', 'CC-BY-4.0': 'ccBy', 'CC-BY-SA-4.0': 'ccBySa' } as const;
+
+/**
+ * The quiz's tags, as chips: Enter or a comma adds what was typed, turned into
+ * a tag ("Pop Culture" → pop-culture); Backspace in the empty field removes the
+ * last one. Saved as soon as the list changes.
+ */
+function TagsField({
+  value,
+  disabled,
+  onSave,
+}: {
+  value: string[];
+  disabled: boolean;
+  onSave: (tags: string[]) => void;
+}) {
+  const { t } = useTranslation('editor');
+  const [draft, setDraft] = useState('');
+  const full = value.length >= QUIZ_MAX_TAGS;
+  const add = () => {
+    const tag = toTag(draft);
+    setDraft('');
+    if (tag && !value.includes(tag) && !full) onSave([...value, tag]);
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm" title={t('settings.tagsHelp')}>
+      <span className="font-medium">{t('settings.tagsLabel')}</span>
+      {value.map((tag) => (
+        <Badge key={tag} variant="muted" className="gap-1 pr-1">
+          {tag}
+          <button
+            type="button"
+            className="hover:text-foreground rounded-sm"
+            aria-label={t('settings.removeTag', { tag })}
+            disabled={disabled}
+            onClick={() => onSave(value.filter((it) => it !== tag))}
+          >
+            <X className="size-3" />
+          </button>
+        </Badge>
+      ))}
+      {full ? null : (
+        <Input
+          className="h-8 w-40"
+          aria-label={t('settings.tagsLabel')}
+          placeholder={t('settings.tagsPlaceholder')}
+          value={draft}
+          disabled={disabled}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={add}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+              e.preventDefault();
+              add();
+            } else if (e.key === 'Backspace' && draft === '' && value.length > 0) {
+              onSave(value.slice(0, -1));
+            }
+          }}
+        />
+      )}
+    </div>
   );
 }

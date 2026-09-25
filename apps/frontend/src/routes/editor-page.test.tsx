@@ -15,6 +15,9 @@ const detail = (over: Record<string, unknown> = {}) => ({
   status: 'draft',
   language: 'fr',
   questionCount: 1,
+  license: null,
+  tags: [],
+  editable: true,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
   archivedAt: null,
@@ -131,13 +134,99 @@ describe('EditorPage', () => {
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined);
     renderApp('/quizzes/q1');
-    fireEvent.click(await screen.findByRole('button', { name: /Exporter/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Exporter' }));
     await waitFor(() => expect(click).toHaveBeenCalled());
     expect(screen.queryByText(/Impossible d’exporter/)).toBeNull();
     const anchor = click.mock.instances[0] as unknown as HTMLAnchorElement;
     expect(anchor.download).toBe('histoire.quizdock.zip');
     expect(exportHeaders?.['X-Local-User']).toBeDefined();
     click.mockRestore();
+  });
+
+  describe('export for publication (#21)', () => {
+    const report = (over: Record<string, unknown> = {}) => ({
+      slug: 'histoire',
+      slugSet: true,
+      language: 'fr',
+      license: 'CC-BY-4.0',
+      tags: ['histoire'],
+      estimatedBytes: 3 * 1024 * 1024,
+      maxBytes: 20 * 1024 * 1024,
+      issues: [],
+      heaviest: [],
+      uncredited: [],
+      ...over,
+    });
+
+    it('lists what blocks and keeps the download disabled', async () => {
+      mockApi([
+        {
+          method: 'GET',
+          path: '/quizzes/q1/publication',
+          body: report({
+            license: null,
+            tags: [],
+            issues: [
+              { code: 'not_ready', level: 'block' },
+              { code: 'license', level: 'block' },
+              { code: 'tags', level: 'block' },
+              { code: 'credit_missing', level: 'warn', count: 1 },
+            ],
+            uncredited: [{ id: 'm1', kind: 'image', name: 'carte.webp', sizeBytes: 10 }],
+          }),
+        },
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      renderApp('/quizzes/q1');
+      fireEvent.click(await screen.findByRole('button', { name: 'Exporter pour publication' }));
+      const dialog = within((await screen.findByText('Nom court')).closest('dialog')!);
+      expect(dialog.getByText('Le quiz n’est pas prêt')).toBeInTheDocument();
+      expect(dialog.getByText('Aucune licence')).toBeInTheDocument();
+      expect(dialog.getByText('Aucun tag')).toBeInTheDocument();
+      expect(dialog.getByText('1 média sans crédit')).toBeInTheDocument();
+      expect(dialog.getByText('carte.webp')).toBeInTheDocument();
+      expect(dialog.getByRole('button', { name: 'Télécharger' })).toBeDisabled();
+    });
+
+    it('downloads under the confirmed slug, warning when it changes', async () => {
+      const fetchMock = mockApi([
+        { method: 'GET', path: '/quizzes/q1/publication', body: report() },
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      const json = fetchMock.getMockImplementation() as (
+        u: string,
+        o?: RequestInit,
+      ) => Promise<Response>;
+      let body: unknown;
+      fetchMock.mockImplementation(async (url: string, opts?: RequestInit) => {
+        if (!String(url).includes('/publication/export')) return json(url, opts);
+        body = JSON.parse(String(opts?.body));
+        return new Response(new Blob(['PK']), {
+          status: 200,
+          headers: {
+            'content-disposition': 'attachment; filename="histoire-de-france.quizdock.zip"',
+          },
+        });
+      });
+      Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+      const click = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      renderApp('/quizzes/q1');
+      fireEvent.click(await screen.findByRole('button', { name: 'Exporter pour publication' }));
+      const input = await screen.findByLabelText('Nom court');
+      expect(input).toHaveValue('histoire');
+      fireEvent.change(input, { target: { value: 'Histoire de France' } });
+      fireEvent.blur(input);
+      expect(input).toHaveValue('histoire-de-france');
+      expect(within(input.closest('dialog')!).getByRole('status')).toHaveTextContent(
+        '« histoire »',
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Télécharger' }));
+      await waitFor(() => expect(click).toHaveBeenCalled());
+      expect(body).toEqual({ slug: 'histoire-de-france' });
+      click.mockRestore();
+    });
   });
 
   it('publie le quiz (PATCH status) au clic', async () => {
@@ -153,6 +242,244 @@ describe('EditorPage', () => {
         ([url, opts]) => String(url).includes('/quizzes/q1/status') && opts?.method === 'PATCH',
       );
       expect(patched).toBe(true);
+    });
+  });
+
+  it('sets the licence and the tags of the quiz (PUT), a typed tag turned into kebab-case', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/quizzes/q1', body: detail({ tags: ['histoire'] }) },
+      { method: 'PUT', path: '/quizzes/q1', body: detail() },
+    ]);
+    renderApp('/quizzes/q1');
+    const patches = () =>
+      fetchMock.mock.calls
+        .filter(([url, opts]) => String(url).endsWith('/quizzes/q1') && opts?.method === 'PUT')
+        .map(([, opts]) => JSON.parse(String(opts?.body)) as Record<string, unknown>);
+
+    fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+      target: { value: 'CC-BY-4.0' },
+    });
+    await waitFor(() => expect(patches()).toContainEqual({ license: 'CC-BY-4.0' }));
+
+    const input = screen.getByPlaceholderText('Ajouter un tag…');
+    fireEvent.change(input, { target: { value: 'Pop Culture ' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(patches()).toContainEqual({ tags: ['histoire', 'pop-culture'] }));
+
+    fireEvent.click(screen.getByLabelText('Retirer le tag histoire'));
+    await waitFor(() => expect(patches()).toContainEqual({ tags: [] }));
+  });
+
+  it('sets the language of the quiz, offered by name with the instance language first (#83)', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/quizzes/q1', body: detail({ language: 'fr' }) },
+      { method: 'PUT', path: '/quizzes/q1', body: detail() },
+    ]);
+    renderApp('/quizzes/q1');
+    const select = await screen.findByLabelText('Langue', { selector: 'select' });
+    const options = within(select).getAllByRole('option');
+    // Tests pin the UI to French: French is the instance's language, listed first.
+    expect(options[0]).toHaveTextContent('français');
+    expect(options.map((o) => (o as HTMLOptionElement).value)).toContain('zh-TW');
+
+    fireEvent.change(select, { target: { value: 'de' } });
+    await waitFor(() => {
+      const bodies = fetchMock.mock.calls
+        .filter(([url, opts]) => String(url).endsWith('/quizzes/q1') && opts?.method === 'PUT')
+        .map(([, opts]) => JSON.parse(String(opts?.body)) as Record<string, unknown>);
+      expect(bodies).toContainEqual({ language: 'de' });
+    });
+  });
+
+  describe("another host's quiz, opened by a manager (#82)", () => {
+    const foreign = () => detail({ editable: false, ownerName: 'Alice', title: 'Quiz d’Alice' });
+
+    it('shows it read-only, with its owner, and no editing controls', async () => {
+      mockApi([
+        { method: 'GET', path: '/quizzes/q1', body: foreign() },
+        {
+          method: 'GET',
+          path: '/me',
+          body: { id: 'm', displayName: 'M', roles: ['admin', 'host'] },
+        },
+      ]);
+      renderApp('/quizzes/q1');
+      expect(
+        await screen.findByText(/Quiz de Alice : vous pouvez le consulter/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Capitale de la France ?')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Exporter' })).toBeNull();
+      expect(screen.queryByText('Publier (prêt)')).toBeNull();
+      expect(screen.queryByLabelText('Licence')).toBeNull();
+    });
+  });
+
+  describe('a save the server refuses says so, instead of snapping back in silence (#82)', () => {
+    const FAILED = 'Impossible d’enregistrer la modification.';
+    const refused = (method: string, path: string) => ({ method, path, status: 500, body: {} });
+    const slide = {
+      id: 's1',
+      quizId: 'q1',
+      beforeQuestionId: 'qq',
+      orderIndex: 0,
+      blocks: [{ type: 'heading', id: 'h', text: 'Bienvenue', level: 1 }],
+      mediaId: null,
+      textTone: 'light',
+      textOutline: false,
+      displayDelayS: null,
+    };
+    const twoQuestions = () =>
+      detail({ questionCount: 2, questions: [q('a', 'Première', 0), q('b', 'Seconde', 1)] });
+
+    /** Each way the editor writes, the request it sends, and how to trigger it. */
+    const cases: {
+      name: string;
+      quiz?: ReturnType<typeof detail>;
+      request: [string, string];
+      act: () => Promise<void>;
+    }[] = [
+      {
+        name: 'the feedback switch',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.click(await screen.findByLabelText('Autoriser les avis des participants'));
+        },
+      },
+      {
+        name: 'the sound levelling',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.change(
+            await screen.findByLabelText('Égalisation du son', { selector: 'select' }),
+            {
+              target: { value: '-23' },
+            },
+          );
+        },
+      },
+      {
+        name: 'the licence',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+            target: { value: 'CC0-1.0' },
+          });
+        },
+      },
+      {
+        name: 'the language',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.change(await screen.findByLabelText('Langue', { selector: 'select' }), {
+            target: { value: 'de' },
+          });
+        },
+      },
+      {
+        name: 'a tag',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          const input = await screen.findByPlaceholderText('Ajouter un tag…');
+          fireEvent.change(input, { target: { value: 'histoire' } });
+          fireEvent.keyDown(input, { key: 'Enter' });
+        },
+      },
+      {
+        name: 'the status (publish)',
+        request: ['PATCH', '/quizzes/q1/status'],
+        act: async () => {
+          fireEvent.click(await screen.findByText('Publier (prêt)'));
+        },
+      },
+      {
+        name: 'the status (archive)',
+        request: ['PATCH', '/quizzes/q1/status'],
+        act: async () => {
+          fireEvent.click(await screen.findByRole('button', { name: 'Archiver' }));
+        },
+      },
+      {
+        name: 'the order of the sequence',
+        quiz: twoQuestions(),
+        request: ['PATCH', '/quizzes/q1/items/reorder'],
+        act: async () => {
+          fireEvent.click((await screen.findAllByLabelText('Descendre'))[0]);
+        },
+      },
+      {
+        name: 'deleting a question',
+        request: ['DELETE', '/questions/qq'],
+        act: async () => {
+          fireEvent.click(await screen.findByLabelText('Supprimer la question'));
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer' }));
+        },
+      },
+      {
+        name: 'deleting a slide',
+        quiz: detail({ slides: [slide] }),
+        request: ['DELETE', '/slides/s1'],
+        act: async () => {
+          fireEvent.click(await screen.findByLabelText('Supprimer la slide'));
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer' }));
+        },
+      },
+      {
+        name: 'deleting the quiz',
+        request: ['DELETE', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le quiz' }));
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer' }));
+        },
+      },
+    ];
+
+    for (const { name, quiz, request, act } of cases) {
+      it(`${name}: the error is shown`, async () => {
+        const fetchMock = mockApi([
+          refused(...request),
+          { method: 'GET', path: '/quizzes/q1', body: quiz ?? detail() },
+        ]);
+        renderApp('/quizzes/q1');
+        await act();
+        // The request did go out, and its refusal is on screen.
+        await waitFor(() =>
+          expect(
+            fetchMock.mock.calls.some(
+              ([url, opts]) =>
+                String(url).includes(request[1]) && (opts?.method ?? 'GET') === request[0],
+            ),
+          ).toBe(true),
+        );
+        expect(await screen.findByText(FAILED)).toBeInTheDocument();
+      });
+    }
+
+    it('a setting that saves shows no error', async () => {
+      mockApi([
+        { method: 'PUT', path: '/quizzes/q1', body: detail() },
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      renderApp('/quizzes/q1');
+      fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+        target: { value: 'CC0-1.0' },
+      });
+      await new Promise((r) => setTimeout(r, 50));
+      expect(screen.queryByText(FAILED)).toBeNull();
+    });
+
+    it('a title that fails to save stays typed, with its Save button', async () => {
+      mockApi([
+        refused('PUT', '/quizzes/q1'),
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      renderApp('/quizzes/q1');
+      const title = await screen.findByDisplayValue('Mon quiz');
+      const header = within(title.closest('form') as HTMLElement);
+      fireEvent.change(title, { target: { value: 'Mon quiz révisé' } });
+      fireEvent.click(await header.findByRole('button', { name: /Enregistrer/ }));
+      expect(await screen.findByText(FAILED)).toBeInTheDocument();
+      expect(title).toHaveValue('Mon quiz révisé');
+      expect(header.getByRole('button', { name: /Enregistrer/ })).toBeEnabled();
     });
   });
 

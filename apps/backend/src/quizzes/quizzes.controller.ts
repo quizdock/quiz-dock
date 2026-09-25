@@ -33,15 +33,15 @@ import { CreateQuizDto } from './dto/create-quiz.dto';
 import { QuizDetailDto } from './dto/quiz-detail.dto';
 import { QuizFeedbackQueryDto, QuizFeedbackSummaryDto } from './dto/quiz-feedback.dto';
 import { SessionDetailDto, SessionListDto, SessionPlayerDetailDto } from './dto/quiz-session.dto';
+import { PublicationExportDto, PublicationReportDto } from './dto/publication.dto';
 import { QuizDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
+import { IMPORT_MAX_BYTES } from './portable/bundle-archive';
 import { type BundleFile, QuizPortableService } from './portable/quiz-portable.service';
+import { QuizPublicationService } from './portable/quiz-publication.service';
 import { QuizzesService } from './quizzes.service';
 import { SampleQuizzesService } from './samples/sample-quizzes.service';
-
-/** A bundle is a zip of media: sized like a handful of uploads. */
-const IMPORT_MAX_BYTES = Number(process.env.IMPORT_MAX_BYTES ?? 50 * 1024 * 1024);
 
 @ApiTags('quizzes')
 @ApiBearerAuth()
@@ -51,6 +51,7 @@ export class QuizzesController {
     private readonly quizzes: QuizzesService,
     private readonly samples: SampleQuizzesService,
     private readonly portable: QuizPortableService,
+    private readonly publication: QuizPublicationService,
   ) {}
 
   /** Sa banque — ou, pour un gestionnaire, celle de toute l'instance (RG-14). */
@@ -100,6 +101,32 @@ export class QuizzesController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     const { filename, zip } = await this.portable.exportZip(id, user.id);
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+    return new StreamableFile(zip);
+  }
+
+  /** What a community store would refuse, before exporting for publication (#21). */
+  @Get(':id/publication')
+  @ApiOkResponse({ type: PublicationReportDto })
+  publicationReport(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.publication.report(id, user.id);
+  }
+
+  /** The bundle for a community store, once nothing blocks; the confirmed slug becomes the quiz's. */
+  @Post(':id/publication/export')
+  @HttpCode(200)
+  @ApiProduces('application/zip')
+  @ApiOkResponse({ description: 'Zip bundle (quiz.json + media/), named after the slug.' })
+  async publicationExport(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() body: PublicationExportDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { filename, zip } = await this.publication.export(id, user.id, body.slug);
     res.set({
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${filename}"`,
