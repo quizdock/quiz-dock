@@ -75,6 +75,7 @@
   "import": {
     "file_missing": "缺少文件（“file”字段）。",
     "invalid_bundle": "这不是 QuizDock 包（quiz.json + media/，zip 压缩）。",
+    "bundle_too_large": "该包解压后过大，或包含的文件过多。",
     "media_missing": "媒体“{{path}}”被引用但不在包中。",
     "media_unsupported": "不支持的媒体“{{path}}”（png、jpg、gif、webp、avif、mp3、ogg、wav、m4a）。",
     "invalid_item": "包中第 {{item}} 项无效（{{field}}）。"

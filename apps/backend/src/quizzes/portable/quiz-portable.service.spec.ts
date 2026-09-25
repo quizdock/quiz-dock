@@ -197,8 +197,8 @@ describe('QuizPortableService', () => {
         title: 'Ports',
         status: 'draft',
         questionCount: 1,
-        // Store fields absent from the bundle: defaults, slug derived from the title.
-        slug: 'ports',
+        // Store fields absent from the bundle: defaults; the slug waits for the first export.
+        slug: null,
         namespace: null,
         revision: 0,
         domain: null,
@@ -221,7 +221,7 @@ describe('QuizPortableService', () => {
       expect(prisma.tx.slide.createMany).not.toHaveBeenCalled();
     });
 
-    it('keeps the Store fields of a bundle that carries them', async () => {
+    it('keeps the Store fields of a bundle, but not its identity', async () => {
       const json = manifest({
         items: [manifest().items[1]],
         quiz: {
@@ -240,8 +240,9 @@ describe('QuizPortableService', () => {
         mimetype: '',
       });
       expect(prisma.tx.quiz.create.mock.calls[0][0].data).toMatchObject({
-        slug: 'harbours-101',
-        namespace: 'alice/harbours-101',
+        // A copy carries nothing of its origin (#39): its own export fixes a slug.
+        slug: null,
+        namespace: null,
         // The copy has never been shared: the origin's revision is not its own (#39).
         revision: 0,
         domain: 'geography',
@@ -293,14 +294,14 @@ describe('QuizPortableService', () => {
           mimetype: '',
         }),
       ).rejects.toMatchObject({ response: { code: 'import.media_unsupported' } });
-      // Larger than the upload limit: filtered out of the zip, hence reported missing.
+      // Larger than the upload limit: inflating stops, the whole bundle is refused.
       const big = new Uint8Array(media.maxUploadBytes + 1);
       await expect(
         service.importBundle(OWNER, {
           buffer: zipOf(manifest(), { 'media/a.png': big }),
           mimetype: '',
         }),
-      ).rejects.toMatchObject({ response: { code: 'import.media_missing' } });
+      ).rejects.toThrow('import.bundle_too_large');
     });
 
     it('rejects a broken manifest and an item failing the content rules', async () => {

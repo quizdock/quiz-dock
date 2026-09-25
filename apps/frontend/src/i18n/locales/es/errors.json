@@ -75,6 +75,7 @@
   "import": {
     "file_missing": "Falta el archivo (campo “file”).",
     "invalid_bundle": "No es un paquete QuizDock (quiz.json + media/, comprimido).",
+    "bundle_too_large": "Este paquete es demasiado grande una vez descomprimido, o contiene demasiados archivos.",
     "media_missing": "El medio “{{path}}” está referenciado pero no está en el paquete.",
     "media_unsupported": "Medio “{{path}}” no admitido (png, jpg, gif, webp, avif, mp3, ogg, wav, m4a).",
     "invalid_item": "El elemento {{item}} del paquete no es válido ({{field}})."
