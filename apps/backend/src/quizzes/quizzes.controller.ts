@@ -36,12 +36,10 @@ import { SessionDetailDto, SessionListDto, SessionPlayerDetailDto } from './dto/
 import { QuizDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
+import { IMPORT_MAX_BYTES } from './portable/bundle-archive';
 import { type BundleFile, QuizPortableService } from './portable/quiz-portable.service';
 import { QuizzesService } from './quizzes.service';
 import { SampleQuizzesService } from './samples/sample-quizzes.service';
-
-/** A bundle is a zip of media: sized like a handful of uploads. */
-const IMPORT_MAX_BYTES = Number(process.env.IMPORT_MAX_BYTES ?? 50 * 1024 * 1024);
 
 @ApiTags('quizzes')
 @ApiBearerAuth()

@@ -85,7 +85,9 @@ is what a Quiz Store repository holds.
   gif, webp, avif, mp4, mp3 — checked by content like any upload, each within
   its kind's limit (`MEDIA_MAX_BYTES`, `MEDIA_MAX_VIDEO_MB`,
   `MEDIA_MAX_AUDIO_MB`), the whole zip within `IMPORT_MAX_BYTES` (raise it for
-  quizzes carrying videos).
+  quizzes carrying videos). Nothing the archive declares is trusted: sizes are
+  counted on the bytes actually unpacked, which may not exceed twice
+  `IMPORT_MAX_BYTES` in total, over at most 2,000 entries.
 - `quiz.mediaTailS` (version 3, 0–30, default 3): the pause kept after a
   question's sound or video. A media longer than its question stretches the
   question to the end of the media plus this pause — nothing is cut mid-play.
@@ -115,14 +117,15 @@ is what a Quiz Store repository holds.
 The `quiz` object carries what a Quiz Store catalogue will need, so bundles
 exported today stay valid there. The licence and the tags are set in the quiz
 settings (*Sharing*); `namespace` and `domain` are not editable yet and export
-at `null`. An imported bundle keeps whatever it carried.
+at `null`. An imported bundle keeps whatever it carried, except its identity
+(`slug`, `namespace`).
 
 | Field | Type | Meaning |
 |---|---|---|
 | `version` (top level) | integer | Manifest schema version, currently `3`. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
 | `media` (top level) | object | What each media file carries beyond its bytes, keyed by the same path the items reference: an `alt`, the description read aloud by screen readers (version 2); for a sound or a video, what the editor measured (version 3) — `durationMs`, `peaks` (200 values in 0–1, the waveform the screens draw), `origin` (`upload` or `recording`), `loudnessLufs` and `peakDbfs` (the playback gain). A sound needs `durationMs` and `peaks`. Absent in a version 1 bundle, and an image with no alternative text simply has no entry. |
-| `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Derived from the title at first export or import when absent; the zip is named after it. |
-| `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. |
+| `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Fixed by the owner's first export (derived from the title); the zip is named after it. Ignored on import: a copy carries nothing of its origin and gets its own slug at its first export. |
+| `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. Ignored on import. |
 | `revision` | integer ≥ 0 | Publication counter of the quiz the bundle came from: **+1 every time it is shared** to a template catalogue. An import starts the copy back at 0 — it has never been shared itself. An integer, not semver. |
 | `updatedAt` | ISO 8601 UTC | When the quiz was last saved (the export moment, since the export itself stamps it). Informative: ignored on import. |
 | `language` | BCP 47 | A dedicated field, never a tag. |

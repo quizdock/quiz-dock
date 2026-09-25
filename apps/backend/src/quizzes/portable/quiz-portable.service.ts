@@ -5,10 +5,11 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
+import { strFromU8, strToU8, zipSync } from 'fflate';
 import { MediaService } from '../../media/media.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeAnswer } from '../../questions/dto/question-content.schema';
+import { archiveLimits, readArchive } from './bundle-archive';
 import {
   BundleContentError,
   collectMediaIds,
@@ -186,8 +187,10 @@ export class QuizPortableService {
           loudnessTargetLufs: imported.loudnessTargetLufs,
           audioTarget: imported.audioTarget,
           coverMediaId: imported.coverMediaId,
-          slug: imported.slug,
-          namespace: imported.namespace,
+          // A copy carries nothing of its origin (#39), its slug included: the new
+          // owner's first export fixes one, or a republished copy would share it (#21).
+          slug: null,
+          namespace: null,
           // The copy has never been shared: its publication counter starts at zero,
           // and the bundle's number stays what it always was — the origin's (#39).
           revision: 0,
@@ -270,17 +273,12 @@ export class QuizPortableService {
   private unpack(file: BundleFile): { manifest: string; files: Record<string, Uint8Array> } {
     const isZip = file.buffer.length >= 4 && file.buffer.readUInt32LE(0) === 0x04034b50;
     if (!isZip) return { manifest: file.buffer.toString('utf8'), files: {} };
-    let files: Record<string, Uint8Array>;
-    try {
-      // Only the manifest and flat `media/*` entries are inflated, each capped at the upload limit.
-      files = unzipSync(new Uint8Array(file.buffer), {
-        filter: (f) =>
-          (f.name === MANIFEST || /^media\/[^/]+$/.test(f.name)) &&
-          f.originalSize <= this.media.maxUploadBytes,
-      });
-    } catch {
-      throw new BadRequestException('import.invalid_bundle');
-    }
+    // Only the manifest and flat `media/*` entries are kept, each within the upload limit.
+    const files = readArchive(
+      new Uint8Array(file.buffer),
+      (name) => name === MANIFEST || /^media\/[^/]+$/.test(name),
+      archiveLimits(this.media.maxUploadBytes),
+    );
     const manifest = files[MANIFEST];
     if (!manifest) throw new BadRequestException('import.invalid_bundle');
     return { manifest: strFromU8(manifest), files };
