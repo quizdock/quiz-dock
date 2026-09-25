@@ -4,11 +4,23 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [Unreleased]
+
+### Documentation
+
+- The README and the CLI guide at 0.8, the media library as what is new
+
+### Contributors
+
+- fchaussin
+
 ## [0.8.0] - 2026-09-25
 
-### Breaking changes
+### ⚠️ Breaking changes
 
-- OIDC configuration changed (OIDC_SESSION_SCOPE removed; new OIDC_INTERNAL_URL, OIDC_CLIENT_SECRET, TRUST_PROXY; everyone signs in again), see <https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrade-oidc-session.md>
+> [!WARNING]
+> Read before upgrading.
+> - **OIDC configuration changed (OIDC_SESSION_SCOPE removed; new OIDC_INTERNAL_URL, OIDC_CLIENT_SECRET, TRUST_PROXY; everyone signs in again), see <https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrade-oidc-session.md>**
 
 ### Bug Fixes
 
@@ -98,9 +110,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [0.7.0] - 2026-09-24
 
-### Breaking changes
+### ⚠️ Breaking changes
 
-- Sound files are no longer accepted. Audio could be attached to a question but no screen has ever played it, so it is refused at the door until that gets a proper design (#42). A quiz that already carries a sound keeps it in the database — nothing was deleted — but a bundle carrying one is refused as a whole, including a bundle exported from an older version. Sorry for the disruption if you were relying on it.
+> [!WARNING]
+> Read before upgrading.
+> - **Sound files are no longer accepted. Audio could be attached to a question but no screen has ever played it, so it is refused at the door until that gets a proper design (#42). A quiz that already carries a sound keeps it in the database — nothing was deleted — but a bundle carrying one is refused as a whole, including a bundle exported from an older version. Sorry for the disruption if you were relying on it.**
 
 ### Bug Fixes
 
