@@ -27,13 +27,25 @@ capabilities dropped, `no-new-privileges`; media on a volume, `/tmp` on tmpfs. S
 ## Content-Security-Policy
 
 Every page of the application is sent with a `Content-Security-Policy`
-(`apps/backend/src/common/csp.ts`), built from the configuration: scripts, frames and
-requests from this origin only, plus the OIDC provider when `AUTH_MODE=oidc` (its
-endpoints and the silent-renew iframe) and a logo served elsewhere (`APP_LOGO_URL`). No
+(`apps/backend/src/common/csp.ts`), built from the configuration: scripts and requests
+from this origin only, no frames, plus a logo served elsewhere (`APP_LOGO_URL`). The
+OIDC provider needs no exception: the backend talks to it, the browser only navigates
+there. No
 inline script and no `eval`; `'wasm-unsafe-eval'` and `blob:` workers for the in-browser
 media converter; `object-src 'none'`, `frame-ancestors 'self'`. The API (`/api`, Swagger
 included) and the socket are left out. What stays loose, and why, is in
 [`../tech-debt.md`](../tech-debt.md).
+
+## Sessions under OIDC
+
+The backend is the OIDC client (Authorization Code + PKCE, `apps/backend/src/auth/oidc/`)
+and keeps the tokens in Redis; the browser holds a random session id in an `httpOnly`,
+`SameSite=Lax` cookie (`Secure` over HTTPS), so a script injected in a page has no token
+to take away. Each sign-in gets a fresh id and Redis stores only its hash. The access
+token is renewed there, one renewal at a time per session. Requests that change
+something, and the game socket, are accepted with the cookie only from the application's
+own pages (`Sec-Fetch-Site`, else `Origin` against the host). Which proxies may speak for
+the client is `TRUST_PROXY`.
 
 ## Reporting a vulnerability
 

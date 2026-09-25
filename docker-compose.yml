@@ -79,12 +79,15 @@ services:
       # vu par le navigateur) diffère de l'URI JWKS (host interne) — d'où deux
       # variables. Les défauts ciblent l'IdP d'exemple du profil `keycloak`.
       OIDC_ISSUER: ${OIDC_ISSUER:-http://localhost:${KEYCLOAK_PORT:-18080}/realms/quiz-dock}
-      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/quiz-dock/protocol/openid-connect/certs}
+      # The backend reaches the example IdP on the internal network.
+      OIDC_INTERNAL_URL: ${OIDC_INTERNAL_URL:-http://keycloak:8080}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-quiz-dock-frontend}
       OIDC_ROLES_CLAIM: ${OIDC_ROLES_CLAIM:-realm_access.roles}
       OIDC_NAME_CLAIM: ${OIDC_NAME_CLAIM:-}
-      OIDC_SESSION_SCOPE: ${OIDC_SESSION_SCOPE:-browser}
+      TRUST_PROXY: ${TRUST_PROXY:-}
       ALLOW_ANONYMOUS_PARTICIPANTS: ${ALLOW_ANONYMOUS_PARTICIPANTS:-false}
     depends_on:
       postgres:

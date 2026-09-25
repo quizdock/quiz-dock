@@ -22,28 +22,46 @@ and `POST /auth/host-seat/release` are what the SPA calls.
 
 Set **`AUTH_MODE=oidc`** to require sign-in for hosts against **any OpenID Connect
 provider**. QuizDock only relies on the OIDC standards — Discovery 1.0, the
-Authorization Code flow with PKCE, JWKS-signed JWTs and the Core 1.0 claims — so any
-compliant IdP works without product-specific glue. Participants sign in too: see
+Authorization Code flow with PKCE, refresh tokens, JWKS-signed JWTs, RP-initiated
+logout and the Core 1.0 claims — so any compliant IdP works without product-specific
+glue. Participants sign in too: see
 [who may take part](#who-may-take-part) below.
 
 A commented starting point: [`env/oidc.env.example`](../../env/oidc.env.example).
 
 ## How it works
 
-1. The SPA calls `GET /auth/config` → `{ mode: "oidc", oidc: { authority, clientId } }`.
-2. It runs the **Authorization Code + PKCE** flow (`oidc-client-ts`): discovery on
-   `authority`, redirect to your IdP, back to **`<your-origin>/auth/callback`**, code
-   exchanged for tokens. Tokens are renewed silently before they expire.
-3. Every API/WebSocket call carries `Authorization: Bearer <access_token>`.
-4. The backend verifies the JWT **signature** against the provider's **JWKS** (found
-   through `${OIDC_ISSUER}/.well-known/openid-configuration`, or `OIDC_JWKS_URI`),
-   **`iss`**, **`exp`** (and **`aud`** if `OIDC_AUDIENCE` is set), then reads roles
-   from `OIDC_ROLES_CLAIM`.
-5. Log out is **RP-initiated**: the SPA redirects to the provider's `end_session_endpoint`
-   (falls back to a local sign-out when the provider has none).
+The backend runs the sign-in and keeps the tokens (a *Backend for Frontend*): the
+browser never holds one, only a random session id in an `httpOnly` cookie that no
+script can read.
+
+1. *Sign in* asks the backend (`POST /auth/login`), which prepares an **Authorization
+   Code + PKCE** request — state, nonce, code verifier — and sends the browser to your
+   provider (found through `${OIDC_ISSUER}/.well-known/openid-configuration`).
+2. The provider sends the browser back to **`<your-origin>/auth/callback`**; that page
+   hands the code to the backend (`POST /auth/callback`), which checks the state against
+   the browser that started, exchanges the code at the token endpoint, checks the ID
+   token (issuer, audience, nonce) and opens a session in Redis.
+3. Every API request and the game socket carry the session cookie (`httpOnly`,
+   `SameSite=Lax`, `Secure` over HTTPS). The backend verifies the access token's
+   **signature** against the provider's **JWKS**, **`iss`**, **`exp`** (and **`aud`**
+   if `OIDC_AUDIENCE` is set), then reads roles from `OIDC_ROLES_CLAIM`. It renews the
+   token with the refresh token before it expires; when the provider refuses, the
+   session ends and the browser goes back to the sign-in page.
+4. Requests that change something, and the game socket, are accepted with the cookie
+   only from the application's own pages (`Sec-Fetch-Site`, else `Origin` against the
+   host) — a page of another origin, even on the same site, gets `403 auth.cross_origin`
+   or stays a guest.
+5. Log out ends the session on the backend, then at the provider (**RP-initiated**, to
+   its `end_session_endpoint` with the ID token as a hint) when it has one.
+
+The tabs of a browser share the session: a console, a projection or a preview opened in
+a new tab stays signed in, and signing out in one signs out the others. A session unused
+for 24 hours is forgotten; the provider bounds it too, through its refresh tokens.
+A client that is not a browser may still send `Authorization: Bearer <access_token>`.
 
 Claims used: `sub` (identity key), `preferred_username` / `name` / `email` (display),
-and the roles claim. The SPA requests scope `openid profile email`; `redirect_uri` is
+and the roles claim. The backend requests scope `openid profile email`; `redirect_uri` is
 `<origin>/auth/callback` and post-logout returns to `<origin>`.
 
 ## Variables
@@ -51,8 +69,9 @@ and the roles claim. The SPA requests scope `openid profile email`; `redirect_ur
 ```dotenv
 AUTH_MODE=oidc
 OIDC_ISSUER=https://idp.example.com/            # must equal the token `iss`
-OIDC_CLIENT_ID=quizdock-frontend                # public SPA client id
-OIDC_JWKS_URI=                                  # optional: skip discovery, use this JWKS
+OIDC_CLIENT_ID=quizdock-frontend                # the client registered with your IdP
+OIDC_CLIENT_SECRET=                             # optional: confidential client (else public + PKCE)
+OIDC_INTERNAL_URL=                              # optional: how the backend reaches the IdP (Docker)
 OIDC_AUDIENCE=                                  # optional: expected `aud`
 OIDC_ROLES_CLAIM=roles                          # dotted path of the roles array claim
 OIDC_NAME_CLAIM=                                # optional: dotted path of the display-name claim
@@ -141,10 +160,11 @@ refused (`session.open_access_forbidden`).
 Whatever the access, the host can **close the game to new participants**, from the
 lobby or during the game (those already in come back after a lost connection) and remove one, and each
 address may try 30 wrong PINs a minute — generous, since a whole room shares one
-public address. Behind a reverse proxy on a private address, the client's address is
-read from `X-Forwarded-For`. Published directly with no proxy in front, where Docker
-hides the client's address (Docker Desktop, the userland proxy), every connection looks
-private and that header could be forged: put a reverse proxy in front that sets it.
+public address. Behind a reverse proxy, the client's address is read from
+`X-Forwarded-For`, from the proxies `TRUST_PROXY` names — by default, a peer on a
+private address. Published directly with no proxy in front, where Docker hides the
+client's address (Docker Desktop, the userland proxy), every connection looks private
+and that header could be forged: set `TRUST_PROXY=false`, or name your proxy.
 
 ## The display name (OIDC)
 
@@ -156,22 +176,31 @@ accounts whose token has no such claim.
 
 ## Register the client on your IdP
 
-QuizDock's frontend is a **public SPA client** (no client secret), using PKCE.
-Configure on your IdP:
+QuizDock's backend is the OIDC client. A **public** client (no secret) protected by
+PKCE is enough; a **confidential** one works too, with its secret in
+`OIDC_CLIENT_SECRET`. Configure on your IdP:
 
-- **Client type**: public / SPA, **PKCE** enabled, standard (authorization code) flow.
+- **Client type**: public or confidential, **PKCE** (S256) allowed, standard
+  (authorization code) flow; a refresh token issued, or the session ends with the
+  first access token.
 - **Valid redirect URI**: `https://quiz.example.com/auth/callback`
 - **Valid post-logout redirect URI** / **Web origin (CORS)**: `https://quiz.example.com`
 - A **`host`** role (or group) assigned to the users who may run quizzes, exposed in
   the token under the claim you set in `OIDC_ROLES_CLAIM`.
 
-## Docker networking caveat — issuer vs JWKS host
+## Docker networking — one issuer, two addresses
 
-In Docker, the **browser** and the **backend** may reach the IdP at different hostnames.
-`OIDC_ISSUER` must match the `iss` the browser sees (e.g. `http://localhost:18080/…`),
-while discovery from inside the container would hit the same public host. If that host
-is not reachable from the backend, set `OIDC_JWKS_URI` to the internal service URL
-(e.g. `http://idp:8080/…/jwks`) — that's why it is a separate variable.
+The **browser** and the **backend** may reach the IdP at different addresses: the
+browser at its public one (`http://localhost:18080`), the backend over the Docker
+network (`http://keycloak:8080`). `OIDC_ISSUER` is the address the browser sees and the
+tokens carry; set **`OIDC_INTERNAL_URL`** to the one the backend uses. Discovery, the
+token endpoint and the keys then go through it, and the pages the browser is sent to
+(sign-in, sign-out) keep the public address. An `OIDC_JWKS_URI` on another host than
+the issuer, from earlier versions, is read the same way.
+
+The provider must name itself the same whoever asks: tokens obtained over the internal
+network must still carry the public issuer. With Keycloak, set `KC_HOSTNAME` to the
+public URL and `KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true`.
 
 ## Example IdP for development
 
@@ -189,15 +218,19 @@ AUTH_MODE=oidc docker compose --profile keycloak up -d       # base file alone
 ```
 
 The dev compose file then defaults `OIDC_ISSUER` to `http://localhost:18080/realms/quiz-dock`,
-`OIDC_JWKS_URI` to the internal service and `OIDC_ROLES_CLAIM` to `realm_access.roles`.
+`OIDC_INTERNAL_URL` to the internal service and `OIDC_ROLES_CLAIM` to `realm_access.roles`.
 
 ## Troubleshooting
 
 | Symptom (in backend logs) | Fix |
 |---|---|
 | `unexpected "iss" claim value` | `OIDC_ISSUER` ≠ the token's `iss`. Match it exactly (scheme/host/port/trailing slash). |
-| `signature verification failed` | Wrong/unreachable JWKS: check `OIDC_JWKS_URI` or that the backend can reach `${OIDC_ISSUER}/.well-known/openid-configuration`. |
-| `OIDC discovery failed` | The backend cannot reach the issuer host (Docker networking): set `OIDC_JWKS_URI` to the internal URL. |
+| `signature verification failed` | Wrong/unreachable JWKS: check that the backend can reach `${OIDC_ISSUER}/.well-known/openid-configuration` (or `OIDC_INTERNAL_URL`). |
+| `OIDC discovery failed` | The backend cannot reach the issuer host (Docker networking): set `OIDC_INTERNAL_URL` to the internal address. |
+| `Sign-in failed: invalid_client` / `unauthorized_client` | The client is confidential on the IdP: set `OIDC_CLIENT_SECRET` (or make it public with PKCE). |
+| `Sign-in failed: … "iss" claim` after the redirect | The IdP names itself after the address that asked (the internal one): give it a fixed public hostname (Keycloak: `KC_HOSTNAME`). |
+| `403 auth.cross_origin` | A request that changes something came from another origin than the application (another port, a sibling subdomain). Open QuizDock at one address. |
+| The session cookie has no `Secure` flag behind HTTPS | The proxy's `X-Forwarded-Proto` is not believed: name the proxy in `TRUST_PROXY`. |
 | `403 auth.host_required` | The user is authenticated but has no `host` role in the claim `OIDC_ROLES_CLAIM` points at. |
 | `unexpected "aud" claim value` | Token `aud` ≠ `OIDC_AUDIENCE`. Fix it or leave `OIDC_AUDIENCE` empty. |
 | Redirect loop / `invalid redirect_uri` | Add `<origin>/auth/callback` to the IdP client's allowed redirect URIs. |
