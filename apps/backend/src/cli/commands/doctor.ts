@@ -87,12 +87,14 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
   }
 
   out.line('Media');
-  const mediaDir = env.MEDIA_DIR ?? '/data/media';
-  try {
-    deps.probeWritable(mediaDir);
-    out.ok(`${mediaDir} is writable`);
-  } catch (err) {
-    fail(`${mediaDir}: ${(err as Error).message}`);
+  // The uploaded media, and the shared templates' catalogue.
+  for (const dir of [env.MEDIA_DIR ?? '/data/media', env.STORE_DIR ?? '/data/store']) {
+    try {
+      deps.probeWritable(dir);
+      out.ok(`${dir} is writable`);
+    } catch (err) {
+      fail(`${dir}: ${(err as Error).message}`);
+    }
   }
 
   const anonymous = env.ALLOW_ANONYMOUS_PARTICIPANTS === 'true';
