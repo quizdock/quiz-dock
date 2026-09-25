@@ -113,9 +113,9 @@ is what a Quiz Store repository holds.
 ## Store fields
 
 The `quiz` object carries what a Quiz Store catalogue will need, so bundles
-exported today stay valid there. None of it is editable in the app yet: a quiz
-built in the editor exports with `namespace`, `domain` and `license` at `null`
-and `tags` empty; an imported bundle keeps whatever it carried.
+exported today stay valid there. The licence and the tags are set in the quiz
+settings (*Sharing*); `namespace` and `domain` are not editable yet and export
+at `null`. An imported bundle keeps whatever it carried.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -128,7 +128,7 @@ and `tags` empty; an imported bundle keeps whatever it carried.
 | `language` | BCP 47 | A dedicated field, never a tag. |
 | `domain` | string or `null` | Free text until the Store closes the vocabulary. |
 | `tags` | kebab-case strings, 5 at most | Lowercase, `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 30 chars each. |
-| `license` | SPDX identifier or `null` | e.g. `CC-BY-4.0`, `MIT`. |
+| `license` | SPDX identifier or `null` | The quiz settings offer `CC0-1.0`, `CC-BY-4.0` and `CC-BY-SA-4.0`, the three a community store accepts. An imported bundle may carry another identifier: it is kept. Required to share the quiz as a template. |
 
 Every field is optional in the manifest: a bundle exported before they existed
 imports with the defaults above. Nothing about the emitting instance travels —
