@@ -59,7 +59,8 @@
     "tagsLabel": "Tags",
     "tagsPlaceholder": "Ajouter un tag…",
     "tagsHelp": "Jusqu’à 5 mots-clés pour retrouver le quiz parmi les modèles. Entrée pour en ajouter un.",
-    "removeTag": "Retirer le tag {{tag}}"
+    "removeTag": "Retirer le tag {{tag}}",
+    "saveError": "Impossible d’enregistrer la modification."
   },
   "broadcast": {
     "title": "Diffusion",
@@ -430,5 +431,8 @@
     "slugLabel": "Nom court",
     "slugHelp": "Ce qui identifie ce quiz dans votre dépôt pour le catalogue. Fichier : {{file}}",
     "slugChanged": "Le changer (auparavant « {{previous}} ») crée un nouveau quiz pour le catalogue : supprimez l’ancien fichier de votre dépôt."
+  },
+  "readOnly": {
+    "notice": "Quiz de {{owner}} : vous pouvez le consulter, pas le modifier."
   }
 }

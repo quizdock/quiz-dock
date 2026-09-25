@@ -358,6 +358,38 @@ describe('QuizzesService', () => {
     });
   });
 
+  describe('read-only for a manager (#82)', () => {
+    const MANAGER = { id: 'manager-1', roles: [UserRole.admin, UserRole.host] };
+
+    it('the owner may edit, and is not told whose quiz it is', async () => {
+      prisma.quiz.findFirst.mockResolvedValue({
+        ...makeQuiz(),
+        questions: [],
+        slides: [],
+        owner: { displayName: 'Alice' },
+      });
+      const detail = await service.get(HOST, 'q1');
+      expect(detail.editable).toBe(true);
+      expect(detail).not.toHaveProperty('ownerName');
+      expect(detail).not.toHaveProperty('owner');
+    });
+
+    it("a manager reads another host's quiz, not editable, with its owner's name", async () => {
+      prisma.quiz.findFirst.mockResolvedValue({
+        ...makeQuiz(),
+        questions: [],
+        slides: [],
+        owner: { displayName: 'Alice' },
+      });
+      const detail = await service.get(MANAGER, 'q1');
+      expect(prisma.quiz.findFirst.mock.calls[0][0].where).toEqual({
+        id: 'q1',
+        ownerId: undefined,
+      });
+      expect(detail).toMatchObject({ editable: false, ownerName: 'Alice' });
+    });
+  });
+
   describe('language (#83)', () => {
     const saved = process.env.APP_LANG;
     afterEach(() => {

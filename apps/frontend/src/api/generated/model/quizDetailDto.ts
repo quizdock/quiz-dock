@@ -45,6 +45,7 @@ export interface QuizDetailDto {
   updatedAt: string;
   /** @nullable */
   archivedAt: string | null;
+  editable: boolean;
   questions: QuizDetailDtoQuestionsItem[];
   slides: QuizDetailDtoSlidesItem[];
 }

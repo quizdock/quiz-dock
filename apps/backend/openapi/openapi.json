@@ -3025,6 +3025,9 @@
             "type": "string",
             "nullable": true
           },
+          "editable": {
+            "type": "boolean"
+          },
           "questions": {
             "type": "array",
             "items": {
@@ -3846,6 +3849,7 @@
           "createdAt",
           "updatedAt",
           "archivedAt",
+          "editable",
           "questions",
           "slides"
         ]

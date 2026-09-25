@@ -17,6 +17,7 @@ const detail = (over: Record<string, unknown> = {}) => ({
   questionCount: 1,
   license: null,
   tags: [],
+  editable: true,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
   archivedAt: null,
@@ -288,6 +289,41 @@ describe('EditorPage', () => {
         .map(([, opts]) => JSON.parse(String(opts?.body)) as Record<string, unknown>);
       expect(bodies).toContainEqual({ language: 'de' });
     });
+  });
+
+  describe("another host's quiz, opened by a manager (#82)", () => {
+    const foreign = () => detail({ editable: false, ownerName: 'Alice', title: 'Quiz d’Alice' });
+
+    it('shows it read-only, with its owner, and no editing controls', async () => {
+      mockApi([
+        { method: 'GET', path: '/quizzes/q1', body: foreign() },
+        {
+          method: 'GET',
+          path: '/me',
+          body: { id: 'm', displayName: 'M', roles: ['admin', 'host'] },
+        },
+      ]);
+      renderApp('/quizzes/q1');
+      expect(
+        await screen.findByText(/Quiz de Alice : vous pouvez le consulter/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Capitale de la France ?')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Exporter' })).toBeNull();
+      expect(screen.queryByText('Publier (prêt)')).toBeNull();
+      expect(screen.queryByLabelText('Licence')).toBeNull();
+    });
+  });
+
+  it('says so when a setting fails to save, instead of snapping back in silence', async () => {
+    mockApi([
+      { method: 'PUT', path: '/quizzes/q1', status: 403, body: { code: 'auth.host_required' } },
+      { method: 'GET', path: '/quizzes/q1', body: detail() },
+    ]);
+    renderApp('/quizzes/q1');
+    fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+      target: { value: 'CC0-1.0' },
+    });
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 
   it('désactive la publication si aucune question', async () => {
