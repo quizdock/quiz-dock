@@ -22,6 +22,9 @@ That's it. The tag (`v*.*.*`) triggers, in one run:
 No version is maintained by hand: the tag is the version. `package.json` versions are not
 used by the pipeline.
 
+Which images stay on Docker Hub, and for how long, is set by the
+[image retention policy](releasing/retention.md) (proposal).
+
 ## Conventions that feed the changelog
 
 Commit messages are [Conventional Commits](https://www.conventionalcommits.org) (already
