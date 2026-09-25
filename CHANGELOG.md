@@ -12,6 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Bug Fixes
 
+- A fresh install starts: the templates folder belongs to the app *(docker)*
 - Quizdock init writes the new OIDC settings *(cli)*
 - Keep the session alive through a long game; words for the new errors *(auth)*
 - Say why a sign-in failed in the log; a stable Keycloak issuer in dev *(auth)*
@@ -27,6 +28,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- The sample quizzes wait in the templates *(auth)*
+- Unreleased changes, with the OIDC upgrade notes *(changelog)*
 - Upgrade notes for the OIDC session held by the backend *(auth)*
 - The session held by the backend, OIDC_INTERNAL_URL and TRUST_PROXY *(auth)*
 - Unreleased changes *(changelog)*
@@ -68,6 +71,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 ### Performance
 
 - Read every media's uses once per admin page, not once per media *(media)*
+
+### Security
+
+- The image runs on Debian 13, without the Debian 12 base's OpenSSL CVEs *(security)*
 
 ### Contributors
 
