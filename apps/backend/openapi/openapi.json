@@ -208,6 +208,82 @@
         ]
       }
     },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "OidcSessionController_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthRedirectDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/callback": {
+      "post": {
+        "operationId": "OidcSessionController_callback",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OidcCallbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OidcSignedInDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "auth.login_failed — the sign-in cannot be completed."
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "OidcSessionController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthRedirectDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/quizzes": {
       "get": {
         "operationId": "QuizzesController_list",
@@ -2362,38 +2438,13 @@
           },
           "anonymousParticipants": {
             "type": "boolean"
-          },
-          "oidc": {
-            "type": "object",
-            "properties": {
-              "authority": {
-                "type": "string"
-              },
-              "clientId": {
-                "type": "string"
-              },
-              "sessionScope": {
-                "type": "string",
-                "enum": [
-                  "browser",
-                  "tab"
-                ]
-              }
-            },
-            "required": [
-              "authority",
-              "clientId",
-              "sessionScope"
-            ],
-            "nullable": true
           }
         },
         "required": [
           "mode",
           "demo",
           "standalone",
-          "anonymousParticipants",
-          "oidc"
+          "anonymousParticipants"
         ]
       },
       "HostSeatDto": {
@@ -2444,6 +2495,54 @@
         },
         "required": [
           "released"
+        ]
+      },
+      "AuthRedirectDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "The provider's address to navigate to; null on logout when the provider has no end-session endpoint.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "OidcCallbackDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512
+          },
+          "iss": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "code",
+          "state"
+        ]
+      },
+      "OidcSignedInDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the signed-in user."
+          }
+        },
+        "required": [
+          "name"
         ]
       },
       "QuizDto": {

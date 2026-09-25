@@ -6,8 +6,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### Breaking changes
+
+- OIDC configuration changed (OIDC_SESSION_SCOPE removed; new OIDC_INTERNAL_URL, OIDC_CLIENT_SECRET, TRUST_PROXY; everyone signs in again), see <https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrade-oidc-session.md>
+
 ### Bug Fixes
 
+- Quizdock init writes the new OIDC settings *(cli)*
+- Keep the session alive through a long game; words for the new errors *(auth)*
+- Say why a sign-in failed in the log; a stable Keycloak issuer in dev *(auth)*
 - The template page draws its slides as the stage does *(store)*
 - A template card draws its first slide as the stage does *(store)*
 - The OIDC session survives a new tab *(auth)*
@@ -20,6 +27,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- Upgrade notes for the OIDC session held by the backend *(auth)*
+- The session held by the backend, OIDC_INTERNAL_URL and TRUST_PROXY *(auth)*
+- Unreleased changes *(changelog)*
 - Player view with the answer tiles pinned at the bottom *(screenshots)*
 - One commented .env example per setup: standalone, local, OIDC
 - The preview in plain words
@@ -32,25 +42,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
-- Convert every media in the browser to one format per kind *(media)*
-- The author's library, credits, and free libraries to look in *(media)*
-- An administration page for the instance's media *(media)*
-- Sizes in pixels, and media the instance provides to every host *(media)*
-- Open access for participants, lobby lock, wrong-PIN limit *(game)*
-- Launch dialog for participant access, lobby lock, docs *(live)*
-- Close or reopen the game to newcomers during play *(live)*
-- A Content-Security-Policy on every page *(security)*
+- No token in the browser any more, the session is a cookie *(auth)*
+- The backend holds the OIDC session, the browser a cookie (BFF) *(auth)*
+- Name the proxies allowed to speak for the client (TRUST_PROXY) *(security)*
 - Answer tiles pinned to the bottom, up to four per row *(player)*
-- Navigation above the stage, questions in 16:9 like the projection *(preview)*
-- Store each file once, named after its SHA-256 *(media)*
-- An hourly job deletes unused media and stray files *(media)*
-- One file list with Global, list or grid, and a preview *(media)*
 - Free libraries under open licences for every kind by default *(media)*
-- Account preferences, remembered wherever one signs in *(users)*
-- "remember my choice" in the launch dialog, set in the profile *(live)*
+- A Content-Security-Policy on every page *(security)*
 - The OIDC session shared by the tabs or per tab (OIDC_SESSION_SCOPE) *(auth)*
+- Navigation above the stage, questions in 16:9 like the projection *(preview)*
+- "remember my choice" in the launch dialog, set in the profile *(live)*
+- Close or reopen the game to newcomers during play *(live)*
+- Launch dialog for participant access, lobby lock, docs *(live)*
+- Open access for participants, lobby lock, wrong-PIN limit *(game)*
+- Account preferences, remembered wherever one signs in *(users)*
 - An empty state like the editor's when no template is shared *(templates)*
 - Invite bug reports, feature ideas, translation fixes and questions *(home)*
+- One file list with Global, list or grid, and a preview *(media)*
+- Sizes in pixels, and media the instance provides to every host *(media)*
+- An administration page for the instance's media *(media)*
+- The author's library, credits, and free libraries to look in *(media)*
+- Convert every media in the browser to one format per kind *(media)*
+- Store each file once, named after its SHA-256 *(media)*
+- An hourly job deletes unused media and stray files *(media)*
 
 ### Performance
 

@@ -85,12 +85,15 @@ services:
       CLIENT_DIR: /app/client
       # Auth OIDC (si AUTH_MODE=oidc).
       OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_INTERNAL_URL: ${OIDC_INTERNAL_URL:-}
       OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-quiz-dock-frontend}
       OIDC_ROLES_CLAIM: ${OIDC_ROLES_CLAIM:-roles}
       OIDC_NAME_CLAIM: ${OIDC_NAME_CLAIM:-}
-      OIDC_SESSION_SCOPE: ${OIDC_SESSION_SCOPE:-browser}
+      # Proxies allowed to speak for the client (X-Forwarded-For/-Proto); empty = private addresses.
+      TRUST_PROXY: ${TRUST_PROXY:-}
       ALLOW_ANONYMOUS_PARTICIPANTS: ${ALLOW_ANONYMOUS_PARTICIPANTS:-false}
     depends_on:
       postgres:

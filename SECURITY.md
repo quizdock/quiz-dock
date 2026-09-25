@@ -24,6 +24,9 @@ fixes are prioritized and disclosed once a patched release is available.
   scans the filesystem and the published image (SARIF → Security tab).
 - **Hardened runtime** — non-root, read-only root FS, dropped capabilities,
   `no-new-privileges`.
-- **Content-Security-Policy** on every page — no inline script, no `eval`, frames and
-  requests limited to this origin and the configured OIDC provider.
+- **No token in the browser** under OIDC — the backend holds the session and the tokens;
+  the browser only gets an `httpOnly`, `SameSite=Lax` cookie, and requests that change
+  something must come from the application's own pages.
+- **Content-Security-Policy** on every page — no inline script, no `eval`, no frames,
+  requests limited to this origin.
 - **Point-in-time audits** are recorded under [`docs/security/`](docs/security/).

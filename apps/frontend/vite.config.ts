@@ -22,16 +22,16 @@ export default defineConfig({
     // natif rate les modifs et Vite sert des transforms en cache obsolètes. Polling
     // pour forcer la détection (cf. même piège que tsc côté backend).
     watch: { usePolling: true, interval: 200 },
+    // The Host is kept (no `changeOrigin`): the backend compares it with the
+    // Origin of what changes something, the way it will see them in production.
     proxy: {
       // Le builder (REST) et la doc API passent par le backend.
       '/api': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',
-        changeOrigin: true,
       },
       // Temps réel : Socket.IO (handshake + upgrade WebSocket) vers le backend.
       '/socket.io': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',
-        changeOrigin: true,
         ws: true,
       },
     },

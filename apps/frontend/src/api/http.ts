@@ -1,13 +1,16 @@
 /**
  * Mutator fetch pour le client Orval. Injecte les en-têtes d'authentification
- * (mode local : `X-Local-User` ; mode OIDC : `Authorization: Bearer`) et reproduit
- * le format de réponse attendu par le code généré (`{ data, status, headers }`).
+ * (mode local : `X-Local-User` ; en OIDC, rien : la session est un cookie
+ * `httpOnly` que le navigateur joint lui-même) et reproduit le format de réponse
+ * attendu par le code généré (`{ data, status, headers }`).
  */
 
 import { errorText, validationFieldErrors } from './error-text';
 
 let authHeaders: Record<string, string> = {};
 let onUnauthorized: (() => void) | null = null;
+/** OIDC: signed in through the session cookie (nothing in the headers to tell). */
+let sessionAuthed = false;
 
 /** Mis à jour par le contexte d'auth (login/logout). */
 export function setAuthHeaders(headers: Record<string, string>): void {
@@ -17,6 +20,11 @@ export function setAuthHeaders(headers: Record<string, string>): void {
 /** Pour les requêtes hors client généré (téléchargement binaire). */
 export function getAuthHeaders(): Record<string, string> {
   return authHeaders;
+}
+
+/** OIDC: whether a session cookie authenticates the requests (a 401 then means it ended). */
+export function setSessionAuthed(authed: boolean): void {
+  sessionAuthed = authed;
 }
 
 /**
@@ -72,7 +80,7 @@ export const customFetch = async <T>(url: string, options: RequestInit): Promise
   const data = body ? JSON.parse(body) : {};
   // Non-2xx → on lève, pour que react-query expose l'erreur (et son corps).
   if (!res.ok) {
-    if (res.status === 401 && Object.keys(authHeaders).length > 0) {
+    if (res.status === 401 && (sessionAuthed || Object.keys(authHeaders).length > 0)) {
       onUnauthorized?.();
     }
     throw new ApiError(res.status, data);

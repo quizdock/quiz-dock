@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import type { RedisService } from '../redis/redis.service';
-import { PIN_ATTEMPTS_MAX, PIN_ATTEMPTS_WINDOW_S, PinAttempts, clientIp } from './pin-attempts';
+import { PIN_ATTEMPTS_MAX, PIN_ATTEMPTS_WINDOW_S, PinAttempts } from './pin-attempts';
 
 describe('PinAttempts', () => {
   function makeLimiter(failures = 0) {
@@ -67,24 +67,5 @@ describe('PinAttempts', () => {
     const attempt = jest.fn();
     await expect(limiter.guard('1.2.3.4', attempt)).rejects.toThrow('pin.too_many_attempts');
     expect(attempt).not.toHaveBeenCalled();
-  });
-});
-
-describe('clientIp', () => {
-  it('takes the peer when it connects directly, whatever header it sends', () => {
-    expect(clientIp('203.0.113.7', '198.51.100.1')).toBe('203.0.113.7');
-  });
-
-  it('believes the header behind a private proxy, read from the right', () => {
-    expect(clientIp('::ffff:172.18.0.3', '198.51.100.9, 203.0.113.7')).toBe('203.0.113.7');
-  });
-
-  it('skips the proxies of the chain', () => {
-    expect(clientIp('127.0.0.1', '203.0.113.7, 10.0.0.2')).toBe('203.0.113.7');
-  });
-
-  it('keeps the peer when the header is missing or makes no sense', () => {
-    expect(clientIp('10.0.0.2', undefined)).toBe('10.0.0.2');
-    expect(clientIp('10.0.0.2', 'garbage')).toBe('10.0.0.2');
   });
 });

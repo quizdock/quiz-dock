@@ -71,9 +71,31 @@ async function buildProvider(audience?: string, rolesClaim?: string, nameClaim?:
   process.env.OIDC_ISSUER = ISSUER;
   // Explicit JWKS URI: no discovery round-trip in unit tests.
   process.env.OIDC_JWKS_URI = `${ISSUER}/jwks`;
-  const { OidcProvider } = await import('./oidc.provider');
-  return new OidcProvider();
+  return newProvider();
 }
+
+/** A session store that knows one browser: `sid-ok` → `sessionToken`. */
+let sessionToken: string | null = null;
+const sessions = {
+  accessToken: jest.fn(async (sid: string) => (sid === 'sid-ok' ? sessionToken : null)),
+};
+
+async function newProvider() {
+  const { OidcProvider } = await import('./oidc.provider');
+  const { OidcClient, oidcSettings } = await import('./oidc/oidc-client');
+  return new OidcProvider(new OidcClient(oidcSettings()), sessions as never);
+}
+
+const withCookie = (cookie: string): Request => ({ headers: { cookie } }) as unknown as Request;
+
+/** A discovery document as a provider serves it, on the given origin. */
+const discoveryDoc = (origin: string, issuer = ISSUER) => ({
+  issuer,
+  authorization_endpoint: `${origin}/realms/quiz-dock/protocol/openid-connect/auth`,
+  token_endpoint: `${origin}/realms/quiz-dock/protocol/openid-connect/token`,
+  end_session_endpoint: `${origin}/realms/quiz-dock/protocol/openid-connect/logout`,
+  jwks_uri: `${origin}/realms/quiz-dock/protocol/openid-connect/certs`,
+});
 
 beforeAll(async () => {
   const pair = await generateKeyPair('RS256', { extractable: true });
@@ -95,9 +117,22 @@ describe('OidcProvider', () => {
     });
   });
 
-  it('renvoie null sans en-tête Bearer', async () => {
+  it('renvoie null sans en-tête Bearer ni cookie de session', async () => {
     const provider = await buildProvider();
     expect(await provider.authenticate({ headers: {} } as unknown as Request)).toBeNull();
+  });
+
+  it('reads the session cookie: the tokens stay server-side', async () => {
+    const provider = await buildProvider();
+    sessionToken = await makeToken({ username: 'marc' });
+    const principal = await provider.authenticate(withCookie('theme=dark; qd_session=sid-ok'));
+    expect(principal?.displayName).toBe('marc');
+    expect(sessions.accessToken).toHaveBeenLastCalledWith('sid-ok');
+  });
+
+  it('turns away an unknown or ended session', async () => {
+    const provider = await buildProvider();
+    expect(await provider.authenticate(withCookie('qd_session=sid-gone'))).toBeNull();
   });
 
   it('rejette un token expiré', async () => {
@@ -153,11 +188,10 @@ describe('OidcProvider', () => {
   it('résout le JWKS via OIDC Discovery quand OIDC_JWKS_URI est absent', async () => {
     await buildProvider();
     delete process.env.OIDC_JWKS_URI;
-    const { OidcProvider } = await import('./oidc.provider');
-    const discovered = new OidcProvider();
+    const discovered = await newProvider();
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ issuer: ISSUER, jwks_uri: `${ISSUER}/protocol/openid-connect/certs` }),
+      json: async () => discoveryDoc('http://localhost:8080'),
     });
     const realFetch = global.fetch;
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -179,12 +213,11 @@ describe('OidcProvider', () => {
   it('retente la discovery au prochain appel si elle a échoué', async () => {
     await buildProvider();
     delete process.env.OIDC_JWKS_URI;
-    const { OidcProvider } = await import('./oidc.provider');
-    const discovered = new OidcProvider();
+    const discovered = await newProvider();
     const fetchMock = jest
       .fn()
       .mockResolvedValueOnce({ ok: false, status: 503 })
-      .mockResolvedValue({ ok: true, json: async () => ({ jwks_uri: `${ISSUER}/jwks` }) });
+      .mockResolvedValue({ ok: true, json: async () => discoveryDoc('http://localhost:8080') });
     const realFetch = global.fetch;
     global.fetch = fetchMock as unknown as typeof fetch;
     try {

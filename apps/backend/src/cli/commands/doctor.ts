@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import Redis from 'ioredis';
 import type { PrismaService } from '../../prisma/prisma.service';
 import type { Output } from '../output';
+import { oidcSettings, type OidcSettings } from '../../auth/oidc/oidc-client';
 import { migrationStatus } from './migrate-status';
 
 export interface DoctorDeps {
@@ -106,33 +107,45 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         ? 'participants: accounts or open access, chosen at each launch'
         : 'participants: accounts required (ALLOW_ANONYMOUS_PARTICIPANTS not set)',
     );
-    const issuer = env.OIDC_ISSUER?.replace(/\/+$/, '');
-    if (!issuer) fail('OIDC_ISSUER is not set');
-    else {
+    let settings: OidcSettings | null = null;
+    try {
+      settings = oidcSettings(env);
+    } catch (err) {
+      fail((err as Error).message);
+    }
+    if (settings) {
+      const { issuer, internalUrl, clientSecret } = settings;
       out.ok(`issuer ${issuer}`);
       out.ok(
-        `client_id ${env.OIDC_CLIENT_ID ?? 'quiz-dock-frontend'}  roles claim ${env.OIDC_ROLES_CLAIM || 'roles'}`,
+        `client_id ${settings.clientId} (${clientSecret ? 'confidential' : 'public, PKCE'})  roles claim ${env.OIDC_ROLES_CLAIM || 'roles'}`,
       );
-      let jwksUri = env.OIDC_JWKS_URI || undefined;
-      if (jwksUri) out.ok(`JWKS from OIDC_JWKS_URI (${jwksUri}) — discovery skipped`);
-      else {
-        const url = `${issuer}/.well-known/openid-configuration`;
-        try {
-          const res = await deps.fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const doc = (await res.json()) as { issuer?: string; jwks_uri?: string };
-          if (typeof doc.jwks_uri !== 'string') throw new Error('no jwks_uri in document');
-          jwksUri = doc.jwks_uri;
-          out.ok(`discovery ok → jwks_uri ${jwksUri}`);
-          if (doc.issuer && doc.issuer.replace(/\/+$/, '') !== issuer)
-            out.warn(
-              `discovery issuer "${doc.issuer}" ≠ OIDC_ISSUER — tokens must carry OIDC_ISSUER exactly`,
-            );
-        } catch (err) {
-          fail(
-            `discovery ${url}: ${(err as Error).message} — set OIDC_JWKS_URI if the issuer host is not reachable from here`,
-          );
+      if (env.OIDC_SESSION_SCOPE)
+        out.warn('OIDC_SESSION_SCOPE is ignored (sessions are server-side)');
+      // The backend talks to the provider itself now: discovery gives it the token endpoint.
+      const onBackChannel = (url: string) =>
+        internalUrl && url.startsWith(new URL(issuer).origin)
+          ? internalUrl + url.slice(new URL(issuer).origin.length)
+          : url;
+      const url = onBackChannel(`${issuer}/.well-known/openid-configuration`);
+      if (internalUrl) out.ok(`provider reached at ${internalUrl} from here`);
+      let jwksUri = settings.jwksUri ?? undefined;
+      try {
+        const res = await deps.fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const doc = (await res.json()) as Record<string, unknown>;
+        for (const key of ['authorization_endpoint', 'token_endpoint', 'jwks_uri']) {
+          if (typeof doc[key] !== 'string') throw new Error(`no ${key} in document`);
         }
+        jwksUri ??= onBackChannel(doc.jwks_uri as string);
+        out.ok(`discovery ok → token endpoint ${onBackChannel(doc.token_endpoint as string)}`);
+        if (typeof doc.issuer === 'string' && doc.issuer.replace(/\/+$/, '') !== issuer)
+          out.warn(
+            `discovery issuer "${doc.issuer}" ≠ OIDC_ISSUER — tokens must carry OIDC_ISSUER exactly`,
+          );
+      } catch (err) {
+        fail(
+          `discovery ${url}: ${(err as Error).message} — set OIDC_INTERNAL_URL if the issuer host is not reachable from here`,
+        );
       }
       if (jwksUri) {
         try {

@@ -67,13 +67,14 @@ How to replace the logo and the stylesheet: **[branding](branding.md)**.
 
 | Variable | Default | Description |
 |---|---|---|
-| `AUTH_MODE` | `none` | `none` = local mode (no IdP, single host seat); `oidc` = validate JWTs from any OpenID Connect provider. |
+| `AUTH_MODE` | `none` | `none` = local mode (no IdP, single host seat); `oidc` = sign-in with any OpenID Connect provider, the session held by the backend. |
 | `DEMO_MODE` | `false` | `true` = public demo guards: the host seat lasts 5 min (renewable), media uploads are refused, and everything is wiped every hour. See below. |
 | `ALLOW_ANONYMOUS_PARTICIPANTS` | `false` | `AUTH_MODE=oidc` only: `true` lets hosts open a game to participants without an account, the PIN and a nickname alone — chosen at each launch ([open access](auth.md#open-access-oidc)) |
 | `OIDC_ISSUER` | — | `iss` expected in tokens (your provider's issuer URL). Required when `AUTH_MODE=oidc`. |
-| `OIDC_JWKS_URI` | _(discovery)_ | JWKS endpoint. Default: `jwks_uri` from `${OIDC_ISSUER}/.well-known/openid-configuration`. Set it to target an internal host in Docker. |
-| `OIDC_SESSION_SCOPE` | `browser` | Where the browser keeps the OIDC session: `browser` = shared by the tabs (a preview or a console opened in a new tab stays signed in); `tab` = each tab signs in on its own, e.g. on shared computers. |
-| `OIDC_CLIENT_ID` | `quiz-dock-frontend` | Public SPA client id (sent to the browser via `GET /auth/config`). |
+| `OIDC_CLIENT_ID` | `quiz-dock-frontend` | The client registered with your provider. |
+| `OIDC_CLIENT_SECRET` | _(unset)_ | Its secret, for a confidential client. Unset: a public client, protected by PKCE. |
+| `OIDC_INTERNAL_URL` | _(unset)_ | Where the backend reaches the provider when the browser's address is not reachable from its network (Docker): discovery, tokens and keys go through it. Defaults to the host of `OIDC_JWKS_URI` when that one points elsewhere than the issuer. |
+| `OIDC_JWKS_URI` | _(discovery)_ | Key endpoint, when discovery's must not be used. |
 | `OIDC_AUDIENCE` | _(unset)_ | Expected `aud`. Left unset = audience check skipped. |
 | `OIDC_ROLES_CLAIM` | `roles` | Dotted path to the roles array in the JWT (e.g. `groups`, `realm_access.roles`). |
 | `OIDC_NAME_CLAIM` | _(unset)_ | Dotted path to the display-name claim (e.g. the standard `nickname`). Unset, or absent from a token: `preferred_username`, then `name`, then `email`. |
@@ -89,6 +90,7 @@ How the two modes behave, and how to register the client on your IdP:
 | `DATABASE_URL` | — | app, migrate | PostgreSQL connection string, e.g. `postgresql://user:pass@host:5432/quizdock`. **Required** (provided by compose; baked into `:standalone`). |
 | `REDIS_URL` | — | app | Redis connection string, e.g. `redis://host:6379`. Live-game state only. |
 | `MEDIA_DIR` | `/data/media` | app | Where uploaded images, videos and sounds are stored. Mount a volume here to persist. |
+| `TRUST_PROXY` | _(private addresses)_ | app | Which hops may speak for the client through `X-Forwarded-For` / `X-Forwarded-Proto` (client address of the wrong-PIN limit, `Secure` session cookie): `false`, `true`, a number of proxies, or addresses and CIDR ranges. Default: a peer on a private address. |
 
 The multi-service `docker-compose.prod.yml` also exposes:
 

@@ -28,7 +28,9 @@ import { UsersService } from '../users/users.service';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { noticeOf } from './game.types';
-import { clientIp, PinAttempts } from './pin-attempts';
+import { isCrossOrigin, readCookie, SESSION_COOKIE } from '../auth/oidc/session-cookie';
+import { clientIp } from '../common/trust-proxy';
+import { PinAttempts } from './pin-attempts';
 import { WsExceptionFilter } from './ws-exception.filter';
 
 /** Données attachées à chaque socket de jeu. */
@@ -75,7 +77,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     this.engine.bindServer(server);
     server.use((socket, next) => {
       const auth = socket.handshake.auth ?? {};
-      if (!auth.token && !auth.localUser) {
+      if (!auth.token && !auth.localUser && !sessionCookieOf(socket as GameSocket)) {
         next();
         return;
       }
@@ -560,8 +562,20 @@ function handshakeAsRequest(socket: GameSocket): Request {
     headers: {
       authorization: auth.token ? `Bearer ${auth.token}` : undefined,
       'x-local-user': auth.localUser,
+      cookie: sessionCookieOf(socket),
     },
   } as unknown as Request;
+}
+
+/**
+ * The browser's session cookie (`AUTH_MODE=oidc`), when the handshake comes from
+ * the application's own pages: another origin's page opening a socket here
+ * (cross-site WebSocket hijacking) stays a guest.
+ */
+function sessionCookieOf(socket: GameSocket): string | undefined {
+  const { headers } = socket.handshake;
+  if (!readCookie(headers.cookie, SESSION_COOKIE)) return undefined;
+  return isCrossOrigin(headers, headers.host) ? undefined : headers.cookie;
 }
 
 /** The address a socket connected from, through our reverse proxy if any. */

@@ -7,7 +7,6 @@
  */
 import type { AuthConfigDtoDemo } from './authConfigDtoDemo';
 import type { AuthConfigDtoMode } from './authConfigDtoMode';
-import type { AuthConfigDtoOidc } from './authConfigDtoOidc';
 
 export interface AuthConfigDto {
   mode: AuthConfigDtoMode;
@@ -15,6 +14,4 @@ export interface AuthConfigDto {
   demo: AuthConfigDtoDemo;
   standalone: boolean;
   anonymousParticipants: boolean;
-  /** @nullable */
-  oidc: AuthConfigDtoOidc;
 }

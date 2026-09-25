@@ -1,6 +1,8 @@
 {
   "auth": {
     "required": "需要身份验证。",
+    "login_failed": "登录未能完成，请重试。",
+    "cross_origin": "此请求并非来自本应用的页面。",
     "host_required": "需要主持人角色。",
     "host_only": "此操作仅限主持人：管理员管理实例，不进行主持。",
     "admin_required": "需要管理员角色。"

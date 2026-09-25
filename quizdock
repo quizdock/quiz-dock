@@ -115,7 +115,7 @@ cmd_init() {
   issuer=""; client_id="quiz-dock-frontend"
   if [ "$auth_mode" = oidc ]; then
     ask issuer "OIDC issuer (exact \`iss\` of your tokens)" ""
-    ask client_id "OIDC public client id" "quiz-dock-frontend"
+    ask client_id "OIDC client id" "quiz-dock-frontend"
   fi
 
   {
@@ -129,12 +129,15 @@ cmd_init() {
     say "# OIDC (used when AUTH_MODE=oidc). Any OpenID Connect provider."
     say "OIDC_ISSUER=$issuer"
     say "OIDC_CLIENT_ID=$client_id"
-    say "OIDC_JWKS_URI="
+    say "# Secret of a confidential client; empty = public client (PKCE)."
+    say "OIDC_CLIENT_SECRET="
+    say "# How the backend reaches the provider, when not at the issuer's address."
+    say "OIDC_INTERNAL_URL="
     say "OIDC_AUDIENCE="
     say "OIDC_ROLES_CLAIM=roles"
     say "OIDC_NAME_CLAIM="
-    say "# browser = the session is shared by the tabs; tab = each tab signs in on its own."
-    say "OIDC_SESSION_SCOPE=browser"
+    say "# Proxies allowed to speak for the client (X-Forwarded-*); empty = private addresses."
+    say "TRUST_PROXY="
     say "# true = hosts may open a game to participants without an account (PIN + nickname)."
     say "ALLOW_ANONYMOUS_PARTICIPANTS=false"
     say "MEDIA_MAX_BYTES=10485760"

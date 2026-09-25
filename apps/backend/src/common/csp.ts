@@ -12,9 +12,8 @@ function originOf(url: string | undefined): string | null {
 
 /**
  * The Content-Security-Policy of the application's pages: everything from this
- * origin, plus what the configuration points elsewhere — the OIDC provider (its
- * discovery and token endpoints, the silent-renew iframe) and a logo served from
- * another host.
+ * origin, plus a logo served from another host. The OIDC provider needs no
+ * exception: the backend talks to it, the browser only navigates there.
  *
  * - `'wasm-unsafe-eval'` and `worker-src blob:`: the in-browser converter encodes
  *   AAC in WebAssembly, in a worker started from a blob.
@@ -23,7 +22,6 @@ function originOf(url: string | undefined): string | null {
  *   insert; no script runs inline, and script is what the policy guards.
  */
 export function contentSecurityPolicy(env: NodeJS.ProcessEnv = process.env): string {
-  const idp = env.AUTH_MODE === 'oidc' ? originOf(env.OIDC_ISSUER) : null;
   const logo = originOf(env.APP_LOGO_URL);
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
@@ -32,8 +30,8 @@ export function contentSecurityPolicy(env: NodeJS.ProcessEnv = process.env): str
     'img-src': ["'self'", 'data:', 'blob:', 'https:', ...(logo ? [logo] : [])],
     'media-src': ["'self'", 'blob:'],
     'font-src': ["'self'", 'data:'],
-    'connect-src': ["'self'", ...(idp ? [idp] : [])],
-    'frame-src': idp ? [idp] : ["'none'"],
+    'connect-src': ["'self'"],
+    'frame-src': ["'none'"],
     'worker-src': ["'self'", 'blob:'],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],

@@ -17,13 +17,13 @@ describe('contentSecurityPolicy', () => {
     expect(directive(policy, 'object-src')).toBe("'none'");
   });
 
-  it('lets the OIDC provider in: its endpoints and the silent-renew iframe', () => {
+  it('needs no exception for the OIDC provider: the backend talks to it, the browser navigates', () => {
     const policy = contentSecurityPolicy({
       AUTH_MODE: 'oidc',
       OIDC_ISSUER: 'https://sso.example.org/realms/quiz-dock',
     });
-    expect(directive(policy, 'connect-src')).toBe("'self' https://sso.example.org");
-    expect(directive(policy, 'frame-src')).toBe('https://sso.example.org');
+    expect(directive(policy, 'connect-src')).toBe("'self'");
+    expect(directive(policy, 'frame-src')).toBe("'none'");
   });
 
   it('lets a logo served from another host in, even over plain http', () => {
@@ -32,8 +32,8 @@ describe('contentSecurityPolicy', () => {
   });
 
   it('ignores a configured URL it cannot read', () => {
-    const policy = contentSecurityPolicy({ AUTH_MODE: 'oidc', OIDC_ISSUER: 'not a url' });
-    expect(directive(policy, 'connect-src')).toBe("'self'");
+    const policy = contentSecurityPolicy({ APP_LOGO_URL: 'not a url' });
+    expect(directive(policy, 'img-src')).toBe("'self' data: blob: https:");
   });
 });
 

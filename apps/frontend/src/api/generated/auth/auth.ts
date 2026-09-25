@@ -26,9 +26,12 @@ import type {
 
 import type {
   AuthConfigDto,
+  AuthRedirectDto,
   ClaimHostSeatDto,
   HostSeatDto,
-  HostSeatReleaseDto
+  HostSeatReleaseDto,
+  OidcCallbackDto,
+  OidcSignedInDto
 } from '../model';
 
 import { customFetch } from '../../http';
@@ -406,4 +409,236 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getHostSeatControllerReleaseMutationOptions(options), queryClient);
+    }
+    export type oidcSessionControllerLoginResponse200 = {
+  data: AuthRedirectDto
+  status: 200
+}
+
+export type oidcSessionControllerLoginResponseSuccess = (oidcSessionControllerLoginResponse200) & {
+  headers: Headers;
+};
+;
+
+export type oidcSessionControllerLoginResponse = (oidcSessionControllerLoginResponseSuccess)
+
+export const getOidcSessionControllerLoginUrl = () => {
+
+
+
+
+  return `/api/v1/auth/login`
+}
+
+export const oidcSessionControllerLogin = async ( options?: RequestInit): Promise<oidcSessionControllerLoginResponse> => {
+
+  return customFetch<oidcSessionControllerLoginResponse>(getOidcSessionControllerLoginUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getOidcSessionControllerLoginMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerLogin>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerLogin>>, TError,void, TContext> => {
+
+const mutationKey = ['oidcSessionControllerLogin'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof oidcSessionControllerLogin>>, void> = () => {
+
+
+          return  oidcSessionControllerLogin(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OidcSessionControllerLoginMutationResult = NonNullable<Awaited<ReturnType<typeof oidcSessionControllerLogin>>>
+
+    export type OidcSessionControllerLoginMutationError = unknown
+
+    export const useOidcSessionControllerLogin = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerLogin>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof oidcSessionControllerLogin>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getOidcSessionControllerLoginMutationOptions(options), queryClient);
+    }
+    export type oidcSessionControllerCallbackResponse200 = {
+  data: OidcSignedInDto
+  status: 200
+}
+
+export type oidcSessionControllerCallbackResponse401 = {
+  data: void
+  status: 401
+}
+
+export type oidcSessionControllerCallbackResponseSuccess = (oidcSessionControllerCallbackResponse200) & {
+  headers: Headers;
+};
+export type oidcSessionControllerCallbackResponseError = (oidcSessionControllerCallbackResponse401) & {
+  headers: Headers;
+};
+
+export type oidcSessionControllerCallbackResponse = (oidcSessionControllerCallbackResponseSuccess | oidcSessionControllerCallbackResponseError)
+
+export const getOidcSessionControllerCallbackUrl = () => {
+
+
+
+
+  return `/api/v1/auth/callback`
+}
+
+export const oidcSessionControllerCallback = async (oidcCallbackDto: OidcCallbackDto, options?: RequestInit): Promise<oidcSessionControllerCallbackResponse> => {
+
+  return customFetch<oidcSessionControllerCallbackResponse>(getOidcSessionControllerCallbackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(oidcCallbackDto)
+  }
+);}
+
+
+
+
+export const getOidcSessionControllerCallbackMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerCallback>>, TError,{data: OidcCallbackDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerCallback>>, TError,{data: OidcCallbackDto}, TContext> => {
+
+const mutationKey = ['oidcSessionControllerCallback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof oidcSessionControllerCallback>>, {data: OidcCallbackDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  oidcSessionControllerCallback(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OidcSessionControllerCallbackMutationResult = NonNullable<Awaited<ReturnType<typeof oidcSessionControllerCallback>>>
+    export type OidcSessionControllerCallbackMutationBody = OidcCallbackDto
+    export type OidcSessionControllerCallbackMutationError = void
+
+    export const useOidcSessionControllerCallback = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerCallback>>, TError,{data: OidcCallbackDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof oidcSessionControllerCallback>>,
+        TError,
+        {data: OidcCallbackDto},
+        TContext
+      > => {
+      return useMutation(getOidcSessionControllerCallbackMutationOptions(options), queryClient);
+    }
+    export type oidcSessionControllerLogoutResponse200 = {
+  data: AuthRedirectDto
+  status: 200
+}
+
+export type oidcSessionControllerLogoutResponseSuccess = (oidcSessionControllerLogoutResponse200) & {
+  headers: Headers;
+};
+;
+
+export type oidcSessionControllerLogoutResponse = (oidcSessionControllerLogoutResponseSuccess)
+
+export const getOidcSessionControllerLogoutUrl = () => {
+
+
+
+
+  return `/api/v1/auth/logout`
+}
+
+export const oidcSessionControllerLogout = async ( options?: RequestInit): Promise<oidcSessionControllerLogoutResponse> => {
+
+  return customFetch<oidcSessionControllerLogoutResponse>(getOidcSessionControllerLogoutUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getOidcSessionControllerLogoutMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerLogout>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerLogout>>, TError,void, TContext> => {
+
+const mutationKey = ['oidcSessionControllerLogout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof oidcSessionControllerLogout>>, void> = () => {
+
+
+          return  oidcSessionControllerLogout(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OidcSessionControllerLogoutMutationResult = NonNullable<Awaited<ReturnType<typeof oidcSessionControllerLogout>>>
+
+    export type OidcSessionControllerLogoutMutationError = unknown
+
+    export const useOidcSessionControllerLogout = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof oidcSessionControllerLogout>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof oidcSessionControllerLogout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getOidcSessionControllerLogoutMutationOptions(options), queryClient);
     }

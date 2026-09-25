@@ -1,6 +1,8 @@
 {
   "auth": {
     "required": "Autenticación requerida.",
+    "login_failed": "No se pudo completar el inicio de sesión. Inténtalo de nuevo.",
+    "cross_origin": "Esta solicitud no procede de una página de la aplicación.",
     "host_required": "Se requiere el rol de anfitrión.",
     "host_only": "Acción reservada a los anfitriones: un administrador gestiona la instancia, no presenta.",
     "admin_required": "Se requiere el rol de administrador."

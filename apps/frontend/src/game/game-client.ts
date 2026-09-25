@@ -8,14 +8,14 @@ import i18next from 'i18next';
 import { type Socket, io } from 'socket.io-client';
 import { errorText } from '../api/error-text';
 import { calibrateClock } from './clock';
-import { getAccessToken, getLocalUser } from '../auth/auth-context';
+import { getAuthMode, getLocalUser } from '../auth/auth-context';
 
 /** Socket typé bout-en-bout (écoute serveur→client, émet client→serveur). */
 export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const ACK_TIMEOUT_MS = 8_000;
 
-// Singleton (comme getOidc) : le socket survit aux navigations entre lobby et
+// Singleton : le socket survit aux navigations entre lobby et
 // écrans de jeu, et n'est jamais recréé par un effet de montage.
 let socket: GameSocket | null = null;
 // Connexion en vol : dédoublonne les appels concurrents (double-montage StrictMode)
@@ -85,20 +85,18 @@ export function clearPlayerSession(): void {
 }
 
 /**
- * Connexion **hôte** : auth dérivée du contexte (mode oidc → `token` = access
- * token ; mode none → `localUser`).
+ * Connexion **hôte** : en mode oidc, le cookie de session suffit (le navigateur le
+ * joint au handshake) ; en mode none, le nom local.
  */
 export async function connectHost(): Promise<GameSocket> {
-  // `auth` en fonction : réévaluée à CHAQUE (re)connexion, donc un jeton OIDC
-  // renouvelé entre-temps est bien présenté au handshake.
-  const auth = async () => {
-    const token = await getAccessToken();
-    return token ? { token } : { localUser: getLocalUser() ?? i18next.t('live:fallbackHost') };
-  };
   socket = io('/game', {
-    auth: (cb) => {
-      void auth().then(cb);
-    },
+    // Re-read at every (re)connection.
+    auth: (cb) =>
+      cb(
+        getAuthMode() === 'oidc'
+          ? {}
+          : { localUser: getLocalUser() ?? i18next.t('live:fallbackHost') },
+      ),
     forceNew: true,
   });
   calibrateClock(socket);
@@ -106,19 +104,13 @@ export async function connectHost(): Promise<GameSocket> {
 }
 
 /**
- * Connexion **joueur** : le jeton OIDC quand il y en a un — sous `AUTH_MODE=oidc`
- * une partie qui exige un compte le lit au handshake (RG-15) —, sinon invité (le
- * backend l'accepte tel quel). Jamais de nom local : il réclamerait le siège d'hôte.
+ * Connexion **joueur** : sous `AUTH_MODE=oidc`, le cookie de session quand il y en
+ * a un — une partie qui exige un compte le lit au handshake (RG-15) —, sinon
+ * invité (le backend l'accepte tel quel). Jamais de nom local : il réclamerait le
+ * siège d'hôte.
  */
 export function connectPlayer(): GameSocket {
-  socket = io('/game', {
-    auth: (cb) => {
-      void getAccessToken()
-        .catch(() => null)
-        .then((token) => cb(token ? { token } : {}));
-    },
-    forceNew: true,
-  });
+  socket = io('/game', { forceNew: true });
   calibrateClock(socket);
   return socket;
 }
