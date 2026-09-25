@@ -36,6 +36,12 @@ the results never leave your servers.
   <img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/demo.gif" width="800" alt="A session on the big screen: players join with the PIN, a question with its timer, the reveal with the leaderboard, the podium" />
 </p>
 
+> ⚠️ **Breaking change in 0.8 — OIDC deployments (`AUTH_MODE=oidc`).** The server now holds
+> the sign-in session: everyone signs in again once, `OIDC_SESSION_SCOPE` is removed, and a
+> backend that reaches the identity provider at an internal address needs `OIDC_INTERNAL_URL`.
+> **Read the [OIDC upgrade notes](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrade-oidc-session.md)
+> before upgrading.** Local mode and the all-in-one image without OIDC: nothing to do.
+
 > [!NOTE]
 > **New in 0.8 — 🗂️ a media library, for hosts and for the instance.** Whatever your
 > browser reads is converted there (WebP, MP4, M4A), stored once and reused from *My media*
