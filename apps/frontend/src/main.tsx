@@ -5,9 +5,15 @@ import { RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { authConfigControllerConfig } from './api/generated/auth/auth';
-import { ApiError, setAuthHeaders } from './api/http';
-import { type AuthMode, AuthProvider, bindOidcSession, configureAuth } from './auth/auth-context';
-import { getOidc, initOidc } from './auth/oidc';
+import { meControllerMe } from './api/generated/me/me';
+import { ApiError } from './api/http';
+import {
+  type AuthMode,
+  AuthProvider,
+  bindOidcSession,
+  configureAuth,
+  forgetStoredTokens,
+} from './auth/auth-context';
 import {
   APP_NAME,
   configureAnonymousParticipants,
@@ -44,15 +50,13 @@ async function bootstrap(): Promise<void> {
     configureDemo(data.demo ?? null);
     configureStandalone(data.standalone === true);
     configureAnonymousParticipants(data.anonymousParticipants === true);
-    if (data.mode === 'oidc' && data.oidc) {
-      initOidc(data.oidc.authority, data.oidc.clientId, data.oidc.sessionScope);
+    forgetStoredTokens();
+    if (data.mode === 'oidc') {
       bindOidcSession();
-      const oidcUser = await getOidc().getUser();
-      if (oidcUser && !oidcUser.expired) {
-        setAuthHeaders({ Authorization: `Bearer ${oidcUser.access_token}` });
-        const p = oidcUser.profile;
-        initialUser = p.name ?? p.preferred_username ?? p.sub ?? 'Animateur';
-      }
+      // The session is an httpOnly cookie: the backend says whether it holds one.
+      initialUser = await meControllerMe()
+        .then(({ data: me }) => me.displayName)
+        .catch(() => null);
       configureAuth('oidc', initialUser !== null);
     } else {
       configureAuth('none');

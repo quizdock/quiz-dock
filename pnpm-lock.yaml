@@ -201,7 +201,7 @@ importers:
         version: link:../../packages/contracts
       '@tailwindcss/vite':
         specifier: ^4.3.0
-        version: 4.3.0(vite@6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))
+        version: 4.3.0(vite@6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))
       '@tanstack/react-form':
         specifier: ^1.33.0
         version: 1.33.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -244,9 +244,6 @@ importers:
       mediabunny:
         specifier: ^1.59.0
         version: 1.59.0
-      oidc-client-ts:
-        specifier: ^3.5.0
-        version: 3.5.0
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.2.7)
@@ -289,22 +286,22 @@ importers:
         version: 19.2.3(@types/react@19.2.17)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
-        version: 4.7.0(vite@6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))
+        version: 4.7.0(vite@6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
       orval:
         specifier: ^8.16.0
-        version: 8.16.0(prettier@3.8.3)(typescript@5.9.3)
+        version: 8.16.0(typescript@5.9.3)
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
       vite:
         specifier: ^6.0.7
-        version: 6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0)
+        version: 6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0)
       vitest:
         specifier: ^2.1.8
-        version: 2.1.9(@types/node@24.13.2)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.48.0)
+        version: 2.1.9(jsdom@25.0.1)(lightningcss@1.32.0)
 
   packages/contracts:
     dependencies:
@@ -4329,10 +4326,6 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
-  jwt-decode@4.0.0:
-    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
-    engines: {node: '>=18'}
-
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -4806,10 +4799,6 @@ packages:
 
   ohash@2.0.12:
     resolution: {integrity: sha512-65S/5gk9YSsaRjcyf7Nfa6h/d3E8/1gslpXfI4W7Dxn/oap8IKRuNT5VXkLQ1YFKIEg4apRY4Pj6aiwFzrDdmw==}
-
-  oidc-client-ts@3.5.0:
-    resolution: {integrity: sha512-l2q8l9CTCTOlbX+AnK4p3M+4CEpKpyQhle6blQkdFhm0IsBqsxm15bYaSa11G7pWdsYr6epdsRZxJpCyCRbT8A==}
-    engines: {node: '>=18'}
 
   on-finished@2.4.1:
     resolution: {integrity: sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==}
@@ -7931,12 +7920,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.0
 
-  '@tailwindcss/vite@4.3.0(vite@6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))':
+  '@tailwindcss/vite@4.3.0(vite@6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@tailwindcss/node': 4.3.0
       '@tailwindcss/oxide': 4.3.0
       tailwindcss: 4.3.0
-      vite: 6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0)
+      vite: 6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0)
 
   '@tanstack/devtools-event-client@0.4.3': {}
 
@@ -8617,7 +8606,7 @@ snapshots:
       d3-time-format: 4.1.0
       internmap: 2.0.3
 
-  '@vitejs/plugin-react@4.7.0(vite@6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))':
+  '@vitejs/plugin-react@4.7.0(vite@6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/plugin-transform-react-jsx-self': 7.29.7(@babel/core@7.29.7)
@@ -8625,7 +8614,7 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0)
+      vite: 6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -8643,6 +8632,14 @@ snapshots:
       magic-string: 0.30.21
     optionalDependencies:
       vite: 5.4.21(@types/node@24.13.2)(lightningcss@1.32.0)(terser@5.48.0)
+
+  '@vitest/mocker@2.1.9(vite@5.4.21(lightningcss@1.32.0))':
+    dependencies:
+      '@vitest/spy': 2.1.9
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 5.4.21(lightningcss@1.32.0)
 
   '@vitest/pretty-format@2.1.9':
     dependencies:
@@ -10647,8 +10644,6 @@ snapshots:
 
   jsonpointer@5.0.1: {}
 
-  jwt-decode@4.0.0: {}
-
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -11183,10 +11178,6 @@ snapshots:
 
   ohash@2.0.12: {}
 
-  oidc-client-ts@3.5.0:
-    dependencies:
-      jwt-decode: 4.0.0
-
   on-finished@2.4.1:
     dependencies:
       ee-first: 1.1.1
@@ -11226,7 +11217,7 @@ snapshots:
 
   orderedmap@2.1.1: {}
 
-  orval@8.16.0(prettier@3.8.3)(typescript@5.9.3):
+  orval@8.16.0(typescript@5.9.3):
     dependencies:
       '@commander-js/extra-typings': 14.0.0(commander@14.0.3)
       '@orval/angular': 8.16.0(typescript@5.9.3)
@@ -11258,8 +11249,6 @@ snapshots:
       typedoc: 0.28.19(typescript@5.9.3)
       typedoc-plugin-coverage: 4.0.3(typedoc@0.28.19(typescript@5.9.3))
       typedoc-plugin-markdown: 4.12.0(typedoc@0.28.19(typescript@5.9.3))
-    optionalDependencies:
-      prettier: 3.8.3
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
@@ -12355,6 +12344,24 @@ snapshots:
       - supports-color
       - terser
 
+  vite-node@2.1.9(lightningcss@1.32.0):
+    dependencies:
+      cac: 6.7.14
+      debug: 4.4.3
+      es-module-lexer: 1.7.0
+      pathe: 1.1.2
+      vite: 5.4.21(lightningcss@1.32.0)
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+
   vite@5.4.21(@types/node@24.13.2)(lightningcss@1.32.0)(terser@5.48.0):
     dependencies:
       esbuild: 0.21.5
@@ -12366,7 +12373,16 @@ snapshots:
       lightningcss: 1.32.0
       terser: 5.48.0
 
-  vite@6.4.3(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0):
+  vite@5.4.21(lightningcss@1.32.0):
+    dependencies:
+      esbuild: 0.21.5
+      postcss: 8.5.28
+      rollup: 4.61.1
+    optionalDependencies:
+      fsevents: 2.3.3
+      lightningcss: 1.32.0
+
+  vite@6.4.3(jiti@2.6.1)(lightningcss@1.32.0)(yaml@2.9.0):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
@@ -12375,11 +12391,9 @@ snapshots:
       rollup: 4.61.1
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 24.13.2
       fsevents: 2.3.3
-      jiti: 2.7.0
+      jiti: 2.6.1
       lightningcss: 1.32.0
-      terser: 5.48.0
       yaml: 2.9.0
 
   vitest@2.1.9(@types/node@24.13.2)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.48.0):
@@ -12406,6 +12420,41 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.13.2
+      jsdom: 25.0.1
+    transitivePeerDependencies:
+      - less
+      - lightningcss
+      - msw
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+
+  vitest@2.1.9(jsdom@25.0.1)(lightningcss@1.32.0):
+    dependencies:
+      '@vitest/expect': 2.1.9
+      '@vitest/mocker': 2.1.9(vite@5.4.21(lightningcss@1.32.0))
+      '@vitest/pretty-format': 2.1.9
+      '@vitest/runner': 2.1.9
+      '@vitest/snapshot': 2.1.9
+      '@vitest/spy': 2.1.9
+      '@vitest/utils': 2.1.9
+      chai: 5.3.3
+      debug: 4.4.3
+      expect-type: 1.3.0
+      magic-string: 0.30.21
+      pathe: 1.1.2
+      std-env: 3.10.0
+      tinybench: 2.9.0
+      tinyexec: 0.3.2
+      tinypool: 1.1.1
+      tinyrainbow: 1.2.0
+      vite: 5.4.21(lightningcss@1.32.0)
+      vite-node: 2.1.9(lightningcss@1.32.0)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
       jsdom: 25.0.1
     transitivePeerDependencies:
       - less

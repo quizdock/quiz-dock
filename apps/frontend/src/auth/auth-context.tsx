@@ -1,9 +1,14 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react';
-import { hostSeatControllerClaim, hostSeatControllerRelease } from '../api/generated/auth/auth';
+import {
+  hostSeatControllerClaim,
+  hostSeatControllerRelease,
+  oidcSessionControllerCallback,
+  oidcSessionControllerLogin,
+  oidcSessionControllerLogout,
+} from '../api/generated/auth/auth';
 import { meControllerMe } from '../api/generated/me/me';
-import { setAuthHeaders, setUnauthorizedHandler } from '../api/http';
+import { setAuthHeaders, setSessionAuthed, setUnauthorizedHandler } from '../api/http';
 import { getDemo } from '../config';
-import { getOidc } from './oidc';
 
 const STORAGE_KEY = 'live.localUser';
 const AFTER_LOGIN_KEY = 'live.afterLogin';
@@ -19,37 +24,58 @@ let oidcAuthed = false;
 export function configureAuth(mode: AuthMode, oidcUserAuthed = false): void {
   currentMode = mode;
   oidcAuthed = oidcUserAuthed;
+  setSessionAuthed(mode === 'oidc' && oidcUserAuthed);
+}
+
+/** Tells the other tabs of this browser that the session is over. */
+const SIGN_OUT_CHANNEL = 'quizdock-auth';
+
+function broadcastSignOut(): void {
+  try {
+    const channel = new BroadcastChannel(SIGN_OUT_CHANNEL);
+    channel.postMessage('signed-out');
+    channel.close();
+  } catch {
+    // No BroadcastChannel: the other tabs find out at their next request (401).
+  }
 }
 
 /**
- * Suit le cycle de vie du jeton OIDC (mode oidc, après `initOidc`) : chaque
- * renouvellement silencieux remplace l'en-tête Bearer ; une expiration sans
- * renouvellement, un 401 du backend, ou une déconnexion dans un autre onglet,
- * ramène à la page de connexion.
+ * Suit la session OIDC (mode oidc) : le backend la tient, le navigateur n'a qu'un
+ * cookie `httpOnly`. Un 401 du backend (session finie ou refusée par le
+ * fournisseur) ou une déconnexion dans un autre onglet ramène à la connexion.
  */
 export function bindOidcSession(): void {
-  const events = getOidc().events;
-  events.addUserLoaded((u) => {
-    setAuthHeaders({ Authorization: `Bearer ${u.access_token}` });
-    oidcAuthed = true;
-  });
   const dropSession = () => {
     oidcAuthed = false;
-    setAuthHeaders({});
-    void getOidc().removeUser();
+    setSessionAuthed(false);
     if (window.location.pathname !== '/login') window.location.assign('/login');
   };
-  events.addAccessTokenExpired(dropSession);
-  events.addUserSignedOut(dropSession);
   setUnauthorizedHandler(dropSession);
-  // The session is shared by the tabs (localStorage): signed out in one, signed
-  // out in all — another tab never keeps a token its user gave back.
-  window.addEventListener('storage', (e) => {
-    if (!oidcAuthed || e.newValue !== null || !e.key?.startsWith('oidc.user:')) return;
-    oidcAuthed = false;
-    setAuthHeaders({});
-    if (window.location.pathname !== '/login') window.location.assign('/login');
-  });
+  try {
+    new BroadcastChannel(SIGN_OUT_CHANNEL).onmessage = (e) => {
+      if (e.data === 'signed-out' && oidcAuthed) dropSession();
+    };
+  } catch {
+    // See broadcastSignOut.
+  }
+}
+
+/**
+ * Tokens an earlier version kept in this browser's storage (`oidc-client-ts`):
+ * nothing reads them any more, and they must not linger — a token is exactly
+ * what the move to a server-side session keeps away from scripts.
+ */
+export function forgetStoredTokens(): void {
+  for (const store of [window.localStorage, window.sessionStorage]) {
+    try {
+      for (const key of Object.keys(store)) {
+        if (key.startsWith('oidc.')) store.removeItem(key);
+      }
+    } catch {
+      // Storage disabled: there is nothing in it either.
+    }
+  }
 }
 
 /** Identité locale (mode none) — utilisée aussi par la garde. */
@@ -107,16 +133,6 @@ export function getAuthMode(): AuthMode {
   return currentMode;
 }
 
-/**
- * Jeton d'accès OIDC courant (mode oidc), pour le handshake WebSocket. `null` en
- * mode none (l'hôte s'y identifie par son nom local via `getLocalUser`).
- */
-export async function getAccessToken(): Promise<string | null> {
-  if (currentMode !== 'oidc') return null;
-  const user = await getOidc().getUser();
-  return user?.access_token ?? null;
-}
-
 function applyLocalUser(name: string | null): void {
   setAuthHeaders(name ? { 'X-Local-User': name } : {});
 }
@@ -152,10 +168,10 @@ interface AuthState {
   claimHostSeat: (expiresInMinutes: number | null) => Promise<void>;
   /** Abandonne l'identité locale sans passer par le backend (siège refusé / annulé). */
   dropLocal: () => void;
-  /** Connexion mode OIDC (redirection vers l'IdP). */
+  /** Connexion mode OIDC (redirection vers le fournisseur, préparée par le backend). */
   loginOidc: () => Promise<void>;
-  /** Finalise le retour de redirection OIDC (route /auth/callback). */
-  completeOidcLogin: () => Promise<void>;
+  /** Finalise le retour du fournisseur (route /auth/callback) : le backend échange le code. */
+  completeOidcLogin: (params: URLSearchParams) => Promise<void>;
   logout: () => void | Promise<void>;
 }
 
@@ -198,30 +214,35 @@ export function AuthProvider({
   }, []);
 
   const loginOidc = useCallback(async () => {
-    await getOidc().signinRedirect();
+    const { data } = await oidcSessionControllerLogin();
+    if (data.url) window.location.assign(data.url);
   }, []);
 
-  const completeOidcLogin = useCallback(async () => {
-    const oidcUser = await getOidc().signinRedirectCallback();
-    setAuthHeaders({ Authorization: `Bearer ${oidcUser.access_token}` });
+  const completeOidcLogin = useCallback(async (params: URLSearchParams) => {
+    const code = params.get('code');
+    const state = params.get('state');
+    if (!code || !state)
+      throw new Error(params.get('error_description') ?? params.get('error') ?? 'OIDC');
+    const iss = params.get('iss') ?? undefined;
+    const { data } = await oidcSessionControllerCallback({ code, state, iss });
     oidcAuthed = true;
-    const profile = oidcUser.profile;
-    setUser(profile.name ?? profile.preferred_username ?? profile.sub ?? 'Animateur');
+    setSessionAuthed(true);
+    setUser(data && 'name' in data ? data.name : null);
   }, []);
 
   const logout = useCallback(async () => {
     if (mode === 'oidc') {
       oidcAuthed = false;
-      setAuthHeaders({});
+      setSessionAuthed(false);
       setUser(null);
-      // RP-initiated logout (end_session_endpoint) ; repli local si le
-      // fournisseur n'en expose pas.
-      try {
-        await getOidc().signoutRedirect();
-        return; // navigation en cours vers l'IdP
-      } catch {
-        await getOidc().removeUser();
-      }
+      broadcastSignOut();
+      // The backend ends its session, then the provider's (RP-initiated logout,
+      // when it has an end-session endpoint).
+      const url = await oidcSessionControllerLogout()
+        .then(({ data }) => data.url)
+        .catch(() => null);
+      window.location.assign(url ?? '/');
+      return;
     } else {
       // Rend le siège d'hôte (no-op si on ne le tenait pas) avant d'oublier l'identité.
       await hostSeatControllerRelease().catch(() => undefined);
