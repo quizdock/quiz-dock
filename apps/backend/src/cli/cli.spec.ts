@@ -81,6 +81,7 @@ describe('doctor', () => {
         DATABASE_URL: 'postgres://x',
         REDIS_URL: 'redis://x',
         MEDIA_DIR: '/tmp',
+        STORE_DIR: '/srv/store',
         ...env,
       },
       fetch: jest.fn() as unknown as typeof fetch,
@@ -115,6 +116,18 @@ describe('doctor', () => {
     expect(text()).toContain('FAIL PostgreSQL: ECONNREFUSED');
     expect(text()).toContain('FAIL REDIS_URL is not set');
     expect(text()).toContain('FAIL /tmp: EROFS');
+  });
+
+  it('checks the templates folder too (a fresh volume owned by root)', async () => {
+    const { out, text } = memOutput();
+    const d = deps({
+      probeWritable: jest.fn((dir: string) => {
+        if (dir === '/srv/store') throw new Error('EACCES');
+      }),
+    });
+    expect(await doctor(out, d)).toBe(false);
+    expect(text()).toContain('OK /tmp is writable');
+    expect(text()).toContain('FAIL /srv/store: EACCES');
   });
 
   it('in oidc mode runs discovery, then checks the JWKS', async () => {

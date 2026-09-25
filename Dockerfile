@@ -6,10 +6,10 @@
 # docker-compose.prod.yml (même image, commande surchargée).
 
 # ---- build (glibc, aligné avec le runtime distroless-debian) ----
-FROM node:24-bookworm-slim AS build
+FROM node:24-trixie-slim AS build
 RUN corepack enable
 WORKDIR /app
-# Pin the schema-engine binary target. bookworm-slim ships no libssl, so Prisma's
+# Pin the schema-engine binary target. The slim image ships no libssl, so Prisma's
 # platform detection falls back to "debian-openssl-1.1.x" and bakes that engine —
 # while the distroless runtime (libssl3) detects "debian-openssl-3.0.x" and tries
 # to download it at `migrate deploy` time (breaks air-gapped deploys, #31).
@@ -40,11 +40,13 @@ RUN pnpm --filter @quiz-dock/contracts build \
  && (cd /out && node_modules/.bin/prisma generate --schema prisma/schema.prisma) \
  # SPA buildé → servi par Nest (CLIENT_DIR).
  && cp -r apps/frontend/dist /out/client \
- # Dossier média possédé par l'uid non-root du runtime (volume hérite à la 1re init).
- && mkdir -p /data/media && chown -R 65532:65532 /data/media
+ # Media and template folders owned by the runtime's non-root uid: a fresh named
+ # volume takes the ownership of the folder it is mounted on.
+ && mkdir -p /data/media /data/store && chown -R 65532:65532 /data/media /data/store
 
 # ---- runtime (distroless, non-root uid 65532) ----
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS runtime
+# Debian 13: the Debian 12 image no longer follows Node releases nor OpenSSL fixes.
+FROM gcr.io/distroless/nodejs24-debian13:nonroot AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
@@ -57,6 +59,7 @@ COPY --from=build --chown=65532:65532 /out/client ./client
 COPY --from=build --chown=65532:65532 /out/prisma ./prisma
 COPY --from=build --chown=65532:65532 /out/prisma.config.ts ./prisma.config.ts
 COPY --from=build --chown=65532:65532 /data/media /data/media
+COPY --from=build --chown=65532:65532 /data/store /data/store
 # Admin CLI as a plain command: `docker compose exec quizdock qd <cmd>`.
 COPY --chmod=755 docker/qd /usr/local/bin/qd
 # Déjà l'uid du tag :nonroot — rendu explicite (scanners, lecteurs).
