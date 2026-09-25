@@ -314,16 +314,173 @@ describe('EditorPage', () => {
     });
   });
 
-  it('says so when a setting fails to save, instead of snapping back in silence', async () => {
-    mockApi([
-      { method: 'PUT', path: '/quizzes/q1', status: 403, body: { code: 'auth.host_required' } },
-      { method: 'GET', path: '/quizzes/q1', body: detail() },
-    ]);
-    renderApp('/quizzes/q1');
-    fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
-      target: { value: 'CC0-1.0' },
+  describe('a save the server refuses says so, instead of snapping back in silence (#82)', () => {
+    const FAILED = 'Impossible d’enregistrer la modification.';
+    const refused = (method: string, path: string) => ({ method, path, status: 500, body: {} });
+    const slide = {
+      id: 's1',
+      quizId: 'q1',
+      beforeQuestionId: 'qq',
+      orderIndex: 0,
+      blocks: [{ type: 'heading', id: 'h', text: 'Bienvenue', level: 1 }],
+      mediaId: null,
+      textTone: 'light',
+      textOutline: false,
+      displayDelayS: null,
+    };
+    const twoQuestions = () =>
+      detail({ questionCount: 2, questions: [q('a', 'Première', 0), q('b', 'Seconde', 1)] });
+
+    /** Each way the editor writes, the request it sends, and how to trigger it. */
+    const cases: {
+      name: string;
+      quiz?: ReturnType<typeof detail>;
+      request: [string, string];
+      act: () => Promise<void>;
+    }[] = [
+      {
+        name: 'the feedback switch',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.click(await screen.findByLabelText('Autoriser les avis des participants'));
+        },
+      },
+      {
+        name: 'the sound levelling',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.change(
+            await screen.findByLabelText('Égalisation du son', { selector: 'select' }),
+            {
+              target: { value: '-23' },
+            },
+          );
+        },
+      },
+      {
+        name: 'the licence',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+            target: { value: 'CC0-1.0' },
+          });
+        },
+      },
+      {
+        name: 'the language',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.change(await screen.findByLabelText('Langue', { selector: 'select' }), {
+            target: { value: 'de' },
+          });
+        },
+      },
+      {
+        name: 'a tag',
+        request: ['PUT', '/quizzes/q1'],
+        act: async () => {
+          const input = await screen.findByPlaceholderText('Ajouter un tag…');
+          fireEvent.change(input, { target: { value: 'histoire' } });
+          fireEvent.keyDown(input, { key: 'Enter' });
+        },
+      },
+      {
+        name: 'the status (publish)',
+        request: ['PATCH', '/quizzes/q1/status'],
+        act: async () => {
+          fireEvent.click(await screen.findByText('Publier (prêt)'));
+        },
+      },
+      {
+        name: 'the status (archive)',
+        request: ['PATCH', '/quizzes/q1/status'],
+        act: async () => {
+          fireEvent.click(await screen.findByRole('button', { name: 'Archiver' }));
+        },
+      },
+      {
+        name: 'the order of the sequence',
+        quiz: twoQuestions(),
+        request: ['PATCH', '/quizzes/q1/items/reorder'],
+        act: async () => {
+          fireEvent.click((await screen.findAllByLabelText('Descendre'))[0]);
+        },
+      },
+      {
+        name: 'deleting a question',
+        request: ['DELETE', '/questions/qq'],
+        act: async () => {
+          fireEvent.click(await screen.findByLabelText('Supprimer la question'));
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer' }));
+        },
+      },
+      {
+        name: 'deleting a slide',
+        quiz: detail({ slides: [slide] }),
+        request: ['DELETE', '/slides/s1'],
+        act: async () => {
+          fireEvent.click(await screen.findByLabelText('Supprimer la slide'));
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer' }));
+        },
+      },
+      {
+        name: 'deleting the quiz',
+        request: ['DELETE', '/quizzes/q1'],
+        act: async () => {
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le quiz' }));
+          fireEvent.click(await screen.findByRole('button', { name: 'Supprimer' }));
+        },
+      },
+    ];
+
+    for (const { name, quiz, request, act } of cases) {
+      it(`${name}: the error is shown`, async () => {
+        const fetchMock = mockApi([
+          refused(...request),
+          { method: 'GET', path: '/quizzes/q1', body: quiz ?? detail() },
+        ]);
+        renderApp('/quizzes/q1');
+        await act();
+        // The request did go out, and its refusal is on screen.
+        await waitFor(() =>
+          expect(
+            fetchMock.mock.calls.some(
+              ([url, opts]) =>
+                String(url).includes(request[1]) && (opts?.method ?? 'GET') === request[0],
+            ),
+          ).toBe(true),
+        );
+        expect(await screen.findByText(FAILED)).toBeInTheDocument();
+      });
+    }
+
+    it('a setting that saves shows no error', async () => {
+      mockApi([
+        { method: 'PUT', path: '/quizzes/q1', body: detail() },
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      renderApp('/quizzes/q1');
+      fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+        target: { value: 'CC0-1.0' },
+      });
+      await new Promise((r) => setTimeout(r, 50));
+      expect(screen.queryByText(FAILED)).toBeNull();
     });
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
+
+    it('a title that fails to save stays typed, with its Save button', async () => {
+      mockApi([
+        refused('PUT', '/quizzes/q1'),
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      renderApp('/quizzes/q1');
+      const title = await screen.findByDisplayValue('Mon quiz');
+      const header = within(title.closest('form') as HTMLElement);
+      fireEvent.change(title, { target: { value: 'Mon quiz révisé' } });
+      fireEvent.click(await header.findByRole('button', { name: /Enregistrer/ }));
+      expect(await screen.findByText(FAILED)).toBeInTheDocument();
+      expect(title).toHaveValue('Mon quiz révisé');
+      expect(header.getByRole('button', { name: /Enregistrer/ })).toBeEnabled();
+    });
   });
 
   it('désactive la publication si aucune question', async () => {
