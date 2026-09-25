@@ -16,17 +16,24 @@ export function isQuizLicense(value: string | null | undefined): value is QuizLi
 export const TAG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const TAG_MAX_LENGTH = 30;
 export const QUIZ_MAX_TAGS = 5;
+/** A quiz slug: kebab-case like a tag, longer. */
+export const SLUG_MAX_LENGTH = 60;
 
-/** What an author typed, as a tag ("Pop Culture " → "pop-culture"); '' when nothing is left. */
-export function toTag(text: string): string {
+/** What an author typed, as a kebab-case name ("Pop Culture " → "pop-culture"); '' when nothing is left. */
+export function toSlug(text: string, maxLength = SLUG_MAX_LENGTH): string {
   return text
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, TAG_MAX_LENGTH)
+    .slice(0, maxLength)
     .replace(/-+$/, '');
+}
+
+/** What an author typed, as a tag. */
+export function toTag(text: string): string {
+  return toSlug(text, TAG_MAX_LENGTH);
 }
 
 /**

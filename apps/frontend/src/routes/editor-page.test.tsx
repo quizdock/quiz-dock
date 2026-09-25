@@ -133,13 +133,99 @@ describe('EditorPage', () => {
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined);
     renderApp('/quizzes/q1');
-    fireEvent.click(await screen.findByRole('button', { name: /Exporter/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Exporter' }));
     await waitFor(() => expect(click).toHaveBeenCalled());
     expect(screen.queryByText(/Impossible d’exporter/)).toBeNull();
     const anchor = click.mock.instances[0] as unknown as HTMLAnchorElement;
     expect(anchor.download).toBe('histoire.quizdock.zip');
     expect(exportHeaders?.['X-Local-User']).toBeDefined();
     click.mockRestore();
+  });
+
+  describe('export for publication (#21)', () => {
+    const report = (over: Record<string, unknown> = {}) => ({
+      slug: 'histoire',
+      slugSet: true,
+      language: 'fr',
+      license: 'CC-BY-4.0',
+      tags: ['histoire'],
+      estimatedBytes: 3 * 1024 * 1024,
+      maxBytes: 20 * 1024 * 1024,
+      issues: [],
+      heaviest: [],
+      uncredited: [],
+      ...over,
+    });
+
+    it('lists what blocks and keeps the download disabled', async () => {
+      mockApi([
+        {
+          method: 'GET',
+          path: '/quizzes/q1/publication',
+          body: report({
+            license: null,
+            tags: [],
+            issues: [
+              { code: 'not_ready', level: 'block' },
+              { code: 'license', level: 'block' },
+              { code: 'tags', level: 'block' },
+              { code: 'credit_missing', level: 'warn', count: 1 },
+            ],
+            uncredited: [{ id: 'm1', kind: 'image', name: 'carte.webp', sizeBytes: 10 }],
+          }),
+        },
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      renderApp('/quizzes/q1');
+      fireEvent.click(await screen.findByRole('button', { name: 'Exporter pour publication' }));
+      const dialog = within((await screen.findByText('Nom court')).closest('dialog')!);
+      expect(dialog.getByText('Le quiz n’est pas prêt')).toBeInTheDocument();
+      expect(dialog.getByText('Aucune licence')).toBeInTheDocument();
+      expect(dialog.getByText('Aucun tag')).toBeInTheDocument();
+      expect(dialog.getByText('1 média sans crédit')).toBeInTheDocument();
+      expect(dialog.getByText('carte.webp')).toBeInTheDocument();
+      expect(dialog.getByRole('button', { name: 'Télécharger' })).toBeDisabled();
+    });
+
+    it('downloads under the confirmed slug, warning when it changes', async () => {
+      const fetchMock = mockApi([
+        { method: 'GET', path: '/quizzes/q1/publication', body: report() },
+        { method: 'GET', path: '/quizzes/q1', body: detail() },
+      ]);
+      const json = fetchMock.getMockImplementation() as (
+        u: string,
+        o?: RequestInit,
+      ) => Promise<Response>;
+      let body: unknown;
+      fetchMock.mockImplementation(async (url: string, opts?: RequestInit) => {
+        if (!String(url).includes('/publication/export')) return json(url, opts);
+        body = JSON.parse(String(opts?.body));
+        return new Response(new Blob(['PK']), {
+          status: 200,
+          headers: {
+            'content-disposition': 'attachment; filename="histoire-de-france.quizdock.zip"',
+          },
+        });
+      });
+      Object.assign(URL, { createObjectURL: vi.fn(() => 'blob:x'), revokeObjectURL: vi.fn() });
+      const click = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+      renderApp('/quizzes/q1');
+      fireEvent.click(await screen.findByRole('button', { name: 'Exporter pour publication' }));
+      const input = await screen.findByLabelText('Nom court');
+      expect(input).toHaveValue('histoire');
+      fireEvent.change(input, { target: { value: 'Histoire de France' } });
+      fireEvent.blur(input);
+      expect(input).toHaveValue('histoire-de-france');
+      expect(within(input.closest('dialog')!).getByRole('status')).toHaveTextContent(
+        '« histoire »',
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Télécharger' }));
+      await waitFor(() => expect(click).toHaveBeenCalled());
+      expect(body).toEqual({ slug: 'histoire-de-france' });
+      click.mockRestore();
+    });
   });
 
   it('publie le quiz (PATCH status) au clic', async () => {

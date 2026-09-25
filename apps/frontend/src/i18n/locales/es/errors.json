@@ -101,5 +101,13 @@
     "not_yours": "Solo su autor, o un administrador, puede retirar una plantilla.",
     "invalid_id": "Identificador de plantilla no válido.",
     "index_unreadable": "No se puede leer el índice del catálogo; avisa a tu administrador."
+  },
+  "publication": {
+    "slug_invalid": "El nombre corto solo admite minúsculas, cifras y guiones.",
+    "not_ready": "Solo un cuestionario listo se puede exportar para publicar.",
+    "license": "Elige una licencia (CC0, CC BY o CC BY-SA) antes de exportar para publicar.",
+    "language": "El idioma del cuestionario no es válido.",
+    "tags": "Añade al menos una etiqueta antes de exportar para publicar.",
+    "too_large": "El cuestionario es demasiado grande para el catálogo comunitario."
   }
 }

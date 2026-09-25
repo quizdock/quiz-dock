@@ -5,6 +5,7 @@ import {
   loudnessSchema,
   peakDbfsSchema,
   QUIZ_MAX_TAGS,
+  SLUG_MAX_LENGTH,
   TAG_MAX_LENGTH,
   TAG_RE,
 } from '@quiz-dock/contracts';
@@ -50,7 +51,7 @@ export const mediaPathSchema = z.string().regex(/^media\/[A-Za-z0-9][A-Za-z0-9._
 
 /** Kebab-case identifier: the quiz `slug`, and each tag. */
 export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-export const slugSchema = z.string().regex(SLUG_RE).max(60);
+export const slugSchema = z.string().regex(SLUG_RE).max(SLUG_MAX_LENGTH);
 export const tagSchema = z.string().regex(TAG_RE).max(TAG_MAX_LENGTH);
 export const MAX_TAGS = QUIZ_MAX_TAGS;
 

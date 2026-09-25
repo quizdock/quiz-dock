@@ -395,5 +395,40 @@
     "players_one": "{{count}} joueur",
     "players_other": "{{count}} joueurs",
     "liveEditsHint": "Les modifications de forme (fonds, contraste, explications, slides) s’appliquent aux sessions en cours dès l’étape suivante ; questions et réponses restent telles que lancées."
+  },
+  "publication": {
+    "open": "Exporter pour publication",
+    "title": "Exporter pour publication",
+    "description": "Vérifie le quiz selon ce qu’accepte le catalogue communautaire, puis télécharge le fichier à déposer dans votre dépôt quizdock-quizzes.",
+    "download": "Télécharger",
+    "checking": "Vérification du quiz…",
+    "failed": "Impossible de préparer l’export.",
+    "check": {
+      "ready": "Le quiz est prêt",
+      "notReady": "Le quiz n’est pas prêt",
+      "language": "Langue : {{language}}",
+      "license": "Licence : {{license}}",
+      "noLicense": "Aucune licence",
+      "tags": "Tags : {{tags}}",
+      "noTags": "Aucun tag",
+      "size": "Taille : {{size}} sur {{max}}",
+      "uncredited_one": "{{count}} média sans crédit",
+      "uncredited_other": "{{count}} médias sans crédit",
+      "credited": "Chaque média a un crédit"
+    },
+    "fix": {
+      "ready": "Passez d’abord le quiz à l’état prêt (Publier).",
+      "settings": "À régler dans les réglages du quiz, rubrique Partage.",
+      "size": "Allégez ou retirez les médias les plus lourds :",
+      "credit": "Vous êtes responsable des droits sur chaque image, son et vidéo publiés. Créditez-les dans votre médiathèque (auteur, licence, source)."
+    },
+    "kind": {
+      "image": "Image",
+      "video": "Vidéo",
+      "audio": "Son"
+    },
+    "slugLabel": "Nom court",
+    "slugHelp": "Ce qui identifie ce quiz dans votre dépôt pour le catalogue. Fichier : {{file}}",
+    "slugChanged": "Le changer (auparavant « {{previous}} ») crée un nouveau quiz pour le catalogue : supprimez l’ancien fichier de votre dépôt."
   }
 }

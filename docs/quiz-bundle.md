@@ -25,6 +25,16 @@ checked afterwards. Contributors changing the bundle schema run
   ([self-hosting/cli.md](self-hosting/cli.md)). An export fixes the quiz's `slug`
   (derived from the title the first time) and leaves its `revision` alone — that
   counter moves when the quiz is *shared* to the template catalogue.
+- **Export for publication** — editor header → *Export for publication*, for a
+  community store (#21). It checks first what a store would refuse: the quiz
+  must be *ready*, with a licence among CC0 / CC BY / CC BY-SA, a language, at
+  least one tag, and a bundle within `PUBLICATION_MAX_MB` (20 MB by default,
+  the heaviest media listed when it is over). Media without a credit are listed
+  as a reminder, never a block: the contributor answers for the rights. The
+  author confirms the `slug`, the name a store knows the quiz by in their
+  repository; changing it later makes a new quiz for the store. The file is
+  `<slug>.quizdock.zip`. `GET /api/v1/quizzes/:id/publication` returns the
+  checks, `POST /api/v1/quizzes/:id/publication/export` (`{"slug"}`) the zip.
 - **Import** — dashboard → *Import* (zip, or a bare `quiz.json` when there is
   no media), `POST /api/v1/quizzes/import` (multipart field `file`), or
   `qd quiz:import <file> <sub|email>`. The result is a **new draft** owned by

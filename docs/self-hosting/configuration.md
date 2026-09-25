@@ -124,6 +124,7 @@ Which setup offers what: [where participants connect](invitation-address.md).
 | `MEDIA_MAX_AUDIO_MB` | `10` | Max size of an uploaded **sound** (MB). The editor converts to M4A (AAC). |
 | `MEDIA_LIBRARY_LINKS` | *(seven free libraries)* | The free media libraries the editor links to: a JSON list of `{"name", "url", "kinds"}` (`kinds` among `image`, `video`, `audio`), or `none` to hide them (an instance without Internet). Default, open licences only and several per kind: OpenSoundLibrary, Freesound, ccMixter, Openverse, Wikimedia Commons, NASA Image and Video Library, Internet Archive. |
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
+| `PUBLICATION_MAX_MB` | `20` | Largest bundle the editor's *Export for publication* allows (MB): the limit of the community store, kept under GitHub's 25 MB web-upload limit. An organisation running its own store may set another. |
 
 | `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
 | `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |
