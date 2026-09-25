@@ -28,7 +28,8 @@ import { UsersService } from '../users/users.service';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { noticeOf } from './game.types';
-import { clientIp, PinAttempts } from './pin-attempts';
+import { clientIp } from '../common/trust-proxy';
+import { PinAttempts } from './pin-attempts';
 import { WsExceptionFilter } from './ws-exception.filter';
 
 /** Données attachées à chaque socket de jeu. */

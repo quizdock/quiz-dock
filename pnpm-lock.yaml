@@ -111,6 +111,9 @@ importers:
       prisma:
         specifier: ^7.10.0
         version: 7.10.0(@types/node@24.13.2)(@types/react-dom@19.2.3(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(typescript@5.9.3)
+      proxy-addr:
+        specifier: ^2.0.7
+        version: 2.0.7
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
@@ -148,6 +151,9 @@ importers:
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
+      '@types/proxy-addr':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@types/supertest':
         specifier: ^6.0.2
         version: 6.0.3
@@ -2492,6 +2498,9 @@ packages:
 
   '@types/pg@8.20.0':
     resolution: {integrity: sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow==}
+
+  '@types/proxy-addr@2.0.3':
+    resolution: {integrity: sha512-TgAHHO4tNG3HgLTUhB+hM4iwW6JUNeQHCLnF1DjaDA9c69PN+IasoFu2MYDhubFc+ZIw5c5t9DMtjvrD6R3Egg==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -8373,6 +8382,10 @@ snapshots:
       '@types/node': 22.19.20
       pg-protocol: 1.14.0
       pg-types: 2.2.0
+
+  '@types/proxy-addr@2.0.3':
+    dependencies:
+      '@types/node': 24.13.2
 
   '@types/qs@6.15.1': {}
 

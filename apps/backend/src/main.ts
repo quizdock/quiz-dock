@@ -6,6 +6,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
 import { cspMiddleware } from './common/csp';
 import { HttpExceptionFilter } from './common/http-exception.filter';
+import { trustProxy } from './common/trust-proxy';
 import { buildSwaggerDocument } from './swagger';
 
 async function bootstrap(): Promise<void> {
@@ -13,6 +14,9 @@ async function bootstrap(): Promise<void> {
     logger: ['log', 'error', 'warn'],
   });
 
+  // Which hops may speak for the client (`X-Forwarded-For`, `X-Forwarded-Proto`):
+  // `req.ip` and `req.secure` follow `TRUST_PROXY`, like the sockets.
+  app.getHttpAdapter().getInstance().set('trust proxy', trustProxy());
   app.enableCors();
   // The pages say where their scripts, styles, frames and requests may come from.
   app.use(cspMiddleware());

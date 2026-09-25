@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { isIP } from 'node:net';
 import { toErrorResponse } from '../common/error-response';
 import { RedisService } from '../redis/redis.service';
 
@@ -44,40 +43,4 @@ export class PinAttempts {
       throw err;
     }
   }
-}
-
-/** Loopback, private and link-local ranges: where a reverse proxy of ours sits. */
-function isPrivate(address: string): boolean {
-  const ip = address.startsWith('::ffff:') ? address.slice(7) : address;
-  if (isIP(ip) === 4) {
-    const [a, b] = ip.split('.').map(Number);
-    return (
-      a === 10 ||
-      a === 127 ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      (a === 169 && b === 254)
-    );
-  }
-  const lower = ip.toLowerCase();
-  return lower === '::1' || /^f[cd]/.test(lower) || /^fe[89ab]/.test(lower);
-}
-
-/**
- * The address a request comes from. `X-Forwarded-For` is believed only when the
- * peer is a private address — a reverse proxy in front of the backend — and read
- * from the right, skipping the proxies of the chain: a client connecting from
- * the internet cannot make up one.
- */
-export function clientIp(peer: string, forwardedFor: string | string[] | undefined): string {
-  const header = Array.isArray(forwardedFor) ? forwardedFor.join(',') : forwardedFor;
-  if (!header || !isPrivate(peer)) return peer;
-  const chain = header
-    .split(',')
-    .map((part) => part.trim())
-    .filter((part) => isIP(part.startsWith('::ffff:') ? part.slice(7) : part) !== 0);
-  for (let i = chain.length - 1; i >= 0; i--) {
-    if (!isPrivate(chain[i])) return chain[i];
-  }
-  return chain[0] ?? peer;
 }
