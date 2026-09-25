@@ -37,13 +37,16 @@ the results never leave your servers.
 </p>
 
 > [!NOTE]
+> **New in 0.8 — 🗂️ a media library, for hosts and for the instance.** Whatever your
+> browser reads is converted there (WebP, MP4, M4A), stored once and reused from *My media*
+> or from the instance's **global media**, credited, and managed on an administration page:
+> disk by kind and owner, clean-up, every file with its usages.
+>
 > **New in 0.7 — 🎧 video & sound in questions** *(experimental)*. Videos and sounds,
 > loudness-matched, with a waveform; played on the projection **and** on the devices of
 > remote participants, started on the same instant everywhere; *listen first* questions
-> open the answers once the media has played. Since then, a **media library**: whatever
-> your browser reads is converted there (WebP, MP4, M4A), reused from *My media* or from
-> the instance's **global media**, credited, and managed on an administration page.
-> Tested in Chromium browsers, not yet on iPhone — see the
+> open the answers once the media has played. Tested in Chromium browsers, not yet on
+> iPhone — see the
 > [audio & video guide](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/audio-video.md).
 
 ## 🎮 Try it online
@@ -141,7 +144,7 @@ docker compose -f docker-compose.prod.yml up -d
 # open http://localhost:18080
 ```
 
-Pin a version with `QUIZDOCK_TAG=0.7.0 docker compose -f docker-compose.prod.yml up -d`.
+Pin a version with `QUIZDOCK_TAG=0.8.0 docker compose -f docker-compose.prod.yml up -d`.
 From source: `git clone https://github.com/quizdock/quiz-dock.git`, then the same command
 with `--build`.
 
@@ -149,7 +152,7 @@ with `--build`.
 
 Migrations run **automatically** on every start: pull the new tag and `up` again.
 **Back up PostgreSQL first**, and **don't roll back** an image once its migrations ran —
-restore the backup instead. With the script: `./quizdock upgrade 0.7.0` (backup → pull →
+restore the backup instead. With the script: `./quizdock upgrade 0.8.0` (backup → pull →
 restart → doctor). Full procedure:
 [self-hosting → Upgrading](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrading.md).
 
