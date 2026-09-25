@@ -358,6 +358,28 @@ describe('QuizzesService', () => {
     });
   });
 
+  describe('language (#83)', () => {
+    const saved = process.env.APP_LANG;
+    afterEach(() => {
+      if (saved === undefined) delete process.env.APP_LANG;
+      else process.env.APP_LANG = saved;
+    });
+
+    it('a new quiz takes the instance language unless told otherwise', async () => {
+      process.env.APP_LANG = 'zh-TW';
+      prisma.quiz.create.mockResolvedValue(makeQuiz());
+      await service.create(OWNER, { title: 'T' });
+      expect(prisma.quiz.create.mock.calls[0][0].data.language).toBe('zh-TW');
+      await service.create(OWNER, { title: 'T', language: 'de' });
+      expect(prisma.quiz.create.mock.calls[1][0].data.language).toBe('de');
+    });
+
+    it('a language is a BCP 47 tag', () => {
+      expect(updateQuizSchema.safeParse({ language: 'zh-TW' }).success).toBe(true);
+      expect(updateQuizSchema.safeParse({ language: 'French' }).success).toBe(false);
+    });
+  });
+
   describe('licence and tags (#21, #39)', () => {
     it('update writes the licence and the tags', async () => {
       prisma.quiz.findFirst.mockResolvedValue(makeQuiz());

@@ -47,6 +47,8 @@
     "sharingSummary_one": "{{license}} · {{count}} tag",
     "sharingSummary_other": "{{license}} · {{count}} tags",
     "noLicense": "No licence",
+    "languageLabel": "Language",
+    "languageHelp": "The language the quiz is written in. Players see it in the templates, and a store filters by it.",
     "licenseLabel": "Licence",
     "licenseHelp": "The terms others may reuse the quiz under. Required to share it as a template. You must hold the rights to its content and media.",
     "license": {

@@ -139,7 +139,7 @@ at `null`. An imported bundle keeps whatever it carried, except its identity
 | `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. Ignored on import. |
 | `revision` | integer ≥ 0 | Publication counter of the quiz the bundle came from: **+1 every time it is shared** to a template catalogue. An import starts the copy back at 0 — it has never been shared itself. An integer, not semver. |
 | `updatedAt` | ISO 8601 UTC | When the quiz was last saved (the export moment, since the export itself stamps it). Informative: ignored on import. |
-| `language` | BCP 47 | A dedicated field, never a tag. |
+| `language` | BCP 47 | A dedicated field, never a tag. Set in the quiz settings (*Sharing*); a bundle without one imports in the instance's language (`APP_LANG`). |
 | `domain` | string or `null` | Free text until the Store closes the vocabulary. |
 | `tags` | kebab-case strings, 5 at most | Lowercase, `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 30 chars each. |
 | `license` | SPDX identifier or `null` | The quiz settings offer `CC0-1.0`, `CC-BY-4.0` and `CC-BY-SA-4.0`, the three a community store accepts. An imported bundle may carry another identifier: it is kept. Required to share the quiz as a template. |

@@ -1,6 +1,7 @@
 import { createZodDto } from 'nestjs-zod';
 import {
   AUDIO_TARGETS,
+  LANGUAGE_RE,
   MEDIA_TAIL_MAX_S,
   QUIZ_LICENSES,
   QUIZ_MAX_TAGS,
@@ -13,7 +14,8 @@ import { z } from 'zod';
 export const updateQuizSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
   description: z.string().trim().max(2000).nullable().optional(),
-  language: z.string().trim().min(2).max(5).optional(),
+  /** BCP 47 ("en", "zh-TW"). */
+  language: z.string().trim().regex(LANGUAGE_RE).max(10).optional(),
   feedbackEnabled: z.boolean().optional(),
   /** Pause after a question's media before its time can run out (s). */
   mediaTailS: z.number().int().min(0).max(MEDIA_TAIL_MAX_S).optional(),

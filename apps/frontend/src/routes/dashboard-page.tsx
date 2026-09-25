@@ -97,7 +97,8 @@ export function DashboardPage() {
 
   const onCreate = () => {
     create.mutate(
-      { data: { title: t('newQuiz'), language: 'fr' } },
+      // No language: the server gives the instance's (#83).
+      { data: { title: t('newQuiz') } },
       {
         onSuccess: () =>
           queryClient.invalidateQueries({

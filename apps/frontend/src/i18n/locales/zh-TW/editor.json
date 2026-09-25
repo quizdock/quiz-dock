@@ -47,6 +47,8 @@
     "sharingSummary_one": "{{license}} · {{count}} 個標籤",
     "sharingSummary_other": "{{license}} · {{count}} 個標籤",
     "noLicense": "無授權條款",
+    "languageLabel": "語言",
+    "languageHelp": "測驗所用的語言。範本中會顯示，目錄也依語言篩選。",
     "licenseLabel": "授權條款",
     "licenseHelp": "他人可以在何種條件下再次使用此測驗。以範本分享前必須選擇。你必須擁有其內容與媒體的權利。",
     "license": {

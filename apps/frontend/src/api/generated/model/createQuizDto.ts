@@ -17,8 +17,8 @@ export interface CreateQuizDto {
   /** @maxLength 2000 */
   description?: string;
   /**
-     * @minLength 2
-     * @maxLength 5
+     * @maxLength 10
+     * @pattern ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$
      */
   language?: string;
   feedbackEnabled?: boolean;
