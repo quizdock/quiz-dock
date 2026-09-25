@@ -59,7 +59,8 @@
     "tagsLabel": "標籤",
     "tagsPlaceholder": "新增標籤…",
     "tagsHelp": "最多 5 個關鍵字，方便在範本中找到此測驗。按 Enter 新增。",
-    "removeTag": "移除標籤 {{tag}}"
+    "removeTag": "移除標籤 {{tag}}",
+    "saveError": "無法儲存變更。"
   },
   "broadcast": {
     "title": "廣播",
@@ -430,5 +431,8 @@
     "slugLabel": "短名稱",
     "slugHelp": "目錄在你的儲存庫中識別此測驗的名稱。檔案：{{file}}",
     "slugChanged": "變更它（原為「{{previous}}」）會在目錄中產生新的測驗：請從儲存庫刪除舊檔案。"
+  },
+  "readOnly": {
+    "notice": "{{owner}} 的測驗：你可以檢視，但不能修改。"
   }
 }

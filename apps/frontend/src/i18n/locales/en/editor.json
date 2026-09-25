@@ -59,7 +59,8 @@
     "tagsLabel": "Tags",
     "tagsPlaceholder": "Add a tag…",
     "tagsHelp": "Up to 5 keywords to find the quiz among templates. Press Enter to add one.",
-    "removeTag": "Remove tag {{tag}}"
+    "removeTag": "Remove tag {{tag}}",
+    "saveError": "Could not save the change."
   },
   "broadcast": {
     "title": "Broadcast",
@@ -430,5 +431,8 @@
     "slugLabel": "Short name",
     "slugHelp": "How the store knows this quiz in your repository. File: {{file}}",
     "slugChanged": "Changing it from “{{previous}}” makes a new quiz for the store: delete the old file from your repository."
+  },
+  "readOnly": {
+    "notice": "{{owner}}'s quiz: you can read it, not change it."
   }
 }

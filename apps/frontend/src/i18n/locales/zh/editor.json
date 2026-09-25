@@ -59,7 +59,8 @@
     "tagsLabel": "标签",
     "tagsPlaceholder": "添加标签…",
     "tagsHelp": "最多 5 个关键词，便于在模板中找到该测验。按回车添加。",
-    "removeTag": "移除标签 {{tag}}"
+    "removeTag": "移除标签 {{tag}}",
+    "saveError": "无法保存更改。"
   },
   "broadcast": {
     "title": "广播",
@@ -430,5 +431,8 @@
     "slugLabel": "短名称",
     "slugHelp": "目录在你的仓库中识别此测验的名称。文件：{{file}}",
     "slugChanged": "更改它（原为“{{previous}}”）会在目录中产生一个新测验：请从仓库中删除旧文件。"
+  },
+  "readOnly": {
+    "notice": "{{owner}} 的测验：你可以查看，但不能修改。"
   }
 }

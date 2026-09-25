@@ -66,7 +66,7 @@ import { cn } from '@/lib/utils';
 import { useLaunchSession } from '../game/use-launch-session';
 import { downloadFile } from '../api/download';
 import { apiErrorText } from '../api/http';
-import type { QuizDetailDto } from '../api/generated/model';
+import type { QuizDetailDto, UpdateQuizDto } from '../api/generated/model';
 import { quizItems, moveItem, slideLabel, type QuizItem } from '@/lib/quiz-items';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
@@ -78,6 +78,7 @@ import { Disclosure } from '@/components/ui/disclosure';
 import { Drawer } from '@/components/ui/drawer';
 import { QuestionForm } from './question-form';
 import { PublicationExport } from './publication-export';
+import { QuizReadOnly } from './quiz-read-only';
 import { SlideForm } from './slide-form';
 import { StarRow } from './feedback-page';
 import {
@@ -117,6 +118,8 @@ export function EditorPage() {
 
   if (isLoading) return <p className="text-muted-foreground">{t('common:loading')}</p>;
   if (error || !data) return <p className="text-destructive">{t('notFound')}</p>;
+  // Another host's quiz, opened by a manager: read, never changed (#82).
+  if (!data.data.editable) return <QuizReadOnly quiz={data.data} />;
   return <QuizEditor quiz={data.data} />;
 }
 
@@ -204,6 +207,9 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() }),
     ]);
 
+  // A save that fails says so, next to the settings, instead of snapping back
+  // in silence (#82).
+  const [saveError, setSaveError] = useState<string | null>(null);
   // Title/description draft kept in localStorage until saved or discarded.
   const quizDraftKey = `quiz:${quiz.id}:settings`;
   type QuizForm = { title: string; description: string; language: string };
@@ -215,14 +221,21 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       language: quiz.language,
     },
     onSubmit: async ({ value }) => {
-      await update.mutateAsync({
-        id: quiz.id,
-        data: {
-          title: value.title,
-          description: value.description || null,
-          language: value.language,
-        },
-      });
+      setSaveError(null);
+      try {
+        await update.mutateAsync({
+          id: quiz.id,
+          data: {
+            title: value.title,
+            description: value.description || null,
+            language: value.language,
+          },
+        });
+      } catch (e) {
+        // The draft stays: nothing typed is lost.
+        setSaveError(apiErrorText(e, t('settings.saveError')));
+        return;
+      }
       await invalidate();
       clearDraft(quizDraftKey);
       setQuizDraft(null);
@@ -245,73 +258,65 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   }, [isDirty, quizValues, quizDraftKey]);
   useUnsavedGuard(isDirty);
 
-  const setFeedbackEnabled = async (feedbackEnabled: boolean) => {
-    await update.mutateAsync({ id: quiz.id, data: { feedbackEnabled } });
-    await invalidate();
+  const guarded = async (action: () => Promise<unknown>) => {
+    setSaveError(null);
+    try {
+      await action();
+    } catch (e) {
+      setSaveError(apiErrorText(e, t('settings.saveError')));
+    }
   };
+  const saveSettings = (data: UpdateQuizDto) =>
+    guarded(async () => {
+      await update.mutateAsync({ id: quiz.id, data });
+      await invalidate();
+    });
 
-  const setLoudness = async (loudnessTargetLufs: LoudnessTarget) => {
-    await update.mutateAsync({ id: quiz.id, data: { loudnessTargetLufs } });
-    await invalidate();
-  };
+  const setFeedbackEnabled = (feedbackEnabled: boolean) => saveSettings({ feedbackEnabled });
+  const setLoudness = (loudnessTargetLufs: LoudnessTarget) => saveSettings({ loudnessTargetLufs });
+  const setAudioTarget = (audioTarget: AudioTarget) => saveSettings({ audioTarget });
+  const setLicense = (license: (typeof QUIZ_LICENSES)[number] | null) => saveSettings({ license });
+  const setLanguage = (language: string) => saveSettings({ language });
+  const setTags = (tags: string[]) => saveSettings({ tags });
+  const setMediaTailS = (mediaTailS: number) => saveSettings({ mediaTailS });
 
-  const setAudioTarget = async (audioTarget: AudioTarget) => {
-    await update.mutateAsync({ id: quiz.id, data: { audioTarget } });
-    await invalidate();
-  };
-
-  const setLicense = async (license: (typeof QUIZ_LICENSES)[number] | null) => {
-    await update.mutateAsync({ id: quiz.id, data: { license } });
-    await invalidate();
-  };
-
-  const setLanguage = async (language: string) => {
-    await update.mutateAsync({ id: quiz.id, data: { language } });
-    await invalidate();
-  };
-
-  const setTags = async (tags: string[]) => {
-    await update.mutateAsync({ id: quiz.id, data: { tags } });
-    await invalidate();
-  };
-
-  const setMediaTailS = async (mediaTailS: number) => {
-    await update.mutateAsync({ id: quiz.id, data: { mediaTailS } });
-    await invalidate();
-  };
-
-  const changeStatus = async (status: 'draft' | 'ready' | 'archived') => {
-    await transition.mutateAsync({ id: quiz.id, data: { status } });
-    await invalidate();
-  };
+  const changeStatus = (status: 'draft' | 'ready' | 'archived') =>
+    guarded(async () => {
+      await transition.mutateAsync({ id: quiz.id, data: { status } });
+      await invalidate();
+    });
 
   const onPresent = () => launch(quiz.id, { fullCapture });
 
-  const onDeleteQuiz = async () => {
-    await removeQuiz.mutateAsync({ id: quiz.id });
-    await queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
-    void navigate({ to: '/quizzes' });
-  };
+  const onDeleteQuiz = () =>
+    guarded(async () => {
+      await removeQuiz.mutateAsync({ id: quiz.id });
+      await queryClient.invalidateQueries({ queryKey: getQuizzesControllerListQueryKey() });
+      void navigate({ to: '/quizzes' });
+    });
 
-  const onDeleteQuestion = async (qid: string) => {
-    await removeQuestion.mutateAsync({ qid });
-    await invalidate();
-  };
+  const onDeleteQuestion = (qid: string) =>
+    guarded(async () => {
+      await removeQuestion.mutateAsync({ qid });
+      await invalidate();
+    });
 
-  const onDeleteSlide = async (sid: string) => {
-    await removeSlide.mutateAsync({ sid });
-    await invalidate();
-  };
+  const onDeleteSlide = (sid: string) =>
+    guarded(async () => {
+      await removeSlide.mutateAsync({ sid });
+      await invalidate();
+    });
 
   // Questions and slides share one sequence (#7): the server re-anchors slides from it.
   const items = quizItems(quiz);
-  const persistOrder = async (next: QuizItem[]) => {
-    await reorder.mutateAsync({
-      id: quiz.id,
-      data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+  const persistOrder = (next: QuizItem[]) =>
+    guarded(async () => {
+      await reorder.mutateAsync({
+        id: quiz.id,
+        data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+      });
+      await invalidate();
     });
-    await invalidate();
-  };
   const move = (index: number, direction: -1 | 1) => {
     const next = moveItem(items, index, direction);
     if (next !== items) void persistOrder(next);
@@ -671,6 +676,11 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
             busy={transition.isPending}
           />
           {launchDialog}
+          {saveError ? (
+            <p className="text-destructive text-sm" role="alert">
+              {saveError}
+            </p>
+          ) : null}
           {quizDraft && isDirty ? (
             <DraftNotice
               onDiscard={() => {

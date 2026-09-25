@@ -59,7 +59,8 @@
     "tagsLabel": "Etiquetas",
     "tagsPlaceholder": "Añadir una etiqueta…",
     "tagsHelp": "Hasta 5 palabras clave para encontrar el cuestionario entre las plantillas. Pulsa Intro para añadir una.",
-    "removeTag": "Quitar la etiqueta {{tag}}"
+    "removeTag": "Quitar la etiqueta {{tag}}",
+    "saveError": "No se pudo guardar el cambio."
   },
   "broadcast": {
     "title": "Difusión",
@@ -430,5 +431,8 @@
     "slugLabel": "Nombre corto",
     "slugHelp": "Cómo reconoce el catálogo este cuestionario en tu repositorio. Archivo: {{file}}",
     "slugChanged": "Cambiarlo (antes «{{previous}}») crea un cuestionario nuevo para el catálogo: borra el archivo antiguo de tu repositorio."
+  },
+  "readOnly": {
+    "notice": "Cuestionario de {{owner}}: puedes consultarlo, no modificarlo."
   }
 }
