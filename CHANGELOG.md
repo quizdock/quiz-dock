@@ -12,6 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- Quiz language in unreleased *(changelog)*
 - The licence and the tags are set in the quiz settings *(bundle)*
 - Licence and tags of a quiz in unreleased *(changelog)*
 - The 0.8 breaking change at the top of the README
@@ -21,6 +22,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
+- Export a quiz for publication to a community store *(editor)*
 - Set the licence and the tags of a quiz *(editor)*
 
 ### Contributors
