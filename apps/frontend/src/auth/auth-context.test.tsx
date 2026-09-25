@@ -140,6 +140,20 @@ describe('OIDC session lifecycle', () => {
     expect(isAuthenticated()).toBe(false);
   });
 
+  it('keeps the session alive while signed in, hidden tab or not', async () => {
+    vi.useFakeTimers();
+    const fetchMock = authBackend({ '/api/v1/me': [200, { displayName: 'Marie' }] });
+    configureAuth('oidc', true);
+    bindOidcSession();
+    await vi.advanceTimersByTimeAsync(4 * 60_000);
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/me', expect.anything());
+    configureAuth('oidc', false);
+    fetchMock.mockClear();
+    await vi.advanceTimersByTimeAsync(4 * 60_000);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
   it('forgets the tokens an earlier version kept in the browser', () => {
     localStorage.setItem('oidc.user:https://idp:quiz-dock-frontend', '{"access_token":"x"}');
     sessionStorage.setItem('oidc.8f2e', '{}');

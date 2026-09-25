@@ -1,6 +1,8 @@
 {
   "auth": {
     "required": "Authentication required.",
+    "login_failed": "The sign-in could not be completed. Please try again.",
+    "cross_origin": "This request did not come from the application's own page.",
     "host_required": "Host role required.",
     "host_only": "This is a host action; an administrator manages the instance, they do not present.",
     "admin_required": "Administrator role required."

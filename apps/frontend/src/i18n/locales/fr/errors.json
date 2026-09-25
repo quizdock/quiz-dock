@@ -1,6 +1,8 @@
 {
   "auth": {
     "required": "Authentification requise.",
+    "login_failed": "La connexion n’a pas pu aboutir. Réessayez.",
+    "cross_origin": "Cette requête ne vient pas d’une page de l’application.",
     "host_required": "Rôle animateur requis.",
     "host_only": "Action réservée aux animateurs : un administrateur gère l’instance, il ne présente pas.",
     "admin_required": "Rôle administrateur requis."

@@ -23,6 +23,7 @@
   ],
   "users": [
     {
+      "id": "2bca0877-373c-460c-a37d-6520be91d3b4",
       "username": "animateur",
       "enabled": true,
       "email": "animateur@quiz-dock.test",
@@ -33,6 +34,7 @@
       "realmRoles": ["host"]
     },
     {
+      "id": "39b95ebf-1a3f-4b7f-a53e-105e57137962",
       "username": "participant",
       "enabled": true,
       "email": "participant@quiz-dock.test",

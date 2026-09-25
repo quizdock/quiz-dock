@@ -27,6 +27,9 @@ export function configureAuth(mode: AuthMode, oidcUserAuthed = false): void {
   setSessionAuthed(mode === 'oidc' && oidcUserAuthed);
 }
 
+/** How often a signed-in page reminds the backend of its session (well under a provider's idle timeout). */
+const KEEP_ALIVE_MS = 4 * 60_000;
+
 /** Tells the other tabs of this browser that the session is over. */
 const SIGN_OUT_CHANNEL = 'quizdock-auth';
 
@@ -52,6 +55,12 @@ export function bindOidcSession(): void {
     if (window.location.pathname !== '/login') window.location.assign('/login');
   };
   setUnauthorizedHandler(dropSession);
+  // The backend renews the tokens when a request comes: a console left in a
+  // background tab through a long game (the socket alone talks) would otherwise
+  // let the provider's session lapse. Hidden tabs included, on purpose.
+  window.setInterval(() => {
+    if (oidcAuthed) void meControllerMe().catch(() => undefined);
+  }, KEEP_ALIVE_MS);
   try {
     new BroadcastChannel(SIGN_OUT_CHANNEL).onmessage = (e) => {
       if (e.data === 'signed-out' && oidcAuthed) dropSession();
