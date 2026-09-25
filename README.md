@@ -24,12 +24,6 @@
   <a href="https://github.com/quizdock/quiz-dock/releases">Releases</a>
 </p>
 
-> ⚠️ **Breaking change in 0.8 — OIDC deployments (`AUTH_MODE=oidc`).** The server now holds
-> the sign-in session: everyone signs in again once, `OIDC_SESSION_SCOPE` is removed, and a
-> backend that reaches the identity provider at an internal address needs `OIDC_INTERNAL_URL`.
-> **Read the [OIDC upgrade notes](https://github.com/quizdock/quiz-dock/blob/main/docs/self-hosting/upgrade-oidc-session.md)
-> before upgrading.** Local mode and the all-in-one image without OIDC: nothing to do.
-
 ---
 
 QuizDock is a Kahoot-style live quiz you run yourself. A host presents a quiz, players
