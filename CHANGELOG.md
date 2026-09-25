@@ -8,6 +8,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Bug Fixes
 
+- The template page draws its slides as the stage does *(store)*
+- A template card draws its first slide as the stage does *(store)*
 - The OIDC session survives a new tab *(auth)*
 - The wrong-PIN window opens with SET NX, on any Redis version *(game)*
 - An original uploaded again is reused, not converted into a duplicate *(media)*
@@ -18,6 +20,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- Player view with the answer tiles pinned at the bottom *(screenshots)*
+- One commented .env example per setup: standalone, local, OIDC
+- The preview in plain words
+- The README in the words of the people who use it
+- Participant access, safeguards, CSP and preview in the README; new screenshots
 - A technical debt register, starting with the OIDC tokens in the browser
 - The media library in the README (and on Docker Hub), new screenshots
 - Name the multi-arch builder instead of making it the default *(releasing)*
@@ -25,23 +32,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
-- A Content-Security-Policy on every page *(security)*
-- The OIDC session shared by the tabs or per tab (OIDC_SESSION_SCOPE) *(auth)*
-- Navigation above the stage, questions in 16:9 like the projection *(preview)*
-- "remember my choice" in the launch dialog, set in the profile *(live)*
-- Close or reopen the game to newcomers during play *(live)*
-- Launch dialog for participant access, lobby lock, docs *(live)*
-- Open access for participants, lobby lock, wrong-PIN limit *(game)*
-- Account preferences, remembered wherever one signs in *(users)*
-- An empty state like the editor's when no template is shared *(templates)*
-- Invite bug reports, feature ideas, translation fixes and questions *(home)*
-- One file list with Global, list or grid, and a preview *(media)*
-- Sizes in pixels, and media the instance provides to every host *(media)*
-- An administration page for the instance's media *(media)*
-- The author's library, credits, and free libraries to look in *(media)*
 - Convert every media in the browser to one format per kind *(media)*
+- The author's library, credits, and free libraries to look in *(media)*
+- An administration page for the instance's media *(media)*
+- Sizes in pixels, and media the instance provides to every host *(media)*
+- Open access for participants, lobby lock, wrong-PIN limit *(game)*
+- Launch dialog for participant access, lobby lock, docs *(live)*
+- Close or reopen the game to newcomers during play *(live)*
+- A Content-Security-Policy on every page *(security)*
+- Answer tiles pinned to the bottom, up to four per row *(player)*
+- Navigation above the stage, questions in 16:9 like the projection *(preview)*
 - Store each file once, named after its SHA-256 *(media)*
 - An hourly job deletes unused media and stray files *(media)*
+- One file list with Global, list or grid, and a preview *(media)*
+- Free libraries under open licences for every kind by default *(media)*
+- Account preferences, remembered wherever one signs in *(users)*
+- "remember my choice" in the launch dialog, set in the profile *(live)*
+- The OIDC session shared by the tabs or per tab (OIDC_SESSION_SCOPE) *(auth)*
+- An empty state like the editor's when no template is shared *(templates)*
+- Invite bug reports, feature ideas, translation fixes and questions *(home)*
 
 ### Performance
 
