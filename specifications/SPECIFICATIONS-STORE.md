@@ -39,7 +39,7 @@ Status: **in preparation.** The two store repositories exist and publish, nothin
 | Bundle JSON Schema, one file per manifest version (`schema/quiz-bundle.v3.json`) | #84 | On `dev` |
 | Quiz language: instance language by default, editable | #86 (closes #83) | On `dev` |
 | *Export for publication* (checks, slug confirmation, `PUBLICATION_MAX_MB`) | #87 | On `dev` |
-| A manager reads another host's quiz; failed saves say so | #90 (closes #82), tests #91 | On `dev` / PR |
+| A manager reads another host's quiz; failed saves say so | #90 (closes #82), tests #91 | On `dev` |
 | Store spec, guide, self-hosting guide, empty registry | quiz-store | Published |
 | Publication CLI and action (folders → reproducible zips + index, rolling release) | quiz-store #1–#3 | Published, tagged `v1.0.0` / `v1` |
 | Registration form (label `registration`) and review procedure | quiz-store #4 | Published |
@@ -87,7 +87,7 @@ Ordered: each step makes the next one meaningful.
 With the released QuizDock, an author cannot set a licence: the store would refuse every quiz. Nothing opens before
 a release carries what is on `dev`.
 
-- [ ] Release `dev` into `main`: #80, #81, #84, #86, #87, #90 (and #91).
+- [ ] Release `dev` into `main`: #80, #81, #84, #86, #87, #90, #91.
 - [ ] The release publishes `schema/quiz-bundle.v3.json` on `main`, at its tag.
 - [ ] quiz-store pins the schema at that tag instead of its copy, with a check that the two stay identical
   (`publish-action/schema/SOURCE.md`); a `v1.0.x` of the action if anything changes.
