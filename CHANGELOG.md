@@ -8,13 +8,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Bug Fixes
 
+- A manager reads another host's quiz, and a failed save says so *(editor)*
+- Start a quiz in the instance language, and let the author change it *(quiz)*
 - Bound the archive on the bytes actually unpacked *(import)*
 
 ### Documentation
 
+- The image retention policy for Docker Hub (proposal) *(releasing)*
+- Manager read-only view in unreleased *(changelog)*
+- Export for publication in unreleased *(changelog)*
+- Quiz language in unreleased *(changelog)*
+- Bundle JSON Schema in unreleased *(changelog)*
 - Bounded import archive in unreleased *(changelog)*
 - The licence and the tags are set in the quiz settings *(bundle)*
 - Licence and tags of a quiz in unreleased *(changelog)*
+- The README no longer opens on the 0.8 breaking change
 - The 0.8 breaking change at the top of the README
 - The README warns OIDC deployments about the 0.8 breaking change
 - Breaking changes in a warning box, impossible to miss *(changelog)*
@@ -22,6 +30,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
+- Export a quiz for publication to a community store *(editor)*
 - Publish the manifest as a JSON Schema, one file per version *(bundle)*
 - Set the licence and the tags of a quiz *(editor)*
 
