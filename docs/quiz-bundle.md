@@ -4,6 +4,17 @@ A quiz leaves and enters QuizDock as a **bundle**: a `quiz.json` manifest next
 to a `media/` folder, zipped (`<slug>.quizdock.zip`). The same layout, unzipped,
 is what a Quiz Store repository holds.
 
+**JSON Schema.** The manifest is published as a JSON Schema (draft 2020-12),
+one file per manifest version, in [`schema/`](../schema/) — currently
+[`quiz-bundle.v3.json`](../schema/quiz-bundle.v3.json). It is generated from the
+importer's own schema and a test keeps the two in step, so a tool outside
+QuizDock (a community store, a CI check) validates exactly what an import
+accepts. A published version is never rewritten: a change to the format comes
+with a new manifest version and a new file. The schema is structural, like the
+first step of an import; the per-type rules of each question and slide are
+checked afterwards. Contributors changing the bundle schema run
+`pnpm generate:schema` and commit the result.
+
 > **Videos and sounds (version 3).** A question's visual may be an MP4 video
 > (H.264, AAC or no audio) and its audio slot an MP3. The formats of the audio
 > suspended in [#42](https://github.com/quizdock/quiz-dock/issues/42) (ogg, wav,

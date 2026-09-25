@@ -5,5 +5,6 @@ pnpm-lock.yaml
 # Artefacts générés (Orval / OpenAPI) — formatés par leur générateur, pas par Prettier
 apps/backend/openapi/**
 apps/frontend/src/api/generated/**
+schema/**
 # Documentation rédigée à la main (tableaux ASCII / wireframes) — ne pas reformater
 **/*.md
