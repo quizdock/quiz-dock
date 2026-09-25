@@ -11,6 +11,8 @@ const quiz = (over: Record<string, unknown> = {}) => ({
   status: 'draft',
   language: 'fr',
   questionCount: 0,
+  license: null,
+  tags: [],
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
   archivedAt: null,

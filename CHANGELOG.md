@@ -8,7 +8,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- The 0.8 breaking change at the top of the README
+- The README warns OIDC deployments about the 0.8 breaking change
+- Breaking changes in a warning box, impossible to miss *(changelog)*
 - The README and the CLI guide at 0.8, the media library as what is new
+
+### Features
+
+- Set the licence and the tags of a quiz *(editor)*
 
 ### Contributors
 

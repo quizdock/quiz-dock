@@ -12,6 +12,7 @@
 export * from './media-sniff';
 export * from './preferences';
 export * from './question-media';
+export * from './quiz-terms';
 import type { ParticipantAccess } from './preferences';
 import type { AudioTarget, LiveQuestionMedia } from './question-media';
 

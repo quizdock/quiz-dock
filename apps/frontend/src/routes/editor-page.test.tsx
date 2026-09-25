@@ -15,6 +15,8 @@ const detail = (over: Record<string, unknown> = {}) => ({
   status: 'draft',
   language: 'fr',
   questionCount: 1,
+  license: null,
+  tags: [],
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
   archivedAt: null,
@@ -154,6 +156,31 @@ describe('EditorPage', () => {
       );
       expect(patched).toBe(true);
     });
+  });
+
+  it('sets the licence and the tags of the quiz (PUT), a typed tag turned into kebab-case', async () => {
+    const fetchMock = mockApi([
+      { method: 'GET', path: '/quizzes/q1', body: detail({ tags: ['histoire'] }) },
+      { method: 'PUT', path: '/quizzes/q1', body: detail() },
+    ]);
+    renderApp('/quizzes/q1');
+    const patches = () =>
+      fetchMock.mock.calls
+        .filter(([url, opts]) => String(url).endsWith('/quizzes/q1') && opts?.method === 'PUT')
+        .map(([, opts]) => JSON.parse(String(opts?.body)) as Record<string, unknown>);
+
+    fireEvent.change(await screen.findByLabelText('Licence', { selector: 'select' }), {
+      target: { value: 'CC-BY-4.0' },
+    });
+    await waitFor(() => expect(patches()).toContainEqual({ license: 'CC-BY-4.0' }));
+
+    const input = screen.getByPlaceholderText('Ajouter un tag…');
+    fireEvent.change(input, { target: { value: 'Pop Culture ' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    await waitFor(() => expect(patches()).toContainEqual({ tags: ['histoire', 'pop-culture'] }));
+
+    fireEvent.click(screen.getByLabelText('Retirer le tag histoire'));
+    await waitFor(() => expect(patches()).toContainEqual({ tags: [] }));
   });
 
   it('désactive la publication si aucune question', async () => {

@@ -1,5 +1,12 @@
 import { createZodDto } from 'nestjs-zod';
-import { AUDIO_TARGETS, MEDIA_TAIL_MAX_S } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  MEDIA_TAIL_MAX_S,
+  QUIZ_LICENSES,
+  QUIZ_MAX_TAGS,
+  TAG_MAX_LENGTH,
+  TAG_RE,
+} from '@quiz-dock/contracts';
 import { z } from 'zod';
 
 /** Mise à jour partielle d'un quiz. `null` sur description/cover = effacement. */
@@ -15,6 +22,14 @@ export const updateQuizSchema = z.object({
   /** Which devices play the sounds, unless a question says otherwise. */
   audioTarget: z.enum(AUDIO_TARGETS).optional(),
   coverMediaId: z.string().length(26).nullable().optional(),
+  /** Terms the quiz travels under when shared (#39, #21); `null` clears it. */
+  license: z.enum(QUIZ_LICENSES).nullable().optional(),
+  /** Replaces the whole list; duplicates are dropped. */
+  tags: z
+    .array(z.string().regex(TAG_RE).max(TAG_MAX_LENGTH))
+    .max(QUIZ_MAX_TAGS)
+    .transform((tags) => [...new Set(tags)])
+    .optional(),
 });
 
 export class UpdateQuizDto extends createZodDto(updateQuizSchema) {}

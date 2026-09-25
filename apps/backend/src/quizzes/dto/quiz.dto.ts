@@ -19,6 +19,9 @@ export const quizSchema = z.object({
   /** Which devices play the sounds, unless a question says otherwise. */
   audioTarget: z.enum(AUDIO_TARGETS),
   questionCount: z.number().int(),
+  /** SPDX identifier, required to share the quiz; an imported one may be outside the list offered. */
+  license: z.string().nullable(),
+  tags: z.array(z.string()),
   /** Nom du propriétaire — uniquement dans la vue d'ensemble d'un gestionnaire (RG-14). */
   ownerName: z.string().optional(),
   createdAt: z.string(),

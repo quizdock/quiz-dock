@@ -35,6 +35,9 @@ export interface QuizDto {
      * @maximum 9007199254740991
      */
   questionCount: number;
+  /** @nullable */
+  license: string | null;
+  tags: string[];
   ownerName?: string;
   createdAt: string;
   updatedAt: string;

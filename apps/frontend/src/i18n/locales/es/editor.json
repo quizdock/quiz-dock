@@ -42,7 +42,22 @@
       "projection": "Solo la proyección",
       "projection_remote": "Proyección y participantes a distancia",
       "everyone": "Todos los dispositivos"
-    }
+    },
+    "sharingLegend": "Compartir",
+    "sharingSummary_one": "{{license}} · {{count}} etiqueta",
+    "sharingSummary_other": "{{license}} · {{count}} etiquetas",
+    "noLicense": "Sin licencia",
+    "licenseLabel": "Licencia",
+    "licenseHelp": "Las condiciones con las que otros pueden reutilizar el cuestionario. Obligatoria para compartirlo como plantilla. Debes tener los derechos sobre su contenido y sus medios.",
+    "license": {
+      "cc0": "CC0 — sin condiciones",
+      "ccBy": "CC BY 4.0 — citar al autor",
+      "ccBySa": "CC BY-SA 4.0 — citar, compartir igual"
+    },
+    "tagsLabel": "Etiquetas",
+    "tagsPlaceholder": "Añadir una etiqueta…",
+    "tagsHelp": "Hasta 5 palabras clave para encontrar el cuestionario entre las plantillas. Pulsa Intro para añadir una.",
+    "removeTag": "Quitar la etiqueta {{tag}}"
   },
   "broadcast": {
     "title": "Difusión",

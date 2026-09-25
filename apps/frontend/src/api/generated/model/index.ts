@@ -188,6 +188,7 @@ export * from './updateQuestionDtoType';
 export * from './updateQuestionDtoWaveformSize';
 export * from './updateQuizDto';
 export * from './updateQuizDtoAudioTarget';
+export * from './updateQuizDtoLicense';
 export * from './updateQuizDtoLoudnessTargetLufs';
 export * from './updateSlideDto';
 export * from './updateSlideDtoBlocksItem';

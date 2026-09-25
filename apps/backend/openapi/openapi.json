@@ -2602,6 +2602,16 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "ownerName": {
             "type": "string"
           },
@@ -2629,6 +2639,8 @@
           "loudnessTargetLufs",
           "audioTarget",
           "questionCount",
+          "license",
+          "tags",
           "createdAt",
           "updatedAt",
           "archivedAt"
@@ -2756,6 +2768,16 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "ownerName": {
             "type": "string"
@@ -3586,6 +3608,8 @@
           "loudnessTargetLufs",
           "audioTarget",
           "questionCount",
+          "license",
+          "tags",
           "createdAt",
           "updatedAt",
           "archivedAt",
@@ -4064,6 +4088,25 @@
             "minLength": 26,
             "maxLength": 26,
             "nullable": true
+          },
+          "license": {
+            "type": "string",
+            "enum": [
+              "CC0-1.0",
+              "CC-BY-4.0",
+              "CC-BY-SA-4.0",
+              null
+            ],
+            "nullable": true
+          },
+          "tags": {
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 30,
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            }
           }
         }
       },

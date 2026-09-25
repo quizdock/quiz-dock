@@ -38,6 +38,7 @@ import {
   Share2,
   Sparkles,
   Trash2,
+  X,
 } from 'lucide-react';
 import {
   AUDIO_TARGETS,
@@ -45,6 +46,10 @@ import {
   LOUDNESS_TARGETS,
   type LoudnessTarget,
   MEDIA_TAIL_MAX_S,
+  QUIZ_LICENSES,
+  QUIZ_MAX_TAGS,
+  isQuizLicense,
+  toTag,
 } from '@quiz-dock/contracts';
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -249,6 +254,16 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
 
   const setAudioTarget = async (audioTarget: AudioTarget) => {
     await update.mutateAsync({ id: quiz.id, data: { audioTarget } });
+    await invalidate();
+  };
+
+  const setLicense = async (license: (typeof QUIZ_LICENSES)[number] | null) => {
+    await update.mutateAsync({ id: quiz.id, data: { license } });
+    await invalidate();
+  };
+
+  const setTags = async (tags: string[]) => {
+    await update.mutateAsync({ id: quiz.id, data: { tags } });
     await invalidate();
   };
 
@@ -559,6 +574,56 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                       ))}
                     </Select>
                   </label>
+                </div>
+              </Disclosure>
+              {/* The terms the quiz is shared under: required before sharing it as a template. */}
+              <Disclosure
+                flush
+                className="-mx-3 border-t px-3 pt-1"
+                title={t('settings.sharingLegend')}
+                value={
+                  quiz.license
+                    ? t('settings.sharingSummary', {
+                        license: licenseName(quiz.license),
+                        count: quiz.tags.length,
+                      })
+                    : t('settings.noLicense')
+                }
+              >
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  <label
+                    className="flex items-center gap-2 text-sm"
+                    title={t('settings.licenseHelp')}
+                  >
+                    <span className="font-medium">{t('settings.licenseLabel')}</span>
+                    <Select
+                      className="h-8 w-auto"
+                      value={quiz.license ?? ''}
+                      disabled={update.isPending}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || isQuizLicense(value)) void setLicense(value || null);
+                      }}
+                    >
+                      <option value="">{t('settings.noLicense')}</option>
+                      {QUIZ_LICENSES.map((license) => (
+                        <option key={license} value={license}>
+                          {t(`settings.license.${LICENSE_KEYS[license]}`)}
+                        </option>
+                      ))}
+                      {/* An imported quiz may carry a licence no longer offered: shown, not lost. */}
+                      {quiz.license && !isQuizLicense(quiz.license) ? (
+                        <option value={quiz.license} disabled>
+                          {quiz.license}
+                        </option>
+                      ) : null}
+                    </Select>
+                  </label>
+                  <TagsField
+                    value={quiz.tags}
+                    disabled={update.isPending}
+                    onSave={(tags) => void setTags(tags)}
+                  />
                 </div>
               </Disclosure>
             </Section>
@@ -1278,5 +1343,79 @@ function MediaTailField({
       />
       <span className="text-muted-foreground">{t('settings.seconds')}</span>
     </label>
+  );
+}
+
+/** A licence as people read it: "CC BY 4.0" rather than "CC-BY-4.0". */
+const LICENSE_NAMES: Record<string, string> = {
+  'CC0-1.0': 'CC0',
+  'CC-BY-4.0': 'CC BY 4.0',
+  'CC-BY-SA-4.0': 'CC BY-SA 4.0',
+};
+/** i18n keys: an SPDX identifier has dots, which i18next reads as nesting. */
+const LICENSE_KEYS = { 'CC0-1.0': 'cc0', 'CC-BY-4.0': 'ccBy', 'CC-BY-SA-4.0': 'ccBySa' } as const;
+function licenseName(spdx: string): string {
+  return LICENSE_NAMES[spdx] ?? spdx;
+}
+
+/**
+ * The quiz's tags, as chips: Enter or a comma adds what was typed, turned into
+ * a tag ("Pop Culture" → pop-culture); Backspace in the empty field removes the
+ * last one. Saved as soon as the list changes.
+ */
+function TagsField({
+  value,
+  disabled,
+  onSave,
+}: {
+  value: string[];
+  disabled: boolean;
+  onSave: (tags: string[]) => void;
+}) {
+  const { t } = useTranslation('editor');
+  const [draft, setDraft] = useState('');
+  const full = value.length >= QUIZ_MAX_TAGS;
+  const add = () => {
+    const tag = toTag(draft);
+    setDraft('');
+    if (tag && !value.includes(tag) && !full) onSave([...value, tag]);
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm" title={t('settings.tagsHelp')}>
+      <span className="font-medium">{t('settings.tagsLabel')}</span>
+      {value.map((tag) => (
+        <Badge key={tag} variant="muted" className="gap-1 pr-1">
+          {tag}
+          <button
+            type="button"
+            className="hover:text-foreground rounded-sm"
+            aria-label={t('settings.removeTag', { tag })}
+            disabled={disabled}
+            onClick={() => onSave(value.filter((it) => it !== tag))}
+          >
+            <X className="size-3" />
+          </button>
+        </Badge>
+      ))}
+      {full ? null : (
+        <Input
+          className="h-8 w-40"
+          aria-label={t('settings.tagsLabel')}
+          placeholder={t('settings.tagsPlaceholder')}
+          value={draft}
+          disabled={disabled}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={add}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ',') {
+              e.preventDefault();
+              add();
+            } else if (e.key === 'Backspace' && draft === '' && value.length > 0) {
+              onSave(value.slice(0, -1));
+            }
+          }}
+        />
+      )}
+    </div>
   );
 }

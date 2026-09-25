@@ -4,6 +4,9 @@ import {
   audioPeaksSchema,
   loudnessSchema,
   peakDbfsSchema,
+  QUIZ_MAX_TAGS,
+  TAG_MAX_LENGTH,
+  TAG_RE,
 } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { gradientSchema } from '../../common/background.schema';
@@ -48,8 +51,8 @@ export const mediaPathSchema = z.string().regex(/^media\/[A-Za-z0-9][A-Za-z0-9._
 /** Kebab-case identifier: the quiz `slug`, and each tag. */
 export const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 export const slugSchema = z.string().regex(SLUG_RE).max(60);
-export const tagSchema = z.string().regex(SLUG_RE).max(30);
-export const MAX_TAGS = 5;
+export const tagSchema = z.string().regex(TAG_RE).max(TAG_MAX_LENGTH);
+export const MAX_TAGS = QUIZ_MAX_TAGS;
 
 /**
  * Quiz Store metadata (#20): the fields a future catalogue needs and that would
