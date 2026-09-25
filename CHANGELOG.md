@@ -6,8 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- Start a quiz in the instance language, and let the author change it *(quiz)*
+
 ### Documentation
 
+- The licence and the tags are set in the quiz settings *(bundle)*
+- Licence and tags of a quiz in unreleased *(changelog)*
 - The 0.8 breaking change at the top of the README
 - The README warns OIDC deployments about the 0.8 breaking change
 - Breaking changes in a warning box, impossible to miss *(changelog)*
