@@ -6,10 +6,10 @@
 # docker-compose.prod.yml (même image, commande surchargée).
 
 # ---- build (glibc, aligné avec le runtime distroless-debian) ----
-FROM node:24-bookworm-slim AS build
+FROM node:24-trixie-slim AS build
 RUN corepack enable
 WORKDIR /app
-# Pin the schema-engine binary target. bookworm-slim ships no libssl, so Prisma's
+# Pin the schema-engine binary target. The slim image ships no libssl, so Prisma's
 # platform detection falls back to "debian-openssl-1.1.x" and bakes that engine —
 # while the distroless runtime (libssl3) detects "debian-openssl-3.0.x" and tries
 # to download it at `migrate deploy` time (breaks air-gapped deploys, #31).
@@ -44,7 +44,8 @@ RUN pnpm --filter @quiz-dock/contracts build \
  && mkdir -p /data/media && chown -R 65532:65532 /data/media
 
 # ---- runtime (distroless, non-root uid 65532) ----
-FROM gcr.io/distroless/nodejs24-debian12:nonroot AS runtime
+# Debian 13: the Debian 12 image no longer follows Node releases nor OpenSSL fixes.
+FROM gcr.io/distroless/nodejs24-debian13:nonroot AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
