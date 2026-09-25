@@ -19,14 +19,6 @@ export class AuthConfigController {
       demo: isDemoMode() ? { user: DEMO_USER } : null,
       standalone: process.env.QUIZDOCK_FLAVOR === 'standalone',
       anonymousParticipants: allowsAnonymousParticipants(),
-      oidc:
-        mode === 'oidc'
-          ? {
-              authority: process.env.OIDC_ISSUER ?? '',
-              clientId: process.env.OIDC_CLIENT_ID ?? 'quiz-dock-frontend',
-              sessionScope: process.env.OIDC_SESSION_SCOPE === 'tab' ? 'tab' : 'browser',
-            }
-          : null,
     };
   }
 }

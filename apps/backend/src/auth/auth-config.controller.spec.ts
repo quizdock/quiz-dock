@@ -13,13 +13,12 @@ describe('AuthConfigController', () => {
     expect(controller.config()).toEqual({
       mode: 'none',
       demo: null,
-      oidc: null,
       standalone: false,
       anonymousParticipants: false,
     });
   });
 
-  it('renvoie le mode oidc avec authority + clientId', () => {
+  it('renvoie le mode oidc, sans rien du fournisseur (le backend porte la connexion)', () => {
     process.env = {
       ...env,
       AUTH_MODE: 'oidc',
@@ -29,19 +28,9 @@ describe('AuthConfigController', () => {
     expect(controller.config()).toEqual({
       mode: 'oidc',
       demo: null,
-      oidc: {
-        authority: 'http://localhost:18080/realms/quiz-dock',
-        clientId: 'quiz-dock-frontend',
-        sessionScope: 'browser',
-      },
       standalone: false,
       anonymousParticipants: false,
     });
-  });
-
-  it('keeps the OIDC session per tab when OIDC_SESSION_SCOPE=tab', () => {
-    process.env = { ...env, AUTH_MODE: 'oidc', OIDC_SESSION_SCOPE: 'tab' };
-    expect(controller.config().oidc?.sessionScope).toBe('tab');
   });
 
   it('offers open access only under OIDC with ALLOW_ANONYMOUS_PARTICIPANTS=true', () => {
@@ -56,7 +45,6 @@ describe('AuthConfigController', () => {
     expect(controller.config()).toEqual({
       mode: 'none',
       demo: { user: 'demo_user' },
-      oidc: null,
       standalone: false,
       anonymousParticipants: false,
     });

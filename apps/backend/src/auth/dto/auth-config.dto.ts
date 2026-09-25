@@ -2,8 +2,8 @@ import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 /**
- * Config d'auth exposée à la SPA (publique) : elle en déduit le mode et, en OIDC,
- * les paramètres du fournisseur ; `demo` porte ce que la SPA doit montrer d'une
+ * Config d'auth exposée à la SPA (publique) : elle en déduit le mode (en OIDC, le
+ * backend porte toute la connexion — la SPA n'a rien à savoir du fournisseur) ; `demo` porte ce que la SPA doit montrer d'une
  * instance `DEMO_MODE` (le serveur impose le reste). Source de vérité = variables
  * d'env du backend.
  */
@@ -15,17 +15,6 @@ export const authConfigSchema = z.object({
   standalone: z.boolean(),
   /** Hosts may open a game to participants without an account (#57, OIDC only). */
   anonymousParticipants: z.boolean(),
-  oidc: z
-    .object({
-      authority: z.string(),
-      clientId: z.string(),
-      /**
-       * Where the browser keeps the session (`OIDC_SESSION_SCOPE`): `browser`, shared
-       * by the tabs (default), or `tab`, each tab signing in on its own.
-       */
-      sessionScope: z.enum(['browser', 'tab']),
-    })
-    .nullable(),
 });
 
 export class AuthConfigDto extends createZodDto(authConfigSchema) {}

@@ -123,7 +123,12 @@ describe('doctor', () => {
       if (url.endsWith('/.well-known/openid-configuration'))
         return {
           ok: true,
-          json: async () => ({ issuer: 'https://idp/x', jwks_uri: 'https://idp/x/jwks' }),
+          json: async () => ({
+            issuer: 'https://idp/x',
+            authorization_endpoint: 'https://idp/x/auth',
+            token_endpoint: 'https://idp/x/token',
+            jwks_uri: 'https://idp/x/jwks',
+          }),
         };
       if (url === 'https://idp/x/jwks') return { ok: true, json: async () => ({ keys: [{}, {}] }) };
       return { ok: false, status: 404, json: async () => ({}) };
@@ -135,12 +140,13 @@ describe('doctor', () => {
         { AUTH_MODE: 'oidc', OIDC_ISSUER: 'https://idp/x/' },
       ),
     );
-    expect(text()).toContain('discovery ok → jwks_uri https://idp/x/jwks');
+    expect(text()).toContain('client_id quiz-dock-frontend (public, PKCE)');
+    expect(text()).toContain('discovery ok → token endpoint https://idp/x/token');
     expect(text()).toContain('JWKS reachable (2 key(s))');
     expect(healthy).toBe(true);
   });
 
-  it('in oidc mode a failed discovery points at OIDC_JWKS_URI', async () => {
+  it('in oidc mode a failed discovery points at OIDC_INTERNAL_URL', async () => {
     const { out, text } = memOutput();
     const fetchMock = jest.fn(async () => ({ ok: false, status: 502, json: async () => ({}) }));
     const healthy = await doctor(
@@ -151,7 +157,7 @@ describe('doctor', () => {
       ),
     );
     expect(healthy).toBe(false);
-    expect(text()).toMatch(/FAIL discovery .*HTTP 502.*set OIDC_JWKS_URI/);
+    expect(text()).toMatch(/FAIL discovery .*HTTP 502.*set OIDC_INTERNAL_URL/);
   });
 });
 
