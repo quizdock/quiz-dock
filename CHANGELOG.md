@@ -8,10 +8,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Bug Fixes
 
+- A manager reads another host's quiz, and a failed save says so *(editor)*
 - Start a quiz in the instance language, and let the author change it *(quiz)*
 
 ### Documentation
 
+- Export for publication in unreleased *(changelog)*
 - Quiz language in unreleased *(changelog)*
 - The licence and the tags are set in the quiz settings *(bundle)*
 - Licence and tags of a quiz in unreleased *(changelog)*
