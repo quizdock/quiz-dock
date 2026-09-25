@@ -14,6 +14,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- The licence, tags and language of a quiz in the feature list
+- The refactoring plan for the game gateway tests *(dev)*
+- #91 is merged *(spec)*
+- The community store brief, from the model to the road to opening *(spec)*
+- Unreleased after merging the store prerequisites *(changelog)*
 - The image retention policy for Docker Hub (proposal) *(releasing)*
 - Manager read-only view in unreleased *(changelog)*
 - Export for publication in unreleased *(changelog)*
