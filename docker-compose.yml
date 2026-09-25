@@ -38,6 +38,10 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_HEALTH_ENABLED: 'true'
+      # One public name for the browser and the tokens' issuer, whatever address
+      # asks; the backend reaches the token endpoint over the internal network.
+      KC_HOSTNAME: http://localhost:${KEYCLOAK_PORT:-18080}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: 'true'
     ports:
       - '${KEYCLOAK_PORT:-18080}:8080'
     volumes:

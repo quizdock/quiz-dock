@@ -3,6 +3,7 @@ import {
   Controller,
   HttpCode,
   Inject,
+  Logger,
   NotFoundException,
   Optional,
   Post,
@@ -44,6 +45,8 @@ function appOrigin(req: Request): string {
 @ApiTags('auth')
 @Controller('auth')
 export class OidcSessionController {
+  private readonly logger = new Logger(OidcSessionController.name);
+
   constructor(
     @Optional() @Inject(OidcClient) private readonly client: OidcClient | null,
     @Optional() @Inject(OidcSessions) private readonly sessions: OidcSessions | null,
@@ -130,7 +133,9 @@ export class OidcSessionController {
       const sid = await sessions.create(principal.sub, tokens);
       res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, sid, { secure: req.secure }));
       return { name: principal.displayName };
-    } catch {
+    } catch (err) {
+      // The reason stays in the log: the browser only learns that it failed.
+      this.logger.warn(`Sign-in failed: ${(err as Error).message}`);
       throw new UnauthorizedException('auth.login_failed');
     }
   }
