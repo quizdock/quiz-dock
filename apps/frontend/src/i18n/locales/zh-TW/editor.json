@@ -42,7 +42,22 @@
       "projection": "僅投影",
       "projection_remote": "投影與遠端參與者",
       "everyone": "所有裝置"
-    }
+    },
+    "sharingLegend": "分享",
+    "sharingSummary_one": "{{license}} · {{count}} 個標籤",
+    "sharingSummary_other": "{{license}} · {{count}} 個標籤",
+    "noLicense": "無授權條款",
+    "licenseLabel": "授權條款",
+    "licenseHelp": "他人可以在何種條件下再次使用此測驗。以範本分享前必須選擇。你必須擁有其內容與媒體的權利。",
+    "license": {
+      "cc0": "CC0 — 無條件",
+      "ccBy": "CC BY 4.0 — 姓名標示",
+      "ccBySa": "CC BY-SA 4.0 — 姓名標示，相同方式分享"
+    },
+    "tagsLabel": "標籤",
+    "tagsPlaceholder": "新增標籤…",
+    "tagsHelp": "最多 5 個關鍵字，方便在範本中找到此測驗。按 Enter 新增。",
+    "removeTag": "移除標籤 {{tag}}"
   },
   "broadcast": {
     "title": "廣播",

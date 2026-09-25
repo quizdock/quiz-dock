@@ -379,6 +379,8 @@ export class QuizzesService {
         mediaTailS: dto.mediaTailS,
         loudnessTargetLufs: dto.loudnessTargetLufs,
         audioTarget: dto.audioTarget,
+        license: dto.license,
+        tags: dto.tags,
       },
     });
   }

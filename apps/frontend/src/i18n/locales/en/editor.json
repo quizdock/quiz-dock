@@ -42,7 +42,22 @@
       "projection": "Projection only",
       "projection_remote": "Projection and remote participants",
       "everyone": "Every device"
-    }
+    },
+    "sharingLegend": "Sharing",
+    "sharingSummary_one": "{{license}} · {{count}} tag",
+    "sharingSummary_other": "{{license}} · {{count}} tags",
+    "noLicense": "No licence",
+    "licenseLabel": "Licence",
+    "licenseHelp": "The terms others may reuse the quiz under. Required to share it as a template. You must hold the rights to its content and media.",
+    "license": {
+      "cc0": "CC0 — no conditions",
+      "ccBy": "CC BY 4.0 — credit the author",
+      "ccBySa": "CC BY-SA 4.0 — credit, share alike"
+    },
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Add a tag…",
+    "tagsHelp": "Up to 5 keywords to find the quiz among templates. Press Enter to add one.",
+    "removeTag": "Remove tag {{tag}}"
   },
   "broadcast": {
     "title": "Broadcast",

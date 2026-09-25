@@ -42,7 +42,22 @@
       "projection": "仅投影",
       "projection_remote": "投影和远程参与者",
       "everyone": "所有设备"
-    }
+    },
+    "sharingLegend": "共享",
+    "sharingSummary_one": "{{license}} · {{count}} 个标签",
+    "sharingSummary_other": "{{license}} · {{count}} 个标签",
+    "noLicense": "无许可协议",
+    "licenseLabel": "许可协议",
+    "licenseHelp": "他人可以在何种条件下再次使用该测验。作为模板共享前必须选择。你必须拥有其内容和媒体的权利。",
+    "license": {
+      "cc0": "CC0 — 无条件",
+      "ccBy": "CC BY 4.0 — 署名",
+      "ccBySa": "CC BY-SA 4.0 — 署名，相同方式共享"
+    },
+    "tagsLabel": "标签",
+    "tagsPlaceholder": "添加标签…",
+    "tagsHelp": "最多 5 个关键词，便于在模板中找到该测验。按回车添加。",
+    "removeTag": "移除标签 {{tag}}"
   },
   "broadcast": {
     "title": "广播",

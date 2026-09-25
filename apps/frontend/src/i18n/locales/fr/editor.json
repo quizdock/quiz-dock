@@ -42,7 +42,22 @@
       "projection": "Projection seulement",
       "projection_remote": "Projection et participants à distance",
       "everyone": "Tous les appareils"
-    }
+    },
+    "sharingLegend": "Partage",
+    "sharingSummary_one": "{{license}} · {{count}} tag",
+    "sharingSummary_other": "{{license}} · {{count}} tags",
+    "noLicense": "Aucune licence",
+    "licenseLabel": "Licence",
+    "licenseHelp": "Les conditions auxquelles d’autres peuvent reprendre le quiz. Obligatoire pour le partager comme modèle. Vous devez détenir les droits sur son contenu et ses médias.",
+    "license": {
+      "cc0": "CC0 — sans condition",
+      "ccBy": "CC BY 4.0 — citer l’auteur",
+      "ccBySa": "CC BY-SA 4.0 — citer, partager à l’identique"
+    },
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Ajouter un tag…",
+    "tagsHelp": "Jusqu’à 5 mots-clés pour retrouver le quiz parmi les modèles. Entrée pour en ajouter un.",
+    "removeTag": "Retirer le tag {{tag}}"
   },
   "broadcast": {
     "title": "Diffusion",
