@@ -133,7 +133,8 @@ export const quizBundleSchema = z.object({
   format: z.literal(BUNDLE_FORMAT),
   version: z.number().int().min(0).max(BUNDLE_VERSION).optional(),
   quiz: z.object({
-    title: z.string().trim().min(1).max(200),
+    // Not blank: written as a pattern so the published JSON Schema says it too.
+    title: z.string().trim().regex(/\S/).max(200),
     description: z.string().nullable().optional(),
     /** BCP 47 tag — a dedicated field, never a tag. */
     language: z.string().min(2).max(10).optional(),
