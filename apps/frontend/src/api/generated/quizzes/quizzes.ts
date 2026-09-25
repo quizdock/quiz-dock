@@ -26,6 +26,8 @@ import type {
 
 import type {
   CreateQuizDto,
+  PublicationExportDto,
+  PublicationReportDto,
   QuizDetailDto,
   QuizDto,
   QuizFeedbackSummaryDto,
@@ -484,7 +486,189 @@ export function useQuizzesControllerExportQuiz<TData = Awaited<ReturnType<typeof
 
 
 
-export type quizzesControllerDuplicateResponse201 = {
+export type quizzesControllerPublicationReportResponse200 = {
+  data: PublicationReportDto
+  status: 200
+}
+
+export type quizzesControllerPublicationReportResponseSuccess = (quizzesControllerPublicationReportResponse200) & {
+  headers: Headers;
+};
+;
+
+export type quizzesControllerPublicationReportResponse = (quizzesControllerPublicationReportResponseSuccess)
+
+export const getQuizzesControllerPublicationReportUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/quizzes/${id}/publication`
+}
+
+export const quizzesControllerPublicationReport = async (id: string, options?: RequestInit): Promise<quizzesControllerPublicationReportResponse> => {
+
+  return customFetch<quizzesControllerPublicationReportResponse>(getQuizzesControllerPublicationReportUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getQuizzesControllerPublicationReportQueryKey = (id: string,) => {
+    return [
+    `/api/v1/quizzes/${id}/publication`
+    ] as const;
+    }
+
+
+export const getQuizzesControllerPublicationReportQueryOptions = <TData = Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getQuizzesControllerPublicationReportQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>> = ({ signal }) => quizzesControllerPublicationReport(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type QuizzesControllerPublicationReportQueryResult = NonNullable<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>>
+export type QuizzesControllerPublicationReportQueryError = unknown
+
+
+export function useQuizzesControllerPublicationReport<TData = Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerPublicationReport>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerPublicationReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerPublicationReport<TData = Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof quizzesControllerPublicationReport>>,
+          TError,
+          Awaited<ReturnType<typeof quizzesControllerPublicationReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useQuizzesControllerPublicationReport<TData = Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useQuizzesControllerPublicationReport<TData = Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof quizzesControllerPublicationReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getQuizzesControllerPublicationReportQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type quizzesControllerPublicationExportResponse200 = {
+  data: void
+  status: 200
+}
+
+export type quizzesControllerPublicationExportResponseSuccess = (quizzesControllerPublicationExportResponse200) & {
+  headers: Headers;
+};
+;
+
+export type quizzesControllerPublicationExportResponse = (quizzesControllerPublicationExportResponseSuccess)
+
+export const getQuizzesControllerPublicationExportUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/quizzes/${id}/publication/export`
+}
+
+export const quizzesControllerPublicationExport = async (id: string,
+    publicationExportDto: PublicationExportDto, options?: RequestInit): Promise<quizzesControllerPublicationExportResponse> => {
+
+  return customFetch<quizzesControllerPublicationExportResponse>(getQuizzesControllerPublicationExportUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(publicationExportDto)
+  }
+);}
+
+
+
+
+export const getQuizzesControllerPublicationExportMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerPublicationExport>>, TError,{id: string;data: PublicationExportDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerPublicationExport>>, TError,{id: string;data: PublicationExportDto}, TContext> => {
+
+const mutationKey = ['quizzesControllerPublicationExport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof quizzesControllerPublicationExport>>, {id: string;data: PublicationExportDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  quizzesControllerPublicationExport(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type QuizzesControllerPublicationExportMutationResult = NonNullable<Awaited<ReturnType<typeof quizzesControllerPublicationExport>>>
+    export type QuizzesControllerPublicationExportMutationBody = PublicationExportDto
+    export type QuizzesControllerPublicationExportMutationError = unknown
+
+    export const useQuizzesControllerPublicationExport = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof quizzesControllerPublicationExport>>, TError,{id: string;data: PublicationExportDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof quizzesControllerPublicationExport>>,
+        TError,
+        {id: string;data: PublicationExportDto},
+        TContext
+      > => {
+      return useMutation(getQuizzesControllerPublicationExportMutationOptions(options), queryClient);
+    }
+    export type quizzesControllerDuplicateResponse201 = {
   data: QuizDto
   status: 201
 }

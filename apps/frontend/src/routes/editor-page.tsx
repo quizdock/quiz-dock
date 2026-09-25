@@ -71,11 +71,13 @@ import { quizItems, moveItem, slideLabel, type QuizItem } from '@/lib/quiz-items
 import { useMediaQuery } from '@/lib/use-media-query';
 import { useUnsavedGuard } from '@/lib/use-unsaved-guard';
 import { clearDraft, loadDraft, saveDraft } from '@/lib/draft-store';
+import { languageName, licenseName } from '@/lib/quiz-terms';
 import { ChromiumNotice } from '@/components/chromium-notice';
 import { DraftNotice } from '@/components/draft-notice';
 import { Disclosure } from '@/components/ui/disclosure';
 import { Drawer } from '@/components/ui/drawer';
 import { QuestionForm } from './question-form';
+import { PublicationExport } from './publication-export';
 import { SlideForm } from './slide-form';
 import { StarRow } from './feedback-page';
 import {
@@ -447,6 +449,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                   <Download className="size-4" />
                   {t('header.export')}
                 </Button>
+                <PublicationExport quizId={quiz.id} />
                 {/* A demo catalogue is read-only. */}
                 {quiz.status === 'ready' && !getDemo() ? (
                   <ShareAsTemplate quizId={quiz.id} />
@@ -1371,21 +1374,6 @@ function MediaTailField({
   );
 }
 
-/** A licence as people read it: "CC BY 4.0" rather than "CC-BY-4.0". */
-const LICENSE_NAMES: Record<string, string> = {
-  'CC0-1.0': 'CC0',
-  'CC-BY-4.0': 'CC BY 4.0',
-  'CC-BY-SA-4.0': 'CC BY-SA 4.0',
-};
-/** A language by its name, in the UI's language ("zh-TW" → "Chinese (Taiwan)"). */
-function languageName(code: string, uiLanguage: string): string {
-  try {
-    return new Intl.DisplayNames([uiLanguage], { type: 'language' }).of(code) ?? code;
-  } catch {
-    return code;
-  }
-}
-
 /**
  * The languages offered, by name: the instance's first, then the common ones,
  * plus the quiz's own when it is none of those (an imported quiz), so it is
@@ -1399,9 +1387,6 @@ function languageOptions(current: string, uiLanguage: string) {
 
 /** i18n keys: an SPDX identifier has dots, which i18next reads as nesting. */
 const LICENSE_KEYS = { 'CC0-1.0': 'cc0', 'CC-BY-4.0': 'ccBy', 'CC-BY-SA-4.0': 'ccBySa' } as const;
-function licenseName(spdx: string): string {
-  return LICENSE_NAMES[spdx] ?? spdx;
-}
 
 /**
  * The quiz's tags, as chips: Enter or a comma adds what was typed, turned into

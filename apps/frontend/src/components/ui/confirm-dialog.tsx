@@ -14,6 +14,7 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   destructive,
+  confirmDisabled,
   children,
   onConfirm,
   onCancel,
@@ -24,6 +25,8 @@ export function ConfirmDialog({
   confirmLabel?: string;
   cancelLabel?: string;
   destructive?: boolean;
+  /** The confirm button waits until what the dialog asks for is right. */
+  confirmDisabled?: boolean;
   /** Contenu additionnel (ex. case à cocher) inséré entre le texte et les actions. */
   children?: ReactNode;
   onConfirm: () => void;
@@ -76,6 +79,7 @@ export function ConfirmDialog({
           <Button
             type="button"
             variant={destructive ? 'destructive' : 'default'}
+            disabled={confirmDisabled}
             onClick={onConfirm}
           >
             {confirmLabel ?? t('confirm')}

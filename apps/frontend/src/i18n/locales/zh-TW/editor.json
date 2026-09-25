@@ -395,5 +395,40 @@
     "players_one": "{{count}} 名玩家",
     "players_other": "{{count}} 名玩家",
     "liveEditsHint": "版面修改（背景、對比度、解析、簡報）會在進行中的場次下一步生效；題目和答案保持啟動時的版本。"
+  },
+  "publication": {
+    "open": "匯出以發布",
+    "title": "匯出以發布",
+    "description": "依社群目錄的要求檢查測驗，然後下載要上傳到你的 quizdock-quizzes 儲存庫的檔案。",
+    "download": "下載",
+    "checking": "正在檢查測驗…",
+    "failed": "無法準備匯出。",
+    "check": {
+      "ready": "測驗已就緒",
+      "notReady": "測驗尚未就緒",
+      "language": "語言：{{language}}",
+      "license": "授權條款：{{license}}",
+      "noLicense": "無授權條款",
+      "tags": "標籤：{{tags}}",
+      "noTags": "無標籤",
+      "size": "大小：{{size}} / {{max}}",
+      "uncredited_one": "{{count}} 個媒體沒有姓名標示",
+      "uncredited_other": "{{count}} 個媒體沒有姓名標示",
+      "credited": "所有媒體都有姓名標示"
+    },
+    "fix": {
+      "ready": "請先將測驗設為就緒（發布）。",
+      "settings": "請在測驗設定的「分享」中設定。",
+      "size": "請壓縮或移除最大的媒體：",
+      "credit": "你須對發布的每張圖片、每段聲音與影片的權利負責。請在媒體庫中標示（作者、授權條款、來源）。"
+    },
+    "kind": {
+      "image": "圖片",
+      "video": "影片",
+      "audio": "聲音"
+    },
+    "slugLabel": "短名稱",
+    "slugHelp": "目錄在你的儲存庫中識別此測驗的名稱。檔案：{{file}}",
+    "slugChanged": "變更它（原為「{{previous}}」）會在目錄中產生新的測驗：請從儲存庫刪除舊檔案。"
   }
 }

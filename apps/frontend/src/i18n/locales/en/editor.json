@@ -395,5 +395,40 @@
     "players_one": "{{count}} player",
     "players_other": "{{count}} players",
     "liveEditsHint": "Layout and presentation edits (backgrounds, contrast, explanations, slides) reach running sessions at their next step; questions and answers stay as launched."
+  },
+  "publication": {
+    "open": "Export for publication",
+    "title": "Export for publication",
+    "description": "Checks the quiz against what the community store accepts, then downloads the file to upload to your quizdock-quizzes repository.",
+    "download": "Download",
+    "checking": "Checking the quiz…",
+    "failed": "Could not prepare the export.",
+    "check": {
+      "ready": "The quiz is ready",
+      "notReady": "The quiz is not ready",
+      "language": "Language: {{language}}",
+      "license": "Licence: {{license}}",
+      "noLicense": "No licence",
+      "tags": "Tags: {{tags}}",
+      "noTags": "No tags",
+      "size": "Size: {{size}} of {{max}}",
+      "uncredited_one": "{{count}} media without a credit",
+      "uncredited_other": "{{count}} media without a credit",
+      "credited": "Every media has a credit"
+    },
+    "fix": {
+      "ready": "Mark the quiz as ready (Publish) first.",
+      "settings": "Set it in the quiz settings, under Sharing.",
+      "size": "Lighten or remove the heaviest media:",
+      "credit": "You are responsible for the rights to every image, sound and video you publish. Credit them in your media library (author, licence, source)."
+    },
+    "kind": {
+      "image": "Image",
+      "video": "Video",
+      "audio": "Sound"
+    },
+    "slugLabel": "Short name",
+    "slugHelp": "How the store knows this quiz in your repository. File: {{file}}",
+    "slugChanged": "Changing it from “{{previous}}” makes a new quiz for the store: delete the old file from your repository."
   }
 }

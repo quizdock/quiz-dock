@@ -100,5 +100,13 @@
     "not_yours": "只有作者或管理员才能撤下模板。",
     "invalid_id": "模板标识无效。",
     "index_unreadable": "无法读取目录索引，请联系管理员。"
+  },
+  "publication": {
+    "slug_invalid": "短名称只能包含小写字母、数字和连字符。",
+    "not_ready": "只有已就绪的测验才能导出以发布。",
+    "license": "导出以发布前请选择许可协议（CC0、CC BY 或 CC BY-SA）。",
+    "language": "测验语言无效。",
+    "tags": "导出以发布前请至少添加一个标签。",
+    "too_large": "测验对社区目录来说过大。"
   }
 }

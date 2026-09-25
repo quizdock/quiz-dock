@@ -100,5 +100,13 @@
     "not_yours": "Only its author, or an administrator, can withdraw a template.",
     "invalid_id": "Invalid template identifier.",
     "index_unreadable": "The catalogue index cannot be read; ask your administrator."
+  },
+  "publication": {
+    "slug_invalid": "The short name must be lowercase letters, digits and dashes.",
+    "not_ready": "Only a ready quiz can be exported for publication.",
+    "license": "Choose a licence (CC0, CC BY or CC BY-SA) before exporting for publication.",
+    "language": "The quiz language is not valid.",
+    "tags": "Add at least one tag before exporting for publication.",
+    "too_large": "The quiz is too large for the community store."
   }
 }

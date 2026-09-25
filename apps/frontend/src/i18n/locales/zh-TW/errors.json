@@ -100,5 +100,13 @@
     "not_yours": "只有作者或管理員才能撤下範本。",
     "invalid_id": "範本識別碼無效。",
     "index_unreadable": "無法讀取目錄索引，請聯絡管理員。"
+  },
+  "publication": {
+    "slug_invalid": "短名稱只能包含小寫字母、數字與連字號。",
+    "not_ready": "只有已就緒的測驗才能匯出以發布。",
+    "license": "匯出以發布前請選擇授權條款（CC0、CC BY 或 CC BY-SA）。",
+    "language": "測驗語言無效。",
+    "tags": "匯出以發布前請至少新增一個標籤。",
+    "too_large": "測驗對社群目錄來說過大。"
   }
 }
