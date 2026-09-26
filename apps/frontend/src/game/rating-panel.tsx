@@ -11,20 +11,34 @@ import type { GameSocket } from './game-client';
 /**
  * Avis de fin de partie (§2.11) : note Likert 5 étoiles + commentaire facultatif.
  * Émis sur le socket live (`player:rate`) tant que le joueur est connecté. Dédoublonné
- * localement par PIN (`localStorage`) pour ne pas re-solliciter à la reconnexion ;
- * le serveur fait par ailleurs un upsert par joueur/partie.
+ * localement par PIN **et par quiz** (`localStorage`) : un salon joue plusieurs quiz
+ * sous un même PIN (#89), chacun se note à part ; le serveur fait un upsert par
+ * joueur et par quiz. `hideWhenDone` : une fois noté, rien (dans le lobby suivant).
  */
-export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket | null }) {
+export function RatingPanel({
+  pin,
+  quizId,
+  socket,
+  hideWhenDone = false,
+}: {
+  pin: string;
+  /** The quiz rated; null before the server named it (older servers): keyed by PIN only. */
+  quizId?: string | null;
+  socket: GameSocket | null;
+  hideWhenDone?: boolean;
+}) {
   const { t } = useTranslation('live');
-  const storageKey = `live.rated.${pin}`;
+  const key = quizId ? `${pin}.${quizId}` : pin;
+  const storageKey = `live.rated.${key}`;
+  const draftKey = `rating:${key}`;
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   // The comment survives a reload until it is sent.
-  const [comment, setComment] = useState(() => loadDraft<string>(`rating:${pin}`) ?? '');
+  const [comment, setComment] = useState(() => loadDraft<string>(draftKey) ?? '');
   useEffect(() => {
-    if (comment) saveDraft(`rating:${pin}`, comment);
-    else clearDraft(`rating:${pin}`);
-  }, [comment, pin]);
+    if (comment) saveDraft(draftKey, comment);
+    else clearDraft(draftKey);
+  }, [comment, draftKey]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(
@@ -32,7 +46,9 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
   );
 
   if (done) {
-    return <p className="text-muted-foreground text-sm">{t('rating.thanks')}</p>;
+    return hideWhenDone ? null : (
+      <p className="text-muted-foreground text-sm">{t('rating.thanks')}</p>
+    );
   }
 
   const submit = () => {
@@ -48,7 +64,7 @@ export function RatingPanel({ pin, socket }: { pin: string; socket: GameSocket |
       setSubmitting(false);
       if (ok) {
         localStorage.setItem(storageKey, '1');
-        clearDraft(`rating:${pin}`);
+        clearDraft(draftKey);
         setDone(true);
       } else {
         setError(message ?? t('rating.sendFailed'));

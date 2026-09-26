@@ -1,3 +1,4 @@
+import { RoomStandingsPanel } from '../game/room-components';
 import { useParams } from '@tanstack/react-router';
 import { Maximize, Minimize, Users } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
@@ -144,7 +145,20 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
       </div>
     );
   } else if (view.state === 'ENDED') {
-    body = <p className="text-[2em] font-semibold">{t('screen.thanks')}</p>;
+    // A room that played several quizzes closes on its own podium (#89).
+    const series = view.standings && view.standings.quizzesPlayed > 1 ? view.standings : null;
+    body = series ? (
+      <div className="flex w-full max-w-[28em] flex-col items-center gap-[1.5em]">
+        <h2 className="text-[2em] font-bold">{t('screen.roomPodium')}</h2>
+        <p className="text-muted-foreground text-[1.25em]">
+          {t('room.afterQuizzes', { count: series.quizzesPlayed })}
+        </p>
+        <Podium rows={series.top.slice(0, 3)} />
+        <p className="text-[1.5em] font-semibold">{t('screen.thanks')}</p>
+      </div>
+    ) : (
+      <p className="text-[2em] font-semibold">{t('screen.thanks')}</p>
+    );
   } else if (view.state === 'SLIDE_SHOW' && view.slide) {
     body = (
       <div className="flex min-h-dvh w-full flex-1">
@@ -156,7 +170,10 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
       <div className="flex w-full max-w-[28em] flex-col items-center gap-[1.5em]">
         <h2 className="text-[2em] font-bold">{t('screen.podium')}</h2>
         <Podium rows={view.podium.podium} />
-        {view.leaderboard && view.leaderboard.top.length > 3 ? (
+        {/* Then the room's standings (#89) once it has played more than one quiz. */}
+        {view.standings && view.standings.quizzesPlayed > 1 ? (
+          <RoomStandingsPanel standings={view.standings} className="text-[1.1em]" />
+        ) : view.leaderboard && view.leaderboard.top.length > 3 ? (
           <div className="flex w-full flex-col gap-[0.5em]">
             <h3 className="text-muted-foreground text-[1.25em] font-semibold">
               {t('screen.overallRanking')}
@@ -254,8 +271,16 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
     );
   } else {
     // LOBBY (et état initial) : invitation à rejoindre + liste des joueurs (§4.1).
+    // The room's next quiz (#89): what comes, and where the room stands.
+    const nextInRoom = view.standings ? view.standings : null;
     body = (
       <div className="flex flex-col items-center gap-[1.5em]">
+        {nextInRoom && view.quizTitle ? (
+          <p className="text-[1.5em]">
+            <span className="text-muted-foreground">{t('screen.nextQuiz')}</span>{' '}
+            <span className="font-semibold">{view.quizTitle}</span>
+          </p>
+        ) : null}
         <p className="text-[1.5em]">
           {t('screen.joinAt')} <span className="font-semibold">{joinHost}</span>
         </p>
@@ -283,6 +308,13 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
             </li>
           ))}
         </ul>
+        {nextInRoom ? (
+          <RoomStandingsPanel
+            standings={nextInRoom}
+            max={5}
+            className="max-w-[28em] text-[1.1em]"
+          />
+        ) : null}
       </div>
     );
   }

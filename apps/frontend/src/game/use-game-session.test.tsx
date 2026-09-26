@@ -77,6 +77,48 @@ describe('useGameSession', () => {
     expect(result.current.view.players.map((p) => p.nickname)).toEqual(['Alice']);
   });
 
+  it('the room’s next quiz: its lobby clears the last quiz, keeps what came just before, and the quiz to rate', async () => {
+    loadPlayerSession.mockReturnValue({ pin: '482913', sessionToken: 't', playerId: 'p1' });
+    const { result } = renderHook(() => useGameSession('482913', 'player'));
+    await waitFor(() => expect(listeners.has('game:podium')).toBe(true));
+
+    fire('game:state', { state: 'PODIUM', questionIndex: 0, totalQuestions: 1 });
+    fire('game:podium', {
+      podium: [{ nickname: 'Ada', score: 900, rank: 1 }],
+      quizId: 'quiz-1',
+      you: { score: 900, rank: 1 },
+    });
+    fire('room:standings', { quizzesPlayed: 1, top: [], you: { score: 900, rank: 1 } });
+    // What the server sends ahead of the next lobby's state (sendStateTo).
+    fire('game:media', {
+      title: 'Quiz 2',
+      hasSound: true,
+      hasMedia: true,
+      audioTarget: 'everyone',
+    });
+    fire('game:state', { state: 'LOBBY', questionIndex: -1, totalQuestions: 3 });
+
+    const v = result.current.view;
+    expect(v.podium).toBeNull();
+    expect(v.quizHasSound).toBe(true);
+    expect(v.quizTitle).toBe('Quiz 2');
+    expect(v.standings?.quizzesPlayed).toBe(1);
+    expect(v.rateable).toEqual({ quizId: 'quiz-1', feedbackEnabled: true });
+
+    // The next quiz starts: the previous one can no longer be rated from here.
+    fire('game:state', { state: 'ANSWERING', questionIndex: 0, totalQuestions: 3 });
+    expect(result.current.view.rateable).toBeNull();
+  });
+
+  it('a participant who joined at the podium has no quiz to rate', async () => {
+    loadPlayerSession.mockReturnValue({ pin: '482913', sessionToken: 't', playerId: 'p2' });
+    const { result } = renderHook(() => useGameSession('482913', 'player'));
+    await waitFor(() => expect(listeners.has('game:podium')).toBe(true));
+    fire('game:podium', { podium: [], quizId: 'quiz-1' });
+    fire('game:ended', { quizId: 'quiz-1', feedbackEnabled: true });
+    expect(result.current.view.rateable).toBeNull();
+  });
+
   it('joueur sans session locale : statut no-session (écran Rejoindre), aucun reconnect', async () => {
     loadPlayerSession.mockReturnValue(null);
     const { result } = renderHook(() => useGameSession('482913', 'player'));

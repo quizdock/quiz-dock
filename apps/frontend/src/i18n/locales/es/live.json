@@ -136,7 +136,17 @@
     "restartMedia": "Reiniciar el medio desde el principio",
     "mediaLoadingTitle": "Cargando los medios de la pregunta",
     "mediaLate": "Aún cargando: {{names}}",
-    "startAnyway": "Empezar de todos modos"
+    "startAnyway": "Empezar de todos modos",
+    "nextQuiz": "Siguiente quiz",
+    "changeQuiz": "Cambiar de quiz",
+    "nextQuizTooltip": "Jugar otro quiz en esta sala: los participantes se quedan",
+    "changeQuizTooltip": "Reemplazar el quiz elegido, antes de que empiece",
+    "nextQuizDescription": "Los participantes se quedan en la sala y se reencuentran en el lobby del siguiente quiz. Nadie vuelve a escribir el PIN.",
+    "changeQuizDescription": "Nadie ha jugado aún este quiz: los participantes se quedan en la sala y el lobby muestra el nuevo.",
+    "openQuiz": "Abrir este quiz",
+    "noPlayableQuiz": "Ningún otro quiz listo. Marca un quiz como listo en el editor para jugarlo aquí.",
+    "pickQuiz": "Quiz",
+    "pickQuizPlaceholder": "Elegir un quiz…"
   },
   "screen": {
     "sessionUnavailable": "Sesión no disponible.",
@@ -159,7 +169,9 @@
     "mediaLoading": "La pregunta está en camino…",
     "readinessLeft": "quedan {{seconds}} s",
     "listening": "Escuchando",
-    "credits": "Créditos:"
+    "credits": "Créditos:",
+    "nextQuiz": "Siguiente quiz:",
+    "roomPodium": "🏆 Podio de la sala"
   },
   "player": {
     "joinFailed": "No se pudo unir a la sesión.",
@@ -221,7 +233,10 @@
     "pollThanks": "¡Gracias por tu opinión!",
     "questionComing": "La pregunta está en camino…",
     "listenFirst": "🎧 Escucha hasta el final…",
-    "listening": "Escuchando"
+    "listening": "Escuchando",
+    "roomRank": "En la sala: #{{rank}} — {{score}} pts",
+    "waitingNextQuiz": "Esperando el siguiente quiz…",
+    "enableSound": "Activar el sonido"
   },
   "reveal": {
     "explanation": "Explicación",
@@ -295,5 +310,10 @@
     },
     "remember": "Recordar mi elección",
     "rememberHint": "Los próximos lanzamientos la usarán sin preguntar. Se cambia en Mi cuenta."
+  },
+  "room": {
+    "standingsTitle": "Clasificación de la sala",
+    "afterQuizzes_one": "tras {{count}} quiz",
+    "afterQuizzes_other": "tras {{count}} quizzes"
   }
 }

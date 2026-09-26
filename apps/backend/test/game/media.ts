@@ -29,6 +29,7 @@ export function mediaTests(ctx: GameContext): void {
     const media = new Promise((resolve) => screen.once('game:media', resolve));
     await screen.emitWithAck('spectator:join', { pin });
     expect(await media).toEqual({
+      title: 'Quiz live test',
       hasSound: false,
       hasMedia: false,
       audioTarget: 'projection_remote',

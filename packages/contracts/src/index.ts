@@ -666,11 +666,14 @@ export interface ServerToClientEvents {
   /** The host restarts the current question's media from the top. */
   'media:control': (p: { questionIndex: number; action: 'restart' }) => void;
   /**
-   * Whether the quiz plays any sound (an MP3, a video), sent on attach to the
-   * screens that are not players: the projection then asks for the click that
-   * unlocks sound as soon as it opens, whatever the moment of the session.
+   * Whether the quiz plays any sound (an MP3, a video), sent on attach to every
+   * device: the projection (and a phone that never enabled it) then asks for the
+   * click that unlocks sound, whatever the moment of the session — the room's
+   * next quiz may play sound where the first did not (#89).
    */
   'game:media': (p: {
+    /** The quiz's title: the room's projection shows the quiz coming next. */
+    title?: string;
     hasSound: boolean;
     /** Whether any question or slide carries a media (the lobby then says they are sent ahead). */
     hasMedia: boolean;

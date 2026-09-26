@@ -4,8 +4,7 @@
 > quizzes, players join once. The model, the decisions taken, how the live state splits between the room and each
 > game, and the ordered pull requests that deliver it.
 
-Status: **in progress.** Steps 1 to 4 are delivered (the room is visible in *History*); the live screens come with
-step 5.
+Status: **delivered.** Steps 1 to 5; the playlist is left to a later *Programme* (§7).
 
 ---
 
@@ -119,15 +118,18 @@ not drop.
      room. A player who joined at a podium is ranked on the quizzes they played.
 4. **Archives.** Delivered as §5: `game_session_log.room_id` and its migration, the room read from its archived
    sessions in *History* (no room table, the standings recalculated).
-5. **Screens.** The console's quiz picker, the room projection (room name, QR code, players, the next quiz once
-   picked, the cumulative leaderboard), the phone's "waiting for the next quiz" with nickname and series rank, the
-   intermission. The room lobby leaves room for #104 (the "Ready!" button and the projection link).
-   - To fix here: a player still rating the quiz just played when the host opens the next one is refused
-     (`player:rate` accepts only a game at its podium or ended); accept the rating for the previous game, or have the
-     console wait.
-   - To fix here: the phones are never told whether the next quiz plays sound (`game:media` goes to the screens
-     only); a remote player who came in on a silent quiz must be asked to enable sound when the next one has some.
-   - To settle here: a player joining at the podium sees the rating panel of a quiz they did not play.
+5. **Screens.** Delivered:
+   - **Console**: at the podium, **Next quiz** (a picker of the host's own playable quizzes, `ready` with a question;
+     *keep the results* checked, as when ending) next to *End the session*; in the lobby, **Change quiz** (the quiz
+     picked is replaced). The room's standings under the podium from the second quiz, and in the next lobby.
+   - **Projection**: in the next lobby, the quiz coming and the room's standings; at the podium, the quiz's podium
+     then the room's standings; when a room of several quizzes closes, its own podium.
+   - **Phone**: in the next lobby, their rank in the room and *Waiting for the next quiz*; at the podium, their rank
+     in the room too. The rating goes to the quiz they played, keyed by it (the podium and `game:ended` name it), and
+     stays open in the next lobby if the host moved on meanwhile; the server takes it for the previous quiz then, and
+     never for one they did not play (a player joining at the podium sees no rating). **Enable sound** when the next
+     quiz has some and this device never enabled it (`game:media` now reaches the phones, with the quiz's title).
+   - A room of one quiz looks as before, apart from *Next quiz* at the podium. The lobby keeps room for #104.
 
 The playlist first planned as a step 6 is left to the *Programme* (§7), which prepares a series instead of
 improvising it.

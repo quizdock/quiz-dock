@@ -136,7 +136,17 @@
     "restartMedia": "Restart the media from the top",
     "mediaLoadingTitle": "Loading the question’s media",
     "mediaLate": "Still loading: {{names}}",
-    "startAnyway": "Start anyway"
+    "startAnyway": "Start anyway",
+    "nextQuiz": "Next quiz",
+    "changeQuiz": "Change quiz",
+    "nextQuizTooltip": "Play another quiz in this room: the participants stay in",
+    "changeQuizTooltip": "Replace the quiz picked, before it starts",
+    "nextQuizDescription": "The participants stay in the room and meet again in the next quiz’s lobby. Nobody types the PIN again.",
+    "changeQuizDescription": "Nobody has played this quiz yet: the participants stay in the room and the lobby shows the new one.",
+    "openQuiz": "Open this quiz",
+    "noPlayableQuiz": "No other ready quiz. Mark a quiz ready in the editor to play it here.",
+    "pickQuiz": "Quiz",
+    "pickQuizPlaceholder": "Choose a quiz…"
   },
   "screen": {
     "sessionUnavailable": "Session unavailable.",
@@ -159,7 +169,9 @@
     "mediaLoading": "The question is on its way…",
     "readinessLeft": "{{seconds}} s left",
     "listening": "Listening",
-    "credits": "Credits:"
+    "credits": "Credits:",
+    "nextQuiz": "Next quiz:",
+    "roomPodium": "🏆 Room podium"
   },
   "player": {
     "joinFailed": "Could not join the session.",
@@ -221,7 +233,10 @@
     "pollThanks": "Thanks for your opinion!",
     "questionComing": "The question is on its way…",
     "listenFirst": "🎧 Listen to the end…",
-    "listening": "Listening"
+    "listening": "Listening",
+    "roomRank": "In the room: #{{rank}} — {{score}} pts",
+    "waitingNextQuiz": "Waiting for the next quiz…",
+    "enableSound": "Enable sound"
   },
   "reveal": {
     "explanation": "Explanation",
@@ -295,5 +310,10 @@
     },
     "remember": "Remember my choice",
     "rememberHint": "Next launches will use it without asking. Change it in My account."
+  },
+  "room": {
+    "standingsTitle": "Room standings",
+    "afterQuizzes_one": "after {{count}} quiz",
+    "afterQuizzes_other": "after {{count}} quizzes"
   }
 }

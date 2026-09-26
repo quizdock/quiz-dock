@@ -136,7 +136,17 @@
     "restartMedia": "Relancer le média depuis le début",
     "mediaLoadingTitle": "Chargement des médias de la question",
     "mediaLate": "Encore en chargement : {{names}}",
-    "startAnyway": "Lancer quand même"
+    "startAnyway": "Lancer quand même",
+    "nextQuiz": "Quiz suivant",
+    "changeQuiz": "Changer de quiz",
+    "nextQuizTooltip": "Jouer un autre quiz dans ce salon : les participants restent",
+    "changeQuizTooltip": "Remplacer le quiz choisi, avant qu’il démarre",
+    "nextQuizDescription": "Les participants restent dans le salon et se retrouvent au lobby du quiz suivant. Personne ne ressaisit le PIN.",
+    "changeQuizDescription": "Personne n’a encore joué ce quiz : les participants restent dans le salon et le lobby affiche le nouveau.",
+    "openQuiz": "Ouvrir ce quiz",
+    "noPlayableQuiz": "Aucun autre quiz prêt. Passez un quiz à « prêt » dans l’éditeur pour le jouer ici.",
+    "pickQuiz": "Quiz",
+    "pickQuizPlaceholder": "Choisir un quiz…"
   },
   "screen": {
     "sessionUnavailable": "Session indisponible.",
@@ -159,7 +169,9 @@
     "mediaLoading": "La question arrive…",
     "readinessLeft": "encore {{seconds}} s",
     "listening": "Écoute en cours",
-    "credits": "Crédits :"
+    "credits": "Crédits :",
+    "nextQuiz": "Quiz suivant :",
+    "roomPodium": "🏆 Podium du salon"
   },
   "player": {
     "joinFailed": "Impossible de rejoindre la session.",
@@ -221,7 +233,10 @@
     "pollThanks": "Merci pour ton avis !",
     "questionComing": "La question arrive…",
     "listenFirst": "🎧 Écoute jusqu’au bout…",
-    "listening": "Écoute en cours"
+    "listening": "Écoute en cours",
+    "roomRank": "Dans le salon : #{{rank}} — {{score}} pts",
+    "waitingNextQuiz": "En attente du quiz suivant…",
+    "enableSound": "Activer le son"
   },
   "reveal": {
     "explanation": "Explication",
@@ -295,5 +310,10 @@
     },
     "remember": "Se souvenir de mon choix",
     "rememberHint": "Les prochains lancements l’utiliseront sans demander. Modifiable dans Mon compte."
+  },
+  "room": {
+    "standingsTitle": "Classement du salon",
+    "afterQuizzes_one": "après {{count}} quiz",
+    "afterQuizzes_other": "après {{count}} quiz"
   }
 }

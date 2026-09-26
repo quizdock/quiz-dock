@@ -1,3 +1,4 @@
+import { NextQuizButton, RoomStandingsPanel } from '../game/room-components';
 import {
   AUDIO_TARGETS,
   type AudioTarget,
@@ -268,6 +269,9 @@ export function ControlPage() {
           <ParticipantsList players={view.players} readiness={view.readiness} onBan={banPlayer} />
         </div>
 
+        {/* A room's next quiz (#89): where the room stands before it starts. */}
+        {view.standings ? <RoomStandingsPanel standings={view.standings} max={5} /> : null}
+
         {/* Who hears the sound, for this game: replaces the quiz's default; a question
             with its own setting keeps it. Only when the quiz has something to hear. */}
         {view.quizHasSound && view.gameAudioTarget ? (
@@ -395,7 +399,17 @@ export function ControlPage() {
         <ActionBar
           status={<ModeToggle mode={view.mode} onChange={setMode} />}
           end={<EndGameButton label={t('control.stopSession')} onConfirm={endGame} />}
-          nav={screenButton}
+          nav={
+            <>
+              <NextQuizButton
+                pin={pin}
+                socket={socket}
+                fromPodium={false}
+                currentQuizId={view.quizId}
+              />
+              {screenButton}
+            </>
+          }
           primary={
             <Tooltip label={t('control.startTooltip')}>
               <Button
@@ -550,10 +564,15 @@ export function ControlPage() {
       <section className={cn(CONSOLE_SECTION, 'items-center gap-6')}>
         <h2 className="text-2xl font-bold">{t('control.podium')}</h2>
         {view.podium ? <Podium rows={view.podium.podium} /> : null}
+        {/* The quiz's podium first, then the room's (#89) once it has played more than one. */}
+        {view.standings && view.standings.quizzesPlayed > 1 ? (
+          <RoomStandingsPanel standings={view.standings} />
+        ) : null}
         <ActionBar
+          end={<EndGameButton label={t('control.endSession')} offerArchive onConfirm={endGame} />}
           nav={navBar}
           primary={
-            <EndGameButton label={t('control.endSession')} offerArchive onConfirm={endGame} />
+            <NextQuizButton pin={pin} socket={socket} fromPodium currentQuizId={view.quizId} />
           }
         />
       </section>

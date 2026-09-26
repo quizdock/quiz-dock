@@ -35,7 +35,7 @@ import {
 } from '../game/live-components';
 import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
-import { unlockAudio } from '../game/media/audio-unlock';
+import { unlockAudio, useAudioUnlocked } from '../game/media/audio-unlock';
 import { claimMediaElements, preloadMedia, waitedFor } from '../game/media/media-pool';
 import { FollowedWaveform, QuestionMediaStage } from '../game/media/question-media-stage';
 import { followed } from '../game/media/followed';
@@ -90,6 +90,7 @@ export function PlayerPage() {
   const [submitted, setSubmitted] = useState(false);
   // Graine d'avatar persistée localement (réinjectée d'une partie à l'autre).
   const [avatarSeed, setAvatarSeed] = useState(() => loadAvatarSeed() ?? '');
+  const soundUnlocked = useAudioUnlocked();
 
   const question = view.question;
   const isMulti = question?.type === 'multiple_choice';
@@ -390,6 +391,17 @@ export function PlayerPage() {
     </Surface>
   );
 
+  // Where this participant stands in the room (#89), once it has played more than one quiz.
+  const roomYou = view.standings && view.standings.quizzesPlayed > 1 ? view.standings.you : null;
+  const roomLine = roomYou ? (
+    <p className="text-muted-foreground">
+      {t('player.roomRank', {
+        rank: roomYou.rank,
+        score: roomYou.score,
+      })}
+    </p>
+  ) : null;
+
   // ── Écran « Rejoindre » (pas de session locale valide) ─────────────────────
   if (view.status === 'no-session') {
     return wrap(
@@ -488,6 +500,7 @@ export function PlayerPage() {
                 {t('player.podiumScore', { score: view.podium.you.score })}
               </p>
             ) : null}
+            {roomLine}
           </>
         ) : (
           <>
@@ -497,7 +510,10 @@ export function PlayerPage() {
             <p className="text-xl font-semibold">{t('player.thanks')}</p>
           </>
         )}
-        {view.feedbackEnabled ? <RatingPanel pin={pin} socket={socket} /> : null}
+        {/* Only a quiz they played, keyed by it: a room plays several under one PIN. */}
+        {view.rateable?.feedbackEnabled ? (
+          <RatingPanel pin={pin} quizId={view.rateable.quizId} socket={socket} />
+        ) : null}
         <Link to="/join" className="text-muted-foreground text-sm underline underline-offset-2">
           {t('player.joinAnother')}
         </Link>
@@ -699,35 +715,68 @@ export function PlayerPage() {
 
   // ── LOBBY / attente ──────────────────────────────────────────────────────────
   return wrap(
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{t('player.inSession')}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col items-center gap-2">
-        <Avatar name={avatarName} size={72} />
-        {nickname ? <p className="text-lg font-semibold">« {nickname} »</p> : null}
-        {/* Avatar modifiable tant que la partie n'a pas démarré : on randomise en local
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>{t('player.inSession')}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-2">
+          <Avatar name={avatarName} size={72} />
+          {nickname ? <p className="text-lg font-semibold">« {nickname} »</p> : null}
+          {/* Avatar modifiable tant que la partie n'a pas démarré : on randomise en local
             puis on synchronise explicitement (évite d'inonder le serveur à chaque clic). */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={randomizeAvatar}>
-            <Shuffle className="size-4" />
-            {t('player.randomAvatar')}
-          </Button>
-          <Button
-            type="button"
-            size="icon"
-            onClick={commitAvatar}
-            disabled={avatarSeed === syncedSeed}
-            aria-label={t('player.saveAvatar')}
-            title={t('player.saveAvatar')}
-          >
-            <Check className="size-4" />
-          </Button>
-        </div>
-        <p className="text-muted-foreground">{t('player.waitingHost')}</p>
-        <p className="text-muted-foreground border-t pt-2 text-sm">{trackingNotice(t, view)}</p>
-      </CardContent>
-    </Card>,
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={randomizeAvatar}>
+              <Shuffle className="size-4" />
+              {t('player.randomAvatar')}
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              onClick={commitAvatar}
+              disabled={avatarSeed === syncedSeed}
+              aria-label={t('player.saveAvatar')}
+              title={t('player.saveAvatar')}
+            >
+              <Check className="size-4" />
+            </Button>
+          </div>
+          {/* Between two quizzes of a room (#89): where they stand, then what comes. */}
+          {view.standings?.you ? (
+            <p className="text-muted-foreground">
+              {t('player.roomRank', {
+                rank: view.standings.you.rank,
+                score: view.standings.you.score,
+              })}
+            </p>
+          ) : null}
+          <p className="text-muted-foreground">
+            {view.standings ? t('player.waitingNextQuiz') : t('player.waitingHost')}
+          </p>
+          {/* The next quiz plays sound and this device never enabled it (it joined a
+            silent one): the tap is the only way a phone lets it play later. */}
+          {view.quizHasSound && !soundUnlocked ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                claimMediaElements();
+                void unlockAudio();
+              }}
+            >
+              <Volume2 className="size-4" />
+              {t('player.enableSound')}
+            </Button>
+          ) : null}
+          <p className="text-muted-foreground border-t pt-2 text-sm">{trackingNotice(t, view)}</p>
+        </CardContent>
+      </Card>
+      {/* The host moved on while they were rating the quiz just played: it stays open. */}
+      {view.rateable?.feedbackEnabled ? (
+        <RatingPanel pin={pin} quizId={view.rateable.quizId} socket={socket} hideWhenDone />
+      ) : null}
+    </>,
   );
 }
 

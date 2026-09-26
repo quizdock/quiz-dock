@@ -254,6 +254,7 @@ export class GameEngine {
     const snapshot = await this.game.getSnapshot(ref.id);
     if (!snapshot) return;
     const payload = {
+      title: snapshot.title,
       hasSound: snapshotHasSound(snapshot),
       hasMedia: snapshotHasMedia(snapshot),
       audioTarget: gameAudioTarget(snapshot, target),
@@ -1084,6 +1085,7 @@ export class GameEngine {
       // Every device asks for sound at once when the quiz will need it (a phone too:
       // the next quiz of a room may play sound where the first did not).
       socket.emit('game:media', {
+        title: snapshotForNav.title,
         hasSound: snapshotHasSound(snapshotForNav),
         hasMedia: snapshotHasMedia(snapshotForNav),
         audioTarget: gameAudioTarget(snapshotForNav, meta.audioTarget),
