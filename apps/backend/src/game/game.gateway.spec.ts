@@ -1,8 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
-import { NestFactory } from '@nestjs/core';
-import { type Socket, io } from 'socket.io-client';
-import { AppModule } from '../app.module';
+import type { Socket } from 'socket.io-client';
+import { type GameHarness, bootGameApp, nextEvent } from '../../test/game-harness';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
@@ -20,97 +19,21 @@ import { PIN_ATTEMPTS_MAX } from './pin-attempts';
 const asHost = (id: string) => ({ id, roles: [UserRole.host] });
 
 describe('GameGateway (intégration socket)', () => {
+  let h: GameHarness;
   let app: INestApplication;
   let prisma: PrismaService;
   let url: string;
   let quizId: string;
   let hostUserId: string;
-  let previousSeat: { userId: string; expiresAt: Date | null } | null = null;
-  const sockets: Socket[] = [];
-
-  const connect = (auth?: Record<string, string>): Socket => {
-    const socket = io(url, { transports: ['websocket'], auth, forceNew: true });
-    sockets.push(socket);
-    return socket;
-  };
+  const connect = (auth?: Record<string, string>): Socket => h.connect(auth);
 
   beforeAll(async () => {
-    // Set by the Jest global setup: a test database and Redis database 1, never the dev ones.
-    if (!process.env.DATABASE_URL?.includes('_test')) {
-      throw new Error('DATABASE_URL must point at a test database (see test/jest.global-setup.ts)');
-    }
-    process.env.GAME_READ_DELAY_MS = '150'; // accélère la fenêtre de lecture en test
-    process.env.GAME_HOST_GRACE_MS = '200'; // grâce hôte courte (§7.1)
-    process.env.GAME_HOST_WINDOW_MS = '1500'; // fenêtre de reconnexion hôte courte (§7.3)
-    process.env.GAME_AUTO_ADVANCE_MS = '300'; // enchaînement auto rapide (§8) en test
-    process.env.GAME_MEDIA_WAIT_S = '1'; // a short wait for media, capped fast
-    app = await NestFactory.create(AppModule, { logger: false });
-    await app.listen(0);
-    prisma = app.get(PrismaService);
-
-    // Seed : un hôte dont l'oidcSubject == slug local ('local:animateur'),
-    // propriétaire d'un quiz « ready » avec une question valide. En mode local le
-    // rôle dérive du siège d'hôte (HostSeatService) : on le lui attribue.
-    const host = await prisma.user.upsert({
-      where: { oidcSubject: 'local:animateur' },
-      create: { oidcSubject: 'local:animateur', displayName: 'Animateur', roles: ['host'] },
-      update: { roles: ['host'] },
-    });
-    hostUserId = host.id;
-    // The seat is shared state of the target database: remember whose it was, give it back at the end.
-    previousSeat = await prisma.hostSeat.findUnique({ where: { id: 1 } });
-    await prisma.hostSeat.upsert({
-      where: { id: 1 },
-      create: { id: 1, userId: host.id, expiresAt: null },
-      update: { userId: host.id, expiresAt: null },
-    });
-    const quiz = await prisma.quiz.create({
-      data: {
-        ownerId: host.id,
-        title: 'Quiz live test',
-        description: 'Quiz de démonstration',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'single_choice',
-            prompt: 'Capitale de la France ?',
-            answerExplanation: 'Paris est la **capitale**.',
-            timeLimitS: 5, // minimum autorisé (contrainte 5..120)
-            options: {
-              create: [
-                { orderIndex: 0, text: 'Paris', color: 'red', shape: 'triangle', isCorrect: true },
-                { orderIndex: 1, text: 'Lyon', color: 'blue', shape: 'diamond', isCorrect: false },
-              ],
-            },
-          },
-        },
-      },
-    });
-    quizId = quiz.id;
-
-    const address = app.getHttpServer().address();
-    const port = typeof address === 'object' && address ? address.port : 0;
-    url = `http://localhost:${port}/game`;
+    h = await bootGameApp();
+    ({ app, prisma, url, hostUserId } = h);
+    quizId = (await h.seedQuiz({ description: 'Quiz de démonstration' })).id;
   }, 30_000);
 
-  afterAll(async () => {
-    for (const s of sockets) s.disconnect();
-    // The server handles those departures asynchronously (roster, readiness): let it
-    // finish while Redis is still open, or a late read fails the suite after the tests.
-    await new Promise((r) => setTimeout(r, 500));
-    if (quizId) await prisma.quiz.delete({ where: { id: quizId } }).catch(() => undefined);
-    if (previousSeat) {
-      await prisma.hostSeat
-        .update({
-          where: { id: 1 },
-          data: { userId: previousSeat.userId, expiresAt: previousSeat.expiresAt },
-        })
-        .catch(() => undefined);
-    }
-    await app.close();
-  });
+  afterAll(() => h.close());
 
   it('répond `pong` à un `ping` (RTT)', async () => {
     const socket = connect();
@@ -371,26 +294,23 @@ describe('GameGateway (intégration socket)', () => {
         credit: 'Photo: Lin Wei, CC BY 4.0',
       },
     });
-    const credited = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Credits test',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'poll',
-            prompt: 'Q',
-            timeLimitS: 5,
-            pointsMode: 'none',
-            visualMediaId: asset.id,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const credited = await h.seedQuiz({
+      title: 'Credits test',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'poll',
+          prompt: 'Q',
+          timeLimitS: 5,
+          pointsMode: 'none',
+          visualMediaId: asset.id,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -434,28 +354,25 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const twoQuestions = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Preload test',
-        status: 'ready',
-        questionCount: 2,
-        questions: {
-          create: [0, 1].map((orderIndex) => ({
-            orderIndex,
-            type: 'poll' as const,
-            prompt: `Q${orderIndex}`,
-            timeLimitS: 5,
-            pointsMode: 'none' as const,
-            audioMediaId: orderIndex === 1 ? asset.id : null,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red' as const, shape: 'triangle' as const },
-                { orderIndex: 1, text: 'B', color: 'blue' as const, shape: 'diamond' as const },
-              ],
-            },
-          })),
-        },
+    const twoQuestions = await h.seedQuiz({
+      title: 'Preload test',
+      status: 'ready',
+      questionCount: 2,
+      questions: {
+        create: [0, 1].map((orderIndex) => ({
+          orderIndex,
+          type: 'poll' as const,
+          prompt: `Q${orderIndex}`,
+          timeLimitS: 5,
+          pointsMode: 'none' as const,
+          audioMediaId: orderIndex === 1 ? asset.id : null,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red' as const, shape: 'triangle' as const },
+              { orderIndex: 1, text: 'B', color: 'blue' as const, shape: 'diamond' as const },
+            ],
+          },
+        })),
       },
     });
     try {
@@ -513,26 +430,23 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const withSound = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Presence test',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'poll',
-            prompt: 'Which tune?',
-            timeLimitS: 5,
-            pointsMode: 'none',
-            audioMediaId: asset.id,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const withSound = await h.seedQuiz({
+      title: 'Presence test',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'poll',
+          prompt: 'Which tune?',
+          timeLimitS: 5,
+          pointsMode: 'none',
+          audioMediaId: asset.id,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -603,27 +517,24 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const withSound = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Audio target test',
-        status: 'ready',
-        questionCount: 1,
-        audioTarget: 'projection',
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'poll',
-            prompt: 'Which tune?',
-            timeLimitS: 5,
-            pointsMode: 'none',
-            audioMediaId: asset.id,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const withSound = await h.seedQuiz({
+      title: 'Audio target test',
+      status: 'ready',
+      questionCount: 1,
+      audioTarget: 'projection',
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'poll',
+          prompt: 'Which tune?',
+          timeLimitS: 5,
+          pointsMode: 'none',
+          audioMediaId: asset.id,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -682,26 +593,23 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const withSound = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Readiness test',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'poll',
-            prompt: 'Which tune?',
-            timeLimitS: 5,
-            pointsMode: 'none',
-            audioMediaId: asset.id,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const withSound = await h.seedQuiz({
+      title: 'Readiness test',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'poll',
+          prompt: 'Which tune?',
+          timeLimitS: 5,
+          pointsMode: 'none',
+          audioMediaId: asset.id,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -787,26 +695,23 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const withSound = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Media wait test',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'poll',
-            prompt: 'Which tune?',
-            timeLimitS: 5,
-            pointsMode: 'none',
-            audioMediaId: asset.id,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const withSound = await h.seedQuiz({
+      title: 'Media wait test',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'poll',
+          prompt: 'Which tune?',
+          timeLimitS: 5,
+          pointsMode: 'none',
+          audioMediaId: asset.id,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -881,26 +786,23 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const withSound = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Media start test',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'poll',
-            prompt: 'Which tune?',
-            timeLimitS: 20,
-            pointsMode: 'none',
-            audioMediaId: asset.id,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const withSound = await h.seedQuiz({
+      title: 'Media start test',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'poll',
+          prompt: 'Which tune?',
+          timeLimitS: 20,
+          pointsMode: 'none',
+          audioMediaId: asset.id,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle' },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -949,26 +851,23 @@ describe('GameGateway (intégration socket)', () => {
         peaks: new Array(200).fill(0.5),
       },
     });
-    const quiz = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Listen first test',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'single_choice',
-            prompt: 'Which tune?',
-            timeLimitS: 5,
-            audioMediaId: asset.id,
-            timerAfterMedia: true,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle', isCorrect: true },
-                { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
-              ],
-            },
+    const quiz = await h.seedQuiz({
+      title: 'Listen first test',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'single_choice',
+          prompt: 'Which tune?',
+          timeLimitS: 5,
+          audioMediaId: asset.id,
+          timerAfterMedia: true,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle', isCorrect: true },
+              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond' },
+            ],
           },
         },
       },
@@ -1315,25 +1214,22 @@ describe('GameGateway (intégration socket)', () => {
 
   it('auto mode: a per-question revealDelayS overrides the default auto-next delay (#6)', async () => {
     // Same quiz shape, but the question asks for a 1 s reveal (default in test is 300 ms).
-    const quiz = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Quiz reveal delay',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'single_choice',
-            prompt: 'Capitale ?',
-            timeLimitS: 5,
-            revealDelayS: 1,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'Paris', color: 'red', shape: 'triangle', isCorrect: true },
-                { orderIndex: 1, text: 'Lyon', color: 'blue', shape: 'diamond', isCorrect: false },
-              ],
-            },
+    const quiz = await h.seedQuiz({
+      title: 'Quiz reveal delay',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'single_choice',
+          prompt: 'Capitale ?',
+          timeLimitS: 5,
+          revealDelayS: 1,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'Paris', color: 'red', shape: 'triangle', isCorrect: true },
+              { orderIndex: 1, text: 'Lyon', color: 'blue', shape: 'diamond', isCorrect: false },
+            ],
           },
         },
       },
@@ -1344,48 +1240,47 @@ describe('GameGateway (intégration socket)', () => {
     const player = connect();
     await player.emitWithAck('player:join', { pin, nickname: 'Wes' });
 
-    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
-      (resolve) => player.on('question:start', (q) => resolve(q as never)),
+    const qStart = nextEvent<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
+      player,
+      'question:start',
     );
-    const modeP = new Promise<{ autoNextMs?: number }>((resolve) =>
-      host.on('game:mode', (m) => (m as { autoNextAt?: number }).autoNextAt && resolve(m as never)),
-    );
-    const podiumP = new Promise<void>((resolve) => player.on('game:podium', () => resolve()));
+    const modeP = nextEvent<{ autoNextAt?: number; autoNextMs?: number }>(host, 'game:mode', {
+      where: (m) => Boolean(m.autoNextAt),
+    });
+    const podiumP = nextEvent(player, 'game:podium').then(() => Date.now());
 
     host.emit('host:start', { pin });
     const q = await qStart;
     await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
-    const revealedAt = Date.now();
-    player.emit('player:submit', { pin, questionIndex: 0, answer: q.options[0].id });
+    player.emit('player:submit', { pin, questionIndex: 0, answer: q.options[0].id }); // → REVEAL
 
-    expect((await modeP).autoNextMs).toBe(1000);
-    await podiumP;
-    expect(Date.now() - revealedAt).toBeGreaterThanOrEqual(1000);
+    const mode = await modeP;
+    expect(mode.autoNextMs).toBe(1000);
+    // Measured against the server's own schedule, not the client's submit instant: the
+    // server arms the timer from its reveal, and a Node timer may fire a millisecond early.
+    const podiumAt = await podiumP;
+    expect(podiumAt).toBeGreaterThanOrEqual((mode.autoNextAt ?? 0) - 20);
   }, 15_000);
 
   it('slides (#7): manual mode = host clicks through; auto mode honours displayDelayS (1 s closing slide)', async () => {
-    const quiz = await prisma.quiz.create({
-      data: {
-        ownerId: hostUserId,
-        title: 'Quiz with slides',
-        status: 'ready',
-        questionCount: 1,
-        questions: {
-          create: {
-            orderIndex: 0,
-            type: 'single_choice',
-            prompt: 'Capitale ?',
-            timeLimitS: 5,
-            options: {
-              create: [
-                { orderIndex: 0, text: 'Paris', color: 'red', shape: 'triangle', isCorrect: true },
-                { orderIndex: 1, text: 'Lyon', color: 'blue', shape: 'diamond', isCorrect: false },
-              ],
-            },
+    const quiz = await h.seedQuiz({
+      title: 'Quiz with slides',
+      status: 'ready',
+      questionCount: 1,
+      questions: {
+        create: {
+          orderIndex: 0,
+          type: 'single_choice',
+          prompt: 'Capitale ?',
+          timeLimitS: 5,
+          options: {
+            create: [
+              { orderIndex: 0, text: 'Paris', color: 'red', shape: 'triangle', isCorrect: true },
+              { orderIndex: 1, text: 'Lyon', color: 'blue', shape: 'diamond', isCorrect: false },
+            ],
           },
         },
       },
-      include: { questions: true },
     });
     await prisma.slide.createMany({
       data: [

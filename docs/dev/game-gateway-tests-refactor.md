@@ -36,7 +36,9 @@ Why it will get worse: every game feature adds tests to this file, each with its
 
 ## 3. The changes
 
-### 3.1 A harness (`src/game/testing/game-harness.ts`)
+### 3.1 A harness (`test/game-harness.ts`)
+
+Outside `src/`, so the production build (`tsconfig.json` includes `src/**/*`) never ships it.
 
 - `bootGameApp()`: sets the `GAME_*` test variables, starts the app on a free port, seeds the host and its seat,
   returns `{ app, prisma, url, close }` (the seat is given back on close, as today).
