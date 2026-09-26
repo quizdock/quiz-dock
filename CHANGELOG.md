@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Bug Fixes
 
+- Smoother French for the remote presence hint *(i18n)*
 - Compare the OIDC issuer exactly, trailing slash included *(auth)*
 - A manager reads another host's quiz, and a failed save says so *(editor)*
 - Start a quiz in the instance language, and let the author change it *(quiz)*
@@ -21,6 +22,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- Exact OIDC issuer in unreleased *(changelog)*
 - Unreleased before the release *(changelog)*
 - The licence, tags and language of a quiz in the feature list
 - The refactoring plan for the game gateway tests *(dev)*
@@ -44,6 +46,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
+- The question fits the screen, the clock as a bar *(live)*
+- One answer grid on the projection and the phone *(live)*
 - Export a quiz for publication to a community store *(editor)*
 - Publish the manifest as a JSON Schema, one file per version *(bundle)*
 - Set the licence and the tags of a quiz *(editor)*
