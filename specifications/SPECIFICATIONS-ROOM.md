@@ -23,7 +23,7 @@ Status: **in progress.** Steps 1 to 3 are delivered on the server; the screens c
 
 - **Always a room** (§1), not an option next to a "simple game".
 - **Picking quizzes on the fly**: the host console has a quiz picker (their `ready` quizzes) to choose the next quiz
-  at any point. A playlist prepared beforehand is optional; when there is one, the picker proposes its next quiz first.
+  at any point. A list prepared beforehand is not part of the room: it belongs to the *Programme* (§7).
 - **Moving on is the host's call**: after a quiz, the room shows the results, and the host starts the next one when
   ready.
 - **Cumulative scores and stats** across the series, next to each quiz's own: total score, rank, correct answers,
@@ -120,7 +120,9 @@ not drop.
    - To fix here: the phones are never told whether the next quiz plays sound (`game:media` goes to the screens
      only); a remote player who came in on a silent quiz must be asked to enable sound when the next one has some.
    - To settle here: a player joining at the podium sees the rating panel of a quiz they did not play.
-6. **Playlist** (optional): a list prepared beforehand, proposed first by the picker.
+
+The playlist first planned as a step 6 is left to the *Programme* (§7), which prepares a series instead of
+improvising it.
 
 To settle along the way, each in the PR it touches: the number of quizzes per room, and what the picker does with a
 quiz edited or deleted between two games (each game freezes its snapshot at start, so a game in progress is never
@@ -131,3 +133,6 @@ affected).
 - [#104](https://github.com/quizdock/quiz-dock/issues/104) — the shared projection and "Ready!", grafted on the room
   lobby.
 - [#93](https://github.com/quizdock/quiz-dock/issues/93) — game sounds, as room settings.
+- **Programme** (later, SPECIFICATIONS-ROADMAP §7): the room is the live, improvised series; a Programme prepares it.
+  A named, saved, replayable list of quizzes with its settings; each run of it a durable record with its results
+  (a table then makes sense, unlike §5), archiving decided once for the run, runs compared with one another.
