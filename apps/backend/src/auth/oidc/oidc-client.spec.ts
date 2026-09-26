@@ -35,9 +35,9 @@ describe('oidcSettings', () => {
     }
   });
 
-  it('keeps the issuer as written, trailing slash included (#99)', () => {
-    const authentik = 'https://idp.example.com/application/o/quizdock/';
-    expect(oidcSettings({ OIDC_ISSUER: ` ${authentik}\n` }).issuer).toBe(authentik);
+  it('keeps the issuer as written, trailing slash included (OIDC Core §3.1.3.7, #99)', () => {
+    const slashed = 'https://idp.example.com/tenant/app/';
+    expect(oidcSettings({ OIDC_ISSUER: ` ${slashed}\n` }).issuer).toBe(slashed);
     expect(oidcSettings({ OIDC_ISSUER: ISSUER }).issuer).toBe(ISSUER);
   });
 
@@ -56,10 +56,10 @@ describe('oidcSettings', () => {
 });
 
 describe('discoveryUrl', () => {
-  it('drops the terminating slash of the issuer, and only there', () => {
-    const doc = 'https://idp.example.com/application/o/quizdock/.well-known/openid-configuration';
-    expect(discoveryUrl('https://idp.example.com/application/o/quizdock/')).toBe(doc);
-    expect(discoveryUrl('https://idp.example.com/application/o/quizdock')).toBe(doc);
+  it('builds the discovery URL per OIDC Discovery §4: drops the trailing slash of the issuer, there only', () => {
+    const doc = 'https://idp.example.com/tenant/app/.well-known/openid-configuration';
+    expect(discoveryUrl('https://idp.example.com/tenant/app/')).toBe(doc);
+    expect(discoveryUrl('https://idp.example.com/tenant/app')).toBe(doc);
     expect(discoveryUrl('https://idp.example.com/')).toBe(
       'https://idp.example.com/.well-known/openid-configuration',
     );
@@ -118,17 +118,17 @@ describe('OidcClient', () => {
     });
   });
 
-  it('finds the discovery of an issuer ending in a slash, on either address (#99)', async () => {
-    const authentik = 'https://idp.example.com/application/o/quizdock/';
-    fetchMock.mockImplementation(async () => json(200, { ...discovery, issuer: authentik }));
-    await new OidcClient(oidcSettings({ OIDC_ISSUER: authentik })).authorizationUrl({
+  it('finds the discovery of an issuer whose path ends in a slash, on either address', async () => {
+    const slashed = 'https://idp.example.com/tenant/app/';
+    fetchMock.mockImplementation(async () => json(200, { ...discovery, issuer: slashed }));
+    await new OidcClient(oidcSettings({ OIDC_ISSUER: slashed })).authorizationUrl({
       redirectUri: 'http://app/auth/callback',
       state: 'st',
       nonce: 'no',
       codeVerifier: 'v',
     });
     await new OidcClient(
-      oidcSettings({ OIDC_ISSUER: authentik, OIDC_INTERNAL_URL: 'http://authentik:9000' }),
+      oidcSettings({ OIDC_ISSUER: slashed, OIDC_INTERNAL_URL: 'http://idp:9000' }),
     ).authorizationUrl({
       redirectUri: 'http://app/auth/callback',
       state: 'st',
@@ -136,8 +136,8 @@ describe('OidcClient', () => {
       codeVerifier: 'v',
     });
     expect(fetchMock.mock.calls.map(([u]) => u)).toEqual([
-      `${authentik}.well-known/openid-configuration`,
-      'http://authentik:9000/application/o/quizdock/.well-known/openid-configuration',
+      `${slashed}.well-known/openid-configuration`,
+      'http://idp:9000/tenant/app/.well-known/openid-configuration',
     ]);
   });
 

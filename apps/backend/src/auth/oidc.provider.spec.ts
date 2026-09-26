@@ -157,14 +157,14 @@ describe('OidcProvider', () => {
     expect(principal).toBeNull();
   });
 
-  it('matches iss exactly: a trailing slash is part of the issuer (#99)', async () => {
-    const authentik = 'https://idp.example.com/application/o/quizdock/';
-    const provider = await buildProvider(undefined, undefined, undefined, authentik);
+  it('matches iss exactly (OIDC Core §3.1.3.7): a trailing slash is part of the issuer', async () => {
+    const slashed = 'https://idp.example.com/tenant/app/';
+    const provider = await buildProvider(undefined, undefined, undefined, slashed);
     expect(
-      await provider.authenticate(bearer(await makeToken({ issuer: authentik }))),
+      await provider.authenticate(bearer(await makeToken({ issuer: slashed }))),
     ).not.toBeNull();
     expect(
-      await provider.authenticate(bearer(await makeToken({ issuer: authentik.slice(0, -1) }))),
+      await provider.authenticate(bearer(await makeToken({ issuer: slashed.slice(0, -1) }))),
     ).toBeNull();
   });
 
