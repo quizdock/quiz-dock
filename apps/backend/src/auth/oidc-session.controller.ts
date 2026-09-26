@@ -117,7 +117,7 @@ export class OidcSessionController {
       throw new UnauthorizedException('auth.login_failed');
     }
     const login = await sessions.takePendingLogin(dto.state);
-    if (!login || (dto.iss && dto.iss.replace(/\/+$/, '') !== client.settings.issuer)) {
+    if (!login || (dto.iss && dto.iss !== client.settings.issuer)) {
       throw new UnauthorizedException('auth.login_failed');
     }
     try {
