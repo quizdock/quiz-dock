@@ -347,11 +347,13 @@ export class GameEngine {
       : [];
     const screensReady = screens.filter((s) => ready.has(`screen:${s.id}`)).length;
     const players: { playerId: string; ready: boolean }[] = [];
+    // The players of this game, as the answer count has them (not those waiting for the next).
+    const inGame = new Set(await this.redis.hkeys(gameKeys.scores(ref.id)));
     for (const [playerId, json] of Object.entries(
       await this.redis.hgetall(gameKeys.players(pin)),
     )) {
       const rec = JSON.parse(json) as PlayerRecord;
-      if (!rec.connected) continue;
+      if (!inGame.has(playerId) || !rec.connected) continue;
       if (hasSoundOrVideo(mediaForDevice(question.media, target, rec.presence ?? 'room'))) {
         players.push({ playerId, ready: ready.has(playerId) });
       }
@@ -559,6 +561,8 @@ export class GameEngine {
     this.server.to(pin).emit('game:mode', await this.readMode(pin));
 
     this.scheduleReveal(ref, index, endsAt + GRACE_MS - now);
+    // An evening of quizzes outlives one TTL: each question keeps the room alive.
+    await this.game.touchRoom(pin);
   }
 
   /** Arme (ou ré-arme) le timer de fin de question → `advanceToReveal`. */
@@ -1429,27 +1433,8 @@ export class GameEngine {
   async end(pin: string, hostUserId: string, archive = false): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state === GameState.Ended) return; // déjà terminée (ré-entrée / double-clic) → pas de double archive
-    // Archivage explicite choisi par l'hôte (§2.7). Volontairement NON best-effort :
-    // si la persistance échoue, on laisse remonter et on ne détruit PAS la partie
-    // (le PIN reste valide, l'hôte peut réessayer) — pas de perte silencieuse.
-    if (archive) {
-      try {
-        await this.archive.archive(pin, meta, { interrupted: false });
-      } catch (err) {
-        // The quiz is gone (deleted meanwhile): nothing will ever archive, end anyway
-        // and say so; any other failure keeps the session so the host can retry.
-        if (!isForeignKeyViolation(err)) throw err;
-        this.log.warn(
-          `Session ${pin}: quiz ${meta.quizId} no longer exists, ended without archive`,
-        );
-        this.server.to(pin).emit('error', { code: 'session.archive_quiz_gone' });
-      }
-    }
-    this.clearTimer(pin);
-    this.cancelTimer(this.graceTimers, pin);
-    this.cancelTimer(this.endWindowTimers, pin);
-    this.cancelTimer(this.autoNextTimers, pin);
-    this.cancelTimer(this.mediaWaitTimers, pin);
+    if (archive) await this.archiveAsked(pin, meta);
+    this.cancelAllTimers(pin);
     await this.redis.hset(gameKeys.game(meta.id), { state: GameState.Ended });
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(meta.hostUserId, pin);
@@ -1459,6 +1444,59 @@ export class GameEngine {
     this.server
       .to(pin)
       .emit('game:ended', { feedbackEnabled: await this.feedbackEnabled(meta.id) });
+  }
+
+  /**
+   * `host:next-quiz`: the room plays `quizId` next, from its lobby. Allowed in
+   * the lobby (the quiz picked is replaced, nothing was played) or at the podium
+   * (`archive` keeps the results of the quiz just played, as `host:end` does).
+   * The players stay in, at 0; every screen is sent the new lobby.
+   */
+  async nextQuiz(pin: string, hostUserId: string, quizId: string, archive = false): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Lobby && meta.state !== GameState.Podium) {
+      throw new BadRequestException('session.next_quiz_unavailable');
+    }
+    // Checked before anything is archived: a quiz that cannot be played changes nothing.
+    const snapshot = await this.game.snapshotFor(pin, quizId);
+    const lock = gameKeys.advanceLock(meta.id, 'next-quiz');
+    if ((await this.redis.set(lock, '1', 'EX', GAME_TTL_S, 'NX')) !== 'OK') return; // double click
+    try {
+      if (archive && meta.state === GameState.Podium) await this.archiveAsked(pin, meta);
+      this.cancelAllTimers(pin);
+      await this.game.openGameWith(pin, snapshot);
+    } catch (err) {
+      await this.redis.del(lock); // nothing moved: the host can try again
+      throw err;
+    }
+    for (const socket of await this.server.in(pin).fetchSockets()) {
+      await this.sendStateTo(socket, pin);
+    }
+    await this.broadcastReadiness(pin);
+  }
+
+  /**
+   * Archives a game at the host's request (§2.7). Deliberately NOT best-effort:
+   * a failed write is thrown and nothing is destroyed (the host can retry) — no
+   * silent loss. A quiz deleted meanwhile will never archive: say so and go on.
+   */
+  private async archiveAsked(pin: string, meta: GameMeta): Promise<void> {
+    try {
+      await this.archive.archive(pin, meta, { interrupted: false });
+    } catch (err) {
+      if (!isForeignKeyViolation(err)) throw err;
+      this.log.warn(`Session ${pin}: quiz ${meta.quizId} no longer exists, ended without archive`);
+      this.server.to(pin).emit('error', { code: 'session.archive_quiz_gone' });
+    }
+  }
+
+  /** Every timer of the room: its game is over or replaced. */
+  private cancelAllTimers(pin: string): void {
+    this.clearTimer(pin);
+    this.cancelTimer(this.graceTimers, pin);
+    this.cancelTimer(this.endWindowTimers, pin);
+    this.cancelTimer(this.autoNextTimers, pin);
+    this.cancelTimer(this.mediaWaitTimers, pin);
   }
 
   // ── Mode / pause / chrono (§8) ─────────────────────────────────────────────

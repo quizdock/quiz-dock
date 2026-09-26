@@ -76,6 +76,8 @@ export const gameKeys = {
   ban: (pin: string, normalized: string) => `room:${pin}:ban:${normalized}`,
   /** Player session token → { pin, playerId } (reconnection). */
   session: (token: string) => `session:${token}`,
+  /** Hash playerId → their session token, so the room keeps them alive while it lives. */
+  tokens: (pin: string) => `room:${pin}:tokens`,
   /** Set of a host's open rooms, by PIN (resumed from the dashboard §6.2). */
   hostGames: (userId: string) => `host:${userId}:games`,
 

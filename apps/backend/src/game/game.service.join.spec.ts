@@ -55,15 +55,8 @@ describe('GameService.joinSession (nom affiché)', () => {
         claimed.add(member);
         return 1;
       }),
-      multi: jest.fn(() => {
-        const pipe = {
-          hset: () => pipe,
-          set: () => pipe,
-          expire: () => pipe,
-          exec: async () => [],
-        };
-        return pipe;
-      }),
+      // The join itself (player, token, score) runs as one script.
+      eval: jest.fn().mockResolvedValue(1),
     } as unknown as RedisService;
     return new GameService({} as PrismaService, redis);
   }

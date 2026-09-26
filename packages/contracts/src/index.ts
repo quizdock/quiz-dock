@@ -104,6 +104,8 @@ export const ClientEvents = {
   HostReveal: 'host:reveal',
   HostKick: 'host:kick',
   HostEnd: 'host:end',
+  /** Opens the next quiz in the room (from its lobby or its podium); the players stay. */
+  HostNextQuiz: 'host:next-quiz',
   /** Bannit un joueur pour une durée donnée (exclusion immédiate, RG-12). */
   HostBan: 'host:ban',
   /** (Dé)active la capture intégrale depuis le lobby, avant le démarrage (RG-13). */
@@ -484,6 +486,16 @@ export interface ClientToServerEvents {
   'host:ban': (p: { pin: string; playerId: string; minutes: number }) => void;
   /** Termine la partie. `archive:true` → persiste les résultats avant destruction. */
   'host:end': (p: { pin: string; archive?: boolean }) => void;
+  /**
+   * Opens `quizId` as the room's next quiz, in its lobby: from the lobby (the
+   * quiz picked is replaced) or from the podium (`archive:true` keeps the results
+   * of the quiz just played, as `host:end` does). The players stay in, at 0; the
+   * host's choices (capture, tracking, lock, pace, audio target) carry over.
+   */
+  'host:next-quiz': (
+    p: { pin: string; quizId: string; archive?: boolean },
+    ack: (res: { ok: boolean }) => void,
+  ) => void;
   /**
    * (Dé)active la capture intégrale des réponses depuis le lobby, **avant** le
    * démarrage (RG-13). Refusé une fois la partie lancée. Les joueurs connectés en

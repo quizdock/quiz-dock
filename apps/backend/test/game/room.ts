@@ -1,72 +1,79 @@
 import type { Socket } from 'socket.io-client';
 import { GameService } from '../../src/game/game.service';
-import { SessionArchiveService } from '../../src/game/session-archive.service';
 import { QuizzesService } from '../../src/quizzes/quizzes.service';
 import { type GameContext, nextEvent, settle, stateEvent } from '../game-harness';
 
-type QuestionStart = { questionIndex: number; startedAt: number };
 type Option = { id: string; text: string };
+type QuestionStart = { questionIndex: number; startedAt: number; options: Option[] };
 
 /**
- * The room (SPECIFICATIONS-ROOM §3): several quizzes played one after another
- * under one PIN, each game on its own state. The host-facing flow comes later;
- * here the next game is opened through the service.
+ * The room (SPECIFICATIONS-ROOM): several quizzes played one after another under
+ * one PIN, each game on its own state, the players joining once.
  */
 export function roomTests(ctx: GameContext): void {
   let game: GameService;
-  let archive: SessionArchiveService;
   const connect = (auth?: Record<string, string>): Socket => ctx.h.connect(auth);
   beforeAll(() => {
     game = ctx.h.app.get(GameService);
-    archive = ctx.h.app.get(SessionArchiveService);
   });
 
-  /** Plays the current question: waits for its opening, answers Paris, returns the reveal. */
-  async function answerParis(host: Socket, player: Socket, pin: string) {
-    const start = nextEvent<QuestionStart & { options: Option[] }>(player, 'question:start');
-    const revealed = nextEvent<{ yourResult?: { points: number } }>(player, 'question:reveal');
+  /** Opens the current question and has every player answer Paris; resolves at the reveal. */
+  async function playParis(host: Socket, pin: string, players: Socket[]) {
+    const starts = players.map((p) => nextEvent<QuestionStart>(p, 'question:start'));
+    const reveals = players.map((p) =>
+      nextEvent<{ yourResult?: { points: number } }>(p, 'question:reveal'),
+    );
     host.emit('host:start', { pin });
-    const q = await start;
+    const q = await starts[0];
     await settle(Math.max(0, q.startedAt - Date.now()) + 50);
     const paris = q.options.find((o) => o.text === 'Paris')!.id;
-    player.emit('player:submit', { pin, questionIndex: 0, answer: paris });
-    return revealed;
+    for (const p of players) p.emit('player:submit', { pin, questionIndex: 0, answer: paris });
+    return Promise.all(reveals);
   }
 
-  it('plays a second quiz in the same room: it reveals, reaches its podium and archives on its own', async () => {
+  /** The last question revealed → the podium. */
+  async function toPodium(host: Socket, pin: string, player: Socket) {
+    const podium = nextEvent<{ you?: { score: number } }>(player, 'game:podium');
+    host.emit('host:next', { pin });
+    return podium;
+  }
+
+  const nextQuiz = (host: Socket, pin: string, quizId: string, archive = false) =>
+    host.emitWithAck('host:next-quiz', { pin, quizId, archive });
+
+  it('plays quizzes in a row: from the podium to the next lobby, each scored and archived on its own', async () => {
     const host = connect({ localUser: 'Animateur' });
     const pin = await ctx.h.createGame(host, ctx.quizId);
     const { socket: player } = await ctx.h.join(pin, 'Rita');
 
-    // Quiz 1, to its podium, then archived as its own session.
-    const first = await answerParis(host, player, pin);
+    // Quiz 1, to its podium, rated there.
+    const [first] = await playParis(host, pin, [player]);
     const firstPoints = first.yourResult!.points;
     expect(firstPoints).toBeGreaterThan(0);
-    const podium1 = stateEvent(player, 'PODIUM');
-    host.emit('host:next', { pin });
-    await podium1;
-    const firstMeta = (await game.getMeta(pin))!;
-    await archive.archive(pin, firstMeta);
+    await toPodium(host, pin, player);
+    expect((await player.emitWithAck('player:rate', { pin, rating: 2 })).ok).toBe(true);
 
-    // Quiz 2 in the same room: a new game, the player still in, at 0.
+    // Quiz 2: the phone is sent the new lobby, the console its outline, nobody types the PIN.
     const second = await ctx.h.seedQuiz({ title: 'Second quiz' });
-    const secondId = await game.openGame(pin, second.id);
-    expect(secondId).not.toBe(firstMeta.id);
-    expect(await game.getMeta(pin)).toMatchObject({ id: secondId, state: 'LOBBY' });
-    // Being played, it cannot be deleted (the room's current game is read).
+    const lobby = stateEvent(player, 'LOBBY');
+    const outline = nextEvent<{ quizId: string }>(host, 'game:outline');
+    expect(await nextQuiz(host, pin, second.id, true)).toEqual({ ok: true });
+    await lobby;
+    expect((await outline).quizId).toBe(second.id);
+    // Being played now, it cannot be deleted (the room's current game is read).
     await expect(
       ctx.h.app.get(QuizzesService).remove(ctx.h.hostUserId, second.id),
     ).rejects.toMatchObject({ response: { message: 'quiz.in_use' } });
 
     // Question 0 again: quiz 1's lock on it must not stop this reveal.
-    const secondReveal = await answerParis(host, player, pin);
-    const secondPoints = secondReveal.yourResult!.points;
-    expect(secondPoints).toBeGreaterThan(0);
-    const podium = nextEvent<{ you?: { score: number } }>(player, 'game:podium');
-    host.emit('host:next', { pin });
+    const [again] = await playParis(host, pin, [player]);
+    const secondPoints = again.yourResult!.points;
     // This quiz's own score, not the sum of both.
-    expect((await podium).you?.score).toBe(secondPoints);
-    await archive.archive(pin, (await game.getMeta(pin))!);
+    expect((await toPodium(host, pin, player)).you?.score).toBe(secondPoints);
+    expect((await player.emitWithAck('player:rate', { pin, rating: 5 })).ok).toBe(true);
+    const ended = nextEvent(player, 'game:ended');
+    host.emit('host:end', { pin, archive: true });
+    await ended;
 
     const sessions = await ctx.h.prisma.gameSessionLog.findMany({
       where: { pin },
@@ -78,7 +85,95 @@ export function roomTests(ctx: GameContext): void {
       firstPoints,
       secondPoints,
     ]);
+    // One rating per quiz: the second did not overwrite the first.
+    const ratings = await ctx.h.prisma.quizFeedback.findMany({ where: { pin } });
+    expect(Object.fromEntries(ratings.map((r) => [r.quizId, r.rating]))).toEqual({
+      [ctx.quizId]: 2,
+      [second.id]: 5,
+    });
     await ctx.h.prisma.gameSessionLog.deleteMany({ where: { pin } });
+    await ctx.h.prisma.quizFeedback.deleteMany({ where: { pin } });
+  });
+
+  it('replaces the quiz picked in the lobby, and the one left is no longer in use', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const picked = await ctx.h.seedQuiz({ title: 'Picked first' });
+    const pin = await ctx.h.createGame(host, picked.id);
+    await ctx.h.join(pin, 'Lola');
+
+    await nextQuiz(host, pin, ctx.quizId);
+    expect(await game.getMeta(pin)).toMatchObject({ quizId: ctx.quizId, state: 'LOBBY' });
+    await expect(
+      ctx.h.app.get(QuizzesService).remove(ctx.h.hostUserId, picked.id),
+    ).resolves.toBeUndefined();
+  });
+
+  it('refuses the next quiz mid-question, and opens it once on a double click', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const pin = await ctx.h.createGame(host, ctx.quizId);
+    const { socket: player } = await ctx.h.join(pin, 'Nico');
+    const second = await ctx.h.seedQuiz({ title: 'Next one' });
+
+    const start = nextEvent<QuestionStart>(player, 'question:start');
+    const reveal = nextEvent(player, 'question:reveal');
+    host.emit('host:start', { pin });
+    const q = await start;
+    const refused = nextEvent<{ code: string }>(host, 'error');
+    host.emit('host:next-quiz', { pin, quizId: second.id });
+    expect((await refused).code).toBe('session.next_quiz_unavailable');
+
+    await settle(Math.max(0, q.startedAt - Date.now()) + 50);
+    const paris = q.options.find((o) => o.text === 'Paris')!.id;
+    player.emit('player:submit', { pin, questionIndex: 0, answer: paris });
+    await reveal;
+    await toPodium(host, pin, player);
+    const firstGame = (await game.getMeta(pin))!.id;
+    // Two clicks: one archive, one new game.
+    host.emit('host:next-quiz', { pin, quizId: second.id, archive: true });
+    await nextQuiz(host, pin, second.id, true);
+    await settle(200);
+    const meta = (await game.getMeta(pin))!;
+    expect(meta.id).not.toBe(firstGame);
+    expect(meta.quizId).toBe(second.id);
+    expect(await ctx.h.prisma.gameSessionLog.count({ where: { pin } })).toBe(1);
+    await ctx.h.prisma.gameSessionLog.deleteMany({ where: { pin } });
+  });
+
+  it('someone joining at the podium waits for the next quiz, then plays it', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const pin = await ctx.h.createGame(host, ctx.quizId);
+    const { socket: early } = await ctx.h.join(pin, 'Early');
+    await playParis(host, pin, [early]);
+    await toPodium(host, pin, early);
+
+    // At the podium: in the room, not in the quiz that is over.
+    const { socket: late, playerId: lateId } = await ctx.h.join(pin, 'Late');
+    const firstGame = (await game.getMeta(pin))!.id;
+    expect(await game.getScore(firstGame, lateId)).toBeNull();
+    const second = await ctx.h.seedQuiz({ title: 'For the late one' });
+    await nextQuiz(host, pin, second.id);
+
+    // The next quiz waits for both.
+    const count = nextEvent<{ answered: number; total: number }>(host, 'answer:count');
+    const [, lateResult] = await playParis(host, pin, [early, late]);
+    expect((await count).total).toBe(2);
+    expect(lateResult.yourResult!.points).toBeGreaterThan(0);
+  });
+
+  it('keeps the host’s choices from one quiz to the next', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const pin = await ctx.h.createGame(host, ctx.quizId);
+    const { socket: player } = await ctx.h.join(pin, 'Mia');
+    host.emit('host:capture', { pin, fullCapture: true });
+    host.emit('host:mode', { pin, mode: 'auto' });
+    await settle(100);
+
+    const second = await ctx.h.seedQuiz({ title: 'Same choices' });
+    const notice = nextEvent<{ fullCapture: boolean }>(player, 'notice');
+    const mode = nextEvent<{ mode: string }>(host, 'game:mode');
+    await nextQuiz(host, pin, second.id);
+    expect((await notice).fullCapture).toBe(true);
+    expect((await mode).mode).toBe('auto');
   });
 
   it('a timer armed for the previous quiz does nothing to the next one', async () => {
@@ -93,7 +188,8 @@ export function roomTests(ctx: GameContext): void {
     // The host's window closes: quiz 1 arms its grace before declaring them gone.
     host.disconnect();
     await settle(50);
-    // Quiz 2 opens within that grace; the grace was quiz 1's, not its.
+    // Quiz 2 opens within that grace (through the service: the host is away);
+    // the grace was quiz 1's, not its.
     const second = await ctx.h.seedQuiz({ title: 'Next quiz' });
     const secondId = await game.openGame(pin, second.id);
     await settle(Number(process.env.GAME_HOST_GRACE_MS) + 300);

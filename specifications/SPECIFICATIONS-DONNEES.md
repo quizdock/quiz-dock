@@ -294,6 +294,7 @@ Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
 | `room:{pin}:nicknames` | Set | The normalized nicknames (atomic deduplication). |
 | `room:{pin}:ban:{nickname}` | String | A banned normalized nickname; the key's TTL is the ban's length *(RG-12)*. |
 | `session:{token}` | String | The token handed out on joining → `{ pin, playerId }`; makes **reconnecting** possible (technique §11). |
+| `room:{pin}:tokens` | Hash `playerId → token` | The players' session tokens, so the room keeps them alive while it lives. |
 | `host:{userId}:games` | Set | The host's open rooms, by PIN (resumed from the dashboard). |
 
 ### 4.2 A game (keyed by its id)
@@ -302,7 +303,7 @@ Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
 |-----|------|----------|
 | `game:{id}` | Hash | The state machine: `state`, `quizId`, `title`, `language`, `currentIndex`, `slideIndex`, `totalQuestions`, `createdAt`, the **server** timings `questionStartedAt` / `questionEndsAt` (technique §6), `mode`, `paused`, `clockFrozen`, `pausedRemainingMs`, `autoNextAt`, `mediaWaitUntil`, `mediaLeadMs`, `audioTarget`, `reviewStep`, `prevState`. |
 | `game:{id}:snapshot` | String (JSON) | The frozen quiz, right answers included — server side only. |
-| `game:{id}:scores` | Hash `playerId → JSON` | `{ score, streak }` in this game. Its keys are **who plays this game**; the ranking is read from it (by score, then arrival). |
+| `game:{id}:scores` | Hash `playerId → JSON` | `{ score, streak }` in this game. Its keys are **who plays this game** (a player joining at the podium waits for the next one); the ranking is read from it (by score, then arrival). |
 | `game:{id}:answers:{qIdx}` | Hash `playerId → JSON` | The graded answer: `answer`, `isCorrect`, `pointsAwarded`, `credit`, `tMs`, `receivedAt` (and `closestRank` / `distance` for a numeric `closest`). One entry per player (`HSETNX`, RG-06); later submissions are ignored. |
 | `game:{id}:ready:{qIdx}` | Set | The devices that loaded a question's sound or video. |
 | `game:{id}:reveal-lock:{qIdx}`, `…:advance-lock:{step}`, `…:media-wait-lock:{qIdx}` | String (`SET NX`) | One winner per transition (no double reveal, no skipped step). |

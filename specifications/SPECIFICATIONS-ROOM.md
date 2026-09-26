@@ -4,7 +4,7 @@
 > quizzes, players join once. The model, the decisions taken, how the live state splits between the room and each
 > game, and the ordered pull requests that deliver it.
 
-Status: **in progress.** Step 1 (the room layer and per-game keys) is delivered; nothing is visible yet.
+Status: **in progress.** Steps 1 and 2 are delivered on the server; the screens come with step 5.
 
 ---
 
@@ -59,11 +59,11 @@ The split, keyed by the PIN for the room and by the game id (`meta.id`, already 
 
 ## 4. Lifecycle
 
-- **Ending a quiz** leads to the intermission (that quiz's podium, then the cumulative one), then back to the room
-  lobby. Today's `host:end` splits in two: *end this quiz* (archive it, back to the room) and *close the room* (the PIN
-  is freed, the phones are told).
-- **Lifetime**: the room lives while it is used. Every game start, answer and host action refreshes its TTL, so an
-  evening of quizzes outlives the current ~4 h. An idle room expires after the TTL; the host can close it explicitly.
+- **Ending a quiz** leads to its podium; from there the host opens the next quiz (`host:next-quiz`), whose lobby is
+  the room's, or closes the room (`host:end`: the PIN is freed, the phones are told). The intermission screens (that
+  quiz's podium, then the cumulative one) come with steps 3 and 5.
+- **Lifetime**: the room lives while it is used. Each question and each quiz opened refresh its TTL, so an evening of
+  quizzes outlives the current ~4 h. An idle room expires after the TTL; the host can close it explicitly.
 - **Host disconnection** (§7.1 of LIVE) applies to the game in progress; in the room lobby, the room simply waits for
   the host within its TTL.
 
@@ -83,25 +83,22 @@ not drop.
 1. **The room layer and per-game keys.** No visible change: the room hash, the key split of §3, the player record
    without its per-quiz score, the engine reading its game through the room. Proves the split by running two games
    in a row in a test.
-2. **The next quiz in the room.** The host picks a quiz, the podium leads back to the room instead of ending, *end
-   this quiz* / *close the room*, the TTL refresh, late joiners.
-   - To settle here: today a player can join a quiz in progress (LIVE §5). Recommendation: keep it for the quiz
-     running when they join, since the room never turns anyone away; "wait for the next quiz" then only applies to a
-     player joining during the intermission.
-   - To fix here: the next quiz opens through the engine, which cancels the timers of the one before (they are
-     kept per PIN; the service's `openGame` cannot reach them).
-   - To fix here: a player joining in the intermission is in the room, not in the game: `readiness` (every connected
-     player) and the answer count (players of the game) must agree on who is waited for.
-   - To fix here: `joinSession` reads the current game, then writes the new player's score after the nickname checks;
-     a game opened in between would get it wrong.
-   - To fix here: a player's rating is kept once per PIN and player (`quiz_feedback`), so rating the second quiz
-     would overwrite the first. Its unique key must include the game or the quiz (a migration).
-   - To settle here: whether the host can change a room setting between two quizzes. Recommendation: yes, in the room
-     lobby only, never during a game.
-   - To settle here: which settings belong to the room (automatic mode, audio target, full answer capture, open
-     access, personal tracking) and which to each quiz (feedback, the quiz's own defaults). Recommendation: capture and
-     tracking are the room's (the players were told once), the audio target and the mode default from the room and
-     can be changed per quiz.
+2. **The next quiz in the room.** `host:next-quiz { pin, quizId, archive? }` opens the next quiz in its lobby; the
+   players stay in, at 0, and every screen is sent the new lobby (the consoles its outline). `host:end` closes the
+   room. Settled:
+   - **When**: from the lobby (the quiz picked is replaced, nothing was played) or from the podium (`archive` keeps
+     the results of the quiz just played, as `host:end` does). Mid-quiz it is refused
+     (`session.next_quiz_unavailable`): the host plays it to the end first. A double click opens one quiz.
+   - **Late joiners**: a player joining while a quiz is played enters it, as a late join does today (LIVE §5). One
+     joining at the podium is in the room, not in the quiz that is over, and plays from the next one. Joining and a
+     quiz opening are each one atomic step, so nobody lands in neither.
+   - **The host's choices carry over**: capture, tracking, the lock and the invitation address (the room's), the pace
+     and the audio target (from the previous quiz). All stay changeable in the lobby of the next quiz, and the players
+     see the notice again when it changes.
+   - **Lifetime**: each question and each quiz opened refresh the TTL of the room, its players' session tokens
+     (`room:{pin}:tokens`) and its current game; an idle room expires. The quiz left behind is marked ended, so it no
+     longer counts as being played.
+   - **Ratings**: one per player and per quiz of the room (`quiz_feedback` unique on PIN, player and quiz).
 3. **Cumulative scores and stats.** Totals per player, the cumulative leaderboard, the series podium.
 4. **Archives.** `roomId`, the room summary table and its migration, *History*.
 5. **Screens.** The console's quiz picker, the room projection (room name, QR code, players, the next quiz once

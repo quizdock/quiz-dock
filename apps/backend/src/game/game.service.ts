@@ -45,6 +45,49 @@ const NICKNAME_HOMONYM_MAX = 20;
 /** Borne de la graine d'avatar (client-fournie, stockée Redis + diffusée). */
 const AVATAR_SEED_MAX = 64;
 
+/** A player's score at the start of a game. */
+const ZERO_SCORE = JSON.stringify({ score: 0, streak: 0 } satisfies PlayerScore);
+
+/*
+ * The two moves that must see the same room: a player joining and a quiz
+ * opening. Lua runs them whole. A game's keys are `game:<id>…` (see gameKeys).
+ */
+
+/**
+ * Join. KEYS: players, room, session, tokens, nicknames. ARGV: playerId, record,
+ * session value, token, zero score, TTL, the two states of a game that is over.
+ * Returns 1 when the player is in the current game, 0 when they wait for the next.
+ */
+const JOIN_SCRIPT = `
+redis.call('HSET', KEYS[1], ARGV[1], ARGV[2])
+redis.call('SET', KEYS[3], ARGV[3], 'EX', ARGV[6])
+redis.call('HSET', KEYS[4], ARGV[1], ARGV[4])
+for _, key in ipairs({KEYS[1], KEYS[4], KEYS[5]}) do redis.call('EXPIRE', key, ARGV[6]) end
+local game = redis.call('HGET', KEYS[2], 'gameId')
+if not game then return 0 end
+local state = redis.call('HGET', 'game:' .. game, 'state')
+if state == ARGV[7] or state == ARGV[8] then return 0 end
+local scores = 'game:' .. game .. ':scores'
+redis.call('HSET', scores, ARGV[1], ARGV[5])
+redis.call('EXPIRE', scores, ARGV[6])
+return 1
+`;
+
+/**
+ * Switch the room to a new game. KEYS: players, room, the new game's scores, the
+ * previous game's hash. ARGV: game id, zero score, TTL, the ended state. The
+ * previous game ends there: nothing reads it as being played any more.
+ * Returns the number of players carried over.
+ */
+const SWITCH_GAME_SCRIPT = `
+local ids = redis.call('HKEYS', KEYS[1])
+for _, id in ipairs(ids) do redis.call('HSET', KEYS[3], id, ARGV[2]) end
+if #ids > 0 then redis.call('EXPIRE', KEYS[3], ARGV[3]) end
+redis.call('HSET', KEYS[2], 'gameId', ARGV[1])
+if redis.call('EXISTS', KEYS[4]) == 1 then redis.call('HSET', KEYS[4], 'state', ARGV[4]) end
+return #ids
+`;
+
 export interface CreateSessionResult {
   pin: string;
 }
@@ -129,7 +172,7 @@ export class GameService {
     const pipe = this.redis.multi();
     pipe.hset(gameKeys.room(pin), serializeRoom(room));
     pipe.expire(gameKeys.room(pin), GAME_TTL_S);
-    this.writeGame(pipe, gameId, snapshot, []);
+    this.writeGame(pipe, gameId, snapshot);
     // Index des parties en cours de l'hôte (reprise depuis le dashboard §6.2).
     pipe.sadd(gameKeys.hostGames(hostUserId), pin);
     pipe.expire(gameKeys.hostGames(hostUserId), GAME_TTL_S);
@@ -142,28 +185,73 @@ export class GameService {
    * Opens a new game of `quizId` in the room: its own snapshot and state, in the
    * lobby, every player of the room at 0. The room points at it from then on;
    * the previous game's state stays under its own id until it expires, so
-   * nothing it left behind (locks, answers, scores) reaches the new one.
+   * nothing it left behind (locks, answers, scores) reaches the new one. The
+   * host's pace and audio target carry over from the previous game.
    */
   async openGame(pin: string, quizId: string): Promise<GameId> {
+    return this.openGameWith(pin, await this.snapshotFor(pin, quizId));
+  }
+
+  /** The snapshot of a quiz the room's host may play next (throws like `host:create`). */
+  async snapshotFor(pin: string, quizId: string): Promise<QuizSnapshot> {
     const room = await this.getRoom(pin);
     if (!room) throw new NotFoundException('session.not_found');
-    const snapshot = await this.playableSnapshot(room.hostUserId, quizId);
+    return this.playableSnapshot(room.hostUserId, quizId);
+  }
+
+  /** `openGame` with the snapshot already frozen. */
+  async openGameWith(pin: string, snapshot: QuizSnapshot): Promise<GameId> {
+    const previous = await this.getMeta(pin);
+    if (!previous) throw new NotFoundException('session.not_found');
     const gameId = newGameId();
-    const playerIds = await this.redis.hkeys(gameKeys.players(pin));
     const pipe = this.redis.multi();
-    this.writeGame(pipe, gameId, snapshot, playerIds);
-    pipe.hset(gameKeys.room(pin), { gameId });
+    this.writeGame(pipe, gameId, snapshot, {
+      mode: previous.mode,
+      audioTarget: previous.audioTarget ?? '',
+    });
+    await pipe.exec();
+    // Every player of the room at 0, and the room on the new game, in one step: a
+    // player joining meanwhile lands in one game or the other, never in neither.
+    await this.redis.eval(
+      SWITCH_GAME_SCRIPT,
+      4,
+      gameKeys.players(pin),
+      gameKeys.room(pin),
+      gameKeys.scores(gameId),
+      gameKeys.game(previous.id),
+      gameId,
+      ZERO_SCORE,
+      GAME_TTL_S,
+      GameState.Ended,
+    );
+    await this.touchRoom(pin);
+    return gameId;
+  }
+
+  /**
+   * Keeps a room alive while it is used: its keys, its players' session tokens
+   * and its current game start their TTL again. An idle room still expires.
+   */
+  async touchRoom(pin: string): Promise<void> {
+    const room = await this.getRoom(pin);
+    if (!room) return;
+    const tokens = Object.values(await this.redis.hgetall(gameKeys.tokens(pin)));
+    const pipe = this.redis.multi();
     for (const key of [
       gameKeys.pin(pin),
       gameKeys.room(pin),
       gameKeys.players(pin),
       gameKeys.nicknames(pin),
+      gameKeys.tokens(pin),
       gameKeys.hostGames(room.hostUserId),
+      gameKeys.game(room.gameId),
+      gameKeys.snapshot(room.gameId),
+      gameKeys.scores(room.gameId),
+      ...tokens.map((token) => gameKeys.session(token)),
     ]) {
       pipe.expire(key, GAME_TTL_S);
     }
     await pipe.exec();
-    return gameId;
   }
 
   /** The snapshot of a quiz the host may play: theirs, `ready`, with at least one question. */
@@ -188,12 +276,12 @@ export class GameService {
     return snapshot;
   }
 
-  /** Queues a new game's state, in the lobby, with `playerIds` at 0. */
+  /** Queues a new game's state, in the lobby (its players come with the room's switch). */
   private writeGame(
     pipe: ReturnType<RedisService['multi']>,
     gameId: GameId,
     snapshot: QuizSnapshot,
-    playerIds: string[],
+    carried: Pick<GameFields, 'mode' | 'audioTarget'> = { mode: 'manual', audioTarget: '' },
   ): void {
     const game: GameFields = {
       quizId: snapshot.quizId,
@@ -205,7 +293,9 @@ export class GameService {
       createdAt: Date.now(),
       questionStartedAt: 0,
       questionEndsAt: 0,
-      mode: 'manual', // rythme par défaut : l'hôte enchaîne les questions (§8)
+      // Rythme par défaut : l'hôte enchaîne les questions (§8) ; ensuite, celui du quiz précédent.
+      mode: carried.mode,
+      audioTarget: carried.audioTarget,
       paused: false,
       clockFrozen: false,
     };
@@ -213,11 +303,6 @@ export class GameService {
     pipe.set(gameKeys.snapshot(gameId), JSON.stringify(snapshot));
     pipe.expire(gameKeys.game(gameId), GAME_TTL_S);
     pipe.expire(gameKeys.snapshot(gameId), GAME_TTL_S);
-    if (playerIds.length > 0) {
-      const zero = JSON.stringify({ score: 0, streak: 0 } satisfies PlayerScore);
-      pipe.hset(gameKeys.scores(gameId), Object.fromEntries(playerIds.map((id) => [id, zero])));
-      pipe.expire(gameKeys.scores(gameId), GAME_TTL_S);
-    }
   }
 
   /**
@@ -285,25 +370,26 @@ export class GameService {
       presence,
     };
 
-    const pipe = this.redis.multi();
-    pipe.hset(gameKeys.players(pin), playerId, JSON.stringify(record));
-    // In the room's game from now on (late join §5 included), at 0.
-    pipe.hset(
-      gameKeys.scores(meta.id),
-      playerId,
-      JSON.stringify({ score: 0, streak: 0 } satisfies PlayerScore),
-    );
-    pipe.set(gameKeys.session(sessionToken), JSON.stringify({ pin, playerId }));
-    // TTL aligné sur le reste de la famille (clés créées au 1er joueur).
-    for (const key of [
+    // In the room, and in the game it plays unless that one is over (the player
+    // then waits for the next quiz) — read in the same step, so a quiz opening
+    // meanwhile cannot leave them out of both.
+    await this.redis.eval(
+      JOIN_SCRIPT,
+      5,
       gameKeys.players(pin),
-      gameKeys.nicknames(pin),
-      gameKeys.scores(meta.id),
+      gameKeys.room(pin),
       gameKeys.session(sessionToken),
-    ]) {
-      pipe.expire(key, GAME_TTL_S);
-    }
-    await pipe.exec();
+      gameKeys.tokens(pin),
+      gameKeys.nicknames(pin),
+      playerId,
+      JSON.stringify(record),
+      JSON.stringify({ pin, playerId }),
+      sessionToken,
+      ZERO_SCORE,
+      GAME_TTL_S,
+      GameState.Podium,
+      GameState.Ended,
+    );
     // Compteur = joueurs **connectés** (§8), pas le total jamais joint.
     const playerCount = await this.connectedCount(pin);
 
@@ -464,6 +550,7 @@ export class GameService {
     pipe.hdel(gameKeys.players(pin), playerId);
     pipe.srem(gameKeys.nicknames(pin), normalized);
     pipe.hdel(gameKeys.scores(gameId), playerId);
+    pipe.hdel(gameKeys.tokens(pin), playerId);
     await pipe.exec();
     return record.nickname;
   }
@@ -509,7 +596,7 @@ export class GameService {
     const player = JSON.parse(raw) as PlayerRecord;
     const cleanComment = comment?.trim() ? comment.trim().slice(0, 2000) : null;
     await this.prisma.quizFeedback.upsert({
-      where: { pin_playerId: { pin, playerId } },
+      where: { pin_playerId_quizId: { pin, playerId, quizId: meta.quizId } },
       create: {
         quizId: meta.quizId,
         pin,
