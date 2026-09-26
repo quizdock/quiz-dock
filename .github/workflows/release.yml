@@ -5,6 +5,9 @@ name: Release
 #   2. Images Docker Hub qui en découlent — jobs `publish` + `standalone`.
 #   3. (Overview Docker Hub : workflow `dockerhub-readme.yml`, à chaque README poussé sur main.)
 #   4. Redéploiement de la démo publique (Render, image :standalone) — job `deploy-demo`.
+# Seul un tag strictement vX.Y.Z publie (job `gate`). Une pré-release (v1.2.0-rc.1,
+# tout tag avec - ou +) ne crée qu'une Release GitHub marquée pré-release : aucune
+# image, :latest intact, démo intacte. Idem pour un lancement manuel hors d'un tel tag.
 # Secrets requis (repo → Settings → Secrets and variables → Actions) :
 #   DOCKERHUB_USERNAME = fchaussin
 #   DOCKERHUB_TOKEN    = access token Docker Hub (Read & Write)
@@ -13,17 +16,35 @@ name: Release
 on:
   push:
     tags: ['v*.*.*']
-  workflow_dispatch: # build manuel possible (utilise :latest + le sha)
+  workflow_dispatch: # relancer une release : choisir son tag vX.Y.Z comme ref, sinon rien n'est publié
 
 permissions:
   contents: read
 
 jobs:
+  # ---- Garde-fou : stable = tag vX.Y.Z exact, rien d'autre ----
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      stable: ${{ steps.check.outputs.stable }}
+    steps:
+      - id: check
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [[ "$REF" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "stable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stable=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::$REF is not a stable vX.Y.Z tag: no image, no :latest, no demo deploy."
+          fi
+
   # ---- Source de vérité : Release GitHub + CHANGELOG (auto, pour chaque tag) ----
   github-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write # créer la Release + committer le CHANGELOG
+    needs: gate
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Checkout main (historique complet)
@@ -37,10 +58,12 @@ jobs:
         uses: softprops/action-gh-release@v2.6.2
         with:
           generate_release_notes: true # notes natives GitHub depuis commits/PRs
-          make_latest: true
+          prerelease: ${{ needs.gate.outputs.stable != 'true' }}
+          make_latest: ${{ needs.gate.outputs.stable == 'true' }}
           name: QuizDock ${{ github.ref_name }}
 
       - name: Régénère CHANGELOG.md (git-cliff)
+        if: needs.gate.outputs.stable == 'true'
         uses: orhun/git-cliff-action@v4.8.0
         with:
           config: cliff.toml
@@ -48,6 +71,7 @@ jobs:
 
       # Best-effort : ne doit jamais casser une release (ex. branche protégée).
       - name: Commit du CHANGELOG sur main
+        if: needs.gate.outputs.stable == 'true'
         continue-on-error: true
         run: |
           if ! git diff --quiet -- CHANGELOG.md; then
@@ -59,6 +83,8 @@ jobs:
           fi
 
   publish:
+    needs: gate
+    if: needs.gate.outputs.stable == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
