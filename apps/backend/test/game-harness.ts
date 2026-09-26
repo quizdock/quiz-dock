@@ -18,6 +18,13 @@ export const HOST_NAME = 'Animateur';
 
 export type SeededQuiz = Prisma.QuizGetPayload<{ include: { questions: true } }>;
 
+/** What the entry spec shares with each domain's tests (test/game/*.ts). */
+export interface GameContext {
+  h: GameHarness;
+  /** The main one-question quiz, seeded once. */
+  quizId: string;
+}
+
 export interface GameHarness {
   app: INestApplication;
   prisma: PrismaService;
@@ -182,4 +189,25 @@ export function nextEvent<T = unknown>(
 /** The only allowed fixed wait: to prove that something did **not** happen. */
 export function settle(ms = 150): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** The next `game:state` of `socket` in `state`. */
+export function stateEvent(socket: Socket, state: string, timeoutMs?: number): Promise<unknown> {
+  return nextEvent(socket, 'game:state', {
+    where: (p: { state: string }) => p.state === state,
+    timeoutMs,
+  });
+}
+
+/**
+ * Brings a live question's timer closer, through the host's own control: the test
+ * watches the same reveal timer expire without sitting through 5 s (the smallest
+ * limit a question may have). The delta leaves about 1.5 s whatever the latency
+ * so far: under 1 s left, the engine would reveal at once instead of re-arming.
+ */
+export async function shortenTimer(host: Socket, pin: string, endsAt: number): Promise<number> {
+  const time = nextEvent<{ endsAt: number }>(host, 'question:time');
+  const deltaS = -Math.floor((endsAt - Date.now() - 1_500) / 1_000);
+  host.emit('host:adjust-time', { pin, deltaS });
+  return (await time).endsAt;
 }
