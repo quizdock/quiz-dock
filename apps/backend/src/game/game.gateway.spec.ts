@@ -1,11 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import type { Socket } from 'socket.io-client';
-import { type GameHarness, bootGameApp, nextEvent } from '../../test/game-harness';
+import { type GameHarness, bootGameApp, nextEvent, settle } from '../../test/game-harness';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
 import { RedisService } from '../redis/redis.service';
+import { GRACE_MS } from './game.keys';
 import { GameService } from './game.service';
 import { PIN_ATTEMPTS_MAX } from './pin-attempts';
 
@@ -26,6 +27,21 @@ describe('GameGateway (intégration socket)', () => {
   let quizId: string;
   let hostUserId: string;
   const connect = (auth?: Record<string, string>): Socket => h.connect(auth);
+  /** The next `game:state` of `socket` in `state`. */
+  const stateEvent = (socket: Socket, state: string) =>
+    nextEvent(socket, 'game:state', { where: (p: { state: string }) => p.state === state });
+  /**
+   * Brings a live question's timer 4 s closer, through the host's own control: the
+   * test watches the same reveal timer expire without sitting through 5 s (the
+   * smallest limit a question may have). A question opens at least MEDIA_LEAD_MS
+   * (600 ms) after the start, so about 1.6 s remain: above the 1 s floor under which
+   * the engine would reveal at once instead.
+   */
+  const shortenTimer = async (host: Socket, pin: string): Promise<number> => {
+    const time = nextEvent<{ endsAt: number }>(host, 'question:time');
+    host.emit('host:adjust-time', { pin, deltaS: -4 });
+    return (await time).endsAt;
+  };
 
   beforeAll(async () => {
     h = await bootGameApp();
@@ -126,8 +142,13 @@ describe('GameGateway (intégration socket)', () => {
       expect(o.id).toBeTruthy();
     }
 
-    // Laisse le timer (startedAt + 5000 + grace) déclencher le REVEAL.
-    await new Promise((r) => setTimeout(r, 6000));
+    // Le timer (endsAt + grace) déclenche le REVEAL, une seule fois.
+    const reveal = nextEvent(player, 'game:state', {
+      where: (s: { state: string }) => s.state === 'REVEAL',
+    });
+    await shortenTimer(host, pin);
+    await reveal;
+    await settle();
     expect(revealCount).toBe(1);
   }, 15_000);
 
@@ -162,6 +183,7 @@ describe('GameGateway (intégration socket)', () => {
     const q = await qStart;
     const parisId = q.options.find((o) => o.text === 'Paris')!.id;
 
+    const endsAt = await shortenTimer(host, pin);
     // Attendre l'ouverture des réponses (startedAt) avant de soumettre.
     await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
 
@@ -176,7 +198,8 @@ describe('GameGateway (intégration socket)', () => {
 
     // 1 joueur sur 1 a répondu → REVEAL anticipé ('all'). Puis le timer s'écoulera :
     // le verrou NX doit l'absorber → toujours UN seul REVEAL.
-    await new Promise((r) => setTimeout(r, 6000));
+    await settle(Math.max(0, endsAt + GRACE_MS - Date.now()));
+    await settle();
     expect(revealCount).toBe(1);
   }, 15_000);
 
@@ -232,7 +255,7 @@ describe('GameGateway (intégration socket)', () => {
     let told = false;
     player.on('game:media', () => (told = true));
     await player.emitWithAck('player:join', { pin, nickname: 'Mia' });
-    await new Promise((r) => setTimeout(r, 100));
+    await settle();
     expect(told).toBe(false);
     host.emit('host:end', { pin });
   }, 15_000);
@@ -410,7 +433,7 @@ describe('GameGateway (intégration socket)', () => {
         media: { audio: { url: '/api/v1/media/preload-test' } },
         audioTarget: 'projection_remote',
       });
-      await new Promise((r) => setTimeout(r, 100));
+      await settle();
       expect(playerPreloads).toBe(0); // in the room, nothing of a sound meant for the projection
     } finally {
       await prisma.quiz.delete({ where: { id: twoQuestions.id } });
@@ -678,7 +701,7 @@ describe('GameGateway (intégration socket)', () => {
     player.emit('media:position', { pin, questionIndex: 0, t: 9, playing: true }); // ignored
     screen.emit('media:position', { pin, questionIndex: 0, t: 1.5, playing: true });
     expect(await atPlayer).toEqual({ questionIndex: 0, t: 1.5, playing: true });
-    await new Promise((r) => setTimeout(r, 100));
+    await settle();
     expect(heard).toEqual([{ questionIndex: 0, t: 1.5, playing: true }]);
     host.emit('host:end', { pin });
   }, 15_000);
@@ -816,8 +839,7 @@ describe('GameGateway (intégration socket)', () => {
         player.once('question:start', resolve),
       );
       const sent = Date.now();
-      host.emit('host:start', { pin });
-      await new Promise((r) => setTimeout(r, 1200)); // no projection open: nobody to wait for
+      host.emit('host:start', { pin }); // no projection open: nobody to wait for
       const start = await q;
       expect(start.mediaStartAt).toBeGreaterThanOrEqual(sent + 500);
       const lead = start.startedAt - start.mediaStartAt!;
@@ -980,7 +1002,10 @@ describe('GameGateway (intégration socket)', () => {
       player.once('question:reveal', () => resolve()),
     );
     const podiumP = new Promise<void>((resolve) => player.once('game:podium', () => resolve()));
+    const started = nextEvent(player, 'question:start');
     host.emit('host:start', { pin });
+    await started;
+    await shortenTimer(host, pin);
     await firstReveal;
     host.emit('host:next', { pin });
     await podiumP;
@@ -1074,7 +1099,7 @@ describe('GameGateway (intégration socket)', () => {
 
     // Ré-entrée : un second host:end ne doit pas créer un 2ᵉ enregistrement (garde d'état).
     host.emit('host:end', { pin, archive: true });
-    await new Promise((r) => setTimeout(r, 300));
+    await settle(300);
 
     const sessions = await prisma.gameSessionLog.findMany({
       where: { quizId },
@@ -1322,8 +1347,9 @@ describe('GameGateway (intégration socket)', () => {
     const podiumP = new Promise<void>((resolve) => player.on('game:podium', () => resolve()));
 
     // Start shows the intro slide, not the question.
+    const intro = Promise.all([stateEvent(player, 'SLIDE_SHOW'), nextEvent(player, 'slide:show')]);
     host.emit('host:start', { pin });
-    await new Promise((r) => setTimeout(r, 200));
+    await intro;
     expect(states).toEqual(['SLIDE_SHOW']);
     expect(slides).toEqual(
       [{ slideIndex: 0, questionIndex: 0 }].map((s) => expect.objectContaining(s)),
@@ -1335,14 +1361,24 @@ describe('GameGateway (intégration socket)', () => {
     const q = await qStart;
     expect(states).toEqual(['SLIDE_SHOW', 'ANSWERING']);
     await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
+    const revealed = stateEvent(player, 'REVEAL');
     player.emit('player:submit', { pin, questionIndex: 0, answer: q.options[0].id }); // → REVEAL
-    await new Promise((r) => setTimeout(r, 200));
+    await revealed;
 
     // Auto mode from here: host:next shows the closing slide, whose 1 s delay then fires alone.
+    const auto = nextEvent(host, 'game:mode', {
+      where: (m: { mode: string }) => m.mode === 'auto',
+    });
     host.emit('host:mode', { pin, mode: 'auto' });
-    await new Promise((r) => setTimeout(r, 100));
+    await auto;
+    const closing = Promise.all([
+      stateEvent(player, 'SLIDE_SHOW'),
+      nextEvent(player, 'slide:show', {
+        where: (sl: { slideIndex: number }) => sl.slideIndex === 1,
+      }),
+    ]);
     host.emit('host:next', { pin });
-    await new Promise((r) => setTimeout(r, 200));
+    await closing;
     expect(states.at(-1)).toBe('SLIDE_SHOW');
     expect(slides.at(-1)).toEqual(expect.objectContaining({ slideIndex: 1, questionIndex: 1 }));
     const shownAt = Date.now();
@@ -1408,10 +1444,12 @@ describe('GameGateway (intégration socket)', () => {
     expect(early.ok).toBe(false);
 
     // On termine la partie, puis on note.
+    const answering = stateEvent(player, 'ANSWERING');
     host.emit('host:start', { pin });
-    await new Promise((r) => setTimeout(r, 300));
+    await answering;
+    const ended = nextEvent(player, 'game:ended');
     host.emit('host:end', { pin });
-    await new Promise((r) => setTimeout(r, 200));
+    await ended;
 
     const ack = await player.emitWithAck('player:rate', {
       pin,
@@ -1430,8 +1468,9 @@ describe('GameGateway (intégration socket)', () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
 
+    const answering = stateEvent(host, 'ANSWERING');
     host.emit('host:start', { pin });
-    await new Promise((r) => setTimeout(r, 250)); // laisse passer la fenêtre de lecture (150 ms)
+    await answering;
 
     const latecomer = connect();
     const stateP = new Promise<{ state: string }>((resolve) =>
@@ -1552,12 +1591,13 @@ describe('GameGateway (intégration socket)', () => {
       questionIndex: 0,
       answer: q.options.find((o) => o.text === 'Paris')!.id,
     });
-    await new Promise((r) => setTimeout(r, 150));
+    await settle();
     expect(revealed).toBe(false);
 
     // p2 quitte → connectés=1, répondu=1 ⇒ convergence ⇒ REVEAL (sans attendre le timer 5 s).
+    const reveal = stateEvent(p1, 'REVEAL');
     p2.disconnect();
-    await new Promise((r) => setTimeout(r, 400));
+    await reveal;
     expect(revealed).toBe(true);
   }, 15_000);
 
@@ -1637,14 +1677,15 @@ describe('GameGateway (intégration socket)', () => {
 
     // p1 (le seul répondant) répond puis quitte. p2 reste connecté SANS avoir répondu :
     // sa réponse manquante doit empêcher le REVEAL (le bug naïf hlen≥connectés révélerait).
+    const acked = nextEvent(p1, 'answer:ack');
     p1.emit('player:submit', {
       pin,
       questionIndex: 0,
       answer: q.options.find((o) => o.text === 'Paris')!.id,
     });
-    await new Promise((r) => setTimeout(r, 150));
+    await acked;
     p1.disconnect();
-    await new Promise((r) => setTimeout(r, 400));
+    await settle(400);
     expect(revealed).toBe(false);
   }, 15_000);
 
@@ -1656,8 +1697,9 @@ describe('GameGateway (intégration socket)', () => {
     const active = await games.listActiveHostGames(hostUserId);
     expect(active.some((g) => g.pin === pin)).toBe(true);
 
+    const ended = nextEvent(host, 'game:ended'); // sent once the index is purged
     host.emit('host:end', { pin });
-    await new Promise((r) => setTimeout(r, 200));
+    await ended;
     const after = await games.listActiveHostGames(hostUserId);
     expect(after.some((g) => g.pin === pin)).toBe(false);
   }, 15_000);
@@ -1671,7 +1713,7 @@ describe('GameGateway (intégration socket)', () => {
     const endedP = new Promise<void>((resolve) => player.on('game:ended', () => resolve()));
     host.disconnect(); // jamais de host:attach → grâce + fenêtre expirent
 
-    await endedP; // doit survenir avant le timeout (grâce 200 ms + fenêtre 1500 ms)
+    await endedP; // doit survenir avant le timeout (grâce 200 ms + fenêtre 800 ms)
   }, 15_000);
 
   describe('participant access and lobby lock (#57)', () => {
