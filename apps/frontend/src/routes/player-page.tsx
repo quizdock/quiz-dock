@@ -35,8 +35,13 @@ import {
 } from '../game/live-components';
 import { cn } from '@/lib/utils';
 import { Surface } from '../game/surface';
-import { unlockAudio, useAudioUnlocked } from '../game/media/audio-unlock';
-import { claimMediaElements, preloadMedia, waitedFor } from '../game/media/media-pool';
+import { unlockAudio } from '../game/media/audio-unlock';
+import {
+  claimMediaElements,
+  mediaElementsClaimed,
+  preloadMedia,
+  waitedFor,
+} from '../game/media/media-pool';
 import { FollowedWaveform, QuestionMediaStage } from '../game/media/question-media-stage';
 import { followed } from '../game/media/followed';
 import { RatingPanel } from '../game/rating-panel';
@@ -90,7 +95,15 @@ export function PlayerPage() {
   const [submitted, setSubmitted] = useState(false);
   // Graine d'avatar persistée localement (réinjectée d'une partie à l'autre).
   const [avatarSeed, setAvatarSeed] = useState(() => loadAvatarSeed() ?? '');
-  const soundUnlocked = useAudioUnlocked();
+  // Whether this phone's media elements were claimed in a gesture (at the join when
+  // the quiz had sound); read at each render, `claimSound` re-renders after the tap.
+  const [, setClaims] = useState(0);
+  const soundReady = mediaElementsClaimed();
+  const claimSound = () => {
+    claimMediaElements();
+    void unlockAudio();
+    setClaims((n) => n + 1);
+  };
 
   const question = view.question;
   const isMulti = question?.type === 'multiple_choice';
@@ -755,16 +768,8 @@ export function PlayerPage() {
           </p>
           {/* The next quiz plays sound and this device never enabled it (it joined a
             silent one): the tap is the only way a phone lets it play later. */}
-          {view.quizHasSound && !soundUnlocked ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                claimMediaElements();
-                void unlockAudio();
-              }}
-            >
+          {view.quizHasSound && !soundReady ? (
+            <Button type="button" variant="outline" size="sm" onClick={claimSound}>
               <Volume2 className="size-4" />
               {t('player.enableSound')}
             </Button>

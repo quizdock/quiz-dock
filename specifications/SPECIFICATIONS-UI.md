@@ -291,7 +291,7 @@ The screens above, with what a room adds (SPECIFICATIONS-ROOM §6, step 5):
   rating of the quiz just played stays open there if the host moved on; **Enable sound** appears when the next quiz
   has some and the phone never enabled it.
 
-A room of one quiz looks as before, apart from *Next quiz* at the podium.
+A room of one quiz looks as before, apart from *Change quiz* in its lobby and *Next quiz* at its podium.
 
 ---
 

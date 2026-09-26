@@ -15,11 +15,9 @@ const claimMediaElements = vi.fn();
 
 vi.mock('../game/media/media-pool', () => ({
   claimMediaElements: () => claimMediaElements(),
+  mediaElementsClaimed: () => audio.unlocked,
 }));
-vi.mock('../game/media/audio-unlock', () => ({
-  unlockAudio: () => Promise.resolve(true),
-  useAudioUnlocked: () => audio.unlocked,
-}));
+vi.mock('../game/media/audio-unlock', () => ({ unlockAudio: () => Promise.resolve(true) }));
 // The stage plays real media elements; here it only says how it was asked to play.
 vi.mock('../game/media/question-media-stage', () => ({
   FollowedWaveform: (p: { follow: { t: number } | null }) => (

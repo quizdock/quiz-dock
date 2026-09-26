@@ -129,7 +129,8 @@ not drop.
      stays open in the next lobby if the host moved on meanwhile; the server takes it for the previous quiz then, and
      never for one they did not play (a player joining at the podium sees no rating). **Enable sound** when the next
      quiz has some and this device never enabled it (`game:media` now reaches the phones, with the quiz's title).
-   - A room of one quiz looks as before, apart from *Next quiz* at the podium. The lobby keeps room for #104.
+   - A room of one quiz looks as before, apart from *Change quiz* in its lobby and *Next quiz* at its podium. The
+     lobby keeps room for #104.
 
 The playlist first planned as a step 6 is left to the *Programme* (§7), which prepares a series instead of
 improvising it.
