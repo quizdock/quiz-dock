@@ -108,11 +108,12 @@ describe('PlayerPage (client participant)', () => {
     fireEvent.click(screen.getByRole('button', { name: /C'est parti/ }));
 
     await waitFor(() =>
-      expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined, undefined),
+      expect(joinSession).toHaveBeenCalledWith('771122', 'Alice', undefined, 'room'),
     );
     await waitFor(() => expect(markJoined).toHaveBeenCalled());
-    // A quiz without sound: nobody is asked where they play from.
-    expect(screen.queryByText(/joues-tu/)).not.toBeInTheDocument();
+    // A quiz without sound still asks where they play from: remote gets the answers' text (#92).
+    expect(screen.getByRole('radio', { name: /Dans la salle/ })).toBeChecked();
+    expect(claimMediaElements).not.toHaveBeenCalled();
   });
 
   it('no-session, quiz with sound: asks where the player is and joins remote', async () => {
@@ -260,12 +261,27 @@ describe('PlayerPage (client participant)', () => {
         audioTarget: 'projection_remote',
       } as never,
     });
-    renderApp('/join/771122');
+    const background = renderApp('/join/771122');
     expect(await screen.findByRole('button', { name: /Paris/ })).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: /Illustration de la question/i })).toBeNull();
     expect(screen.queryByTestId('stage')).toBeNull();
-    // …but its waveform follows the projection's playhead.
-    expect(screen.getByTestId('followed')).toBeInTheDocument();
+    // A background sound: no waveform on the phone, the answers keep the room (#92)…
+    expect(screen.queryByTestId('followed')).toBeNull();
+    background.unmount();
+
+    // …but when the sound is the question (listen first), its waveform follows the projection's playhead.
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      question: {
+        ...question,
+        media: { visual: null, audio: sound },
+        audioTarget: 'projection_remote',
+        listenFirst: true,
+      } as never,
+    });
+    renderApp('/join/771122');
+    expect(await screen.findByTestId('followed')).toBeInTheDocument();
   });
 
   it('ANSWERING, remote: the phone plays the question’s sound, and its owner can mute it', async () => {

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import {
   AnswerExplanation,
   AnswerRules,
-  OptionGrid,
+  OptionTiles,
   Podium,
   RevealAnswer,
   SlideView,
@@ -42,7 +42,7 @@ export function ParticipantPreview({ view }: { view: GameView }) {
         </div>
         <AnswerRules question={q} />
         {q.options?.length ? (
-          <OptionGrid options={q.options} disabled layout="split" />
+          <OptionTiles options={q.options} disabled />
         ) : (
           <Input disabled placeholder={t('player.answerPlaceholder')} className="text-center" />
         )}

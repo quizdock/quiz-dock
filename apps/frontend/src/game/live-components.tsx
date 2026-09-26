@@ -37,13 +37,25 @@ export const TYPE_BASE = {
 } as const;
 
 /**
- * Grille d'options colorées + formes. `onPick` la rend interactive (joueur) ;
- * `correctIds` met en évidence la bonne réponse au reveal ; jamais de flag correct
- * avant (anti-triche §7 — les options publiques n'en portent pas).
+ * One answer layout for every screen (#92): two columns, as many rows as it takes,
+ * so an answer sits at the same place on the projection and on the phone. An odd
+ * last answer keeps the width of the others, centred on its own row.
  */
-/** Beyond this label length the grid gives up tiles for full-width rows. */
+const ANSWER_GRID = 'grid w-full grid-cols-2 gap-[0.6em]';
+const lastOdd = (index: number, count: number) =>
+  count % 2 === 1 && index === count - 1
+    ? 'col-span-2 w-[calc(50%-0.3em)] justify-self-center'
+    : undefined;
+
+/** Beyond this label length the tile text steps down a size. */
 const OPTION_TILE_MAX_CHARS = 18;
 
+/**
+ * Grille d'options colorées + formes, le texte dans la tuile. `onPick` la rend
+ * interactive (joueur à distance) ; `correctIds` met en évidence la bonne réponse au
+ * reveal ; jamais de flag correct avant (anti-triche §7 — les options publiques n'en
+ * portent pas).
+ */
 export function OptionGrid({
   options,
   onPick,
@@ -65,108 +77,58 @@ export function OptionGrid({
    */
   highlightIds?: string[];
   disabled?: boolean;
-  /**
-   * `tiles`: labels on the coloured tiles (projection, console). `split` (phone):
-   * the answers listed one under the other with their colour/shape code, and a
-   * grid of colour/shape tiles as the tap targets — long labels stay readable,
-   * targets stay big.
-   */
-  layout?: 'tiles' | 'split' | 'list';
+  /** `tiles`: the coloured tiles. `list` (a participant's reveal): the answers one under the other. */
+  layout?: 'tiles' | 'list';
 }) {
-  if (layout === 'split' || layout === 'list') {
+  if (layout === 'list') {
     return (
-      <SplitOptions
-        options={options}
-        onPick={onPick}
-        selectedIds={selectedIds}
-        correctIds={correctIds}
-        disabled={disabled}
-        tiles={layout === 'split'}
-      />
+      <OptionKey options={options} selectedIds={selectedIds} correctIds={correctIds} showPick />
     );
   }
-  // Short labels tile two per row once the container allows it; long ones (or
-  // many options) stack as full-width rows so the text keeps room to wrap.
-  const long =
-    options.length > 4 || options.some((o) => (o.text ?? '').length > OPTION_TILE_MAX_CHARS);
-  // The query reads the wrapper's width (a container query never targets its own element).
+  const many = options.length > 4;
+  const long = options.some((o) => (o.text ?? '').length > OPTION_TILE_MAX_CHARS);
   return (
-    <div className="@container w-full">
-      <div className={cn('grid grid-cols-1 gap-[0.75em]', !long && '@[22em]:grid-cols-2')}>
-        {options.map((o) => {
-          const isCorrect = correctIds?.includes(o.id);
-          const isPicked = selectedIds?.includes(o.id) ?? false;
-          const isHinted = highlightIds?.includes(o.id); // indice animateur (outline verte)
-          const dimmed = correctIds && !isCorrect; // au reveal, estompe les mauvaises
-          const Tag = onPick ? 'button' : 'div';
-          return (
-            <Tag
-              key={o.id}
-              type={onPick ? 'button' : undefined}
-              disabled={onPick ? disabled : undefined}
-              onClick={onPick ? () => onPick(o.id) : undefined}
-              className={cn(
-                'flex min-h-[3.25em] items-center gap-[0.75em] rounded-[0.75em] px-[1em] py-[0.75em] text-left leading-snug font-semibold text-white shadow transition',
-                long ? 'text-[1em]' : 'text-[1.125em]',
-                COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
-                onPick && !disabled && 'hover:brightness-110 active:scale-[0.98] cursor-pointer',
-                dimmed && 'opacity-40',
-                isCorrect && 'ring-4 ring-white',
-                isPicked && 'ring-4 ring-black/60',
-                isHinted && 'outline-success outline outline-2 outline-offset-2',
-              )}
-              aria-label={o.text ?? o.color}
-            >
-              <span aria-hidden className="shrink-0 text-[1.35em] leading-none">
-                {SHAPE_GLYPH[o.shape] ?? '●'}
-              </span>
-              {o.text ? (
-                <Markdown profile="inline" className="min-w-0 flex-1 [overflow-wrap:anywhere]">
-                  {o.text}
-                </Markdown>
-              ) : null}
-              {isCorrect ? <span className="ml-auto">✓</span> : null}
-            </Tag>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function SplitOptions({
-  options,
-  onPick,
-  selectedIds,
-  correctIds,
-  disabled,
-  tiles = true,
-}: {
-  options: PublicOption[];
-  onPick?: (optionId: string) => void;
-  selectedIds?: string[];
-  correctIds?: string[];
-  disabled?: boolean;
-  /** Without the tap tiles: the list alone (a participant's reveal). */
-  tiles?: boolean;
-}) {
-  return (
-    <div className="flex w-full flex-col gap-[1em]">
-      <OptionKey
-        options={options}
-        selectedIds={selectedIds}
-        correctIds={correctIds}
-        showPick={!onPick}
-      />
-      {tiles ? (
-        <OptionTiles
-          options={options}
-          onPick={onPick}
-          selectedIds={selectedIds}
-          correctIds={correctIds}
-          disabled={disabled}
-        />
-      ) : null}
+    <div className={ANSWER_GRID}>
+      {options.map((o, i) => {
+        const isCorrect = correctIds?.includes(o.id);
+        const isPicked = selectedIds?.includes(o.id) ?? false;
+        const isHinted = highlightIds?.includes(o.id); // indice animateur (outline verte)
+        const dimmed = correctIds && !isCorrect; // au reveal, estompe les mauvaises
+        const Tag = onPick ? 'button' : 'div';
+        return (
+          <Tag
+            key={o.id}
+            type={onPick ? 'button' : undefined}
+            disabled={onPick ? disabled : undefined}
+            onClick={onPick ? () => onPick(o.id) : undefined}
+            aria-pressed={onPick ? isPicked : undefined}
+            className={cn(
+              'flex items-center gap-[0.6em] rounded-[0.75em] px-[0.9em] py-[0.6em] text-left leading-tight font-semibold text-white shadow transition',
+              // Five answers and more: lower tiles, so four rows still leave room above.
+              many ? 'min-h-[2.6em]' : 'min-h-[3.25em]',
+              long ? 'text-[0.95em]' : many ? 'text-[1em]' : 'text-[1.125em]',
+              lastOdd(i, options.length),
+              COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
+              onPick && !disabled && 'hover:brightness-110 active:scale-[0.98] cursor-pointer',
+              dimmed && 'opacity-40',
+              isCorrect && 'ring-4 ring-white',
+              isPicked && 'ring-4 ring-black/60',
+              isHinted && 'outline-success outline outline-2 outline-offset-2',
+            )}
+            aria-label={o.text ?? o.color}
+          >
+            <span aria-hidden className="shrink-0 text-[1.35em] leading-none">
+              {SHAPE_GLYPH[o.shape] ?? '●'}
+            </span>
+            {o.text ? (
+              <Markdown profile="inline" className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                {o.text}
+              </Markdown>
+            ) : null}
+            {isCorrect ? <span className="ml-auto">✓</span> : null}
+          </Tag>
+        );
+      })}
     </div>
   );
 }
@@ -225,13 +187,10 @@ export function OptionKey({
   );
 }
 
-// Up to four tiles share one row; past that, two balanced rows (5–6 → 3 per row, 7–8 → 4).
-const TILE_COLUMNS = ['grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'];
-function tileColumns(count: number): number {
-  return Math.min(4, Math.max(1, count <= 4 ? count : Math.ceil(count / 2)));
-}
-
-/** The tap targets: colour + shape only, big and steady whatever the labels. */
+/**
+ * The tap targets of a phone in the room: colour + shape only, big and steady
+ * whatever the labels — the text is read on the projection, at the same place.
+ */
 export function OptionTiles({
   options,
   onPick,
@@ -245,10 +204,10 @@ export function OptionTiles({
   correctIds?: string[];
   disabled?: boolean;
 }) {
-  const columns = tileColumns(options.length);
+  const many = options.length > 4;
   return (
-    <div className={cn('grid w-full gap-[0.6em]', TILE_COLUMNS[columns - 1])}>
-      {options.map((o) => {
+    <div className={ANSWER_GRID}>
+      {options.map((o, i) => {
         const isCorrect = correctIds?.includes(o.id);
         const isPicked = selectedIds?.includes(o.id) ?? false;
         const Tag = onPick ? 'button' : 'div';
@@ -262,8 +221,9 @@ export function OptionTiles({
             aria-pressed={onPick ? isPicked : undefined}
             className={cn(
               'flex items-center justify-center rounded-[0.75em] text-[2em] leading-none text-white shadow transition',
-              // Narrow columns get squatter tiles, so two rows of four stay low on the screen.
-              columns >= 3 ? 'min-h-[2.5em]' : 'min-h-[3.5em]',
+              // Five answers and more: squatter tiles, so four rows stay low on the screen.
+              many ? 'min-h-[2.25em]' : 'min-h-[3.5em]',
+              lastOdd(i, options.length),
               COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
               onPick && !disabled && 'hover:brightness-110 active:scale-[0.97] cursor-pointer',
               correctIds && !isCorrect && 'opacity-40',
