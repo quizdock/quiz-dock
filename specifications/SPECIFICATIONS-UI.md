@@ -279,6 +279,20 @@ Shown on joining, **before** anything is collected, in the wording the two switc
 └───────────────────────────────┘
 ```
 
+### 5.6 Several quizzes in one room (#89)
+The screens above, with what a room adds (SPECIFICATIONS-ROOM §6, step 5):
+
+- **Console** — at the podium, **Next quiz** opens a picker of the host's own playable quizzes (*keep the results*
+  checked, as when ending); in the lobby, **Change quiz** replaces the one picked. From the room's second quiz, its
+  standings sit under the podium and in the next lobby.
+- **Projection** — the next lobby names the quiz coming and shows the room's standings (top 5); the podium is the
+  quiz's, then the room's; a room of several quizzes closes on its own podium.
+- **Phone** — the next lobby says where the participant stands in the room and *Waiting for the next quiz…*; the
+  rating of the quiz just played stays open there if the host moved on; **Enable sound** appears when the next quiz
+  has some and the phone never enabled it.
+
+A room of one quiz looks as before, apart from *Change quiz* in its lobby and *Next quiz* at its podium.
+
 ---
 
 ## 6. The session report (host)

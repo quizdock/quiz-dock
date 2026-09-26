@@ -136,7 +136,17 @@
     "restartMedia": "從頭重新播放媒體",
     "mediaLoadingTitle": "正在載入本題的媒體",
     "mediaLate": "仍在載入：{{names}}",
-    "startAnyway": "仍然開始"
+    "startAnyway": "仍然開始",
+    "nextQuiz": "下一個測驗",
+    "changeQuiz": "更換測驗",
+    "nextQuizTooltip": "在此房間中進行另一個測驗：參與者留在房間內",
+    "changeQuizTooltip": "在開始前替換所選測驗",
+    "nextQuizDescription": "參與者留在房間中，在下一個測驗的大廳重新相聚，無需再次輸入 PIN。",
+    "changeQuizDescription": "還沒有人玩過這個測驗：參與者留在房間中，大廳將顯示新的測驗。",
+    "openQuiz": "開啟此測驗",
+    "noPlayableQuiz": "沒有其他就緒的測驗。在編輯器中將測驗設為就緒即可在此進行。",
+    "pickQuiz": "測驗",
+    "pickQuizPlaceholder": "選擇一個測驗…"
   },
   "screen": {
     "sessionUnavailable": "會話不可用。",
@@ -159,7 +169,9 @@
     "mediaLoading": "題目即將出現…",
     "readinessLeft": "還剩 {{seconds}} 秒",
     "listening": "正在收聽",
-    "credits": "出處："
+    "credits": "出處：",
+    "nextQuiz": "下一個測驗：",
+    "roomPodium": "🏆 房間頒獎臺"
   },
   "player": {
     "joinFailed": "無法加入會話。",
@@ -221,7 +233,10 @@
     "pollThanks": "感謝你的意見！",
     "questionComing": "題目即將出現…",
     "listenFirst": "🎧 請聽完…",
-    "listening": "正在收聽"
+    "listening": "正在收聽",
+    "roomRank": "房間內：#{{rank}} — {{score}} 分",
+    "waitingNextQuiz": "等待下一個測驗…",
+    "enableSound": "開啟聲音"
   },
   "reveal": {
     "explanation": "解析",
@@ -295,5 +310,10 @@
     },
     "remember": "記住我的選擇",
     "rememberHint": "之後開始時將直接使用，不再詢問。可在「我的帳號」中更改。"
+  },
+  "room": {
+    "standingsTitle": "房間排名",
+    "afterQuizzes_one": "共 {{count}} 個測驗後",
+    "afterQuizzes_other": "共 {{count}} 個測驗後"
   }
 }

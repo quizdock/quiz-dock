@@ -242,14 +242,14 @@ The wireframes (UI §3–§5) give the *look*; this matrix gives the *binding*.
 
 | State | Control (host) | Projection (spectator) | Player | Triggering events |
 |---|---|---|---|---|
-| `LOBBY` | the player list + the session options (full capture, personalised tracking, chosen display name) + **Start** | PIN/QR + the player list (UI §4.1) | "You are in the game" (UI §5.2) | `player:joined`/`left` |
+| `LOBBY` | the player list + the session options (full capture, personalised tracking, chosen display name) + **Start**; in a room (#89) also **Change quiz** and the room's standings | PIN/QR + the player list (UI §4.1); in a room, the next quiz's title and the room's standings | "You are in the game" (UI §5.2); in a room, their rank in it, "Waiting for the next quiz", the last quiz still to rate, **Enable sound** when the next quiz has some | `player:joined`/`left`, `room:standings`, `game:media` |
 | `QUESTION_SHOW`* | question number + prompt | prompt + media, **answers hidden** | a minimal prompt, the grid **locked** | `question:start` (the reading window, `startedAt` in the future) |
 | `ANSWERING` | the `x/total` counter, **Reveal**/**Pause** | prompt + options (no right answer) + chrono + counter (UI §4.2) | the grid is live, then "Answer recorded ✓" (UI §5.3) | `question:start`, `answer:count`, `answer:ack` |
 | `REVEAL` | the right answer + distribution + leaderboard (UI §3.3) | the right answer + distribution | **personal** feedback: right or wrong, points, streak, rank (UI §5.4) | `question:reveal` (per socket), `leaderboard` |
 | `LEADERBOARD`† | the leaderboard + **Next question** | the leaderboard | "your rank" | `leaderboard` |
-| `PODIUM` | the podium + the end | the podium (UI §5.5) | the podium + your rank + "See my answers" | `game:podium` |
+| `PODIUM` | the podium, then the room's standings (from its second quiz) + **Next quiz** + the end | the podium (UI §5.5), then the room's standings | the podium + your rank (+ your rank in the room) + the rating of a quiz they played | `game:podium`, `room:standings` |
 | `HOST_DISCONNECTED` | (the host is gone) | "The game is paused" | "The presenter disconnected — paused" | `game:state` (§7) |
-| `ENDED` | back to the report | an ending screen | "Thank you!" | `game:ended` |
+| `ENDED` | back to the report | an ending screen; a room of several quizzes closes on its own podium | "Thank you!" | `game:ended`, `room:standings` |
 
 > \* On the server side, `QUESTION_SHOW` is the **reading window** built into
 > `question:start` (`startedAt` in the future). The client unlocks the grid at

@@ -2,10 +2,11 @@ import { GameState } from '@quiz-dock/contracts';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameView } from '../game/use-game-session';
-import { renderApp } from '../test/harness';
+import { mockApi, renderApp } from '../test/harness';
 
 const { fakeSocket, hookState } = vi.hoisted(() => ({
-  fakeSocket: { emit: vi.fn() },
+  // `once`/`off`: an emit with an ack also listens for the server's `error`.
+  fakeSocket: { emit: vi.fn(), once: vi.fn(), off: vi.fn() },
   hookState: { value: null as unknown },
 }));
 
@@ -54,7 +55,92 @@ const view = (partial: Partial<GameView>): GameView => ({
   mediaWait: null,
   nav: null,
   joinBaseUrl: null,
+  standings: null,
+  rateable: null,
   ...partial,
+});
+
+const quiz = (id: string, title: string, over: Record<string, unknown> = {}) => ({
+  id,
+  ownerId: 'me',
+  title,
+  description: null,
+  coverMediaId: null,
+  status: 'ready',
+  language: 'fr',
+  feedbackEnabled: true,
+  mediaTailS: 0,
+  loudnessTargetLufs: -16,
+  audioTarget: 'projection_remote',
+  questionCount: 3,
+  license: null,
+  tags: [],
+  editable: true,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  archivedAt: null,
+  ...over,
+});
+
+describe('ControlPage: the room’s next quiz (#89)', () => {
+  afterEach(() => {
+    localStorage.clear();
+    vi.clearAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it('at the podium, opens the host’s next playable quiz, results kept', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    mockApi([
+      {
+        method: 'GET',
+        path: '/me',
+        body: {
+          id: 'me',
+          displayName: 'Animateur',
+          email: null,
+          roles: ['host'],
+          subject: 'local:animateur',
+        },
+      },
+      {
+        method: 'GET',
+        path: '/quizzes',
+        body: [
+          quiz('q2', 'Round two'),
+          quiz('q3', 'A draft', { status: 'draft' }),
+          quiz('q4', 'Someone else’s', { ownerId: 'other' }),
+          quiz('q5', 'Empty', { questionCount: 0 }),
+        ],
+      },
+    ]);
+    hookState.value = view({
+      state: GameState.Podium,
+      quizId: 'q1',
+      podium: { podium: [{ nickname: 'Ada', score: 900, rank: 1 }] },
+      standings: { quizzesPlayed: 2, top: [{ nickname: 'Ada', score: 1800, rank: 1 }] },
+    });
+    renderApp('/session/482913/console');
+
+    // The quiz's podium, then the room's.
+    expect(await screen.findByText(/Classement du salon/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Quiz suivant/ }));
+    const picker = await screen.findByRole('combobox', { name: 'Quiz' });
+    await waitFor(() =>
+      expect(screen.getByRole('option', { name: 'Round two' })).toBeInTheDocument(),
+    );
+    // Only the host's own quizzes that can be played.
+    expect(screen.queryByRole('option', { name: 'A draft' })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'Someone else’s' })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'Empty' })).toBeNull();
+    fireEvent.change(picker, { target: { value: 'q2' } });
+    fireEvent.click(screen.getByRole('button', { name: /Ouvrir ce quiz/ }));
+    expect(fakeSocket.emit).toHaveBeenCalledWith(
+      'host:next-quiz',
+      { pin: '482913', quizId: 'q2', archive: true },
+      expect.any(Function),
+    );
+  });
 });
 
 describe('ControlPage (console hôte)', () => {

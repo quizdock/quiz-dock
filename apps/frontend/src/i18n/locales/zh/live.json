@@ -136,7 +136,17 @@
     "restartMedia": "从头重新播放媒体",
     "mediaLoadingTitle": "正在加载本题的媒体",
     "mediaLate": "仍在加载：{{names}}",
-    "startAnyway": "仍然开始"
+    "startAnyway": "仍然开始",
+    "nextQuiz": "下一个测验",
+    "changeQuiz": "更换测验",
+    "nextQuizTooltip": "在此房间中进行另一个测验：参与者留在房间内",
+    "changeQuizTooltip": "在开始前替换所选测验",
+    "nextQuizDescription": "参与者留在房间中，在下一个测验的大厅重新相聚，无需再次输入 PIN。",
+    "changeQuizDescription": "还没有人玩过这个测验：参与者留在房间中，大厅将显示新的测验。",
+    "openQuiz": "打开此测验",
+    "noPlayableQuiz": "没有其他就绪的测验。在编辑器中将测验设为就绪即可在此进行。",
+    "pickQuiz": "测验",
+    "pickQuizPlaceholder": "选择一个测验…"
   },
   "screen": {
     "sessionUnavailable": "会话不可用。",
@@ -159,7 +169,9 @@
     "mediaLoading": "题目即将出现…",
     "readinessLeft": "还剩 {{seconds}} 秒",
     "listening": "正在收听",
-    "credits": "署名："
+    "credits": "署名：",
+    "nextQuiz": "下一个测验：",
+    "roomPodium": "🏆 房间领奖台"
   },
   "player": {
     "joinFailed": "无法加入会话。",
@@ -221,7 +233,10 @@
     "pollThanks": "感谢你的意见！",
     "questionComing": "题目即将出现…",
     "listenFirst": "🎧 请听完…",
-    "listening": "正在收听"
+    "listening": "正在收听",
+    "roomRank": "房间内：#{{rank}} — {{score}} 分",
+    "waitingNextQuiz": "等待下一个测验…",
+    "enableSound": "开启声音"
   },
   "reveal": {
     "explanation": "解析",
@@ -295,5 +310,10 @@
     },
     "remember": "记住我的选择",
     "rememberHint": "之后开始时将直接使用，不再询问。可在“我的账号”中更改。"
+  },
+  "room": {
+    "standingsTitle": "房间排名",
+    "afterQuizzes_one": "共 {{count}} 个测验后",
+    "afterQuizzes_other": "共 {{count}} 个测验后"
   }
 }

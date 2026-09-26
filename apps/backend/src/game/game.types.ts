@@ -135,6 +135,8 @@ export interface RoomMeta {
   hostUserId: string;
   /** The game the room plays (the last one, once it is over). */
   gameId: GameId;
+  /** The game before it, when the host moved on: its podium's ratings may still arrive. */
+  previousGameId?: GameId;
   fullCapture: boolean;
   personalTracking: boolean;
   pickOwnName: boolean;
@@ -151,6 +153,7 @@ export const ROOM_FIELDS = [
   'roomId',
   'hostUserId',
   'gameId',
+  'previousGameId',
   'fullCapture',
   'personalTracking',
   'pickOwnName',

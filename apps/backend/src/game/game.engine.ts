@@ -254,13 +254,13 @@ export class GameEngine {
     const snapshot = await this.game.getSnapshot(ref.id);
     if (!snapshot) return;
     const payload = {
+      title: snapshot.title,
       hasSound: snapshotHasSound(snapshot),
       hasMedia: snapshotHasMedia(snapshot),
       audioTarget: gameAudioTarget(snapshot, target),
     };
-    for (const socket of await this.server.in(pin).fetchSockets()) {
-      if (!(socket.data as { playerId?: string }).playerId) socket.emit('game:media', payload);
-    }
+    // Every device: a phone that never enabled sound asks for it when the quiz has some.
+    this.server.to(pin).emit('game:media', payload);
     // Who needs what may have changed (the phones in the room, for every device).
     await this.emitPreload(ref, snapshot, 0);
     await this.broadcastReadiness(pin);
@@ -1059,6 +1059,7 @@ export class GameEngine {
     const me = playerId ? ranked.find((p) => p.id === playerId) : undefined;
     return {
       podium,
+      ...(snapshot ? { quizId: snapshot.quizId } : {}),
       feedbackEnabled: snapshot?.feedbackEnabled ?? true,
       ...(snapshot?.credits?.length ? { credits: snapshot.credits } : {}),
       you: me ? { score: me.score, rank: rankOf.get(me.id) ?? ranked.length } : undefined,
@@ -1080,9 +1081,11 @@ export class GameEngine {
     // le host:create — doit voir ce que la session enregistre de lui.
     socket.emit('notice', noticeOf(meta));
     const snapshotForNav = await this.game.getSnapshot(meta.id);
-    if (!playerId && snapshotForNav) {
-      // The projection asks for sound at once when the quiz will need it.
+    if (snapshotForNav) {
+      // Every device asks for sound at once when the quiz will need it (a phone too:
+      // the next quiz of a room may play sound where the first did not).
       socket.emit('game:media', {
+        title: snapshotForNav.title,
         hasSound: snapshotHasSound(snapshotForNav),
         hasMedia: snapshotHasMedia(snapshotForNav),
         audioTarget: gameAudioTarget(snapshotForNav, meta.audioTarget),
@@ -1398,7 +1401,7 @@ export class GameEngine {
     this.server
       .to(pin)
       .emit('game:state', { state: GameState.Ended, questionIndex: -1, totalQuestions: 0 });
-    this.server.to(pin).emit('game:ended', { feedbackEnabled: await this.feedbackEnabled(ref.id) });
+    this.server.to(pin).emit('game:ended', await this.endedPayload(ref.id));
   }
 
   /**
@@ -1495,9 +1498,7 @@ export class GameEngine {
     this.server
       .to(pin)
       .emit('game:state', { state: GameState.Ended, questionIndex: -1, totalQuestions: 0 });
-    this.server
-      .to(pin)
-      .emit('game:ended', { feedbackEnabled: await this.feedbackEnabled(meta.id) });
+    this.server.to(pin).emit('game:ended', await this.endedPayload(meta.id));
   }
 
   /**
@@ -1804,10 +1805,15 @@ export class GameEngine {
     await this.next(pin, hostUserId);
   }
 
-  /** Whether players may rate this quiz (§2.11); defaults to true when the snapshot is gone. */
-  private async feedbackEnabled(gameId: GameId): Promise<boolean> {
+  /** `game:ended`: whether players may rate the quiz (§2.11; yes when the snapshot is gone), and which. */
+  private async endedPayload(
+    gameId: GameId,
+  ): Promise<{ feedbackEnabled: boolean; quizId?: string }> {
     const snapshot = await this.game.getSnapshot(gameId);
-    return snapshot?.feedbackEnabled ?? true;
+    return {
+      feedbackEnabled: snapshot?.feedbackEnabled ?? true,
+      ...(snapshot ? { quizId: snapshot.quizId } : {}),
+    };
   }
 
   /** Lit les réponses gradées d'une question (playerId → enregistrement). */

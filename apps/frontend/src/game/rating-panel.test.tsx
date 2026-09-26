@@ -27,6 +27,29 @@ describe('RatingPanel', () => {
     expect(localStorage.getItem('live.rated.482913')).toBe('1');
   });
 
+  it('rates each quiz of a room on its own: the first one rated leaves the next one open', () => {
+    const emit = vi.fn((_e: string, _p: unknown, ack?: (r: { ok: boolean }) => void) =>
+      ack?.({ ok: true }),
+    );
+    const socket = { emit } as never;
+    const { unmount } = render(<RatingPanel pin="482913" quizId="quiz-1" socket={socket} />);
+    fireEvent.click(screen.getByLabelText('5 étoiles'));
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer mon avis/ }));
+    expect(localStorage.getItem('live.rated.482913.quiz-1')).toBe('1');
+    unmount();
+
+    render(<RatingPanel pin="482913" quizId="quiz-2" socket={socket} hideWhenDone />);
+    expect(screen.getByRole('button', { name: /Envoyer mon avis/ })).toBeInTheDocument();
+  });
+
+  it('shows nothing once rated when asked to (the next lobby)', () => {
+    localStorage.setItem('live.rated.482913.quiz-1', '1');
+    const { container } = render(
+      <RatingPanel pin="482913" quizId="quiz-1" socket={null} hideWhenDone />,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('désactive l’envoi tant qu’aucune étoile n’est choisie', () => {
     const socket = { emit: vi.fn() } as never;
     render(<RatingPanel pin="000000" socket={socket} />);

@@ -99,6 +99,15 @@ function silence(): string {
   return `data:audio/wav;base64,${btoa(String.fromCharCode(...bytes))}`;
 }
 
+/**
+ * Whether the phone's elements were made inside a gesture. Not the page's sticky
+ * activation: tapping an answer does not claim them, and without them a later
+ * quiz's sound would not play on a phone (iOS).
+ */
+export function mediaElementsClaimed(): boolean {
+  return !!dedicated.audio && !!dedicated.video;
+}
+
 /** Makes the phone's two elements and starts them on silence. Call it inside the click. */
 export function claimMediaElements(): void {
   const src = silence();

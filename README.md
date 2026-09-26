@@ -86,6 +86,9 @@ your phone to play.
 - 🏆 **Scoring that rewards speed** — time-weighted points, streak bonuses, leaderboard
   between questions, final podium; per-question rules (*closest answer wins*, partial
   credit, typo-tolerant text, double or fixed points).
+- 🔁 **Several quizzes in one room** — players join once and stay: the host picks the
+  next quiz at the podium, everyone meets again in its lobby, and the room keeps its
+  own standings across the quizzes, shown live and kept in *History* with the results.
 - 🏠 **Self-hosted and private** — one Docker image (`amd64` / `arm64`), no SaaS, no
   tracking, no ads; interface in English, French, Spanish, Simplified and Traditional
   Chinese; rebrand name, logo and CSS without a rebuild.

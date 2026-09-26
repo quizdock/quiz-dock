@@ -5,15 +5,17 @@ import type { GameView } from '../game/use-game-session';
 import { configureAnonymousParticipants } from '../config';
 import { renderApp } from '../test/harness';
 
-const { fakeSocket, hookState } = vi.hoisted(() => ({
+const { fakeSocket, hookState, audio } = vi.hoisted(() => ({
   fakeSocket: { emit: vi.fn() },
   hookState: { value: null as unknown },
+  audio: { unlocked: true },
 }));
 const markJoined = vi.fn();
 const claimMediaElements = vi.fn();
 
 vi.mock('../game/media/media-pool', () => ({
   claimMediaElements: () => claimMediaElements(),
+  mediaElementsClaimed: () => audio.unlocked,
 }));
 vi.mock('../game/media/audio-unlock', () => ({ unlockAudio: () => Promise.resolve(true) }));
 // The stage plays real media elements; here it only says how it was asked to play.
@@ -86,6 +88,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   mediaWait: null,
   nav: null,
   joinBaseUrl: null,
+  standings: null,
+  rateable: null,
   ...partial,
 });
 
@@ -188,6 +192,61 @@ describe('PlayerPage (client participant)', () => {
 
     expect(await screen.findByText(/Tu es dans la session/)).toBeInTheDocument();
     expect(screen.getByText(/« Bob »/)).toBeInTheDocument();
+  });
+
+  describe('in a room, between two quizzes (#89)', () => {
+    const standings = {
+      quizzesPlayed: 1,
+      top: [{ nickname: 'Bob', score: 900, rank: 1 }],
+      you: {
+        score: 900,
+        rank: 1,
+        correct: 1,
+        answered: 1,
+        avgResponseMs: 1200,
+        maxStreak: 1,
+        quizzes: 1,
+      },
+    };
+    const session = { pin: '771122', nickname: 'Bob', sessionToken: 't', playerId: 'p1' };
+    afterEach(() => {
+      audio.unlocked = true;
+    });
+
+    it('says where they stand and waits for the next quiz, the last one still to rate', async () => {
+      loadPlayerSession.mockReturnValue(session);
+      hookState.value = view({
+        state: GameState.Lobby,
+        standings,
+        rateable: { quizId: 'quiz-1', feedbackEnabled: true },
+      });
+      renderApp('/join/771122');
+      expect(await screen.findByText(/Dans le salon : #1 — 900 pts/)).toBeInTheDocument();
+      expect(screen.getByText(/En attente du quiz suivant/)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Envoyer mon avis/ })).toBeInTheDocument();
+    });
+
+    it('asks this phone for sound when the next quiz has some and it never enabled it', async () => {
+      loadPlayerSession.mockReturnValue(session);
+      audio.unlocked = false;
+      hookState.value = view({ state: GameState.Lobby, standings, quizHasSound: true });
+      renderApp('/join/771122');
+      fireEvent.click(await screen.findByRole('button', { name: /Activer le son/ }));
+      expect(claimMediaElements).toHaveBeenCalled();
+    });
+
+    it('offers no rating to someone who only saw the podium', async () => {
+      loadPlayerSession.mockReturnValue(session);
+      hookState.value = view({
+        state: GameState.Podium,
+        podium: { podium: [], quizId: 'quiz-1' },
+        feedbackEnabled: true,
+        rateable: null,
+      });
+      renderApp('/join/771122');
+      expect(await screen.findByText('Podium')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Envoyer mon avis/ })).toBeNull();
+    });
   });
 
   it('LOBBY : l’avis dit ce que la session enregistre (RG-16)', async () => {
