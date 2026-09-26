@@ -22,6 +22,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- The playlist goes to a later Programme, out of the room *(spec)*
+- The room's standings in unreleased *(changelog)*
 - The next quiz in the room in unreleased *(changelog)*
 - Game sequencing by events, and the engine split, after the room *(roadmap)*
 - The room layer in unreleased *(changelog)*
@@ -51,6 +53,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
+- A session played in a room shows its room *(history)*
 - The room's standings, summed over its quizzes *(game)*
 - The next quiz in the same room, the players still in *(game)*
 - The question fits the screen, the clock as a bar *(live)*
