@@ -22,6 +22,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- Game sequencing by events, and the engine split, after the room *(roadmap)*
+- The room layer in unreleased *(changelog)*
 - The multi-quiz room brief, from the model to the ordered pull requests *(spec)*
 - One answer grid in unreleased *(changelog)*
 - Exact OIDC issuer in unreleased *(changelog)*
@@ -48,6 +50,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
+- The next quiz in the same room, the players still in *(game)*
 - The question fits the screen, the clock as a bar *(live)*
 - One answer grid on the projection and the phone *(live)*
 - Export a quiz for publication to a community store *(editor)*
