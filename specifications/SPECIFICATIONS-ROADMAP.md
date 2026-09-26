@@ -241,6 +241,8 @@ at a steady level; tested in Chromium browsers (iPhone still to test, hence *exp
 | HARD-INFRA-2 | A **migration** strategy plus backup and purge (retention, RG-11) |
 | HARD-DOC-1 | Operational documentation: a runbook, the published OpenAPI, a host guide |
 | HARD-QA-3 | An overall acceptance pass across every journey (métier §6) |
+| HARD-ENGINE-1 | **Game sequencing by events, not timers** — after the multi-quiz room (#89). Everything that moves a game (an answer, a host action, a media ready, a deadline reached) becomes an event handled one at a time per room, carrying the game and the step it is for; a late one is dropped by one rule. Deadlines are stored in Redis and picked up by a scheduler, instead of five in-memory timer maps re-armed after a restart. Most per-transition locks go; tests run on a simulated clock |
+| HARD-ENGINE-2 | **Split the game engine** (`game.engine.ts`, ~1,800 lines), with HARD-ENGINE-1 rather than before it: the transitions as a pure function (state + event → new state + effects), the payloads (reveal, leaderboard, podium, navigation) and the media readiness in modules of their own. Pure helpers can move earlier, when a pull request touches them |
 
 **Done when**: the base is hardened, audited and documented.
 
