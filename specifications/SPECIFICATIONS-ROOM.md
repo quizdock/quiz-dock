@@ -104,6 +104,12 @@ not drop.
 5. **Screens.** The console's quiz picker, the room projection (room name, QR code, players, the next quiz once
    picked, the cumulative leaderboard), the phone's "waiting for the next quiz" with nickname and series rank, the
    intermission. The room lobby leaves room for #104 (the "Ready!" button and the projection link).
+   - To fix here: a player still rating the quiz just played when the host opens the next one is refused
+     (`player:rate` accepts only a game at its podium or ended); accept the rating for the previous game, or have the
+     console wait.
+   - To fix here: the phones are never told whether the next quiz plays sound (`game:media` goes to the screens
+     only); a remote player who came in on a silent quiz must be asked to enable sound when the next one has some.
+   - To settle here: a player joining at the podium sees the rating panel of a quiz they did not play.
 6. **Playlist** (optional): a list prepared beforehand, proposed first by the picker.
 
 To settle along the way, each in the PR it touches: the number of quizzes per room, and what the picker does with a

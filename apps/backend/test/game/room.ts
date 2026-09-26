@@ -1,5 +1,7 @@
 import type { Socket } from 'socket.io-client';
+import { GAME_TTL_S, gameKeys } from '../../src/game/game.keys';
 import { GameService } from '../../src/game/game.service';
+import { RedisService } from '../../src/redis/redis.service';
 import { QuizzesService } from '../../src/quizzes/quizzes.service';
 import { type GameContext, nextEvent, settle, stateEvent } from '../game-harness';
 
@@ -174,6 +176,23 @@ export function roomTests(ctx: GameContext): void {
     await nextQuiz(host, pin, second.id);
     expect((await notice).fullCapture).toBe(true);
     expect((await mode).mode).toBe('auto');
+  });
+
+  it('each question keeps the room, its players’ tokens and its game alive', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const pin = await ctx.h.createGame(host, ctx.quizId);
+    const { socket: player, sessionToken } = await ctx.h.join(pin, 'Eve');
+    const redis = ctx.h.app.get(RedisService);
+    const gameId = (await game.getMeta(pin))!.id;
+    const keys = [gameKeys.room(pin), gameKeys.session(sessionToken), gameKeys.game(gameId)];
+    // An evening later: a few seconds left on each.
+    for (const key of keys) await redis.expire(key, 5);
+
+    const start = nextEvent(player, 'question:start');
+    host.emit('host:start', { pin });
+    await start;
+    await settle(100);
+    for (const key of keys) expect(await redis.ttl(key)).toBeGreaterThan(GAME_TTL_S - 60);
   });
 
   it('a timer armed for the previous quiz does nothing to the next one', async () => {
