@@ -178,13 +178,143 @@ export function roomTests(ctx: GameContext): void {
     expect((await mode).mode).toBe('auto');
   });
 
+  describe('standings', () => {
+    type Standings = {
+      quizzesPlayed: number;
+      top: { nickname: string; score: number; rank: number }[];
+      you?: {
+        score: number;
+        rank: number;
+        correct: number;
+        answered: number;
+        maxStreak: number;
+        quizzes: number;
+      };
+    };
+    const standingsOf = (socket: Socket) => nextEvent<Standings>(socket, 'room:standings');
+
+    /** Opens the question, each player answers the option named; resolves with their points. */
+    async function play(host: Socket, pin: string, answers: [Socket, string][]) {
+      const starts = answers.map(([p]) => nextEvent<QuestionStart>(p, 'question:start'));
+      const reveals = answers.map(([p]) =>
+        nextEvent<{ yourResult?: { points: number } }>(p, 'question:reveal'),
+      );
+      host.emit('host:start', { pin });
+      const q = await starts[0];
+      await settle(Math.max(0, q.startedAt - Date.now()) + 50);
+      answers.forEach(([p, text]) => {
+        const option = q.options.find((o) => o.text === text)!.id;
+        p.emit('player:submit', { pin, questionIndex: 0, answer: option });
+      });
+      return (await Promise.all(reveals)).map((r) => r.yourResult?.points ?? 0);
+    }
+
+    it('adds up the quizzes of the room, each player with their own line', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const pin = await ctx.h.createGame(host, ctx.quizId);
+      const { socket: ana } = await ctx.h.join(pin, 'Ana');
+      const { socket: ben } = await ctx.h.join(pin, 'Ben');
+      const screen = connect();
+      await screen.emitWithAck('spectator:join', { pin });
+
+      const [ana1, ben1] = await play(host, pin, [
+        [ana, 'Paris'],
+        [ben, 'Lyon'],
+      ]);
+      // At the podium of a one-quiz room, the standings are that quiz's.
+      const first = standingsOf(ana);
+      await toPodium(host, pin, ana);
+      expect(await first).toMatchObject({ quizzesPlayed: 1, you: { score: ana1, rank: 1 } });
+
+      await nextQuiz(host, pin, (await ctx.h.seedQuiz({ title: 'Round two' })).id);
+      const [ana2, ben2] = await play(host, pin, [
+        [ana, 'Paris'],
+        [ben, 'Paris'],
+      ]);
+      const anaLine = standingsOf(ana);
+      const benLine = standingsOf(ben);
+      const screenLine = standingsOf(screen);
+      await toPodium(host, pin, ana);
+      expect((await anaLine).you).toMatchObject({
+        score: ana1 + ana2,
+        correct: 2,
+        answered: 2,
+        maxStreak: 1,
+        quizzes: 2,
+      });
+      expect((await benLine).you).toMatchObject({
+        score: ben1 + ben2,
+        correct: 1,
+        answered: 2,
+        quizzes: 2,
+      });
+      const shown = await screenLine;
+      expect(shown.quizzesPlayed).toBe(2);
+      expect(shown.you).toBeUndefined(); // the projection has no line of its own
+      expect(shown.top.map((r) => r.nickname)).toEqual(['Ana', 'Ben']);
+    });
+
+    it('counts a quiz once, even when the room closes at its podium', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const pin = await ctx.h.createGame(host, ctx.quizId);
+      const { socket: player } = await ctx.h.join(pin, 'Cleo');
+      await play(host, pin, [[player, 'Paris']]);
+      const atPodium = standingsOf(player);
+      await toPodium(host, pin, player);
+      expect((await atPodium).quizzesPlayed).toBe(1);
+      const atClose = standingsOf(player);
+      host.emit('host:end', { pin });
+      expect(await atClose).toMatchObject({ quizzesPlayed: 1, you: { quizzes: 1 } });
+    });
+
+    it('does not count a quiz that never started: replaced, or closed in its lobby', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const replaced = await ctx.h.seedQuiz({ title: 'Never played' });
+      const pin = await ctx.h.createGame(host, replaced.id);
+      const { socket: player } = await ctx.h.join(pin, 'Dora');
+      await nextQuiz(host, pin, ctx.quizId); // replaced before it started
+      await play(host, pin, [[player, 'Paris']]);
+      await toPodium(host, pin, player);
+
+      await nextQuiz(host, pin, (await ctx.h.seedQuiz({ title: 'Closed unplayed' })).id);
+      const atClose = standingsOf(player);
+      host.emit('host:end', { pin });
+      expect((await atClose).quizzesPlayed).toBe(1);
+    });
+
+    it('ranks someone who joined at the podium on the quizzes they played', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const pin = await ctx.h.createGame(host, ctx.quizId);
+      const { socket: first } = await ctx.h.join(pin, 'First');
+      await play(host, pin, [[first, 'Paris']]);
+      await toPodium(host, pin, first);
+      const { socket: later } = await ctx.h.join(pin, 'Later');
+
+      await nextQuiz(host, pin, (await ctx.h.seedQuiz({ title: 'Joined late' })).id);
+      await play(host, pin, [
+        [first, 'Paris'],
+        [later, 'Paris'],
+      ]);
+      const line = standingsOf(later);
+      await toPodium(host, pin, first);
+      expect((await line).you).toMatchObject({ quizzes: 1, answered: 1, rank: 2 });
+    });
+  });
+
   it('each question keeps the room, its players’ tokens and its game alive', async () => {
     const host = connect({ localUser: 'Animateur' });
     const pin = await ctx.h.createGame(host, ctx.quizId);
     const { socket: player, sessionToken } = await ctx.h.join(pin, 'Eve');
     const redis = ctx.h.app.get(RedisService);
     const gameId = (await game.getMeta(pin))!.id;
-    const keys = [gameKeys.room(pin), gameKeys.session(sessionToken), gameKeys.game(gameId)];
+    // A quiz already recorded in the standings, as after a first round.
+    await redis.hset(gameKeys.played(pin), 'earlier', '{}');
+    const keys = [
+      gameKeys.room(pin),
+      gameKeys.session(sessionToken),
+      gameKeys.game(gameId),
+      gameKeys.played(pin),
+    ];
     // An evening later: a few seconds left on each.
     for (const key of keys) await redis.expire(key, 5);
 

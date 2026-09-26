@@ -730,7 +730,7 @@ export class GameEngine {
   }
 
   /** Top 10 du classement (lignes publiques, sans rang personnel). */
-  private topRows(ranked: RankedPlayer[]): LeaderboardRow[] {
+  private topRows(ranked: Pick<RankedPlayer, 'nickname' | 'score' | 'avatar'>[]): LeaderboardRow[] {
     return ranked
       .slice(0, 10)
       .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1, avatar: p.avatar }));
@@ -979,6 +979,7 @@ export class GameEngine {
   private async toPodium(ref: GameRef, meta: GameMeta): Promise<void> {
     const { pin } = ref;
     await this.redis.hset(gameKeys.game(ref.id), { state: GameState.Podium });
+    await this.foldGame(ref, meta);
     const ranked = await this.rankedPlayers(ref);
     const rankOf = new Map(ranked.map((p, i) => [p.id, i + 1]));
     const podium = ranked
@@ -1000,6 +1001,50 @@ export class GameEngine {
       // Classement général (top 10) aussi au podium : alimente l'écran projeté et
       // survit à un rechargement (sendStateTo le ré-émet en PODIUM).
       socket.emit('leaderboard', this.personalLeaderboard(top, ranked, rankOf, playerId));
+    }
+    await this.emitStandings(pin);
+  }
+
+  /**
+   * Records a game that is over in the room's standings — one that started;
+   * a quiz replaced in its lobby was never played. The room goes on if it fails.
+   */
+  private async foldGame(ref: GameRef, meta: GameMeta): Promise<void> {
+    if (meta.currentIndex < 0) return;
+    try {
+      await this.game.foldGame(ref.pin, ref.id);
+    } catch (err) {
+      this.log.error(`foldGame ${ref.pin}: ${(err as Error).message}`);
+    }
+  }
+
+  /** The room's standings, to every socket (or `only` one), each with its own line. */
+  private async emitStandings(pin: string, only?: Emitter): Promise<void> {
+    const { quizzesPlayed, ranked } = await this.game.standings(pin);
+    if (quizzesPlayed === 0) return;
+    const top = this.topRows(ranked);
+    const sockets: Emitter[] = only ? [only] : await this.server.in(pin).fetchSockets();
+    for (const socket of sockets) {
+      const playerId = socket.data.playerId;
+      const at = playerId ? ranked.findIndex((p) => p.id === playerId) : -1;
+      const me = ranked[at];
+      socket.emit('room:standings', {
+        quizzesPlayed,
+        top,
+        ...(me
+          ? {
+              you: {
+                score: me.score,
+                rank: at + 1,
+                correct: me.correct,
+                answered: me.answered,
+                avgResponseMs: me.answered > 0 ? Math.round(me.totalMs / me.answered) : null,
+                maxStreak: me.maxStreak,
+                quizzes: me.quizzes,
+              },
+            }
+          : {}),
+      });
     }
   }
 
@@ -1055,6 +1100,10 @@ export class GameEngine {
     // Mode/pause courants : un (ré)attache doit refléter auto/pause immédiatement.
     socket.emit('game:mode', this.buildModePayload(meta));
     if (meta.joinBaseUrl) socket.emit('game:join-url', { baseUrl: meta.joinBaseUrl });
+    // Between quizzes, the room's standings so far.
+    if (meta.state === GameState.Lobby || meta.state === GameState.Podium) {
+      await this.emitStandings(pin, socket);
+    }
     // In the lobby, every device fetches what the first question needs while people wait;
     // arriving during a wait for media, what the coming question needs, and how long.
     if (meta.state === GameState.Lobby && snapshotForNav) {
@@ -1342,6 +1391,8 @@ export class GameEngine {
     // l'hôte est absent, un échec ne doit pas bloquer la fin (journalisé, avalé).
     await this.archive.archive(pin, meta, { interrupted: true, bestEffort: true });
     await this.redis.hset(gameKeys.game(ref.id), { state: GameState.Ended });
+    await this.foldGame(ref, meta);
+    await this.emitStandings(pin);
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(hostUserId, pin);
     this.server
@@ -1436,6 +1487,9 @@ export class GameEngine {
     if (archive) await this.archiveAsked(pin, meta);
     this.cancelAllTimers(pin);
     await this.redis.hset(gameKeys.game(meta.id), { state: GameState.Ended });
+    // After the state: an answer arriving meanwhile can no longer be scored and missed.
+    await this.foldGame(refOf(pin, meta), meta);
+    await this.emitStandings(pin);
     await this.redis.del(gameKeys.pin(pin));
     await this.game.removeHostGame(meta.hostUserId, pin);
     this.server
