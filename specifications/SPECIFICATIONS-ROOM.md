@@ -88,6 +88,12 @@ not drop.
    - To settle here: today a player can join a quiz in progress (LIVE §5). Recommendation: keep it for the quiz
      running when they join, since the room never turns anyone away; "wait for the next quiz" then only applies to a
      player joining during the intermission.
+   - To fix here: the next quiz opens through the engine, which cancels the timers of the one before (they are
+     kept per PIN; the service's `openGame` cannot reach them).
+   - To fix here: a player joining in the intermission is in the room, not in the game: `readiness` (every connected
+     player) and the answer count (players of the game) must agree on who is waited for.
+   - To fix here: `joinSession` reads the current game, then writes the new player's score after the nickname checks;
+     a game opened in between would get it wrong.
    - To fix here: a player's rating is kept once per PIN and player (`quiz_feedback`), so rating the second quiz
      would overwrite the first. Its unique key must include the game or the quiz (a migration).
    - To settle here: whether the host can change a room setting between two quizzes. Recommendation: yes, in the room

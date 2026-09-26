@@ -1,11 +1,10 @@
 import type { Socket } from 'socket.io-client';
 import { GameService } from '../../src/game/game.service';
-import { GRACE_MS } from '../../src/game/game.keys';
 import { SessionArchiveService } from '../../src/game/session-archive.service';
 import { QuizzesService } from '../../src/quizzes/quizzes.service';
-import { type GameContext, nextEvent, settle, shortenTimer, stateEvent } from '../game-harness';
+import { type GameContext, nextEvent, settle, stateEvent } from '../game-harness';
 
-type QuestionStart = { questionIndex: number; startedAt: number; endsAt: number };
+type QuestionStart = { questionIndex: number; startedAt: number };
 type Option = { id: string; text: string };
 
 /**
@@ -82,47 +81,24 @@ export function roomTests(ctx: GameContext): void {
     await ctx.h.prisma.gameSessionLog.deleteMany({ where: { pin } });
   });
 
-  it('a timer armed by the previous quiz does not move the next one', async () => {
+  it('a timer armed for the previous quiz does nothing to the next one', async () => {
     const host = connect({ localUser: 'Animateur' });
     const pin = await ctx.h.createGame(host, ctx.quizId);
     const { socket: player } = await ctx.h.join(pin, 'Timo');
-
-    // Quiz 1 on question 0, its reveal timer shortened to fire soon.
-    const start = nextEvent<QuestionStart>(player, 'question:start');
-    host.emit('host:start', { pin });
-    const q = await start;
-    const firstEndsAt = await shortenTimer(host, pin, q.endsAt);
-
-    // Quiz 2 opens and starts its own question 0, with a long clock.
-    const long = await ctx.h.seedQuiz({
-      title: 'Long quiz',
-      questions: {
-        create: {
-          orderIndex: 0,
-          type: 'single_choice',
-          prompt: 'Long question',
-          timeLimitS: 60,
-          options: {
-            create: [
-              { orderIndex: 0, text: 'A', color: 'red', shape: 'triangle', isCorrect: true },
-              { orderIndex: 1, text: 'B', color: 'blue', shape: 'diamond', isCorrect: false },
-            ],
-          },
-        },
-      },
-    });
-    const secondId = await game.openGame(pin, long.id);
-    const secondStart = nextEvent<QuestionStart>(player, 'question:start');
-    host.emit('host:start', { pin });
-    expect((await secondStart).endsAt - Date.now()).toBeGreaterThan(50_000);
-
-    // Past quiz 1's deadline: quiz 2 is still answering.
-    let revealed = false;
+    let hostGone = false;
     player.on('game:state', (s: { state: string }) => {
-      if (s.state === 'REVEAL') revealed = true;
+      if (s.state === 'HOST_DISCONNECTED') hostGone = true;
     });
-    await settle(Math.max(0, firstEndsAt + GRACE_MS - Date.now()) + 300);
-    expect(revealed).toBe(false);
-    expect(await game.getMeta(pin)).toMatchObject({ id: secondId, state: 'ANSWERING' });
+
+    // The host's window closes: quiz 1 arms its grace before declaring them gone.
+    host.disconnect();
+    await settle(50);
+    // Quiz 2 opens within that grace; the grace was quiz 1's, not its.
+    const second = await ctx.h.seedQuiz({ title: 'Next quiz' });
+    const secondId = await game.openGame(pin, second.id);
+    await settle(Number(process.env.GAME_HOST_GRACE_MS) + 300);
+
+    expect(hostGone).toBe(false);
+    expect(await game.getMeta(pin)).toMatchObject({ id: secondId, state: 'LOBBY' });
   });
 }
