@@ -194,6 +194,7 @@ CHECKs, in SQL or in the application, depending on the type:
 | `quiz_id` | char(26) | FK→`quiz.id`, NN, IDX | The quiz that was played (a snapshot is advised, see the note) |
 | `host_id` | char(26) | FK→`user.id`, NN, IDX | The host who ran it |
 | `pin` | char(6) | NN | The PIN used (historical; not unique over time) |
+| `room_id` | char(32) | nullable, IDX | The room it was played in (SPECIFICATIONS-ROOM): the archived sessions of one room are read together — its quizzes, and standings summed from their `player_result_log` (nothing stored twice). Null for sessions archived before rooms |
 | `status` | enum `session_status` | NN, DEF `ended` | `ended` \| `archived` (the live `lobby`/`in_progress` states live in Redis) |
 | `language` | text | NN | The session's language |
 | `player_count` | int | NN, DEF 0 | How many participants played |

@@ -18,7 +18,9 @@
     "capture": "Captura",
     "participantCount_one": "{{count}} jugador",
     "participantCount_other": "{{count}} jugadores",
-    "successRate": "Acierto {{rate}}"
+    "successRate": "Acierto {{rate}}",
+    "inRoom_one": "Sala · {{count}} quiz",
+    "inRoom_other": "Sala · {{count}} quizzes"
   },
   "detail": {
     "notFound": "Sesión no encontrada.",
@@ -51,6 +53,18 @@
       "maxStreak": "Racha máx.",
       "avgTime": "Tiempo medio (s)",
       "filenameFallback": "sesion"
+    },
+    "room": {
+      "title": "Sala",
+      "intro_one": "Esta sesión se jugó en una sala: {{count}} quiz conservado, uno tras otro, y los participantes entraron una sola vez.",
+      "intro_other": "Esta sesión se jugó en una sala: {{count}} quizzes conservados, uno tras otro, y los participantes entraron una sola vez.",
+      "thisSession": "esta sesión",
+      "standingsTitle": "Clasificación de la sala",
+      "standingsNote": "Acumulada sobre los quizzes archivados de la sala.",
+      "noPersonalTracking": "Sin clasificación de la sala: al menos una de sus sesiones no hizo seguimiento individual de los participantes.",
+      "thQuizzes": "Quizzes",
+      "exportCsv": "Exportar clasificación (CSV)",
+      "csvFilename": "sala"
     }
   },
   "player": {

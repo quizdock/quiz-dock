@@ -15,6 +15,7 @@ import type { CreateQuizDto } from './dto/create-quiz.dto';
 import type { QuizFeedbackQueryDto } from './dto/quiz-feedback.dto';
 import type { TransitionQuizDto } from './dto/transition-quiz.dto';
 import type { UpdateQuizDto } from './dto/update-quiz.dto';
+import { roomStandings } from './room-standings';
 import { instanceLanguage } from '../common/instance-language';
 
 type QuizFeedbackQuery = Pick<QuizFeedbackQueryDto, 'page' | 'pageSize' | 'rating'>;
@@ -169,7 +170,66 @@ export class QuizzesService {
       orderBy: { startedAt: 'desc' },
       select: SESSION_SUMMARY_SELECT,
     });
-    return { sessions: rows.map(toSessionSummary) };
+    // How many archived sessions each room kept (#89): a room of one reads as a plain session.
+    const roomIds = [...new Set(rows.flatMap((r) => (r.roomId ? [r.roomId] : [])))];
+    const inRooms = roomIds.length
+      ? await this.prisma.gameSessionLog.findMany({
+          where: { roomId: { in: roomIds }, quiz: { ownerId } },
+          select: { roomId: true },
+        })
+      : [];
+    const sizes = new Map<string, number>();
+    for (const { roomId } of inRooms) if (roomId) sizes.set(roomId, (sizes.get(roomId) ?? 0) + 1);
+    return {
+      sessions: rows.map((r) => {
+        const size = r.roomId ? (sizes.get(r.roomId) ?? 1) : 1;
+        return toSessionSummary(r, size > 1 ? size : null);
+      }),
+    };
+  }
+
+  /**
+   * The room a session was played in, from its archived sessions (#89): the
+   * quizzes kept, in order, and the standings summed over them — only when
+   * every one of them tracked its participants (RG-16). Null for a session
+   * played alone, or whose room kept only it.
+   */
+  private async roomOf(roomId: string | null, ownerId: string | undefined, current: string) {
+    if (!roomId) return null;
+    const sessions = await this.prisma.gameSessionLog.findMany({
+      where: { roomId, quiz: { ownerId } },
+      orderBy: { startedAt: 'asc' },
+      select: {
+        id: true,
+        quizId: true,
+        startedAt: true,
+        personalTracking: true,
+        quizSnapshot: true,
+        playerResults: {
+          select: {
+            nickname: true,
+            finalScore: true,
+            correctCount: true,
+            answeredCount: true,
+            avgResponseMs: true,
+            maxStreak: true,
+          },
+        },
+      },
+    });
+    if (sessions.length < 2) return null;
+    return {
+      sessions: sessions.map((s) => ({
+        id: s.id,
+        quizId: s.quizId,
+        quizTitle: ((s.quizSnapshot ?? {}) as { title?: string }).title ?? '',
+        startedAt: s.startedAt.toISOString(),
+        current: s.id === current,
+      })),
+      standings: sessions.every((s) => s.personalTracking)
+        ? roomStandings(sessions.map((s) => s.playerResults))
+        : null,
+    };
   }
 
   /**
@@ -195,8 +255,10 @@ export class QuizzesService {
       questions?: Array<{ orderIndex: number; prompt: string; type: string }>;
     };
     const byIndex = new Map((snap.questions ?? []).map((q) => [q.orderIndex, q]));
+    const room = await this.roomOf(row.roomId, ownerId, row.id);
     return {
-      ...toSessionSummary(row),
+      ...toSessionSummary(row, room?.sessions.length ?? null),
+      room,
       quizTitle: snap.title ?? '',
       language: row.language,
       totalQuestions: row.questionStats.length,
@@ -477,6 +539,7 @@ const SESSION_SUMMARY_SELECT = {
   fullCapture: true,
   startedAt: true,
   endedAt: true,
+  roomId: true,
 } satisfies Prisma.GameSessionLogSelect;
 
 /**
@@ -501,17 +564,20 @@ function renderAnswer(
 }
 
 /** Projette une ligne `GameSessionLog` en résumé sérialisable (Decimal→number, Date→ISO). */
-function toSessionSummary(row: {
-  id: string;
-  pin: string;
-  status: string;
-  playerCount: number;
-  successRate: Prisma.Decimal | null;
-  personalTracking: boolean;
-  fullCapture: boolean;
-  startedAt: Date;
-  endedAt: Date;
-}) {
+function toSessionSummary(
+  row: {
+    id: string;
+    pin: string;
+    status: string;
+    playerCount: number;
+    successRate: Prisma.Decimal | null;
+    personalTracking: boolean;
+    fullCapture: boolean;
+    startedAt: Date;
+    endedAt: Date;
+  },
+  roomSize: number | null,
+) {
   return {
     id: row.id,
     pin: row.pin,
@@ -522,5 +588,6 @@ function toSessionSummary(row: {
     fullCapture: row.fullCapture,
     startedAt: row.startedAt.toISOString(),
     endedAt: row.endedAt.toISOString(),
+    roomSize,
   };
 }

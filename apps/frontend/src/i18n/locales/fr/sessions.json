@@ -18,7 +18,9 @@
     "capture": "Capture",
     "participantCount_one": "{{count}} participant",
     "participantCount_other": "{{count}} participants",
-    "successRate": "Réussite {{rate}}"
+    "successRate": "Réussite {{rate}}",
+    "inRoom_one": "Salon · {{count}} quiz",
+    "inRoom_other": "Salon · {{count}} quiz"
   },
   "detail": {
     "notFound": "Session introuvable.",
@@ -51,6 +53,18 @@
       "maxStreak": "Série max",
       "avgTime": "Temps moyen (s)",
       "filenameFallback": "session"
+    },
+    "room": {
+      "title": "Salon",
+      "intro_one": "Cette session a été jouée dans un salon : {{count}} quiz conservé, l’un après l’autre, les participants n’entrant qu’une fois.",
+      "intro_other": "Cette session a été jouée dans un salon : {{count}} quiz conservés, l’un après l’autre, les participants n’entrant qu’une fois.",
+      "thisSession": "cette session",
+      "standingsTitle": "Classement du salon",
+      "standingsNote": "Cumulé sur les quiz archivés du salon.",
+      "noPersonalTracking": "Pas de classement du salon : au moins une de ses sessions n’a pas suivi les participants individuellement.",
+      "thQuizzes": "Quiz",
+      "exportCsv": "Exporter le classement (CSV)",
+      "csvFilename": "salon"
     }
   },
   "player": {

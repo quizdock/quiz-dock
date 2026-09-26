@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Check, ChevronRight, Download, Radio, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Download, Layers, Radio, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { Markdown } from '@/components/markdown';
@@ -13,7 +13,7 @@ import {
   useQuizzesControllerSessionPlayer,
   useQuizzesControllerSessions,
 } from '../api/generated/quizzes/quizzes';
-import type { SessionListDtoSessionsItem } from '../api/generated/model';
+import type { SessionDetailDtoRoom, SessionListDtoSessionsItem } from '../api/generated/model';
 import { sessionDetailRoute, sessionPlayerRoute, sessionsRoute } from '../router';
 
 function statusLabel(t: TFunction, status: string): string {
@@ -116,6 +116,12 @@ function SessionRow({
           </p>
         </div>
         <Badge variant={statusVariant(s.status)}>{statusLabel(t, s.status)}</Badge>
+        {s.roomSize ? (
+          <Badge variant="default" className="gap-1">
+            <Layers className="size-3" />
+            {t('list.inRoom', { count: s.roomSize })}
+          </Badge>
+        ) : null}
         {s.fullCapture ? (
           <Badge variant="default" className="gap-1">
             <Radio className="size-3" />
@@ -307,7 +313,138 @@ export function SessionDetailPage() {
           </CardContent>
         )}
       </Card>
+
+      {s.room ? <RoomCard room={s.room} pin={s.pin} /> : null}
     </section>
+  );
+}
+
+/**
+ * The room this session was played in (#89): its other archived quizzes, and
+ * the standings summed over them — read from those sessions, nothing kept twice.
+ */
+function RoomCard({ room, pin }: { room: NonNullable<SessionDetailDtoRoom>; pin: string }) {
+  const { t } = useTranslation(['sessions', 'common']);
+  const standings = room.standings;
+  const exportStandings = () => {
+    if (!standings) return;
+    const rows: Array<Array<string | number>> = [
+      [
+        t('detail.csvGlobal.rank'),
+        t('detail.csvGlobal.nickname'),
+        t('detail.csvGlobal.score'),
+        t('detail.csvGlobal.correct'),
+        t('detail.csvGlobal.answered'),
+        t('detail.csvGlobal.maxStreak'),
+        t('detail.csvGlobal.avgTime'),
+        t('detail.room.thQuizzes'),
+      ],
+      ...standings.map((p) => [
+        p.rank,
+        p.nickname,
+        p.score,
+        p.correctCount,
+        p.answeredCount,
+        p.maxStreak,
+        p.avgResponseMs === null ? '' : (p.avgResponseMs / 1000).toFixed(1),
+        p.quizzes,
+      ]),
+    ];
+    downloadCsv(csvFilename(t('detail.room.csvFilename'), pin), toCsv(rows));
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row flex-wrap items-center gap-3">
+        <CardTitle className="flex items-center gap-2">
+          <Layers className="size-5" />
+          {t('detail.room.title')}
+        </CardTitle>
+        {standings ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            disabled={standings.length === 0}
+            onClick={exportStandings}
+          >
+            <Download className="size-4" />
+            {t('detail.room.exportCsv')}
+          </Button>
+        ) : null}
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <p className="text-muted-foreground text-sm">
+          {t('detail.room.intro', { count: room.sessions.length })}
+        </p>
+        <ol className="flex flex-col gap-1 text-sm">
+          {room.sessions.map((r, i) => (
+            <li key={r.id} className="flex items-baseline gap-2">
+              <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+              {r.current ? (
+                <span className="font-medium">
+                  {r.quizTitle || t('detail.fallbackTitle')}{' '}
+                  <span className="text-muted-foreground font-normal">
+                    ({t('detail.room.thisSession')})
+                  </span>
+                </span>
+              ) : (
+                <Link
+                  to="/quizzes/$quizId/history/$sessionId"
+                  params={{ quizId: r.quizId, sessionId: r.id }}
+                  className="font-medium hover:underline"
+                >
+                  {r.quizTitle || t('detail.fallbackTitle')}
+                </Link>
+              )}
+              <span className="text-muted-foreground text-xs">{fmtDate(r.startedAt)}</span>
+            </li>
+          ))}
+        </ol>
+
+        {standings ? (
+          <div className="flex flex-col gap-2">
+            <h3 className="font-semibold">{t('detail.room.standingsTitle')}</h3>
+            <p className="text-muted-foreground text-xs">{t('detail.room.standingsNote')}</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-muted-foreground border-b text-left">
+                  <tr>
+                    <th className="py-2 pr-2 font-medium">{t('detail.thRank')}</th>
+                    <th className="py-2 pr-2 font-medium">{t('detail.thNickname')}</th>
+                    <th className="py-2 pr-2 text-right font-medium">{t('detail.thScore')}</th>
+                    <th className="py-2 pr-2 text-right font-medium">{t('detail.thCorrect')}</th>
+                    <th className="py-2 pr-2 text-right font-medium">{t('detail.thStreak')}</th>
+                    <th className="py-2 pr-2 text-right font-medium">{t('detail.thAvgTime')}</th>
+                    <th className="py-2 text-right font-medium">{t('detail.room.thQuizzes')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {standings.map((p) => (
+                    <tr key={p.nickname} className="border-b last:border-0">
+                      <td className="py-2 pr-2 tabular-nums">{p.rank}</td>
+                      <td className="py-2 pr-2 font-medium">{p.nickname}</td>
+                      <td className="py-2 pr-2 text-right tabular-nums">{p.score}</td>
+                      <td className="py-2 pr-2 text-right tabular-nums">
+                        {p.correctCount}/{p.answeredCount}
+                      </td>
+                      <td className="py-2 pr-2 text-right tabular-nums">{p.maxStreak}</td>
+                      <td className="py-2 pr-2 text-right tabular-nums">
+                        {seconds(p.avgResponseMs)}
+                      </td>
+                      <td className="py-2 text-right tabular-nums">{p.quizzes}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">{t('detail.room.noPersonalTracking')}</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

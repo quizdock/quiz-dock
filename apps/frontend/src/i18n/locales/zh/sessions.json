@@ -18,7 +18,9 @@
     "capture": "记录",
     "participantCount_one": "{{count}} 名玩家",
     "participantCount_other": "{{count}} 名玩家",
-    "successRate": "正确率 {{rate}}"
+    "successRate": "正确率 {{rate}}",
+    "inRoom_one": "房间 · {{count}} 个测验",
+    "inRoom_other": "房间 · {{count}} 个测验"
   },
   "detail": {
     "notFound": "未找到会话。",
@@ -51,6 +53,18 @@
       "maxStreak": "最高连胜",
       "avgTime": "平均用时（秒）",
       "filenameFallback": "session"
+    },
+    "room": {
+      "title": "房间",
+      "intro_one": "本次会话在一个房间中进行：保留了 {{count}} 个测验，依次进行，参与者只需加入一次。",
+      "intro_other": "本次会话在一个房间中进行：保留了 {{count}} 个测验，依次进行，参与者只需加入一次。",
+      "thisSession": "本次会话",
+      "standingsTitle": "房间排名",
+      "standingsNote": "按房间中已归档的测验累计。",
+      "noPersonalTracking": "没有房间排名：至少有一个会话未对参与者进行个人追踪。",
+      "thQuizzes": "测验",
+      "exportCsv": "导出排名（CSV）",
+      "csvFilename": "room"
     }
   },
   "player": {
