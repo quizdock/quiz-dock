@@ -28,18 +28,21 @@ describe('GameGateway (intégration socket)', () => {
   let hostUserId: string;
   const connect = (auth?: Record<string, string>): Socket => h.connect(auth);
   /** The next `game:state` of `socket` in `state`. */
-  const stateEvent = (socket: Socket, state: string) =>
-    nextEvent(socket, 'game:state', { where: (p: { state: string }) => p.state === state });
+  const stateEvent = (socket: Socket, state: string, timeoutMs?: number) =>
+    nextEvent(socket, 'game:state', {
+      where: (p: { state: string }) => p.state === state,
+      timeoutMs,
+    });
   /**
-   * Brings a live question's timer 4 s closer, through the host's own control: the
-   * test watches the same reveal timer expire without sitting through 5 s (the
-   * smallest limit a question may have). A question opens at least MEDIA_LEAD_MS
-   * (600 ms) after the start, so about 1.6 s remain: above the 1 s floor under which
-   * the engine would reveal at once instead.
+   * Brings a live question's timer closer, through the host's own control: the test
+   * watches the same reveal timer expire without sitting through 5 s (the smallest
+   * limit a question may have). The delta leaves about 1.5 s whatever the latency
+   * so far: under 1 s left, the engine would reveal at once instead of re-arming.
    */
-  const shortenTimer = async (host: Socket, pin: string): Promise<number> => {
+  const shortenTimer = async (host: Socket, pin: string, endsAt: number): Promise<number> => {
     const time = nextEvent<{ endsAt: number }>(host, 'question:time');
-    host.emit('host:adjust-time', { pin, deltaS: -4 });
+    const deltaS = -Math.floor((endsAt - Date.now() - 1_500) / 1_000);
+    host.emit('host:adjust-time', { pin, deltaS });
     return (await time).endsAt;
   };
 
@@ -146,7 +149,7 @@ describe('GameGateway (intégration socket)', () => {
     const reveal = nextEvent(player, 'game:state', {
       where: (s: { state: string }) => s.state === 'REVEAL',
     });
-    await shortenTimer(host, pin);
+    await shortenTimer(host, pin, q.endsAt);
     await reveal;
     await settle();
     expect(revealCount).toBe(1);
@@ -162,9 +165,11 @@ describe('GameGateway (intégration socket)', () => {
     player.on('game:state', (s: { state: string }) => {
       if (s.state === 'REVEAL') revealCount++;
     });
-    const qStart = new Promise<{ startedAt: number; options: Array<{ id: string; text: string }> }>(
-      (resolve) => player.on('question:start', (q) => resolve(q as never)),
-    );
+    const qStart = nextEvent<{
+      startedAt: number;
+      endsAt: number;
+      options: Array<{ id: string; text: string }>;
+    }>(player, 'question:start');
 
     // answer:ack est un event (pas un ack Socket.IO) → on les met en file.
     const acks: Array<{ accepted: boolean }> = [];
@@ -183,7 +188,7 @@ describe('GameGateway (intégration socket)', () => {
     const q = await qStart;
     const parisId = q.options.find((o) => o.text === 'Paris')!.id;
 
-    const endsAt = await shortenTimer(host, pin);
+    const endsAt = await shortenTimer(host, pin, q.endsAt);
     // Attendre l'ouverture des réponses (startedAt) avant de soumettre.
     await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
 
@@ -841,6 +846,8 @@ describe('GameGateway (intégration socket)', () => {
       const sent = Date.now();
       host.emit('host:start', { pin }); // no projection open: nobody to wait for
       const start = await q;
+      // The pause below lands once the answers are open, the media playing.
+      await settle(Math.max(0, start.startedAt - Date.now()) + 50);
       expect(start.mediaStartAt).toBeGreaterThanOrEqual(sent + 500);
       const lead = start.startedAt - start.mediaStartAt!;
 
@@ -1002,10 +1009,9 @@ describe('GameGateway (intégration socket)', () => {
       player.once('question:reveal', () => resolve()),
     );
     const podiumP = new Promise<void>((resolve) => player.once('game:podium', () => resolve()));
-    const started = nextEvent(player, 'question:start');
+    const started = nextEvent<{ endsAt: number }>(player, 'question:start');
     host.emit('host:start', { pin });
-    await started;
-    await shortenTimer(host, pin);
+    await shortenTimer(host, pin, (await started).endsAt);
     await firstReveal;
     host.emit('host:next', { pin });
     await podiumP;
@@ -1361,7 +1367,7 @@ describe('GameGateway (intégration socket)', () => {
     const q = await qStart;
     expect(states).toEqual(['SLIDE_SHOW', 'ANSWERING']);
     await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
-    const revealed = stateEvent(player, 'REVEAL');
+    const revealed = stateEvent(player, 'REVEAL', 1_000); // well before the 5 s timer
     player.emit('player:submit', { pin, questionIndex: 0, answer: q.options[0].id }); // → REVEAL
     await revealed;
 
@@ -1381,9 +1387,9 @@ describe('GameGateway (intégration socket)', () => {
     await closing;
     expect(states.at(-1)).toBe('SLIDE_SHOW');
     expect(slides.at(-1)).toEqual(expect.objectContaining({ slideIndex: 1, questionIndex: 1 }));
-    const shownAt = Date.now();
+    const shownAt = Date.now(); // the slide's arrival (it used to be taken ~200 ms later, with 700)
     await podiumP;
-    expect(Date.now() - shownAt).toBeGreaterThanOrEqual(700);
+    expect(Date.now() - shownAt).toBeGreaterThanOrEqual(900);
   }, 15_000);
 
   it('REVEAL anticipé quand TOUS répondent FAUX (convergence indépendante de la justesse)', async () => {
@@ -1595,7 +1601,7 @@ describe('GameGateway (intégration socket)', () => {
     expect(revealed).toBe(false);
 
     // p2 quitte → connectés=1, répondu=1 ⇒ convergence ⇒ REVEAL (sans attendre le timer 5 s).
-    const reveal = stateEvent(p1, 'REVEAL');
+    const reveal = stateEvent(p1, 'REVEAL', 1_000); // well before the 5 s timer
     p2.disconnect();
     await reveal;
     expect(revealed).toBe(true);
