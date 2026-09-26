@@ -37,7 +37,8 @@ script can read.
 
 1. *Sign in* asks the backend (`POST /auth/login`), which prepares an **Authorization
    Code + PKCE** request — state, nonce, code verifier — and sends the browser to your
-   provider (found through `${OIDC_ISSUER}/.well-known/openid-configuration`).
+   provider (found through `${OIDC_ISSUER}/.well-known/openid-configuration`, the issuer's
+   trailing slash dropped first).
 2. The provider sends the browser back to **`<your-origin>/auth/callback`**; that page
    hands the code to the backend (`POST /auth/callback`), which checks the state against
    the browser that started, exchanges the code at the token endpoint, checks the ID
@@ -224,7 +225,7 @@ The dev compose file then defaults `OIDC_ISSUER` to `http://localhost:18080/real
 
 | Symptom (in backend logs) | Fix |
 |---|---|
-| `unexpected "iss" claim value` | `OIDC_ISSUER` ≠ the token's `iss`. Match it exactly (scheme/host/port/trailing slash). |
+| `unexpected "iss" claim value` | `OIDC_ISSUER` ≠ the token's `iss`. Match it exactly (scheme/host/port/trailing slash): copy the `issuer` of the discovery document. At startup the backend warns when they differ, and says so when only a trailing slash does. |
 | `signature verification failed` | Wrong/unreachable JWKS: check that the backend can reach `${OIDC_ISSUER}/.well-known/openid-configuration` (or `OIDC_INTERNAL_URL`). |
 | `OIDC discovery failed` | The backend cannot reach the issuer host (Docker networking): set `OIDC_INTERNAL_URL` to the internal address. |
 | `Sign-in failed: invalid_client` / `unauthorized_client` | The client is confidential on the IdP: set `OIDC_CLIENT_SECRET` (or make it public with PKCE). |

@@ -59,7 +59,12 @@ async function makeToken(opts: TokenOpts = {}): Promise<string> {
 }
 
 /** Construit le provider après avoir armé le JWKS local et l'env. */
-async function buildProvider(audience?: string, rolesClaim?: string, nameClaim?: string) {
+async function buildProvider(
+  audience?: string,
+  rolesClaim?: string,
+  nameClaim?: string,
+  issuer = ISSUER,
+) {
   const localSet = createLocalJWKSet({ keys: [publicJwk] });
   (createRemoteJWKSet as jest.Mock).mockReturnValue(localSet);
   if (audience) process.env.OIDC_AUDIENCE = audience;
@@ -68,7 +73,7 @@ async function buildProvider(audience?: string, rolesClaim?: string, nameClaim?:
   else delete process.env.OIDC_ROLES_CLAIM;
   if (nameClaim) process.env.OIDC_NAME_CLAIM = nameClaim;
   else delete process.env.OIDC_NAME_CLAIM;
-  process.env.OIDC_ISSUER = ISSUER;
+  process.env.OIDC_ISSUER = issuer;
   // Explicit JWKS URI: no discovery round-trip in unit tests.
   process.env.OIDC_JWKS_URI = `${ISSUER}/jwks`;
   return newProvider();
@@ -150,6 +155,17 @@ describe('OidcProvider', () => {
       bearer(await makeToken({ issuer: 'http://evil/realms/x' })),
     );
     expect(principal).toBeNull();
+  });
+
+  it('matches iss exactly: a trailing slash is part of the issuer (#99)', async () => {
+    const authentik = 'https://idp.example.com/application/o/quizdock/';
+    const provider = await buildProvider(undefined, undefined, undefined, authentik);
+    expect(
+      await provider.authenticate(bearer(await makeToken({ issuer: authentik }))),
+    ).not.toBeNull();
+    expect(
+      await provider.authenticate(bearer(await makeToken({ issuer: authentik.slice(0, -1) }))),
+    ).toBeNull();
   });
 
   it('rejette une signature altérée', async () => {

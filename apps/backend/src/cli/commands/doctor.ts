@@ -3,7 +3,12 @@ import { join } from 'node:path';
 import Redis from 'ioredis';
 import type { PrismaService } from '../../prisma/prisma.service';
 import type { Output } from '../output';
-import { oidcSettings, type OidcSettings } from '../../auth/oidc/oidc-client';
+import {
+  discoveryUrl,
+  issuerMismatch,
+  oidcSettings,
+  type OidcSettings,
+} from '../../auth/oidc/oidc-client';
 import { migrationStatus } from './migrate-status';
 
 export interface DoctorDeps {
@@ -128,7 +133,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         internalUrl && url.startsWith(new URL(issuer).origin)
           ? internalUrl + url.slice(new URL(issuer).origin.length)
           : url;
-      const url = onBackChannel(`${issuer}/.well-known/openid-configuration`);
+      const url = onBackChannel(discoveryUrl(issuer));
       if (internalUrl) out.ok(`provider reached at ${internalUrl} from here`);
       let jwksUri = settings.jwksUri ?? undefined;
       try {
@@ -140,10 +145,8 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         }
         jwksUri ??= onBackChannel(doc.jwks_uri as string);
         out.ok(`discovery ok → token endpoint ${onBackChannel(doc.token_endpoint as string)}`);
-        if (typeof doc.issuer === 'string' && doc.issuer.replace(/\/+$/, '') !== issuer)
-          out.warn(
-            `discovery issuer "${doc.issuer}" ≠ OIDC_ISSUER — tokens must carry OIDC_ISSUER exactly`,
-          );
+        const mismatch = typeof doc.issuer === 'string' && issuerMismatch(doc.issuer, issuer);
+        if (mismatch) out.warn(mismatch);
       } catch (err) {
         fail(
           `discovery ${url}: ${(err as Error).message} — set OIDC_INTERNAL_URL if the issuer host is not reachable from here`,

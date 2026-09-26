@@ -43,13 +43,54 @@ export interface OidcSettings {
 const originOf = (url: string): string => new URL(url).origin;
 
 /**
+ * Where a provider publishes its discovery document (OIDC Discovery §4): the
+ * issuer without its terminating `/`, then `/.well-known/openid-configuration`.
+ * Only this URL drops the slash — the issuer itself is compared exactly.
+ */
+export function discoveryUrl(issuer: string): string {
+  const url = new URL(issuer);
+  url.pathname = `${url.pathname.replace(/\/+$/, '')}/.well-known/openid-configuration`;
+  return url.toString();
+}
+
+/**
+ * `OIDC_ISSUER` checked, not rewritten: an http(s) URL without query or
+ * fragment (OIDC Discovery §3). Surrounding spaces are the only thing dropped.
+ */
+function readIssuer(raw: string | undefined): string {
+  const issuer = raw?.trim();
+  if (!issuer) throw new Error('OIDC_ISSUER is required when AUTH_MODE=oidc.');
+  let url: URL;
+  try {
+    url = new URL(issuer);
+  } catch {
+    throw new Error(`OIDC_ISSUER "${issuer}" is not a URL.`);
+  }
+  if (!['https:', 'http:'].includes(url.protocol) || /[?#]/.test(issuer)) {
+    throw new Error(`OIDC_ISSUER "${issuer}" must be an http(s) URL without query or fragment.`);
+  }
+  return issuer;
+}
+
+/**
+ * Why the discovery document's `issuer` will not match the tokens, or null if
+ * it will. Comparison is exact (OIDC Discovery §4.3): a trailing slash counts.
+ */
+export function issuerMismatch(discovered: string, configured: string): string | null {
+  if (discovered === configured) return null;
+  const slashOnly = discovered.replace(/\/+$/, '') === configured.replace(/\/+$/, '');
+  return `discovery issuer "${discovered}" differs from OIDC_ISSUER "${configured}"${
+    slashOnly ? ' by a trailing slash only' : ''
+  } — tokens must carry OIDC_ISSUER exactly; set it to the provider's issuer`;
+}
+
+/**
  * Reads the OIDC settings. `OIDC_INTERNAL_URL` defaults to the origin of an
  * `OIDC_JWKS_URI` pointing elsewhere than the issuer — the setup that variable
  * already described (the provider seen under another name from the backend).
  */
 export function oidcSettings(env: NodeJS.ProcessEnv = process.env): OidcSettings {
-  const issuer = env.OIDC_ISSUER?.replace(/\/+$/, '');
-  if (!issuer) throw new Error('OIDC_ISSUER is required when AUTH_MODE=oidc.');
+  const issuer = readIssuer(env.OIDC_ISSUER);
   const jwksUri = env.OIDC_JWKS_URI || null;
   let internalUrl = env.OIDC_INTERNAL_URL ? originOf(env.OIDC_INTERNAL_URL) : null;
   if (!internalUrl && jwksUri && originOf(jwksUri) !== originOf(issuer)) {
@@ -117,7 +158,7 @@ export class OidcClient {
   }
 
   private async fetchDiscovery(): Promise<Endpoints> {
-    const url = this.toInternal(`${this.settings.issuer}/.well-known/openid-configuration`);
+    const url = this.toInternal(discoveryUrl(this.settings.issuer));
     const res = await fetch(url);
     if (!res.ok) throw new Error(`OIDC discovery failed: ${url} → HTTP ${res.status}`);
     const doc = (await res.json()) as Record<string, unknown>;
@@ -128,12 +169,9 @@ export class OidcClient {
     if (!authorization || !token || !jwks) {
       throw new Error(`OIDC discovery document at ${url} lacks an endpoint.`);
     }
-    const issuer = str('issuer')?.replace(/\/+$/, '');
-    if (issuer && issuer !== this.settings.issuer) {
-      this.logger.warn(
-        `Discovery issuer "${issuer}" differs from OIDC_ISSUER "${this.settings.issuer}" — tokens must carry the latter.`,
-      );
-    }
+    const issuer = str('issuer');
+    const mismatch = issuer && issuerMismatch(issuer, this.settings.issuer);
+    if (mismatch) this.logger.warn(mismatch);
     const endSession = str('end_session_endpoint');
     return {
       authorization: this.toPublic(authorization),

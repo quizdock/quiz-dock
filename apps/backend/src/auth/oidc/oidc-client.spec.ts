@@ -1,4 +1,11 @@
-import { OidcClient, OidcGrantError, oidcSettings, pkceChallenge } from './oidc-client';
+import {
+  discoveryUrl,
+  issuerMismatch,
+  OidcClient,
+  OidcGrantError,
+  oidcSettings,
+  pkceChallenge,
+} from './oidc-client';
 
 const ISSUER = 'http://localhost:18080/realms/quiz-dock';
 const INTERNAL = 'http://keycloak:8080';
@@ -19,8 +26,19 @@ const json = (status: number, body: unknown) => ({
 });
 
 describe('oidcSettings', () => {
-  it('requires the issuer', () => {
-    expect(() => oidcSettings({})).toThrow(/OIDC_ISSUER/);
+  it('requires the issuer, as an http(s) URL without query or fragment', () => {
+    expect(() => oidcSettings({})).toThrow(/OIDC_ISSUER is required/);
+    expect(() => oidcSettings({ OIDC_ISSUER: '  ' })).toThrow(/OIDC_ISSUER is required/);
+    expect(() => oidcSettings({ OIDC_ISSUER: 'idp.example.com' })).toThrow(/not a URL/);
+    for (const bad of ['ftp://idp/x', 'https://idp/x?a=1', 'https://idp/x#f', 'https://idp/x?']) {
+      expect(() => oidcSettings({ OIDC_ISSUER: bad })).toThrow(/without query or fragment/);
+    }
+  });
+
+  it('keeps the issuer as written, trailing slash included (#99)', () => {
+    const authentik = 'https://idp.example.com/application/o/quizdock/';
+    expect(oidcSettings({ OIDC_ISSUER: ` ${authentik}\n` }).issuer).toBe(authentik);
+    expect(oidcSettings({ OIDC_ISSUER: ISSUER }).issuer).toBe(ISSUER);
   });
 
   it('reads the internal address, or takes it from a JWKS URI on another host', () => {
@@ -31,9 +49,28 @@ describe('oidcSettings', () => {
       OIDC_ISSUER: `${ISSUER}/`,
       OIDC_JWKS_URI: `${INTERNAL}/realms/quiz-dock/protocol/openid-connect/certs`,
     });
-    expect(derived.issuer).toBe(ISSUER);
+    expect(derived.issuer).toBe(`${ISSUER}/`);
     expect(derived.internalUrl).toBe(INTERNAL);
     expect(oidcSettings({ OIDC_ISSUER: ISSUER }).internalUrl).toBeNull();
+  });
+});
+
+describe('discoveryUrl', () => {
+  it('drops the terminating slash of the issuer, and only there', () => {
+    const doc = 'https://idp.example.com/application/o/quizdock/.well-known/openid-configuration';
+    expect(discoveryUrl('https://idp.example.com/application/o/quizdock/')).toBe(doc);
+    expect(discoveryUrl('https://idp.example.com/application/o/quizdock')).toBe(doc);
+    expect(discoveryUrl('https://idp.example.com/')).toBe(
+      'https://idp.example.com/.well-known/openid-configuration',
+    );
+  });
+});
+
+describe('issuerMismatch', () => {
+  it('compares exactly, and names a trailing slash as the only difference', () => {
+    expect(issuerMismatch(ISSUER, ISSUER)).toBeNull();
+    expect(issuerMismatch(`${ISSUER}/`, ISSUER)).toMatch(/by a trailing slash only/);
+    expect(issuerMismatch('https://other/x', ISSUER)).not.toMatch(/trailing slash/);
   });
 });
 
@@ -79,6 +116,29 @@ describe('OidcClient', () => {
       code_challenge: pkceChallenge('verifier-verifier-verifier-verifier-verifier-00'),
       code_challenge_method: 'S256',
     });
+  });
+
+  it('finds the discovery of an issuer ending in a slash, on either address (#99)', async () => {
+    const authentik = 'https://idp.example.com/application/o/quizdock/';
+    fetchMock.mockImplementation(async () => json(200, { ...discovery, issuer: authentik }));
+    await new OidcClient(oidcSettings({ OIDC_ISSUER: authentik })).authorizationUrl({
+      redirectUri: 'http://app/auth/callback',
+      state: 'st',
+      nonce: 'no',
+      codeVerifier: 'v',
+    });
+    await new OidcClient(
+      oidcSettings({ OIDC_ISSUER: authentik, OIDC_INTERNAL_URL: 'http://authentik:9000' }),
+    ).authorizationUrl({
+      redirectUri: 'http://app/auth/callback',
+      state: 'st',
+      nonce: 'no',
+      codeVerifier: 'v',
+    });
+    expect(fetchMock.mock.calls.map(([u]) => u)).toEqual([
+      `${authentik}.well-known/openid-configuration`,
+      'http://authentik:9000/application/o/quizdock/.well-known/openid-configuration',
+    ]);
   });
 
   it('computes the S256 challenge of RFC 7636 (appendix B)', () => {
