@@ -22,6 +22,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
+- The multi-quiz room brief, from the model to the ordered pull requests *(spec)*
+- One answer grid in unreleased *(changelog)*
 - Exact OIDC issuer in unreleased *(changelog)*
 - Unreleased before the release *(changelog)*
 - The licence, tags and language of a quiz in the feature list
@@ -51,6 +53,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - Export a quiz for publication to a community store *(editor)*
 - Publish the manifest as a JSON Schema, one file per version *(bundle)*
 - Set the licence and the tags of a quiz *(editor)*
+
+### Refactor
+
+- The room under its PIN, each game under its own id *(game)*
 
 ### Contributors
 
