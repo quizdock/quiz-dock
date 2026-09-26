@@ -24,6 +24,7 @@ Read them in this order to discover the project:
 | 8 | **[SPECIFICATIONS-MEDIA.md](./SPECIFICATIONS-MEDIA.md)** | Audio & video in questions: the phased brief, the decisions taken, the phases to come, the idea box (microphone) | Frontend, backend, product |
 | 9 | **[SPECIFICATIONS-MEDIA-LIBRARY.md](./SPECIFICATIONS-MEDIA-LIBRARY.md)** | Media library & converter: target formats encoded in the browser, file/use split and deduplication, the media input module, credits, the admin page | Frontend, backend, product |
 | 10 | **[SPECIFICATIONS-STORE.md](./SPECIFICATIONS-STORE.md)** | Community store (#21): the model (author repositories, registry, copy never reference), the decisions taken, what is delivered, the ordered road to opening | Product, backend, frontend |
+| 11 | **[SPECIFICATIONS-ROOM.md](./SPECIFICATIONS-ROOM.md)** | Multi-quiz room (#89): every session a room, the live state split between the room and each game, lifecycle, archives, the ordered pull requests | Backend, frontend, product |
 
 > The documents refer to one another (for instance `technique §5`, `RG-13`, `données §2.10`). Any change of behaviour must update **the document it concerns, in the same commit** (see the "test & document" policy, technique §18).
 
