@@ -22,7 +22,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import { RedisService } from '../redis/redis.service';
 import { GAME_TTL_S, type GameId, gameKeys } from './game.keys';
+import { type PlayerStats, type SeriesStats, answerStats, sumGames } from './player-stats';
 import type {
+  AnswerRecord,
   GameFields,
   GameMeta,
   PlayerRecord,
@@ -87,6 +89,9 @@ redis.call('HSET', KEYS[2], 'gameId', ARGV[1])
 if redis.call('EXISTS', KEYS[4]) == 1 then redis.call('HSET', KEYS[4], 'state', ARGV[4]) end
 return #ids
 `;
+
+/** A player of the room with their standing over its games. */
+export type RoomStanding = PlayerRecord & SeriesStats & { id: string };
 
 export interface CreateSessionResult {
   pin: string;
@@ -243,6 +248,7 @@ export class GameService {
       gameKeys.players(pin),
       gameKeys.nicknames(pin),
       gameKeys.tokens(pin),
+      gameKeys.played(pin),
       gameKeys.hostGames(room.hostUserId),
       gameKeys.game(room.gameId),
       gameKeys.snapshot(room.gameId),
@@ -473,6 +479,56 @@ export class GameService {
   async currentSnapshot(pin: string): Promise<QuizSnapshot | null> {
     const room = await this.getRoom(pin);
     return room ? this.getSnapshot(room.gameId) : null;
+  }
+
+  /**
+   * Records what each player did in a game that is over, for the room's
+   * standings. Keyed by the game: recording it again changes nothing.
+   */
+  async foldGame(pin: string, gameId: GameId): Promise<void> {
+    const snapshot = await this.getSnapshot(gameId);
+    if (!snapshot) return;
+    const scores = await this.redis.hgetall(gameKeys.scores(gameId));
+    const answersByIndex = new Map<number, Map<string, AnswerRecord>>();
+    for (const { orderIndex } of snapshot.questions) {
+      const raw = await this.redis.hgetall(gameKeys.answers(gameId, orderIndex));
+      answersByIndex.set(
+        orderIndex,
+        new Map(Object.entries(raw).map(([id, json]) => [id, JSON.parse(json) as AnswerRecord])),
+      );
+    }
+    const played: Record<string, PlayerStats> = {};
+    for (const [playerId, json] of Object.entries(scores)) {
+      const { score } = JSON.parse(json) as PlayerScore;
+      played[playerId] = { score, ...answerStats(snapshot, answersByIndex, playerId) };
+    }
+    await this.redis
+      .multi()
+      .hset(gameKeys.played(pin), gameId, JSON.stringify(played))
+      .expire(gameKeys.played(pin), GAME_TTL_S)
+      .exec();
+  }
+
+  /**
+   * The room's standings over the games recorded so far: the players still in
+   * the room (one who left stays, one banned does not), by total score, then
+   * arrival in the room.
+   */
+  async standings(pin: string): Promise<{ quizzesPlayed: number; ranked: RoomStanding[] }> {
+    const [played, players] = await Promise.all([
+      this.redis.hgetall(gameKeys.played(pin)),
+      this.redis.hgetall(gameKeys.players(pin)),
+    ]);
+    const games = Object.values(played).map(
+      (json) => JSON.parse(json) as Record<string, PlayerStats>,
+    );
+    const ranked: RoomStanding[] = [];
+    for (const [id, stats] of sumGames(games)) {
+      if (!players[id]) continue;
+      ranked.push({ id, ...(JSON.parse(players[id]) as PlayerRecord), ...stats });
+    }
+    ranked.sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt);
+    return { quizzesPlayed: games.length, ranked };
   }
 
   /** A player's score in a game (null when they do not play it). */

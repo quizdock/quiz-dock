@@ -3,6 +3,7 @@ import { Prisma, SessionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { type GameId, gameKeys } from './game.keys';
+import { answerStats } from './player-stats';
 import { buildRevealCommon } from './reveal';
 import type { AnswerRecord, GameMeta, PlayerRecord, PlayerScore, QuizSnapshot } from './game.types';
 
@@ -186,29 +187,8 @@ export class SessionArchiveService {
     playerId: string;
     data: Omit<Prisma.PlayerResultLogUncheckedCreateInput, 'sessionLogId'>;
   }[] {
-    const orderedIndexes = snapshot.questions.map((q) => q.orderIndex);
     return ranked.map((p, i) => {
-      let answered = 0;
-      let correct = 0;
-      let totalMs = 0;
-      let streak = 0;
-      let maxStreak = 0;
-      for (const idx of orderedIndexes) {
-        const rec = answersByIndex.get(idx)?.get(p.id);
-        if (!rec) {
-          streak = 0;
-          continue;
-        }
-        answered += 1;
-        totalMs += rec.tMs;
-        if (rec.isCorrect) {
-          correct += 1;
-          streak += 1;
-          if (streak > maxStreak) maxStreak = streak;
-        } else {
-          streak = 0;
-        }
-      }
+      const { answered, correct, totalMs, maxStreak } = answerStats(snapshot, answersByIndex, p.id);
       return {
         playerId: p.id,
         data: {

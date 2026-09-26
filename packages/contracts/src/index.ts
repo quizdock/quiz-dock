@@ -437,6 +437,28 @@ export interface LeaderboardPayload {
   you?: { score: number; rank: number };
 }
 
+/**
+ * The room's standings across the quizzes played so far (#89): the scores add up,
+ * a player who left stays ranked. `you` is the player's own, on their socket only.
+ */
+export interface RoomStandingsPayload {
+  quizzesPlayed: number;
+  /** Top 10, by total score then arrival in the room. */
+  top: LeaderboardRow[];
+  you?: {
+    score: number;
+    rank: number;
+    correct: number;
+    answered: number;
+    /** Average answer time over the series (ms); null before any answer. */
+    avgResponseMs: number | null;
+    /** Longest run of right answers in any one quiz. */
+    maxStreak: number;
+    /** Quizzes of the room they took part in. */
+    quizzes: number;
+  };
+}
+
 export interface PodiumPayload {
   podium: LeaderboardRow[];
   you?: { score: number; rank: number };
@@ -615,6 +637,8 @@ export interface ServerToClientEvents {
   'question:reveal': (p: QuestionRevealPayload) => void;
   leaderboard: (p: LeaderboardPayload) => void;
   'game:podium': (p: PodiumPayload) => void;
+  /** The room's standings: at a podium, in the lobby of the next quiz, and when the room closes. */
+  'room:standings': (p: RoomStandingsPayload) => void;
   'game:ended': (p: { feedbackEnabled?: boolean }) => void;
   /** Mode/pause courants (à chaque changement et au (ré)attache). */
   'game:mode': (p: GameModePayload) => void;

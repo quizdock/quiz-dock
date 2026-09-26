@@ -295,6 +295,7 @@ Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
 | `room:{pin}:ban:{nickname}` | String | A banned normalized nickname; the key's TTL is the ban's length *(RG-12)*. |
 | `session:{token}` | String | The token handed out on joining → `{ pin, playerId }`; makes **reconnecting** possible (technique §11). |
 | `room:{pin}:tokens` | Hash `playerId → token` | The players' session tokens, so the room keeps them alive while it lives. |
+| `room:{pin}:played` | Hash `gameId → JSON` | Once a game that started is over (podium, end, host gone): what each of its players did in it — `{ playerId: { score, correct, answered, totalMs, maxStreak } }`. The standings are its sum; recording a game twice changes nothing. |
 | `host:{userId}:games` | Set | The host's open rooms, by PIN (resumed from the dashboard). |
 
 ### 4.2 A game (keyed by its id)

@@ -317,6 +317,7 @@ points = P_max_time * (right_ticks - wrong_ticks) / total_right   (floored at 0)
 | `question:reveal` | `{ correctOptionIds \| correctValue, distribution, yourResult:{ correct, points, totalScore, rank } }` | the room (the personal result aimed per socket) |
 | `leaderboard` | `{ top:[{nickname, score, rank}], you?:{score,rank} }` | the room |
 | `game:podium` | `{ podium:[top3], you?:{score,rank} }` | the room |
+| `room:standings` | `{ quizzesPlayed, top:[top10], you?:{score, rank, correct, answered, avgResponseMs, maxStreak, quizzes} }` | the room (`you` on each player's socket) | The room's standings over its quizzes: at a podium, in the next lobby, when the room closes (SPECIFICATIONS-ROOM §6) |
 | `game:ended` | `{ }` | the room |
 | `error` | `{ code, message }` | targeted |
 | `pong` | `{ t0, t1 }` | the sender |

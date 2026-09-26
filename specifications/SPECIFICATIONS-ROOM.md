@@ -4,7 +4,7 @@
 > quizzes, players join once. The model, the decisions taken, how the live state splits between the room and each
 > game, and the ordered pull requests that deliver it.
 
-Status: **in progress.** Steps 1 and 2 are delivered on the server; the screens come with step 5.
+Status: **in progress.** Steps 1 to 3 are delivered on the server; the screens come with step 5.
 
 ---
 
@@ -99,7 +99,17 @@ not drop.
      (`room:{pin}:tokens`) and its current game; an idle room expires. The quiz left behind is marked ended, so it no
      longer counts as being played.
    - **Ratings**: one per player and per quiz of the room (`quiz_feedback` unique on PIN, player and quiz).
-3. **Cumulative scores and stats.** Totals per player, the cumulative leaderboard, the series podium.
+3. **Cumulative scores and stats.** Each game that started is recorded when it is over (its podium, `host:end`, the
+   host gone for good): what each of its players did in it (`room:{pin}:played`). The standings are the sum, read when
+   needed: total score, rank, correct and answered, average answer time, longest run in any one quiz, quizzes played.
+   They go out as `room:standings` (top 10, each player's own line on their socket) at a podium, in the next lobby and
+   when the room closes; the series podium is their top 3. Settled:
+   - A quiz ended mid-way counts for what was played; one that never started (replaced or closed in its lobby) does
+     not.
+   - A quiz closed without archiving still counts: the standings are live, not kept. Keeping them is step 4, under
+     RG-16.
+   - Ranked: the room's players, those who left included, banned ones not; ties by total score, then arrival in the
+     room. A player who joined at a podium is ranked on the quizzes they played.
 4. **Archives.** `roomId`, the room summary table and its migration, *History*.
 5. **Screens.** The console's quiz picker, the room projection (room name, QR code, players, the next quiz once
    picked, the cumulative leaderboard), the phone's "waiting for the next quiz" with nickname and series rank, the
