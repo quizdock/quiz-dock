@@ -48,8 +48,8 @@ sequenceDiagram
     participant P as Projection
 
     F->>API: ws host:create { quizId }
-    API->>R: SADD pin:index (a unique 6-digit PIN, RG-04)
-    API->>R: HSET game:{pin} {state:LOBBY, quizId, hostId, fullCapture?}
+    API->>R: SET pin:{pin} NX (a unique 6-digit PIN, RG-04)
+    API->>R: HSET room:{pin} {hostUserId, gameId, fullCapture?} + HSET game:{id} {state:LOBBY, quizId}
     API-->>F: game:created { pin }
     F->>P: shows the PIN (the projected screen)
 
@@ -59,7 +59,7 @@ sequenceDiagram
     else a guest
         API->>API: userId = null
     end
-    API->>R: HSET game:{pin}:players {playerId:{nickname,userId,score:0}}
+    API->>R: HSET room:{pin}:players {playerId:{nickname,userId}} + HSET game:{id}:scores {playerId:{score:0}}
     API->>R: SET session:{token} playerId (for reconnecting)
     API-->>A: joined { sessionToken, playerId }
     API-->>F: player:joined { nickname, playerCount }
@@ -85,7 +85,7 @@ sequenceDiagram
     Note over A,API: on joining, the RTT is measured (ping/pong) → latencyMs/2 (compensation)
 
     F->>API: host:start  (or host:next)
-    API->>R: HSET game:{pin} state=ANSWERING, questionStartedAt=Ts, questionEndsAt=Ts+limit
+    API->>R: HSET game:{id} state=ANSWERING, questionStartedAt=Ts, questionEndsAt=Ts+limit
     par the question goes out (WITHOUT the right answer)
         API-->>A: question:start { options(text,color,shape), timeLimitS, startedAt, endsAt }
         API-->>P: question:start { ... }
@@ -96,8 +96,8 @@ sequenceDiagram
     alt in time and the first answer (RG-06)
         API->>API: isCorrect = validated on the server
         API->>API: points = scoring(t, T, correct, streak)  (technique §5)
-        API->>R: HSET game:{pin}:answers:{qIdx} {playerId:{value,isCorrect,points,receivedAt}}
-        API->>R: ZINCRBY game:{pin}:leaderboard points playerId
+        API->>R: HSETNX game:{id}:answers:{qIdx} {playerId:{value,isCorrect,points,receivedAt}}
+        API->>R: HSET game:{id}:scores {playerId:{score,streak}}
         API-->>A: answer:ack { accepted:true }
     else late / duplicate
         API-->>A: answer:ack { accepted:false, reason:late|duplicate }
@@ -105,7 +105,7 @@ sequenceDiagram
     API-->>F: answer:count { answered, total }
 
     alt the timer elapsed OR everyone answered
-        API->>R: HSET game:{pin} state=REVEAL
+        API->>R: HSET game:{id} state=REVEAL
         API-->>A: question:reveal { correctOptionIds, yourResult:{correct,points,totalScore,rank} }
         API-->>P: question:reveal { correctOptionIds, distribution }
         API-->>F: question:reveal { distribution, leaderboard }
@@ -128,8 +128,8 @@ sequenceDiagram
     A->>API: player:reconnect { sessionToken }
     API->>R: GET session:{token} → playerId
     alt the session is still alive
-        API->>R: HSET game:{pin}:players[playerId].connected = true
-        API->>R: HGETALL game:{pin} (the current state) + the score
+        API->>R: HSET room:{pin}:players[playerId].connected = true
+        API->>R: HGETALL room:{pin} → game:{id} (the current state) + game:{id}:scores
         API-->>A: game:state { state, questionIndex }
         opt state = ANSWERING and they have not answered yet
             API-->>A: question:start { ... , endsAt }  (the chrono realigned on the server's endsAt)
@@ -153,14 +153,14 @@ sequenceDiagram
     participant A as Participant
 
     Note over API: the host socket's disconnect is detected
-    API->>R: HSET game:{pin} state=HOST_DISCONNECTED (freezes the timers)
+    API->>R: HSET game:{id} state=HOST_DISCONNECTED (freezes the timers)
     API-->>A: game:state { state: HOST_DISCONNECTED }  ("the host disconnected, the game is paused")
     alt back within 120 s
         F->>API: player:reconnect / host re-auth { pin }
-        API->>R: HSET game:{pin} state=<the frozen state>
+        API->>R: HSET game:{id} state=<the frozen state>
         API-->>A: game:state { resumed }
     else the window elapsed
-        API->>R: HSET game:{pin} state=ENDED
+        API->>R: HSET game:{id} state=ENDED
         Note over API: consolidation (see §6)
         API-->>A: game:ended { }
     end
@@ -179,7 +179,7 @@ sequenceDiagram
     participant PG as PostgreSQL
 
     F->>API: host:end { pin }  (or the last question was reached)
-    API->>R: HGETALL game:{pin}:players / :leaderboard / :answers:*
+    API->>R: HGETALL room:{pin}:players / game:{id}:scores / game:{id}:answers:*
     API->>API: computes the final leaderboard, per-question stats, success_rate
     API->>PG: INSERT game_session_log (+ quiz_snapshot JSONB)
     API->>PG: INSERT player_result_log (one per participant, user_id when signed in)
@@ -187,7 +187,7 @@ sequenceDiagram
     alt full_capture = true
         API->>PG: INSERT answer_log (one per individual answer)
     end
-    API->>R: DEL game:{pin}* ; SREM pin:index {pin}
+    API->>R: DEL pin:{pin} (the rest expires with its TTL)
     API-->>F: game:ended → the report is available
     Note over F: GET /sessions/:id/results(.csv) (REST, Orval)
 ```

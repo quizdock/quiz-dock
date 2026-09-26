@@ -257,17 +257,22 @@ describe('MediaService', () => {
       expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
     });
 
+    const GAME = 'a'.repeat(32);
+
     it('keeps a media a session is playing, from its frozen snapshot', async () => {
       prisma.mediaAsset.findUnique.mockResolvedValue(unused);
-      redis.keys.mockResolvedValue(['game:123456:snapshot']);
+      redis.keys.mockResolvedValue([`game:${GAME}:snapshot`]);
+      redis.hget.mockResolvedValueOnce('ANSWERING');
       redis.mget.mockResolvedValue(['{"media":{"url":"/api/v1/media/m1"}}'] as never);
       await service.releaseUnused(['m1']);
+      // The state is read from the game that snapshot belongs to.
+      expect(redis.hget).toHaveBeenCalledWith(`game:${GAME}`, 'state');
       expect(prisma.mediaAsset.delete).not.toHaveBeenCalled();
     });
 
     it('lets go of a media once its session has ended, keys or not', async () => {
       prisma.mediaAsset.findUnique.mockResolvedValue(unused);
-      redis.keys.mockResolvedValue(['game:123456:snapshot']);
+      redis.keys.mockResolvedValue([`game:${GAME}:snapshot`]);
       redis.hget.mockResolvedValueOnce('ENDED');
       redis.mget.mockResolvedValue(['{"media":{"url":"/api/v1/media/m1"}}'] as never);
       await service.releaseUnused(['m1']);

@@ -53,7 +53,7 @@ The media brief (`specifications/SPECIFICATIONS-MEDIA.md` §5) as built:
   into the two elements the Join click started (iOS).
 - **Readiness** — a device sends `media:ready` once what it fetched can play
   through; the server counts the projection windows and the participants whose
-  device plays a sound or a video (`game:{pin}:ready:{q}`), and tells the screens
+  device plays a sound or a video (`game:{id}:ready:{q}`), and tells the screens
   (`media:readiness`). The console's embedded tabs share the host socket and are
   not counted.
 - **Wait** — `beginQuestion` enters `MEDIA_LOADING` when a counted device is not

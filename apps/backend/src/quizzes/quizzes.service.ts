@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
 import { isManager, type RoleSet } from '../auth/roles';
-import { gameKeys } from '../game/game.keys';
+import { currentGameFields, gameKeys } from '../game/game.keys';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QUESTION_INCLUDE, toQuestionOutput } from '../questions/questions.service';
@@ -418,7 +418,7 @@ export class QuizzesService {
   private async hasLiveSession(ownerId: string, quizId: string): Promise<boolean> {
     const pins = await this.redis.smembers(gameKeys.hostGames(ownerId));
     for (const pin of pins) {
-      const [state, gameQuiz] = await this.redis.hmget(gameKeys.game(pin), 'state', 'quizId');
+      const [state, gameQuiz] = await currentGameFields(this.redis, pin, 'state', 'quizId');
       if (gameQuiz === quizId && state && state !== 'ENDED') return true;
     }
     return false;

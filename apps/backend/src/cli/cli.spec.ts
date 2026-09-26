@@ -361,6 +361,7 @@ describe('quiz commands', () => {
       } as unknown as Parameters<typeof quizTransfer>[1];
       const redis = {
         smembers: jest.fn().mockResolvedValue(live ? ['123456'] : []),
+        hget: jest.fn().mockResolvedValue(live ? 'a'.repeat(32) : null),
         hmget: jest.fn().mockResolvedValue(live ? ['ANSWERING', 'q1'] : [null, null]),
       };
       return { prisma, redis };

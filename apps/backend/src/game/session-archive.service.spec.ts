@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { SessionArchiveService } from './session-archive.service';
-import { gameKeys } from './game.keys';
+import { type GameId, gameKeys } from './game.keys';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import type { GameMeta } from './game.types';
@@ -54,8 +54,10 @@ describe('SessionArchiveService', () => {
     ],
   };
 
+  const GAME = 'g1' as GameId;
   const meta: GameMeta = {
-    id: 'g1',
+    id: GAME,
+    roomId: 'r1',
     quizId: 'quiz1',
     hostUserId: 'host1',
     state: 'PODIUM',
@@ -76,17 +78,27 @@ describe('SessionArchiveService', () => {
     clockFrozen: false,
   };
 
+  /** The fixtures keep each player whole; the game holds only their score and streak. */
+  const scoresOf = (players: Record<string, string>): Record<string, string> =>
+    Object.fromEntries(
+      Object.entries(players).map(([id, json]) => {
+        const { score, streak } = JSON.parse(json) as { score: number; streak: number };
+        return [id, JSON.stringify({ score, streak })];
+      }),
+    );
+
   function buildRedis(
     players: Record<string, string>,
     answers: Record<string, string>,
   ): RedisService {
     return {
       get: jest.fn(async (key: string) =>
-        key === gameKeys.snapshot(PIN) ? JSON.stringify(snapshot) : null,
+        key === gameKeys.snapshot(GAME) ? JSON.stringify(snapshot) : null,
       ),
       hgetall: jest.fn(async (key: string) => {
         if (key === gameKeys.players(PIN)) return players;
-        if (key === gameKeys.answers(PIN, 0)) return answers;
+        if (key === gameKeys.scores(GAME)) return scoresOf(players);
+        if (key === gameKeys.answers(GAME, 0)) return answers;
         return {};
       }),
     } as unknown as RedisService;

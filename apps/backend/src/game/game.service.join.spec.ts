@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
-import { gameKeys } from './game.keys';
+import { type GameId, gameKeys } from './game.keys';
 import { GameService } from './game.service';
 
 /**
@@ -15,7 +15,8 @@ describe('GameService.joinSession (nom affiché)', () => {
     pickOwnName: boolean,
     extra: Record<string, string> = {},
   ): Record<string, string> => ({
-    id: 'g1',
+    roomId: 'r1',
+    gameId: 'g1',
     quizId: 'q1',
     hostUserId: 'h1',
     state: 'LOBBY',
@@ -43,7 +44,10 @@ describe('GameService.joinSession (nom affiché)', () => {
     const claimed = new Set(taken);
     const redis = {
       hgetall: jest.fn(async (key: string) =>
-        key === gameKeys.game(PIN) ? meta(pickOwnName, extra) : {},
+        // The room and its game, from one flat record (each reads its own fields).
+        key === gameKeys.room(PIN) || key === gameKeys.game('g1' as GameId)
+          ? meta(pickOwnName, extra)
+          : {},
       ),
       exists: jest.fn().mockResolvedValue(0),
       sadd: jest.fn(async (_key: string, member: string) => {
@@ -54,7 +58,6 @@ describe('GameService.joinSession (nom affiché)', () => {
       multi: jest.fn(() => {
         const pipe = {
           hset: () => pipe,
-          zadd: () => pipe,
           set: () => pipe,
           expire: () => pipe,
           exec: async () => [],

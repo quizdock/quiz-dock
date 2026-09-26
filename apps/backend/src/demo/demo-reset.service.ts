@@ -2,6 +2,7 @@ import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@ne
 import { GameState } from '@quiz-dock/contracts';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { GAME_HASH_KEY } from '../game/game.keys';
 import { RedisService } from '../redis/redis.service';
 import { localPrincipal } from '../auth/no-auth.provider';
 import { HostSeatService } from '../users/host-seat.service';
@@ -11,9 +12,6 @@ import {
   DEMO_USER,
   isDemoMode,
 } from './demo.config';
-
-/** Live game hashes are `game:<pin>`; their satellites carry a third segment. */
-const GAME_HASH = /^game:\d+$/;
 
 /**
  * Demo instance hygiene: every hour, back to a blank install — users, quizzes,
@@ -65,13 +63,13 @@ export class DemoResetService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /** Any `game:<pin>` hash whose state is not `ended`. */
+  /** Any game hash (`game:<id>`, not its satellites) whose state is not `ended`. */
   async hasLiveGames(): Promise<boolean> {
     let cursor = '0';
     do {
       const [next, keys] = await this.redis.scan(cursor, 'MATCH', 'game:*', 'COUNT', 200);
       cursor = next;
-      for (const key of keys.filter((k) => GAME_HASH.test(k))) {
+      for (const key of keys.filter((k) => GAME_HASH_KEY.test(k))) {
         const state = await this.redis.hget(key, 'state');
         if (state && state !== GameState.Ended) return true;
       }

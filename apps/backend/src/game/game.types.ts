@@ -15,6 +15,7 @@ import type {
   SlideBlock,
   SlideTextTone,
 } from '@quiz-dock/contracts';
+import type { GameId } from './game.keys';
 
 /**
  * Snapshot serveur du quiz (SPECIFICATIONS §8 / mémoire gameplay-v0-3).
@@ -100,15 +101,16 @@ export interface QuizSnapshot {
   credits?: string[];
 }
 
-/** Enregistrement d'un joueur dans l'état live (Redis hash `:players`). */
+/**
+ * Who a player is in the room (Redis hash `room:{pin}:players`). What they score
+ * belongs to each game (`PlayerScore`), never to the room.
+ */
 export interface PlayerRecord {
   nickname: string;
   /** Graine d'avatar (multiavatar) — cosmétique ; défaut = pseudo. */
   avatar: string;
   /** Compte lié si participant authentifié, sinon `null` (invité). */
   userId: string | null;
-  score: number;
-  streak: number;
   connected: boolean;
   /** ms epoch d'arrivée (départage des égalités §5). */
   joinedAt: number;
@@ -118,9 +120,55 @@ export interface PlayerRecord {
   presence?: PlayerPresence;
 }
 
-/** État scalaire d'une partie (Redis hash `game:{pin}`). */
+/** A player's score in one game (Redis hash `game:{id}:scores`). */
+export interface PlayerScore {
+  score: number;
+  streak: number;
+}
+
+/**
+ * The room (Redis hash `room:{pin}`): who hosts it, the game it plays, and what
+ * the players were told when they came in.
+ */
+export interface RoomMeta {
+  roomId: string;
+  hostUserId: string;
+  /** The game the room plays (the last one, once it is over). */
+  gameId: GameId;
+  fullCapture: boolean;
+  personalTracking: boolean;
+  pickOwnName: boolean;
+  participantAccess: ParticipantAccess;
+  joinLocked: boolean;
+  /** Base URL of the invitations (QR, link) chosen by the host; '' = each screen's own origin. */
+  joinBaseUrl: string;
+  /** When the room opened (ms epoch); each game keeps its own `createdAt`. */
+  openedAt: number;
+}
+
+/** The room fields, as the game view (`GameMeta`) carries them. */
+export const ROOM_FIELDS = [
+  'roomId',
+  'hostUserId',
+  'gameId',
+  'fullCapture',
+  'personalTracking',
+  'pickOwnName',
+  'participantAccess',
+  'joinLocked',
+  'joinBaseUrl',
+  'openedAt',
+] as const;
+
+/**
+ * The game a room is playing, as the engine reads it: its own hash
+ * (`game:{id}`) merged with the room's (`room:{pin}`).
+ */
 export interface GameMeta {
-  id: string;
+  /** The game's id, the key of its state. */
+  id: GameId;
+  /** The room it is played in. */
+  roomId: string;
   quizId: string;
   hostUserId: string;
   state: string;
@@ -179,6 +227,9 @@ export interface GameMeta {
   /** Base URL of the invitations (QR, link) chosen by the host; '' = each screen's own origin. */
   joinBaseUrl?: string;
 }
+
+/** The fields of the game hash (`game:{id}`): everything in `GameMeta` the room does not hold. */
+export type GameFields = Omit<GameMeta, 'id' | (typeof ROOM_FIELDS)[number]>;
 
 /** Réponse gradée stockée au submit (Redis hash `:answers:{idx}`) — REVEAL la relit. */
 export interface AnswerRecord {
