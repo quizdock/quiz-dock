@@ -393,6 +393,9 @@ describe('quiz commands', () => {
       await expect(quizTransfer(out, prisma, redis, 'q1', 'bob@ex.io')).rejects.toThrow(
         /being played/,
       );
+      // The game the room plays, found through the room: the PIN alone keys no game.
+      expect(redis.hget).toHaveBeenCalledWith('room:123456', 'gameId');
+      expect(redis.hmget).toHaveBeenCalledWith(`game:${'a'.repeat(32)}`, 'state', 'quizId');
       expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
