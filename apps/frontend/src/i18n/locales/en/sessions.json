@@ -18,7 +18,9 @@
     "capture": "Capture",
     "participantCount_one": "{{count}} player",
     "participantCount_other": "{{count}} players",
-    "successRate": "Success {{rate}}"
+    "successRate": "Success {{rate}}",
+    "inRoom_one": "Room · {{count}} quiz",
+    "inRoom_other": "Room · {{count}} quizzes"
   },
   "detail": {
     "notFound": "Session not found.",
@@ -51,6 +53,18 @@
       "maxStreak": "Max streak",
       "avgTime": "Average time (s)",
       "filenameFallback": "session"
+    },
+    "room": {
+      "title": "Room",
+      "intro_one": "This session was played in a room: {{count}} quiz kept, one after another, the participants joining once.",
+      "intro_other": "This session was played in a room: {{count}} quizzes kept, one after another, the participants joining once.",
+      "thisSession": "this session",
+      "standingsTitle": "Room standings",
+      "standingsNote": "Summed over the archived quizzes of the room.",
+      "noPersonalTracking": "No room standings: at least one of its sessions did not track participants individually.",
+      "thQuizzes": "Quizzes",
+      "exportCsv": "Export standings (CSV)",
+      "csvFilename": "room"
     }
   },
   "player": {

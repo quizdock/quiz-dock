@@ -434,6 +434,8 @@ model GameSessionLog {
   quizId           String        @map("quiz_id") @db.Char(26)
   hostId           String        @map("host_id") @db.Char(26)
   pin              String        @db.Char(6)
+  /// The room it was played in (#89): its sessions are read together. Null before rooms.
+  roomId           String?       @map("room_id") @db.Char(32)
   status           SessionStatus @default(ended)
   language         String
   playerCount      Int           @default(0) @map("player_count")
@@ -457,6 +459,7 @@ model GameSessionLog {
   @@index([quizId])
   @@index([hostId, startedAt])
   @@index([retainUntil])
+  @@index([roomId])
   @@map("game_session_log")
 }
 

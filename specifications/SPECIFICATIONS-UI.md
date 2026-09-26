@@ -310,6 +310,13 @@ Shown on joining, **before** anything is collected, in the wording the two switc
 └───────────────────────────────────────────────────────────┘
 ```
 
+### 6.3 A session played in a room
+When the session's room kept other archived quizzes (SPECIFICATIONS-ROOM §5), the history list marks it
+(*Room · N quizzes*) and the report ends with a **Room** card: the room's archived quizzes in the order played (the
+others link to their own report), then the room's standings summed over them — rank, nickname, total score,
+correct/answered, longest run, average time, quizzes played — with their own CSV export. Without personalised
+tracking on every one of those sessions, the card says why there are no standings.
+
 ---
 
 ## 7. Participant history (signed in)

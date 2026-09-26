@@ -4,7 +4,8 @@
 > quizzes, players join once. The model, the decisions taken, how the live state splits between the room and each
 > game, and the ordered pull requests that deliver it.
 
-Status: **in progress.** Steps 1 to 3 are delivered on the server; the screens come with step 5.
+Status: **in progress.** Steps 1 to 4 are delivered (the room is visible in *History*); the live screens come with
+step 5.
 
 ---
 
@@ -69,11 +70,17 @@ The split, keyed by the PIN for the room and by the game id (`meta.id`, already 
 
 ## 5. Archives and history
 
-- `GameSessionLog` gains a nullable `roomId`. A small room summary table (host, PIN, started / ended, quizzes played,
-  cumulative podium) links the per-quiz archives.
-- *History* keeps listing per quiz. A room with more than one quiz also shows its summary; a room of one quiz reads as
-  today.
-- The room summary follows the session's personal tracking choice (RG-16): no per-participant totals when it is off.
+- Each archived session carries the id of its room (`game_session_log.room_id`). There is no room table: a room's
+  history is read from its archived sessions, so nothing is stored twice and nothing goes stale when a session is
+  deleted or purged.
+- **Only what the host kept**: a quiz of the room that was not archived leaves no trace, and the room's archived
+  standings sum only the archived quizzes (they may differ from the standings seen live).
+- **History** keeps listing per quiz. A session whose room kept other quizzes is marked (*Room · N quizzes*); its
+  detail adds a *Room* card: the room's archived quizzes in order (links to their sessions) and the standings summed
+  over them, exportable in CSV. A session whose room kept only it reads as today.
+- **RG-16**: the standings are shown only when every archived session of the room tracked its participants; they are
+  summed per nickname (unique within a room) from their `player_result_log`.
+- A room page of its own can come later, reading the same sessions.
 
 ## 6. Pull requests, in order
 
@@ -110,7 +117,8 @@ not drop.
      RG-16.
    - Ranked: the room's players, those who left included, banned ones not; ties by total score, then arrival in the
      room. A player who joined at a podium is ranked on the quizzes they played.
-4. **Archives.** `roomId`, the room summary table and its migration, *History*.
+4. **Archives.** Delivered as §5: `game_session_log.room_id` and its migration, the room read from its archived
+   sessions in *History* (no room table, the standings recalculated).
 5. **Screens.** The console's quiz picker, the room projection (room name, QR code, players, the next quiz once
    picked, the cumulative leaderboard), the phone's "waiting for the next quiz" with nickname and series rank, the
    intermission. The room lobby leaves room for #104 (the "Ready!" button and the projection link).

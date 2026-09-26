@@ -22,4 +22,10 @@ export type SessionListDtoSessionsItem = {
   fullCapture: boolean;
   startedAt: string;
   endedAt: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  roomSize: number | null;
 };

@@ -7,6 +7,7 @@
  */
 import type { SessionDetailDtoPlayersItem } from './sessionDetailDtoPlayersItem';
 import type { SessionDetailDtoQuestionsItem } from './sessionDetailDtoQuestionsItem';
+import type { SessionDetailDtoRoom } from './sessionDetailDtoRoom';
 import type { SessionDetailDtoStatus } from './sessionDetailDtoStatus';
 
 export interface SessionDetailDto {
@@ -24,6 +25,12 @@ export interface SessionDetailDto {
   fullCapture: boolean;
   startedAt: string;
   endedAt: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     * @nullable
+     */
+  roomSize: number | null;
   quizTitle: string;
   language: string;
   /**
@@ -33,4 +40,6 @@ export interface SessionDetailDto {
   totalQuestions: number;
   questions: SessionDetailDtoQuestionsItem[];
   players: SessionDetailDtoPlayersItem[];
+  /** @nullable */
+  room: SessionDetailDtoRoom;
 }

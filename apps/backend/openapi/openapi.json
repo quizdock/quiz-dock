@@ -3978,6 +3978,12 @@
                 },
                 "endedAt": {
                   "type": "string"
+                },
+                "roomSize": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "nullable": true
                 }
               },
               "required": [
@@ -3989,7 +3995,8 @@
                 "personalTracking",
                 "fullCapture",
                 "startedAt",
-                "endedAt"
+                "endedAt",
+                "roomSize"
               ]
             }
           }
@@ -4037,6 +4044,12 @@
           },
           "endedAt": {
             "type": "string"
+          },
+          "roomSize": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
           },
           "quizTitle": {
             "type": "string"
@@ -4146,6 +4159,102 @@
                 "maxStreak"
               ]
             }
+          },
+          "room": {
+            "type": "object",
+            "properties": {
+              "sessions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "quizId": {
+                      "type": "string"
+                    },
+                    "quizTitle": {
+                      "type": "string"
+                    },
+                    "startedAt": {
+                      "type": "string"
+                    },
+                    "current": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "quizId",
+                    "quizTitle",
+                    "startedAt",
+                    "current"
+                  ]
+                }
+              },
+              "standings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rank": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "score": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "correctCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "answeredCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "avgResponseMs": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "maxStreak": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "quizzes": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "rank",
+                    "nickname",
+                    "score",
+                    "correctCount",
+                    "answeredCount",
+                    "avgResponseMs",
+                    "maxStreak",
+                    "quizzes"
+                  ]
+                },
+                "nullable": true
+              }
+            },
+            "required": [
+              "sessions",
+              "standings"
+            ],
+            "nullable": true
           }
         },
         "required": [
@@ -4158,11 +4267,13 @@
           "fullCapture",
           "startedAt",
           "endedAt",
+          "roomSize",
           "quizTitle",
           "language",
           "totalQuestions",
           "questions",
-          "players"
+          "players",
+          "room"
         ]
       },
       "SessionPlayerDetailDto": {

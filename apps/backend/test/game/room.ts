@@ -2,6 +2,7 @@ import type { Socket } from 'socket.io-client';
 import { GAME_TTL_S, gameKeys } from '../../src/game/game.keys';
 import { GameService } from '../../src/game/game.service';
 import { RedisService } from '../../src/redis/redis.service';
+import { UserRole } from '@prisma/client';
 import { QuizzesService } from '../../src/quizzes/quizzes.service';
 import { type GameContext, nextEvent, settle, stateEvent } from '../game-harness';
 
@@ -298,6 +299,108 @@ export function roomTests(ctx: GameContext): void {
       const line = standingsOf(later);
       await toPodium(host, pin, first);
       expect((await line).you).toMatchObject({ quizzes: 1, answered: 1, rank: 2 });
+    });
+  });
+
+  describe('history', () => {
+    const asHost = () => ({ id: ctx.h.hostUserId, roles: [UserRole.host] });
+    const quizzes = () => ctx.h.app.get(QuizzesService);
+
+    /** Plays the quiz in the room to its podium, every participant answering Paris. */
+    async function playToPodium(host: Socket, pin: string, players: Socket[]) {
+      await playParis(host, pin, players);
+      await toPodium(host, pin, players[0]);
+    }
+
+    /** The only archived session of `quizId` played under `pin`. */
+    async function sessionOf(quizId: string, pin: string) {
+      return ctx.h.prisma.gameSessionLog.findFirstOrThrow({ where: { quizId, pin } });
+    }
+
+    it('reads a room from its archived sessions: its quizzes in order, its standings', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const [a, b] = [
+        await ctx.h.seedQuiz({ title: 'Round A' }),
+        await ctx.h.seedQuiz({ title: 'Round B' }),
+      ];
+      const pin = await ctx.h.createGame(host, a.id);
+      const { socket: hana } = await ctx.h.join(pin, 'Hana');
+      const { socket: ivo } = await ctx.h.join(pin, 'Ivo');
+      await playToPodium(host, pin, [hana, ivo]);
+      await nextQuiz(host, pin, b.id, true);
+      await playToPodium(host, pin, [hana, ivo]);
+      const ended = nextEvent(hana, 'game:ended');
+      host.emit('host:end', { pin, archive: true });
+      await ended;
+
+      const [sa, sb] = [await sessionOf(a.id, pin), await sessionOf(b.id, pin)];
+      expect(sa.roomId).toBe(sb.roomId);
+      const list = await quizzes().sessions(asHost(), a.id);
+      expect(list.sessions.find((s) => s.id === sa.id)?.roomSize).toBe(2);
+
+      const detail = await quizzes().sessionDetail(asHost(), a.id, sa.id);
+      expect(detail.room?.sessions).toEqual([
+        expect.objectContaining({ id: sa.id, quizId: a.id, quizTitle: 'Round A', current: true }),
+        expect.objectContaining({ id: sb.id, quizId: b.id, quizTitle: 'Round B', current: false }),
+      ]);
+      const results = await ctx.h.prisma.playerResultLog.findMany({
+        where: { sessionLogId: { in: [sa.id, sb.id] }, nickname: 'Hana' },
+      });
+      expect(detail.room?.standings?.find((r) => r.nickname === 'Hana')).toMatchObject({
+        score: results.reduce((sum, r) => sum + r.finalScore, 0),
+        answeredCount: 2,
+        quizzes: 2,
+      });
+      await ctx.h.prisma.gameSessionLog.deleteMany({ where: { pin } });
+    });
+
+    it('keeps no standings unless every session tracked its participants', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const [a, b] = [
+        await ctx.h.seedQuiz({ title: 'Untracked' }),
+        await ctx.h.seedQuiz({ title: 'Tracked' }),
+      ];
+      const pin = await ctx.h.createGame(host, a.id);
+      const { socket: jo } = await ctx.h.join(pin, 'Jo');
+      host.emit('host:options', { pin, personalTracking: false });
+      await settle(100);
+      await playToPodium(host, pin, [jo]);
+      await nextQuiz(host, pin, b.id, true);
+      host.emit('host:options', { pin, personalTracking: true });
+      await settle(100);
+      await playToPodium(host, pin, [jo]);
+      const ended = nextEvent(jo, 'game:ended');
+      host.emit('host:end', { pin, archive: true });
+      await ended;
+
+      const sb = await sessionOf(b.id, pin);
+      const detail = await quizzes().sessionDetail(asHost(), b.id, sb.id);
+      expect(detail.room?.sessions).toHaveLength(2);
+      expect(detail.room?.standings).toBeNull();
+      await ctx.h.prisma.gameSessionLog.deleteMany({ where: { pin } });
+    });
+
+    it('reads a session as played alone when its room kept only it', async () => {
+      const host = connect({ localUser: 'Animateur' });
+      const [a, b] = [
+        await ctx.h.seedQuiz({ title: 'Kept' }),
+        await ctx.h.seedQuiz({ title: 'Not kept' }),
+      ];
+      const pin = await ctx.h.createGame(host, a.id);
+      const { socket: kim } = await ctx.h.join(pin, 'Kim');
+      await playToPodium(host, pin, [kim]);
+      await nextQuiz(host, pin, b.id, true);
+      await playToPodium(host, pin, [kim]);
+      const ended = nextEvent(kim, 'game:ended');
+      host.emit('host:end', { pin }); // quiz B not archived
+      await ended;
+
+      const sa = await sessionOf(a.id, pin);
+      expect(sa.roomId).toBeTruthy();
+      const detail = await quizzes().sessionDetail(asHost(), a.id, sa.id);
+      expect(detail.room).toBeNull();
+      expect(detail.roomSize).toBeNull();
+      await ctx.h.prisma.gameSessionLog.deleteMany({ where: { pin } });
     });
   });
 

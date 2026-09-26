@@ -143,6 +143,7 @@ export class SessionArchiveService {
       quizId: meta.quizId,
       hostId: meta.hostUserId,
       pin,
+      roomId: meta.roomId,
       status,
       language: meta.language,
       playerCount,
