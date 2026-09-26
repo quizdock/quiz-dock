@@ -28,6 +28,7 @@ import {
   QuestionMedia,
   OptionGrid,
   OptionTiles,
+  TimerBar,
   RevealAnswer,
   SlideView,
   TYPE_BASE,
@@ -610,18 +611,32 @@ export function PlayerPage() {
       >
         {participantBar}
         {remaining !== null ? (
-          <span
-            className="shrink-0 pt-[0.5em] text-[2.5em] font-bold tabular-nums"
-            aria-label={
+          // Pinned on top while the rest scrolls; above an opened picture too.
+          <TimerBar
+            remaining={reading && question.listenFirst ? (readingLeft ?? 0) : remaining}
+            totalS={
+              reading && question.listenFirst
+                ? (question.startedAt - (question.mediaStartAt ?? question.startedAt)) / 1000
+                : (question.endsAt - question.startedAt) / 1000
+            }
+            icon={reading && question.listenFirst ? '🎧' : view.paused ? '⏸' : '⏱'}
+            label={
               reading && question.listenFirst ? t('player.listening') : t('player.timeRemaining')
             }
-          >
-            {reading && question.listenFirst ? `🎧 ${readingLeft}` : `⏱ ${remaining}`}
-          </span>
+            paused={view.paused}
+            className="bg-background sticky top-0 z-50 shrink-0 py-[0.5em] text-[1.25em]"
+          />
         ) : null}
-        <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[1em]">
-          {/* #41: capped at ~a third of the viewport so the answer zone below
-              stays where the thumb expects it, whatever the image's ratio. */}
+        <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[0.5em]">
+          {/* The prompt first, then the picture: a small one in the room (it is big on the
+              projection), a tap to open it over the screen (#92). */}
+          <Markdown
+            role="heading"
+            aria-level={1}
+            className="text-[1.5em] font-semibold text-balance"
+          >
+            {question.prompt}
+          </Markdown>
           {playsHere ? (
             <QuestionMediaStage
               key={question.questionIndex}
@@ -632,7 +647,8 @@ export function PlayerPage() {
               follow={hears ? undefined : followed(view, question.questionIndex)}
               catchUp={followed(view, question.questionIndex)}
               startAt={question.mediaStartAt ?? null}
-              boxClassName="w-full max-h-[35dvh]"
+              zoomable
+              boxClassName="w-full max-h-[30dvh]"
               resumeKey={`${pin}:${question.questionIndex}`}
               restartSignal={
                 view.mediaControl?.questionIndex === question.questionIndex
@@ -642,7 +658,7 @@ export function PlayerPage() {
             />
           ) : (
             <>
-              <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
+              <QuestionMedia media={question.media} zoomable className="max-h-[18dvh] w-auto" />
               {/* In the room the sound plays on the projection; its playhead shows here only
                   when the sound is the question (listen first), not a background (#92). */}
               {question.media?.audio && question.listenFirst ? (
@@ -653,13 +669,6 @@ export function PlayerPage() {
               ) : null}
             </>
           )}
-          <Markdown
-            role="heading"
-            aria-level={1}
-            className="text-[1.5em] font-semibold text-balance"
-          >
-            {question.prompt}
-          </Markdown>
         </div>
         <div
           className={cn(

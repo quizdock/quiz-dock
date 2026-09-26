@@ -11,6 +11,8 @@ import type {
   SlideTextAlign,
   SlideTextSize,
 } from '@quiz-dock/contracts';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import {
@@ -32,8 +34,9 @@ import { Surface } from './surface';
  */
 export const TYPE_BASE = {
   stage: 'text-[20px]',
-  screen: 'text-[clamp(1rem,0.5rem_+_1vw,2.5rem)]',
-  phone: 'text-[clamp(0.875rem,0.5rem_+_0.6vw,1.5rem)]',
+  // On the smaller side of the screen: a 16:9 projection runs out of height first.
+  screen: 'text-[clamp(1rem,2.6vmin,2.5rem)]',
+  phone: 'text-[clamp(0.875rem,0.45rem_+_1.4vmin,1.5rem)]',
 } as const;
 
 /**
@@ -220,9 +223,9 @@ export function OptionTiles({
             aria-label={o.text ?? o.color}
             aria-pressed={onPick ? isPicked : undefined}
             className={cn(
-              'flex items-center justify-center rounded-[0.75em] text-[2em] leading-none text-white shadow transition',
-              // Five answers and more: squatter tiles, so four rows stay low on the screen.
-              many ? 'min-h-[2.25em]' : 'min-h-[3.5em]',
+              'flex items-center justify-center rounded-[0.75em] text-[1.6em] leading-none text-white shadow transition',
+              // Low enough to leave the prompt its room; five answers and more, lower still.
+              many ? 'min-h-[2em]' : 'min-h-[2.75em]',
               lastOdd(i, options.length),
               COLOR_BG[o.color] ?? OPTION_BG_FALLBACK,
               onPick && !disabled && 'hover:brightness-110 active:scale-[0.97] cursor-pointer',
@@ -408,9 +411,12 @@ export function ClosestList({ rows }: { rows: ClosestRow[] }) {
 export function QuestionMedia({
   media,
   className,
+  zoomable = false,
 }: {
   media: QuestionStartPayload['media'] | undefined;
   className?: string;
+  /** A phone's picture: a tap opens it over the whole screen, another closes it. */
+  zoomable?: boolean;
 }) {
   const { t } = useTranslation('live');
   const visual = media?.visual;
@@ -418,12 +424,121 @@ export function QuestionMedia({
   // What the author wrote (#43), or a generic label saying an image is there —
   // never an empty alt, which would hide the image from a screen reader entirely
   // while it carries the question for everyone else.
-  return (
+  const alt = visual.alt?.trim() || t('question.mediaAlt');
+  const img = (
     <img
       src={visual.url}
-      alt={visual.alt?.trim() || t('question.mediaAlt')}
+      alt={alt}
       className={cn('mx-auto rounded-lg object-contain', className)}
     />
+  );
+  return zoomable ? (
+    <ZoomableImage src={visual.url} alt={alt}>
+      {img}
+    </ZoomableImage>
+  ) : (
+    img
+  );
+}
+
+/**
+ * A picture that opens over the whole screen on a tap and closes on the next
+ * (or Escape). The page's clock stays above it: time keeps running.
+ */
+export function ZoomableImage({
+  src,
+  alt,
+  children,
+  className,
+}: {
+  src: string;
+  alt: string;
+  /** The picture as it sits in the page. */
+  children: ReactNode;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const overlay = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    overlay.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+  return (
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={() => setOpen(true)}
+        className={cn('mx-auto block max-w-full cursor-zoom-in', className)}
+      >
+        {children}
+      </button>
+      {open
+        ? createPortal(
+            <div
+              ref={overlay}
+              role="dialog"
+              aria-modal="true"
+              aria-label={alt}
+              tabIndex={-1}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-40 flex cursor-zoom-out items-center justify-center bg-black/90 p-[1em] outline-none"
+            >
+              <img src={src} alt={alt} className="max-h-full max-w-full object-contain" />
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
+}
+
+/**
+ * The question's clock as a draining bar across the top, the seconds and their
+ * icon at its right end (#92): the prompt gets the room a big number took.
+ */
+export function TimerBar({
+  remaining,
+  totalS,
+  icon,
+  label,
+  paused = false,
+  className,
+}: {
+  remaining: number;
+  /** The full time, for the bar's length; unknown (0) draws it full. */
+  totalS: number;
+  icon: string;
+  label: string;
+  paused?: boolean;
+  className?: string;
+}) {
+  const total = Math.max(totalS, remaining);
+  const share = total > 0 ? remaining / total : 1;
+  // The last seconds turn red, where a player's eye goes anyway.
+  const late = !paused && remaining <= 5;
+  return (
+    <div
+      role="timer"
+      aria-label={label}
+      className={cn('flex w-full items-center gap-[0.6em]', paused && 'opacity-60', className)}
+    >
+      <div className="bg-muted h-[0.5em] flex-1 overflow-hidden rounded-full">
+        <div
+          className={cn(
+            'h-full rounded-full transition-[width] duration-1000 ease-linear',
+            late ? 'bg-destructive' : 'bg-primary',
+          )}
+          style={{ width: `${share * 100}%` }}
+        />
+      </div>
+      <span className="shrink-0 font-bold whitespace-nowrap tabular-nums">
+        <span aria-hidden>{icon}</span> {remaining}
+      </span>
+    </div>
   );
 }
 

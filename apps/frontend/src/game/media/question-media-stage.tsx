@@ -9,6 +9,7 @@ import { releaseMedia, takeMedia } from './media-pool';
 import { clearPosition, readPosition, resumeAt, writePosition } from './media-position';
 import { Waveform } from './waveform';
 import { serverNow } from '../clock';
+import { ZoomableImage } from '../live-components';
 
 /**
  * - `play`: the projection plays the media as the question appears;
@@ -449,8 +450,11 @@ export function QuestionMediaStage({
   onPosition,
   catchUp,
   startAt = null,
+  zoomable = false,
 }: {
   media: LiveQuestionMedia | null | undefined;
+  /** A phone's picture: sized by `boxClassName`, a tap opens it over the whole screen. */
+  zoomable?: boolean;
   mode: StageMode;
   /** False on a device the sound is not meant for: the video plays muted, the sound is left out. */
   audible?: boolean;
@@ -483,13 +487,23 @@ export function QuestionMediaStage({
   return (
     <div className={cn('flex w-full flex-col items-center gap-[0.75em]', className)}>
       {visual?.kind === 'image' ? (
-        <div className={cn('relative aspect-video max-w-full', boxClassName)}>
-          <img
-            src={visual.url}
-            alt={visual.alt?.trim() || t('question.mediaAlt')}
-            className="absolute inset-0 h-full w-full rounded-lg object-contain"
-          />
-        </div>
+        zoomable ? (
+          <ZoomableImage src={visual.url} alt={visual.alt?.trim() || t('question.mediaAlt')}>
+            <img
+              src={visual.url}
+              alt={visual.alt?.trim() || t('question.mediaAlt')}
+              className={cn('rounded-lg object-contain', boxClassName)}
+            />
+          </ZoomableImage>
+        ) : (
+          <div className={cn('relative aspect-video max-w-full', boxClassName)}>
+            <img
+              src={visual.url}
+              alt={visual.alt?.trim() || t('question.mediaAlt')}
+              className="absolute inset-0 h-full w-full rounded-lg object-contain"
+            />
+          </div>
+        )
       ) : visual?.source === 'upload' ? (
         <VideoBox
           url={visual.url}
