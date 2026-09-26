@@ -6,14 +6,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ## [Unreleased]
 
+### ⚠️ Breaking changes
+
+> [!WARNING]
+> Read before upgrading.
+> - **An OIDC_ISSUER ending in `/` while the provider's issuer does not (or the reverse) no longer signs in: set it to the provider's issuer, as the backend log and `quizdock doctor` point out.**
+
 ### Bug Fixes
 
+- Compare the OIDC issuer exactly, trailing slash included *(auth)*
 - A manager reads another host's quiz, and a failed save says so *(editor)*
 - Start a quiz in the instance language, and let the author change it *(quiz)*
 - Bound the archive on the bytes actually unpacked *(import)*
 
 ### Documentation
 
+- Unreleased before the release *(changelog)*
 - The licence, tags and language of a quiz in the feature list
 - The refactoring plan for the game gateway tests *(dev)*
 - #91 is merged *(spec)*
@@ -27,6 +35,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - Bounded import archive in unreleased *(changelog)*
 - The licence and the tags are set in the quiz settings *(bundle)*
 - Licence and tags of a quiz in unreleased *(changelog)*
+- The README no longer opens on the 0.8 breaking change
 - The README no longer opens on the 0.8 breaking change
 - The 0.8 breaking change at the top of the README
 - The README warns OIDC deployments about the 0.8 breaking change
