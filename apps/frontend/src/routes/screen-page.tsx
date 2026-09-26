@@ -13,6 +13,7 @@ import {
   AnswerRules,
   LeaderboardList,
   OptionGrid,
+  TimerBar,
   Podium,
   RevealAnswer,
   SlideView,
@@ -188,50 +189,67 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
       </div>
     );
   } else if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && view.question) {
+    const visual = !!view.question.media?.visual;
+    // Nobody scrolls a projector: the page is the screen's height, the answers keep
+    // their room and the picture takes what is left (#92).
     body = (
-      <div className="flex w-full max-w-[40em] flex-col items-center gap-[1.5em]">
-        <div className="flex w-full items-start justify-between gap-[1em]">
-          <Markdown role="heading" aria-level={1} className="text-[2em] font-semibold">
+      <div className="flex min-h-0 w-full max-w-[64em] flex-1 flex-col items-center gap-[1em]">
+        {remaining !== null ? (
+          <TimerBar
+            remaining={listening ? (listenLeft ?? 0) : remaining}
+            totalS={
+              listening
+                ? (view.question.startedAt -
+                    (view.question.mediaStartAt ?? view.question.startedAt)) /
+                  1000
+                : (view.question.endsAt - view.question.startedAt) / 1000
+            }
+            icon={listening ? '🎧' : view.paused ? '⏸' : '⏱'}
+            label={listening ? t('screen.listening') : t('screen.timeRemaining')}
+            paused={view.paused}
+            // Clear of the fullscreen button, top right.
+            className="shrink-0 pr-[2.5em] text-[1.6em]"
+          />
+        ) : null}
+        {/* Under the clock: centred when short, the picture filling what is left otherwise. */}
+        <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center gap-[1em]">
+          <Markdown
+            role="heading"
+            aria-level={1}
+            className="w-full shrink-0 text-[1.8em] leading-tight font-semibold"
+          >
             {view.question.prompt}
           </Markdown>
-          {remaining !== null ? (
-            <span
-              className={cn(
-                'shrink-0 text-[2.5em] font-bold whitespace-nowrap tabular-nums',
-                view.paused && 'opacity-50',
-              )}
-              aria-label={listening ? t('screen.listening') : t('screen.timeRemaining')}
-            >
-              {listening ? `🎧 ${listenLeft}` : `${view.paused ? '⏸' : '⏱'} ${remaining}`}
-            </span>
-          ) : null}
+          {/* Image or video in one box, the sound as its waveform; played here only. */}
+          <QuestionMediaStage
+            key={view.question.questionIndex}
+            media={view.question.media}
+            mode={!playMedia || view.nav?.review ? 'still' : view.paused ? 'pause' : 'play'}
+            className={visual ? 'min-h-[6em] flex-1' : 'shrink-0'}
+            boxClassName={visual ? 'aspect-auto h-full min-h-0 w-full flex-1' : undefined}
+            resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
+            follow={playMedia ? undefined : followed(view, view.question.questionIndex)}
+            onPosition={playMedia ? sayPosition : undefined}
+            startAt={view.question.mediaStartAt ?? null}
+            restartSignal={
+              view.mediaControl?.questionIndex === view.question.questionIndex
+                ? view.mediaControl.seq
+                : 0
+            }
+          />
+          <AnswerRules question={view.question} className="shrink-0" />
+          {view.question.options?.length ? (
+            <div className="w-full shrink-0">
+              <OptionGrid options={view.question.options} />
+            </div>
+          ) : (
+            <>
+              <p className="text-muted-foreground text-[1.5em]">{t('screen.answerOnPhone')}</p>
+              {joinBar}
+            </>
+          )}
+          <div className="shrink-0">{counter}</div>
         </div>
-        {/* Image or video in one box, the sound as its waveform; played here only. */}
-        <QuestionMediaStage
-          key={view.question.questionIndex}
-          media={view.question.media}
-          mode={!playMedia || view.nav?.review ? 'still' : view.paused ? 'pause' : 'play'}
-          boxClassName="h-[35vh]"
-          resumeKey={playMedia ? `${pin}:${view.question.questionIndex}` : null}
-          follow={playMedia ? undefined : followed(view, view.question.questionIndex)}
-          onPosition={playMedia ? sayPosition : undefined}
-          startAt={view.question.mediaStartAt ?? null}
-          restartSignal={
-            view.mediaControl?.questionIndex === view.question.questionIndex
-              ? view.mediaControl.seq
-              : 0
-          }
-        />
-        <AnswerRules question={view.question} />
-        {view.question.options?.length ? (
-          <OptionGrid options={view.question.options} />
-        ) : (
-          <>
-            <p className="text-muted-foreground text-[1.5em]">{t('screen.answerOnPhone')}</p>
-            {joinBar}
-          </>
-        )}
-        {counter}
       </div>
     );
   } else {
@@ -274,12 +292,14 @@ export function ScreenView({ pin, playMedia = false }: { pin: string; playMedia?
       ref={ref}
       className={cn(
         'bg-background relative flex min-h-dvh flex-col',
+        // A question fits the screen exactly (see its body); the rest may grow.
+        (view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && 'h-dvh',
         // One typographic base for the whole projected page; everything inside is in em.
         TYPE_BASE.screen,
         // A slide owns the whole surface; everything else is centred with breathing room.
         view.state === 'SLIDE_SHOW'
           ? 'items-stretch justify-stretch p-0'
-          : 'items-center justify-center gap-[1.5em] p-[2em] text-center',
+          : 'items-center justify-center gap-[1.5em] p-[1.5em] text-center',
       )}
     >
       {fullscreenBtn}

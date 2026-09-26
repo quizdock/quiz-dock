@@ -223,7 +223,7 @@ export function mediaTests(ctx: GameContext): void {
     }
   }, 15_000);
 
-  it('offers remote play only when the quiz has sound, and tells the roster', async () => {
+  it('offers remote play for every quiz, says which quiz has sound, and tells the roster', async () => {
     const asset = await prisma.mediaAsset.create({
       data: {
         ownerId: hostUserId,
@@ -271,8 +271,8 @@ export function mediaTests(ctx: GameContext): void {
         participantAccess: 'account',
       });
 
-      // Remote asked for a silent quiz: nothing to play, the player is in the room.
-      const ignored = new Promise<{ presence?: string }>((resolve) =>
+      // Remote holds for a silent quiz too: the answers' text comes to that phone (#92).
+      const silentRemote = new Promise<{ presence?: string }>((resolve) =>
         host.once('player:joined', resolve),
       );
       await guest.emitWithAck('player:join', {
@@ -280,7 +280,7 @@ export function mediaTests(ctx: GameContext): void {
         nickname: 'Ada',
         presence: 'remote',
       });
-      expect((await ignored).presence).toBe('room');
+      expect((await silentRemote).presence).toBe('remote');
 
       const remote = connect();
       const joined = new Promise<{ presence?: string }>((resolve) =>

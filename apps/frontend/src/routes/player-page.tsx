@@ -27,8 +27,8 @@ import {
   AnswerRules,
   QuestionMedia,
   OptionGrid,
-  OptionKey,
   OptionTiles,
+  TimerBar,
   RevealAnswer,
   SlideView,
   TYPE_BASE,
@@ -194,7 +194,7 @@ export function PlayerPage() {
         pin,
         nickname.trim(),
         avatarSeed || undefined,
-        hasSound ? wantedPresence : undefined,
+        wantedPresence,
       );
       // Le serveur a pu retenir un autre nom (compte, homonyme) : l'écran suit.
       if (joined.nickname && joined.nickname !== nickname.trim()) setNickname(joined.nickname);
@@ -274,12 +274,17 @@ export function PlayerPage() {
       );
     }
 
-    // À options (QCM unique/multi, V-F, sondage) : the tiles only — their legend
-    // scrolls with the prompt, above.
+    // À options (QCM unique/multi, V-F, sondage) : the tiles, in the projection's grid.
     if (opts.length) {
       return (
         <>
-          <OptionTiles options={opts} onPick={onPick} selectedIds={selected} />
+          {/* In the room the text is read on the projection, at the same place in the
+              same grid; a remote participant has no projection, so it is in the tiles. */}
+          {remote ? (
+            <OptionGrid options={opts} onPick={onPick} selectedIds={selected} />
+          ) : (
+            <OptionTiles options={opts} onPick={onPick} selectedIds={selected} />
+          )}
           {isMulti ? (
             <Button type="button" disabled={selected.length === 0} onClick={() => submit(selected)}>
               {t('player.submitAnswer')}
@@ -304,7 +309,8 @@ export function PlayerPage() {
   const hears = !!question?.audioTarget && playsSound(question.audioTarget, device);
   // A remote participant gets the whole question (a muted video when the sound is not
   // theirs); in the room, the phone shows the image unless the sound is meant for it too.
-  const playsHere = presence === 'remote' || hears;
+  const remote = presence === 'remote';
+  const playsHere = remote || hears;
 
   const participantBar =
     topbarSlot && view.status === 'ready' && view.state !== 'ENDED' && !view.kicked
@@ -410,7 +416,7 @@ export function PlayerPage() {
                 required
               />
             </Label>
-            {hasSound ? <PresenceChoice value={wantedPresence} onChange={setPresence} /> : null}
+            <PresenceChoice value={wantedPresence} onChange={setPresence} />
             {error ? <p className="text-destructive text-sm">{error}</p> : null}
             <Button type="submit" disabled={joining || !nickname.trim()}>
               <LogIn className="size-4" />
@@ -584,8 +590,8 @@ export function PlayerPage() {
 
   if ((view.state === 'ANSWERING' || view.state === 'QUESTION_SHOW') && question) {
     const done = submitted || view.answerAccepted === true;
-    // Tap tiles (QCM, V-F, poll): pinned to the bottom of the screen, their legend
-    // above. Typed answers and ordering stay in the flow (the keyboard would fight a pin).
+    // Tap tiles (QCM, V-F, poll): pinned to the bottom of the screen. Typed answers
+    // and ordering stay in the flow (the keyboard would fight a pin).
     const tiled =
       !!question.options?.length &&
       question.type !== 'ordering' &&
@@ -605,18 +611,32 @@ export function PlayerPage() {
       >
         {participantBar}
         {remaining !== null ? (
-          <span
-            className="shrink-0 pt-[0.5em] text-[2.5em] font-bold tabular-nums"
-            aria-label={
+          // Pinned on top while the rest scrolls; above an opened picture too.
+          <TimerBar
+            remaining={reading && question.listenFirst ? (readingLeft ?? 0) : remaining}
+            totalS={
+              reading && question.listenFirst
+                ? (question.startedAt - (question.mediaStartAt ?? question.startedAt)) / 1000
+                : (question.endsAt - question.startedAt) / 1000
+            }
+            icon={reading && question.listenFirst ? '🎧' : view.paused ? '⏸' : '⏱'}
+            label={
               reading && question.listenFirst ? t('player.listening') : t('player.timeRemaining')
             }
-          >
-            {reading && question.listenFirst ? `🎧 ${readingLeft}` : `⏱ ${remaining}`}
-          </span>
+            paused={view.paused}
+            className="bg-background sticky top-0 z-50 shrink-0 py-[0.5em] text-[1.25em]"
+          />
         ) : null}
-        <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[1em]">
-          {/* #41: capped at ~a third of the viewport so the answer zone below
-              stays where the thumb expects it, whatever the image's ratio. */}
+        <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[0.5em]">
+          {/* The prompt first, then the picture: a small one in the room (it is big on the
+              projection), a tap to open it over the screen (#92). */}
+          <Markdown
+            role="heading"
+            aria-level={1}
+            className="text-[1.5em] font-semibold text-balance"
+          >
+            {question.prompt}
+          </Markdown>
           {playsHere ? (
             <QuestionMediaStage
               key={question.questionIndex}
@@ -627,7 +647,8 @@ export function PlayerPage() {
               follow={hears ? undefined : followed(view, question.questionIndex)}
               catchUp={followed(view, question.questionIndex)}
               startAt={question.mediaStartAt ?? null}
-              boxClassName="w-full max-h-[35dvh]"
+              zoomable
+              boxClassName="w-full max-h-[30dvh]"
               resumeKey={`${pin}:${question.questionIndex}`}
               restartSignal={
                 view.mediaControl?.questionIndex === question.questionIndex
@@ -637,9 +658,10 @@ export function PlayerPage() {
             />
           ) : (
             <>
-              <QuestionMedia media={question.media} className="max-h-[35dvh] w-auto" />
-              {/* In the room: the sound plays on the projection, its playhead moves here too. */}
-              {question.media?.audio ? (
+              <QuestionMedia media={question.media} zoomable className="max-h-[18dvh] w-auto" />
+              {/* In the room the sound plays on the projection; its playhead shows here only
+                  when the sound is the question (listen first), not a background (#92). */}
+              {question.media?.audio && question.listenFirst ? (
                 <FollowedWaveform
                   audio={question.media.audio}
                   follow={followed(view, question.questionIndex)}
@@ -647,16 +669,6 @@ export function PlayerPage() {
               ) : null}
             </>
           )}
-          <Markdown
-            role="heading"
-            aria-level={1}
-            className="text-[1.5em] font-semibold text-balance"
-          >
-            {question.prompt}
-          </Markdown>
-          {tiled && !reading && !done ? (
-            <OptionKey options={question.options ?? []} selectedIds={selected} />
-          ) : null}
         </div>
         <div
           className={cn(

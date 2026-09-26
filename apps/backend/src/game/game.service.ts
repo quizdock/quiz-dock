@@ -210,9 +210,8 @@ export class GameService {
     const sessionToken = randomBytes(24).toString('base64url');
     // Graine d'avatar : bornée (client-fournie, stockée + diffusée), défaut = pseudo.
     const avatar = (rawAvatar ?? '').trim().slice(0, AVATAR_SEED_MAX) || nickname;
-    // Remote only means something when the quiz plays sound; the room otherwise.
-    const presence: PlayerPresence =
-      wantedPresence === 'remote' && (await this.hasSound(pin)) ? 'remote' : 'room';
+    // Remote: no projection in sight, so the answers' text (and any sound) comes to this device.
+    const presence: PlayerPresence = wantedPresence === 'remote' ? 'remote' : 'room';
     const record: PlayerRecord = {
       nickname,
       avatar,
