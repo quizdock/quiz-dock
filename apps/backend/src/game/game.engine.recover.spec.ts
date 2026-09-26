@@ -28,7 +28,7 @@ const meta = (over: Partial<GameMeta>): GameMeta =>
 /** Timers are process-local: after a restart the engine re-arms them from Redis. */
 describe('GameEngine.recoverTimers (bindServer)', () => {
   const build = (metas: Record<string, GameMeta>) => {
-    const redis = { keys: jest.fn(async () => Object.keys(metas).map((p) => `game:${p}`)) };
+    const redis = { keys: jest.fn(async () => Object.keys(metas).map((p) => `room:${p}`)) };
     const game = { getMeta: jest.fn(async (pin: string) => metas[pin] ?? null) };
     const engine = new GameEngine(
       game as unknown as GameService,
@@ -57,8 +57,12 @@ describe('GameEngine.recoverTimers (bindServer)', () => {
     engine.bindServer({ to: () => ({ emit: () => undefined }) } as never);
     await new Promise((r) => setTimeout(r, 10));
     expect(scheduleReveal).toHaveBeenCalledTimes(1);
-    const [pin, index, delay] = scheduleReveal.mock.calls[0] as unknown as [string, number, number];
-    expect(pin).toBe('111111');
+    const [ref, index, delay] = scheduleReveal.mock.calls[0] as unknown as [
+      { pin: string },
+      number,
+      number,
+    ];
+    expect(ref.pin).toBe('111111');
     expect(index).toBe(2);
     expect(delay).toBeGreaterThan(4_000);
     expect(delay).toBeLessThanOrEqual(5_300);
@@ -75,7 +79,10 @@ describe('GameEngine.recoverTimers (bindServer)', () => {
     });
     engine.bindServer({ to: () => ({ emit: () => undefined }) } as never);
     await new Promise((r) => setTimeout(r, 10));
-    expect(scheduleAuto.mock.calls.map((c) => (c as unknown as [string])[0])).toEqual(['1', '2']);
+    expect(scheduleAuto.mock.calls.map((c) => (c as unknown as [{ pin: string }])[0].pin)).toEqual([
+      '1',
+      '2',
+    ]);
     expect(scheduleReveal).not.toHaveBeenCalled();
   });
 
@@ -88,8 +95,8 @@ describe('GameEngine.recoverTimers (bindServer)', () => {
       .mockImplementation(() => undefined);
     engine.bindServer({ to: () => ({ emit: () => undefined }) } as never);
     await new Promise((r) => setTimeout(r, 10));
-    const [pin, index, delay] = arm.mock.calls[0] as unknown as [string, number, number];
-    expect([pin, index]).toEqual(['7', 1]);
+    const [ref, index, delay] = arm.mock.calls[0] as unknown as [{ pin: string }, number, number];
+    expect([ref.pin, index]).toEqual(['7', 1]);
     expect(delay).toBeGreaterThan(2_500);
   });
 });

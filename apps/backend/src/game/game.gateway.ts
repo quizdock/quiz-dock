@@ -202,7 +202,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
 
   /** Émet le sommaire des questions (sans secret) à une fenêtre de contrôle hôte. */
   private async emitOutline(socket: GameSocket, pin: string): Promise<void> {
-    const snapshot = await this.game.getSnapshot(pin);
+    const snapshot = await this.game.currentSnapshot(pin);
     if (!snapshot) return;
     socket.emit('game:outline', {
       quizId: snapshot.quizId,

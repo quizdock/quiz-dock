@@ -4,7 +4,7 @@
 > quizzes, players join once. The model, the decisions taken, how the live state splits between the room and each
 > game, and the ordered pull requests that deliver it.
 
-Status: **in design.** Nothing is delivered yet.
+Status: **in progress.** Step 1 (the room layer and per-game keys) is delivered; nothing is visible yet.
 
 ---
 
@@ -44,12 +44,16 @@ The split, keyed by the PIN for the room and by the game id (`meta.id`, already 
 
 | Level | Keys |
 |-------|------|
-| **Room** (PIN) | PIN allocation, room hash (host, current game, settings, created/last active), players, nicknames, bans, session tokens, the host's open rooms, cumulative totals and ranking |
-| **Game** (game id) | game hash (state machine, current index, timings, mode, pause), snapshot, answers, per-quiz leaderboard, media readiness, reveal / advance / media-wait locks |
+| **Room** (PIN) | PIN allocation, room hash (host, current game, what the players were told), players, nicknames, bans, session tokens, the host's open rooms, cumulative totals and ranking |
+| **Game** (game id) | game hash (state machine, current index, timings, mode, pause), snapshot, scores, answers, media readiness, reveal / advance / media-wait locks |
 
 - The session token stays `{ pin, playerId }`: it already belongs to the room.
 - A player record keeps who they are (nickname, avatar, account, presence, connection). The score and streak of the
-  quiz being played live with the game; the totals live with the room.
+  quiz being played live with the game (`game:{id}:scores`, whose keys are who plays it); the totals live with the
+  room.
+- Whatever runs after a wait or on a timer carries the game it was started for, and does nothing once the room plays
+  another: a step of one game never writes into the next.
+- The key-by-key layout is in [SPECIFICATIONS-DONNEES.md §4](./SPECIFICATIONS-DONNEES.md).
 - Keys are renamed in one go. A game running on the old keys while the server is upgraded is lost: upgrade between
   games (to say in the release notes).
 
@@ -84,6 +88,14 @@ not drop.
    - To settle here: today a player can join a quiz in progress (LIVE §5). Recommendation: keep it for the quiz
      running when they join, since the room never turns anyone away; "wait for the next quiz" then only applies to a
      player joining during the intermission.
+   - To fix here: the next quiz opens through the engine, which cancels the timers of the one before (they are
+     kept per PIN; the service's `openGame` cannot reach them).
+   - To fix here: a player joining in the intermission is in the room, not in the game: `readiness` (every connected
+     player) and the answer count (players of the game) must agree on who is waited for.
+   - To fix here: `joinSession` reads the current game, then writes the new player's score after the nickname checks;
+     a game opened in between would get it wrong.
+   - To fix here: a player's rating is kept once per PIN and player (`quiz_feedback`), so rating the second quiz
+     would overwrite the first. Its unique key must include the game or the quiz (a migration).
    - To settle here: whether the host can change a room setting between two quizzes. Recommendation: yes, in the room
      lobby only, never during a game.
    - To settle here: which settings belong to the room (automatic mode, audio target, full answer capture, open

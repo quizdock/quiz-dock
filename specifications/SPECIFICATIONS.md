@@ -134,19 +134,19 @@ MediaAsset      id, owner_id, url, mime, size_bytes, created_at
 
 ### 3.2 Live (Redis)
 
-The keys (TTL ≈ the length of a game plus a margin, 4 h say):
+The keys (TTL ≈ the length of a session plus a margin, 4 h say). A session is a **room** under its PIN; each
+quiz played in it is a **game** under its own id (SPECIFICATIONS-ROOM §3). Full layout: données §4.
 
 ```
-game:{pin}                  Hash  -> state, quizId, hostId, currentQuestionIndex,
-                                     questionStartedAt (server epoch ms),
-                                     questionEndsAt, createdAt
-game:{pin}:players          Hash  -> playerId => {nickname, userId?, connected,
-                                     score, streak, joinedAt}
-game:{pin}:answers:{qIdx}   Hash  -> playerId => {optionId|value, receivedAt,
-                                     latencyMs, isCorrect, pointsAwarded}
-game:{pin}:leaderboard      ZSet  -> playerId scored by score
-session:{token}             Str   -> playerId (reconnecting)
-pin:index                   Set   -> the active PINs (uniqueness)
+pin:{pin}                   Str   -> the room id (PIN uniqueness, SET NX)
+room:{pin}                  Hash  -> hostUserId, gameId (the game it plays), what the players were told
+room:{pin}:players          Hash  -> playerId => {nickname, userId?, connected, joinedAt, ...}
+session:{token}             Str   -> {pin, playerId} (reconnecting)
+game:{id}                   Hash  -> state, quizId, currentIndex, questionStartedAt (server epoch ms),
+                                     questionEndsAt, mode, pause, ...
+game:{id}:snapshot          Str   -> the frozen quiz, right answers included
+game:{id}:scores            Hash  -> playerId => {score, streak} (who plays this game)
+game:{id}:answers:{qIdx}    Hash  -> playerId => {answer, receivedAt, tMs, isCorrect, pointsAwarded}
 ```
 
 ---

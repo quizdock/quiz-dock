@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { PrismaService } from '../../prisma/prisma.service';
-import { gameKeys } from '../../game/game.keys';
+import { type LiveReader, currentGameFields, gameKeys } from '../../game/game.keys';
 import {
   collectMediaIds,
   EXPORT_INCLUDE,
@@ -15,9 +15,8 @@ type Db = Pick<PrismaService, 'user' | 'quiz'>;
 /** What `quiz:transfer` needs on top: the media rows follow, in one transaction. */
 type TransferDb = Db & Pick<PrismaService, 'mediaAsset' | '$transaction'>;
 /** The live-games index of a host (`host:{id}:games`) and the games it points at. */
-type LiveIndex = {
+type LiveIndex = LiveReader & {
   smembers(key: string): Promise<string[]>;
-  hmget(key: string, ...fields: string[]): Promise<(string | null)[]>;
 };
 type Portable = Pick<QuizPortableService, 'exportZip' | 'importBundle'>;
 
@@ -174,7 +173,7 @@ export async function quizTransfer(
 async function refuseWhilePlayed(redis: LiveIndex, ownerId: string, quizId: string): Promise<void> {
   const pins = await redis.smembers(gameKeys.hostGames(ownerId));
   for (const pin of pins) {
-    const [state, playing] = await redis.hmget(gameKeys.game(pin), 'state', 'quizId');
+    const [state, playing] = await currentGameFields(redis, pin, 'state', 'quizId');
     if (playing === quizId && state && state !== 'ENDED') {
       throw new CliError(
         `"${quizId}" is being played right now (PIN ${pin}): end the session first.`,

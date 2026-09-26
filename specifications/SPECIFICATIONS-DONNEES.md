@@ -280,59 +280,32 @@ Indexes: `(session_log_id, order_index)`; `(player_result_log_id)`.
 
 ## 4. Real-time structures (Redis)
 
-> The **living** state of a game. TTL ≈ the length of a game plus a margin (DEF 4 h); abandoned games are cleaned up automatically. It is the source of truth while the game runs, and is consolidated into the database at the end (§2.7–2.9).
+> The **living** state of a session. TTL ≈ the length of a session plus a margin (DEF 4 h); abandoned sessions are cleaned up automatically. It is the source of truth while a game runs, and is consolidated into the database at its end (§2.7–2.9). The keys are defined in `apps/backend/src/game/game.keys.ts`.
+>
+> Every session is a **room** (SPECIFICATIONS-ROOM §1): the room lives under its **PIN**, each **game** (one quiz played in it) under its own **game id** (32 hex characters). Nothing a game leaves behind (a lock, an answer, a score) is ever read by the next game of the room.
 
-### 4.1 `game:{pin}` — a Hash (the game state)
+### 4.1 The room (keyed by the PIN)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `state` | string | `LOBBY`\|`QUESTION_SHOW`\|`ANSWERING`\|`REVEAL`\|`LEADERBOARD`\|`PODIUM`\|`ENDED`\|`HOST_DISCONNECTED` |
-| `quizId` | string | The quiz being played |
-| `hostId` | string | The host |
-| `hostSocketId` | string | The host's current socket |
-| `currentQuestionIndex` | int | 0-based index |
-| `questionStartedAt` | int (ms epoch) | The **server** clock (fairness, technique §6) |
-| `questionEndsAt` | int (ms epoch) | The theoretical end |
-| `fullCapture` | bool | Full-capture mode is on → `answer_log` is written at the end (§2.10) |
-| `createdAt` | int (ms epoch) | When the game was created |
+| Key | Type | Contents |
+|-----|------|----------|
+| `pin:{pin}` | String | The room id; atomic allocation (`SET NX`), guarantees the PIN's **uniqueness** *(RG-04)*. Deleted when the room closes. |
+| `room:{pin}` | Hash | `roomId`, `hostUserId`, `gameId` (the game it plays), `fullCapture`, `personalTracking`, `pickOwnName`, `participantAccess`, `joinLocked`, `joinBaseUrl`, `openedAt` — what the players were told when they came in. |
+| `room:{pin}:players` | Hash `playerId → JSON` | Who each player is: `nickname`, `avatar`, `userId` (null = a guest), `connected`, `joinedAt`, `latencyMs`, `presence`. No score: it belongs to each game. |
+| `room:{pin}:nicknames` | Set | The normalized nicknames (atomic deduplication). |
+| `room:{pin}:ban:{nickname}` | String | A banned normalized nickname; the key's TTL is the ban's length *(RG-12)*. |
+| `session:{token}` | String | The token handed out on joining → `{ pin, playerId }`; makes **reconnecting** possible (technique §11). |
+| `host:{userId}:games` | Set | The host's open rooms, by PIN (resumed from the dashboard). |
 
-### 4.2 `game:{pin}:players` — a Hash of `playerId → JSON`
+### 4.2 A game (keyed by its id)
 
-```jsonc
-{
-  "nickname": "marc",
-  "userId": "uuid|null",      // null = a guest
-  "connected": true,
-  "score": 8120,
-  "streak": 3,
-  "joinedAt": 1733740800000
-}
-```
-
-### 4.3 `game:{pin}:answers:{qIdx}` — a Hash of `playerId → JSON`
-
-```jsonc
-{
-  "value": "optionId | [optionIds] | text | a number | [order]",
-  "receivedAt": 1733740812345,  // the server timestamp
-  "latencyMs": 42,              // compensation (technique §6)
-  "isCorrect": true,
-  "pointsAwarded": 850
-}
-```
-> One entry per `playerId` (one answer per question, RG-06). Later submissions are ignored.
-
-### 4.4 `game:{pin}:leaderboard` — a Sorted Set
-
-- The member is the `playerId`, the score is `score`. Reading the top N and a rank is O(log n).
-
-### 4.5 `session:{token}` — a String
-
-- The `token` (handed out on joining) → the `playerId`. It makes **reconnecting** possible (technique §11). TTL = the length of the game.
-
-### 4.6 `pin:index` — a Set
-
-- The active PINs, guaranteeing **uniqueness** at generation time *(RG-04)*. The PIN is removed when the game ends.
+| Key | Type | Contents |
+|-----|------|----------|
+| `game:{id}` | Hash | The state machine: `state`, `quizId`, `title`, `language`, `currentIndex`, `slideIndex`, `totalQuestions`, `createdAt`, the **server** timings `questionStartedAt` / `questionEndsAt` (technique §6), `mode`, `paused`, `clockFrozen`, `pausedRemainingMs`, `autoNextAt`, `mediaWaitUntil`, `mediaLeadMs`, `audioTarget`, `reviewStep`, `prevState`. |
+| `game:{id}:snapshot` | String (JSON) | The frozen quiz, right answers included — server side only. |
+| `game:{id}:scores` | Hash `playerId → JSON` | `{ score, streak }` in this game. Its keys are **who plays this game**; the ranking is read from it (by score, then arrival). |
+| `game:{id}:answers:{qIdx}` | Hash `playerId → JSON` | The graded answer: `answer`, `isCorrect`, `pointsAwarded`, `credit`, `tMs`, `receivedAt` (and `closestRank` / `distance` for a numeric `closest`). One entry per player (`HSETNX`, RG-06); later submissions are ignored. |
+| `game:{id}:ready:{qIdx}` | Set | The devices that loaded a question's sound or video. |
+| `game:{id}:reveal-lock:{qIdx}`, `…:advance-lock:{step}`, `…:media-wait-lock:{qIdx}` | String (`SET NX`) | One winner per transition (no double reveal, no skipped step). |
 
 ---
 

@@ -57,16 +57,21 @@ describe('DemoResetService', () => {
 
   it('hasLiveGames: only game hashes count, and ended ones do not', async () => {
     const { service } = makeService({
-      'game:123456': 'ENDED',
-      'game:123456:players': 'x',
-      'game:654321:snapshot': 'lobby',
+      'game:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa': 'ENDED',
+      'game:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:scores': 'x',
+      'game:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:snapshot': 'lobby',
+      'room:123456': 'lobby',
     });
     expect(await service.hasLiveGames()).toBe(false);
-    expect(await makeService({ 'game:111111': 'question' }).service.hasLiveGames()).toBe(true);
+    expect(
+      await makeService({
+        'game:cccccccccccccccccccccccccccccccc': 'question',
+      }).service.hasLiveGames(),
+    ).toBe(true);
   });
 
   it('tick: defers while a game is live, resets otherwise', async () => {
-    const live = makeService({ 'game:111111': 'lobby' });
+    const live = makeService({ 'game:cccccccccccccccccccccccccccccccc': 'lobby' });
     expect(await live.service.tick()).toBe(false);
     expect(live.redis.flushdb).not.toHaveBeenCalled();
     const idle = makeService({});
@@ -75,7 +80,7 @@ describe('DemoResetService', () => {
   });
 
   it('tick: resets regardless once the deferral cap is past', async () => {
-    const { service, redis } = makeService({ 'game:111111': 'lobby' });
+    const { service, redis } = makeService({ 'game:cccccccccccccccccccccccccccccccc': 'lobby' });
     expect(await service.tick(Date.now() + DEMO_RESET_MAX_DEFER_MS + 1)).toBe(true);
     expect(redis.flushdb).toHaveBeenCalled();
   });

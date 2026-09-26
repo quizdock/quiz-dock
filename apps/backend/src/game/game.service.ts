@@ -21,8 +21,15 @@ import { MediaLibraryService } from '../media/media-library.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import { RedisService } from '../redis/redis.service';
-import { GAME_TTL_S, gameKeys } from './game.keys';
-import type { GameMeta, PlayerRecord, QuizSnapshot } from './game.types';
+import { GAME_TTL_S, type GameId, gameKeys } from './game.keys';
+import type {
+  GameFields,
+  GameMeta,
+  PlayerRecord,
+  PlayerScore,
+  QuizSnapshot,
+  RoomMeta,
+} from './game.types';
 import {
   QUIZ_SNAPSHOT_INCLUDE,
   buildSnapshot,
@@ -97,8 +104,72 @@ export class GameService {
     if (open && !allowsAnonymousParticipants()) {
       throw new ForbiddenException('session.open_access_forbidden');
     }
+    const snapshot = await this.playableSnapshot(hostUserId, dto.quizId);
+    const roomId = randomBytes(16).toString('hex');
+    const pin = await this.allocatePin(roomId);
+    const gameId = newGameId();
+
+    const room: RoomMeta = {
+      roomId,
+      hostUserId,
+      gameId,
+      fullCapture: dto.fullCapture === true,
+      // Suivi individuel : par défaut oui (RG-16). Nom choisi : par défaut oui, sauf
+      // sous OIDC où le nom vient du compte tant que l'hôte n'ouvre pas le choix.
+      // Open access: guests only, so nothing personal to track and no account to
+      // take a name from.
+      personalTracking: !open && dto.personalTracking !== false,
+      pickOwnName: open || (dto.pickOwnName ?? !isOidcMode()),
+      participantAccess: open ? 'open' : 'account',
+      joinLocked: false,
+      joinBaseUrl: '',
+      openedAt: Date.now(),
+    };
+
+    const pipe = this.redis.multi();
+    pipe.hset(gameKeys.room(pin), serializeRoom(room));
+    pipe.expire(gameKeys.room(pin), GAME_TTL_S);
+    this.writeGame(pipe, gameId, snapshot, []);
+    // Index des parties en cours de l'hôte (reprise depuis le dashboard §6.2).
+    pipe.sadd(gameKeys.hostGames(hostUserId), pin);
+    pipe.expire(gameKeys.hostGames(hostUserId), GAME_TTL_S);
+    await pipe.exec();
+
+    return { pin };
+  }
+
+  /**
+   * Opens a new game of `quizId` in the room: its own snapshot and state, in the
+   * lobby, every player of the room at 0. The room points at it from then on;
+   * the previous game's state stays under its own id until it expires, so
+   * nothing it left behind (locks, answers, scores) reaches the new one.
+   */
+  async openGame(pin: string, quizId: string): Promise<GameId> {
+    const room = await this.getRoom(pin);
+    if (!room) throw new NotFoundException('session.not_found');
+    const snapshot = await this.playableSnapshot(room.hostUserId, quizId);
+    const gameId = newGameId();
+    const playerIds = await this.redis.hkeys(gameKeys.players(pin));
+    const pipe = this.redis.multi();
+    this.writeGame(pipe, gameId, snapshot, playerIds);
+    pipe.hset(gameKeys.room(pin), { gameId });
+    for (const key of [
+      gameKeys.pin(pin),
+      gameKeys.room(pin),
+      gameKeys.players(pin),
+      gameKeys.nicknames(pin),
+      gameKeys.hostGames(room.hostUserId),
+    ]) {
+      pipe.expire(key, GAME_TTL_S);
+    }
+    await pipe.exec();
+    return gameId;
+  }
+
+  /** The snapshot of a quiz the host may play: theirs, `ready`, with at least one question. */
+  private async playableSnapshot(hostUserId: string, quizId: string): Promise<QuizSnapshot> {
     const quiz = await this.prisma.quiz.findFirst({
-      where: { id: dto.quizId, ownerId: hostUserId },
+      where: { id: quizId, ownerId: hostUserId },
       include: QUIZ_SNAPSHOT_INCLUDE,
     });
     if (!quiz) {
@@ -110,32 +181,27 @@ export class GameService {
     if (quiz.questions.length < 1) {
       throw new BadRequestException('quiz.empty');
     }
-
     const snapshot = buildSnapshot(quiz);
     // Frozen with the rest: a licence's attribution is owed for what was played.
     const credits = (await this.mediaLibrary?.creditsOf(quiz.id)) ?? [];
     if (credits.length > 0) snapshot.credits = credits;
-    const id = randomBytes(16).toString('hex');
-    const pin = await this.allocatePin(id);
+    return snapshot;
+  }
 
-    const meta: GameMeta = {
-      id,
-      quizId: quiz.id,
-      hostUserId,
+  /** Queues a new game's state, in the lobby, with `playerIds` at 0. */
+  private writeGame(
+    pipe: ReturnType<RedisService['multi']>,
+    gameId: GameId,
+    snapshot: QuizSnapshot,
+    playerIds: string[],
+  ): void {
+    const game: GameFields = {
+      quizId: snapshot.quizId,
       state: GameState.Lobby,
       currentIndex: -1,
       totalQuestions: snapshot.questions.length,
-      fullCapture: dto.fullCapture === true,
-      // Suivi individuel : par défaut oui (RG-16). Nom choisi : par défaut oui, sauf
-      // sous OIDC où le nom vient du compte tant que l'hôte n'ouvre pas le choix.
-      // Open access: guests only, so nothing personal to track and no account to
-      // take a name from.
-      personalTracking: !open && dto.personalTracking !== false,
-      pickOwnName: open || (dto.pickOwnName ?? !isOidcMode()),
-      participantAccess: open ? 'open' : 'account',
-      joinLocked: false,
-      title: quiz.title,
-      language: quiz.language,
+      title: snapshot.title,
+      language: snapshot.language,
       createdAt: Date.now(),
       questionStartedAt: 0,
       questionEndsAt: 0,
@@ -143,18 +209,15 @@ export class GameService {
       paused: false,
       clockFrozen: false,
     };
-
-    const pipe = this.redis.multi();
-    pipe.hset(gameKeys.game(pin), serializeMeta(meta));
-    pipe.set(gameKeys.snapshot(pin), JSON.stringify(snapshot));
-    // Index des parties en cours de l'hôte (reprise depuis le dashboard §6.2).
-    pipe.sadd(gameKeys.hostGames(hostUserId), pin);
-    pipe.expire(gameKeys.game(pin), GAME_TTL_S);
-    pipe.expire(gameKeys.snapshot(pin), GAME_TTL_S);
-    pipe.expire(gameKeys.hostGames(hostUserId), GAME_TTL_S);
-    await pipe.exec();
-
-    return { pin };
+    pipe.hset(gameKeys.game(gameId), serializeGame(game));
+    pipe.set(gameKeys.snapshot(gameId), JSON.stringify(snapshot));
+    pipe.expire(gameKeys.game(gameId), GAME_TTL_S);
+    pipe.expire(gameKeys.snapshot(gameId), GAME_TTL_S);
+    if (playerIds.length > 0) {
+      const zero = JSON.stringify({ score: 0, streak: 0 } satisfies PlayerScore);
+      pipe.hset(gameKeys.scores(gameId), Object.fromEntries(playerIds.map((id) => [id, zero])));
+      pipe.expire(gameKeys.scores(gameId), GAME_TTL_S);
+    }
   }
 
   /**
@@ -216,8 +279,6 @@ export class GameService {
       nickname,
       avatar,
       userId,
-      score: 0,
-      streak: 0,
       connected: true,
       joinedAt: Date.now(),
       latencyMs: 0,
@@ -226,13 +287,18 @@ export class GameService {
 
     const pipe = this.redis.multi();
     pipe.hset(gameKeys.players(pin), playerId, JSON.stringify(record));
-    pipe.zadd(gameKeys.leaderboard(pin), 0, playerId);
+    // In the room's game from now on (late join §5 included), at 0.
+    pipe.hset(
+      gameKeys.scores(meta.id),
+      playerId,
+      JSON.stringify({ score: 0, streak: 0 } satisfies PlayerScore),
+    );
     pipe.set(gameKeys.session(sessionToken), JSON.stringify({ pin, playerId }));
     // TTL aligné sur le reste de la famille (clés créées au 1er joueur).
     for (const key of [
       gameKeys.players(pin),
       gameKeys.nicknames(pin),
-      gameKeys.leaderboard(pin),
+      gameKeys.scores(meta.id),
       gameKeys.session(sessionToken),
     ]) {
       pipe.expire(key, GAME_TTL_S);
@@ -262,7 +328,7 @@ export class GameService {
     const meta = await this.getMeta(pin);
     if (!meta) throw new NotFoundException('session.not_found');
     if (meta.state === GameState.Ended) throw new BadRequestException('session.ended');
-    const snapshot = await this.getSnapshot(pin);
+    const snapshot = await this.getSnapshot(meta.id);
     return !!snapshot && snapshotHasSound(snapshot);
   }
 
@@ -282,19 +348,51 @@ export class GameService {
     return record;
   }
 
-  /** Lit l'état scalaire d'une partie (null si inexistante/expirée). */
+  /** The room behind a PIN (null when gone or expired). */
+  async getRoom(pin: string): Promise<RoomMeta | null> {
+    const raw = await this.redis.hgetall(gameKeys.room(pin));
+    if (!raw || !raw.gameId) return null;
+    return deserializeRoom(raw);
+  }
+
+  /** The game the room plays, merged with the room (null when either is gone or expired). */
   async getMeta(pin: string): Promise<GameMeta | null> {
-    const raw = await this.redis.hgetall(gameKeys.game(pin));
+    const room = await this.getRoom(pin);
+    if (!room) return null;
+    const raw = await this.redis.hgetall(gameKeys.game(room.gameId));
     if (!raw || Object.keys(raw).length === 0) {
       return null;
     }
-    return deserializeMeta(raw);
+    return {
+      ...deserializeGame(raw),
+      id: room.gameId,
+      roomId: room.roomId,
+      hostUserId: room.hostUserId,
+      fullCapture: room.fullCapture,
+      personalTracking: room.personalTracking,
+      pickOwnName: room.pickOwnName,
+      participantAccess: room.participantAccess,
+      joinLocked: room.joinLocked,
+      joinBaseUrl: room.joinBaseUrl,
+    };
   }
 
-  /** Lit le snapshot figé du quiz (null si partie inexistante/expirée). */
-  async getSnapshot(pin: string): Promise<QuizSnapshot | null> {
-    const raw = await this.redis.get(gameKeys.snapshot(pin));
+  /** The frozen snapshot of a game (null when gone or expired). */
+  async getSnapshot(gameId: GameId): Promise<QuizSnapshot | null> {
+    const raw = await this.redis.get(gameKeys.snapshot(gameId));
     return raw ? (JSON.parse(raw) as QuizSnapshot) : null;
+  }
+
+  /** The snapshot of the game a room plays. */
+  async currentSnapshot(pin: string): Promise<QuizSnapshot | null> {
+    const room = await this.getRoom(pin);
+    return room ? this.getSnapshot(room.gameId) : null;
+  }
+
+  /** A player's score in a game (null when they do not play it). */
+  async getScore(gameId: GameId, playerId: string): Promise<PlayerScore | null> {
+    const raw = await this.redis.hget(gameKeys.scores(gameId), playerId);
+    return raw ? (JSON.parse(raw) as PlayerScore) : null;
   }
 
   /**
@@ -303,8 +401,8 @@ export class GameService {
    * host's edits reach a running session without touching its substance.
    * Returns the snapshot in use (unchanged when the quiz is gone).
    */
-  async refreshSnapshot(pin: string): Promise<QuizSnapshot | null> {
-    const frozen = await this.getSnapshot(pin);
+  async refreshSnapshot(gameId: GameId): Promise<QuizSnapshot | null> {
+    const frozen = await this.getSnapshot(gameId);
     if (!frozen) return null;
     const quiz = await this.prisma.quiz.findUnique({
       where: { id: frozen.quizId },
@@ -312,7 +410,7 @@ export class GameService {
     });
     if (!quiz) return frozen;
     const refreshed = refreshSnapshotForm(frozen, quiz);
-    await this.redis.set(gameKeys.snapshot(pin), JSON.stringify(refreshed), 'KEEPTTL');
+    await this.redis.set(gameKeys.snapshot(gameId), JSON.stringify(refreshed), 'KEEPTTL');
     return refreshed;
   }
 
@@ -350,7 +448,12 @@ export class GameService {
    * La reconnexion échoue ensuite d'elle-même (record absent → `setConnected` null),
    * et le re-join est refusé par la clé ban.
    */
-  async banPlayer(pin: string, playerId: string, minutes: number): Promise<string | null> {
+  async banPlayer(
+    pin: string,
+    gameId: GameId,
+    playerId: string,
+    minutes: number,
+  ): Promise<string | null> {
     const raw = await this.redis.hget(gameKeys.players(pin), playerId);
     if (!raw) return null;
     const record = JSON.parse(raw) as PlayerRecord;
@@ -360,7 +463,7 @@ export class GameService {
     pipe.set(gameKeys.ban(pin, normalized), '1', 'EX', ttlS);
     pipe.hdel(gameKeys.players(pin), playerId);
     pipe.srem(gameKeys.nicknames(pin), normalized);
-    pipe.zrem(gameKeys.leaderboard(pin), playerId);
+    pipe.hdel(gameKeys.scores(gameId), playerId);
     await pipe.exec();
     return record.nickname;
   }
@@ -395,7 +498,7 @@ export class GameService {
     if (!meta || (meta.state !== GameState.Podium && meta.state !== GameState.Ended)) {
       return { ok: false };
     }
-    const snapshot = await this.getSnapshot(pin);
+    const snapshot = await this.getSnapshot(meta.id);
     if (snapshot && !snapshot.feedbackEnabled) {
       return { ok: false }; // rating switched off on this quiz
     }
@@ -491,10 +594,10 @@ export class GameService {
   }
 
   /** Alloue un PIN à 6 chiffres unique (claim atomique auto-expirant). */
-  private async allocatePin(gameId: string): Promise<string> {
+  private async allocatePin(roomId: string): Promise<string> {
     for (let i = 0; i < PIN_ALLOC_ATTEMPTS; i++) {
       const pin = randomInt(0, 1_000_000).toString().padStart(6, '0');
-      const ok = await this.redis.set(gameKeys.pin(pin), gameId, 'EX', GAME_TTL_S, 'NX');
+      const ok = await this.redis.set(gameKeys.pin(pin), roomId, 'EX', GAME_TTL_S, 'NX');
       if (ok === 'OK') {
         return pin;
       }
@@ -531,57 +634,75 @@ function suffixNickname(base: string, n: number): string {
   return base.slice(0, NICKNAME_MAX - suffix.length) + suffix;
 }
 
-/** Sérialise les méta pour un hash Redis (tout en string). */
-function serializeMeta(meta: GameMeta): Record<string, string> {
-  const raw: Record<string, string> = {
-    id: meta.id,
-    quizId: meta.quizId,
-    hostUserId: meta.hostUserId,
-    state: meta.state,
-    currentIndex: String(meta.currentIndex),
-    totalQuestions: String(meta.totalQuestions),
-    fullCapture: meta.fullCapture ? '1' : '0',
-    personalTracking: meta.personalTracking ? '1' : '0',
-    pickOwnName: meta.pickOwnName ? '1' : '0',
-    participantAccess: meta.participantAccess,
-    joinLocked: meta.joinLocked ? '1' : '0',
-    audioTarget: meta.audioTarget ?? '',
-    mediaWaitUntil: String(meta.mediaWaitUntil ?? 0),
-    mediaLeadMs: meta.mediaLeadMs == null ? '' : String(meta.mediaLeadMs),
-    title: meta.title,
-    language: meta.language,
-    createdAt: String(meta.createdAt),
-    questionStartedAt: String(meta.questionStartedAt),
-    questionEndsAt: String(meta.questionEndsAt),
-    mode: meta.mode,
-    paused: meta.paused ? '1' : '0',
-    clockFrozen: meta.clockFrozen ? '1' : '0',
-    autoNextAt: String(meta.autoNextAt ?? 0),
-    autoNextMs: String(meta.autoNextMs ?? 0),
-    slideIndex: String(meta.slideIndex ?? -1),
+/** A new game's id: 32 hex characters (see `GAME_HASH_KEY`). */
+function newGameId(): GameId {
+  return randomBytes(16).toString('hex') as GameId;
+}
+
+/** The room hash (every field a string). */
+function serializeRoom(room: RoomMeta): Record<string, string> {
+  return {
+    roomId: room.roomId,
+    hostUserId: room.hostUserId,
+    gameId: room.gameId,
+    fullCapture: room.fullCapture ? '1' : '0',
+    personalTracking: room.personalTracking ? '1' : '0',
+    pickOwnName: room.pickOwnName ? '1' : '0',
+    participantAccess: room.participantAccess,
+    joinLocked: room.joinLocked ? '1' : '0',
+    joinBaseUrl: room.joinBaseUrl,
+    openedAt: String(room.openedAt),
   };
-  if (meta.prevState !== undefined) raw.prevState = meta.prevState;
-  if (meta.pausedRemainingMs !== undefined) raw.pausedRemainingMs = String(meta.pausedRemainingMs);
+}
+
+function deserializeRoom(raw: Record<string, string>): RoomMeta {
+  return {
+    roomId: raw.roomId,
+    hostUserId: raw.hostUserId,
+    gameId: raw.gameId as GameId,
+    fullCapture: raw.fullCapture === '1',
+    personalTracking: raw.personalTracking !== '0',
+    pickOwnName: raw.pickOwnName === '1',
+    participantAccess: raw.participantAccess === 'open' ? 'open' : 'account',
+    joinLocked: raw.joinLocked === '1',
+    joinBaseUrl: raw.joinBaseUrl ?? '',
+    openedAt: Number(raw.openedAt),
+  };
+}
+
+/** The game hash (every field a string). */
+function serializeGame(game: GameFields): Record<string, string> {
+  const raw: Record<string, string> = {
+    quizId: game.quizId,
+    state: game.state,
+    currentIndex: String(game.currentIndex),
+    totalQuestions: String(game.totalQuestions),
+    audioTarget: game.audioTarget ?? '',
+    mediaWaitUntil: String(game.mediaWaitUntil ?? 0),
+    mediaLeadMs: game.mediaLeadMs == null ? '' : String(game.mediaLeadMs),
+    title: game.title,
+    language: game.language,
+    createdAt: String(game.createdAt),
+    questionStartedAt: String(game.questionStartedAt),
+    questionEndsAt: String(game.questionEndsAt),
+    mode: game.mode,
+    paused: game.paused ? '1' : '0',
+    clockFrozen: game.clockFrozen ? '1' : '0',
+    autoNextAt: String(game.autoNextAt ?? 0),
+    autoNextMs: String(game.autoNextMs ?? 0),
+    slideIndex: String(game.slideIndex ?? -1),
+  };
+  if (game.prevState !== undefined) raw.prevState = game.prevState;
+  if (game.pausedRemainingMs !== undefined) raw.pausedRemainingMs = String(game.pausedRemainingMs);
   return raw;
 }
 
-function deserializeMeta(raw: Record<string, string>): GameMeta {
+function deserializeGame(raw: Record<string, string>): GameFields {
   return {
-    id: raw.id,
     quizId: raw.quizId,
-    hostUserId: raw.hostUserId,
     state: raw.state,
     currentIndex: Number(raw.currentIndex),
     totalQuestions: Number(raw.totalQuestions),
-    fullCapture: raw.fullCapture === '1',
-    // Défauts pour les parties déjà en vol avant l'ajout des deux options : les mêmes
-    // qu'à la création, pour qu'une session d'avant le déploiement se comporte comme
-    // une nouvelle (sous OIDC, le nom vient du compte).
-    personalTracking: raw.personalTracking !== '0',
-    pickOwnName: raw.pickOwnName === undefined ? !isOidcMode() : raw.pickOwnName === '1',
-    // Games in flight before #57 required accounts, as every game did.
-    participantAccess: raw.participantAccess === 'open' ? 'open' : 'account',
-    joinLocked: raw.joinLocked === '1',
     audioTarget: (AUDIO_TARGETS as readonly string[]).includes(raw.audioTarget ?? '')
       ? (raw.audioTarget as AudioTarget)
       : '',
@@ -592,7 +713,6 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     createdAt: Number(raw.createdAt),
     questionStartedAt: Number(raw.questionStartedAt ?? 0),
     questionEndsAt: Number(raw.questionEndsAt ?? 0),
-    // Défauts pour les parties déjà en vol avant l'ajout du mode (§8).
     mode: raw.mode === 'auto' ? 'auto' : 'manual',
     paused: raw.paused === '1',
     clockFrozen: raw.clockFrozen === '1',
@@ -602,6 +722,5 @@ function deserializeMeta(raw: Record<string, string>): GameMeta {
     prevState: raw.prevState,
     pausedRemainingMs: raw.pausedRemainingMs ? Number(raw.pausedRemainingMs) : undefined,
     reviewStep: raw.reviewStep ?? '',
-    joinBaseUrl: raw.joinBaseUrl ?? '',
   };
 }

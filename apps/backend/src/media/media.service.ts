@@ -26,7 +26,7 @@ import {
 import type { MediaAsset, MediaKind } from '@prisma/client';
 import { GameState, type MediaRejection, sniffMedia } from '@quiz-dock/contracts';
 import { isDemoMode } from '../demo/demo.config';
-import { gameKeys } from '../game/game.keys';
+import { type GameId, gameKeys } from '../game/game.keys';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { parseUploadMeta } from './dto/media-upload-meta';
@@ -728,11 +728,11 @@ export class MediaService implements OnModuleInit {
    * media). An ended session keeps its keys until they expire, but plays nothing.
    */
   private async liveSnapshots(): Promise<string[]> {
-    const keys = await this.redis.keys(gameKeys.snapshot('*'));
+    const keys = await this.redis.keys(gameKeys.snapshot('*' as GameId));
     if (keys.length === 0) return [];
-    const pins = keys.map((k) => k.split(':')[1]);
+    const games = keys.map((k) => k.split(':')[1] as GameId);
     const states = await Promise.all(
-      pins.map((pin) => this.redis.hget(gameKeys.game(pin), 'state')),
+      games.map((id) => this.redis.hget(gameKeys.game(id), 'state')),
     );
     const live = keys.filter((_k, i) => states[i] && states[i] !== GameState.Ended);
     if (live.length === 0) return [];
