@@ -22,7 +22,7 @@ export function mediaTests(ctx: GameContext): void {
     hostUserId = ctx.h.hostUserId;
   });
 
-  it('tells the projection on attach whether the quiz has sound, never the players', async () => {
+  it('tells every device on attach whether the quiz has sound, the phones too', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });
     const screen = connect();
@@ -33,12 +33,11 @@ export function mediaTests(ctx: GameContext): void {
       hasMedia: false,
       audioTarget: 'projection_remote',
     }); // the seeded quiz is silent
+    // A phone too: the room's next quiz may play sound where this one does not (#89).
     const player = connect();
-    let told = false;
-    player.on('game:media', () => (told = true));
+    const told = new Promise((resolve) => player.once('game:media', resolve));
     await player.emitWithAck('player:join', { pin, nickname: 'Mia' });
-    await settle();
-    expect(told).toBe(false);
+    expect(await told).toMatchObject({ hasSound: false });
     host.emit('host:end', { pin });
   }, 15_000);
 

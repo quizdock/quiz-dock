@@ -461,6 +461,8 @@ export interface RoomStandingsPayload {
 
 export interface PodiumPayload {
   podium: LeaderboardRow[];
+  /** The quiz of this podium: a rating goes to it (several quizzes share a room's PIN). */
+  quizId?: string;
   you?: { score: number; rank: number };
   /** Whether the end-of-session rating panel is offered (§2.11); absent = yes. */
   feedbackEnabled?: boolean;
@@ -639,7 +641,8 @@ export interface ServerToClientEvents {
   'game:podium': (p: PodiumPayload) => void;
   /** The room's standings: at a podium, in the lobby of the next quiz, and when the room closes. */
   'room:standings': (p: RoomStandingsPayload) => void;
-  'game:ended': (p: { feedbackEnabled?: boolean }) => void;
+  /** `quizId`: the quiz that ended, which a rating goes to (several share a room's PIN). */
+  'game:ended': (p: { feedbackEnabled?: boolean; quizId?: string }) => void;
   /** Mode/pause courants (à chaque changement et au (ré)attache). */
   'game:mode': (p: GameModePayload) => void;
   /** Base URL of the invitations chosen by the host (null = the page's own origin). */

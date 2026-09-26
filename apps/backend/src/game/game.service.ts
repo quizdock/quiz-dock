@@ -77,7 +77,7 @@ return 1
 
 /**
  * Switch the room to a new game. KEYS: players, room, the new game's scores, the
- * previous game's hash. ARGV: game id, zero score, TTL, the ended state. The
+ * previous game's hash. ARGV: game id, zero score, TTL, the ended state, the previous game's id. The
  * previous game ends there: nothing reads it as being played any more.
  * Returns the number of players carried over.
  */
@@ -85,7 +85,7 @@ const SWITCH_GAME_SCRIPT = `
 local ids = redis.call('HKEYS', KEYS[1])
 for _, id in ipairs(ids) do redis.call('HSET', KEYS[3], id, ARGV[2]) end
 if #ids > 0 then redis.call('EXPIRE', KEYS[3], ARGV[3]) end
-redis.call('HSET', KEYS[2], 'gameId', ARGV[1])
+redis.call('HSET', KEYS[2], 'gameId', ARGV[1], 'previousGameId', ARGV[5])
 if redis.call('EXISTS', KEYS[4]) == 1 then redis.call('HSET', KEYS[4], 'state', ARGV[4]) end
 return #ids
 `;
@@ -228,6 +228,7 @@ export class GameService {
       ZERO_SCORE,
       GAME_TTL_S,
       GameState.Ended,
+      previous.id,
     );
     await this.touchRoom(pin);
     return gameId;
@@ -637,11 +638,9 @@ export class GameService {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return { ok: false };
     }
-    const meta = await this.getMeta(pin);
-    if (!meta || (meta.state !== GameState.Podium && meta.state !== GameState.Ended)) {
-      return { ok: false };
-    }
-    const snapshot = await this.getSnapshot(meta.id);
+    const rated = await this.ratedGame(pin, playerId);
+    if (!rated) return { ok: false };
+    const snapshot = await this.getSnapshot(rated.id);
     if (snapshot && !snapshot.feedbackEnabled) {
       return { ok: false }; // rating switched off on this quiz
     }
@@ -652,9 +651,9 @@ export class GameService {
     const player = JSON.parse(raw) as PlayerRecord;
     const cleanComment = comment?.trim() ? comment.trim().slice(0, 2000) : null;
     await this.prisma.quizFeedback.upsert({
-      where: { pin_playerId_quizId: { pin, playerId, quizId: meta.quizId } },
+      where: { pin_playerId_quizId: { pin, playerId, quizId: rated.quizId } },
       create: {
-        quizId: meta.quizId,
+        quizId: rated.quizId,
         pin,
         playerId,
         nickname: player.nickname,
@@ -664,6 +663,33 @@ export class GameService {
       update: { rating, comment: cleanComment },
     });
     return { ok: true };
+  }
+
+  /**
+   * The quiz a rating is for: the room's game at its podium or over, else the
+   * one before it (the host moved on while the player was still rating). Only a
+   * game that started, and that this player played — never a quiz they only saw
+   * the podium of, nor one closed in its lobby.
+   */
+  private async ratedGame(
+    pin: string,
+    playerId: string,
+  ): Promise<{ id: GameId; quizId: string } | null> {
+    const room = await this.getRoom(pin);
+    if (!room) return null;
+    for (const id of [room.gameId, room.previousGameId]) {
+      if (!id) continue;
+      const [state, currentIndex, quizId] = await this.redis.hmget(
+        gameKeys.game(id),
+        'state',
+        'currentIndex',
+        'quizId',
+      );
+      if (!state || !quizId || Number(currentIndex) < 0) continue; // gone, or never started
+      if (id === room.gameId && state !== GameState.Podium && state !== GameState.Ended) continue;
+      return (await this.getScore(id, playerId)) ? { id, quizId } : null;
+    }
+    return null;
   }
 
   /**
@@ -803,6 +829,7 @@ function deserializeRoom(raw: Record<string, string>): RoomMeta {
     roomId: raw.roomId,
     hostUserId: raw.hostUserId,
     gameId: raw.gameId as GameId,
+    ...(raw.previousGameId ? { previousGameId: raw.previousGameId as GameId } : {}),
     fullCapture: raw.fullCapture === '1',
     personalTracking: raw.personalTracking !== '0',
     pickOwnName: raw.pickOwnName === '1',

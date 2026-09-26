@@ -36,7 +36,7 @@ export function roomTests(ctx: GameContext): void {
 
   /** The last question revealed → the podium. */
   async function toPodium(host: Socket, pin: string, player: Socket) {
-    const podium = nextEvent<{ you?: { score: number } }>(player, 'game:podium');
+    const podium = nextEvent<{ you?: { score: number }; quizId?: string }>(player, 'game:podium');
     host.emit('host:next', { pin });
     return podium;
   }
@@ -177,6 +177,31 @@ export function roomTests(ctx: GameContext): void {
     await nextQuiz(host, pin, second.id);
     expect((await notice).fullCapture).toBe(true);
     expect((await mode).mode).toBe('auto');
+  });
+
+  it('takes a rating for the quiz just played after the host moved on, never for one not played', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const first = await ctx.h.seedQuiz({ title: 'Rated late' });
+    const pin = await ctx.h.createGame(host, first.id);
+    const { socket: ada } = await ctx.h.join(pin, 'Ada');
+    await playParis(host, pin, [ada]);
+    // The podium names its quiz: the phone keys its rating by it.
+    expect((await toPodium(host, pin, ada)).quizId).toBe(first.id);
+    const { socket: bea } = await ctx.h.join(pin, 'Bea'); // at the podium: did not play it
+
+    await nextQuiz(host, pin, (await ctx.h.seedQuiz({ title: 'Next, unplayed' })).id);
+    const rate = (p: Socket, rating: number) => p.emitWithAck('player:rate', { pin, rating });
+    expect((await rate(ada, 4)).ok).toBe(true); // still typing when the host moved on
+    expect((await rate(bea, 1)).ok).toBe(false);
+
+    // Closed from the lobby of a quiz nobody played: the rating still goes to the one played.
+    const ended = nextEvent<{ quizId?: string }>(ada, 'game:ended');
+    host.emit('host:end', { pin });
+    await ended;
+    expect((await rate(ada, 5)).ok).toBe(true);
+    const rows = await ctx.h.prisma.quizFeedback.findMany({ where: { pin } });
+    expect(rows.map((r) => [r.quizId, r.nickname, r.rating])).toEqual([[first.id, 'Ada', 5]]);
+    await ctx.h.prisma.quizFeedback.deleteMany({ where: { pin } });
   });
 
   describe('standings', () => {
