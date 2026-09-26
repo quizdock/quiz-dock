@@ -132,7 +132,8 @@ From the **quiz detail** (the editor, a `ready` quiz) the presenter:
 
 `player:join {pin, nickname}` is **allowed as long as the game is not over** (states
 `LOBBY`, `QUESTION_SHOW`, `ANSWERING`, `REVEAL`, `LEADERBOARD`, `PODIUM`; refused in
-`ENDED`). On joining, the server **sends the current state back** so the client catches
+`ENDED`). Joining at the `PODIUM` puts the player in the room only: they play from the
+room's next quiz on (SPECIFICATIONS-ROOM §6). On joining, the server **sends the current state back** so the client catches
 up right away:
 
 - the player is created (score 0, the nickname claimed atomically — unchanged);

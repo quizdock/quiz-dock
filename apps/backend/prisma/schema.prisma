@@ -538,7 +538,8 @@ model QuizFeedback {
 
   quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
 
-  @@unique([pin, playerId])
+  /// One rating per player and per quiz of a room (several quizzes share a PIN).
+  @@unique([pin, playerId, quizId])
   @@index([quizId, createdAt])
   @@map("quiz_feedback")
 }

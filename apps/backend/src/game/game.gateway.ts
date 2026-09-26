@@ -201,7 +201,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   }
 
   /** Émet le sommaire des questions (sans secret) à une fenêtre de contrôle hôte. */
-  private async emitOutline(socket: GameSocket, pin: string): Promise<void> {
+  private async emitOutline(socket: Pick<GameSocket, 'emit'>, pin: string): Promise<void> {
     const snapshot = await this.game.currentSnapshot(pin);
     if (!snapshot) return;
     socket.emit('game:outline', {
@@ -372,6 +372,25 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     @MessageBody() payload: { pin: string; archive?: boolean },
   ): Promise<void> {
     await this.engine.end(payload.pin, this.requireHostId(socket), payload.archive === true);
+  }
+
+  /** `host:next-quiz`: the room's next quiz, in its lobby; the consoles get its outline. */
+  @SubscribeMessage('host:next-quiz')
+  async hostNextQuiz(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; quizId: string; archive?: boolean },
+  ): Promise<{ ok: boolean }> {
+    const { pin } = payload;
+    await this.engine.nextQuiz(
+      pin,
+      this.requireHostId(socket),
+      String(payload.quizId ?? ''),
+      payload.archive === true,
+    );
+    for (const control of await this.server.in(pin).fetchSockets()) {
+      if (control.data.isHostControl) await this.emitOutline(control, pin);
+    }
+    return { ok: true };
   }
 
   /** `host:lock` : ferme la partie aux nouveaux participants (ou la rouvre), jusqu'à la fin. */
