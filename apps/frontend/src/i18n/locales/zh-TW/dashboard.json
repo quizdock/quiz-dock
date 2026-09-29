@@ -191,5 +191,16 @@
   "ownerMe": "我",
   "ownerNone": "沒有該擁有者",
   "statusCount_one": "{{count}} 個狀態",
-  "statusCount_other": "{{count}} 個狀態"
+  "statusCount_other": "{{count}} 個狀態",
+  "kahootImported": "已從 Kahoot 匯入 {{count}} 道題。",
+  "kahootReview": "開始遊戲前請檢查草稿。不會匯入圖片和音訊。",
+  "kahootSkipped": "已略過第 {{row}} 列：{{reason}}",
+  "kahootReasons": {
+    "missing_prompt": "缺少題目",
+    "missing_answers": "答案少於兩個",
+    "invalid_time": "時間必須為 5–120 秒",
+    "invalid_correct": "正確答案編號無效",
+    "formula": "不支援公式儲存格",
+    "invalid_content": "內容超出 QuizDock 限制"
+  }
 }

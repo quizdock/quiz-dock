@@ -35,7 +35,7 @@ import { QuizDetailDto } from './dto/quiz-detail.dto';
 import { QuizFeedbackQueryDto, QuizFeedbackSummaryDto } from './dto/quiz-feedback.dto';
 import { SessionDetailDto, SessionListDto, SessionPlayerDetailDto } from './dto/quiz-session.dto';
 import { PublicationExportDto, PublicationReportDto } from './dto/publication.dto';
-import { QuizDto } from './dto/quiz.dto';
+import { QuizDto, QuizImportDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { IMPORT_MAX_BYTES } from './portable/bundle-archive';
@@ -92,7 +92,7 @@ export class QuizzesController {
       required: ['file'],
     },
   })
-  @ApiCreatedResponse({ type: QuizDto })
+  @ApiCreatedResponse({ type: QuizImportDto })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: IMPORT_MAX_BYTES } }))
   importQuiz(@CurrentUser() user: User, @UploadedFile() file: BundleFile | undefined) {
     return this.portable.importBundle(user.id, file);

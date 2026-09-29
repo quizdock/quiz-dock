@@ -31,6 +31,7 @@ import type {
   QuizDetailDto,
   QuizDto,
   QuizFeedbackSummaryDto,
+  QuizImportDto,
   QuizzesControllerFeedbackParams,
   QuizzesControllerImportQuizBody,
   SessionDetailDto,
@@ -313,7 +314,7 @@ export const useQuizzesControllerCreateSamples = <TError = unknown,
       return useMutation(getQuizzesControllerCreateSamplesMutationOptions(options), queryClient);
     }
     export type quizzesControllerImportQuizResponse201 = {
-  data: QuizDto
+  data: QuizImportDto
   status: 201
 }
 

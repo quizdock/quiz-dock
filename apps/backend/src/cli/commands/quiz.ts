@@ -90,12 +90,21 @@ export async function quizImport(
   const buffer = await io.read(source);
   let quiz;
   try {
-    quiz = await portable.importBundle(user.id, { buffer, mimetype: 'application/octet-stream' });
+    quiz = await portable.importBundle(user.id, {
+      buffer,
+      mimetype: 'application/octet-stream',
+      originalname: source === '-' ? undefined : source,
+    });
   } catch (err) {
     if (err instanceof BadRequestException) throw new CliError(`Import refused: ${reason(err)}`);
     throw err;
   }
   out.line(`Imported "${quiz.title}" (${quiz.id}) as a draft of ${user.displayName}.`);
+  if (quiz.importReport) {
+    out.line(`Kahoot: ${quiz.importReport.converted} questions converted.`);
+    for (const skipped of quiz.importReport.skipped)
+      out.line(`Skipped row ${skipped.row}: ${skipped.reason}`);
+  }
 }
 
 /** The API error as one line: its code, then the parameters naming the culprit. */

@@ -408,7 +408,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuizDto"
+                  "$ref": "#/components/schemas/QuizImportDto"
                 }
               }
             }
@@ -2795,6 +2795,163 @@
         },
         "required": [
           "title"
+        ]
+      },
+      "QuizImportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ownerId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "coverMediaId": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "ready",
+              "archived"
+            ]
+          },
+          "language": {
+            "type": "string"
+          },
+          "feedbackEnabled": {
+            "type": "boolean"
+          },
+          "mediaTailS": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "loudnessTargetLufs": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "audioTarget": {
+            "type": "string",
+            "enum": [
+              "projection",
+              "projection_remote",
+              "everyone"
+            ]
+          },
+          "questionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "license": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "shared": {
+            "type": "boolean"
+          },
+          "editable": {
+            "type": "boolean"
+          },
+          "ownerName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "archivedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "importReport": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "enum": [
+                  "kahoot"
+                ]
+              },
+              "converted": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "skipped": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "row": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "reason": {
+                      "type": "string",
+                      "enum": [
+                        "missing_prompt",
+                        "missing_answers",
+                        "invalid_time",
+                        "invalid_correct",
+                        "formula",
+                        "invalid_content"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "row",
+                    "reason"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "source",
+              "converted",
+              "skipped"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "ownerId",
+          "title",
+          "description",
+          "coverMediaId",
+          "status",
+          "language",
+          "feedbackEnabled",
+          "mediaTailS",
+          "loudnessTargetLufs",
+          "audioTarget",
+          "questionCount",
+          "license",
+          "tags",
+          "shared",
+          "createdAt",
+          "updatedAt",
+          "archivedAt"
         ]
       },
       "PublicationReportDto": {

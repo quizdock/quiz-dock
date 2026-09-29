@@ -191,5 +191,16 @@
   "ownerMe": "Moi",
   "ownerNone": "Aucun propriétaire de ce nom",
   "statusCount_one": "{{count}} statut",
-  "statusCount_other": "{{count}} statuts"
+  "statusCount_other": "{{count}} statuts",
+  "kahootImported": "{{count}} questions importées de Kahoot.",
+  "kahootReview": "Vérifiez le brouillon avant de jouer. Les images et les sons ne sont pas importés.",
+  "kahootSkipped": "Ligne {{row}} ignorée : {{reason}}",
+  "kahootReasons": {
+    "missing_prompt": "question manquante",
+    "missing_answers": "moins de deux réponses",
+    "invalid_time": "durée requise : 5–120 secondes",
+    "invalid_correct": "numéros des bonnes réponses invalides",
+    "formula": "les formules ne sont pas prises en charge",
+    "invalid_content": "le contenu dépasse les limites de QuizDock"
+  }
 }

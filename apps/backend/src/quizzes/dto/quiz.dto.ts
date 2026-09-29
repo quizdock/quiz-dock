@@ -34,3 +34,27 @@ export const quizSchema = z.object({
 });
 
 export class QuizDto extends createZodDto(quizSchema) {}
+
+export class QuizImportDto extends createZodDto(
+  quizSchema.extend({
+    importReport: z
+      .object({
+        source: z.literal('kahoot'),
+        converted: z.number().int(),
+        skipped: z.array(
+          z.object({
+            row: z.number().int(),
+            reason: z.enum([
+              'missing_prompt',
+              'missing_answers',
+              'invalid_time',
+              'invalid_correct',
+              'formula',
+              'invalid_content',
+            ]),
+          }),
+        ),
+      })
+      .optional(),
+  }),
+) {}

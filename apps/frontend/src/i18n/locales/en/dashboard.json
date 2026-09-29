@@ -191,5 +191,16 @@
   "ownerMe": "Me",
   "ownerNone": "No such owner",
   "statusCount_one": "{{count}} status",
-  "statusCount_other": "{{count}} statuses"
+  "statusCount_other": "{{count}} statuses",
+  "kahootImported": "Imported {{count}} questions from Kahoot.",
+  "kahootReview": "Review the draft before playing. Images and sounds are not imported.",
+  "kahootSkipped": "Row {{row}} skipped: {{reason}}",
+  "kahootReasons": {
+    "missing_prompt": "missing question",
+    "missing_answers": "fewer than two answers",
+    "invalid_time": "time must be 5–120 seconds",
+    "invalid_correct": "invalid correct answer numbers",
+    "formula": "formula cells are not supported",
+    "invalid_content": "content exceeds QuizDock limits"
+  }
 }

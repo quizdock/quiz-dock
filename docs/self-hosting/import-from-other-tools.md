@@ -1,12 +1,32 @@
 # Bringing a quiz from another tool
 
-QuizDock imports its own format: a `quiz.json` file, alone or zipped with its
-media ([the bundle format](../quiz-bundle.md)). No other tool exports that, and
-some export nothing at all: a free Kahoot account, for one, has no export of a
-quiz's content.
+## Kahoot spreadsheet
 
-Until QuizDock reads other formats itself
-([#88](https://github.com/quizdock/quiz-dock/issues/88)), a chatbot can do the
+In the dashboard, choose **Import** and select an `.xlsx` file using the
+[official Kahoot template](https://support.kahoot.com/hc/en-us/articles/115002812547-How-to-import-questions-from-a-spreadsheet-to-your-kahoot).
+The template has one sheet, headers on row 8 and questions starting on row 9.
+The file name becomes the draft title. Delete the template's example question
+if you do not want to import it.
+
+QuizDock keeps the wording, answer order, correct answers and time limits
+(5–120 seconds). One correct answer becomes single choice; several become
+multiple choice. At least two answers are required. Unsupported or invalid
+rows are skipped and reported by spreadsheet row number and reason. If no
+question can be converted, no draft is created. Formula cells are skipped;
+links, pictures and sounds are not read or fetched. The draft inherits the
+instance language and has no licence: check both before publishing it.
+
+The API uses the existing `POST /quizzes/import` upload. Kahoot imports include
+an `importReport` with `source`, `converted` and `skipped` (row/reason).
+The operator command `qd quiz:import file.xlsx user@example.com` prints the
+same report. An existing Kahoot quiz URL is not an import source; Kahoot's
+spreadsheet template is an input format, not a quiz export.
+
+## Other source formats
+
+QuizDock also imports its own `quiz.json`, alone or zipped with media
+([the bundle format](../quiz-bundle.md)). For PDFs, screenshots or other files,
+a chatbot can do the
 conversion: give it what you have, [the prompt](#the-prompt) and
 [the format guide](#the-format-guide), and it writes a `quiz.json` that
 QuizDock imports. It works from almost anything:
@@ -16,8 +36,7 @@ QuizDock imports. It works from almost anything:
 - **screenshots** — of each question with its answers, when nothing can be
   printed or exported; a phone photo of a quiz on paper works too. The chatbot
   has to read images: most current ones do;
-- **a spreadsheet** — Kahoot's import template, or any sheet with one question
-  per row;
+- **a spreadsheet** — another sheet with one question per row;
 - **text** — a Word document, notes, a list pasted as is.
 
 > **What you send leaves your instance.** The chatbot's provider receives the

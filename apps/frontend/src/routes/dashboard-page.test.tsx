@@ -255,6 +255,32 @@ describe('DashboardPage', () => {
     expect(await screen.findByDisplayValue('Importé')).toBeInTheDocument();
   });
 
+  it('accepts XLSX and keeps the conversion report visible before opening the draft', async () => {
+    mockApi([
+      { method: 'GET', path: '/quizzes', body: [] },
+      {
+        method: 'POST',
+        path: '/quizzes/import',
+        status: 201,
+        body: quiz({
+          id: 'kahoot',
+          importReport: {
+            source: 'kahoot',
+            converted: 2,
+            skipped: [{ row: 12, reason: 'formula' }],
+          },
+        }),
+      },
+    ]);
+    renderApp('/quizzes');
+    const input = await screen.findByLabelText('Importer');
+    expect(input).toHaveAttribute('accept', expect.stringContaining('.xlsx'));
+    fireEvent.change(input, { target: { files: [new File(['x'], 'quiz.xlsx')] } });
+    expect(await screen.findByText('2 questions importées de Kahoot.')).toBeInTheDocument();
+    expect(screen.getByText(/Ligne 12 ignorée/)).toHaveTextContent('formules');
+    expect(screen.getByRole('link', { name: 'Éditer' })).toHaveAttribute('href', '/quizzes/kahoot');
+  });
+
   it('shows the tokenised import error', async () => {
     mockApi([
       { method: 'GET', path: '/quizzes', body: [] },

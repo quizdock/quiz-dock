@@ -191,5 +191,16 @@
   "ownerMe": "Yo",
   "ownerNone": "Ningún propietario con ese nombre",
   "statusCount_one": "{{count}} estado",
-  "statusCount_other": "{{count}} estados"
+  "statusCount_other": "{{count}} estados",
+  "kahootImported": "Se importaron {{count}} preguntas de Kahoot.",
+  "kahootReview": "Revisa el borrador antes de jugar. No se importan imágenes ni sonidos.",
+  "kahootSkipped": "Fila {{row}} omitida: {{reason}}",
+  "kahootReasons": {
+    "missing_prompt": "falta la pregunta",
+    "missing_answers": "menos de dos respuestas",
+    "invalid_time": "el tiempo debe ser de 5–120 segundos",
+    "invalid_correct": "números de respuestas correctas inválidos",
+    "formula": "no se admiten fórmulas",
+    "invalid_content": "el contenido supera los límites de QuizDock"
+  }
 }

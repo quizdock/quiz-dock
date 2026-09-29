@@ -24,6 +24,8 @@ import {
 import { type BundleMediaMeta, type QuizBundle, quizBundleSchema } from './quiz-bundle.schema';
 import { mediaUrl } from '../../media/media.config';
 
+import { kahootSpreadsheet, type KahootImportReport } from './kahoot-spreadsheet';
+
 export { slugify };
 
 const MANIFEST = 'quiz.json';
@@ -115,10 +117,17 @@ export class QuizPortableService {
   }
 
   /** Imports a zip bundle or a bare `quiz.json`, as a new draft of `ownerId`. */
-  async importBundle(ownerId: string, file: BundleFile | undefined): Promise<Quiz> {
+  async importBundle(
+    ownerId: string,
+    file: BundleFile | undefined,
+  ): Promise<Quiz & { importReport?: KahootImportReport }> {
     if (!file) throw new BadRequestException('import.file_missing');
-    const { manifest, files } = this.unpack(file);
-    const bundle = this.parseManifest(manifest);
+    const kahoot = kahootSpreadsheet(file.buffer, file.originalname);
+    const unpacked = kahoot
+      ? { manifest: '', files: {} as Record<string, Uint8Array> }
+      : this.unpack(file);
+    const { files } = unpacked;
+    const bundle = kahoot?.bundle ?? this.parseManifest(unpacked.manifest);
 
     // Media first: everything referenced must be in the zip and of a known type.
     const idByPath = new Map<string, string>();
@@ -177,7 +186,7 @@ export class QuizPortableService {
       throw err;
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const quiz = await tx.quiz.create({
         data: {
           ownerId,
@@ -223,6 +232,7 @@ export class QuizPortableService {
       }
       return quiz;
     });
+    return kahoot ? { ...result, importReport: kahoot.report } : result;
   }
 
   /** A zip (manifest + media) or a bare JSON manifest. */

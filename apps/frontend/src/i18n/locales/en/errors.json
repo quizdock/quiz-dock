@@ -78,7 +78,9 @@
     "bundle_too_large": "This bundle is too large once unpacked, or holds too many files.",
     "media_missing": "Media “{{path}}” is referenced but missing from the bundle.",
     "media_unsupported": "Unsupported media “{{path}}” (png, jpg, gif, webp, avif, mp3, ogg, wav, m4a).",
-    "invalid_item": "Item {{item}} of the bundle is invalid ({{field}})."
+    "invalid_item": "Item {{item}} of the bundle is invalid ({{field}}).",
+    "kahoot_template": "Use the original Kahoot spreadsheet template (.xlsx), with one sheet.",
+    "kahoot_empty": "No valid questions found. Check row {{row}} and the Kahoot template."
   },
   "question": {
     "not_in_quiz": "Question not part of the quiz.",
