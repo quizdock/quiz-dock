@@ -119,13 +119,13 @@ export function RootLayout() {
           {t('common:demo.banner', { user: demo.user })}
         </p>
       ) : null}
-      {/* Wide but bounded: ~1440px, the usual ceiling for app layouts. Pages fill it;
-          only the ones that would look lost in it narrow themselves (see `content-*`). */}
+      {/* The participant page owns its content width so question backgrounds can span
+          the viewport; the app shell stays bounded to ~1440px. */}
       <main
         className={cn(
           'qd-main',
           shell === 'participant'
-            ? 'content-phone flex-1 px-4 py-4'
+            ? 'w-full flex-1 px-4 py-4'
             : 'content-shell flex-1 px-6 py-6 lg:px-10',
         )}
       >

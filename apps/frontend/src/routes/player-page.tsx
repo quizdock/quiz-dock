@@ -793,92 +793,107 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
     // reste en haut, l'énoncé occupe le centre et **défile** s'il est long, la zone
     // de réponse est ancrée en bas (position constante, jamais repoussée hors écran).
     return (
-      <section
+      <Surface
+        background={question.background}
+        textTone={question.textTone}
+        textOutline={question.textOutline}
         className={cn(
-          // Fills the viewport under the header (main padding included): the chrono
-          // on top, the prompt centred in the remaining height, the answer zone at the bottom.
-          'mx-auto flex min-h-[calc(100dvh-6rem)] w-full max-w-[24em] flex-col gap-[0.75em] text-center md:max-w-[36em]',
-          TYPE_BASE.phone,
+          '-mx-4 -my-4 min-h-[calc(100dvh-4rem)] px-4 py-4',
+          !question.background && 'bg-transparent',
         )}
       >
-        {participantBar}
-        {clock ? (
-          // Pinned on top while the rest scrolls; above an opened picture too.
-          <QuestionClockBar
-            clock={clock}
-            className="bg-background sticky top-0 z-50 shrink-0 py-[0.5em] text-[1.25em]"
-          />
-        ) : null}
-        <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[0.5em]">
-          {/* The prompt first, then the picture: a small one in the room (it is big on the
-              projection), a tap to open it over the screen (#92). */}
-          <Markdown
-            role="heading"
-            aria-level={1}
-            className="qd-prompt text-[1.5em] font-semibold text-balance"
-          >
-            {question.prompt}
-          </Markdown>
-          {playsHere ? (
-            <QuestionMediaStage
-              key={question.questionIndex}
-              media={question.media}
-              mode={view.paused ? 'pause' : 'play'}
-              audible={hears}
-              muted={muted}
-              follow={hears ? undefined : followed(view, { questionIndex: question.questionIndex })}
-              catchUp={followed(view, { questionIndex: question.questionIndex })}
-              startAt={question.mediaStartAt ?? null}
-              zoomable
-              boxClassName="w-full max-h-[30dvh]"
-              resumeKey={`${pin}:${question.questionIndex}`}
-              anchor={anchorOf(view, { questionIndex: question.questionIndex })}
-            />
-          ) : (
-            <>
-              <QuestionMedia media={question.media} zoomable className="max-h-[18dvh] w-auto" />
-              {/* In the room the sound plays on the projection; its playhead shows here only
-                  when the sound is the question (listen first), not a background (#92). */}
-              {question.media?.audio && question.listenFirst ? (
-                <FollowedWaveform
-                  audio={question.media.audio}
-                  follow={followed(view, { questionIndex: question.questionIndex })}
-                />
-              ) : null}
-            </>
-          )}
-        </div>
-        <div
+        <section
           className={cn(
-            'flex w-full shrink-0 flex-col items-center gap-[0.75em] pb-[0.5em]',
-            tiled &&
-              'bg-background sticky bottom-0 pt-[0.5em] pb-[max(0.5em,env(safe-area-inset-bottom))]',
+            // Fills the viewport under the header (main padding included): the chrono
+            // on top, the prompt centred in the remaining height, the answer zone at the bottom.
+            'mx-auto flex min-h-[calc(100dvh-6rem)] w-full max-w-[24em] flex-col gap-[0.75em] text-center md:max-w-[36em]',
+            TYPE_BASE.phone,
           )}
         >
-          <AnswerRules question={question} />
-          {reading ? (
-            <p className="text-muted-foreground text-[1.1em] font-medium">
-              {question.listenFirst ? t('player.listenFirst') : t('player.readQuestion')}{' '}
-              <span className="tabular-nums">{readingLeft}</span>
-            </p>
-          ) : lost ? (
-            <p role="alert" className="text-destructive text-[1.1em] font-semibold">
-              {t(`player.answerRefused.${refusal}`)}
-            </p>
-          ) : done ? (
-            <p className="text-[1.25em] font-semibold">{t('player.answerSaved')}</p>
-          ) : (
-            <>
-              {refusal === 'early' ? (
-                <p role="alert" className="text-muted-foreground">
-                  {t('player.answerRefused.early')}
-                </p>
-              ) : null}
-              {renderAnswerInput()}
-            </>
-          )}
-        </div>
-      </section>
+          {participantBar}
+          {clock ? (
+            // Pinned on top while the rest scrolls; above an opened picture too.
+            <QuestionClockBar
+              clock={clock}
+              className={cn(
+                'sticky top-0 z-50 shrink-0 py-[0.5em] text-[1.25em]',
+                !question.background && 'bg-background',
+              )}
+            />
+          ) : null}
+          <div className="flex min-h-0 flex-1 flex-col justify-center gap-[0.75em] overflow-y-auto py-[0.5em]">
+            {/* The prompt first, then the picture: a small one in the room (it is big on the
+              projection), a tap to open it over the screen (#92). */}
+            <Markdown
+              role="heading"
+              aria-level={1}
+              className="qd-prompt text-[1.5em] font-semibold text-balance"
+            >
+              {question.prompt}
+            </Markdown>
+            {playsHere ? (
+              <QuestionMediaStage
+                key={question.questionIndex}
+                media={question.media}
+                mode={view.paused ? 'pause' : 'play'}
+                audible={hears}
+                muted={muted}
+                follow={
+                  hears ? undefined : followed(view, { questionIndex: question.questionIndex })
+                }
+                catchUp={followed(view, { questionIndex: question.questionIndex })}
+                startAt={question.mediaStartAt ?? null}
+                zoomable
+                boxClassName="w-full max-h-[30dvh]"
+                resumeKey={`${pin}:${question.questionIndex}`}
+                anchor={anchorOf(view, { questionIndex: question.questionIndex })}
+              />
+            ) : (
+              <>
+                <QuestionMedia media={question.media} zoomable className="max-h-[18dvh] w-auto" />
+                {/* In the room the sound plays on the projection; its playhead shows here only
+                  when the sound is the question (listen first), not a background (#92). */}
+                {question.media?.audio && question.listenFirst ? (
+                  <FollowedWaveform
+                    audio={question.media.audio}
+                    follow={followed(view, { questionIndex: question.questionIndex })}
+                  />
+                ) : null}
+              </>
+            )}
+          </div>
+          <div
+            className={cn(
+              'flex w-full shrink-0 flex-col items-center gap-[0.75em] pb-[0.5em]',
+              tiled && 'sticky bottom-0 pt-[0.5em] pb-[max(0.5em,env(safe-area-inset-bottom))]',
+              tiled && !question.background && 'bg-background',
+            )}
+          >
+            <AnswerRules question={question} />
+            {reading ? (
+              <p className="text-muted-foreground text-[1.1em] font-medium">
+                {question.listenFirst ? t('player.listenFirst') : t('player.readQuestion')}{' '}
+                <span className="tabular-nums">{readingLeft}</span>
+              </p>
+            ) : lost ? (
+              <p role="alert" className="text-destructive text-[1.1em] font-semibold">
+                {t(`player.answerRefused.${refusal}`)}
+              </p>
+            ) : done ? (
+              <p className="text-[1.25em] font-semibold">{t('player.answerSaved')}</p>
+            ) : (
+              <>
+                {refusal === 'early' ? (
+                  <p role="alert" className="text-muted-foreground">
+                    {t('player.answerRefused.early')}
+                  </p>
+                ) : null}
+                {renderAnswerInput()}
+              </>
+            )}
+          </div>
+        </section>
+      </Surface>
     );
   }
 
