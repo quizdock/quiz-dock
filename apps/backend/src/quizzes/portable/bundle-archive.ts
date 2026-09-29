@@ -76,7 +76,10 @@ export function readArchive(
   unzip.register(UnzipInflate);
   unzip.register(UnzipPassThrough);
   try {
-    unzip.push(zip, true);
+    // Bound each inflater output too: callbacks can only stop after a chunk is produced.
+    for (let offset = 0; offset < zip.length && !failure; offset += 1024) {
+      unzip.push(zip.subarray(offset, offset + 1024), offset + 1024 >= zip.length);
+    }
   } catch {
     failure ??= 'invalid';
   }
