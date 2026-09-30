@@ -10,6 +10,7 @@ import { apiErrorText } from '../api/http';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
+import { FilterField } from '@/components/ui/filter-field';
 import { Select } from '@/components/ui/select';
 import { fold } from '@/lib/text';
 import {
@@ -108,7 +109,7 @@ export function LivePage() {
       {sessions.length > 0 ? (
         <>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="relative min-w-[12rem] flex-1">
+            <label className="relative min-w-[12rem] flex-1 basis-full sm:basis-auto">
               <span className="sr-only">{t('searchSessions')}</span>
               <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
               <Input
@@ -118,8 +119,7 @@ export function LivePage() {
                 className="pl-8"
               />
             </label>
-            <label className="text-muted-foreground flex flex-col gap-1">
-              <span className="text-xs">{t('filterState')}</span>
+            <FilterField label={t('filterState')}>
               <Select
                 value={state}
                 onChange={(e) => narrow(() => setState(e.target.value as typeof state))}
@@ -128,9 +128,8 @@ export function LivePage() {
                 <option value="lobby">{t('stateLobby')}</option>
                 <option value="playing">{t('statePlaying')}</option>
               </Select>
-            </label>
-            <label className="text-muted-foreground flex flex-col gap-1">
-              <span className="text-xs">{t('sortBy')}</span>
+            </FilterField>
+            <FilterField label={t('sortBy')}>
               <Select
                 value={sort}
                 onChange={(e) => narrow(() => setSort(e.target.value as typeof sort))}
@@ -139,7 +138,7 @@ export function LivePage() {
                 <option value="title">{t('sortTitle')}</option>
                 <option value="pin">{t('sortPin')}</option>
               </Select>
-            </label>
+            </FilterField>
           </div>
           <p className="text-muted-foreground text-sm" role="status">
             {t('sessionCount', { count: shown.length })}

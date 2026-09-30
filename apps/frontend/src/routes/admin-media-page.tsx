@@ -23,6 +23,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Segmented } from '@/components/ui/segmented';
+import { FilterField } from '@/components/ui/filter-field';
 import { Select } from '@/components/ui/select';
 import { WaveformPlayer } from '@/components/waveform-player';
 import { formatDimensions } from '@/lib/dimensions';
@@ -341,9 +342,8 @@ function Files() {
       ) : null}
 
       <div className="flex flex-wrap items-end gap-2">
-        <label className="text-muted-foreground flex flex-col gap-1">
-          <span className="text-xs">{t('mediaAdmin.files.kind')}</span>
-          <Select className="w-36" value={kind} onChange={(e) => setKind(e.target.value)}>
+        <FilterField label={t('mediaAdmin.files.kind')}>
+          <Select className="w-full sm:w-36" value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="">{t('mediaAdmin.files.allKinds')}</option>
             {(['image', 'video', 'audio'] as const).map((k) => (
               <option key={k} value={k}>
@@ -351,11 +351,14 @@ function Files() {
               </option>
             ))}
           </Select>
-        </label>
+        </FilterField>
         {scope === 'all' ? (
-          <label className="text-muted-foreground flex flex-col gap-1">
-            <span className="text-xs">{t('mediaAdmin.files.owner')}</span>
-            <Select className="w-44" value={ownerId} onChange={(e) => setOwnerId(e.target.value)}>
+          <FilterField label={t('mediaAdmin.files.owner')}>
+            <Select
+              className="w-full sm:w-44"
+              value={ownerId}
+              onChange={(e) => setOwnerId(e.target.value)}
+            >
               <option value="">{t('mediaAdmin.files.allOwners')}</option>
               {owners.map((o) => (
                 <option key={o.ownerId} value={o.ownerId}>
@@ -363,12 +366,11 @@ function Files() {
                 </option>
               ))}
             </Select>
-          </label>
+          </FilterField>
         ) : null}
-        <label className="text-muted-foreground flex flex-col gap-1">
-          <span className="text-xs">{t('mediaAdmin.files.sort')}</span>
+        <FilterField label={t('mediaAdmin.files.sort')}>
           <Select
-            className="w-44"
+            className="w-full sm:w-44"
             value={sort}
             onChange={(e) => setSort(e.target.value as typeof sort)}
           >
@@ -376,7 +378,7 @@ function Files() {
             <option value="usage">{t('mediaAdmin.files.byUsage')}</option>
             <option value="recent">{t('mediaAdmin.files.byDate')}</option>
           </Select>
-        </label>
+        </FilterField>
         <label className="flex items-center gap-1.5 text-sm">
           <input type="checkbox" checked={legacy} onChange={(e) => setLegacy(e.target.checked)} />
           {t('mediaAdmin.files.legacyOnly')}

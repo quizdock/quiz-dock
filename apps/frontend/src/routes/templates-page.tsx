@@ -16,6 +16,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Segmented } from '@/components/ui/segmented';
+import { FilterField } from '@/components/ui/filter-field';
 import { Select } from '@/components/ui/select';
 import { TagFilter, tagsOf } from '@/components/tag-filter';
 import { fold } from '@/lib/text';
@@ -108,7 +109,7 @@ export function TemplatesPage() {
       {entries.length > 0 ? (
         <>
           <div className="flex flex-wrap items-end gap-3">
-            <label className="relative min-w-[12rem] flex-1">
+            <label className="relative min-w-[12rem] flex-1 basis-full sm:basis-auto">
               <span className="sr-only">{t('search')}</span>
               <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
               <Input
@@ -122,8 +123,7 @@ export function TemplatesPage() {
               />
             </label>
             {languages.length > 1 ? (
-              <label className="text-muted-foreground flex flex-col gap-1">
-                <span className="text-xs">{t('dashboard:filterLanguage')}</span>
+              <FilterField label={t('dashboard:filterLanguage')}>
                 <Select
                   value={language}
                   onChange={(e) => {
@@ -138,10 +138,9 @@ export function TemplatesPage() {
                     </option>
                   ))}
                 </Select>
-              </label>
+              </FilterField>
             ) : null}
-            <label className="text-muted-foreground flex flex-col gap-1">
-              <span className="text-xs">{t('sortBy')}</span>
+            <FilterField label={t('sortBy')}>
               <Select
                 value={sort}
                 onChange={(e) => {
@@ -153,7 +152,7 @@ export function TemplatesPage() {
                 <option value="title">{t('sortTitle')}</option>
                 <option value="questions">{t('sortQuestions')}</option>
               </Select>
-            </label>
+            </FilterField>
             <Segmented
               label={t('dashboard:display')}
               value={view}

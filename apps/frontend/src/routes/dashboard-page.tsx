@@ -32,6 +32,7 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { Input } from '@/components/ui/input';
 import { Pagination } from '@/components/ui/pagination';
 import { Segmented } from '@/components/ui/segmented';
+import { FilterField } from '@/components/ui/filter-field';
 import { Select } from '@/components/ui/select';
 import { TagFilter, tagsOf } from '@/components/tag-filter';
 import { fold } from '@/lib/text';
@@ -288,7 +289,7 @@ export function DashboardPage() {
       {!isLoading && !error && quizzes.length > 0 ? (
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-end gap-3">
-            <label className="relative min-w-[12rem] flex-1">
+            <label className="relative min-w-[12rem] flex-1 basis-full sm:basis-auto">
               <span className="sr-only">{t('search')}</span>
               <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
               <Input
@@ -299,11 +300,10 @@ export function DashboardPage() {
               />
             </label>
             {/* Not a <label>: it holds a list of its own labelled boxes. */}
-            <div className="text-muted-foreground flex flex-col gap-1 text-xs">
-              <span>{t('filterStatus')}</span>
+            <FilterField label={t('filterStatus')} as="div">
               <MultiSelect
                 aria-label={t('filterStatus')}
-                className="w-44"
+                className="w-full sm:w-44"
                 options={(['draft', 'ready', 'archived'] as const).map((v) => ({
                   value: v,
                   label: t(`common:quizStatus.${v}`),
@@ -313,15 +313,14 @@ export function DashboardPage() {
                 allLabel={t('statusAll')}
                 countLabel={(count) => t('statusCount', { count })}
               />
-            </div>
+            </FilterField>
             {others.length > 0 ? (
-              <label className="text-muted-foreground flex flex-col gap-1">
-                <span className="text-xs">{t('filterOwner')}</span>
+              <FilterField label={t('filterOwner')}>
                 {others.length > OWNER_SELECT_MAX ? (
                   // Many hosts share: a list to type into rather than to scroll.
                   <Combobox
                     aria-label={t('filterOwner')}
-                    className="w-48"
+                    className="w-full sm:w-48"
                     options={ownerOptions}
                     value={owner}
                     onChange={(v) => narrow(() => setOwner(v))}
@@ -336,11 +335,10 @@ export function DashboardPage() {
                     ))}
                   </Select>
                 )}
-              </label>
+              </FilterField>
             ) : null}
             {languages.length > 1 ? (
-              <label className="text-muted-foreground flex flex-col gap-1">
-                <span className="text-xs">{t('filterLanguage')}</span>
+              <FilterField label={t('filterLanguage')}>
                 <Select
                   value={language}
                   onChange={(e) => narrow(() => setLanguage(e.target.value))}
@@ -352,10 +350,9 @@ export function DashboardPage() {
                     </option>
                   ))}
                 </Select>
-              </label>
+              </FilterField>
             ) : null}
-            <label className="text-muted-foreground flex flex-col gap-1">
-              <span className="text-xs">{t('sortBy')}</span>
+            <FilterField label={t('sortBy')}>
               <Select
                 value={sort}
                 onChange={(e) => narrow(() => setSort(e.target.value as typeof sort))}
@@ -364,7 +361,7 @@ export function DashboardPage() {
                 <option value="title">{t('sortTitle')}</option>
                 <option value="questions">{t('sortQuestions')}</option>
               </Select>
-            </label>
+            </FilterField>
             <Segmented
               label={t('display')}
               value={view}
