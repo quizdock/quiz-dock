@@ -66,7 +66,7 @@ describe('useGameSession', () => {
   it('takes on every event it follows, and lets every one go on unmount', async () => {
     const { unmount } = renderHook(() => useGameSession('482913', 'host'));
     await waitFor(() => expect(emitted.some((e) => e.event === 'host:attach')).toBe(true));
-    expect(listeners.size).toBe(31); // the contract's 29, and the connection's own two
+    expect(listeners.size).toBe(32); // the contract's 30, and the connection's own two
     unmount();
     expect([...listeners.keys()]).toEqual([]);
   });
@@ -78,7 +78,7 @@ describe('useGameSession', () => {
     await act(() => i18n.changeLanguage(before === 'en' ? 'fr' : 'en'));
     await act(() => i18n.changeLanguage(before));
     expect(emitted.filter((e) => e.event === 'host:attach')).toHaveLength(1);
-    expect(listeners.size).toBe(31); // the contract's 29, and the connection's own two
+    expect(listeners.size).toBe(32); // the contract's 30, and the connection's own two
   });
 
   it('says when the connection is lost, until it is back, but not when the page lets it go (audit F9)', async () => {

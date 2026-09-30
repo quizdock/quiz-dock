@@ -1,4 +1,5 @@
-import { m, stagger, useAnimate, useReducedMotion } from 'motion/react';
+import { m, stagger, useAnimate } from 'motion/react';
+import { useMotionLevel } from './level';
 import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { gradientCss } from '../surface';
@@ -12,15 +13,17 @@ import { EASE_OUT, MOTION } from './tokens';
  * its colours linger for half a second. Put it last in the screen's positioned root.
  */
 export function BackdropFade({ stepKey, backdrop }: { stepKey: string; backdrop: Backdrop }) {
+  const level = useMotionLevel();
   const last = useRef({ stepKey, backdrop });
   const [ghost, setGhost] = useState<{ id: string; backdrop: Backdrop } | null>(null);
   useLayoutEffect(() => {
     const before = last.current;
     last.current = { stepKey, backdrop };
+    if (level === 'none') return;
     if (before.stepKey !== stepKey && !sameBackdrop(before.backdrop, backdrop)) {
       setGhost({ id: `${before.stepKey}>${stepKey}`, backdrop: before.backdrop });
     }
-  }, [stepKey, backdrop]);
+  }, [stepKey, backdrop, level]);
   if (!ghost) return null;
   const b = ghost.backdrop;
   const veil = b && b.textTone === 'dark' ? 'bg-white/55' : 'bg-black/40';
@@ -66,21 +69,21 @@ export function StepEnter({
   children: ReactNode;
 }) {
   const [scope, animate] = useAnimate<HTMLDivElement>();
-  const reduced = useReducedMotion();
+  const level = useMotionLevel();
   const shown = useRef<string | null>(null);
   useLayoutEffect(() => {
     const first = shown.current === null;
     shown.current = stepKey;
     // The screen opening on a step shows it as it is; only a change moves.
-    if (first || !scope.current) return;
+    if (first || !scope.current || level === 'none') return;
     const parts = partsOf(scope.current);
     if (parts.length === 0) return;
-    void animate(parts, reduced ? { opacity: [0, 1] } : { opacity: [0, 1], y: [16, 0] }, {
+    void animate(parts, level === 'fade' ? { opacity: [0, 1] } : { opacity: [0, 1], y: [16, 0] }, {
       duration: MOTION.enter,
       delay: stagger(MOTION.stagger, { startDelay: MOTION.enterDelay }),
       ease: EASE_OUT,
     });
-  }, [stepKey, animate, reduced, scope]);
+  }, [stepKey, animate, level, scope]);
   return (
     <div ref={scope} className={className}>
       {children}

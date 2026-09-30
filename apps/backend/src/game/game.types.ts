@@ -167,6 +167,8 @@ export interface RoomMeta {
   hostName: string;
   /** The room's game sounds (#93): what the host set, and what the screens are sent. */
   sounds: RoomSounds;
+  /** Whether the room's screens move between steps (UI system §1.8); the host switches it. */
+  motion: boolean;
 }
 
 /** The room's game sounds as kept: the host's choices (media ids) and their URLs. */
@@ -239,6 +241,7 @@ export const ROOM_FIELDS = [
   'name',
   'hostName',
   'sounds',
+  'motion',
 ] as const;
 
 /**

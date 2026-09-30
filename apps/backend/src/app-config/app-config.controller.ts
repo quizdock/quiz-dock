@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { liveMotionDefault } from '../game/live-motion';
 import { join } from 'node:path';
 import { Controller, Get, Header, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
@@ -32,7 +33,9 @@ export class AppConfigController {
     // The home page's feedback links: empty = the QuizDock repository, `none` = hidden.
     const feedbackUrl = process.env.APP_FEEDBACK_URL ?? '';
     // JSON is valid JavaScript, whatever the values hold (quotes, backslashes, line breaks).
-    const config = JSON.stringify({ appName, lang, logoUrl, feedbackUrl });
+    // A new room's screens move between steps unless the instance says `off` (UI system §1.8).
+    const liveMotion = liveMotionDefault();
+    const config = JSON.stringify({ appName, lang, logoUrl, feedbackUrl, liveMotion });
     return `window.__APP_CONFIG__ = ${config};\n`;
   }
 

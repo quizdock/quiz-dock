@@ -392,6 +392,15 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     await this.engine.setSounds(pin, this.requireHostId(socket), patch);
   }
 
+  /** `host:motion`: whether the room's screens move between steps (UI system §1.8). */
+  @SubscribeMessage('host:motion')
+  async hostMotion(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; on: boolean },
+  ): Promise<void> {
+    await this.engine.setMotion(payload.pin, this.requireHostId(socket), payload.on);
+  }
+
   /** `player:ready` (#104): the participant is ready, or not yet, in the lobby. */
   @SubscribeMessage('player:ready')
   async playerReady(

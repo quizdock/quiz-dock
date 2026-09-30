@@ -249,7 +249,10 @@
     "pauseNothing": "目前沒有可暫停的內容",
     "spaceKey": "空白鍵",
     "slideAuto": "{{seconds}} 秒",
-    "slideManual": "手動"
+    "slideManual": "手動",
+    "motion": "動畫",
+    "motionOnTooltip": "螢幕在各步驟之間有過場動畫。點擊可關閉，適合較慢的投影設備。",
+    "motionOffTooltip": "螢幕切換時沒有過場動畫。點擊可重新開啟。"
   },
   "screen": {
     "sessionUnavailable": "房間無法使用。",

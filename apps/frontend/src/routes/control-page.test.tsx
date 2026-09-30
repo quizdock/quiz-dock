@@ -67,6 +67,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   joinBaseUrl: null,
   youReady: false,
   sounds: null,
+  motion: null,
   roomName: null,
   hostName: null,
   standings: null,
@@ -506,6 +507,24 @@ describe('ControlPage (console hôte)', () => {
     });
     act(() => fireEvent.click(lock));
     expect(fakeSocket.emit).toHaveBeenCalledWith('host:lock', { pin: '482913', locked: true });
+  });
+
+  it('ANSWERING: the host keeps the screens still, or lets them move, for the whole room (UI system §1.8)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      totalQuestions: 3,
+      question: { prompt: 'Capitale ?' } as never,
+      answerCount: { answered: 0, total: 1 },
+      motion: true,
+    });
+    renderApp('/session/482913/console');
+
+    const motion = await screen.findByRole('button', { name: 'Animations' });
+    expect(motion).toHaveAttribute('aria-pressed', 'true');
+    act(() => motion.click());
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:motion', { pin: '482913', on: false });
   });
 
   it('LOBBY: open access greys personal tracking out, and says why (#57)', async () => {

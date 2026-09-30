@@ -1,4 +1,5 @@
 import { randomBytes, randomInt } from 'node:crypto';
+import { liveMotionDefault } from './live-motion';
 import {
   BadRequestException,
   ConflictException,
@@ -206,6 +207,7 @@ export class GameService {
       openedAt: Date.now(),
       name: '',
       sounds: DEFAULT_ROOM_SOUNDS,
+      motion: liveMotionDefault(),
       hostName:
         (
           await this.prisma.user.findUnique({

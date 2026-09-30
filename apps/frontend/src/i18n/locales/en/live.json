@@ -249,7 +249,10 @@
     "pauseNothing": "Nothing to pause right now",
     "spaceKey": "Space",
     "slideAuto": "{{seconds}} s",
-    "slideManual": "manual"
+    "slideManual": "manual",
+    "motion": "Animations",
+    "motionOnTooltip": "The screens move between steps. Click to keep them still, for a slow projector.",
+    "motionOffTooltip": "The screens change without transitions. Click to bring the transitions back."
   },
   "screen": {
     "sessionUnavailable": "Room unavailable.",

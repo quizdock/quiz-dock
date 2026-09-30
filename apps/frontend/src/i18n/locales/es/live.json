@@ -249,7 +249,10 @@
     "pauseNothing": "Nada que pausar ahora",
     "spaceKey": "Espacio",
     "slideAuto": "{{seconds}} s",
-    "slideManual": "manual"
+    "slideManual": "manual",
+    "motion": "Animaciones",
+    "motionOnTooltip": "Las pantallas se animan entre los pasos. Haz clic para dejarlas quietas, para un proyector lento.",
+    "motionOffTooltip": "Las pantallas cambian sin transiciones. Haz clic para recuperarlas."
   },
   "screen": {
     "sessionUnavailable": "Sala no disponible.",

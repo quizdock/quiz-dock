@@ -25,6 +25,11 @@ export interface AppConfig {
    * QuizDock repository, another URL = the operator's own, `none` = no links.
    */
   feedbackUrl?: string;
+  /**
+   * Whether a new room's screens move between steps (`LIVE_MOTION`, UI system §1.8);
+   * the host switches it for their room.
+   */
+  liveMotion?: boolean;
 }
 
 const DEFAULTS: AppConfig = {

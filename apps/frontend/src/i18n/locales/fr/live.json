@@ -249,7 +249,10 @@
     "pauseNothing": "Rien à mettre en pause pour l’instant",
     "spaceKey": "Espace",
     "slideAuto": "{{seconds}} s",
-    "slideManual": "manuel"
+    "slideManual": "manuel",
+    "motion": "Animations",
+    "motionOnTooltip": "Les écrans s’animent entre les étapes. Cliquer pour les figer, pour un projecteur lent.",
+    "motionOffTooltip": "Les écrans changent sans transition. Cliquer pour remettre les transitions."
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",

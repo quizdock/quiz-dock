@@ -1,4 +1,5 @@
 import { RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { LiveMotion } from '../game/motion/level';
 import { Pulse } from '../game/motion/primitives';
 import { BackdropFade, StepEnter } from '../game/motion/step-transition';
 import { backdropOf, stepKeyOf } from '../game/motion/step';
@@ -660,59 +661,61 @@ export function ScreenSurface({
   );
 
   return (
-    <div
-      ref={ref}
-      data-state={view.state ?? 'none'}
-      className={cn(
-        'qd-screen bg-background relative flex flex-col',
-        boxed ? 'h-full w-full overflow-hidden' : 'min-h-dvh',
-        // A question fits the screen exactly; the rest may grow.
-        !boxed &&
-          (view.state === 'ANSWERING' ||
-            view.state === 'QUESTION_SHOW' ||
-            view.state === 'REVEAL' ||
-            view.state === 'LEADERBOARD') &&
-          'h-dvh',
-        // One typographic base for the whole projected page; everything inside is in em.
-        boxed ? TYPE_BASE.stage : TYPE_BASE.screen,
-      )}
-    >
-      {fullscreenBtn}
-      {soundButton ? (
-        <SoundButton
-          size="lg"
-          align="start"
-          className={cn('absolute top-4 left-4 z-40', BACKDROP_EDGE)}
-          onUnmute={() => void unlockAudio()}
-        />
-      ) : null}
-      {/* A quiz with sound asks for the unlocking click as soon as this window opens,
+    <LiveMotion on={view.motion}>
+      <div
+        ref={ref}
+        data-state={view.state ?? 'none'}
+        className={cn(
+          'qd-screen bg-background relative flex flex-col',
+          boxed ? 'h-full w-full overflow-hidden' : 'min-h-dvh',
+          // A question fits the screen exactly; the rest may grow.
+          !boxed &&
+            (view.state === 'ANSWERING' ||
+              view.state === 'QUESTION_SHOW' ||
+              view.state === 'REVEAL' ||
+              view.state === 'LEADERBOARD') &&
+            'h-dvh',
+          // One typographic base for the whole projected page; everything inside is in em.
+          boxed ? TYPE_BASE.stage : TYPE_BASE.screen,
+        )}
+      >
+        {fullscreenBtn}
+        {soundButton ? (
+          <SoundButton
+            size="lg"
+            align="start"
+            className={cn('absolute top-4 left-4 z-40', BACKDROP_EDGE)}
+            onUnmute={() => void unlockAudio()}
+          />
+        ) : null}
+        {/* A quiz with sound asks for the unlocking click as soon as this window opens,
           whatever the moment of the session; a silent quiz never asks. */}
-      {(playMedia || (role === 'follow' && sound)) &&
-      !soundUnlocked &&
-      !deviceSound.muted &&
-      (view.quizHasSound || soundsOn) &&
-      view.state !== 'ENDED' ? (
-        // The projection cannot be muted from here: the console does it.
-        <SoundUnlockOverlay allowSilent={role === 'follow'} />
-      ) : null}
-      {onBackground &&
-      view.question?.background &&
-      view.state &&
-      QUESTION_STATES.has(view.state) ? (
-        // A question with a background owns the surface, bands included.
-        <Surface
-          background={view.question.background}
-          textTone={view.question.textTone}
-          textOutline={view.question.textOutline}
-          className="absolute inset-0"
-        >
-          {frame}
-        </Surface>
-      ) : (
-        frame
-      )}
-      <BackdropFade stepKey={stepKey} backdrop={backdropOf(view, onBackground)} />
-    </div>
+        {(playMedia || (role === 'follow' && sound)) &&
+        !soundUnlocked &&
+        !deviceSound.muted &&
+        (view.quizHasSound || soundsOn) &&
+        view.state !== 'ENDED' ? (
+          // The projection cannot be muted from here: the console does it.
+          <SoundUnlockOverlay allowSilent={role === 'follow'} />
+        ) : null}
+        {onBackground &&
+        view.question?.background &&
+        view.state &&
+        QUESTION_STATES.has(view.state) ? (
+          // A question with a background owns the surface, bands included.
+          <Surface
+            background={view.question.background}
+            textTone={view.question.textTone}
+            textOutline={view.question.textOutline}
+            className="absolute inset-0"
+          >
+            {frame}
+          </Surface>
+        ) : (
+          frame
+        )}
+        <BackdropFade stepKey={stepKey} backdrop={backdropOf(view, onBackground)} />
+      </div>
+    </LiveMotion>
   );
 }

@@ -83,6 +83,7 @@ describe('GameService: the hashes of a new session (integration)', () => {
       pickOwnName: '1',
       participantAccess: 'account',
       joinLocked: '0',
+      motion: '1',
       joinBaseUrl: '',
       openedAt: expect.stringMatching(/^\d{13}$/),
       name: '',

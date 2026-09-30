@@ -1,4 +1,5 @@
-import { animate, stagger, useReducedMotion } from 'motion/react';
+import { animate, stagger } from 'motion/react';
+import { useMotionLevel } from './level';
 import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react';
 import { EASE_OUT, MOTION } from './tokens';
 
@@ -17,7 +18,8 @@ export function CountUp({
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const last = useRef(from ?? value);
-  const reduced = useReducedMotion();
+  const level = useMotionLevel();
+  const reduced = level !== 'full';
   useEffect(() => {
     const start = last.current;
     last.current = value;
@@ -44,7 +46,8 @@ export function CountUp({
 export function Pulse({ value, className }: { value: number | string; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const last = useRef(value);
-  const reduced = useReducedMotion();
+  const level = useMotionLevel();
+  const reduced = level !== 'full';
   useEffect(() => {
     if (last.current === value || reduced || !ref.current) {
       last.current = value;
@@ -74,7 +77,8 @@ export function useStandingsMotion(
   rows: { nickname: string; rank: number; score: number }[],
   track = 'standings',
 ) {
-  const reduced = useReducedMotion();
+  const level = useMotionLevel();
+  const reduced = level !== 'full';
   const signature = rows.map((r) => `${r.nickname}:${r.rank}:${r.score}`).join('|');
   useLayoutEffect(() => {
     const before = shownStandings.get(track);
@@ -116,7 +120,8 @@ export function useStandingsMotion(
  * fill from zero together, then the wrong answers step back and the tick pops.
  */
 export function useRevealMotion(ref: RefObject<HTMLElement | null>, key: string) {
-  const reduced = useReducedMotion();
+  const level = useMotionLevel();
+  const reduced = level !== 'full';
   useLayoutEffect(() => {
     const root = ref.current;
     if (!root || reduced) return;
@@ -149,7 +154,8 @@ export function useRevealMotion(ref: RefObject<HTMLElement | null>, key: string)
  * above them): the steps rise third, second, first, each winner arriving on top.
  */
 export function usePodiumMotion(ref: RefObject<HTMLElement | null>, key: string) {
-  const reduced = useReducedMotion();
+  const level = useMotionLevel();
+  const reduced = level !== 'full';
   useLayoutEffect(() => {
     const root = ref.current;
     if (!root || reduced) return;

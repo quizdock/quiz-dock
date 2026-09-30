@@ -1,4 +1,5 @@
 import { RoomSoundsButton } from '../game/game-sounds-panel';
+import { appConfig } from '../config';
 import { ImageChoiceGrid, optionLabel } from '../game/image-choice';
 import { NextQuizButton, RoomStandingsPanel, roomLabel } from '../game/room-components';
 import {
@@ -37,6 +38,7 @@ import {
   Users,
   Wifi,
   Trash2,
+  Sparkles,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
@@ -389,6 +391,10 @@ function HostConsole({
       <RoomSoundsButton
         sounds={view.sounds}
         onChange={(patch) => socket?.emit('host:sounds', { pin, ...patch })}
+      />
+      <MotionButton
+        on={view.motion ?? appConfig.liveMotion !== false}
+        onToggle={(on) => socket?.emit('host:motion', { pin, on })}
       />
       {screenButton}
       <span className="flex-1" />
@@ -1508,6 +1514,28 @@ function LockButton({
       >
         {locked ? <Lock className="size-4" /> : <LockOpen className="size-4" />}
         {locked ? t('control.locked') : t('control.lock')}
+      </Button>
+    </Tooltip>
+  );
+}
+
+/**
+ * Whether the room's screens move between steps (UI system §1.8): the host sees
+ * what the projector copes with, and switches it for every screen at once.
+ */
+function MotionButton({ on, onToggle }: { on: boolean; onToggle: (on: boolean) => void }) {
+  const { t } = useTranslation('live');
+  return (
+    <Tooltip label={on ? t('control.motionOnTooltip') : t('control.motionOffTooltip')}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        aria-pressed={on}
+        onClick={() => onToggle(!on)}
+      >
+        <Sparkles className={cn('size-4', !on && 'opacity-40')} />
+        {t('control.motion')}
       </Button>
     </Tooltip>
   );

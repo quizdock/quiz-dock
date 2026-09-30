@@ -115,6 +115,8 @@ export const ClientEvents = {
   PlayerReady: 'player:ready',
   /** The room's game sounds (#93). */
   HostSounds: 'host:sounds',
+  /** Whether the live screens move between steps (UI system §1.8), at any time. */
+  HostMotion: 'host:motion',
   /** Names the room (from its lobby); every screen shows it. */
   HostRoomName: 'host:room-name',
   /** Opens the next quiz in the room (from its lobby or its podium); the players stay. */
@@ -657,6 +659,8 @@ export interface ClientToServerEvents {
    */
   /** The room's game sounds (#93), at any time (a volume may move mid-quiz). */
   'host:sounds': (p: { pin: string } & RoomSoundsSettings) => void;
+  /** Whether the room's screens move between steps (UI system §1.8), at any time. */
+  'host:motion': (p: { pin: string; on: boolean }) => void;
   /** The participant is ready (or not yet) in the lobby (#104); never blocks the start. */
   'player:ready': (p: { pin: string; ready: boolean }, ack: (res: { ok: boolean }) => void) => void;
   /** The room's own name (≤ 60 characters), from its lobby; blank = the default. */
@@ -841,6 +845,11 @@ export interface ServerToClientEvents {
   'room:info': (p: { name: string | null; hostName: string }) => void;
   /** The room's game sounds (#93): on attach, and when the host changes them. */
   'room:sounds': (p: RoomSoundsPayload) => void;
+  /**
+   * Whether the room's screens move between steps (UI system §1.8): on attach, and
+   * when the host switches it. A new room starts from the instance's `LIVE_MOTION`.
+   */
+  'room:motion': (p: { on: boolean }) => void;
   /** To a participant back in a lobby: whether they already said they are ready (#104). */
   'lobby:you': (p: { ready: boolean }) => void;
   /** To the participants in a lobby (#104): how many said they are ready, out of how many. */

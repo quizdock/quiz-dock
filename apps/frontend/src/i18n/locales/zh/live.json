@@ -249,7 +249,10 @@
     "pauseNothing": "当前没有可暂停的内容",
     "spaceKey": "空格",
     "slideAuto": "{{seconds}} 秒",
-    "slideManual": "手动"
+    "slideManual": "手动",
+    "motion": "动画",
+    "motionOnTooltip": "屏幕在各步骤之间有过渡动画。点击可关闭，适合较慢的投影设备。",
+    "motionOffTooltip": "屏幕切换时没有过渡动画。点击可重新开启。"
   },
   "screen": {
     "sessionUnavailable": "房间不可用。",

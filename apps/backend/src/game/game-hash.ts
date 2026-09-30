@@ -1,5 +1,6 @@
 import { AUDIO_TARGETS, type AudioTarget } from '@quiz-dock/contracts';
 import type { GameId } from './game.keys';
+import { liveMotionDefault } from './live-motion';
 import { DEFAULT_ROOM_SOUNDS, type GameFields, type RoomMeta, type RoomSounds } from './game.types';
 
 /**
@@ -57,6 +58,8 @@ export function deserializeRoom(raw: Record<string, string>): RoomMeta {
     sounds: raw.sounds
       ? { ...DEFAULT_ROOM_SOUNDS, ...(JSON.parse(raw.sounds) as Partial<RoomSounds>) }
       : DEFAULT_ROOM_SOUNDS,
+    // A room opened before the setting existed follows the instance.
+    motion: raw.motion === undefined ? liveMotionDefault() : raw.motion === '1',
   };
 }
 

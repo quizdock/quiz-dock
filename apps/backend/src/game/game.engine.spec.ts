@@ -326,6 +326,16 @@ describe('GameEngine (characterization)', () => {
       await expect(engine.setJoinLocked(pin, HOST, false)).rejects.toThrow('session.ended');
     });
 
+    it('host:motion switches the room’s transitions at any time, and every device follows (UI system §1.8)', async () => {
+      await seed(snapshotOf([question()]));
+      expect((await game.getRoom(pin))?.motion).toBe(true);
+      await engine.start(pin, HOST);
+      await engine.setMotion(pin, HOST, false);
+      expect((await game.getRoom(pin))?.motion).toBe(false);
+      expect(roomOf('room:motion').at(-1)).toEqual({ on: false });
+      await expect(engine.setMotion(pin, 'someone-else', true)).rejects.toThrow();
+    });
+
     it('host:room-name trims the name in the lobby, and is refused once started', async () => {
       await seed(snapshotOf([question()]));
       await engine.setRoomName(pin, HOST, '  Friday   night ');

@@ -249,7 +249,10 @@
     "pauseNothing": "Şu anda duraklatılacak bir şey yok",
     "spaceKey": "Boşluk",
     "slideAuto": "{{seconds}} sn",
-    "slideManual": "elle"
+    "slideManual": "elle",
+    "motion": "Animasyonlar",
+    "motionOnTooltip": "Ekranlar adımlar arasında hareket eder. Yavaş bir projeksiyon için sabitlemek üzere tıkla.",
+    "motionOffTooltip": "Ekranlar geçiş olmadan değişir. Geçişleri geri getirmek için tıkla."
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",
