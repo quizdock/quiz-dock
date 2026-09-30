@@ -223,7 +223,11 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
       state: GameState.Podium,
       quizId: 'q1',
       podium: { podium: [{ nickname: 'Ada', score: 900, rank: 1 }] },
-      standings: { quizzesPlayed: 2, top: [{ nickname: 'Ada', score: 1800, rank: 1 }] },
+      standings: {
+        quizzesPlayed: 2,
+        playedQuizIds: ['q1', 'q6'],
+        top: [{ nickname: 'Ada', score: 1800, rank: 1 }],
+      },
     });
     renderApp('/session/482913/console');
 
@@ -243,6 +247,13 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'history' }));
     expect(screen.queryByRole('option', { name: /Round two/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'history' }));
+    // Every quiz the room played is marked, and can be left out.
+    expect(screen.getByRole('option', { name: /Round three/ })).toHaveTextContent('déjà joué');
+    expect(screen.getByRole('option', { name: /Round two/ })).not.toHaveTextContent('déjà joué');
+    const played = screen.getByRole('combobox', { name: 'Joués dans cette room' });
+    fireEvent.change(played, { target: { value: 'fresh' } });
+    expect(screen.queryByRole('option', { name: /Round three/ })).toBeNull();
+    fireEvent.change(played, { target: { value: '' } });
     fireEvent.change(picker, { target: { value: 'mountains' } });
     expect(within(screen.getByRole('listbox')).getAllByRole('option')).toHaveLength(1);
     expect(screen.getByRole('status')).toHaveTextContent('1 quiz'); // counted after the search

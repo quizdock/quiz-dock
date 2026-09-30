@@ -402,9 +402,21 @@ function HostConsole({
       <span className="flex-1" />
       <span aria-hidden className="bg-border mx-1 h-6 w-px" />
       {inLobby ? (
-        <NextQuizButton pin={pin} socket={socket} mode="lobby" currentQuizId={view.quizId} />
+        <NextQuizButton
+          pin={pin}
+          socket={socket}
+          mode="lobby"
+          currentQuizId={view.quizId}
+          playedQuizIds={view.standings?.playedQuizIds}
+        />
       ) : phase === 'podium' ? null : (
-        <NextQuizButton pin={pin} socket={socket} mode="close" currentQuizId={view.quizId} />
+        <NextQuizButton
+          pin={pin}
+          socket={socket}
+          mode="close"
+          currentQuizId={view.quizId}
+          playedQuizIds={view.standings?.playedQuizIds}
+        />
       )}
       <EndGameButton
         label={inLobby ? t('control.stopSession') : t('control.endSession')}
@@ -705,7 +717,13 @@ function HostConsole({
     );
     status = t('control.statusQuizOver');
     primary = (
-      <NextQuizButton pin={pin} socket={socket} mode="podium" currentQuizId={view.quizId} />
+      <NextQuizButton
+        pin={pin}
+        socket={socket}
+        mode="podium"
+        currentQuizId={view.quizId}
+        playedQuizIds={view.standings?.playedQuizIds}
+      />
     );
   } else if ((state === 'REVEAL' || state === 'LEADERBOARD') && view.question) {
     const question = view.question;

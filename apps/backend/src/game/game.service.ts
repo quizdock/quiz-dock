@@ -293,6 +293,7 @@ export class GameService {
       gameKeys.nicknames(pin),
       gameKeys.tokens(pin),
       gameKeys.played(pin),
+      gameKeys.playedQuizzes(pin),
       gameKeys.hostGames(room.hostUserId),
       gameKeys.game(room.gameId),
       gameKeys.snapshot(room.gameId),
@@ -591,6 +592,8 @@ export class GameService {
       .multi()
       .hset(gameKeys.played(pin), gameId, JSON.stringify(played))
       .expire(gameKeys.played(pin), GAME_TTL_S)
+      .sadd(gameKeys.playedQuizzes(pin), snapshot.quizId)
+      .expire(gameKeys.playedQuizzes(pin), GAME_TTL_S)
       .exec();
   }
 
@@ -599,10 +602,13 @@ export class GameService {
    * the room (one who left stays, one banned does not), by total score, then
    * arrival in the room.
    */
-  async standings(pin: string): Promise<{ quizzesPlayed: number; ranked: RoomStanding[] }> {
-    const [played, players] = await Promise.all([
+  async standings(
+    pin: string,
+  ): Promise<{ quizzesPlayed: number; playedQuizIds: string[]; ranked: RoomStanding[] }> {
+    const [played, players, playedQuizIds] = await Promise.all([
       this.redis.hgetall(gameKeys.played(pin)),
       this.players(pin),
+      this.redis.smembers(gameKeys.playedQuizzes(pin)),
     ]);
     const games = Object.values(played).map(
       (json) => JSON.parse(json) as Record<string, PlayerStats>,
@@ -614,7 +620,7 @@ export class GameService {
       ranked.push({ id, ...player, ...stats });
     }
     ranked.sort((a, b) => b.score - a.score || a.joinedAt - b.joinedAt);
-    return { quizzesPlayed: games.length, ranked };
+    return { quizzesPlayed: games.length, playedQuizIds, ranked };
   }
 
   /**

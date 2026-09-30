@@ -107,6 +107,8 @@ export const gameKeys = {
   session: (token: string) => `session:${token}`,
   /** Hash gameId → what each player did in it (JSON), once the game is over: the standings. */
   played: (pin: string) => `room:${pin}:played`,
+  /** Set of the quiz ids the room played to their end: the console marks them when picking the next. */
+  playedQuizzes: (pin: string) => `room:${pin}:played-quizzes`,
   /** Hash playerId → their session token, so the room keeps them alive while it lives. */
   tokens: (pin: string) => `room:${pin}:tokens`,
   /** Set of a host's open rooms, by PIN (resumed from the dashboard §6.2). */

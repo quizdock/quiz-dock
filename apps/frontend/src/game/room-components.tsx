@@ -1,5 +1,5 @@
 import type { RoomStandingsPayload } from '@quiz-dock/contracts';
-import { ListChecks, ListPlus } from 'lucide-react';
+import { CircleCheck, ListChecks, ListPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TagFilter, tagsOf } from '@/components/tag-filter';
@@ -71,11 +71,14 @@ export function NextQuizButton({
   socket,
   mode,
   currentQuizId,
+  playedQuizIds = [],
 }: {
   pin: string;
   socket: GameSocket | null;
   mode: 'lobby' | 'podium' | 'close';
   currentQuizId: string | null;
+  /** The quizzes the room already played to their end. */
+  playedQuizIds?: string[];
 }) {
   const fromPodium = mode === 'podium';
   // Something was played: its results may be kept.
@@ -171,6 +174,7 @@ export function NextQuizButton({
             value={picked}
             onChange={setQuizId}
             playingId={fromPodium ? currentQuizId : null}
+            playedIds={playedQuizIds}
           />
         )}
         {offersArchive ? (
@@ -201,15 +205,21 @@ function QuizPicker({
   value,
   onChange,
   playingId,
+  playedIds,
 }: {
   quizzes: PickableQuiz[];
   value: string;
   onChange: (id: string) => void;
   /** The quiz the room just played (it may be played again). */
   playingId: string | null;
+  /** Every quiz the room played: marked, and a filter keeps them in or out. */
+  playedIds: string[];
 }) {
   const { t, i18n } = useTranslation(['live', 'dashboard']);
   const [tags, setTags] = useState<string[]>([]);
+  const [played, setPlayed] = useState<'' | 'played' | 'fresh'>('');
+  const wasPlayed = (q: PickableQuiz) => playedIds.includes(q.id);
+  const anyPlayed = quizzes.some(wasPlayed);
   const [language, setLanguage] = useState('');
   const [sort, setSort] = useState<'recent' | 'title' | 'questions'>('recent');
   const allTags = tagsOf(quizzes);
@@ -217,6 +227,7 @@ function QuizPicker({
   const kept = quizzes
     .filter((q) => tags.every((tag) => q.tags.includes(tag)))
     .filter((q) => !language || q.language === language)
+    .filter((q) => !played || wasPlayed(q) === (played === 'played'))
     .sort((a, b) =>
       sort === 'title'
         ? a.title.localeCompare(b.title)
@@ -243,6 +254,18 @@ function QuizPicker({
                 {l.toUpperCase()}
               </option>
             ))}
+          </Select>
+        ) : null}
+        {anyPlayed ? (
+          <Select
+            className="h-8 w-auto"
+            value={played}
+            aria-label={t('control.pickerPlayed')}
+            onChange={(e) => setPlayed(e.target.value as typeof played)}
+          >
+            <option value="">{t('control.pickerPlayedAll')}</option>
+            <option value="fresh">{t('control.pickerPlayedFresh')}</option>
+            <option value="played">{t('control.pickerPlayedDone')}</option>
           </Select>
         ) : null}
         <Select
@@ -292,9 +315,12 @@ function QuizPicker({
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="flex items-center gap-2">
                 <span className="truncate font-medium">{q.title}</span>
-                {q.id === playingId ? (
-                  <span className="text-muted-foreground shrink-0 text-xs">
-                    · {t('control.pickerJustPlayed')}
+                {wasPlayed(q) || q.id === playingId ? (
+                  <span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs">
+                    <CircleCheck className="text-success size-3.5" aria-hidden />
+                    {t(
+                      q.id === playingId ? 'control.pickerJustPlayed' : 'control.pickerPlayedMark',
+                    )}
                   </span>
                 ) : null}
               </span>

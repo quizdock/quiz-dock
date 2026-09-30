@@ -153,7 +153,7 @@ function questionStartOf(
  * personnel entre la diffusion live et la relecture d'état (reconnexion / late join).
  */
 interface Emitter {
-  data: { playerId?: string };
+  data: { playerId?: string; isHostControl?: boolean };
   emit<E extends keyof ServerToClientEvents>(
     ev: E,
     ...args: Parameters<ServerToClientEvents[E]>
@@ -1079,7 +1079,7 @@ export class GameEngine {
 
   /** The room's standings, to every socket (or `only` one), each with its own line. */
   private async emitStandings(pin: string, only?: Emitter): Promise<void> {
-    const { quizzesPlayed, ranked } = await this.game.standings(pin);
+    const { quizzesPlayed, playedQuizIds, ranked } = await this.game.standings(pin);
     if (quizzesPlayed === 0) return;
     const top = topRows(ranked);
     const sockets: Emitter[] = only ? [only] : await this.server.in(pin).fetchSockets();
@@ -1089,6 +1089,8 @@ export class GameEngine {
       const me = ranked[at];
       socket.emit('room:standings', {
         quizzesPlayed,
+        // Which quizzes: the host's own ids, for the console only.
+        ...(socket.data.isHostControl ? { playedQuizIds } : {}),
         top,
         ...(me
           ? {

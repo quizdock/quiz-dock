@@ -584,6 +584,8 @@ export interface RoomSoundsSettings {
 
 export interface RoomStandingsPayload {
   quizzesPlayed: number;
+  /** The quizzes the room played to their end — to the host console only. */
+  playedQuizIds?: string[];
   /** Top 10, by total score then arrival in the room. */
   top: LeaderboardRow[];
   you?: {
