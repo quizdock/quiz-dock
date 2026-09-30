@@ -41,7 +41,7 @@ Usage: qd <command> [options]      (in the container; = node dist/cli.js)
   quiz:validate <file|->
                     Validate text-only quiz.json without writing anything
   mcp [--user=<sub|email>]
-                    Serve MCP on stdin/stdout; optional host account enables imports
+                    Serve MCP on stdin/stdout (experimental); optional host account enables imports
   quiz:transfer <quiz-id> <sub|email>
                     Hand a quiz over to another account (media and history follow)
   sessions:purge [--dry-run]

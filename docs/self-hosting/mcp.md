@@ -1,5 +1,10 @@
 # Quiz conversion with a local MCP client
 
+> **Experimental.** The tools are covered by the backend's tests, but the connector
+> has not been tried end to end with every chatbot client yet. Its commands and
+> answers may change. A problem, or a client it works with:
+> [open an issue](https://github.com/quizdock/quiz-dock/issues/new/choose).
+
 QuizDock provides a **local stdio MCP server** for clients that can spawn a
 process (for example a desktop client). It uses the backend's generated format
 guide and real import schemas. It opens no HTTP MCP listener and works on a LAN

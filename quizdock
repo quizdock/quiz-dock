@@ -341,7 +341,7 @@ Administration (relayed to the CLI inside the container)
   quiz:export <id> <file.zip>       Write a quiz bundle (quiz.json + media/) on the host
   quiz:import <file> <sub|email>    Create a draft from a bundle (zip or quiz.json)
   quiz:validate <file>              Check text-only JSON without writes
-  mcp [--user=<sub|email>]           Local MCP on stdin/stdout (no TTY)
+  mcp [--user=<sub|email>]           Local MCP on stdin/stdout, experimental (no TTY)
   quiz:transfer <quiz-id> <sub|email>  Hand a quiz over to another account
   sessions:purge [--dry-run]
   admin <command…>      Any other in-image command (\`admin help\`)
