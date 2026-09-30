@@ -18,6 +18,9 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   AUDIO_TARGETS,
   type AudioTarget,
+  MEDIA_POSITIONS,
+  MEDIA_POSITION_DEFAULT,
+  type MediaPosition,
   WAVEFORM_SIZES,
   WAVEFORM_SIZE_DEFAULT,
   type WaveformSize,
@@ -55,7 +58,12 @@ import {
   EllipsisVertical,
   GripVertical,
   Image as ImageIcon,
+  type LucideIcon,
   Monitor,
+  PanelBottom,
+  PanelLeft,
+  PanelRight,
+  PanelTop,
   Smartphone,
   Plus,
   Trash2,
@@ -139,6 +147,7 @@ interface FormValues {
   audioTarget: AudioTarget | null;
   /** How thick the sound's waveform is drawn on the screens. */
   waveformSize: WaveformSize;
+  mediaPosition: MediaPosition;
   /** Listen first: the timer starts when the media ends. */
   timerAfterMedia: boolean;
   pointsMode: 'standard' | 'double' | 'none' | 'fixed';
@@ -182,6 +191,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
       revealDelayS: null,
       audioTarget: null,
       waveformSize: WAVEFORM_SIZE_DEFAULT,
+      mediaPosition: MEDIA_POSITION_DEFAULT,
       timerAfterMedia: false,
       pointsMode: 'standard',
       scoring: 'standard',
@@ -207,6 +217,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     revealDelayS: q.revealDelayS ?? null,
     audioTarget: (q.audioTarget as AudioTarget | null | undefined) ?? null,
     waveformSize: (q.waveformSize as WaveformSize | undefined) ?? WAVEFORM_SIZE_DEFAULT,
+    mediaPosition: (q.mediaPosition as MediaPosition | undefined) ?? MEDIA_POSITION_DEFAULT,
     timerAfterMedia: q.timerAfterMedia ?? false,
     pointsMode: q.pointsMode as FormValues['pointsMode'],
     scoring: (q.scoring ?? 'standard') as Scoring,
@@ -807,6 +818,31 @@ export function QuestionForm({
             onChange={(m) => form.setFieldValue('media', m)}
             withVisual={type !== 'image_choice'}
           >
+            {media.visual ? (
+              // Where the picture sits against the text on the big screen; the answers stay below.
+              <form.Field name="mediaPosition">
+                {(field) => (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-medium">
+                      {t('questionForm.mediaPositionLabel')}
+                    </span>
+                    <Segmented
+                      label={t('questionForm.mediaPositionLabel')}
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      options={MEDIA_POSITIONS.map((position) => ({
+                        value: position,
+                        label: t(`questionForm.mediaPosition.${position}`),
+                        icon: POSITION_ICON[position],
+                      }))}
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      {t('questionForm.mediaPositionHint')}
+                    </p>
+                  </div>
+                )}
+              </form.Field>
+            ) : null}
             {canListenFirst ? (
               <form.Field name="timerAfterMedia">
                 {(field) => (
@@ -1173,6 +1209,14 @@ function mediaHasSound(media: QuestionMedia): boolean {
 /** The engine's default reading window before answers open (GAME_READ_DELAY_MS), for the hint. */
 const READ_DELAY_DEFAULT_MS = 3000;
 
+/** Each place of the picture, drawn as the screen it gives. */
+const POSITION_ICON: Record<MediaPosition, LucideIcon> = {
+  bottom: PanelBottom,
+  top: PanelTop,
+  left: PanelLeft,
+  right: PanelRight,
+};
+
 /** Construit le payload API en n'envoyant que les champs pertinents pour le type. */
 function buildPayload(v: FormValues) {
   const base = {
@@ -1184,6 +1228,7 @@ function buildPayload(v: FormValues) {
     // Nothing to hear, nothing to target: a removed sound takes its setting with it.
     audioTarget: mediaHasSound(v.media) ? v.audioTarget : null,
     waveformSize: v.waveformSize,
+    mediaPosition: v.mediaPosition,
     // Only with a media to wait for; the server also falls back when its length is unknown.
     timerAfterMedia: mediaHasSound(v.media) && v.timerAfterMedia,
     pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
@@ -1405,6 +1450,7 @@ function previewQuestion(v: FormValues): QuizDetailDtoQuestionsItem {
     revealDelayS: p.revealDelayS ?? null,
     audioTarget: p.audioTarget ?? null,
     waveformSize: v.waveformSize,
+    mediaPosition: v.mediaPosition,
     timerAfterMedia: p.timerAfterMedia ?? false,
     pointsMode: p.pointsMode ?? 'standard',
     scoring: p.scoring ?? 'standard',

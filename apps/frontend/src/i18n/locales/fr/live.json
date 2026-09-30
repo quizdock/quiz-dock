@@ -252,7 +252,12 @@
     "slideManual": "manuel",
     "motion": "Animations",
     "motionOnTooltip": "Les écrans s’animent entre les étapes. Cliquer pour les figer, pour un projecteur lent.",
-    "motionOffTooltip": "Les écrans changent sans transition. Cliquer pour remettre les transitions."
+    "motionOffTooltip": "Les écrans changent sans transition. Cliquer pour remettre les transitions.",
+    "pickerPlayed": "Joués dans cette room",
+    "pickerPlayedAll": "Tous les quiz",
+    "pickerPlayedFresh": "Pas encore joués",
+    "pickerPlayedDone": "Déjà joués",
+    "pickerPlayedMark": "déjà joué"
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",
@@ -297,7 +302,8 @@
     "nextStep": "Ensuite : question {{n}}",
     "lookingBackAt": "Retour sur la question {{n}}",
     "gameGoesOn": "puis la partie reprend",
-    "answerLabel": "Réponse"
+    "answerLabel": "Réponse",
+    "answeredShort": "ont répondu"
   },
   "player": {
     "joinFailed": "Impossible de rejoindre le salon.",

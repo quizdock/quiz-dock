@@ -127,6 +127,14 @@ enum WaveformSize {
   hidden
 }
 
+/// Where a question's picture or video sits against its text on the projection.
+enum MediaPosition {
+  bottom
+  top
+  left
+  right
+}
+
 /// Which devices play a question's sound (see AudioTarget in @quiz-dock/contracts).
 enum AudioTarget {
   projection
@@ -270,6 +278,8 @@ model Question {
   audioTarget        AudioTarget?    @map("audio_target")
   /// How thick its waveform is drawn on the screens.
   waveformSize       WaveformSize    @default(M) @map("waveform_size")
+  /// Where its picture or video sits against its text on the projection (answers stay below).
+  mediaPosition      MediaPosition   @default(bottom) @map("media_position")
   /// The timer starts when the media ends (listen first, then answer); needs a known duration.
   timerAfterMedia    Boolean         @default(false) @map("timer_after_media")
   pointsMode         PointsMode      @default(standard) @map("points_mode")

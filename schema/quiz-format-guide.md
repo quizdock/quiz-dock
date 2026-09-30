@@ -77,7 +77,7 @@ QuizDock. Never write these fields (a zipped export carries them, with its files
 
 - the file: `media`;
 - `quiz`: `feedbackEnabled`, `mediaTailS`, `loudnessTargetLufs`, `audioTarget`, `cover`, `slug`, `namespace`, `revision`, `updatedAt`, `domain`, `tags`, `license`;
-- a question: `media`, `audio`, `backgroundImage`, `backgroundGradient`, `textTone`, `textOutline`, `revealDelayS`, `audioTarget`, `waveformSize`, `timerAfterMedia`, `multiSelect`;
+- a question: `media`, `audio`, `backgroundImage`, `backgroundGradient`, `textTone`, `textOutline`, `revealDelayS`, `audioTarget`, `waveformSize`, `mediaPosition`, `timerAfterMedia`, `multiSelect`;
 - an option: `media`, `alt`;
 - a slide: `backgroundImage`, `backgroundGradient`, `textTone`, `textOutline`, `video`, `videoLoop`, `videoSound`, `audio`, `waveformSize`, `audioTarget`, `displayDelayS`; block types `image`, `columns`;
 - Markdown images (`![…](…)`) anywhere.

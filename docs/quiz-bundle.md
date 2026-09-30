@@ -6,7 +6,7 @@ is what a Quiz Store repository holds.
 
 **JSON Schema.** The manifest is published as a JSON Schema (draft 2020-12),
 one file per manifest version, in [`schema/`](../schema/) — currently
-[`quiz-bundle.v5.json`](../schema/quiz-bundle.v5.json). It is generated from the
+[`quiz-bundle.v7.json`](../schema/quiz-bundle.v7.json). It is generated from the
 importer's own schema and a test keeps the two in step, so a tool outside
 QuizDock (a community store, a CI check) validates exactly what an import
 accepts. A published version is never rewritten: a change to the format comes
@@ -148,6 +148,9 @@ Contributors changing the bundle schema or a content schema run
   options, each a picture — `media` with its `alt`, in the quiz's language —
   and no `text`; `multiSelect: true` lets several be right. It has no `media`
   of its own (an `audio` is fine).
+- `mediaPosition` (version 7): where a question's picture or video sits against
+  its text on the projection — `bottom` (default, under the text), `top`,
+  `left` or `right`. The answers stay below; the phones are unchanged.
 - Questions and slides follow the API content rules (question types and their
   fields, block types, colour/shape names, limits). Defaults apply when a
   field is omitted: `timeLimitS` 20, `pointsMode` standard, `textTone` light,

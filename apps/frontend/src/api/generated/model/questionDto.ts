@@ -9,6 +9,7 @@ import type { QuestionDtoAcceptedAnswersItem } from './questionDtoAcceptedAnswer
 import type { QuestionDtoAudioTarget } from './questionDtoAudioTarget';
 import type { QuestionDtoBackgroundGradient } from './questionDtoBackgroundGradient';
 import type { QuestionDtoMedia } from './questionDtoMedia';
+import type { QuestionDtoMediaPosition } from './questionDtoMediaPosition';
 import type { QuestionDtoOptionsItem } from './questionDtoOptionsItem';
 import type { QuestionDtoPointsMode } from './questionDtoPointsMode';
 import type { QuestionDtoScoring } from './questionDtoScoring';
@@ -49,6 +50,7 @@ export interface QuestionDto {
   /** @nullable */
   audioTarget: QuestionDtoAudioTarget;
   waveformSize: QuestionDtoWaveformSize;
+  mediaPosition: QuestionDtoMediaPosition;
   timerAfterMedia: boolean;
   pointsMode: QuestionDtoPointsMode;
   scoring: QuestionDtoScoring;

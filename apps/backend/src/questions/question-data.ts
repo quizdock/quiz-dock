@@ -23,6 +23,7 @@ export function questionData(dto: QuestionContent) {
     revealDelayS: dto.revealDelayS ?? null,
     audioTarget: dto.audioTarget ?? null,
     waveformSize: dto.waveformSize,
+    mediaPosition: dto.mediaPosition,
     timerAfterMedia: dto.timerAfterMedia,
     // Un sondage ne rapporte aucun point (technique §4).
     pointsMode: dto.type === 'poll' ? 'none' : dto.pointsMode,

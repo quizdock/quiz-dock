@@ -161,6 +161,42 @@ describe('ScreenPage: the branding hooks (lot 5)', () => {
     expect($('.qd-answers .qd-answer[data-color="red"]')).toHaveTextContent('Oui');
   });
 
+  it('a question’s picture sits where its author placed it, and the count goes up to the top band', async () => {
+    const now = Date.now();
+    hookState.value = view({
+      state: GameState.Answering,
+      questionIndex: 0,
+      answerCount: { answered: 3, total: 8 },
+      question: {
+        questionIndex: 0,
+        type: 'single_choice',
+        prompt: 'Which city is this?',
+        media: {
+          visual: { kind: 'image', url: '/m/paris.webp', alt: 'Paris' },
+          audio: null,
+          position: 'left',
+        },
+        options: [
+          { id: 'a', text: 'Lyon', color: 'red', shape: 'triangle' },
+          { id: 'b', text: 'Paris', color: 'blue', shape: 'diamond' },
+        ],
+        startedAt: now - 2_000,
+        endsAt: now + 18_000,
+      } as never,
+    });
+    const { container } = renderApp('/session/482913/projection');
+    const picture = await screen.findByRole('img', { name: 'Paris' });
+    // Left of the text: the picture comes first in the row, the prompt after it.
+    expect(
+      picture.compareDocumentPosition(
+        screen.getByRole('heading', { name: 'Which city is this?' }),
+      ) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    // The count joins the clock in the top band; no band below.
+    expect(container.querySelector('.qd-band .qd-answered')).toHaveTextContent('3 / 8');
+    expect(container.querySelectorAll('.qd-band')).toHaveLength(1);
+  });
+
   it('has no sound button of its own: the console controls its sound (#150)', async () => {
     hookState.value = view({ state: GameState.Lobby });
     renderApp('/session/482913/projection');

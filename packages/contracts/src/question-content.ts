@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import { backgroundFields, noBackgroundConflict } from './background';
 import { IMAGE_CHOICE_OPTION_COUNTS, OPTION_ALT_MAX } from './image-choice';
-import { AUDIO_TARGETS, WAVEFORM_SIZES, questionMediaSchema } from './question-media';
+import {
+  AUDIO_TARGETS,
+  MEDIA_POSITIONS,
+  WAVEFORM_SIZES,
+  questionMediaSchema,
+} from './question-media';
 
 /**
  * A question's content, validated in two layers (UI system §1.5):
@@ -138,6 +143,8 @@ export const questionContentSchema = z
     ...backgroundFields,
     // Visual + audio slots (shared contract: never a video with an audio track).
     media: questionMediaSchema.optional(),
+    // Where the visual sits against the text on the projection.
+    mediaPosition: z.enum(MEDIA_POSITIONS).default('bottom'),
     timeLimitS: z
       .number()
       .int()

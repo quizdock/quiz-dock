@@ -1,5 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
-import { AUDIO_TARGETS, WAVEFORM_SIZES, questionMediaSchema } from '@quiz-dock/contracts';
+import {
+  AUDIO_TARGETS,
+  MEDIA_POSITIONS,
+  WAVEFORM_SIZES,
+  questionMediaSchema,
+} from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { backgroundOutputFields } from '../../common/background.schema';
 
@@ -50,6 +55,8 @@ export const questionSchema = z.object({
   audioTarget: z.enum(AUDIO_TARGETS).nullable(),
   /** How thick its waveform is drawn on the screens. */
   waveformSize: z.enum(WAVEFORM_SIZES),
+  /** Where its picture or video sits against its text on the projection. */
+  mediaPosition: z.enum(MEDIA_POSITIONS),
   /** The timer starts when the media ends. */
   timerAfterMedia: z.boolean(),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']),

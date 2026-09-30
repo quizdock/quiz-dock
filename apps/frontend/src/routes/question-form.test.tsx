@@ -157,12 +157,15 @@ describe('QuestionForm', () => {
         ),
       ).toBe(true),
     );
+    // With a picture, where it sits on the big screen: below the text unless placed elsewhere.
+    fireEvent.click(await screen.findByRole('button', { name: 'À gauche du texte' }));
     fireEvent.click(screen.getAllByRole('radio')[0]);
     fireEvent.click(screen.getByText('Ajouter'));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     const payload = lastPost(fetchMock);
     expect(payload.prompt).toBe('Quelle ville ?');
     expect(payload.media.visual).toEqual({ kind: 'image', assetId: ID });
+    expect(payload.mediaPosition).toBe('left');
   });
 
   it('sends the per-question reveal delay when set (#6)', async () => {

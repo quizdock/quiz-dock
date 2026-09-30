@@ -252,7 +252,12 @@
     "slideManual": "手动",
     "motion": "动画",
     "motionOnTooltip": "屏幕在各步骤之间有过渡动画。点击可关闭，适合较慢的投影设备。",
-    "motionOffTooltip": "屏幕切换时没有过渡动画。点击可重新开启。"
+    "motionOffTooltip": "屏幕切换时没有过渡动画。点击可重新开启。",
+    "pickerPlayed": "本房间已玩",
+    "pickerPlayedAll": "全部测验",
+    "pickerPlayedFresh": "尚未玩过",
+    "pickerPlayedDone": "已玩过",
+    "pickerPlayedMark": "已玩过"
   },
   "screen": {
     "sessionUnavailable": "房间不可用。",
@@ -297,7 +302,8 @@
     "nextStep": "下一题：第 {{n}} 题",
     "lookingBackAt": "回看第 {{n}} 题",
     "gameGoesOn": "然后游戏继续",
-    "answerLabel": "答案"
+    "answerLabel": "答案",
+    "answeredShort": "已作答"
   },
   "player": {
     "joinFailed": "无法加入房间。",

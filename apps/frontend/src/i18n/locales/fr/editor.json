@@ -385,7 +385,15 @@
     "place_ordinal_one": "{{count}}er",
     "place_ordinal_two": "{{count}}e",
     "place_ordinal_few": "{{count}}e",
-    "place_ordinal_other": "{{count}}e"
+    "place_ordinal_other": "{{count}}e",
+    "mediaPositionLabel": "Photo sur la projection",
+    "mediaPositionHint": "Où se place la photo par rapport au texte ; les réponses restent en bas.",
+    "mediaPosition": {
+      "bottom": "Sous le texte",
+      "top": "Au-dessus du texte",
+      "left": "À gauche du texte",
+      "right": "À droite du texte"
+    }
   },
   "preview": {
     "view": "Aperçu (vue participant)",

@@ -385,7 +385,15 @@
     "place_ordinal_one": "{{count}}.",
     "place_ordinal_two": "{{count}}.",
     "place_ordinal_few": "{{count}}.",
-    "place_ordinal_other": "{{count}}."
+    "place_ordinal_other": "{{count}}.",
+    "mediaPositionLabel": "Projeksiyonda görsel",
+    "mediaPositionHint": "Görselin metne göre konumu; cevaplar altta kalır.",
+    "mediaPosition": {
+      "bottom": "Metnin altında",
+      "top": "Metnin üstünde",
+      "left": "Metnin solunda",
+      "right": "Metnin sağında"
+    }
   },
   "preview": {
     "view": "Önizleme (katılımcı görünümü)",

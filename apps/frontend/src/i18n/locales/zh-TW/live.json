@@ -252,7 +252,12 @@
     "slideManual": "手動",
     "motion": "動畫",
     "motionOnTooltip": "螢幕在各步驟之間有過場動畫。點擊可關閉，適合較慢的投影設備。",
-    "motionOffTooltip": "螢幕切換時沒有過場動畫。點擊可重新開啟。"
+    "motionOffTooltip": "螢幕切換時沒有過場動畫。點擊可重新開啟。",
+    "pickerPlayed": "本房間已玩",
+    "pickerPlayedAll": "全部測驗",
+    "pickerPlayedFresh": "尚未玩過",
+    "pickerPlayedDone": "已玩過",
+    "pickerPlayedMark": "已玩過"
   },
   "screen": {
     "sessionUnavailable": "房間無法使用。",
@@ -297,7 +302,8 @@
     "nextStep": "下一題：第 {{n}} 題",
     "lookingBackAt": "回看第 {{n}} 題",
     "gameGoesOn": "然後遊戲繼續",
-    "answerLabel": "答案"
+    "answerLabel": "答案",
+    "answeredShort": "已作答"
   },
   "player": {
     "joinFailed": "無法加入房間。",

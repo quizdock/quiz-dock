@@ -3568,6 +3568,15 @@
                     "hidden"
                   ]
                 },
+                "mediaPosition": {
+                  "type": "string",
+                  "enum": [
+                    "bottom",
+                    "top",
+                    "left",
+                    "right"
+                  ]
+                },
                 "timerAfterMedia": {
                   "type": "boolean"
                 },
@@ -3713,6 +3722,7 @@
                 "revealDelayS",
                 "audioTarget",
                 "waveformSize",
+                "mediaPosition",
                 "timerAfterMedia",
                 "pointsMode",
                 "scoring",
@@ -6005,6 +6015,15 @@
                     "hidden"
                   ]
                 },
+                "mediaPosition": {
+                  "type": "string",
+                  "enum": [
+                    "bottom",
+                    "top",
+                    "left",
+                    "right"
+                  ]
+                },
                 "timerAfterMedia": {
                   "type": "boolean"
                 },
@@ -6150,6 +6169,7 @@
                 "revealDelayS",
                 "audioTarget",
                 "waveformSize",
+                "mediaPosition",
                 "timerAfterMedia",
                 "pointsMode",
                 "scoring",
@@ -6861,6 +6881,16 @@
               "audio"
             ]
           },
+          "mediaPosition": {
+            "default": "bottom",
+            "type": "string",
+            "enum": [
+              "bottom",
+              "top",
+              "left",
+              "right"
+            ]
+          },
           "timeLimitS": {
             "default": 20,
             "type": "integer",
@@ -7261,6 +7291,15 @@
               "hidden"
             ]
           },
+          "mediaPosition": {
+            "type": "string",
+            "enum": [
+              "bottom",
+              "top",
+              "left",
+              "right"
+            ]
+          },
           "timerAfterMedia": {
             "type": "boolean"
           },
@@ -7406,6 +7445,7 @@
           "revealDelayS",
           "audioTarget",
           "waveformSize",
+          "mediaPosition",
           "timerAfterMedia",
           "pointsMode",
           "scoring",
@@ -7657,6 +7697,16 @@
             "required": [
               "visual",
               "audio"
+            ]
+          },
+          "mediaPosition": {
+            "default": "bottom",
+            "type": "string",
+            "enum": [
+              "bottom",
+              "top",
+              "left",
+              "right"
             ]
           },
           "timeLimitS": {

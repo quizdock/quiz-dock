@@ -252,7 +252,12 @@
     "slideManual": "manual",
     "motion": "Animations",
     "motionOnTooltip": "The screens move between steps. Click to keep them still, for a slow projector.",
-    "motionOffTooltip": "The screens change without transitions. Click to bring the transitions back."
+    "motionOffTooltip": "The screens change without transitions. Click to bring the transitions back.",
+    "pickerPlayed": "Played in this room",
+    "pickerPlayedAll": "All quizzes",
+    "pickerPlayedFresh": "Not played yet",
+    "pickerPlayedDone": "Already played",
+    "pickerPlayedMark": "played"
   },
   "screen": {
     "sessionUnavailable": "Room unavailable.",
@@ -297,7 +302,8 @@
     "nextStep": "Next: question {{n}}",
     "lookingBackAt": "Looking back · question {{n}}",
     "gameGoesOn": "then the game goes on",
-    "answerLabel": "Answer"
+    "answerLabel": "Answer",
+    "answeredShort": "answered"
   },
   "player": {
     "joinFailed": "Could not join the room.",

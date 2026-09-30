@@ -385,7 +385,15 @@
     "place_ordinal_one": "{{count}}st",
     "place_ordinal_two": "{{count}}nd",
     "place_ordinal_few": "{{count}}rd",
-    "place_ordinal_other": "{{count}}th"
+    "place_ordinal_other": "{{count}}th",
+    "mediaPositionLabel": "Picture on the big screen",
+    "mediaPositionHint": "Where the picture sits against the text; the answers stay below.",
+    "mediaPosition": {
+      "bottom": "Below the text",
+      "top": "Above the text",
+      "left": "Left of the text",
+      "right": "Right of the text"
+    }
   },
   "preview": {
     "view": "Preview (player view)",

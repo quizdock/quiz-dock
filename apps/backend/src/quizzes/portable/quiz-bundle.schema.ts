@@ -1,6 +1,7 @@
 import {
   AUDIO_TARGETS,
   OPTION_ALT_MAX,
+  MEDIA_POSITIONS,
   WAVEFORM_SIZES,
   audioPeaksSchema,
   loudnessSchema,
@@ -32,8 +33,9 @@ export const BUNDLE_FORMAT = 'quizdock/quiz';
  * Version 4: a question's waveform may be `hidden`.
  * Version 5: slides carry media (#125) — Video and Sound blocks, a video background.
  * Version 6: image choice — answers that are pictures, each with its `alt`.
+ * Version 7: a question's picture or video may sit above or beside its text (`mediaPosition`).
  */
-export const BUNDLE_VERSION = 6;
+export const BUNDLE_VERSION = 7;
 
 /** Whether a slide item uses what version 5 brought: a video, a sound (#125). */
 function slideUsesMedia(it: SlideBundleItem): boolean {
@@ -46,6 +48,10 @@ function slideUsesMedia(it: SlideBundleItem): boolean {
  * that uses nothing newer.
  */
 export function bundleVersionOf(items: QuizBundle['items']): number {
+  if (
+    items.some((it) => it.kind === 'question' && it.mediaPosition && it.mediaPosition !== 'bottom')
+  )
+    return 7;
   if (items.some((it) => it.kind === 'question' && it.type === 'image_choice')) return 6;
   if (items.some((it) => it.kind === 'slide' && slideUsesMedia(it))) return 5;
   const hides = items.some((it) => it.kind === 'question' && it.waveformSize === 'hidden');
@@ -135,6 +141,8 @@ export const questionBundleSchema = z.object({
   audioTarget: z.enum(AUDIO_TARGETS).optional(),
   /** How thick its waveform is drawn (version 3); absent = M. */
   waveformSize: z.enum(WAVEFORM_SIZES).optional(),
+  /** Where its picture or video sits against its text (version 7); absent = below it. */
+  mediaPosition: z.enum(MEDIA_POSITIONS).optional(),
   /** The timer starts when the media ends (version 3); absent = with the question. */
   timerAfterMedia: z.boolean().optional(),
   pointsMode: z.enum(['standard', 'double', 'none', 'fixed']).optional(),

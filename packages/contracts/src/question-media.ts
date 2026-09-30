@@ -146,6 +146,15 @@ export const WAVEFORM_SIZES = ['S', 'M', 'L', 'hidden'] as const;
 export type WaveformSize = (typeof WAVEFORM_SIZES)[number];
 export const WAVEFORM_SIZE_DEFAULT: WaveformSize = 'M';
 
+/**
+ * Where a question's picture or video sits against its text on the projection:
+ * under it (the default), above it, or beside it. The answers stay below, as for
+ * every question; a phone keeps the picture above them whatever the position.
+ */
+export const MEDIA_POSITIONS = ['bottom', 'top', 'left', 'right'] as const;
+export type MediaPosition = (typeof MEDIA_POSITIONS)[number];
+export const MEDIA_POSITION_DEFAULT: MediaPosition = 'bottom';
+
 // ─── Audio target ─────────────────────────────────────────────────────────
 
 /**
@@ -200,7 +209,12 @@ export type LiveAudio = {
   size?: WaveformSize;
 };
 
-export type LiveQuestionMedia = { visual: LiveVisual | null; audio: LiveAudio | null };
+export type LiveQuestionMedia = {
+  visual: LiveVisual | null;
+  audio: LiveAudio | null;
+  /** Where the visual sits against the text ({@link MEDIA_POSITION_DEFAULT} when absent). */
+  position?: MediaPosition;
+};
 
 /** Every URL a screen should fetch ahead to play these media at once. */
 export function liveMediaUrls(media: LiveQuestionMedia | null | undefined): string[] {

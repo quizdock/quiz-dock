@@ -385,7 +385,15 @@
     "place_ordinal_one": "{{count}}.º",
     "place_ordinal_two": "{{count}}.º",
     "place_ordinal_few": "{{count}}.º",
-    "place_ordinal_other": "{{count}}.º"
+    "place_ordinal_other": "{{count}}.º",
+    "mediaPositionLabel": "Imagen en la proyección",
+    "mediaPositionHint": "Dónde se coloca la imagen respecto al texto; las respuestas quedan abajo.",
+    "mediaPosition": {
+      "bottom": "Bajo el texto",
+      "top": "Sobre el texto",
+      "left": "A la izquierda del texto",
+      "right": "A la derecha del texto"
+    }
   },
   "preview": {
     "view": "Vista previa (vista del jugador)",

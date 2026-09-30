@@ -252,7 +252,12 @@
     "slideManual": "manual",
     "motion": "Animaciones",
     "motionOnTooltip": "Las pantallas se animan entre los pasos. Haz clic para dejarlas quietas, para un proyector lento.",
-    "motionOffTooltip": "Las pantallas cambian sin transiciones. Haz clic para recuperarlas."
+    "motionOffTooltip": "Las pantallas cambian sin transiciones. Haz clic para recuperarlas.",
+    "pickerPlayed": "Jugados en esta sala",
+    "pickerPlayedAll": "Todos los cuestionarios",
+    "pickerPlayedFresh": "Aún no jugados",
+    "pickerPlayedDone": "Ya jugados",
+    "pickerPlayedMark": "ya jugado"
   },
   "screen": {
     "sessionUnavailable": "Sala no disponible.",
@@ -297,7 +302,8 @@
     "nextStep": "Siguiente: pregunta {{n}}",
     "lookingBackAt": "Revisando la pregunta {{n}}",
     "gameGoesOn": "y luego sigue la partida",
-    "answerLabel": "Respuesta"
+    "answerLabel": "Respuesta",
+    "answeredShort": "han respondido"
   },
   "player": {
     "joinFailed": "No se pudo unir a la sala.",

@@ -88,6 +88,7 @@ export function templateSteps(
     revealDelayS: q.revealDelayS ?? null,
     audioTarget: q.audioTarget ?? null,
     waveformSize: q.waveformSize,
+    mediaPosition: q.mediaPosition,
     timerAfterMedia: q.timerAfterMedia,
     pointsMode: q.type === 'poll' ? 'none' : q.pointsMode,
     scoring: q.scoring,

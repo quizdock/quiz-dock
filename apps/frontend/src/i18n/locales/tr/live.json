@@ -252,7 +252,12 @@
     "slideManual": "elle",
     "motion": "Animasyonlar",
     "motionOnTooltip": "Ekranlar adımlar arasında hareket eder. Yavaş bir projeksiyon için sabitlemek üzere tıkla.",
-    "motionOffTooltip": "Ekranlar geçiş olmadan değişir. Geçişleri geri getirmek için tıkla."
+    "motionOffTooltip": "Ekranlar geçiş olmadan değişir. Geçişleri geri getirmek için tıkla.",
+    "pickerPlayed": "Bu odada oynananlar",
+    "pickerPlayedAll": "Tüm quizler",
+    "pickerPlayedFresh": "Henüz oynanmamış",
+    "pickerPlayedDone": "Oynanmış",
+    "pickerPlayedMark": "oynandı"
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",
@@ -297,7 +302,8 @@
     "nextStep": "Sıradaki: {{n}}. soru",
     "lookingBackAt": "Önceki adım · {{n}}. soru",
     "gameGoesOn": "ardından oyun devam eder",
-    "answerLabel": "Yanıt"
+    "answerLabel": "Yanıt",
+    "answeredShort": "yanıtladı"
   },
   "player": {
     "joinFailed": "Odaya katılım sağlanamadı.",

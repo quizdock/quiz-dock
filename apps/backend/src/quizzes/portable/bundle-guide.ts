@@ -86,6 +86,7 @@ export const GUIDE_FIELDS = {
       'revealDelayS',
       'audioTarget',
       'waveformSize',
+      'mediaPosition',
       'timerAfterMedia',
       'multiSelect',
     ],

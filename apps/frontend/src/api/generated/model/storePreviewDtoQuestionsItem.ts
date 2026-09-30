@@ -9,6 +9,7 @@ import type { StorePreviewDtoQuestionsItemAcceptedAnswersItem } from './storePre
 import type { StorePreviewDtoQuestionsItemAudioTarget } from './storePreviewDtoQuestionsItemAudioTarget';
 import type { StorePreviewDtoQuestionsItemBackgroundGradient } from './storePreviewDtoQuestionsItemBackgroundGradient';
 import type { StorePreviewDtoQuestionsItemMedia } from './storePreviewDtoQuestionsItemMedia';
+import type { StorePreviewDtoQuestionsItemMediaPosition } from './storePreviewDtoQuestionsItemMediaPosition';
 import type { StorePreviewDtoQuestionsItemOptionsItem } from './storePreviewDtoQuestionsItemOptionsItem';
 import type { StorePreviewDtoQuestionsItemPointsMode } from './storePreviewDtoQuestionsItemPointsMode';
 import type { StorePreviewDtoQuestionsItemScoring } from './storePreviewDtoQuestionsItemScoring';
@@ -49,6 +50,7 @@ export type StorePreviewDtoQuestionsItem = {
   /** @nullable */
   audioTarget: StorePreviewDtoQuestionsItemAudioTarget;
   waveformSize: StorePreviewDtoQuestionsItemWaveformSize;
+  mediaPosition: StorePreviewDtoQuestionsItemMediaPosition;
   timerAfterMedia: boolean;
   pointsMode: StorePreviewDtoQuestionsItemPointsMode;
   scoring: StorePreviewDtoQuestionsItemScoring;

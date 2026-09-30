@@ -313,7 +313,7 @@ describe('quiz bundle', () => {
       BundleContentError,
     );
     // A bundle from a newer schema is refused, as an older importer refuses this one.
-    expect(quizBundleSchema.safeParse({ ...bundle, version: 7 }).success).toBe(false);
+    expect(quizBundleSchema.safeParse({ ...bundle, version: 8 }).success).toBe(false);
     // What makes it true: the published v5 schema, the one a 0.8 / 0.9 importer matches, refuses it.
     const v5 = JSON.parse(
       readFileSync(
@@ -324,6 +324,26 @@ describe('quiz bundle', () => {
     const ajv = new Ajv2020({ strict: false, allErrors: true });
     addFormats(ajv);
     expect(ajv.compile(v5)(JSON.parse(JSON.stringify(bundle)))).toBe(false);
+  });
+
+  it('stamps version 7 once a picture sits above or beside its text, and brings the place back', () => {
+    const src = makeQuiz();
+    expect(toBundle(src, pathFor).items.some((it) => 'mediaPosition' in it)).toBe(false);
+    src.questions[0].mediaPosition = 'left';
+    const bundle = toBundle(src, pathFor);
+    expect(bundle.version).toBe(7);
+    expect(fromBundle(bundle, idFor).questions[0]).toMatchObject({ mediaPosition: 'left' });
+    // Absent, the picture is under the text, as before version 7.
+    const older = {
+      ...bundle,
+      items: bundle.items.map((it) => {
+        if (it.kind !== 'question') return it;
+        const rest = { ...it };
+        delete rest.mediaPosition;
+        return rest;
+      }),
+    } as typeof bundle;
+    expect(fromBundle(older, idFor).questions[0]).toMatchObject({ mediaPosition: 'bottom' });
   });
 
   it('round-trips through import with the API content rules applied', () => {

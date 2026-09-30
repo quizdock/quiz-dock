@@ -6,6 +6,7 @@ import {
   LOUDNESS_TARGET_LUFS,
   VIDEO_WITH_AUDIO,
   WAVEFORM_SIZE_DEFAULT,
+  type MediaPosition,
   type WaveformSize,
   playbackGainDb,
 } from '@quiz-dock/contracts';
@@ -23,6 +24,8 @@ interface WithMedia {
   audioMedia: MediaAsset | null;
   /** How thick the waveform is drawn (the question's; M when not given). */
   waveformSize?: WaveformSize;
+  /** Where the visual sits against the text (the question's; bottom when not given). */
+  mediaPosition?: MediaPosition;
 }
 
 /** The two slots of a stored question, in the shape of the shared contract. */
@@ -76,6 +79,10 @@ export function liveMediaOf(
             size: q.waveformSize ?? WAVEFORM_SIZE_DEFAULT,
           }
         : null,
+    // Only a visual has a place against the text; the default goes without saying.
+    ...(visual && q.mediaPosition && q.mediaPosition !== 'bottom'
+      ? { position: q.mediaPosition }
+      : {}),
   };
 }
 

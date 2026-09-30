@@ -7,6 +7,7 @@ import {
   type QuestionRevealPayload,
   type QuestionStartPayload,
   type SlideGradient,
+  type MediaPosition,
   type WaveformSize,
   basePointsFor,
   normalizeAnswer,
@@ -61,7 +62,12 @@ function liveQuestion(
 ): QuestionStartPayload {
   const media = q.media as QuestionMedia | null;
   const now = Date.now();
-  const live = liveMedia(media, url, q.waveformSize as WaveformSize);
+  const live = liveMedia(
+    media,
+    url,
+    q.waveformSize as WaveformSize,
+    q.mediaPosition as MediaPosition,
+  );
   return {
     questionIndex,
     type: q.type as QuestionStartPayload['type'],
@@ -104,6 +110,7 @@ function liveMedia(
   media: QuestionMedia | null,
   url: MediaResolver,
   size: WaveformSize,
+  position: MediaPosition | undefined,
 ): LiveQuestionMedia {
   const visual = media?.visual;
   const audio = media?.audio;
@@ -124,6 +131,8 @@ function liveMedia(
           size,
         }
       : null,
+    // As the server sends it: only a visual has a place, the default goes without saying.
+    ...(visual && position && position !== 'bottom' ? { position } : {}),
   };
 }
 

@@ -385,7 +385,15 @@
     "place_ordinal_one": "第{{count}}",
     "place_ordinal_two": "第{{count}}",
     "place_ordinal_few": "第{{count}}",
-    "place_ordinal_other": "第{{count}}"
+    "place_ordinal_other": "第{{count}}",
+    "mediaPositionLabel": "投影上的图片",
+    "mediaPositionHint": "图片相对文字的位置；答案始终在下方。",
+    "mediaPosition": {
+      "bottom": "文字下方",
+      "top": "文字上方",
+      "left": "文字左侧",
+      "right": "文字右侧"
+    }
   },
   "preview": {
     "view": "预览（玩家视图）",
