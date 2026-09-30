@@ -20,6 +20,7 @@ import {
   configureDemo,
   configureStandalone,
 } from './config';
+import { MotionRoot } from './game/motion/motion-root';
 import { router } from './router';
 import { loadLanguages } from './i18n';
 import './index.css';
@@ -72,7 +73,9 @@ async function bootstrap(): Promise<void> {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <AuthProvider mode={mode} initialUser={initialUser}>
-          <RouterProvider router={router} />
+          <MotionRoot>
+            <RouterProvider router={router} />
+          </MotionRoot>
         </AuthProvider>
       </QueryClientProvider>
     </StrictMode>,

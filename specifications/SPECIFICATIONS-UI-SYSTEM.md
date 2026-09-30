@@ -54,6 +54,13 @@
 - **Orval**-generated clients stay the only REST access; error mapping keeps field paths.
 - **Vitest** for components and the translation-coverage test; **Playwright** for one screenshot per screen and state, to catch regressions of the frames.
 
+### 1.8 Motion — one layer, below the components
+The live screens (projection, phones) move between steps; the rest of the app does not. Motion is a layer the game components do not know about, so a new screen or question type gets it for free.
+- **One place**: `game/motion/` is the only code importing Motion — its tokens (durations, easing, stagger), the root setting (the system's *reduce motion* honoured: movement off, fades kept) and the primitives below.
+- **Automatic, at the root of a live screen**: when the step changes, the previous background fades out over the new one (gradient, picture, video or none: nothing is duplicated), then the step's top-level elements come in one after the other.
+- **Two primitives where a component must say what moves**: a number that counts up (scores) and a list that reorders by sliding (the standings, keyed by player). The reveal's bars fill from zero; the podium's steps rise third, second, first.
+- **Never in the way of the game**: purely visual, short (about half a second); no timer, sync or media start waits for an animation. Only opacity and position move, for the projectors and old phones. Animations are off in tests.
+
 ---
 
 ## 2. Lot 1 — live, host side

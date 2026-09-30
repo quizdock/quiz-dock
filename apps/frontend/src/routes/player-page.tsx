@@ -1,4 +1,6 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { BackdropFade, StepEnter } from '../game/motion/step-transition';
+import { type Backdrop, stepKeyOf } from '../game/motion/step';
 import { NICKNAME_MAX, type PlayerPresence, playsSound } from '@quiz-dock/contracts';
 import {
   Ban,
@@ -514,15 +516,23 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
 
   // The question's background covers the whole viewport under the header, in every
   // phase of that question; the phone column is centred inside it.
+  // The motion layer (UI system §1.8): the step, and the background this page draws it on.
+  const stepKey = stepKeyOf(view);
+  const phoneBackdrop: Backdrop = view.question?.background
+    ? { background: view.question.background, textTone: view.question.textTone ?? 'light' }
+    : null;
   const surface = (children: React.ReactNode) => (
     <Surface
       background={view.question?.background}
       textTone={view.question?.textTone}
       textOutline={view.question?.textOutline}
       className={cn('flex-1', TYPE_BASE.phone)}
+      overlay={<BackdropFade stepKey={stepKey} backdrop={phoneBackdrop} />}
     >
       {participantBar}
-      <div className="flex flex-1 flex-col px-4 py-4">{children}</div>
+      <StepEnter stepKey={stepKey} className="flex flex-1 flex-col px-4 py-4">
+        {children}
+      </StepEnter>
     </Surface>
   );
 

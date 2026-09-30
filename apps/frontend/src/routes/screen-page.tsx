@@ -1,4 +1,7 @@
 import { RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { Pulse } from '../game/motion/primitives';
+import { BackdropFade, StepEnter } from '../game/motion/step-transition';
+import { backdropOf, stepKeyOf } from '../game/motion/step';
 import { useParams } from '@tanstack/react-router';
 import { Loader2, Maximize, Minimize, Users } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
@@ -556,10 +559,12 @@ export function ScreenSurface({
             'bottom',
             null,
             bigStatus(
-              t('screen.answered', {
-                answered: view.answerCount.answered,
-                total: view.answerCount.total,
-              }),
+              <Pulse
+                value={t('screen.answered', {
+                  answered: view.answerCount.answered,
+                  total: view.answerCount.total,
+                })}
+              />,
             ),
             null,
           )
@@ -635,10 +640,13 @@ export function ScreenSurface({
   }
 
   const slide = view.state === 'SLIDE_SHOW';
+  // The motion layer (UI system §1.8): what the step is, and what it is drawn on.
+  const stepKey = stepKeyOf(view);
   const frame = (
     <div className={cn('flex w-full flex-1 flex-col', !slide && 'min-h-0')}>
       {top}
-      <div
+      <StepEnter
+        stepKey={stepKey}
         className={cn(
           'flex min-h-0 w-full flex-1 flex-col items-center',
           slide ? 'items-stretch' : 'justify-center gap-[1.5em] px-[3.5em] py-[1.5em] text-center',
@@ -646,7 +654,7 @@ export function ScreenSurface({
         )}
       >
         {stage}
-      </div>
+      </StepEnter>
       {bottom}
     </div>
   );
@@ -704,6 +712,7 @@ export function ScreenSurface({
       ) : (
         frame
       )}
+      <BackdropFade stepKey={stepKey} backdrop={backdropOf(view, onBackground)} />
     </div>
   );
 }

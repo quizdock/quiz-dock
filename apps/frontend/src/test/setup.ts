@@ -1,3 +1,4 @@
+import { MotionGlobalConfig } from 'motion/react';
 import '@testing-library/jest-dom/vitest';
 import { loadLanguages } from '../i18n';
 
@@ -53,3 +54,6 @@ window.matchMedia ??= (query: string) =>
     removeListener: () => undefined,
     dispatchEvent: () => false,
   }) as MediaQueryList;
+
+// The motion layer (UI system §1.8) jumps to its end states: tests read the screens, not their transitions.
+MotionGlobalConfig.skipAnimations = true;

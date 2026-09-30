@@ -13,6 +13,8 @@ services:
     ports: !reset []
     environment:
       APP_LANG: en
+      # Local mode whatever the dev stack's .env says: the screenshots sign in by name.
+      AUTH_MODE: none
   frontend:
     image: quiz-dock-frontend:latest
     pull_policy: never

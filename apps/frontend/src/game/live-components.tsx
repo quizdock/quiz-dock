@@ -13,6 +13,7 @@ import type {
 } from '@quiz-dock/contracts';
 import { TILE_RATIO, fillSlideBlocks } from '@quiz-dock/contracts';
 import { type ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { usePodiumMotion, useRevealMotion, useStandingsMotion } from './motion/primitives';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
@@ -340,8 +341,14 @@ export function Distribution({
   reveal: QuestionRevealPayload;
 }) {
   const total = Object.values(reveal.distribution).reduce((a, b) => a + b, 0) || 1;
+  const ref = useRef<HTMLUListElement>(null);
+  useRevealMotion(ref, options.map((o) => o.id).join('|'));
   return (
-    <ul className={cn('qd-distribution flex w-full flex-col gap-[0.5em]', BACKDROP_PANEL)}>
+    <ul
+      ref={ref}
+      data-motion="own"
+      className={cn('qd-distribution flex w-full flex-col gap-[0.5em]', BACKDROP_PANEL)}
+    >
       {options.map((o) => {
         const n = reveal.distribution[o.id] ?? 0;
         const pct = Math.round((n / total) * 100);
@@ -349,6 +356,7 @@ export function Distribution({
         return (
           <li
             key={o.id}
+            data-dim={(reveal.correctOptionIds && !isCorrect) || undefined}
             className={cn(
               'flex items-center gap-[0.5em]',
               // The right answer stands out: full colour and an outline; the others step back.
@@ -376,6 +384,7 @@ export function Distribution({
               )}
             >
               <div
+                data-fill
                 className={cn('h-full', COLOR_BG[o.color] ?? OPTION_BG_FALLBACK)}
                 style={{ width: `${pct}%` }}
               />
@@ -393,6 +402,7 @@ export function Distribution({
             <span className="w-[2.5em] text-right text-[0.95em] tabular-nums">{n}</span>
             <span
               aria-label={isCorrect ? '✓' : undefined}
+              data-mark={isCorrect || undefined}
               className={cn(
                 'inline-flex size-[1.4em] shrink-0 items-center justify-center rounded-full text-[0.95em]',
                 isCorrect && 'bg-success text-success-foreground',
@@ -885,21 +895,32 @@ export function LeaderboardList({
   rows,
   highlightRank,
   max = 10,
+  track,
 }: {
   rows: LeaderboardRow[];
   highlightRank?: number;
   max?: number;
+  /** Which standings these are, for the rows to slide from their previous place. */
+  track?: string;
 }) {
   const shown = rows.slice(0, max);
   const topScore = Math.max(0, ...shown.map((r) => r.score));
+  const ref = useRef<HTMLOListElement>(null);
+  useStandingsMotion(ref, shown, track);
   return (
-    <ol className={cn('qd-leaderboard flex w-full flex-col gap-[0.4em]', BACKDROP_PANEL)}>
+    <ol
+      ref={ref}
+      data-motion="own"
+      className={cn('qd-leaderboard flex w-full flex-col gap-[0.4em]', BACKDROP_PANEL)}
+    >
       {shown.map((r) => {
         const pct = topScore > 0 ? Math.round((r.score / topScore) * 100) : 0;
         const me = r.rank === highlightRank;
         return (
           <li
-            key={`${r.rank}-${r.nickname}`}
+            // A player keeps their row from one showing to the next: it slides to its new place.
+            key={r.nickname}
+            data-row={r.nickname}
             data-rank={r.rank}
             data-you={me || undefined}
             className={cn(
@@ -916,7 +937,9 @@ export function LeaderboardList({
             <span className="text-muted-foreground relative tabular-nums">{r.rank}.</span>
             <Avatar name={r.avatar || r.nickname} size="1.75em" />
             <span className="relative min-w-0 flex-1 truncate text-left">{r.nickname}</span>
-            <span className="relative tabular-nums">{r.score}</span>
+            <span data-score className="relative tabular-nums">
+              {r.score}
+            </span>
           </li>
         );
       })}
@@ -928,19 +951,33 @@ export function LeaderboardList({
 export function Podium({ rows }: { rows: LeaderboardRow[] }) {
   const order = [rows[1], rows[0], rows[2]]; // 2 · 1 · 3
   const heights = ['h-[6em]', 'h-[8em]', 'h-[5em]'];
+  const ref = useRef<HTMLDivElement>(null);
+  usePodiumMotion(ref, rows.map((r) => r.nickname).join('|'));
   return (
-    <div className="qd-podium flex items-end justify-center gap-[0.75em]">
+    <div
+      ref={ref}
+      data-motion="own"
+      className="qd-podium flex items-end justify-center gap-[0.75em]"
+    >
       {order.map((r, i) =>
         r ? (
           <div
             key={r.rank}
             data-rank={r.rank}
+            data-podium-step={r.rank}
             className="qd-podium-step flex w-[6em] flex-col items-center gap-[0.25em]"
           >
-            <Avatar name={r.avatar || r.nickname} size="3em" />
-            <span className="max-w-full truncate font-semibold">{r.nickname}</span>
-            <span className="text-muted-foreground text-[0.875em] tabular-nums">{r.score}</span>
+            <span data-podium-who>
+              <Avatar name={r.avatar || r.nickname} size="3em" />
+            </span>
+            <span data-podium-who className="max-w-full truncate font-semibold">
+              {r.nickname}
+            </span>
+            <span data-podium-who className="text-muted-foreground text-[0.875em] tabular-nums">
+              {r.score}
+            </span>
             <div
+              data-podium-block
               className={cn(
                 'flex w-full items-start justify-center rounded-t-[0.5em] pt-[0.5em] text-[1.5em] font-bold text-white [text-shadow:none]',
                 BACKDROP_EDGE,

@@ -49,7 +49,12 @@ export function RoomStandingsPanel({
           · {t('room.afterQuizzes', { count: standings.quizzesPlayed })}
         </span>
       </h3>
-      <LeaderboardList rows={standings.top} highlightRank={standings.you?.rank} max={max} />
+      <LeaderboardList
+        rows={standings.top}
+        highlightRank={standings.you?.rank}
+        max={max}
+        track="room"
+      />
     </div>
   );
 }

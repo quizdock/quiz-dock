@@ -735,7 +735,7 @@ function HostConsole({
         {view.leaderboard ? (
           <div className="flex flex-col gap-2">
             <SectionTitle>{t('control.leaderboard')}</SectionTitle>
-            <LeaderboardList rows={view.leaderboard.top} max={5} />
+            <LeaderboardList rows={view.leaderboard.top} max={5} track="console" />
           </div>
         ) : null}
       </>
