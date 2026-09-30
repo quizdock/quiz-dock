@@ -1124,6 +1124,7 @@ export class GameEngine {
     socket.emit('room:info', { name: meta.roomName || null, hostName: meta.hostName });
     const room = await this.game.getRoom(pin);
     if (room) socket.emit('room:sounds', soundsPayload(room.sounds));
+    if (room) socket.emit('room:motion', { on: room.motion });
     const snapshot = await this.game.getSnapshot(meta.id);
     if (snapshot) {
       // Every device asks for sound at once when the quiz will need it (a phone too:
@@ -1581,6 +1582,16 @@ export class GameEngine {
   }
 
   /** `host:sounds` (#93): the room's game sounds, at any time; every screen is told. */
+  /**
+   * `host:motion`: whether the room's screens move between steps (UI system §1.8),
+   * at any time — the host sees what the projector copes with. Every device follows.
+   */
+  async setMotion(pin: string, hostUserId: string, on: boolean): Promise<void> {
+    await this.requireHost(pin, hostUserId);
+    await this.redis.hset(gameKeys.room(pin), roomHash({ motion: on === true }));
+    this.server.to(pin).emit('room:motion', { on: on === true });
+  }
+
   async setSounds(pin: string, hostUserId: string, patch: RoomSoundsSettings): Promise<void> {
     await this.requireHost(pin, hostUserId);
     const sounds = await this.game.setSounds(pin, hostUserId, patch);

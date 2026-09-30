@@ -51,7 +51,7 @@
     "hostDisconnected": "Sunucunun bağlantısı kesildi; quiz duraklatıldı.",
     "sessionEnded": "Oda kapatıldı.",
     "leaderboard": "Sıralama",
-    "autoPaused": "Otomatik mod duraklatıldı; sıradaki adımlar bekletiliyor.",
+    "autoPaused": "Otomatik oynatma duraklatıldı; sıradaki adımlar bekletiliyor.",
     "nextQuestion": "Sonraki soru",
     "continue": "Devam et",
     "endSession": "Odayı kapat",
@@ -69,8 +69,8 @@
     "rhythmGroup": "Quiz temposu",
     "modeManualTooltip": "Manuel mod: Bir sonraki soruya kendiniz geçersiniz",
     "modeManual": "Manuel",
-    "modeAutoTooltip": "Otomatik mod: Her sonuçtan sonra otomatik olarak bir sonraki soruya geçer",
-    "modeAuto": "Otomatik",
+    "modeAutoTooltip": "Otomatik oynatma: Her sonuçtan sonra otomatik olarak bir sonraki soruya geçer",
+    "modeAuto": "Otomatik oynatma",
     "noParticipants": "Bağlı katılımcı yok.",
     "remote": "Uzaktan katılım",
     "banTooltip": "{{nickname}}'ı kaldır",
@@ -249,7 +249,10 @@
     "pauseNothing": "Şu anda duraklatılacak bir şey yok",
     "spaceKey": "Boşluk",
     "slideAuto": "{{seconds}} sn",
-    "slideManual": "elle"
+    "slideManual": "elle",
+    "motion": "Animasyonlar",
+    "motionOnTooltip": "Ekranlar adımlar arasında hareket eder. Yavaş bir projeksiyon için sabitlemek üzere tıkla.",
+    "motionOffTooltip": "Ekranlar geçiş olmadan değişir. Geçişleri geri getirmek için tıkla."
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",

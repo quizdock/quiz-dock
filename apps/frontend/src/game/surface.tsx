@@ -39,6 +39,7 @@ export function Surface({
   textOutline = true,
   className,
   backdrop,
+  overlay,
   children,
 }: {
   background: SlideBackground | null | undefined;
@@ -47,6 +48,8 @@ export function Surface({
   className?: string;
   /** A layer drawn behind the content in place of an image — a slide's video (#125). */
   backdrop?: ReactNode;
+  /** Drawn over everything, content included: the motion layer's fading background. */
+  overlay?: ReactNode;
   children: ReactNode;
 }) {
   const light = textTone !== 'dark';
@@ -83,6 +86,7 @@ export function Surface({
         </>
       ) : null}
       <div className="relative z-10 flex w-full flex-1 flex-col">{children}</div>
+      {overlay}
     </div>
   );
 }

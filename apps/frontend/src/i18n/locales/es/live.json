@@ -51,7 +51,7 @@
     "hostDisconnected": "Quiz en pausa — anfitrión desconectado.",
     "sessionEnded": "Sala cerrada.",
     "leaderboard": "Clasificación",
-    "autoPaused": "Auto en pausa — encadenamiento suspendido.",
+    "autoPaused": "Autoplay en pausa — encadenamiento suspendido.",
     "nextQuestion": "Siguiente pregunta",
     "continue": "Continuar",
     "endSession": "Cerrar la sala",
@@ -69,8 +69,8 @@
     "rhythmGroup": "Ritmo del quiz",
     "modeManualTooltip": "Modo manual: pasas tú mismo a la siguiente pregunta",
     "modeManual": "Manual",
-    "modeAutoTooltip": "Modo automático: pasa automáticamente a la siguiente pregunta tras cada resultado",
-    "modeAuto": "Auto",
+    "modeAutoTooltip": "Autoplay: pasa automáticamente a la siguiente pregunta tras cada resultado",
+    "modeAuto": "Autoplay",
     "noParticipants": "No hay jugadores conectados.",
     "remote": "Participa a distancia",
     "banTooltip": "Expulsar a {{nickname}}",
@@ -249,7 +249,10 @@
     "pauseNothing": "Nada que pausar ahora",
     "spaceKey": "Espacio",
     "slideAuto": "{{seconds}} s",
-    "slideManual": "manual"
+    "slideManual": "manual",
+    "motion": "Animaciones",
+    "motionOnTooltip": "Las pantallas se animan entre los pasos. Haz clic para dejarlas quietas, para un proyector lento.",
+    "motionOffTooltip": "Las pantallas cambian sin transiciones. Haz clic para recuperarlas."
   },
   "screen": {
     "sessionUnavailable": "Sala no disponible.",

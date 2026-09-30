@@ -139,6 +139,8 @@ services:
       PUBLICATION_MAX_MB: ${PUBLICATION_MAX_MB:-20}
       MEDIA_LIBRARY_LINKS: ${MEDIA_LIBRARY_LINKS:-}
       GAME_AUTO_ADVANCE_MS: ${GAME_AUTO_ADVANCE_MS:-5000}
+      # Transitions between steps on the live screens, the rooms' default (on | off).
+      LIVE_MOTION: ${LIVE_MOTION:-on}
       GAME_READ_DELAY_MS: ${GAME_READ_DELAY_MS:-3000}
       GAME_MEDIA_WAIT_S: ${GAME_MEDIA_WAIT_S:-10}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.

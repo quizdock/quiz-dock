@@ -153,6 +153,7 @@ Which setup offers what: [where participants connect](invitation-address.md).
 | `IMPORT_MAX_BYTES` | `52428800` | Max size of an imported quiz bundle (zip). Default 50 MiB. |
 | `PUBLICATION_MAX_MB` | `20` | Largest bundle the editor's *Export for publication* allows (MB): the limit of the community store, kept under GitHub's 25 MB web-upload limit. An organisation running its own store may set another. |
 
+| `LIVE_MOTION` | `on` | Transitions between steps on the projection and the phones, as a new room starts: the previous background fades out, the step comes in, the standings slide. `off` for old projectors or low-end devices. The host switches it for their room at any time (console, *Animations*); a device asking the system to reduce motion keeps fades only. |
 | `GAME_AUTO_ADVANCE_MS` | `5000` | Automatic mode: time spent on a reveal or a content slide before moving on, unless the question/slide sets its own. |
 | `GAME_READ_DELAY_MS` | `3000` | Reading window shown before a question's timer starts. |
 | `GAME_MEDIA_WAIT_S` | `10` | How long the room waits at most, before a question, for the devices that play its sound or video to load it (the host can start anyway). `0` never waits. See [audio & video](audio-video.md#waiting-for-media). |

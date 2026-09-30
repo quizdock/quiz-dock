@@ -64,6 +64,10 @@ The media brief (`specifications/SPECIFICATIONS-MEDIA.md` §5) as built:
 - **Clock** — every client estimates its offset to the server's clock from
   `ping`/`pong` (shortest round trip wins, `clock.ts`); countdowns and media starts
   compare server times with `serverNow()`.
+- **Motion** — the transitions between steps are the screens' own (`game/motion/`):
+  nothing on the server waits for them. The room keeps whether they run
+  (`motion`, from `LIVE_MOTION` when it opens); `host:motion` switches it at any
+  time and `room:motion` tells every device, on attach too.
 - **Common start** — `question:start` / `question:time` carry `mediaStartAt`, a
   moment ahead of the question's opening; the engine keeps it as a distance from
   `questionStartedAt` (`mediaLeadMs`), so pauses, a host coming back and restarts

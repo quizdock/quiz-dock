@@ -136,6 +136,8 @@ export interface GameView {
   nav: { prev: GameStep | null; next: GameStep | null; review: boolean } | null;
   /** The room's game sounds (#93); null until told. */
   sounds: RoomSoundsPayload | null;
+  /** Whether the room's screens move between steps (UI system §1.8); null until told. */
+  motion: boolean | null;
   /** Whether this participant said they are ready in the lobby (#104). */
   youReady: boolean;
   /** The lobby's count, as a participant sees it: ready, out of how many (#104). */
@@ -203,6 +205,7 @@ export const INITIAL_VIEW: GameView = {
   youReady: false,
   lobbyCount: null,
   sounds: null,
+  motion: null,
   roomName: null,
   hostName: null,
   standings: null,
@@ -382,6 +385,7 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
     const onLobbyYou = (p: { ready: boolean }) => patch({ youReady: p.ready });
     const onLobbyCount = (p: { ready: number; total: number }) => patch({ lobbyCount: p });
     const onSounds = (p: RoomSoundsPayload) => patch({ sounds: p });
+    const onMotion = (p: { on: boolean }) => patch({ motion: p.on });
     const onRoomInfo = (p: { name: string | null; hostName: string }) =>
       patch({ roomName: p.name, hostName: p.hostName });
     const onMediaControl = (p: MediaControlPayload) =>
@@ -464,6 +468,7 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
       'lobby:you': onLobbyYou,
       'lobby:count': onLobbyCount,
       'room:sounds': onSounds,
+      'room:motion': onMotion,
       'game:ended': onEnded,
       notice: onNotice,
       kicked: onKicked,

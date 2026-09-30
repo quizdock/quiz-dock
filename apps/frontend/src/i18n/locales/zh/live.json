@@ -51,7 +51,7 @@
     "hostDisconnected": "测验已暂停 — 主持人已断开连接。",
     "sessionEnded": "房间已关闭。",
     "leaderboard": "排行榜",
-    "autoPaused": "自动模式已暂停 — 连续推进已暂停。",
+    "autoPaused": "自动播放已暂停 — 连续推进已暂停。",
     "nextQuestion": "下一题",
     "continue": "继续",
     "endSession": "关闭房间",
@@ -69,8 +69,8 @@
     "rhythmGroup": "测验节奏",
     "modeManualTooltip": "手动模式：由您自己切换到下一题",
     "modeManual": "手动",
-    "modeAutoTooltip": "自动模式：每次出结果后自动切换到下一题",
-    "modeAuto": "自动",
+    "modeAutoTooltip": "自动播放：每次出结果后自动切换到下一题",
+    "modeAuto": "自动播放",
     "noParticipants": "没有玩家连接。",
     "remote": "远程参与",
     "banTooltip": "移除 {{nickname}}",
@@ -249,7 +249,10 @@
     "pauseNothing": "当前没有可暂停的内容",
     "spaceKey": "空格",
     "slideAuto": "{{seconds}} 秒",
-    "slideManual": "手动"
+    "slideManual": "手动",
+    "motion": "动画",
+    "motionOnTooltip": "屏幕在各步骤之间有过渡动画。点击可关闭，适合较慢的投影设备。",
+    "motionOffTooltip": "屏幕切换时没有过渡动画。点击可重新开启。"
   },
   "screen": {
     "sessionUnavailable": "房间不可用。",
