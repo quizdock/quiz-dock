@@ -24,6 +24,7 @@ import {
   Lock,
   LockOpen,
   Eye,
+  ExternalLink,
   MonitorPlay,
   Pause,
   Pencil,
@@ -38,7 +39,6 @@ import {
   Users,
   Wifi,
   Trash2,
-  Sparkles,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
@@ -209,6 +209,8 @@ function HostConsole({
       <Button type="button" variant="outline" size="sm" onClick={openScreen}>
         <Eye className="size-4" />
         {t('control.screenButton')}
+        {/* It opens in a new tab: said before the click. */}
+        <ExternalLink className="text-muted-foreground size-3.5" aria-hidden />
       </Button>
     </Tooltip>
   );
@@ -392,7 +394,7 @@ function HostConsole({
         sounds={view.sounds}
         onChange={(patch) => socket?.emit('host:sounds', { pin, ...patch })}
       />
-      <MotionButton
+      <MotionSwitch
         on={view.motion ?? appConfig.liveMotion !== false}
         onToggle={(on) => socket?.emit('host:motion', { pin, on })}
       />
@@ -1521,22 +1523,17 @@ function LockButton({
 
 /**
  * Whether the room's screens move between steps (UI system §1.8): the host sees
- * what the projector copes with, and switches it for every screen at once.
+ * what the projector copes with, and switches it for every screen at once — a
+ * switch, like Autoplay, so on and off read apart.
  */
-function MotionButton({ on, onToggle }: { on: boolean; onToggle: (on: boolean) => void }) {
+function MotionSwitch({ on, onToggle }: { on: boolean; onToggle: (on: boolean) => void }) {
   const { t } = useTranslation('live');
   return (
     <Tooltip label={on ? t('control.motionOnTooltip') : t('control.motionOffTooltip')}>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        aria-pressed={on}
-        onClick={() => onToggle(!on)}
-      >
-        <Sparkles className={cn('size-4', !on && 'opacity-40')} />
+      <label className="flex items-center gap-2 text-sm font-medium">
+        <Switch checked={on} onCheckedChange={onToggle} aria-label={t('control.motion')} />
         {t('control.motion')}
-      </Button>
+      </label>
     </Tooltip>
   );
 }

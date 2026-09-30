@@ -521,8 +521,8 @@ describe('ControlPage (console hôte)', () => {
     });
     renderApp('/session/482913/console');
 
-    const motion = await screen.findByRole('button', { name: 'Animations' });
-    expect(motion).toHaveAttribute('aria-pressed', 'true');
+    const motion = await screen.findByRole('switch', { name: 'Animations' });
+    expect(motion).toHaveAttribute('aria-checked', 'true');
     act(() => motion.click());
     expect(fakeSocket.emit).toHaveBeenCalledWith('host:motion', { pin: '482913', on: false });
   });
