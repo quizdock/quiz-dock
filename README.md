@@ -59,7 +59,7 @@ your phone to play.
   alternative text, Markdown everywhere, content
   slides between questions, backgrounds, answer explanations at the reveal. A new quiz
   starts from a draft: an intro slide and a first question to complete. Three sample
-  quizzes wait in the templates (France, Taiwan, and Türkiye in Turkish), every question
+  quizzes wait in the templates (France, Taiwan, Türkiye), every question
   type in them, with pictures and sounds from Wikimedia Commons.
 - 🎧 **Video & sound** — videos and sounds in questions and slides,
   loudness-matched, drawn as a waveform with a playhead; played on the projection and on

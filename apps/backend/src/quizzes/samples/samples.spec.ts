@@ -9,11 +9,11 @@ const kindOf = (path: string) => (path.endsWith('.mp3') ? 'audio' : 'image');
 describe('the shipped samples', () => {
   const samples = loadSamples();
 
-  it('France and Taiwan in English, Türkiye in Turkish', () => {
+  it('all in English', () => {
     expect(samples.map((s) => [s.key, s.manifest.quiz.language])).toEqual([
       ['discover-france', 'en'],
       ['discover-taiwan', 'en'],
-      ['discover-turkiye', 'tr'],
+      ['discover-turkiye', 'en'],
     ]);
   });
 

@@ -198,8 +198,9 @@ async function takeSamples() {
   for (const e of [...entries].sort((a, b) => a.sharedAt.localeCompare(b.sharedAt))) {
     const quiz = await api('POST', `/store/${e.id}/take`);
     await api('PATCH', `/quizzes/${quiz.id}/status`, { status: 'ready' });
-    quizzes[e.language === 'tr' ? 'turkiye' : e.title.includes('France') ? 'france' : 'taiwan'] =
-      quiz.id;
+    quizzes[
+      e.title.includes('Türkiye') ? 'turkiye' : e.title.includes('France') ? 'france' : 'taiwan'
+    ] = quiz.id;
   }
   log('quizzes', JSON.stringify(quizzes));
   return quizzes;

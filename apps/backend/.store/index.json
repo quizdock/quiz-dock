@@ -46,9 +46,9 @@
     },
     {
       "id": "01M3RMY6RR35A7EFN6HZV270E5",
-      "title": "Türkiye’yi Keşfet",
-      "description": "Örnek quiz — Türkiye’nin coğrafyası, tarihi ve kültürü.",
-      "language": "tr",
+      "title": "Discover Türkiye",
+      "description": "Sample quiz — geography, history and culture of Türkiye.",
+      "language": "en",
       "tags": [],
       "questionCount": 11,
       "license": "CC-BY-4.0",
@@ -56,12 +56,12 @@
         "name": "fchaussin",
         "subject": "system:samples"
       },
-      "revision": 1,
+      "revision": 2,
       "sharedAt": "2026-09-30T07:54:48.478Z",
       "cover": null,
       "first": {
         "kind": "slide",
-        "text": "Türkiye’yi Keşfet",
+        "text": "Discover Türkiye",
         "media": "media/istanbul.webp",
         "gradient": null
       }

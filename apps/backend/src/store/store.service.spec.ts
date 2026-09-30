@@ -332,11 +332,11 @@ describe('StoreService', () => {
       const { service } = makeService();
       await service.onModuleInit();
       const seeded = await service.list();
-      expect(seeded.map((e) => e.language).sort()).toEqual(['en', 'en', 'tr']);
+      expect(seeded.map((e) => e.language)).toEqual(['en', 'en', 'en']);
       for (const entry of seeded) {
         expect(existsSync(join(dir, entry.id, 'media'))).toBe(true);
         const istanbul = await service.readMedia(entry.id, 'istanbul.webp').catch(() => null);
-        expect(istanbul !== null).toBe(entry.language === 'tr');
+        expect(istanbul !== null).toBe(entry.title === 'Discover Türkiye');
       }
     });
 
@@ -364,13 +364,13 @@ describe('StoreService', () => {
       expect(france).toMatchObject({ id: old.id, revision: 2, sharedAt: old.sharedAt });
       expect(france?.questionCount).toBeGreaterThan(10);
       expect(existsSync(join(dir, old.id, 'media', 'mont-saint-michel.webp'))).toBe(true);
-      expect(await titles(service)).toEqual(['Discover France', 'Türkiye’yi Keşfet']);
+      expect(await titles(service)).toEqual(['Discover France', 'Discover Türkiye']);
     });
 
     it('a sample withdrawn by the operator does not come back at the next start', async () => {
       const { service } = makeService();
       await service.onModuleInit();
-      const turkiye = (await service.list()).find((e) => e.language === 'tr');
+      const turkiye = (await service.list()).find((e) => e.title === 'Discover Türkiye');
       await service.withdraw({ ...alice, roles: [UserRole.admin] }, turkiye!.id);
       await makeService().service.onModuleInit();
       expect(await titles(makeService().service)).toEqual(['Discover France', 'Discover Taiwan']);

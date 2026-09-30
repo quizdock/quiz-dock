@@ -2,11 +2,11 @@
   "format": "quizdock/quiz",
   "version": 6,
   "quiz": {
-    "title": "Türkiye’yi Keşfet",
-    "description": "Örnek quiz — Türkiye’nin coğrafyası, tarihi ve kültürü.",
-    "language": "tr",
+    "title": "Discover Türkiye",
+    "description": "Sample quiz — geography, history and culture of Türkiye.",
+    "language": "en",
     "license": "CC-BY-4.0",
-    "revision": 1,
+    "revision": 2,
     "feedbackEnabled": true,
     "cover": null
   },
@@ -17,14 +17,14 @@
         {
           "type": "heading",
           "id": "intro-title",
-          "text": "Türkiye’yi Keşfet",
+          "text": "Discover Türkiye",
           "level": 1,
           "align": "center"
         },
         {
           "type": "text",
           "id": "intro-text",
-          "md": "İstanbul’dan Kapadokya’ya, Türkiye üzerine kısa sorular.",
+          "md": "From Istanbul to Cappadocia, a few questions about Türkiye.",
           "align": "center",
           "size": "large"
         }
@@ -39,12 +39,12 @@
       "pointsMode": "standard",
       "scoring": "standard",
       "type": "single_choice",
-      "prompt": "Türkiye’nin başkenti neresidir?",
+      "prompt": "What is the capital of Türkiye?",
       "media": "media/anitkabir.webp",
-      "answerExplanation": "Ankara 1923’ten beri başkenttir. Fotoğraftaki Anıtkabir de Ankara’dadır.",
+      "answerExplanation": "Ankara has been the capital since 1923. Anıtkabir, in the picture, stands in Ankara.",
       "options": [
         {
-          "text": "İstanbul",
+          "text": "Istanbul",
           "color": "red",
           "shape": "triangle",
           "isCorrect": false
@@ -56,7 +56,7 @@
           "isCorrect": true
         },
         {
-          "text": "İzmir",
+          "text": "Izmir",
           "color": "yellow",
           "shape": "circle",
           "isCorrect": false
@@ -75,17 +75,17 @@
       "pointsMode": "standard",
       "scoring": "standard",
       "type": "true_false",
-      "prompt": "İstanbul hem Avrupa’da hem Asya’da yer alır.",
-      "answerExplanation": "İstanbul Boğazı şehri iki kıtaya ayırır.",
+      "prompt": "Istanbul lies in both Europe and Asia.",
+      "answerExplanation": "The Bosphorus splits the city between two continents.",
       "options": [
         {
-          "text": "Doğru",
+          "text": "True",
           "color": "red",
           "shape": "triangle",
           "isCorrect": true
         },
         {
-          "text": "Yanlış",
+          "text": "False",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": false
@@ -98,29 +98,29 @@
       "pointsMode": "standard",
       "scoring": "partial",
       "type": "multiple_choice",
-      "prompt": "Bu ülkelerden hangileri Türkiye ile kara sınırına sahiptir?",
-      "answerExplanation": "Türkiye’nin sekiz kara komşusu vardır; İtalya bunlardan biri değildir.",
+      "prompt": "Which of these countries share a land border with Türkiye?",
+      "answerExplanation": "Türkiye has eight land neighbours; Italy is not one of them.",
       "options": [
         {
-          "text": "Yunanistan",
+          "text": "Greece",
           "color": "red",
           "shape": "triangle",
           "isCorrect": true
         },
         {
-          "text": "İtalya",
+          "text": "Italy",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": false
         },
         {
-          "text": "Gürcistan",
+          "text": "Georgia",
           "color": "yellow",
           "shape": "circle",
           "isCorrect": true
         },
         {
-          "text": "İran",
+          "text": "Iran",
           "color": "green",
           "shape": "square",
           "isCorrect": true
@@ -133,11 +133,11 @@
       "pointsMode": "standard",
       "scoring": "closest",
       "type": "numeric",
-      "prompt": "Ağrı Dağı kaç metre yüksekliğindedir? En yakın tahmin kazanır.",
+      "prompt": "How high is Mount Ararat, in metres? The closest guess wins.",
       "media": "media/agri-dagi.webp",
       "numericValue": 5137,
       "numericTolerance": 100,
-      "answerExplanation": "Ağrı Dağı 5.137 metreyle Türkiye’nin en yüksek dağıdır."
+      "answerExplanation": "At 5,137 metres, Mount Ararat is the highest mountain in Türkiye."
     },
     {
       "kind": "question",
@@ -145,33 +145,33 @@
       "pointsMode": "standard",
       "scoring": "standard",
       "type": "image_choice",
-      "prompt": "Bunlardan hangisi Ayasofya’dır?",
-      "answerExplanation": "Ayasofya 537 yılında tamamlandı ve yaklaşık bin yıl boyunca dünyanın en büyük kubbeli yapısı oldu.",
+      "prompt": "Which one is Hagia Sophia?",
+      "answerExplanation": "Hagia Sophia was completed in 537 and was the world’s largest domed building for nearly a thousand years.",
       "options": [
         {
           "media": "media/taj-mahal.webp",
-          "alt": "Beyaz mermerden, dört minareli bir türbe ve önünde uzun bir havuz",
+          "alt": "A white marble mausoleum with four minarets and a long pool in front",
           "color": "red",
           "shape": "triangle",
           "isCorrect": false
         },
         {
           "media": "media/ayasofya.webp",
-          "alt": "Büyük bir kubbe ve onu çevreleyen yarım kubbeler, bahçede ağaçlar",
+          "alt": "A great dome ringed by half-domes, trees in the garden",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": true
         },
         {
           "media": "media/aziz-vasil.webp",
-          "alt": "Renkli soğan kubbeli bir katedral ve önünde bir heykel",
+          "alt": "A cathedral with colourful onion domes and a statue in front",
           "color": "yellow",
           "shape": "circle",
           "isCorrect": false
         },
         {
           "media": "media/sagrada-familia.webp",
-          "alt": "Taş oymalarla kaplı, sivri kuleli bir bazilika cephesi",
+          "alt": "A basilica front covered in stone carvings, with spired towers",
           "color": "green",
           "shape": "square",
           "isCorrect": false
@@ -184,9 +184,9 @@
       "pointsMode": "standard",
       "scoring": "lenient",
       "type": "text_input",
-      "prompt": "Eski adı Konstantinopolis olan şehrin bugünkü adı nedir?",
-      "acceptedAnswers": ["İstanbul", "Istanbul"],
-      "answerExplanation": "Şehir 1453’te Osmanlıların eline geçti; İstanbul adı 1930’da resmîleşti."
+      "prompt": "What is the city once called Constantinople named today?",
+      "acceptedAnswers": ["Istanbul", "İstanbul"],
+      "answerExplanation": "The Ottomans took the city in 1453; the name Istanbul became official in 1930."
     },
     {
       "kind": "slide",
@@ -194,7 +194,7 @@
         {
           "type": "heading",
           "id": "kapadokya-title",
-          "text": "Kapadokya",
+          "text": "Cappadocia",
           "level": 2,
           "align": "center"
         },
@@ -208,7 +208,7 @@
         {
           "type": "text",
           "id": "kapadokya-text",
-          "md": "Peri bacaları ve sıcak hava balonlarıyla ünlü Kapadokya, İç Anadolu’dadır.",
+          "md": "Famous for its fairy chimneys and hot-air balloons, Cappadocia lies in Central Anatolia.",
           "align": "center"
         }
       ],
@@ -225,7 +225,7 @@
       "pointsMode": "standard",
       "scoring": "partial",
       "type": "ordering",
-      "prompt": "Bu şehirleri batıdan doğuya doğru sıralayın.",
+      "prompt": "Put these cities in order from west to east.",
       "options": [
         {
           "text": "Ankara",
@@ -235,7 +235,7 @@
           "correctOrderIndex": 2
         },
         {
-          "text": "İzmir",
+          "text": "Izmir",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": false,
@@ -249,7 +249,7 @@
           "correctOrderIndex": 3
         },
         {
-          "text": "İstanbul",
+          "text": "Istanbul",
           "color": "green",
           "shape": "square",
           "isCorrect": false,
@@ -263,18 +263,18 @@
       "pointsMode": "standard",
       "scoring": "standard",
       "type": "true_false",
-      "prompt": "Pamukkale’nin beyaz terasları kardan oluşur.",
+      "prompt": "Pamukkale’s white terraces are made of snow.",
       "media": "media/pamukkale.webp",
-      "answerExplanation": "Beyaz teraslar, sıcak su kaynaklarının bıraktığı traverten tortularıdır.",
+      "answerExplanation": "The white terraces are travertine, left by hot springs.",
       "options": [
         {
-          "text": "Doğru",
+          "text": "True",
           "color": "red",
           "shape": "triangle",
           "isCorrect": false
         },
         {
-          "text": "Yanlış",
+          "text": "False",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": true
@@ -287,30 +287,30 @@
       "pointsMode": "standard",
       "scoring": "standard",
       "type": "single_choice",
-      "prompt": "Bu hangi marştır?",
+      "prompt": "Which anthem is this?",
       "audio": "media/istiklal-marsi.mp3",
-      "answerExplanation": "Sözleri Mehmet Âkif Ersoy’a ait olan İstiklâl Marşı, 1921’de kabul edildi.",
+      "answerExplanation": "The Independence March, with words by Mehmet Âkif Ersoy, was adopted in 1921.",
       "options": [
         {
-          "text": "İstiklâl Marşı",
+          "text": "Independence March",
           "color": "red",
           "shape": "triangle",
           "isCorrect": true
         },
         {
-          "text": "Onuncu Yıl Marşı",
+          "text": "Tenth Anniversary March",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": false
         },
         {
-          "text": "İzmir Marşı",
+          "text": "Izmir March",
           "color": "yellow",
           "shape": "circle",
           "isCorrect": false
         },
         {
-          "text": "Gençlik Marşı",
+          "text": "Youth March",
           "color": "green",
           "shape": "square",
           "isCorrect": false
@@ -323,8 +323,8 @@
       "pointsMode": "double",
       "scoring": "standard",
       "type": "single_choice",
-      "prompt": "Türkiye’nin para birimi nedir?",
-      "answerExplanation": "Türk lirası (₺) Türkiye’nin resmî para birimidir.",
+      "prompt": "What is the currency of Türkiye?",
+      "answerExplanation": "The Turkish lira (₺) is the official currency of Türkiye.",
       "options": [
         {
           "text": "Euro",
@@ -333,7 +333,7 @@
           "isCorrect": false
         },
         {
-          "text": "Türk lirası",
+          "text": "Turkish lira",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": true
@@ -345,7 +345,7 @@
           "isCorrect": false
         },
         {
-          "text": "Drahmi",
+          "text": "Drachma",
           "color": "green",
           "shape": "square",
           "isCorrect": false
@@ -358,16 +358,16 @@
       "pointsMode": "standard",
       "scoring": "standard",
       "type": "poll",
-      "prompt": "Türkiye’de ilk nereyi görmek isterdin?",
+      "prompt": "Where in Türkiye would you go first?",
       "options": [
         {
-          "text": "İstanbul",
+          "text": "Istanbul",
           "color": "red",
           "shape": "triangle",
           "isCorrect": false
         },
         {
-          "text": "Kapadokya",
+          "text": "Cappadocia",
           "color": "blue",
           "shape": "diamond",
           "isCorrect": false
@@ -379,7 +379,7 @@
           "isCorrect": false
         },
         {
-          "text": "Karadeniz",
+          "text": "Black Sea",
           "color": "green",
           "shape": "square",
           "isCorrect": false
@@ -390,47 +390,47 @@
   "media": {
     "media/istanbul.webp": {
       "name": "istanbul.webp",
-      "alt": "İstanbul’un tarihî yarımadası, camileri ve Boğaz",
+      "alt": "Istanbul’s historic peninsula, its mosques and the Bosphorus",
       "credit": "Hunanuk · CC0 · Wikimedia Commons"
     },
     "media/anitkabir.webp": {
       "name": "anitkabir.webp",
-      "alt": "Ankara’daki Anıtkabir ve önündeki geniş meydan",
+      "alt": "Anıtkabir in Ankara and the wide square before it",
       "credit": "Nicoleon · CC0 · Wikimedia Commons"
     },
     "media/agri-dagi.webp": {
       "name": "agri-dagi.webp",
-      "alt": "Karlı zirvesiyle Ağrı Dağı ve önünde uzanan ova",
+      "alt": "Mount Ararat with its snowy summit, the plain stretching before it",
       "credit": "Vyacheslav Argenberg · CC BY 4.0 · Wikimedia Commons"
     },
     "media/taj-mahal.webp": {
       "name": "taj-mahal.webp",
-      "alt": "Beyaz mermerden, dört minareli bir türbe ve önünde uzun bir havuz",
+      "alt": "A white marble mausoleum with four minarets and a long pool in front",
       "credit": "Almbauer · CC0 · Wikimedia Commons"
     },
     "media/ayasofya.webp": {
       "name": "ayasofya.webp",
-      "alt": "Büyük bir kubbe ve onu çevreleyen yarım kubbeler, bahçede ağaçlar",
+      "alt": "A great dome ringed by half-domes, trees in the garden",
       "credit": "Maskaravivek · CC BY 3.0 · Wikimedia Commons"
     },
     "media/aziz-vasil.webp": {
       "name": "aziz-vasil.webp",
-      "alt": "Renkli soğan kubbeli bir katedral ve önünde bir heykel",
+      "alt": "A cathedral with colourful onion domes and a statue in front",
       "credit": "Diego Delso · Public domain · Wikimedia Commons"
     },
     "media/sagrada-familia.webp": {
       "name": "sagrada-familia.webp",
-      "alt": "Taş oymalarla kaplı, sivri kuleli bir bazilika cephesi",
+      "alt": "A basilica front covered in stone carvings, with spired towers",
       "credit": "Julian Lupyan · CC0 · Wikimedia Commons"
     },
     "media/kapadokya.webp": {
       "name": "kapadokya.webp",
-      "alt": "Kapadokya’nın peri bacaları üzerinde uçan sıcak hava balonları",
+      "alt": "Hot-air balloons over Cappadocia’s fairy chimneys",
       "credit": "Netha Hussain · CC0 · Wikimedia Commons"
     },
     "media/pamukkale.webp": {
       "name": "pamukkale.webp",
-      "alt": "Pamukkale’nin bembeyaz traverten terasları",
+      "alt": "Pamukkale’s snow-white travertine terraces",
       "credit": "rheins · CC BY 3.0 · Wikimedia Commons"
     },
     "media/istiklal-marsi.mp3": {
