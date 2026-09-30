@@ -20,6 +20,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
+import { isString, isStrings, useSessionState } from '@/lib/use-session-state';
 import { useTranslation } from 'react-i18next';
 import { QuizStatusBadge } from '@/components/quiz-status-badge';
 import { cn } from '@/lib/utils';
@@ -76,14 +77,20 @@ export function DashboardPage() {
   // Stable entre deux rendus : le `?? []` fabriquerait un tableau neuf à chaque fois,
   // et le tri/filtre ci-dessous se recalculerait pour rien.
   const quizzes = useMemo(() => data?.data ?? [], [data]);
-  const [search, setSearch] = useState('');
+  // The filters last as long as the tab: back from a quiz, the list is as it was left.
+  const [search, setSearch] = useSessionState(`${FILTERS}.search`, '', isString);
   // The statuses ticked (none = every status): the archived ones out of the way by default.
-  const [statuses, setStatuses] = useState<string[]>(['draft', 'ready']);
-  const [sort, setSort] = useState<'recent' | 'title' | 'questions'>('recent');
-  const [language, setLanguage] = useState('');
+  const [statuses, setStatuses] = useSessionState(
+    `${FILTERS}.statuses`,
+    ['draft', 'ready'],
+    isStrings,
+  );
+  const [sort, setSort] = useSessionState(`${FILTERS}.sort`, 'recent', isSort);
+  const [language, setLanguage] = useSessionState(`${FILTERS}.language`, '', isString);
   // Whose quizzes: '' all, ME the caller's, else an owner's name (a shared quiz, a manager's view).
-  const [owner, setOwner] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  // The caller's own by default; a manager who hosts nothing has none, and starts on everyone's.
+  const [owner, setOwner] = useSessionState(`${FILTERS}.owner`, managerOnly ? '' : ME, isString);
+  const [tags, setTags] = useSessionState<string[]>(`${FILTERS}.tags`, [], isStrings);
   const [page, setPage] = useState(1);
   const [view, setView] = useStoredView('quizdock.quizzes.view');
   const languages = useMemo(() => [...new Set(quizzes.map((q) => q.language))].sort(), [quizzes]);
@@ -96,7 +103,7 @@ export function DashboardPage() {
       ].sort((a, b) => a.localeCompare(b)),
     [quizzes],
   );
-  // The caller first, then the others by name; everyone last (the default).
+  // The caller first (the default), then the others by name; everyone last.
   const ownerOptions = useMemo(
     () => [
       { value: ME, label: t('ownerMe') },
@@ -533,6 +540,12 @@ export function DashboardPage() {
 
 /** Past this many other owners, the filter becomes a list to type into. */
 const OWNER_SELECT_MAX = 8;
+
+/** Where the list's filters are kept for the tab's visit. */
+const FILTERS = 'quizdock.quizzes.filter';
+
+type Sort = 'recent' | 'title' | 'questions';
+const isSort = (v: unknown): v is Sort => v === 'recent' || v === 'title' || v === 'questions';
 
 /** The owner filter's value for the caller's own quizzes (never a name). */
 const ME = '\u0000me';

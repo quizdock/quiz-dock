@@ -20,10 +20,14 @@ const quiz = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** The owner filter on everyone's quizzes, as a tab that chose it would find it. */
+const everyone = () => sessionStorage.setItem('quizdock.quizzes.filter.owner', JSON.stringify(''));
+
 describe('DashboardPage', () => {
   beforeEach(() => localStorage.setItem('live.localUser', 'Marc'));
   afterEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     vi.unstubAllGlobals();
   });
 
@@ -61,6 +65,7 @@ describe('DashboardPage', () => {
         ],
       },
     ]);
+    everyone();
     renderApp('/quizzes');
     expect(await screen.findByText('Partagé')).toBeInTheDocument();
     expect(
@@ -130,7 +135,7 @@ describe('DashboardPage', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/quizzes/d1'));
   });
 
-  it('filters by owner: me first, then the others, everyone by default', async () => {
+  it('filters by owner: me first and by default, then the others, then everyone', async () => {
     mockApi([
       {
         method: 'GET',
@@ -146,12 +151,29 @@ describe('DashboardPage', () => {
     await screen.findByText('Le mien');
     const select = screen.getByLabelText('Propriétaire') as HTMLSelectElement;
     expect([...select.options].map((o) => o.text)).toEqual(['Moi', 'Alice', 'Billy', 'Tous']);
-    expect(select.value).toBe('');
-    fireEvent.change(select, { target: { value: select.options[0].value } });
-    expect(screen.getByText('Le mien')).toBeInTheDocument();
+    // Mine by default: the others' quizzes wait behind the filter.
+    expect(select.value).toBe(select.options[0].value);
     expect(screen.queryByText('De Billy')).toBeNull();
     fireEvent.change(select, { target: { value: 'Billy' } });
     expect(screen.getByText('De Billy')).toBeInTheDocument();
+    expect(screen.queryByText('Le mien')).toBeNull();
+    fireEvent.change(select, { target: { value: '' } });
+    expect(screen.getByText('Le mien')).toBeInTheDocument();
+    expect(screen.getByText('D’Alice')).toBeInTheDocument();
+  });
+
+  it('keeps the filters for the tab: back on the list, it is as it was left', async () => {
+    const body = [
+      quiz({ id: 'mine', title: 'Le mien' }),
+      quiz({ id: 'b', title: 'De Billy', editable: false, shared: true, ownerName: 'Billy' }),
+    ];
+    mockApi([{ method: 'GET', path: '/quizzes', body }]);
+    const first = renderApp('/quizzes');
+    await screen.findByText('Le mien');
+    fireEvent.change(screen.getByLabelText('Propriétaire'), { target: { value: 'Billy' } });
+    first.unmount();
+    renderApp('/quizzes');
+    expect(await screen.findByText('De Billy')).toBeInTheDocument();
     expect(screen.queryByText('Le mien')).toBeNull();
   });
 
@@ -420,6 +442,7 @@ describe('DashboardPage', () => {
         body: [quiz({ id: 'shared', title: 'Partagé', editable: false, shared: true })],
       },
     ]);
+    everyone();
     renderApp('/quizzes');
     fireEvent.click((await screen.findAllByRole('button', { name: /Nouveau quiz/ }))[0]);
     expect(await screen.findByRole('alert')).toBeInTheDocument();
