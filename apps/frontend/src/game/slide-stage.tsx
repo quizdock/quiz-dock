@@ -41,6 +41,40 @@ export function ScaledStage({ children, className }: { children: ReactNode; clas
   );
 }
 
+/**
+ * The stage as large as it fits in the space it is given, in both directions: a
+ * phone in landscape is short, a phone in portrait is narrow. Fills its parent.
+ */
+export function FittedStage({ children, className }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState<number | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // The height it is given, but never more than what the window shows below it.
+    const measure = () => {
+      const visible = window.innerHeight - el.getBoundingClientRect().top;
+      const height = Math.max(0, Math.min(el.clientHeight, visible));
+      setWidth(Math.min(el.clientWidth, (height * STAGE_W) / STAGE_H));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    ro?.observe(el);
+    return () => {
+      window.removeEventListener('resize', measure);
+      ro?.disconnect();
+    };
+  }, []);
+  return (
+    <div ref={ref} className="flex min-h-0 w-full flex-1 items-center justify-center">
+      <div style={{ width: width ?? '100%' }}>
+        <ScaledStage className={className}>{children}</ScaledStage>
+      </div>
+    </div>
+  );
+}
+
 /** A faithful miniature of the projected slide. */
 export function SlideStage({ slide, className }: { slide: SlideShowPayload; className?: string }) {
   return (
