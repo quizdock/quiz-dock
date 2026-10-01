@@ -1,13 +1,34 @@
 /// <reference types="vitest/config" />
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
+/** The icon (tab, home screen): the operator's in branding/, QuizDock's otherwise — as nginx does. */
+const ICONS = new Set(['/favicon.png']);
+
 export default defineConfig({
   // The release tag, passed as APP_VERSION at image build time; "dev" otherwise.
   define: { __APP_VERSION__: JSON.stringify(process.env.APP_VERSION ?? 'dev') },
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    {
+      name: 'branding-icons',
+      configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          if (req.url && ICONS.has(req.url)) {
+            const own = existsSync(
+              fileURLToPath(new URL(`./public/branding${req.url}`, import.meta.url)),
+            );
+            req.url = own ? `/branding${req.url}` : '/icons/quizdock.png';
+          }
+          next();
+        });
+      },
+    },
+  ],
   // jSquash loads its WASM relative to its own module: pre-bundling would lose the file.
   optimizeDeps: { exclude: ['@jsquash/webp'] },
   resolve: {

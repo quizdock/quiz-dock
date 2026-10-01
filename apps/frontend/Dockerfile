@@ -15,7 +15,8 @@ COPY apps/frontend apps/frontend
 ARG APP_VERSION=dev
 ENV APP_VERSION=$APP_VERSION
 RUN pnpm --filter @quiz-dock/contracts build \
- && pnpm --filter @quiz-dock/frontend build
+ && pnpm --filter @quiz-dock/frontend build \
+ && cp apps/frontend/dist/manifest.webmanifest apps/frontend/dist/manifest.base.webmanifest
 
 # ---- runtime (Nginx statique, non-root : uid 101 `nginx`, écoute :8080) ----
 FROM nginxinc/nginx-unprivileged:alpine AS runtime

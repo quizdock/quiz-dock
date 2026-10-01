@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { useWakeLock } from '@/lib/use-wake-lock';
 import { LiveMotion } from '../game/motion/level';
 import { BackdropFade, StepEnter } from '../game/motion/step-transition';
 import { type Backdrop, stepKeyOf } from '../game/motion/step';
@@ -110,6 +111,8 @@ function trackingNotice(
 export function PlayerPage() {
   const { pin } = useParams({ from: '/join/$pin' });
   const session = useGameSession(pin, 'player');
+  // The phone stays on between two questions, from the lobby to the end.
+  useWakeLock(session.view.status === 'ready' && session.view.state !== 'ENDED');
   return (
     <>
       <ConnectionLost lost={session.view.connectionLost} />

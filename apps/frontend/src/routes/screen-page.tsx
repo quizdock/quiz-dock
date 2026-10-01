@@ -1,4 +1,5 @@
 import { RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { useWakeLock } from '@/lib/use-wake-lock';
 import { LiveMotion } from '../game/motion/level';
 import { Pulse } from '../game/motion/primitives';
 import { BackdropFade, StepEnter } from '../game/motion/step-transition';
@@ -98,6 +99,8 @@ export function ScreenView({
   follow?: { sound: boolean };
 }) {
   const session = useGameSession(pin, 'spectator', { follow: !!follow });
+  // A projector, or a participant's copy of it, never dims during the session.
+  useWakeLock(session.view.status === 'ready' && session.view.state !== 'ENDED');
   return (
     <>
       <ConnectionLost lost={session.view.connectionLost} />

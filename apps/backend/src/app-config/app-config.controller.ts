@@ -1,11 +1,14 @@
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { liveMotionDefault } from '../game/live-motion';
 import { join } from 'node:path';
-import { Controller, Get, Header, Res } from '@nestjs/common';
+import { Controller, Get, Header, NotFoundException, Req, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { Public } from '../auth/public.decorator';
 import { instanceLanguage } from '../common/instance-language';
+
+/** The icon (tab, home screen), which an operator may give in `branding/`. */
+export const ICONS = ['favicon.png'];
 
 /**
  * Sert `/config.js` (white-label runtime) quand le backend héberge aussi le SPA
@@ -58,5 +61,46 @@ export class AppConfigController {
     }
     res.status(204);
     return '';
+  }
+
+  /**
+   * The installed app's manifest (PWA), in the instance's name and language: the
+   * built one, renamed — as the nginx image's entrypoint does at start.
+   */
+  @Public()
+  @Get('manifest.webmanifest')
+  @ApiExcludeEndpoint()
+  @Header('Content-Type', 'application/manifest+json; charset=utf-8')
+  @Header('Cache-Control', 'no-cache')
+  async manifest(): Promise<string> {
+    const dir = process.env.CLIENT_DIR;
+    if (!dir) throw new NotFoundException();
+    const built = JSON.parse(await readFile(join(dir, 'manifest.webmanifest'), 'utf8')) as Record<
+      string,
+      unknown
+    >;
+    const name = process.env.APP_NAME ?? 'QuizDock';
+    return JSON.stringify({ ...built, name, short_name: name, lang: instanceLanguage() });
+  }
+
+  /**
+   * The icon, for the tab and the home screen: the operator's
+   * `branding/favicon.png` when given, QuizDock's otherwise — as nginx's
+   * `try_files` does.
+   */
+  @Public()
+  @Get(ICONS)
+  @ApiExcludeEndpoint()
+  @Header('Cache-Control', 'no-cache')
+  async icon(@Req() req: Request, @Res() res: Response): Promise<void> {
+    const dir = process.env.CLIENT_DIR;
+    const name = ICONS.find((icon) => req.path === `/${icon}`);
+    if (!dir || !name) throw new NotFoundException();
+    const own = join(dir, 'branding', name);
+    const path = await access(own).then(
+      () => own,
+      () => join(dir, 'icons', 'quizdock.png'),
+    );
+    res.sendFile(path);
   }
 }

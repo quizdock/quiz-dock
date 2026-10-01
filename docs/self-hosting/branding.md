@@ -10,6 +10,7 @@ Three things are brandable **at runtime**, without rebuilding the image:
 | **Name** | `APP_NAME` (header, tab, share messages). |
 | **Language** | `APP_LANG` (`en`/`fr`/`es`/`zh`/`zh-TW`/`tr`). |
 | **Logo & CSS** | files served at fixed paths — replace them via a mounted folder, or point `APP_LOGO_URL` at a logo hosted elsewhere. |
+| **Icon** | `favicon.png` in the same folder: the browser tab and the home screen (below). |
 
 ## How it works
 
@@ -26,6 +27,25 @@ which the SPA reads (`window.__APP_CONFIG__`). Two asset files are served at fix
   CSS variable or rule. It is **optional**: when the mounted folder has no `override.css`,
   the server answers an empty `204` and nothing is overridden. The bundled default is
   intentionally near-empty.
+
+## Icons and the home screen
+
+A page added to a phone's home screen, or installed as an app by a desktop
+browser, opens without the browser's bars. At startup the container writes
+`/manifest.webmanifest` with `APP_NAME` as the app's name and `APP_LANG` as its
+language.
+
+One icon, **optional** (QuizDock's otherwise), for the browser tab and the home
+screen: `branding/favicon.png`.
+
+- **PNG, square, 512 × 512**: the browser scales it down for the tab.
+- **Opaque**, the logo on its own background: iOS fills transparency with black.
+- **Logo in the centre 80 %**: Android may crop the icon to a circle.
+
+It is its own file, apart from `logo.<ext>`: a header logo may well be wide,
+an icon has to be square.
+
+A device keeps the icon it installed with: a change shows on a new install.
 
 ## Override logo & CSS
 

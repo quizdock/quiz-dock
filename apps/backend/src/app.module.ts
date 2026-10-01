@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { AppConfigController } from './app-config/app-config.controller';
+import { AppConfigController, ICONS } from './app-config/app-config.controller';
 import { AuthModule } from './auth/auth.module';
 import { DemoModule } from './demo/demo.module';
 import { GameModule } from './game/game.module';
@@ -32,10 +32,21 @@ const serveStatic = process.env.CLIENT_DIR
           '/health',
           '/config.js',
           '/branding/override.css',
+          ...ICONS.map((icon) => `/${icon}`),
+          '/manifest.webmanifest',
           '/socket.io/{*splat}',
           '/socket.io',
         ],
-        serveStaticOptions: { index: 'index.html' },
+        serveStaticOptions: {
+          index: 'index.html',
+          // Hashed built files are kept for good; the rest (the page itself) is
+          // asked again, so a new version reaches the browser.
+          setHeaders: (res, path) =>
+            res.setHeader(
+              'Cache-Control',
+              /[/\\]assets[/\\]/.test(path) ? 'public, max-age=31536000, immutable' : 'no-cache',
+            ),
+        },
       }),
     ]
   : [];

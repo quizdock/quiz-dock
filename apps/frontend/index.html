@@ -4,6 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QuizDock</title>
+    <!--
+      Installable app (PWA). The manifest is written at container start in the
+      instance's name. One icon for the tab and the home screen: the operator's
+      branding/favicon.png when given, QuizDock's otherwise.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0a" />
     <!-- Config de marque runtime (white-label) : régénérée depuis l'env au démarrage. -->
     <script src="/config.js"></script>
   </head>
