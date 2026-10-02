@@ -234,9 +234,9 @@
       "sweep": "清理媒體"
     },
     "presets": {
-      "list": "預設組合",
-      "plan": "預覽預設組合",
-      "apply": "套用預設組合"
+      "list": "快速設定",
+      "plan": "預覽快速設定",
+      "apply": "套用快速設定"
     },
     "setup": {
       "status": "初始設定",
@@ -268,13 +268,12 @@
     "setting": "設定",
     "value": "值",
     "all": "全部",
-    "preset": "預設組合",
-    "pace": "節奏",
-    "venue": "場地",
     "audience": "對象",
     "name": "名稱",
     "address": "網址",
-    "id": "ID"
+    "id": "ID",
+    "internet": "網際網路",
+    "accessibility": "無障礙"
   },
   "columns": {
     "name": "名稱",
@@ -389,57 +388,6 @@
     "exportHelp": "用於將它們固定到 .env 中（然後在此復原），或移到另一個執行個體：",
     "resetAll": "全部復原"
   },
-  "presets": {
-    "title": "預設組合",
-    "intro": "針對某類活動的現成值：選擇一個，查看它會變更什麼，然後套用。每個面向也可以單獨設定。",
-    "readOnly": "針對某類活動的現成值。此處為唯讀：ADMIN_WEB_SCOPE=read。",
-    "notHere": "僅適用於 AUTH_MODE=oidc：在本機模式下，參與者從不登入。",
-    "preview": "將變更的內容：",
-    "nothing": "執行個體已是此狀態。",
-    "apply": "套用",
-    "applied": "已套用。",
-    "skipped": {
-      "locked": "未變更：被 ADMIN_LOCK 鎖定",
-      "not-applicable": "未變更：不適用於此驗證模式"
-    },
-    "axes": {
-      "pace": "節奏",
-      "venue": "場地",
-      "audience": "對象"
-    },
-    "levels": {
-      "fast": "快速",
-      "standard": "標準",
-      "comfortable": "寬鬆",
-      "large": "大型活動",
-      "modest": "設備有限",
-      "accounts": "需要帳號",
-      "open": "對所有人開放",
-      "custom": "自訂"
-    },
-    "named": {
-      "party": {
-        "title": "派對、酒吧",
-        "help": "標準節奏，對所有人開放。"
-      },
-      "classroom": {
-        "title": "課堂、培訓",
-        "help": "留出閱讀時間，需要帳號。"
-      },
-      "event": {
-        "title": "大型活動",
-        "help": "100–200 名參與者共用擁擠的 Wi-Fi：等待媒體的時間更長。"
-      },
-      "express": {
-        "title": "快速測驗",
-        "help": "快速節奏，對所有人開放。"
-      },
-      "accessible": {
-        "title": "無障礙",
-        "help": "留出閱讀時間，無轉場效果，輕量影片。"
-      }
-    }
-  },
   "setup": {
     "title": "初始設定此執行個體",
     "invite": "此執行個體尚未完成初始設定。",
@@ -461,6 +409,10 @@
       "open": "開始"
     },
     "step": {
+      "usage": {
+        "title": "用途",
+        "help": "關於執行個體用途的三個問題：每個回答會同時設定多項設定。所有內容都可以在後續步驟中調整，或之後在管理頁面中變更。"
+      },
       "health": {
         "title": "健康狀態",
         "help": "資料庫、Redis、遷移、資料夾、關鍵變數。此處失敗的項目需在 .env 中修正，然後重新啟動執行個體。"
@@ -479,7 +431,7 @@
       },
       "limits": {
         "title": "限制與節奏",
-        "help": "預設值適合大多數執行個體：如有不同，可選擇一個預設組合，或逐項設定。"
+        "help": "預設值適合大多數執行個體：僅在你的執行個體不同時才變更某個值。"
       },
       "content": {
         "title": "內容",
@@ -581,6 +533,59 @@
       "colorblind": {
         "title": "色覺友善",
         "help": "在各種常見色覺缺陷下皆可區分的顏色，以及形狀。"
+      }
+    }
+  },
+  "usage": {
+    "preview": "這些回答將設定：",
+    "nothing": "執行個體已是這些回答對應的狀態。",
+    "apply": "套用",
+    "applied": "已套用：後續步驟會呈現。",
+    "skipped": {
+      "locked": "未變更：被 ADMIN_LOCK 鎖定",
+      "not-applicable": "未變更：僅適用於身分提供者（AUTH_MODE=oidc）"
+    },
+    "internet": {
+      "question": "此執行個體能否連上網際網路？",
+      "answers": {
+        "connected": {
+          "title": "能",
+          "help": "編輯器會提供線上免費媒體庫。"
+        },
+        "offline": {
+          "title": "不能",
+          "help": "僅限區域網路：不提供線上媒體庫連結。請在後續步驟中從手機測試網址。"
+        }
+      }
+    },
+    "audience": {
+      "question": "誰來參與？",
+      "answers": {
+        "colleagues": {
+          "title": "同事、朋友",
+          "help": "標準設定。"
+        },
+        "class": {
+          "title": "班級、培訓",
+          "help": "參與者使用自己的帳號登入。"
+        },
+        "public": {
+          "title": "一般大眾、大型活動",
+          "help": "對所有人開放——需使用身分提供者——並在擁擠的 Wi-Fi 上為聲音和影片保留更多載入時間。"
+        }
+      }
+    },
+    "accessibility": {
+      "question": "是否有參與者需要更便利的體驗？",
+      "answers": {
+        "standard": {
+          "title": "否",
+          "help": "標準設定。"
+        },
+        "adapted": {
+          "title": "是",
+          "help": "色盲人士可區分的顏色、無轉場效果、更多閱讀時間。"
+        }
       }
     }
   }

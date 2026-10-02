@@ -234,9 +234,9 @@
       "sweep": "Medyayı temizle"
     },
     "presets": {
-      "list": "Hazır ayarlar",
-      "plan": "Bir hazır ayarı önizle",
-      "apply": "Bir hazır ayarı uygula"
+      "list": "Hızlı kurulum",
+      "plan": "Hızlı kurulumu önizle",
+      "apply": "Hızlı kurulumu uygula"
     },
     "setup": {
       "status": "İlk ayarlar",
@@ -268,13 +268,12 @@
     "setting": "Ayar",
     "value": "Değer",
     "all": "Hepsi",
-    "preset": "Hazır ayar",
-    "pace": "Tempo",
-    "venue": "Mekân",
     "audience": "Kitle",
     "name": "Ad",
     "address": "Adres",
-    "id": "Kimlik"
+    "id": "Kimlik",
+    "internet": "İnternet",
+    "accessibility": "Erişilebilirlik"
   },
   "columns": {
     "name": "Ad",
@@ -389,57 +388,6 @@
     "exportHelp": "Bunları .env içine sabitlemek (sonra buradan geri almak) veya başka bir kuruluma taşımak için:",
     "resetAll": "Hepsini geri al"
   },
-  "presets": {
-    "title": "Hazır ayarlar",
-    "intro": "Bir etkinlik türü için hazır değerler: birini seçin, neyi değiştirdiğini görün, sonra uygulayın. Her eksen ayrıca tek başına da ayarlanabilir.",
-    "readOnly": "Bir etkinlik türü için hazır değerler. Burada salt okunur: ADMIN_WEB_SCOPE=read.",
-    "notHere": "Yalnızca AUTH_MODE=oidc ile: yerel modda katılımcılar hiçbir zaman oturum açmaz.",
-    "preview": "Değiştirdikleri:",
-    "nothing": "Kurulum zaten bu durumda.",
-    "apply": "Uygula",
-    "applied": "Uygulandı.",
-    "skipped": {
-      "locked": "değiştirilmedi: ADMIN_LOCK ile kilitli",
-      "not-applicable": "değiştirilmedi: bu kimlik doğrulama moduyla geçerli değil"
-    },
-    "axes": {
-      "pace": "Tempo",
-      "venue": "Mekân",
-      "audience": "Kitle"
-    },
-    "levels": {
-      "fast": "Hızlı",
-      "standard": "Standart",
-      "comfortable": "Rahat",
-      "large": "Büyük etkinlik",
-      "modest": "Mütevazı donanım",
-      "accounts": "Hesap zorunlu",
-      "open": "Herkese açık",
-      "custom": "Özel"
-    },
-    "named": {
-      "party": {
-        "title": "Parti, bar",
-        "help": "Standart tempo, herkese açık."
-      },
-      "classroom": {
-        "title": "Sınıf, eğitim",
-        "help": "Okuma süresi, hesap zorunlu."
-      },
-      "event": {
-        "title": "Büyük etkinlik",
-        "help": "Yoğun bir Wi-Fi üzerinde 100–200 katılımcı: medya için daha uzun beklenir."
-      },
-      "express": {
-        "title": "Hızlı quiz",
-        "help": "Hızlı tempo, herkese açık."
-      },
-      "accessible": {
-        "title": "Erişilebilir",
-        "help": "Okuma süresi, geçiş yok, hafif videolar."
-      }
-    }
-  },
   "setup": {
     "title": "Bu kurulumun ilk ayarları",
     "invite": "Bu kurulumun ilk ayarları henüz yapılmadı.",
@@ -461,6 +409,10 @@
       "open": "Başla"
     },
     "step": {
+      "usage": {
+        "title": "Kullanım",
+        "help": "Kurulumun nasıl kullanılacağına dair üç soru: her yanıt birkaç ayarı birden belirler. Her şey sonraki adımlarda ya da daha sonra yönetim ekranından ayarlanabilir."
+      },
       "health": {
         "title": "Sağlık",
         "help": "Veritabanı, Redis, geçişler, klasörler, kritik değişkenler. Burada başarısız olanlar .env içinde düzeltilir, ardından kurulum yeniden başlatılır."
@@ -479,7 +431,7 @@
       },
       "limits": {
         "title": "Sınırlar ve tempo",
-        "help": "Varsayılanlar çoğu kuruluma uyar: sizinki farklıysa bir hazır ayar seçin veya değerleri tek tek ayarlayın."
+        "help": "Varsayılanlar çoğu kuruluma uyar: bir değeri yalnızca sizinki farklıysa değiştirin."
       },
       "content": {
         "title": "İçerik",
@@ -581,6 +533,59 @@
       "colorblind": {
         "title": "Renk körlüğü",
         "help": "Her yaygın renk görme bozukluğunda ayırt edilebilen renkler ve şekiller."
+      }
+    }
+  },
+  "usage": {
+    "preview": "Bu yanıtların ayarladıkları:",
+    "nothing": "Kurulum zaten bu şekilde.",
+    "apply": "Uygula",
+    "applied": "Uygulandı: sonraki adımlarda görünür.",
+    "skipped": {
+      "locked": "değiştirilmedi: ADMIN_LOCK ile kilitli",
+      "not-applicable": "değiştirilmedi: yalnızca bir kimlik sağlayıcısıyla (AUTH_MODE=oidc)"
+    },
+    "internet": {
+      "question": "Bu kurulum internete erişebiliyor mu?",
+      "answers": {
+        "connected": {
+          "title": "Evet",
+          "help": "Düzenleyici çevrim içi ücretsiz medya kütüphaneleri sunar."
+        },
+        "offline": {
+          "title": "Hayır",
+          "help": "Yalnızca yerel ağ: çevrim içi kütüphanelere bağlantı yok. Sonraki adımlarda adresi bir telefondan test edin."
+        }
+      }
+    },
+    "audience": {
+      "question": "Kimler katılıyor?",
+      "answers": {
+        "colleagues": {
+          "title": "İş arkadaşları, arkadaşlar",
+          "help": "Standart ayarlar."
+        },
+        "class": {
+          "title": "Bir sınıf, bir eğitim",
+          "help": "Katılımcılar kendi hesaplarıyla oturum açar."
+        },
+        "public": {
+          "title": "Halk, büyük bir etkinlik",
+          "help": "Herkese açık — bir kimlik sağlayıcısıyla — ve yoğun bir Wi-Fi'da seslerin ve videoların yüklenmesi için daha fazla süre."
+        }
+      }
+    },
+    "accessibility": {
+      "question": "Bazı katılımcıların kolaylığa ihtiyacı var mı?",
+      "answers": {
+        "standard": {
+          "title": "Hayır",
+          "help": "Standart ayarlar."
+        },
+        "adapted": {
+          "title": "Evet",
+          "help": "Renk körlerinin ayırt edebileceği renkler, geçiş yok, okumak için daha fazla süre."
+        }
       }
     }
   }

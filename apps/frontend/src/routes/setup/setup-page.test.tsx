@@ -62,6 +62,19 @@ describe('SetupPage (§3.8)', () => {
       { method: 'POST', path: '/setup/operations/settings.list', body: result(list) },
       {
         method: 'POST',
+        path: '/setup/operations/presets.list',
+        body: result({
+          axes: [{ id: 'internet', levels: ['connected', 'offline'], standard: 'connected' }],
+          current: { internet: 'connected' },
+        }),
+      },
+      {
+        method: 'POST',
+        path: '/setup/operations/presets.plan',
+        body: result({ plan: { axes: {}, changes: [] } }),
+      },
+      {
+        method: 'POST',
         path: '/setup/operations/health.doctor',
         body: result({ output: [{ level: 'ok', text: 'PostgreSQL reachable' }] }),
       },
@@ -69,6 +82,11 @@ describe('SetupPage (§3.8)', () => {
     renderPage();
     fireEvent.change(await screen.findByLabelText('Jeton'), { target: { value: 'tok3n' } });
     fireEvent.click(screen.getByRole('button', { name: 'Commencer' }));
+    // First, the quick setup: questions in plain words.
+    expect(
+      await screen.findByText('Cette instance accède-t-elle à Internet ?'),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Santé/ }));
     expect(await screen.findByText('PostgreSQL reachable')).toBeInTheDocument();
     const call = fetchMock.mock.calls.find(([url]) =>
       String(url).includes('/setup/operations/health.doctor'),

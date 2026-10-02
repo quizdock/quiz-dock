@@ -234,9 +234,9 @@
       "sweep": "Clean up the media"
     },
     "presets": {
-      "list": "Presets",
-      "plan": "Preview a preset",
-      "apply": "Apply a preset"
+      "list": "Quick setup",
+      "plan": "Preview the quick setup",
+      "apply": "Apply the quick setup"
     },
     "setup": {
       "status": "Setup",
@@ -268,13 +268,12 @@
     "setting": "Setting",
     "value": "Value",
     "all": "All of them",
-    "preset": "Preset",
-    "pace": "Pace",
-    "venue": "Venue",
     "audience": "Audience",
     "name": "Name",
     "address": "Address",
-    "id": "Id"
+    "id": "Id",
+    "internet": "Internet",
+    "accessibility": "Accessibility"
   },
   "columns": {
     "name": "Name",
@@ -389,57 +388,6 @@
     "exportHelp": "To pin them in .env (then take them back here), or to move them to another instance:",
     "resetAll": "Take everything back"
   },
-  "presets": {
-    "title": "Presets",
-    "intro": "Ready-made values for a kind of event: pick one, see what it changes, then apply it. Each axis can also be set on its own.",
-    "readOnly": "Ready-made values for a kind of event. Read only here: ADMIN_WEB_SCOPE=read.",
-    "notHere": "Only with AUTH_MODE=oidc: in local mode, participants never sign in.",
-    "preview": "What it changes:",
-    "nothing": "The instance is already there.",
-    "apply": "Apply",
-    "applied": "Applied.",
-    "skipped": {
-      "locked": "left alone: locked by ADMIN_LOCK",
-      "not-applicable": "left alone: not with this authentication mode"
-    },
-    "axes": {
-      "pace": "Pace",
-      "venue": "Venue",
-      "audience": "Audience"
-    },
-    "levels": {
-      "fast": "Fast",
-      "standard": "Standard",
-      "comfortable": "Comfortable",
-      "large": "Large event",
-      "modest": "Modest equipment",
-      "accounts": "Accounts required",
-      "open": "Open to all",
-      "custom": "Custom"
-    },
-    "named": {
-      "party": {
-        "title": "Party, bar",
-        "help": "Standard pace, open to all."
-      },
-      "classroom": {
-        "title": "Classroom, training",
-        "help": "Time to read, accounts required."
-      },
-      "event": {
-        "title": "Large event",
-        "help": "100–200 players on a busy Wi-Fi: media waited for longer."
-      },
-      "express": {
-        "title": "Express quiz",
-        "help": "Fast pace, open to all."
-      },
-      "accessible": {
-        "title": "Accessible",
-        "help": "Time to read, no transitions, light videos."
-      }
-    }
-  },
   "setup": {
     "title": "Setting up this instance",
     "invite": "This instance is not set up yet.",
@@ -461,6 +409,10 @@
       "open": "Start"
     },
     "step": {
+      "usage": {
+        "title": "Usage",
+        "help": "Three questions about how the instance will be used: each answer sets several settings at once. Everything can be adjusted at the next steps, or later from the administration."
+      },
       "health": {
         "title": "Health",
         "help": "The database, Redis, the migrations, the folders, the critical variables. What fails here is fixed in .env, then the instance restarted."
@@ -479,7 +431,7 @@
       },
       "limits": {
         "title": "Limits & pace",
-        "help": "The defaults suit most instances: a preset, or a value at a time, if yours differs."
+        "help": "The defaults suit most instances: change a value only if yours differs."
       },
       "content": {
         "title": "Content",
@@ -581,6 +533,59 @@
       "colorblind": {
         "title": "Colour vision",
         "help": "Colours told apart under every common colour vision deficiency, and the shapes."
+      }
+    }
+  },
+  "usage": {
+    "preview": "What these answers set:",
+    "nothing": "The instance already answers this way.",
+    "apply": "Apply",
+    "applied": "Applied: the next steps show it.",
+    "skipped": {
+      "locked": "left alone: locked by ADMIN_LOCK",
+      "not-applicable": "left alone: only with an identity provider (AUTH_MODE=oidc)"
+    },
+    "internet": {
+      "question": "Does this instance reach the Internet?",
+      "answers": {
+        "connected": {
+          "title": "Yes",
+          "help": "The editor offers free media libraries online."
+        },
+        "offline": {
+          "title": "No",
+          "help": "A local network only: no links to online libraries. Test the address from a phone at the next steps."
+        }
+      }
+    },
+    "audience": {
+      "question": "Who plays?",
+      "answers": {
+        "colleagues": {
+          "title": "Colleagues, friends",
+          "help": "The standard settings."
+        },
+        "class": {
+          "title": "A class, a training",
+          "help": "Participants sign in with their account."
+        },
+        "public": {
+          "title": "The public, a large event",
+          "help": "Open to all — with an identity provider — and more time for sounds and videos to load on a busy Wi-Fi."
+        }
+      }
+    },
+    "accessibility": {
+      "question": "Do some participants need it easier?",
+      "answers": {
+        "standard": {
+          "title": "No",
+          "help": "The standard settings."
+        },
+        "adapted": {
+          "title": "Yes",
+          "help": "Colours told apart by colour-blind people, no transitions, more time to read."
+        }
       }
     }
   }

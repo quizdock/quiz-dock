@@ -6,7 +6,6 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { apiErrorText } from '../../api/http';
 import { type Answer, useRunOperation, useReadOperation, useRefreshAdmin } from './admin-api';
-import { PresetsPanel } from './presets-panel';
 import { SettingEditor } from './setting-editor';
 import type { SettingsList } from './settings-model';
 import { SettingsPage } from './settings-page';
@@ -17,7 +16,6 @@ export function AdminSettingsPage() {
     <div className="flex flex-col gap-4">
       <OverridesActions />
       <SettingsPage
-        above={(access) => <PresetsPanel access={access} />}
         editor={(row, access) => (
           <SettingEditor
             key={`${row.key}:${JSON.stringify(row.value)}`}

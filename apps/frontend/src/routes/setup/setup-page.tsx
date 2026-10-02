@@ -27,7 +27,7 @@ import {
   useRunOperation,
 } from '../admin/admin-api';
 import { OperationPanel, ReadPanel } from '../admin/operation-panel';
-import { PresetsPanel } from '../admin/presets-panel';
+import { UsageStep } from './usage-step';
 import { SettingEditor } from '../admin/setting-editor';
 import type { SettingsList } from '../admin/settings-model';
 import { SettingDetail, Value } from '../admin/settings-page';
@@ -57,7 +57,16 @@ function setupChannel(session: string): OperationChannel {
   };
 }
 
-const STEPS = ['health', 'identity', 'address', 'access', 'limits', 'content', 'summary'] as const;
+const STEPS = [
+  'usage',
+  'health',
+  'identity',
+  'address',
+  'access',
+  'limits',
+  'content',
+  'summary',
+] as const;
 type Step = (typeof STEPS)[number];
 
 /**
@@ -174,7 +183,7 @@ function TokenStep({ onSession }: { onSession: (session: string) => void }) {
 
 function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () => void }) {
   const { t } = useTranslation('admin');
-  const [step, setStep] = useState<Step>('health');
+  const [step, setStep] = useState<Step>('usage');
   const [finished, setFinished] = useState(false);
   const list = useReadOperation<SettingsList>('settings.list');
   const at = STEPS.indexOf(step);
@@ -229,7 +238,9 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
         ))}
       </ol>
       <p className="text-muted-foreground text-sm">{t(`setup.step.${step}.help`)}</p>
-      {step === 'health' ? (
+      {step === 'usage' ? (
+        <UsageStep />
+      ) : step === 'health' ? (
         <HealthStep />
       ) : step === 'identity' ? (
         <Settings data={data} keys={['APP_NAME', 'APP_LANG', 'APP_LOGO_URL', 'APP_FEEDBACK_URL']} />
@@ -239,7 +250,6 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
         <AccessStep data={data} authMode={authMode} />
       ) : step === 'limits' ? (
         <div className="flex flex-col gap-4">
-          <PresetsPanel access={data.access} wizard />
           <Settings
             data={data}
             keys={data.rows

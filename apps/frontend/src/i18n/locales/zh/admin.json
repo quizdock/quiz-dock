@@ -234,9 +234,9 @@
       "sweep": "清理媒体"
     },
     "presets": {
-      "list": "预设",
-      "plan": "预览预设",
-      "apply": "应用预设"
+      "list": "快速设置",
+      "plan": "预览快速设置",
+      "apply": "应用快速设置"
     },
     "setup": {
       "status": "初始化",
@@ -268,13 +268,12 @@
     "setting": "设置",
     "value": "值",
     "all": "全部",
-    "preset": "预设",
-    "pace": "节奏",
-    "venue": "场地",
     "audience": "受众",
     "name": "名称",
     "address": "地址",
-    "id": "ID"
+    "id": "ID",
+    "internet": "互联网",
+    "accessibility": "无障碍"
   },
   "columns": {
     "name": "名称",
@@ -389,57 +388,6 @@
     "exportHelp": "用于将它们固定到 .env 中（然后在此撤销），或迁移到另一个实例：",
     "resetAll": "全部撤销"
   },
-  "presets": {
-    "title": "预设",
-    "intro": "针对某类活动的现成值：选择一个，查看它会更改什么，然后应用。每个维度也可以单独设置。",
-    "readOnly": "针对某类活动的现成值。此处只读：ADMIN_WEB_SCOPE=read。",
-    "notHere": "仅适用于 AUTH_MODE=oidc：在本地模式下，参与者从不登录。",
-    "preview": "将更改的内容：",
-    "nothing": "实例已是此状态。",
-    "apply": "应用",
-    "applied": "已应用。",
-    "skipped": {
-      "locked": "未更改：被 ADMIN_LOCK 锁定",
-      "not-applicable": "未更改：不适用于此认证模式"
-    },
-    "axes": {
-      "pace": "节奏",
-      "venue": "场地",
-      "audience": "受众"
-    },
-    "levels": {
-      "fast": "快速",
-      "standard": "标准",
-      "comfortable": "宽松",
-      "large": "大型活动",
-      "modest": "设备有限",
-      "accounts": "需要账号",
-      "open": "对所有人开放",
-      "custom": "自定义"
-    },
-    "named": {
-      "party": {
-        "title": "聚会、酒吧",
-        "help": "标准节奏，对所有人开放。"
-      },
-      "classroom": {
-        "title": "课堂、培训",
-        "help": "留出阅读时间，需要账号。"
-      },
-      "event": {
-        "title": "大型活动",
-        "help": "100–200 名参与者共用拥挤的 Wi-Fi：等待媒体的时间更长。"
-      },
-      "express": {
-        "title": "快速测验",
-        "help": "快速节奏，对所有人开放。"
-      },
-      "accessible": {
-        "title": "无障碍",
-        "help": "留出阅读时间，无过渡效果，轻量视频。"
-      }
-    }
-  },
   "setup": {
     "title": "初始化此实例",
     "invite": "此实例尚未完成初始化。",
@@ -461,6 +409,10 @@
       "open": "开始"
     },
     "step": {
+      "usage": {
+        "title": "用途",
+        "help": "关于实例用途的三个问题：每个回答会同时设置多项设置。所有内容都可以在后续步骤中调整，或以后在管理页面中更改。"
+      },
       "health": {
         "title": "健康状况",
         "help": "数据库、Redis、迁移、文件夹、关键变量。此处失败的项目需在 .env 中修复，然后重启实例。"
@@ -479,7 +431,7 @@
       },
       "limits": {
         "title": "限制与节奏",
-        "help": "默认值适合大多数实例：如有不同，可选择一个预设，或逐项设置。"
+        "help": "默认值适合大多数实例：仅在你的实例不同时才更改某个值。"
       },
       "content": {
         "title": "内容",
@@ -581,6 +533,59 @@
       "colorblind": {
         "title": "色觉友好",
         "help": "在各种常见色觉缺陷下均可区分的颜色，以及形状。"
+      }
+    }
+  },
+  "usage": {
+    "preview": "这些回答将设置：",
+    "nothing": "实例已是这些回答对应的状态。",
+    "apply": "应用",
+    "applied": "已应用：后续步骤会体现。",
+    "skipped": {
+      "locked": "未更改：被 ADMIN_LOCK 锁定",
+      "not-applicable": "未更改：仅适用于身份提供方（AUTH_MODE=oidc）"
+    },
+    "internet": {
+      "question": "此实例能否访问互联网？",
+      "answers": {
+        "connected": {
+          "title": "能",
+          "help": "编辑器会提供在线免费媒体库。"
+        },
+        "offline": {
+          "title": "不能",
+          "help": "仅限局域网：不提供在线媒体库链接。请在后续步骤中从手机测试地址。"
+        }
+      }
+    },
+    "audience": {
+      "question": "谁来参与？",
+      "answers": {
+        "colleagues": {
+          "title": "同事、朋友",
+          "help": "标准设置。"
+        },
+        "class": {
+          "title": "班级、培训",
+          "help": "参与者使用自己的账号登录。"
+        },
+        "public": {
+          "title": "公众、大型活动",
+          "help": "对所有人开放——需使用身份提供方——并在拥挤的 Wi-Fi 上为声音和视频留出更多加载时间。"
+        }
+      }
+    },
+    "accessibility": {
+      "question": "是否有参与者需要更便利的体验？",
+      "answers": {
+        "standard": {
+          "title": "否",
+          "help": "标准设置。"
+        },
+        "adapted": {
+          "title": "是",
+          "help": "色盲人士可区分的颜色、无过渡效果、更多阅读时间。"
+        }
       }
     }
   }

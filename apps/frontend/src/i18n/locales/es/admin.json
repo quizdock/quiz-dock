@@ -234,9 +234,9 @@
       "sweep": "Limpiar los medios"
     },
     "presets": {
-      "list": "Preajustes",
-      "plan": "Previsualizar un preajuste",
-      "apply": "Aplicar un preajuste"
+      "list": "Configuración rápida",
+      "plan": "Previsualizar la configuración rápida",
+      "apply": "Aplicar la configuración rápida"
     },
     "setup": {
       "status": "Puesta en marcha",
@@ -268,13 +268,12 @@
     "setting": "Ajuste",
     "value": "Valor",
     "all": "Todos",
-    "preset": "Preajuste",
-    "pace": "Ritmo",
-    "venue": "Lugar",
     "audience": "Público",
     "name": "Nombre",
     "address": "Dirección",
-    "id": "ID"
+    "id": "ID",
+    "internet": "Internet",
+    "accessibility": "Accesibilidad"
   },
   "columns": {
     "name": "Nombre",
@@ -389,57 +388,6 @@
     "exportHelp": "Para fijarlos en .env (y luego deshacerlos aquí), o para llevarlos a otra instancia:",
     "resetAll": "Deshacerlo todo"
   },
-  "presets": {
-    "title": "Preajustes",
-    "intro": "Valores listos para un tipo de evento: elige uno, mira lo que cambia y aplícalo. Cada eje también se puede ajustar por separado.",
-    "readOnly": "Valores listos para un tipo de evento. Aquí solo lectura: ADMIN_WEB_SCOPE=read.",
-    "notHere": "Solo con AUTH_MODE=oidc: en modo local, los participantes nunca inician sesión.",
-    "preview": "Lo que cambia:",
-    "nothing": "La instancia ya está así.",
-    "apply": "Aplicar",
-    "applied": "Aplicado.",
-    "skipped": {
-      "locked": "sin cambios: bloqueado por ADMIN_LOCK",
-      "not-applicable": "sin cambios: no aplica con este modo de autenticación"
-    },
-    "axes": {
-      "pace": "Ritmo",
-      "venue": "Lugar",
-      "audience": "Público"
-    },
-    "levels": {
-      "fast": "Rápido",
-      "standard": "Estándar",
-      "comfortable": "Cómodo",
-      "large": "Gran evento",
-      "modest": "Equipo modesto",
-      "accounts": "Cuentas obligatorias",
-      "open": "Abierto a todos",
-      "custom": "Personalizado"
-    },
-    "named": {
-      "party": {
-        "title": "Fiesta, bar",
-        "help": "Ritmo estándar, abierto a todos."
-      },
-      "classroom": {
-        "title": "Aula, formación",
-        "help": "Tiempo para leer, cuentas obligatorias."
-      },
-      "event": {
-        "title": "Gran evento",
-        "help": "De 100 a 200 participantes en una Wi-Fi saturada: se espera más a los medios."
-      },
-      "express": {
-        "title": "Quiz exprés",
-        "help": "Ritmo rápido, abierto a todos."
-      },
-      "accessible": {
-        "title": "Accesible",
-        "help": "Tiempo para leer, sin transiciones, vídeos ligeros."
-      }
-    }
-  },
   "setup": {
     "title": "Puesta en marcha de esta instancia",
     "invite": "Esta instancia aún no está configurada.",
@@ -461,6 +409,10 @@
       "open": "Empezar"
     },
     "step": {
+      "usage": {
+        "title": "Uso",
+        "help": "Tres preguntas sobre cómo se usará la instancia: cada respuesta define varios ajustes a la vez. Todo se puede ajustar en los pasos siguientes, o más tarde desde la administración."
+      },
       "health": {
         "title": "Estado",
         "help": "La base de datos, Redis, las migraciones, las carpetas, las variables críticas. Lo que falle aquí se corrige en .env y después se reinicia la instancia."
@@ -479,7 +431,7 @@
       },
       "limits": {
         "title": "Límites y ritmo",
-        "help": "Los valores por defecto sirven para la mayoría de las instancias: un preajuste, o un valor cada vez, si la tuya es distinta."
+        "help": "Los valores por defecto sirven para la mayoría de las instancias: cambia un valor solo si la tuya es distinta."
       },
       "content": {
         "title": "Contenido",
@@ -581,6 +533,59 @@
       "colorblind": {
         "title": "Daltonismo",
         "help": "Colores distinguibles con cada daltonismo habitual, y las formas."
+      }
+    }
+  },
+  "usage": {
+    "preview": "Lo que definen estas respuestas:",
+    "nothing": "La instancia ya responde así.",
+    "apply": "Aplicar",
+    "applied": "Aplicado: los pasos siguientes lo muestran.",
+    "skipped": {
+      "locked": "sin cambios: bloqueado por ADMIN_LOCK",
+      "not-applicable": "sin cambios: solo con un proveedor de identidad (AUTH_MODE=oidc)"
+    },
+    "internet": {
+      "question": "¿Esta instancia tiene acceso a Internet?",
+      "answers": {
+        "connected": {
+          "title": "Sí",
+          "help": "El editor ofrece bancos de medios libres en línea."
+        },
+        "offline": {
+          "title": "No",
+          "help": "Solo una red local: sin enlaces a bancos en línea. Prueba la dirección desde un teléfono en los pasos siguientes."
+        }
+      }
+    },
+    "audience": {
+      "question": "¿Quién participa?",
+      "answers": {
+        "colleagues": {
+          "title": "Compañeros, amigos",
+          "help": "Los ajustes estándar."
+        },
+        "class": {
+          "title": "Una clase, una formación",
+          "help": "Los participantes inician sesión con su cuenta."
+        },
+        "public": {
+          "title": "El público, un gran evento",
+          "help": "Abierto a todos — con un proveedor de identidad — y más tiempo para que carguen sonidos y vídeos en una Wi-Fi saturada."
+        }
+      }
+    },
+    "accessibility": {
+      "question": "¿Algunos participantes necesitan más facilidades?",
+      "answers": {
+        "standard": {
+          "title": "No",
+          "help": "Los ajustes estándar."
+        },
+        "adapted": {
+          "title": "Sí",
+          "help": "Colores que distinguen las personas daltónicas, sin transiciones, más tiempo para leer."
+        }
       }
     }
   }
