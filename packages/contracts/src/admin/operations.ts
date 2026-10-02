@@ -46,6 +46,8 @@ export interface OperationResult<R = unknown> {
   notes: OperationNote[];
   /** Rows or an object: each access renders it. */
   data?: R;
+  /** What the operation replaced (§3.11, memento): kept in the audit, for going back. */
+  memento?: Record<string, unknown>;
 }
 
 /** Why the runner did not run an operation. Stable: the web translates them. */

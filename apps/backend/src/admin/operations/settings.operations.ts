@@ -3,8 +3,72 @@ import { SETTING_LIST, SETTINGS, type SettingDefinition } from '@quiz-dock/contr
 import { z } from 'zod';
 import { AUDIT_REPOSITORY } from '../admin.tokens';
 import type { AuditRepository } from '../audit/audit.repository';
+import { OverridesService } from '../settings/overrides.service';
 import { type SettingIssue, settings } from '../settings/settings.service';
-import { type AdminOperation, OperationError, defineOperation } from './operation';
+import {
+  type AdminOperation,
+  OperationError,
+  defineOperation,
+  done,
+  nothingToDo,
+} from './operation';
+
+const DEFINITIONS = new Map(SETTING_LIST.map((d) => [d.key, d]));
+const settingKey = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .transform((k) => k.toUpperCase());
+
+/** A setting the administration may change, or why not. */
+function changeable(key: string): SettingDefinition {
+  const def = DEFINITIONS.get(key);
+  if (!def) throw new OperationError('not_found', `No setting "${key}".`);
+  if (!def.overridable || def.internal || def.deprecated) {
+    throw new OperationError('critical', `${key} is set in .env only (level ${def.criticality}).`);
+  }
+  return def;
+}
+
+/** The rules between variables a change would break, that hold now. */
+function brokenRules(changes: Record<string, string | undefined>): string[] {
+  const now = new Set(
+    settings
+      .issues()
+      .filter((i) => i.code === 'rule')
+      .map((i) => i.message),
+  );
+  return settings
+    .withOverrides(changes)
+    .issues()
+    .filter((i) => i.code === 'rule' && !now.has(i.message))
+    .map((i) => i.message);
+}
+
+/**
+ * Checks a value as an override is checked (§3.1): readable, within its
+ * bounds — strictly, unlike an environment value — and breaking no rule.
+ */
+export function checkOverride(key: string, value: string): SettingDefinition {
+  const def = changeable(key);
+  if (value === '' && !def.allowEmpty) {
+    throw new OperationError('invalid_params', `${key}: empty — go back to .env instead.`, {
+      path: 'value',
+    });
+  }
+  const parsed = def.schema.safeParse(value);
+  if (!parsed.success || (def.bounds && !def.bounds.safeParse(parsed.data).success)) {
+    throw new OperationError('invalid_params', `${key} accepts ${def.accepts}.`, {
+      path: 'value',
+      accepts: def.accepts,
+    });
+  }
+  const broken = brokenRules({ [key]: value });
+  if (broken.length)
+    throw new OperationError('invalid_params', broken.join(' '), { path: 'value' });
+  return def;
+}
 
 /** A setting as the administration shows it: never a secret's value. */
 export interface SettingRow {
@@ -70,10 +134,13 @@ export function settingRow(def: SettingDefinition): SettingRow {
   };
 }
 
-/** Reading the settings and the audit log. */
+/** Reading and changing the settings, reading the audit log. */
 @Injectable()
 export class SettingsOperations {
-  constructor(@Inject(AUDIT_REPOSITORY) private readonly audit: AuditRepository) {}
+  constructor(
+    @Inject(AUDIT_REPOSITORY) private readonly audit: AuditRepository,
+    private readonly overrides: OverridesService,
+  ) {}
 
   list(): AdminOperation[] {
     return [
@@ -95,6 +162,82 @@ export class SettingsOperations {
             notes: [],
             data: { rows, rules, access: settingsAccess() },
           });
+        },
+      }),
+      defineOperation({
+        id: 'settings.set',
+        domain: 'instance',
+        category: 'settings',
+        effect: 'write',
+        summary: 'Changes a setting from the administration; its .env value stays, to go back to.',
+        params: z.object({ key: settingKey, value: z.string().max(10_000) }),
+        settings: ({ key }) => [key],
+        validate: ({ key, value }) => void checkOverride(key, value),
+        confirmation: ({ key, value }) => {
+          const def = DEFINITIONS.get(key);
+          return def?.criticality === 'C2' ? `Change ${key} to ${JSON.stringify(value)}.` : null;
+        },
+        run: async (ctx, { key, value }) => {
+          const previous = this.overrides.store.get(key) ?? null;
+          if (previous === value)
+            return nothingToDo(`${key} is already ${value}.`, 'settings.unchanged');
+          await this.overrides.apply([{ key, value }], ctx.actor);
+          return { ...done({ key, value }), memento: { override: previous } };
+        },
+      }),
+      defineOperation({
+        id: 'settings.reset',
+        domain: 'instance',
+        category: 'settings',
+        effect: 'write',
+        summary:
+          'Takes back what the administration changed: the .env value (or the default) applies again.',
+        params: z
+          .object({ key: settingKey.optional(), all: z.boolean().optional() })
+          .refine((p) => !!p.key !== !!p.all, { message: 'key or all' }),
+        settings: ({ key }) => (key ? [key] : this.overrides.store.entries().map(([k]) => k)),
+        confirmation: ({ all }) =>
+          all ? 'Take back every setting changed from the administration.' : null,
+        run: async (ctx, { key, all }) => {
+          const keys = all ? this.overrides.store.entries().map(([k]) => k) : [key!];
+          const removed = Object.fromEntries(
+            keys.flatMap((k) => {
+              const v = this.overrides.store.get(k);
+              return v === undefined ? [] : [[k, v]];
+            }),
+          );
+          if (!Object.keys(removed).length)
+            return nothingToDo('Nothing was changed here.', 'settings.unchanged');
+          const broken = brokenRules(Object.fromEntries(keys.map((k) => [k, undefined])));
+          if (broken.length) throw new OperationError('invalid_params', broken.join(' '));
+          await this.overrides.apply(
+            Object.keys(removed).map((k) => ({ key: k, value: null })),
+            ctx.actor,
+          );
+          return { ...done({ keys: Object.keys(removed) }), memento: { overrides: removed } };
+        },
+      }),
+      defineOperation({
+        id: 'settings.export',
+        domain: 'instance',
+        category: 'settings',
+        effect: 'read',
+        summary:
+          'The settings changed from the administration, as a .env excerpt: to pin them, or move them to another instance.',
+        params: z.object({}),
+        run: () => {
+          const lines = this.overrides.store
+            .entries()
+            .filter(([k]) => DEFINITIONS.get(k) && !DEFINITIONS.get(k)?.secret)
+            .map(([k, v]) => `${k}=${/[\s#"'$]/.test(v) ? JSON.stringify(v) : v}`);
+          return Promise.resolve(
+            done({
+              env: lines.length
+                ? `# Changed from the administration — paste into .env, then take them back there.\n${lines.join('\n')}\n`
+                : '',
+              count: lines.length,
+            }),
+          );
         },
       }),
       defineOperation({

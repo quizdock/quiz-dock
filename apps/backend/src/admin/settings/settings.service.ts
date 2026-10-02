@@ -42,6 +42,45 @@ export const recordSource = (env: Record<string, string | undefined>): SettingSo
   read: (key) => env[key],
 });
 
+/**
+ * The values changed from the administration (`instance_setting`), held in
+ * memory: the `OverridesService` loads them, and loads them again when a replica
+ * says they changed. Read on the game's hot path: a map lookup.
+ */
+export class OverrideStore {
+  private values = new Map<string, string>();
+
+  replace(entries: Iterable<[string, string]>): void {
+    this.values = new Map(entries);
+  }
+
+  get(key: string): string | undefined {
+    return this.values.get(key);
+  }
+
+  entries(): [string, string][] {
+    return [...this.values];
+  }
+}
+
+const DEFINITIONS = new Map(SETTING_LIST.map((d) => [d.key, d]));
+
+/**
+ * The overrides as a source: only for a variable the administration may change,
+ * and never in safe mode (`ADMIN_OVERRIDES=ignore`, read from the environment
+ * alone: kept, not applied).
+ */
+export function overrideSource(store: OverrideStore, env: SettingSource): SettingSource {
+  return {
+    name: 'override',
+    read: (key) => {
+      if (!DEFINITIONS.get(key)?.overridable) return undefined;
+      const safe = SETTINGS.ADMIN_OVERRIDES.schema.safeParse(env.read('ADMIN_OVERRIDES') ?? '');
+      return safe.success && safe.data === 'ignore' ? undefined : store.get(key);
+    },
+  };
+}
+
 /** A value as a message may quote it: never a secret's. */
 const quote = (def: SettingDefinition, raw: string) =>
   def.secret ? `${def.key} (set)` : `${def.key}=${JSON.stringify(raw)}`;
@@ -107,9 +146,42 @@ export class SettingsService {
           message: `${quote(def, raw)} is outside what it accepts (${def.accepts}): used as is for now; a later release will enforce it.`,
         });
       }
-      return { key: def.key, value: parsed.data, source: this.sources[i].name, issues };
+      const source = this.sources[i].name;
+      return {
+        key: def.key,
+        value: parsed.data,
+        source,
+        ...(source === 'override'
+          ? { envValue: this.envValue(def, raws.slice(i + 1), i + 1) }
+          : {}),
+        issues,
+      };
     }
     return { key: def.key, value: def.default, source: 'default', issues };
+  }
+
+  /** What the environment alone gives, under an override: its readable value, else the default. */
+  private envValue<T>(def: SettingDefinition<T>, raws: (string | undefined)[], offset: number): T {
+    for (const [j, raw] of raws.entries()) {
+      if (this.sources[offset + j].name !== 'env') continue;
+      if (raw === undefined || (raw === '' && !def.allowEmpty)) continue;
+      const parsed = def.schema.safeParse(raw);
+      if (parsed.success) return parsed.data;
+    }
+    return def.default;
+  }
+
+  /**
+   * The settings as they would be with these overrides changed (`undefined`
+   * removes one): to check the rules between variables before saving.
+   */
+  withOverrides(changes: Record<string, string | undefined>): SettingsService {
+    const current = this.sources.find((s) => s.name === 'override');
+    const candidate: SettingSource = {
+      name: 'override',
+      read: (key) => (key in changes ? changes[key] : current?.read(key)),
+    };
+    return new SettingsService([candidate, ...this.sources.filter((s) => s.name !== 'override')]);
   }
 
   /** Everything to report about the current configuration: each value, then the rules between them. */
@@ -158,9 +230,17 @@ export const SETTING_RULES: SettingRule[] = [
   },
 ];
 
-/** The backend's settings, from its environment. */
-export const settings = new SettingsService();
+/** The values changed from the administration, as the backend holds them. */
+export const overrides = new OverrideStore();
 
-/** Settings over a fixed environment, for tests and tools. */
-export const settingsFrom = (env: Record<string, string | undefined>): SettingsService =>
-  new SettingsService([recordSource(env)]);
+/** The backend's settings: the administration's overrides, then its environment. */
+export const settings = new SettingsService([overrideSource(overrides, envSource), envSource]);
+
+/** Settings over a fixed environment (and overrides), for tests and tools. */
+export const settingsFrom = (
+  env: Record<string, string | undefined>,
+  store?: OverrideStore,
+): SettingsService =>
+  new SettingsService(
+    store ? [overrideSource(store, recordSource(env)), recordSource(env)] : [recordSource(env)],
+  );

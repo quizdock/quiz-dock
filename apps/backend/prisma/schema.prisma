@@ -606,3 +606,17 @@ model AdminAudit {
   @@index([operation, at])
   @@map("admin_audit")
 }
+
+/// Administration (SPECIFICATIONS-ADMIN §3.1): a setting changed from the
+/// administration, overriding the environment (default < `.env` < this). The raw
+/// text, read through the setting's schema like an environment value. Also the
+/// instance's own flags (`setup.completed`).
+model InstanceSetting {
+  key       String   @id @db.VarChar(64)
+  value     String
+  updatedBy String   @map("updated_by")
+  userId    String?  @map("user_id") @db.Char(26)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("instance_setting")
+}

@@ -8,14 +8,21 @@ import { ADMIN_OPERATIONS, AUDIT_REPOSITORY, CONFIRMATION_STORE } from './admin.
 import { type AuditRepository, PrismaAuditRepository } from './audit/audit.repository';
 import { CliCommandOperations } from './operations/cli-commands.operations';
 import { MediaOperations } from './operations/media.operations';
+import { QuizzesOperations } from './operations/quizzes.operations';
 import type { AdminOperation } from './operations/operation';
 import { SettingsOperations } from './operations/settings.operations';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
 import { OperationRunner } from './runner/operation-runner';
+import { OverridesService } from './settings/overrides.service';
 import { settings } from './settings/settings.service';
 
 /** Every group of operations: the registry, reviewed in one place (§3.2, no discovery). */
-const OPERATION_GROUPS = [CliCommandOperations, SettingsOperations, MediaOperations];
+const OPERATION_GROUPS = [
+  CliCommandOperations,
+  SettingsOperations,
+  QuizzesOperations,
+  MediaOperations,
+];
 
 /**
  * The administration's core (§3.4): the operations, the runner and its
@@ -24,6 +31,7 @@ const OPERATION_GROUPS = [CliCommandOperations, SettingsOperations, MediaOperati
 @Module({
   imports: [UsersModule, QuizzesModule, MediaModule],
   providers: [
+    OverridesService,
     ...OPERATION_GROUPS,
     {
       provide: AUDIT_REPOSITORY,
@@ -50,6 +58,6 @@ const OPERATION_GROUPS = [CliCommandOperations, SettingsOperations, MediaOperati
       ) => new OperationRunner(ops, settings, audit, confirmations),
     },
   ],
-  exports: [OperationRunner, AUDIT_REPOSITORY],
+  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService],
 })
 export class AdminModule {}

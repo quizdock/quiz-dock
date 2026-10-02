@@ -191,7 +191,12 @@ export class OperationRunner {
           userId: call.actor.userId ?? null,
           address: call.actor.address ?? null,
           operation: call.id.slice(0, 64),
-          params: maskParams(state.params ?? call.raw ?? {}),
+          params: maskParams({
+            ...((state.params ?? call.raw ?? {}) as Record<string, unknown>),
+            ...(outcome.kind === 'result' && outcome.result.memento
+              ? { before: outcome.result.memento }
+              : {}),
+          }),
           outcome: outcome.kind === 'result' ? outcome.result.outcome : 'refused',
           code: outcome.kind === 'refused' ? outcome.code : null,
           durationMs: Date.now() - started,
@@ -279,7 +284,7 @@ export class OperationRunner {
           );
         }
         state.params = parsed.data;
-        return next();
+        return Promise.resolve(state.op!.validate?.(parsed.data)).then(() => next());
       },
     };
   }
@@ -352,9 +357,9 @@ export class OperationRunner {
         const { op, call } = state;
         if (call.dryRun || call.preconfirmed) return next();
         const ask =
-          op!.confirmation?.(state.params) ??
+          (await op!.confirmation?.(state.params)) ??
           (op!.effect === 'destructive'
-            ? (op!.describe?.(state.params) ?? `${op!.summary} This cannot be undone.`)
+            ? ((await op!.describe?.(state.params)) ?? `${op!.summary} This cannot be undone.`)
             : null);
         if (!ask) return next();
         if (!call.confirmation) {

@@ -12,6 +12,6 @@ import { QuizValidationController } from './quiz-validation.controller';
   imports: [MediaModule],
   controllers: [QuizValidationController, QuizzesController],
   providers: [QuizzesService, SampleQuizzesService, QuizPortableService, QuizPublicationService],
-  exports: [SampleQuizzesService, QuizPortableService],
+  exports: [SampleQuizzesService, QuizPortableService, QuizzesService],
 })
 export class QuizzesModule {}

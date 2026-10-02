@@ -41,15 +41,20 @@ export interface AdminOperation<P = unknown, R = unknown> {
   /** What it does, one sentence. */
   summary: string;
   params: z.ZodType<P>;
+  /**
+   * Checks beyond the schema — against the registry, the rules — before any
+   * confirmation is asked; throws an `OperationError` to refuse.
+   */
+  validate?(params: P): void | Promise<void>;
   /** Can say what it would do without doing it. */
   dryRun?: boolean;
   /**
    * What the caller is asked to confirm, when the operation needs it beyond
    * being destructive (a critical setting, say); `null` when it does not.
    */
-  confirmation?(params: P): string | null;
+  confirmation?(params: P): string | null | Promise<string | null>;
   /** How the confirmation of a destructive operation reads. */
-  describe?(params: P): string;
+  describe?(params: P): string | Promise<string>;
   /** The settings it changes: the gate checks `ADMIN_LOCK` against them. */
   settings?(params: P): string[];
   /** Longer than the runner's default, for a long purge or an import. */

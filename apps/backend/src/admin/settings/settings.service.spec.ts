@@ -1,5 +1,5 @@
 import { SETTINGS, SETTING_LIST } from '@quiz-dock/contracts';
-import { SettingsService, recordSource, settingsFrom } from './settings.service';
+import { OverrideStore, SettingsService, recordSource, settingsFrom } from './settings.service';
 
 describe('the settings registry', () => {
   it.each(SETTING_LIST.map((def) => [def.key, def]))(
@@ -139,6 +139,44 @@ describe('SettingsService', () => {
       expect(rules({ IMPORT_MAX_BYTES: String(100 * 1024 * 1024) })).toEqual([
         'MEDIA_MAX_VIDEO_MB',
       ]);
+    });
+  });
+
+  describe('overrides', () => {
+    const store = () => {
+      const s = new OverrideStore();
+      s.replace([
+        ['GAME_READ_DELAY_MS', '1500'],
+        ['AUTH_MODE', 'oidc'],
+      ]);
+      return s;
+    };
+
+    it('win over .env, which stays known', () => {
+      const s = settingsFrom({ GAME_READ_DELAY_MS: '2000' }, store());
+      expect(s.describe(SETTINGS.GAME_READ_DELAY_MS)).toMatchObject({
+        value: 1500,
+        source: 'override',
+        envValue: 2000,
+      });
+      expect(settingsFrom({}, store()).describe(SETTINGS.GAME_READ_DELAY_MS).envValue).toBe(3000);
+    });
+
+    it('never reach a critical variable', () => {
+      expect(settingsFrom({}, store()).get(SETTINGS.AUTH_MODE)).toBe('none');
+    });
+
+    it('safe mode: kept, not applied', () => {
+      expect(
+        settingsFrom({ ADMIN_OVERRIDES: 'ignore' }, store()).describe(SETTINGS.GAME_READ_DELAY_MS),
+      ).toMatchObject({ value: 3000, source: 'default' });
+    });
+
+    it('a candidate change is seen with the rules, without touching the settings', () => {
+      const s = settingsFrom({ AUTH_MODE: 'none' }, new OverrideStore());
+      const candidate = s.withOverrides({ ALLOW_ANONYMOUS_PARTICIPANTS: 'true' });
+      expect(candidate.issues().map((i) => i.key)).toContain('ALLOW_ANONYMOUS_PARTICIPANTS');
+      expect(s.issues()).toEqual([]);
     });
   });
 });
