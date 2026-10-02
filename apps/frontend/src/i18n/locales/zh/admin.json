@@ -1,0 +1,324 @@
+{
+  "title": "管理",
+  "adminOnly": "此页面仅供本实例的管理员使用。",
+  "loading": "加载中…",
+  "domains": {
+    "instance": "实例",
+    "quizzes": "测验",
+    "media": "媒体"
+  },
+  "sections": {
+    "settings": "设置",
+    "health": "健康状况",
+    "accounts": "账号",
+    "audit": "审计",
+    "quizzes": "测验",
+    "media": "媒体",
+    "changes": "更改"
+  },
+  "token": {
+    "unset": "本地模式：在 .env 中设置 ADMIN_TOKEN（32 个字符或以上）并重启实例之前，无法通过网页更改任何内容。",
+    "ask": "本地模式：输入管理令牌（ADMIN_TOKEN）才能进行更改。它只保存在此标签页中。",
+    "use": "使用",
+    "given": "已为此标签页提供管理令牌。",
+    "forget": "清除"
+  },
+  "settings": {
+    "search": "搜索设置",
+    "view": "布局",
+    "views": {
+      "cards": "卡片",
+      "split": "列表与详情",
+      "table": "表格"
+    },
+    "filters": {
+      "label": "仅显示",
+      "changed": "与默认值不同",
+      "overridden": "在此更改的",
+      "problem": "有问题的",
+      "editable": "可编辑的"
+    },
+    "none": "没有匹配的设置。",
+    "list": "设置",
+    "problem": "有问题",
+    "rules": "相互矛盾的设置：",
+    "envValue": "取代 .env：",
+    "access": {
+      "read": "网页显示所有设置，但不更改任何设置（ADMIN_WEB_SCOPE=read）。",
+      "write": "网页可以更改 C2 至 C4 级的设置（ADMIN_WEB_SCOPE=write）；C1 级永远不能。",
+      "how": "这些在 .env 中设置，然后重启实例。",
+      "locks": "被 ADMIN_LOCK 锁定：",
+      "safeMode": "安全模式（ADMIN_OVERRIDES=ignore）：在此更改的值会保留，但不会生效。",
+      "token": "本地模式：更改需要管理令牌。",
+      "noToken": "本地模式：在设置 ADMIN_TOKEN 之前，无法通过网页更改任何内容。"
+    },
+    "columns": {
+      "variable": "变量",
+      "value": "值",
+      "source": "来源",
+      "env": ".env 值",
+      "default": "默认值",
+      "level": "级别",
+      "applies": "生效时机"
+    }
+  },
+  "categories": {
+    "identity": "标识与品牌",
+    "access": "访问与认证",
+    "network": "网络与邀请",
+    "storage": "存储",
+    "limits": "限制",
+    "pace": "测验节奏",
+    "admin": "管理",
+    "internal": "内部"
+  },
+  "source": {
+    "default": "默认值",
+    "env": "来自 .env",
+    "override": "在此更改"
+  },
+  "criticality": {
+    "C1": "关键：启动、数据或安全。仅显示，永远不能通过网页更改。",
+    "C2": "高：谁可以进入、可以存储多少。每次更改都需确认。",
+    "C3": "普通：实例的行为方式。",
+    "C4": "外观：样式与措辞。"
+  },
+  "applies": {
+    "live": "立即",
+    "next-room": "下一个房间",
+    "restart": "重启后"
+  },
+  "appliesHelp": {
+    "live": "下次使用时生效：进行中的测验也会遵循。",
+    "next-room": "在更改后开启的房间中生效；进行中的房间保留原有值。",
+    "restart": "仅在启动时读取一次：实例必须重启。"
+  },
+  "readOnly": {
+    "critical": "关键：永远不能通过网页更改",
+    "locked": "被 ADMIN_LOCK 锁定",
+    "scope": "只读（ADMIN_WEB_SCOPE=read）",
+    "safe-mode": "安全模式"
+  },
+  "value": {
+    "empty": "—",
+    "set": "已设置",
+    "notSet": "未设置",
+    "on": "开启",
+    "off": "关闭"
+  },
+  "units": {
+    "MB": "MB",
+    "s": "秒"
+  },
+  "help": {
+    "accepts": "可接受的值",
+    "default": "默认值",
+    "example": "在 .env 中",
+    "applies": "生效时机",
+    "rules": "相关设置",
+    "doc": "查看文档",
+    "history": "最近的更改",
+    "noHistory": "从未通过管理页面更改。"
+  },
+  "outside": {
+    "title": "应用之外",
+    "intro": "由 Docker Compose、quizdock 脚本、镜像构建或 Keycloak 读取，而不是由应用读取：它们在被读取的地方更改，而不是在这里。",
+    "readBy": "读取方",
+    "what": "用途",
+    "readers": {
+      "compose": "Compose",
+      "keycloak": "Keycloak",
+      "script": "quizdock 脚本",
+      "build": "镜像构建",
+      "dev": "开发环境",
+      "image": "镜像"
+    }
+  },
+  "labels": {
+    "APP_NAME": "应用名称",
+    "APP_LANG": "界面语言",
+    "APP_LOGO_URL": "Logo 地址",
+    "APP_FEEDBACK_URL": "反馈链接的目标",
+    "AUTH_MODE": "认证模式",
+    "DEMO_MODE": "公开演示",
+    "ALLOW_ANONYMOUS_PARTICIPANTS": "无账号的参与者",
+    "OIDC_ISSUER": "身份提供方（颁发者）",
+    "OIDC_CLIENT_ID": "客户端标识",
+    "OIDC_CLIENT_SECRET": "客户端密钥",
+    "OIDC_INTERNAL_URL": "身份提供方的内部地址",
+    "OIDC_JWKS_URI": "密钥端点",
+    "OIDC_AUDIENCE": "预期受众",
+    "OIDC_ROLES_CLAIM": "角色声明",
+    "OIDC_NAME_CLAIM": "显示名称声明",
+    "OIDC_SESSION_SCOPE": "会话范围（已忽略）",
+    "PORT": "容器内端口",
+    "TRUST_PROXY": "受信任的代理",
+    "APP_PUBLIC_URL": "公开地址",
+    "HOST_LAN_IPS": "局域网地址",
+    "QUIZ_STORE_URL": "社区目录",
+    "QUIZ_STORE_HOSTS": "允许下载的主机",
+    "DATABASE_URL": "数据库",
+    "REDIS_URL": "Redis",
+    "MEDIA_DIR": "媒体文件夹",
+    "STORE_DIR": "共享模板文件夹",
+    "SAMPLES_DIR": "示例测验文件夹",
+    "CLIENT_DIR": "网页应用文件夹",
+    "MEDIA_MAX_BYTES": "图片大小上限",
+    "MEDIA_MAX_VIDEO_MB": "视频大小上限",
+    "MEDIA_MAX_AUDIO_MB": "声音大小上限",
+    "IMPORT_MAX_BYTES": "导入测验大小上限",
+    "PUBLICATION_MAX_MB": "发布测验大小上限",
+    "MEDIA_LIBRARY_LINKS": "免费媒体库",
+    "GAME_READ_DELAY_MS": "计时前的阅读时间",
+    "GAME_ALL_ANSWERED_DELAY_MS": "全员作答后的停顿",
+    "GAME_AUTO_ADVANCE_MS": "自动模式：每步时长",
+    "GAME_MEDIA_WAIT_S": "等待声音和视频",
+    "LIVE_MOTION": "直播画面的过渡效果",
+    "GAME_HOST_GRACE_MS": "主持人离开前的宽限时间",
+    "GAME_HOST_WINDOW_MS": "主持人返回时限",
+    "ADMIN_WEB_SCOPE": "网页可更改的范围",
+    "ADMIN_LOCK": "永不通过网页更改的设置",
+    "ADMIN_TOKEN": "管理令牌（本地模式）",
+    "ADMIN_OVERRIDES": "通过网页更改的值",
+    "QUIZDOCK_FLAVOR": "镜像版本类型",
+    "PRISMA_SKIP_CONNECT": "不连接数据库启动"
+  },
+  "operations": {
+    "health": {
+      "doctor": "健康检查"
+    },
+    "migrations": {
+      "status": "数据库迁移"
+    },
+    "seat": {
+      "status": "主持席位",
+      "release": "释放主持席位"
+    },
+    "users": {
+      "list": "账号",
+      "set-role": "授予或撤销角色"
+    },
+    "samples": {
+      "load": "为账号添加示例测验"
+    },
+    "quizzes": {
+      "list": "测验",
+      "transfer": "移交测验",
+      "export": "导出测验",
+      "import": "为账号导入测验"
+    },
+    "sessions": {
+      "purge": "清除旧会话"
+    },
+    "settings": {
+      "list": "设置"
+    },
+    "audit": {
+      "list": "审计"
+    },
+    "media": {
+      "upload": "向实例媒体添加媒体",
+      "promote": "将文件提升为实例媒体",
+      "credit": "媒体署名",
+      "remove": "从实例媒体中移除媒体",
+      "delete-file": "删除文件",
+      "sweep": "清理媒体"
+    }
+  },
+  "params": {
+    "user": "账号",
+    "roles": "角色",
+    "owner": "所有者",
+    "quiz": "测验（ID）",
+    "to": "新所有者",
+    "bundle": "包（zip、quiz.json 或 Kahoot 表格）",
+    "key": "设置",
+    "limit": "数量",
+    "operation": "操作",
+    "setting": "设置"
+  },
+  "columns": {
+    "name": "名称",
+    "subject": "主体标识",
+    "email": "邮箱",
+    "roles": "角色",
+    "granted": "已授予",
+    "quizzes": "测验",
+    "createdAt": "创建时间",
+    "id": "ID",
+    "title": "标题",
+    "owner": "所有者",
+    "status": "状态",
+    "questions": "题目",
+    "slug": "别名",
+    "revision": "修订版本",
+    "updatedAt": "更新时间",
+    "holder": "持有者",
+    "claimedAt": "占用时间",
+    "expiresAt": "到期时间"
+  },
+  "effects": {
+    "write": "会更改",
+    "destructive": "会销毁"
+  },
+  "run": {
+    "read": "显示",
+    "write": "运行",
+    "preview": "预览",
+    "confirm": "确认",
+    "again": "重新读取"
+  },
+  "form": {
+    "choose": "选择…"
+  },
+  "result": {
+    "done": "完成。",
+    "nothing-to-do": "无需操作。",
+    "partial": "已完成，但有问题。",
+    "preview": "将执行的操作：",
+    "none": "无。",
+    "download": "保存 {{name}}"
+  },
+  "refusals": {
+    "unknown_operation": "未知操作。",
+    "forbidden": "仅限管理员。",
+    "scope_read": "只读：ADMIN_WEB_SCOPE=read。",
+    "local_mode_token": "本地模式：需要管理令牌。",
+    "locked": "被 ADMIN_LOCK 锁定。",
+    "critical": "关键：永远不能通过网页更改。",
+    "invalid_params": "参数无效。",
+    "confirmation_invalid": "确认已过期。",
+    "dry_run_unsupported": "无法预览。",
+    "not_found": "未找到。",
+    "conflict": "冲突。",
+    "timeout": "耗时过长。",
+    "failed": "失败。"
+  },
+  "quizzes": {
+    "intro": "本实例的所有测验，无论所有者是谁：有人离开时移交测验、导出测验、为主持人导入测验、清除超过保留期限的会话。"
+  },
+  "audit": {
+    "filter": "操作",
+    "empty": "审计中暂无记录。",
+    "newer": "较新",
+    "older": "较旧",
+    "columns": {
+      "at": "时间",
+      "who": "操作者",
+      "operation": "操作",
+      "params": "参数",
+      "outcome": "结果"
+    },
+    "via": {
+      "cli": "命令行",
+      "api": "网页"
+    },
+    "outcomes": {
+      "done": "完成",
+      "nothing-to-do": "无需操作",
+      "partial": "部分完成",
+      "refused": "已拒绝",
+      "failed": "失败"
+    }
+  }
+}

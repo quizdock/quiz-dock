@@ -183,5 +183,21 @@
     "disabled": "Topluluk mağazası devre dışı.",
     "download_failed": "Quiz indirilemedi veya doğrulanamadı.",
     "busy": "Topluluk mağazası şu anda meşgul. Biraz sonra tekrar deneyin."
+  },
+  "admin": {
+    "unknown_operation": "Bilinmeyen yönetim işlemi.",
+    "forbidden": "Yönetici rolü gerekli.",
+    "scope_read": "Bu kurulumda web yönetimi salt okunurdur (ADMIN_WEB_SCOPE=read).",
+    "local_mode_token": "Yerel mod: herhangi bir şeyi değiştirmek için yönetim belirtecini (ADMIN_TOKEN) girin.",
+    "locked": "ADMIN_LOCK ile kilitli: {{keys}}.",
+    "critical": "Kritik bir ayar web üzerinden asla değiştirilmez.",
+    "invalid_params": "Geçersiz parametreler: {{message}}",
+    "confirmation_invalid": "Onayın süresi doldu: tekrar deneyin.",
+    "dry_run_unsupported": "Bu işlem önizlenemez.",
+    "not_found": "Bulunamadı: {{message}}",
+    "conflict": "Şu anda mümkün değil: {{message}}",
+    "timeout": "İşlem çok uzun sürdü.",
+    "failed": "İşlem başarısız oldu: {{message}}",
+    "too_many_requests": "Çok fazla deneme: biraz bekleyin."
   }
 }

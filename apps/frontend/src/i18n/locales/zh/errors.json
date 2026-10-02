@@ -183,5 +183,21 @@
     "disabled": "社区题库已禁用。",
     "download_failed": "无法下载或验证测验。",
     "busy": "社区题库繁忙，请稍后重试。"
+  },
+  "admin": {
+    "unknown_operation": "未知的管理操作。",
+    "forbidden": "需要管理员角色。",
+    "scope_read": "本实例的网页管理为只读（ADMIN_WEB_SCOPE=read）。",
+    "local_mode_token": "本地模式：请提供管理令牌（ADMIN_TOKEN）后再进行更改。",
+    "locked": "被 ADMIN_LOCK 锁定：{{keys}}。",
+    "critical": "关键设置永远不能通过网页更改。",
+    "invalid_params": "参数无效：{{message}}",
+    "confirmation_invalid": "确认已过期：请重试。",
+    "dry_run_unsupported": "此操作无法预览。",
+    "not_found": "未找到：{{message}}",
+    "conflict": "目前无法执行：{{message}}",
+    "timeout": "操作耗时过长。",
+    "failed": "操作失败：{{message}}",
+    "too_many_requests": "尝试次数过多：请稍候。"
   }
 }

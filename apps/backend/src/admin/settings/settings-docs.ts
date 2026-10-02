@@ -61,7 +61,11 @@ const GROUPS: Group[] = [
       '(`client_max_body_size 50m;`).',
   },
   { title: 'Game pace', categories: ['pace'] },
-  { title: 'Administration', categories: ['admin'] },
+  {
+    title: 'Administration',
+    categories: ['admin'],
+    note: 'What the web administration may do, and the audit: [administration](administration.md).',
+  },
 ];
 
 const LEVELS =

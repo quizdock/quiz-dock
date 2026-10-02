@@ -183,5 +183,21 @@
     "disabled": "Le catalogue communautaire est désactivé.",
     "download_failed": "Le quiz n’a pas pu être téléchargé ou vérifié.",
     "busy": "Le catalogue communautaire est occupé. Réessayez dans un instant."
+  },
+  "admin": {
+    "unknown_operation": "Opération d’administration inconnue.",
+    "forbidden": "Rôle administrateur requis.",
+    "scope_read": "L’administration web est en lecture seule sur cette instance (ADMIN_WEB_SCOPE=read).",
+    "local_mode_token": "Mode local : fournissez le jeton d’administration (ADMIN_TOKEN) pour modifier quoi que ce soit.",
+    "locked": "Verrouillé par ADMIN_LOCK : {{keys}}.",
+    "critical": "Un réglage critique ne se modifie jamais depuis le web.",
+    "invalid_params": "Paramètres invalides : {{message}}",
+    "confirmation_invalid": "La confirmation a expiré : réessayez.",
+    "dry_run_unsupported": "Cette opération ne peut pas être prévisualisée.",
+    "not_found": "Introuvable : {{message}}",
+    "conflict": "Impossible pour le moment : {{message}}",
+    "timeout": "L’opération a pris trop de temps.",
+    "failed": "L’opération a échoué : {{message}}",
+    "too_many_requests": "Trop de tentatives : patientez un instant."
   }
 }

@@ -1,0 +1,324 @@
+{
+  "title": "Administration",
+  "adminOnly": "This page is for the instance's administrators.",
+  "loading": "Loading…",
+  "domains": {
+    "instance": "Instance",
+    "quizzes": "Quizzes",
+    "media": "Media"
+  },
+  "sections": {
+    "settings": "Settings",
+    "health": "Health",
+    "accounts": "Accounts",
+    "audit": "Audit",
+    "quizzes": "Quizzes",
+    "media": "Media",
+    "changes": "Changes"
+  },
+  "token": {
+    "unset": "Local mode: nothing can be changed from the web until ADMIN_TOKEN is set in .env (32 characters or more), then the instance restarted.",
+    "ask": "Local mode: enter the administration token (ADMIN_TOKEN) to change anything. It is kept in this tab only.",
+    "use": "Use",
+    "given": "Administration token given for this tab.",
+    "forget": "Forget it"
+  },
+  "settings": {
+    "search": "Search a setting",
+    "view": "Layout",
+    "views": {
+      "cards": "Cards",
+      "split": "List and detail",
+      "table": "Table"
+    },
+    "filters": {
+      "label": "Show only",
+      "changed": "Changed from the default",
+      "overridden": "Changed here",
+      "problem": "With a problem",
+      "editable": "Editable"
+    },
+    "none": "No setting matches.",
+    "list": "Settings",
+    "problem": "A problem",
+    "rules": "Settings that contradict each other:",
+    "envValue": "replaces .env:",
+    "access": {
+      "read": "The web shows every setting and changes none (ADMIN_WEB_SCOPE=read).",
+      "write": "The web may change the settings of levels C2 to C4 (ADMIN_WEB_SCOPE=write); C1 never.",
+      "how": "These are set in .env, then the instance restarted.",
+      "locks": "Locked by ADMIN_LOCK:",
+      "safeMode": "Safe mode (ADMIN_OVERRIDES=ignore): the values changed here are kept but not applied.",
+      "token": "Local mode: a change needs the administration token.",
+      "noToken": "Local mode: nothing can be changed from the web until ADMIN_TOKEN is set."
+    },
+    "columns": {
+      "variable": "Variable",
+      "value": "Value",
+      "source": "Source",
+      "env": ".env value",
+      "default": "Default",
+      "level": "Level",
+      "applies": "Applies"
+    }
+  },
+  "categories": {
+    "identity": "Identity & branding",
+    "access": "Access & authentication",
+    "network": "Network & invitation",
+    "storage": "Storage",
+    "limits": "Limits",
+    "pace": "Game pace",
+    "admin": "Administration",
+    "internal": "Internal"
+  },
+  "source": {
+    "default": "Default",
+    "env": "From .env",
+    "override": "Changed here"
+  },
+  "criticality": {
+    "C1": "Critical: start-up, data or security. Shown, never changed from the web.",
+    "C2": "High: who may enter, how much may be stored. Each change confirmed.",
+    "C3": "Normal: how the instance behaves.",
+    "C4": "Cosmetic: look and wording."
+  },
+  "applies": {
+    "live": "Live",
+    "next-room": "Next room",
+    "restart": "At restart"
+  },
+  "appliesHelp": {
+    "live": "On its next use: a game in progress follows it.",
+    "next-room": "In the rooms opened after the change; a room in progress keeps its own.",
+    "restart": "Read once at start: the instance must restart."
+  },
+  "readOnly": {
+    "critical": "Critical: never from the web",
+    "locked": "Locked by ADMIN_LOCK",
+    "scope": "Read only (ADMIN_WEB_SCOPE=read)",
+    "safe-mode": "Safe mode"
+  },
+  "value": {
+    "empty": "—",
+    "set": "Set",
+    "notSet": "Not set",
+    "on": "On",
+    "off": "Off"
+  },
+  "units": {
+    "MB": "MB",
+    "s": "s"
+  },
+  "help": {
+    "accepts": "Accepts",
+    "default": "Default",
+    "example": "In .env",
+    "applies": "Applies",
+    "rules": "Goes with",
+    "doc": "In the documentation",
+    "history": "Last changes",
+    "noHistory": "Never changed from the administration."
+  },
+  "outside": {
+    "title": "Outside the application",
+    "intro": "Read by Docker Compose, the quizdock script, the image build or Keycloak, never by the application: they are changed where they are read, not here.",
+    "readBy": "Read by",
+    "what": "What",
+    "readers": {
+      "compose": "Compose",
+      "keycloak": "Keycloak",
+      "script": "quizdock script",
+      "build": "Image build",
+      "dev": "Development stack",
+      "image": "The image"
+    }
+  },
+  "labels": {
+    "APP_NAME": "Name of the application",
+    "APP_LANG": "Language of the interface",
+    "APP_LOGO_URL": "Address of the logo",
+    "APP_FEEDBACK_URL": "Where feedback links lead",
+    "AUTH_MODE": "Authentication mode",
+    "DEMO_MODE": "Public demo",
+    "ALLOW_ANONYMOUS_PARTICIPANTS": "Participants without an account",
+    "OIDC_ISSUER": "Identity provider (issuer)",
+    "OIDC_CLIENT_ID": "Client identifier",
+    "OIDC_CLIENT_SECRET": "Client secret",
+    "OIDC_INTERNAL_URL": "Provider's internal address",
+    "OIDC_JWKS_URI": "Key endpoint",
+    "OIDC_AUDIENCE": "Expected audience",
+    "OIDC_ROLES_CLAIM": "Claim of the roles",
+    "OIDC_NAME_CLAIM": "Claim of the display name",
+    "OIDC_SESSION_SCOPE": "Session scope (ignored)",
+    "PORT": "Port in the container",
+    "TRUST_PROXY": "Trusted proxies",
+    "APP_PUBLIC_URL": "Public address",
+    "HOST_LAN_IPS": "Local network addresses",
+    "QUIZ_STORE_URL": "Community catalogues",
+    "QUIZ_STORE_HOSTS": "Hosts allowed for downloads",
+    "DATABASE_URL": "Database",
+    "REDIS_URL": "Redis",
+    "MEDIA_DIR": "Media folder",
+    "STORE_DIR": "Shared templates folder",
+    "SAMPLES_DIR": "Sample quizzes folder",
+    "CLIENT_DIR": "Web application folder",
+    "MEDIA_MAX_BYTES": "Largest image",
+    "MEDIA_MAX_VIDEO_MB": "Largest video",
+    "MEDIA_MAX_AUDIO_MB": "Largest sound",
+    "IMPORT_MAX_BYTES": "Largest imported quiz",
+    "PUBLICATION_MAX_MB": "Largest quiz for publication",
+    "MEDIA_LIBRARY_LINKS": "Free media libraries",
+    "GAME_READ_DELAY_MS": "Reading time before the timer",
+    "GAME_ALL_ANSWERED_DELAY_MS": "Pause once everyone answered",
+    "GAME_AUTO_ADVANCE_MS": "Automatic mode: time on a step",
+    "GAME_MEDIA_WAIT_S": "Wait for sounds and videos",
+    "LIVE_MOTION": "Transitions on the live screens",
+    "GAME_HOST_GRACE_MS": "Host's grace before leaving",
+    "GAME_HOST_WINDOW_MS": "Host's way back",
+    "ADMIN_WEB_SCOPE": "What the web may change",
+    "ADMIN_LOCK": "Settings never changed from the web",
+    "ADMIN_TOKEN": "Administration token (local mode)",
+    "ADMIN_OVERRIDES": "Values changed from the web",
+    "QUIZDOCK_FLAVOR": "Image flavour",
+    "PRISMA_SKIP_CONNECT": "Start without a database"
+  },
+  "operations": {
+    "health": {
+      "doctor": "Health check"
+    },
+    "migrations": {
+      "status": "Database migrations"
+    },
+    "seat": {
+      "status": "Host seat",
+      "release": "Free the host seat"
+    },
+    "users": {
+      "list": "Accounts",
+      "set-role": "Grant or revoke a role"
+    },
+    "samples": {
+      "load": "Add the sample quizzes to an account"
+    },
+    "quizzes": {
+      "list": "Quizzes",
+      "transfer": "Hand a quiz over",
+      "export": "Export a quiz",
+      "import": "Import a quiz for an account"
+    },
+    "sessions": {
+      "purge": "Purge old sessions"
+    },
+    "settings": {
+      "list": "Settings"
+    },
+    "audit": {
+      "list": "Audit"
+    },
+    "media": {
+      "upload": "Add a media to the instance's",
+      "promote": "Promote a file to the instance's media",
+      "credit": "Credit of a media",
+      "remove": "Take a media out of the instance's",
+      "delete-file": "Delete a file",
+      "sweep": "Clean up the media"
+    }
+  },
+  "params": {
+    "user": "Account",
+    "roles": "Roles",
+    "owner": "Owner",
+    "quiz": "Quiz (id)",
+    "to": "New owner",
+    "bundle": "Bundle (zip, quiz.json or Kahoot sheet)",
+    "key": "Setting",
+    "limit": "How many",
+    "operation": "Operation",
+    "setting": "Setting"
+  },
+  "columns": {
+    "name": "Name",
+    "subject": "Subject",
+    "email": "E-mail",
+    "roles": "Roles",
+    "granted": "Granted",
+    "quizzes": "Quizzes",
+    "createdAt": "Created",
+    "id": "Id",
+    "title": "Title",
+    "owner": "Owner",
+    "status": "Status",
+    "questions": "Questions",
+    "slug": "Slug",
+    "revision": "Revision",
+    "updatedAt": "Updated",
+    "holder": "Holder",
+    "claimedAt": "Claimed",
+    "expiresAt": "Expires"
+  },
+  "effects": {
+    "write": "Changes",
+    "destructive": "Destroys"
+  },
+  "run": {
+    "read": "Show",
+    "write": "Run",
+    "preview": "Preview",
+    "confirm": "Confirm",
+    "again": "Read again"
+  },
+  "form": {
+    "choose": "Choose…"
+  },
+  "result": {
+    "done": "Done.",
+    "nothing-to-do": "Nothing to do.",
+    "partial": "Done, with problems.",
+    "preview": "What it would do:",
+    "none": "None.",
+    "download": "Save {{name}}"
+  },
+  "refusals": {
+    "unknown_operation": "Unknown operation.",
+    "forbidden": "Administrators only.",
+    "scope_read": "Read only: ADMIN_WEB_SCOPE=read.",
+    "local_mode_token": "Local mode: the administration token is needed.",
+    "locked": "Locked by ADMIN_LOCK.",
+    "critical": "Critical: never from the web.",
+    "invalid_params": "Invalid parameters.",
+    "confirmation_invalid": "Confirmation expired.",
+    "dry_run_unsupported": "No preview.",
+    "not_found": "Not found.",
+    "conflict": "Conflict.",
+    "timeout": "Took too long.",
+    "failed": "Failed."
+  },
+  "quizzes": {
+    "intro": "Every quiz of the instance, whoever owns it: hand one over when someone leaves, export it, import one for a host, purge the sessions past their retention date."
+  },
+  "audit": {
+    "filter": "Operation",
+    "empty": "Nothing in the audit yet.",
+    "newer": "Newer",
+    "older": "Older",
+    "columns": {
+      "at": "When",
+      "who": "Who",
+      "operation": "Operation",
+      "params": "Parameters",
+      "outcome": "Outcome"
+    },
+    "via": {
+      "cli": "Command line",
+      "api": "Web"
+    },
+    "outcomes": {
+      "done": "Done",
+      "nothing-to-do": "Nothing to do",
+      "partial": "Partly",
+      "refused": "Refused",
+      "failed": "Failed"
+    }
+  }
+}

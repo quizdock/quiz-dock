@@ -1,0 +1,324 @@
+{
+  "title": "Yönetim",
+  "adminOnly": "Bu sayfa kurulumun yöneticileri içindir.",
+  "loading": "Yükleniyor…",
+  "domains": {
+    "instance": "Kurulum",
+    "quizzes": "Quizler",
+    "media": "Medya"
+  },
+  "sections": {
+    "settings": "Ayarlar",
+    "health": "Sağlık",
+    "accounts": "Hesaplar",
+    "audit": "Denetim",
+    "quizzes": "Quizler",
+    "media": "Medya",
+    "changes": "Değişiklikler"
+  },
+  "token": {
+    "unset": "Yerel mod: ADMIN_TOKEN .env içinde ayarlanıp (32 karakter veya daha uzun) kurulum yeniden başlatılana kadar web üzerinden hiçbir şey değiştirilemez.",
+    "ask": "Yerel mod: herhangi bir şeyi değiştirmek için yönetim belirtecini (ADMIN_TOKEN) girin. Yalnızca bu sekmede saklanır.",
+    "use": "Kullan",
+    "given": "Bu sekme için yönetim belirteci verildi.",
+    "forget": "Unut"
+  },
+  "settings": {
+    "search": "Ayar arayın",
+    "view": "Düzen",
+    "views": {
+      "cards": "Kartlar",
+      "split": "Liste ve ayrıntı",
+      "table": "Tablo"
+    },
+    "filters": {
+      "label": "Yalnızca göster",
+      "changed": "Varsayılandan farklı olanlar",
+      "overridden": "Burada değiştirilenler",
+      "problem": "Sorunlu olanlar",
+      "editable": "Düzenlenebilir olanlar"
+    },
+    "none": "Eşleşen ayar yok.",
+    "list": "Ayarlar",
+    "problem": "Bir sorun var",
+    "rules": "Birbiriyle çelişen ayarlar:",
+    "envValue": ".env değerinin yerine geçer:",
+    "access": {
+      "read": "Web tüm ayarları gösterir ve hiçbirini değiştirmez (ADMIN_WEB_SCOPE=read).",
+      "write": "Web, C2 ile C4 arası düzeylerin ayarlarını değiştirebilir (ADMIN_WEB_SCOPE=write); C1 asla.",
+      "how": "Bunlar .env içinde ayarlanır, ardından kurulum yeniden başlatılır.",
+      "locks": "ADMIN_LOCK ile kilitli:",
+      "safeMode": "Güvenli mod (ADMIN_OVERRIDES=ignore): burada değiştirilen değerler saklanır ama uygulanmaz.",
+      "token": "Yerel mod: bir değişiklik için yönetim belirteci gerekir.",
+      "noToken": "Yerel mod: ADMIN_TOKEN ayarlanana kadar web üzerinden hiçbir şey değiştirilemez."
+    },
+    "columns": {
+      "variable": "Değişken",
+      "value": "Değer",
+      "source": "Kaynak",
+      "env": ".env değeri",
+      "default": "Varsayılan",
+      "level": "Düzey",
+      "applies": "Geçerlilik"
+    }
+  },
+  "categories": {
+    "identity": "Kimlik ve marka",
+    "access": "Erişim ve kimlik doğrulama",
+    "network": "Ağ ve davet",
+    "storage": "Depolama",
+    "limits": "Sınırlar",
+    "pace": "Quiz temposu",
+    "admin": "Yönetim",
+    "internal": "Dahili"
+  },
+  "source": {
+    "default": "Varsayılan",
+    "env": ".env dosyasından",
+    "override": "Burada değiştirildi"
+  },
+  "criticality": {
+    "C1": "Kritik: başlatma, veri veya güvenlik. Gösterilir, web üzerinden asla değiştirilmez.",
+    "C2": "Yüksek: kimin girebileceği, ne kadar depolanabileceği. Her değişiklik onaylanır.",
+    "C3": "Normal: kurulumun nasıl davrandığı.",
+    "C4": "Görsel: görünüm ve ifadeler."
+  },
+  "applies": {
+    "live": "Anında",
+    "next-room": "Sonraki oda",
+    "restart": "Yeniden başlatınca"
+  },
+  "appliesHelp": {
+    "live": "Bir sonraki kullanımda: devam eden bir quiz de buna uyar.",
+    "next-room": "Değişiklikten sonra açılan odalarda; devam eden bir oda kendi değerini korur.",
+    "restart": "Başlangıçta bir kez okunur: kurulumun yeniden başlatılması gerekir."
+  },
+  "readOnly": {
+    "critical": "Kritik: web üzerinden asla",
+    "locked": "ADMIN_LOCK ile kilitli",
+    "scope": "Salt okunur (ADMIN_WEB_SCOPE=read)",
+    "safe-mode": "Güvenli mod"
+  },
+  "value": {
+    "empty": "—",
+    "set": "Ayarlı",
+    "notSet": "Ayarlı değil",
+    "on": "Açık",
+    "off": "Kapalı"
+  },
+  "units": {
+    "MB": "MB",
+    "s": "sn"
+  },
+  "help": {
+    "accepts": "Kabul edilen değerler",
+    "default": "Varsayılan",
+    "example": ".env içinde",
+    "applies": "Geçerlilik",
+    "rules": "İlgili ayarlar",
+    "doc": "Belgelerde",
+    "history": "Son değişiklikler",
+    "noHistory": "Yönetim ekranından hiç değiştirilmedi."
+  },
+  "outside": {
+    "title": "Uygulamanın dışında",
+    "intro": "Bunları uygulama değil; Docker Compose, quizdock betiği, imaj derlemesi veya Keycloak okur. Okundukları yerde değiştirilirler, burada değil.",
+    "readBy": "Okuyan",
+    "what": "Ne işe yarar",
+    "readers": {
+      "compose": "Compose",
+      "keycloak": "Keycloak",
+      "script": "quizdock betiği",
+      "build": "İmaj derlemesi",
+      "dev": "Geliştirme ortamı",
+      "image": "İmaj"
+    }
+  },
+  "labels": {
+    "APP_NAME": "Uygulamanın adı",
+    "APP_LANG": "Arayüz dili",
+    "APP_LOGO_URL": "Logo adresi",
+    "APP_FEEDBACK_URL": "Geri bildirim bağlantılarının hedefi",
+    "AUTH_MODE": "Kimlik doğrulama modu",
+    "DEMO_MODE": "Herkese açık demo",
+    "ALLOW_ANONYMOUS_PARTICIPANTS": "Hesabı olmayan katılımcılar",
+    "OIDC_ISSUER": "Kimlik sağlayıcısı (yayıncı)",
+    "OIDC_CLIENT_ID": "İstemci kimliği",
+    "OIDC_CLIENT_SECRET": "İstemci gizli anahtarı",
+    "OIDC_INTERNAL_URL": "Sağlayıcının iç adresi",
+    "OIDC_JWKS_URI": "Anahtar uç noktası",
+    "OIDC_AUDIENCE": "Beklenen hedef kitle",
+    "OIDC_ROLES_CLAIM": "Rollerin claim alanı",
+    "OIDC_NAME_CLAIM": "Görünen adın claim alanı",
+    "OIDC_SESSION_SCOPE": "Oturum kapsamı (yok sayılır)",
+    "PORT": "Konteyner içindeki port",
+    "TRUST_PROXY": "Güvenilen proxy'ler",
+    "APP_PUBLIC_URL": "Genel adres",
+    "HOST_LAN_IPS": "Yerel ağ adresleri",
+    "QUIZ_STORE_URL": "Topluluk katalogları",
+    "QUIZ_STORE_HOSTS": "İndirmelere izin verilen ana makineler",
+    "DATABASE_URL": "Veritabanı",
+    "REDIS_URL": "Redis",
+    "MEDIA_DIR": "Medya klasörü",
+    "STORE_DIR": "Paylaşılan şablonlar klasörü",
+    "SAMPLES_DIR": "Örnek quizler klasörü",
+    "CLIENT_DIR": "Web uygulaması klasörü",
+    "MEDIA_MAX_BYTES": "En büyük görsel boyutu",
+    "MEDIA_MAX_VIDEO_MB": "En büyük video boyutu",
+    "MEDIA_MAX_AUDIO_MB": "En büyük ses boyutu",
+    "IMPORT_MAX_BYTES": "İçe aktarılan en büyük quiz",
+    "PUBLICATION_MAX_MB": "Yayımlanacak en büyük quiz",
+    "MEDIA_LIBRARY_LINKS": "Ücretsiz medya kütüphaneleri",
+    "GAME_READ_DELAY_MS": "Zamanlayıcıdan önce okuma süresi",
+    "GAME_ALL_ANSWERED_DELAY_MS": "Herkes yanıtladıktan sonra duraklama",
+    "GAME_AUTO_ADVANCE_MS": "Otomatik mod: adım başına süre",
+    "GAME_MEDIA_WAIT_S": "Ses ve videoları bekleme",
+    "LIVE_MOTION": "Canlı ekranlarda geçişler",
+    "GAME_HOST_GRACE_MS": "Sunucunun ayrılmadan önceki ek süresi",
+    "GAME_HOST_WINDOW_MS": "Sunucunun geri dönüş süresi",
+    "ADMIN_WEB_SCOPE": "Web'in neleri değiştirebileceği",
+    "ADMIN_LOCK": "Web üzerinden asla değiştirilmeyen ayarlar",
+    "ADMIN_TOKEN": "Yönetim belirteci (yerel mod)",
+    "ADMIN_OVERRIDES": "Web üzerinden değiştirilen değerler",
+    "QUIZDOCK_FLAVOR": "İmaj türü",
+    "PRISMA_SKIP_CONNECT": "Veritabanı olmadan başlat"
+  },
+  "operations": {
+    "health": {
+      "doctor": "Sağlık denetimi"
+    },
+    "migrations": {
+      "status": "Veritabanı geçişleri"
+    },
+    "seat": {
+      "status": "Sunucu yetkisi",
+      "release": "Sunucu yetkisini serbest bırak"
+    },
+    "users": {
+      "list": "Hesaplar",
+      "set-role": "Rol ver veya geri al"
+    },
+    "samples": {
+      "load": "Örnek quizleri bir hesaba ekle"
+    },
+    "quizzes": {
+      "list": "Quizler",
+      "transfer": "Bir quizi devret",
+      "export": "Bir quizi dışa aktar",
+      "import": "Bir hesap için quiz içe aktar"
+    },
+    "sessions": {
+      "purge": "Eski oturumları temizle"
+    },
+    "settings": {
+      "list": "Ayarlar"
+    },
+    "audit": {
+      "list": "Denetim"
+    },
+    "media": {
+      "upload": "Kurulum medyasına medya ekle",
+      "promote": "Bir dosyayı kurulum medyasına yükselt",
+      "credit": "Medya kaynağı",
+      "remove": "Bir medyayı kurulum medyasından çıkar",
+      "delete-file": "Bir dosyayı sil",
+      "sweep": "Medyayı temizle"
+    }
+  },
+  "params": {
+    "user": "Hesap",
+    "roles": "Roller",
+    "owner": "Sahip",
+    "quiz": "Quiz (kimlik)",
+    "to": "Yeni sahip",
+    "bundle": "Paket (zip, quiz.json veya Kahoot tablosu)",
+    "key": "Ayar",
+    "limit": "Kaç tane",
+    "operation": "İşlem",
+    "setting": "Ayar"
+  },
+  "columns": {
+    "name": "Ad",
+    "subject": "Özne (subject)",
+    "email": "E-posta",
+    "roles": "Roller",
+    "granted": "Verilen",
+    "quizzes": "Quizler",
+    "createdAt": "Oluşturulma",
+    "id": "Kimlik",
+    "title": "Başlık",
+    "owner": "Sahip",
+    "status": "Durum",
+    "questions": "Sorular",
+    "slug": "Kısa ad",
+    "revision": "Revizyon",
+    "updatedAt": "Güncellenme",
+    "holder": "Tutan",
+    "claimedAt": "Alınma",
+    "expiresAt": "Bitiş"
+  },
+  "effects": {
+    "write": "Değiştirir",
+    "destructive": "Siler"
+  },
+  "run": {
+    "read": "Göster",
+    "write": "Çalıştır",
+    "preview": "Önizle",
+    "confirm": "Onayla",
+    "again": "Yeniden oku"
+  },
+  "form": {
+    "choose": "Seçin…"
+  },
+  "result": {
+    "done": "Tamamlandı.",
+    "nothing-to-do": "Yapılacak bir şey yok.",
+    "partial": "Tamamlandı, ancak sorunlar var.",
+    "preview": "Yapacakları:",
+    "none": "Yok.",
+    "download": "{{name}} dosyasını kaydet"
+  },
+  "refusals": {
+    "unknown_operation": "Bilinmeyen işlem.",
+    "forbidden": "Yalnızca yöneticiler.",
+    "scope_read": "Salt okunur: ADMIN_WEB_SCOPE=read.",
+    "local_mode_token": "Yerel mod: yönetim belirteci gerekli.",
+    "locked": "ADMIN_LOCK ile kilitli.",
+    "critical": "Kritik: web üzerinden asla.",
+    "invalid_params": "Geçersiz parametreler.",
+    "confirmation_invalid": "Onayın süresi doldu.",
+    "dry_run_unsupported": "Önizleme yok.",
+    "not_found": "Bulunamadı.",
+    "conflict": "Çakışma.",
+    "timeout": "Çok uzun sürdü.",
+    "failed": "Başarısız."
+  },
+  "quizzes": {
+    "intro": "Sahibi kim olursa olsun kurulumdaki tüm quizler: biri ayrıldığında quizini devredin, dışa aktarın, bir sunucu için quiz içe aktarın, saklama süresi geçmiş oturumları temizleyin."
+  },
+  "audit": {
+    "filter": "İşlem",
+    "empty": "Denetim kaydında henüz bir şey yok.",
+    "newer": "Daha yeni",
+    "older": "Daha eski",
+    "columns": {
+      "at": "Ne zaman",
+      "who": "Kim",
+      "operation": "İşlem",
+      "params": "Parametreler",
+      "outcome": "Sonuç"
+    },
+    "via": {
+      "cli": "Komut satırı",
+      "api": "Web"
+    },
+    "outcomes": {
+      "done": "Tamamlandı",
+      "nothing-to-do": "Yapılacak bir şey yok",
+      "partial": "Kısmen",
+      "refused": "Reddedildi",
+      "failed": "Başarısız"
+    }
+  }
+}

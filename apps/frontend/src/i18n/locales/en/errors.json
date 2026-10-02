@@ -183,5 +183,21 @@
     "disabled": "The community store is disabled.",
     "download_failed": "The quiz could not be downloaded or verified.",
     "busy": "The community store is busy. Try again shortly."
+  },
+  "admin": {
+    "unknown_operation": "Unknown administrative operation.",
+    "forbidden": "Administrator role required.",
+    "scope_read": "The web administration is read-only on this instance (ADMIN_WEB_SCOPE=read).",
+    "local_mode_token": "Local mode: give the administration token (ADMIN_TOKEN) to change anything.",
+    "locked": "Locked by ADMIN_LOCK: {{keys}}.",
+    "critical": "A critical setting is never changed from the web.",
+    "invalid_params": "Invalid parameters: {{message}}",
+    "confirmation_invalid": "The confirmation expired: try again.",
+    "dry_run_unsupported": "This operation cannot be previewed.",
+    "not_found": "Not found: {{message}}",
+    "conflict": "Not possible right now: {{message}}",
+    "timeout": "The operation took too long.",
+    "failed": "The operation failed: {{message}}",
+    "too_many_requests": "Too many attempts: wait a moment."
   }
 }

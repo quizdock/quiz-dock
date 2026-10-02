@@ -183,5 +183,21 @@
     "disabled": "社群題庫已停用。",
     "download_failed": "無法下載或驗證測驗。",
     "busy": "社群題庫忙碌，請稍後重試。"
+  },
+  "admin": {
+    "unknown_operation": "未知的管理操作。",
+    "forbidden": "需要管理員角色。",
+    "scope_read": "本執行個體的網頁管理為唯讀（ADMIN_WEB_SCOPE=read）。",
+    "local_mode_token": "本機模式：請提供管理權杖（ADMIN_TOKEN）後再進行變更。",
+    "locked": "被 ADMIN_LOCK 鎖定：{{keys}}。",
+    "critical": "關鍵設定永遠不能從網頁變更。",
+    "invalid_params": "參數無效：{{message}}",
+    "confirmation_invalid": "確認已逾期：請再試一次。",
+    "dry_run_unsupported": "此操作無法預覽。",
+    "not_found": "找不到：{{message}}",
+    "conflict": "目前無法執行：{{message}}",
+    "timeout": "操作耗時過長。",
+    "failed": "操作失敗：{{message}}",
+    "too_many_requests": "嘗試次數過多：請稍候。"
   }
 }

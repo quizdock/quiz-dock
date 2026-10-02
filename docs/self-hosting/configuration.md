@@ -149,6 +149,8 @@ request body limit to the largest of these sizes** — nginx refuses anything ov
 | `ADMIN_TOKEN` | — | text, 32 characters or more | C1 | Local mode (`AUTH_MODE=none`) has no accounts, so whoever reaches the instance could administer it: the web administration changes nothing there unless this token is set, and asks for it before any change. At least 32 characters. |
 | `ADMIN_OVERRIDES` | `apply` | `apply` · `ignore` | C1 | `ignore` starts the instance on its environment alone: every value changed from the web administration is ignored (kept, not deleted) — the way back when one of them went wrong. |
 
+What the web administration may do, and the audit: [administration](administration.md).
+
 ### Deployment (Compose)
 
 Read by `docker-compose.prod.yml` and the `quizdock` script, never by the application.

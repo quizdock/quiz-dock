@@ -43,7 +43,8 @@
     "templates": "Templates",
     "profile": "My account",
     "template": "Template",
-    "instanceMedia": "Instance media"
+    "instanceMedia": "Instance media",
+    "admin": "Administration"
   },
   "demo": {
     "banner": "Public demo — one host account shared by all visitors; everything is wiped every hour."

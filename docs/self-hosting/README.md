@@ -14,6 +14,9 @@ infrastructure — for operators and integrators (not contributors).
 - **[CLI — install, maintain, administer](cli.md)** — the `quizdock` script
   (init, up, backup/restore, upgrade) and the admin commands shipped in the
   image (doctor, host seat, users, quiz export / import, retention purge).
+- **[Administration](administration.md)** — the web administration and what the
+  operator lets it change (`ADMIN_WEB_SCOPE`, `ADMIN_LOCK`, `ADMIN_TOKEN`), the
+  audit of every administrative action.
 - **[Configuration](configuration.md)** — how to start it, every environment
   variable, ports and volumes, and the public-demo guards.
 - **[Sizing the VM](sizing.md)** — how many players at once for how many vCPU

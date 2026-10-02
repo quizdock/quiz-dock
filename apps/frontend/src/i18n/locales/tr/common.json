@@ -43,7 +43,8 @@
     "templates": "Şablonlar",
     "profile": "Hesabım",
     "template": "Şablon",
-    "instanceMedia": "Kurulum medyası"
+    "instanceMedia": "Kurulum medyası",
+    "admin": "Yönetim"
   },
   "demo": {
     "banner": "Herkese açık demo — tüm ziyaretçiler aynı sunucu hesabını paylaşır; veriler her saat silinir."

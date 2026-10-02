@@ -43,7 +43,8 @@
     "templates": "Modèles",
     "profile": "Mon compte",
     "template": "Modèle",
-    "instanceMedia": "Médias de l’instance"
+    "instanceMedia": "Médias de l’instance",
+    "admin": "Administration"
   },
   "demo": {
     "banner": "Démo publique — un seul compte animateur partagé par tous les visiteurs ; tout est effacé chaque heure."

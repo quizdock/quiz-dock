@@ -43,7 +43,8 @@
     "templates": "Plantillas",
     "profile": "Mi cuenta",
     "template": "Plantilla",
-    "instanceMedia": "Medios de la instancia"
+    "instanceMedia": "Medios de la instancia",
+    "admin": "Administración"
   },
   "demo": {
     "banner": "Demo pública — una sola cuenta de anfitrión compartida por todos los visitantes; todo se borra cada hora."

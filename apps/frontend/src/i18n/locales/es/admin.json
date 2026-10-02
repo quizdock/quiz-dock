@@ -1,0 +1,324 @@
+{
+  "title": "Administración",
+  "adminOnly": "Esta página es para los administradores de la instancia.",
+  "loading": "Cargando…",
+  "domains": {
+    "instance": "Instancia",
+    "quizzes": "Quizzes",
+    "media": "Medios"
+  },
+  "sections": {
+    "settings": "Ajustes",
+    "health": "Estado",
+    "accounts": "Cuentas",
+    "audit": "Auditoría",
+    "quizzes": "Quizzes",
+    "media": "Medios",
+    "changes": "Cambios"
+  },
+  "token": {
+    "unset": "Modo local: no se puede cambiar nada desde la web hasta que ADMIN_TOKEN esté definido en .env (32 caracteres o más) y la instancia se haya reiniciado.",
+    "ask": "Modo local: introduce el token de administración (ADMIN_TOKEN) para cambiar cualquier cosa. Solo se guarda en esta pestaña.",
+    "use": "Usar",
+    "given": "Token de administración proporcionado para esta pestaña.",
+    "forget": "Olvidarlo"
+  },
+  "settings": {
+    "search": "Buscar un ajuste",
+    "view": "Diseño",
+    "views": {
+      "cards": "Tarjetas",
+      "split": "Lista y detalle",
+      "table": "Tabla"
+    },
+    "filters": {
+      "label": "Mostrar solo",
+      "changed": "Distintos del valor por defecto",
+      "overridden": "Cambiados aquí",
+      "problem": "Con un problema",
+      "editable": "Editables"
+    },
+    "none": "Ningún ajuste coincide.",
+    "list": "Ajustes",
+    "problem": "Un problema",
+    "rules": "Ajustes que se contradicen:",
+    "envValue": "sustituye a .env:",
+    "access": {
+      "read": "La web muestra todos los ajustes y no cambia ninguno (ADMIN_WEB_SCOPE=read).",
+      "write": "La web puede cambiar los ajustes de los niveles C2 a C4 (ADMIN_WEB_SCOPE=write); C1 nunca.",
+      "how": "Se definen en .env y después se reinicia la instancia.",
+      "locks": "Bloqueados por ADMIN_LOCK:",
+      "safeMode": "Modo seguro (ADMIN_OVERRIDES=ignore): los valores cambiados aquí se conservan pero no se aplican.",
+      "token": "Modo local: un cambio requiere el token de administración.",
+      "noToken": "Modo local: no se puede cambiar nada desde la web hasta que ADMIN_TOKEN esté definido."
+    },
+    "columns": {
+      "variable": "Variable",
+      "value": "Valor",
+      "source": "Origen",
+      "env": "Valor en .env",
+      "default": "Por defecto",
+      "level": "Nivel",
+      "applies": "Se aplica"
+    }
+  },
+  "categories": {
+    "identity": "Identidad y marca",
+    "access": "Acceso y autenticación",
+    "network": "Red e invitación",
+    "storage": "Almacenamiento",
+    "limits": "Límites",
+    "pace": "Ritmo del quiz",
+    "admin": "Administración",
+    "internal": "Interno"
+  },
+  "source": {
+    "default": "Por defecto",
+    "env": "Desde .env",
+    "override": "Cambiado aquí"
+  },
+  "criticality": {
+    "C1": "Crítico: arranque, datos o seguridad. Se muestra, nunca se cambia desde la web.",
+    "C2": "Alto: quién puede entrar, cuánto se puede almacenar. Cada cambio se confirma.",
+    "C3": "Normal: cómo se comporta la instancia.",
+    "C4": "Estético: aspecto y textos."
+  },
+  "applies": {
+    "live": "En directo",
+    "next-room": "Próxima sala",
+    "restart": "Al reiniciar"
+  },
+  "appliesHelp": {
+    "live": "En su próximo uso: un quiz en curso lo sigue.",
+    "next-room": "En las salas abiertas después del cambio; una sala en curso conserva el suyo.",
+    "restart": "Se lee una sola vez al arrancar: la instancia debe reiniciarse."
+  },
+  "readOnly": {
+    "critical": "Crítico: nunca desde la web",
+    "locked": "Bloqueado por ADMIN_LOCK",
+    "scope": "Solo lectura (ADMIN_WEB_SCOPE=read)",
+    "safe-mode": "Modo seguro"
+  },
+  "value": {
+    "empty": "—",
+    "set": "Definido",
+    "notSet": "Sin definir",
+    "on": "Activado",
+    "off": "Desactivado"
+  },
+  "units": {
+    "MB": "MB",
+    "s": "s"
+  },
+  "help": {
+    "accepts": "Acepta",
+    "default": "Por defecto",
+    "example": "En .env",
+    "applies": "Se aplica",
+    "rules": "Va con",
+    "doc": "En la documentación",
+    "history": "Últimos cambios",
+    "noHistory": "Nunca cambiado desde la administración."
+  },
+  "outside": {
+    "title": "Fuera de la aplicación",
+    "intro": "Los leen Docker Compose, el script quizdock, la construcción de la imagen o Keycloak, nunca la aplicación: se cambian donde se leen, no aquí.",
+    "readBy": "Lo lee",
+    "what": "Qué",
+    "readers": {
+      "compose": "Compose",
+      "keycloak": "Keycloak",
+      "script": "Script quizdock",
+      "build": "Construcción de la imagen",
+      "dev": "Entorno de desarrollo",
+      "image": "La imagen"
+    }
+  },
+  "labels": {
+    "APP_NAME": "Nombre de la aplicación",
+    "APP_LANG": "Idioma de la interfaz",
+    "APP_LOGO_URL": "Dirección del logotipo",
+    "APP_FEEDBACK_URL": "Destino de los enlaces de comentarios",
+    "AUTH_MODE": "Modo de autenticación",
+    "DEMO_MODE": "Demo pública",
+    "ALLOW_ANONYMOUS_PARTICIPANTS": "Participantes sin cuenta",
+    "OIDC_ISSUER": "Proveedor de identidad (emisor)",
+    "OIDC_CLIENT_ID": "Identificador del cliente",
+    "OIDC_CLIENT_SECRET": "Secreto del cliente",
+    "OIDC_INTERNAL_URL": "Dirección interna del proveedor",
+    "OIDC_JWKS_URI": "Punto de acceso de las claves",
+    "OIDC_AUDIENCE": "Audiencia esperada",
+    "OIDC_ROLES_CLAIM": "Claim de los roles",
+    "OIDC_NAME_CLAIM": "Claim del nombre visible",
+    "OIDC_SESSION_SCOPE": "Ámbito de sesión (ignorado)",
+    "PORT": "Puerto en el contenedor",
+    "TRUST_PROXY": "Proxies de confianza",
+    "APP_PUBLIC_URL": "Dirección pública",
+    "HOST_LAN_IPS": "Direcciones de la red local",
+    "QUIZ_STORE_URL": "Catálogos de la comunidad",
+    "QUIZ_STORE_HOSTS": "Hosts permitidos para descargas",
+    "DATABASE_URL": "Base de datos",
+    "REDIS_URL": "Redis",
+    "MEDIA_DIR": "Carpeta de medios",
+    "STORE_DIR": "Carpeta de plantillas compartidas",
+    "SAMPLES_DIR": "Carpeta de quizzes de ejemplo",
+    "CLIENT_DIR": "Carpeta de la aplicación web",
+    "MEDIA_MAX_BYTES": "Tamaño máximo de una imagen",
+    "MEDIA_MAX_VIDEO_MB": "Tamaño máximo de un vídeo",
+    "MEDIA_MAX_AUDIO_MB": "Tamaño máximo de un sonido",
+    "IMPORT_MAX_BYTES": "Tamaño máximo de un quiz importado",
+    "PUBLICATION_MAX_MB": "Tamaño máximo de un quiz para publicar",
+    "MEDIA_LIBRARY_LINKS": "Bancos de medios libres",
+    "GAME_READ_DELAY_MS": "Tiempo de lectura antes del temporizador",
+    "GAME_ALL_ANSWERED_DELAY_MS": "Pausa cuando todos han respondido",
+    "GAME_AUTO_ADVANCE_MS": "Modo automático: tiempo por paso",
+    "GAME_MEDIA_WAIT_S": "Espera de sonidos y vídeos",
+    "LIVE_MOTION": "Transiciones en las pantallas en directo",
+    "GAME_HOST_GRACE_MS": "Margen del anfitrión antes de salir",
+    "GAME_HOST_WINDOW_MS": "Plazo de vuelta del anfitrión",
+    "ADMIN_WEB_SCOPE": "Lo que la web puede cambiar",
+    "ADMIN_LOCK": "Ajustes nunca cambiados desde la web",
+    "ADMIN_TOKEN": "Token de administración (modo local)",
+    "ADMIN_OVERRIDES": "Valores cambiados desde la web",
+    "QUIZDOCK_FLAVOR": "Variante de la imagen",
+    "PRISMA_SKIP_CONNECT": "Arrancar sin base de datos"
+  },
+  "operations": {
+    "health": {
+      "doctor": "Comprobación de estado"
+    },
+    "migrations": {
+      "status": "Migraciones de la base de datos"
+    },
+    "seat": {
+      "status": "Asiento de anfitrión",
+      "release": "Liberar el asiento de anfitrión"
+    },
+    "users": {
+      "list": "Cuentas",
+      "set-role": "Conceder o retirar un rol"
+    },
+    "samples": {
+      "load": "Añadir los quizzes de ejemplo a una cuenta"
+    },
+    "quizzes": {
+      "list": "Quizzes",
+      "transfer": "Traspasar un quiz",
+      "export": "Exportar un quiz",
+      "import": "Importar un quiz para una cuenta"
+    },
+    "sessions": {
+      "purge": "Purgar sesiones antiguas"
+    },
+    "settings": {
+      "list": "Ajustes"
+    },
+    "audit": {
+      "list": "Auditoría"
+    },
+    "media": {
+      "upload": "Añadir un medio a los de la instancia",
+      "promote": "Convertir un archivo en medio de la instancia",
+      "credit": "Crédito de un medio",
+      "remove": "Quitar un medio de los de la instancia",
+      "delete-file": "Eliminar un archivo",
+      "sweep": "Limpiar los medios"
+    }
+  },
+  "params": {
+    "user": "Cuenta",
+    "roles": "Roles",
+    "owner": "Propietario",
+    "quiz": "Quiz (id)",
+    "to": "Nuevo propietario",
+    "bundle": "Paquete (zip, quiz.json u hoja de Kahoot)",
+    "key": "Ajuste",
+    "limit": "Cuántos",
+    "operation": "Operación",
+    "setting": "Ajuste"
+  },
+  "columns": {
+    "name": "Nombre",
+    "subject": "Sujeto",
+    "email": "Correo electrónico",
+    "roles": "Roles",
+    "granted": "Concedidos",
+    "quizzes": "Quizzes",
+    "createdAt": "Creado",
+    "id": "ID",
+    "title": "Título",
+    "owner": "Propietario",
+    "status": "Estado",
+    "questions": "Preguntas",
+    "slug": "Slug",
+    "revision": "Revisión",
+    "updatedAt": "Actualizado",
+    "holder": "Titular",
+    "claimedAt": "Ocupado",
+    "expiresAt": "Caduca"
+  },
+  "effects": {
+    "write": "Modifica",
+    "destructive": "Destruye"
+  },
+  "run": {
+    "read": "Mostrar",
+    "write": "Ejecutar",
+    "preview": "Vista previa",
+    "confirm": "Confirmar",
+    "again": "Volver a leer"
+  },
+  "form": {
+    "choose": "Elegir…"
+  },
+  "result": {
+    "done": "Hecho.",
+    "nothing-to-do": "Nada que hacer.",
+    "partial": "Hecho, con problemas.",
+    "preview": "Lo que haría:",
+    "none": "Ninguno.",
+    "download": "Guardar {{name}}"
+  },
+  "refusals": {
+    "unknown_operation": "Operación desconocida.",
+    "forbidden": "Solo administradores.",
+    "scope_read": "Solo lectura: ADMIN_WEB_SCOPE=read.",
+    "local_mode_token": "Modo local: se necesita el token de administración.",
+    "locked": "Bloqueado por ADMIN_LOCK.",
+    "critical": "Crítico: nunca desde la web.",
+    "invalid_params": "Parámetros no válidos.",
+    "confirmation_invalid": "Confirmación caducada.",
+    "dry_run_unsupported": "Sin vista previa.",
+    "not_found": "No encontrado.",
+    "conflict": "Conflicto.",
+    "timeout": "Tardó demasiado.",
+    "failed": "Error."
+  },
+  "quizzes": {
+    "intro": "Todos los quizzes de la instancia, sea quien sea su propietario: traspasa uno cuando alguien se va, expórtalo, importa uno para un anfitrión, purga las sesiones que superaron su plazo de conservación."
+  },
+  "audit": {
+    "filter": "Operación",
+    "empty": "Todavía no hay nada en la auditoría.",
+    "newer": "Más recientes",
+    "older": "Más antiguas",
+    "columns": {
+      "at": "Cuándo",
+      "who": "Quién",
+      "operation": "Operación",
+      "params": "Parámetros",
+      "outcome": "Resultado"
+    },
+    "via": {
+      "cli": "Línea de comandos",
+      "api": "Web"
+    },
+    "outcomes": {
+      "done": "Hecho",
+      "nothing-to-do": "Nada que hacer",
+      "partial": "En parte",
+      "refused": "Rechazado",
+      "failed": "Error"
+    }
+  }
+}

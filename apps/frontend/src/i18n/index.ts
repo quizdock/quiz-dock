@@ -31,6 +31,7 @@ export const namespaces = [
   'auth',
   'errors',
   'validation',
+  'admin',
 ] as const;
 
 export const supportedLngs = ['en', 'fr', 'es', 'zh', 'zh-TW', 'tr'] as const;

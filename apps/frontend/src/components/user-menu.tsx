@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ChevronDown, HardDrive, LogOut, UserRound } from 'lucide-react';
+import { ChevronDown, ShieldCheck, LogOut, UserRound } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -66,13 +66,13 @@ export function UserMenu({
           {children ? <div className="bg-border my-1 h-px" /> : null}
           {isManager ? (
             <Link
-              to="/admin/media"
+              to="/admin/settings"
               role="menuitem"
               onClick={() => setOpen(false)}
               className="hover:bg-accent flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm"
             >
-              <HardDrive className="size-4" />
-              {t('nav.instanceMedia')}
+              <ShieldCheck className="size-4" />
+              {t('nav.admin')}
             </Link>
           ) : null}
           <Link

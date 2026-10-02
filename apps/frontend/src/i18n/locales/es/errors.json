@@ -183,5 +183,21 @@
     "disabled": "El catálogo de la comunidad está desactivado.",
     "download_failed": "No se pudo descargar o verificar el quiz.",
     "busy": "El catálogo de la comunidad está ocupado. Inténtalo de nuevo en un momento."
+  },
+  "admin": {
+    "unknown_operation": "Operación de administración desconocida.",
+    "forbidden": "Se requiere el rol de administrador.",
+    "scope_read": "La administración web es de solo lectura en esta instancia (ADMIN_WEB_SCOPE=read).",
+    "local_mode_token": "Modo local: proporciona el token de administración (ADMIN_TOKEN) para cambiar cualquier cosa.",
+    "locked": "Bloqueado por ADMIN_LOCK: {{keys}}.",
+    "critical": "Un ajuste crítico nunca se cambia desde la web.",
+    "invalid_params": "Parámetros no válidos: {{message}}",
+    "confirmation_invalid": "La confirmación ha caducado: inténtalo de nuevo.",
+    "dry_run_unsupported": "Esta operación no admite vista previa.",
+    "not_found": "No encontrado: {{message}}",
+    "conflict": "No es posible ahora mismo: {{message}}",
+    "timeout": "La operación tardó demasiado.",
+    "failed": "La operación falló: {{message}}",
+    "too_many_requests": "Demasiados intentos: espera un momento."
   }
 }

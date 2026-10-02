@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { HardDrive, LogOut, Menu, UserRound, X } from 'lucide-react';
+import { ShieldCheck, LogOut, Menu, UserRound, X } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LiveSessions } from '@/components/live-sessions';
@@ -58,12 +58,12 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
             {/* The same entries as the user menu (UI system §4). */}
             {isManager ? (
               <Link
-                to="/admin/media"
+                to="/admin/settings"
                 onClick={close}
                 className="hover:bg-accent flex items-center gap-2 rounded-md px-2 py-2 text-sm"
               >
-                <HardDrive className="size-4" />
-                {t('nav.instanceMedia')}
+                <ShieldCheck className="size-4" />
+                {t('nav.admin')}
               </Link>
             ) : null}
             <Link
