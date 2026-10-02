@@ -27,6 +27,16 @@ export interface OperationCall {
   confirmation?: string;
   /** A closed request. */
   signal?: AbortSignal;
+  /**
+   * What an access hands over beside the parameters and cannot serialize — an
+   * uploaded file. Neither validated nor audited: the operation checks it.
+   */
+  attachments?: Record<string, unknown>;
+  /**
+   * The access already asked (a page with its own confirmation dialog, a command
+   * of old that never asked): the confirmation step lets it through.
+   */
+  preconfirmed?: boolean;
 }
 
 /** What the steps pass along: the call, then what they learnt about it. */
@@ -340,7 +350,7 @@ export class OperationRunner {
       name: 'confirmation',
       handle: async (state, next) => {
         const { op, call } = state;
-        if (call.dryRun) return next();
+        if (call.dryRun || call.preconfirmed) return next();
         const ask =
           op!.confirmation?.(state.params) ??
           (op!.effect === 'destructive'
@@ -380,7 +390,15 @@ export class OperationRunner {
         });
         aborted.catch(() => undefined); // settled after the handler: nobody listens any more
         const result = await Promise.race([
-          op!.run({ actor: call.actor, dryRun: !!call.dryRun, signal }, state.params),
+          op!.run(
+            {
+              actor: call.actor,
+              dryRun: !!call.dryRun,
+              signal,
+              attachments: call.attachments ?? {},
+            },
+            state.params,
+          ),
           aborted,
         ]);
         return { kind: 'result', result };

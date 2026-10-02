@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { SETTING_LIST, type SettingDefinition } from '@quiz-dock/contracts';
+import { SETTING_LIST, SETTINGS, type SettingDefinition } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { AUDIT_REPOSITORY } from '../admin.tokens';
 import type { AuditRepository } from '../audit/audit.repository';
@@ -20,7 +20,33 @@ export interface SettingRow {
   /** The value `.env` gives, when an override replaces it. */
   envValue?: unknown;
   default: unknown;
+  /** Named by `ADMIN_LOCK`: the web never changes it. */
+  locked: boolean;
   issues: SettingIssue[];
+}
+
+/** What the web may do with the settings (§3.7): shown above them. */
+export interface SettingsAccess {
+  scope: 'read' | 'write';
+  locks: string[];
+  authMode: 'none' | 'oidc';
+  /** Local mode: a change needs `ADMIN_TOKEN`, and whether it is set at all. */
+  tokenRequired: boolean;
+  tokenSet: boolean;
+  /** `ADMIN_OVERRIDES=ignore`: the values changed from the web are not applied. */
+  safeMode: boolean;
+}
+
+export function settingsAccess(): SettingsAccess {
+  const authMode = settings.get(SETTINGS.AUTH_MODE);
+  return {
+    scope: settings.get(SETTINGS.ADMIN_WEB_SCOPE),
+    locks: settings.get(SETTINGS.ADMIN_LOCK),
+    authMode,
+    tokenRequired: authMode === 'none',
+    tokenSet: settings.get(SETTINGS.ADMIN_TOKEN) !== '',
+    safeMode: settings.get(SETTINGS.ADMIN_OVERRIDES) === 'ignore',
+  };
 }
 
 /** One boundary for secrets (§3.11): a secret's value never leaves through here. */
@@ -39,6 +65,7 @@ export function settingRow(def: SettingDefinition): SettingRow {
     source: state.source,
     ...(state.envValue !== undefined ? { envValue: show(state.envValue) } : {}),
     default: def.secret ? false : def.default,
+    locked: settings.get(SETTINGS.ADMIN_LOCK).includes(def.key),
     issues: state.issues,
   };
 }
@@ -63,7 +90,11 @@ export class SettingsOperations {
           if (key && !defs.length) throw new OperationError('not_found', `No setting "${key}".`);
           const rows = defs.filter((d) => !d.internal || key).map(settingRow);
           const rules = key ? [] : settings.issues().filter((i) => i.code === 'rule');
-          return Promise.resolve({ outcome: 'done', notes: [], data: { rows, rules } });
+          return Promise.resolve({
+            outcome: 'done',
+            notes: [],
+            data: { rows, rules, access: settingsAccess() },
+          });
         },
       }),
       defineOperation({

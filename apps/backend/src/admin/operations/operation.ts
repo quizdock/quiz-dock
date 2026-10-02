@@ -23,6 +23,8 @@ export interface OperationContext {
   dryRun: boolean;
   /** A timeout, a closed request. */
   signal: AbortSignal;
+  /** What the access could not pass as parameters (an uploaded file). */
+  attachments: Record<string, unknown>;
 }
 
 /**

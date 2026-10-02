@@ -16,6 +16,7 @@ import { RedisModule } from './redis/redis.module';
 import { UsersModule } from './users/users.module';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from './admin/settings/settings.service';
+import { AdminHttpModule } from './admin/http/admin-http.module';
 
 /**
  * En image unique (front+back), `CLIENT_DIR` pointe le SPA buildé : le backend
@@ -68,6 +69,7 @@ const serveStatic = clientDir
     MediaModule,
     GameModule,
     DemoModule,
+    AdminHttpModule,
   ],
   controllers: [HealthController, MeController, AppConfigController],
   providers: [],

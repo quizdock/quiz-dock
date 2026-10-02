@@ -33,7 +33,10 @@ import type {
   MediaFilesPageDto,
   MediaOverviewDto,
   MediaSweepResultDto,
-  MediaUploadResultDto
+  MediaUploadResultDto,
+  OperationAnswerDto,
+  OperationCatalogueDto,
+  RunOperationDto
 } from '../model';
 
 import { customFetch } from '../../http';
@@ -43,7 +46,189 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export type mediaAdminControllerAddUploadResponse201 = {
+export type adminOperationsControllerCatalogueResponse200 = {
+  data: OperationCatalogueDto
+  status: 200
+}
+
+export type adminOperationsControllerCatalogueResponseSuccess = (adminOperationsControllerCatalogueResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminOperationsControllerCatalogueResponse = (adminOperationsControllerCatalogueResponseSuccess)
+
+export const getAdminOperationsControllerCatalogueUrl = () => {
+
+
+
+
+  return `/api/v1/admin/operations`
+}
+
+export const adminOperationsControllerCatalogue = async ( options?: RequestInit): Promise<adminOperationsControllerCatalogueResponse> => {
+
+  return customFetch<adminOperationsControllerCatalogueResponse>(getAdminOperationsControllerCatalogueUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getAdminOperationsControllerCatalogueQueryKey = () => {
+    return [
+    `/api/v1/admin/operations`
+    ] as const;
+    }
+
+
+export const getAdminOperationsControllerCatalogueQueryOptions = <TData = Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminOperationsControllerCatalogueQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>> = ({ signal }) => adminOperationsControllerCatalogue({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminOperationsControllerCatalogueQueryResult = NonNullable<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>>
+export type AdminOperationsControllerCatalogueQueryError = unknown
+
+
+export function useAdminOperationsControllerCatalogue<TData = Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>,
+          TError,
+          Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminOperationsControllerCatalogue<TData = Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>,
+          TError,
+          Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminOperationsControllerCatalogue<TData = Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminOperationsControllerCatalogue<TData = Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminOperationsControllerCatalogue>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminOperationsControllerCatalogueQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+export type adminOperationsControllerRunResponse200 = {
+  data: OperationAnswerDto
+  status: 200
+}
+
+export type adminOperationsControllerRunResponseSuccess = (adminOperationsControllerRunResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminOperationsControllerRunResponse = (adminOperationsControllerRunResponseSuccess)
+
+export const getAdminOperationsControllerRunUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/admin/operations/${id}`
+}
+
+export const adminOperationsControllerRun = async (id: string,
+    runOperationDto: RunOperationDto, options?: RequestInit): Promise<adminOperationsControllerRunResponse> => {
+
+  return customFetch<adminOperationsControllerRunResponse>(getAdminOperationsControllerRunUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(runOperationDto)
+  }
+);}
+
+
+
+
+export const getAdminOperationsControllerRunMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminOperationsControllerRun>>, TError,{id: string;data: RunOperationDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminOperationsControllerRun>>, TError,{id: string;data: RunOperationDto}, TContext> => {
+
+const mutationKey = ['adminOperationsControllerRun'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminOperationsControllerRun>>, {id: string;data: RunOperationDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminOperationsControllerRun(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminOperationsControllerRunMutationResult = NonNullable<Awaited<ReturnType<typeof adminOperationsControllerRun>>>
+    export type AdminOperationsControllerRunMutationBody = RunOperationDto
+    export type AdminOperationsControllerRunMutationError = unknown
+
+    export const useAdminOperationsControllerRun = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminOperationsControllerRun>>, TError,{id: string;data: RunOperationDto}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminOperationsControllerRun>>,
+        TError,
+        {id: string;data: RunOperationDto},
+        TContext
+      > => {
+      return useMutation(getAdminOperationsControllerRunMutationOptions(options), queryClient);
+    }
+    export type mediaAdminControllerAddUploadResponse201 = {
   data: MediaUploadResultDto
   status: 201
 }
