@@ -64,11 +64,17 @@ compose() {
   else docker compose -f "$COMPOSE_FILE" "$@"; fi
 }
 
-# Runs the in-image admin CLI with the instance's environment.
+# Runs the in-image admin CLI with the instance's environment; with a terminal
+# when there is one, so that an operation can ask for its confirmation.
 admin() {
+  if [ -t 0 ] && [ -t 1 ]; then tty=1; else tty=; fi
   case "$(mode)" in
-    compose | full) compose exec -T quizdock qd "$@" ;;
-    standalone) docker exec -i "$CONTAINER" qd "$@" ;;
+    compose | full)
+      if [ -n "$tty" ]; then compose exec quizdock qd "$@"
+      else compose exec -T quizdock qd "$@"; fi ;;
+    standalone)
+      if [ -n "$tty" ]; then docker exec -it "$CONTAINER" qd "$@"
+      else docker exec -i "$CONTAINER" qd "$@"; fi ;;
   esac
 }
 
@@ -403,6 +409,8 @@ Administration (relayed to the CLI inside the container)
   mcp [--user=<sub|email>]           Local MCP on stdin/stdout, experimental (no TTY)
   quiz:transfer <quiz-id> <sub|email>  Hand a quiz over to another account
   sessions:purge [--dry-run]
+  qd <operation> [--param=value…] [--yes] [--dry-run] [--json]
+                        Any administrative operation (\`qd operations\` lists them)
   admin <command…>      Any other in-image command (\`admin help\`)
 
 Environment: QUIZDOCK_IMAGE, QUIZDOCK_COMPOSE_FILE, QUIZDOCK_ENV_FILE, QUIZDOCK_BACKUP_DIR.
@@ -437,7 +445,7 @@ case "$cmd" in
     [ -f "$1" ] || die "no such file: $1"
     need_docker; need_init; admin quiz:validate - <"$1" ;;
   mcp) need_docker; need_init; admin mcp "$@" ;;
-  admin) need_docker; need_init; admin "$@" ;;
+  admin | qd) need_docker; need_init; admin "$@" ;;
   help | -h | --help) cmd_help ;;
   *) die "unknown command \`$cmd\` — see \`$0 help\`." ;;
 esac

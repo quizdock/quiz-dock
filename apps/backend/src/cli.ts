@@ -6,19 +6,13 @@ import { findUser } from './cli/commands/users';
 import { NestFactory } from '@nestjs/core';
 import { parseArgs } from './cli/args';
 import { CliModule } from './cli/cli.module';
-import { defaultPingRedis, defaultProbeWritable, doctor } from './cli/commands/doctor';
-import { migrationStatus } from './cli/commands/migrate-status';
-import { diskIo, quizExport, quizImport, quizList, quizTransfer } from './cli/commands/quiz';
-import { seatRelease, seatStatus } from './cli/commands/seat';
-import { sessionsPurge } from './cli/commands/sessions';
-import { samplesLoad, userList, userSetRole } from './cli/commands/users';
 import { CliError, ConsoleOutput } from './cli/output';
+import { diskIo } from './cli/commands/quiz';
+import { operationsHelp, runCommand } from './cli/adapter';
+import { OperationRunner } from './admin/runner/operation-runner';
+import { createInterface } from 'node:readline/promises';
 import { PrismaService } from './prisma/prisma.service';
-import { RedisService } from './redis/redis.service';
 import { QuizPortableService } from './quizzes/portable/quiz-portable.service';
-import { SampleQuizzesService } from './quizzes/samples/sample-quizzes.service';
-import { HostSeatService } from './users/host-seat.service';
-import { settings } from './admin/settings/settings.service';
 
 const USAGE = `QuizDock admin CLI — runs inside the app container.
 
@@ -47,9 +41,23 @@ Usage: qd <command> [options]      (in the container; = node dist/cli.js)
                     Hand a quiz over to another account (media and history follow)
   sessions:purge [--dry-run]
                     Delete archived sessions past their retention date
+  operations        Every operation, with its parameters (qd <operation> --param=value…)
   help              This message
 
-Exit code 0 on success, 1 on failure.`;
+Options: --json (the outcome as JSON), --yes (confirm), --dry-run (say what
+would be done), --as=<name> (who the audit records).
+Exit code 0 on success, 1 on failure, 2 on bad usage.`;
+
+/** Asks on the terminal; nobody to ask when stdin is not one. */
+async function askOnTerminal(question: string): Promise<boolean | null> {
+  if (!process.stdin.isTTY) return null;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    return /^y(es)?$/i.test((await rl.question(`${question} [y/N] `)).trim());
+  } finally {
+    rl.close();
+  }
+}
 
 function need(value: string | undefined, what: string): string {
   if (!value) throw new CliError(`Missing argument ${what}.\n\n${USAGE}`, 2);
@@ -85,112 +93,38 @@ async function main(argv: string[]): Promise<number> {
     logger: args.command === 'mcp' ? false : toStdout ? ['error'] : ['error', 'warn'],
   });
   try {
-    const prisma = app.get(PrismaService);
-    switch (args.command) {
-      case 'mcp': {
-        const who = args.flags.user;
-        if (typeof who !== 'string')
-          throw new CliError('Use --user=<sub|email> to enable imports.', 2);
-        const user = await findUser(prisma, who);
-        if (!isHost(user.roles))
-          throw new CliError('The configured MCP account must have the host role.');
-        await runQuizMcp({
-          ownerId: user.id,
-          portable: app.get(QuizPortableService),
-          authorized: async () => {
-            const current = await prisma.user.findUnique({
-              where: { id: user.id },
-              select: { roles: true },
-            });
-            return !!current && isHost(current.roles);
-          },
-        });
-        return 0;
-      }
-      case 'doctor': {
-        const ok = await doctor(out, {
-          prisma,
-          settings,
-          fetch,
-          pingRedis: defaultPingRedis,
-          probeWritable: defaultProbeWritable,
-        });
-        return ok ? 0 : 1;
-      }
-      case 'migrate:status': {
-        const s = await migrationStatus(prisma);
-        out.line(`Applied (${s.applied.length}):`);
-        for (const m of s.applied) out.ok(m);
-        out.line(`Pending (${s.pending.length}):`);
-        for (const m of s.pending) out.warn(m);
-        if (s.failed.length) {
-          out.line(`Failed (${s.failed.length}):`);
-          for (const m of s.failed) out.fail(m);
-        }
-        return s.pending.length || s.failed.length ? 1 : 0;
-      }
-      case 'seat:status':
-        await seatStatus(out, app.get(HostSeatService));
-        return 0;
-      case 'seat:release':
-        await seatRelease(out, app.get(HostSeatService));
-        return 0;
-      case 'user:list':
-        await userList(out, prisma);
-        return 0;
-      case 'user:set-role':
-        await userSetRole(
-          out,
-          prisma,
-          need(args.positional[0], '<sub|email>'),
-          need(args.positional[1], 'host|admin|host,admin|player'),
-        );
-        return 0;
-      case 'samples:load':
-        await samplesLoad(
-          out,
-          prisma,
-          app.get(SampleQuizzesService),
-          need(args.positional[0], '<sub|email>'),
-        );
-        return 0;
-      case 'quiz:transfer':
-        await quizTransfer(
-          out,
-          prisma,
-          app.get(RedisService),
-          need(args.positional[0], '<quiz-id>'),
-          need(args.positional[1], '<sub|email>'),
-        );
-        return 0;
-      case 'quiz:list':
-        await quizList(out, prisma, args.positional[0]);
-        return 0;
-      case 'quiz:export':
-        await quizExport(
-          out,
-          app.get(QuizPortableService),
-          need(args.positional[0], '<id>'),
-          need(args.positional[1], '<file.zip|->'),
-          diskIo,
-        );
-        return 0;
-      case 'quiz:import':
-        await quizImport(
-          out,
-          prisma,
-          app.get(QuizPortableService),
-          need(args.positional[0], '<file|->'),
-          need(args.positional[1], '<sub|email>'),
-          diskIo,
-        );
-        return 0;
-      case 'sessions:purge':
-        await sessionsPurge(out, prisma, args.flags['dry-run'] === true);
-        return 0;
-      default:
-        throw new CliError(`Unknown command "${args.command}".\n\n${USAGE}`, 2);
+    if (args.command === 'mcp') {
+      const prisma = app.get(PrismaService);
+      const who = args.flags.user;
+      if (typeof who !== 'string')
+        throw new CliError('Use --user=<sub|email> to enable imports.', 2);
+      const user = await findUser(prisma, who);
+      if (!isHost(user.roles))
+        throw new CliError('The configured MCP account must have the host role.');
+      await runQuizMcp({
+        ownerId: user.id,
+        portable: app.get(QuizPortableService),
+        authorized: async () => {
+          const current = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { roles: true },
+          });
+          return !!current && isHost(current.roles);
+        },
+      });
+      return 0;
     }
+    const runner = app.get(OperationRunner);
+    if (args.command === 'operations') {
+      out.line(operationsHelp(runner.catalogue({ via: 'cli', name: 'cli' })));
+      return 0;
+    }
+    return await runCommand(args, runner, {
+      out,
+      io: diskIo,
+      write: (text) => process.stdout.write(text),
+      ask: askOnTerminal,
+    });
   } finally {
     await app.close();
   }
