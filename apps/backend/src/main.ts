@@ -39,7 +39,9 @@ async function bootstrap(): Promise<void> {
     jsonDocumentUrl: 'api/docs-json',
   });
 
-  const port = Number(process.env.PORT ?? 3000);
+  // Unset, empty or not a number: 3000.
+  const configured = Number(process.env.PORT?.trim() || NaN);
+  const port = Number.isFinite(configured) ? configured : 3000;
   await app.listen(port, '0.0.0.0');
   Logger.log(`QuizDock API démarrée sur le port ${port}`, 'Bootstrap');
 }
