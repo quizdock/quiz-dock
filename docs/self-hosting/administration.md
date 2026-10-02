@@ -23,8 +23,9 @@ The role comes from the identity provider's claims (OIDC) or from
 
 ## 2. The web administration
 
-*Administration* in the account menu (administrators only), one section per
-domain:
+*Administration* in the account menu (administrators only) opens on the
+quizzes; the media follow, then the instance — its accounts, settings, look,
+health and audit:
 
 - **Settings** — every variable the application reads: its value (in megabytes
   and seconds, whatever unit the variable is written in; a secret only as *set*

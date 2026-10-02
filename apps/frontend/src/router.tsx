@@ -305,7 +305,7 @@ const adminIndexRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/',
   beforeLoad: () => {
-    throw redirect({ to: '/admin/settings' });
+    throw redirect({ to: '/admin/quizzes' });
   },
 });
 

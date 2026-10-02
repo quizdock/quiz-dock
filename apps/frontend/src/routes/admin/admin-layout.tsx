@@ -11,20 +11,24 @@ import { useRole } from '../../auth/use-role';
 import { setAdminToken, useAdminToken, useReadOperation } from './admin-api';
 import type { SettingsList } from './settings-model';
 
-/** The administration's sections, by domain (§0.1). */
+/**
+ * The administration's sections, by domain (§0.1): the instance's content
+ * first — its quizzes, its media —, then the instance itself, its accounts
+ * before its settings.
+ */
 const SECTIONS = [
+  { domain: 'quizzes', links: [{ to: '/admin/quizzes', key: 'quizzes' }] },
+  { domain: 'media', links: [{ to: '/admin/media', key: 'media' }] },
   {
     domain: 'instance',
     links: [
-      { to: '/admin/settings', key: 'settings' },
-      { to: '/admin/health', key: 'health' },
       { to: '/admin/accounts', key: 'accounts' },
+      { to: '/admin/settings', key: 'settings' },
       { to: '/admin/look', key: 'look' },
+      { to: '/admin/health', key: 'health' },
       { to: '/admin/audit', key: 'audit' },
     ],
   },
-  { domain: 'quizzes', links: [{ to: '/admin/quizzes', key: 'quizzes' }] },
-  { domain: 'media', links: [{ to: '/admin/media', key: 'media' }] },
 ] as const;
 
 /** The administration: its sections, by domain, around the page shown. */

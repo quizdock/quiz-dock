@@ -58,7 +58,7 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
             {/* The same entries as the user menu (UI system §4). */}
             {isManager ? (
               <Link
-                to="/admin/settings"
+                to="/admin/quizzes"
                 onClick={close}
                 className="hover:bg-accent flex items-center gap-2 rounded-md px-2 py-2 text-sm"
               >
