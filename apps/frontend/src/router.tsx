@@ -23,7 +23,8 @@ import { RootLayout } from './routes/root-layout';
 import { ErrorPage, NotFoundPage } from './routes/fallback-pages';
 import { AdminMediaPage } from './routes/admin-media-page';
 import { AdminLayout } from './routes/admin/admin-layout';
-import { AccountsPage, AuditPage, HealthPage, QuizzesAdminPage } from './routes/admin/admin-pages';
+import { AccountsPage, AuditPage, HealthPage } from './routes/admin/admin-pages';
+import { AdminQuizzesPage } from './routes/admin/admin-quizzes-page';
 import { AdminSettingsPage } from './routes/admin/admin-settings-page';
 import { SetupPage } from './routes/setup/setup-page';
 import type { QuizImportDtoImportReport } from './api/generated/model';
@@ -331,7 +332,7 @@ export const adminAuditRoute = createRoute({
 export const adminQuizzesRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'quizzes',
-  component: QuizzesAdminPage,
+  component: AdminQuizzesPage,
 });
 /** The instance's media (#54). */
 export const adminMediaRoute = createRoute({

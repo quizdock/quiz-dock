@@ -196,7 +196,8 @@
     },
     "users": {
       "list": "Accounts",
-      "set-role": "Grant or revoke a role"
+      "set-role": "Grant or revoke a role",
+      "find": "Find an account"
     },
     "samples": {
       "load": "Add the sample quizzes to an account"
@@ -209,7 +210,8 @@
       "archive": "Archive a quiz",
       "restore": "Restore an archived quiz",
       "delete": "Delete a quiz",
-      "orphans": "Quizzes nobody can reach"
+      "orphans": "Quizzes nobody can reach",
+      "search": "Search the quizzes"
     },
     "sessions": {
       "purge": "Purge old sessions"
@@ -266,7 +268,11 @@
     "address": "Address",
     "id": "Id",
     "internet": "Internet",
-    "accessibility": "Accessibility"
+    "accessibility": "Accessibility",
+    "q": "Search",
+    "status": "Status",
+    "orphans": "Nobody can reach them",
+    "offset": "From"
   },
   "columns": {
     "name": "Name",
@@ -327,7 +333,48 @@
     "failed": "Failed."
   },
   "quizzes": {
-    "intro": "Every quiz of the instance, whoever owns it: hand one over when someone leaves, export it, import one for a host, purge the sessions past their retention date."
+    "search": "Search a quiz",
+    "owner": "Owner",
+    "everyone": "Everyone",
+    "status": "Status",
+    "anyStatus": "Any",
+    "statuses": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "archived": "Archived"
+    },
+    "orphans": "Nobody can reach them",
+    "none": "No quiz matches.",
+    "count_one": "{{count}} quiz",
+    "count_other": "{{count}} quizzes",
+    "questions_one": "{{count}} question",
+    "questions_other": "{{count}} questions",
+    "live": "Being played (PIN {{pin}})",
+    "unreachable": "Owner can no longer reach it",
+    "close": "Close",
+    "columns": {
+      "quiz": "Quiz",
+      "owner": "Owner",
+      "updated": "Updated",
+      "actions": "Actions"
+    },
+    "actions": {
+      "quizzes_import": "Import a quiz for an account",
+      "samples_load": "Add the sample quizzes",
+      "sessions_purge": "Purge old sessions",
+      "open": "Open",
+      "export": "Export",
+      "transfer": "Hand over",
+      "archive": "Archive",
+      "restore": "Restore",
+      "delete": "Delete"
+    },
+    "transfer": {
+      "title": "Hand “{{title}}” over",
+      "help": "To another account: the media only this quiz uses and its history follow it; {{owner}} keeps the rest.",
+      "search": "Name, subject or e-mail",
+      "player": "participant"
+    }
   },
   "audit": {
     "filter": "Operation",

@@ -196,7 +196,8 @@
     },
     "users": {
       "list": "账号",
-      "set-role": "授予或撤销角色"
+      "set-role": "授予或撤销角色",
+      "find": "查找账号"
     },
     "samples": {
       "load": "为账号添加示例测验"
@@ -209,7 +210,8 @@
       "archive": "归档测验",
       "restore": "恢复已归档的测验",
       "delete": "删除测验",
-      "orphans": "无人可访问的测验"
+      "orphans": "无人可访问的测验",
+      "search": "搜索测验"
     },
     "sessions": {
       "purge": "清除旧会话"
@@ -266,7 +268,11 @@
     "address": "地址",
     "id": "ID",
     "internet": "互联网",
-    "accessibility": "无障碍"
+    "accessibility": "无障碍",
+    "q": "搜索",
+    "status": "状态",
+    "orphans": "无人可访问",
+    "offset": "起始位置"
   },
   "columns": {
     "name": "名称",
@@ -327,7 +333,48 @@
     "failed": "失败。"
   },
   "quizzes": {
-    "intro": "本实例的所有测验，无论所有者是谁：有人离开时移交测验、导出测验、为主持人导入测验、清除超过保留期限的会话。"
+    "search": "搜索测验",
+    "owner": "所有者",
+    "everyone": "所有人",
+    "status": "状态",
+    "anyStatus": "全部",
+    "statuses": {
+      "draft": "草稿",
+      "ready": "就绪",
+      "archived": "已归档"
+    },
+    "orphans": "无人可访问",
+    "none": "没有匹配的测验。",
+    "count_one": "{{count}} 个测验",
+    "count_other": "{{count}} 个测验",
+    "questions_one": "{{count}} 道题目",
+    "questions_other": "{{count}} 道题目",
+    "live": "正在房间中进行（PIN {{pin}}）",
+    "unreachable": "所有者已无法访问",
+    "close": "关闭",
+    "columns": {
+      "quiz": "测验",
+      "owner": "所有者",
+      "updated": "更新时间",
+      "actions": "操作"
+    },
+    "actions": {
+      "quizzes_import": "为账号导入测验",
+      "samples_load": "添加示例测验",
+      "sessions_purge": "清除旧会话",
+      "open": "打开",
+      "export": "导出",
+      "transfer": "移交",
+      "archive": "归档",
+      "restore": "恢复",
+      "delete": "删除"
+    },
+    "transfer": {
+      "title": "移交“{{title}}”",
+      "help": "移交给另一个账号：仅此测验使用的媒体及其历史会随之转移；其余内容仍归 {{owner}} 所有。",
+      "search": "名称、主体标识或邮箱",
+      "player": "参与者"
+    }
   },
   "audit": {
     "filter": "操作",

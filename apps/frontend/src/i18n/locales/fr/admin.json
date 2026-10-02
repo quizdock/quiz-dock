@@ -196,7 +196,8 @@
     },
     "users": {
       "list": "Comptes",
-      "set-role": "Octroyer ou retirer un rôle"
+      "set-role": "Octroyer ou retirer un rôle",
+      "find": "Trouver un compte"
     },
     "samples": {
       "load": "Ajouter les quiz d’exemple à un compte"
@@ -209,7 +210,8 @@
       "archive": "Archiver un quiz",
       "restore": "Restaurer un quiz archivé",
       "delete": "Supprimer un quiz",
-      "orphans": "Quiz que personne ne peut atteindre"
+      "orphans": "Quiz que personne ne peut atteindre",
+      "search": "Chercher dans les quiz"
     },
     "sessions": {
       "purge": "Purger les anciennes sessions"
@@ -266,7 +268,11 @@
     "address": "Adresse",
     "id": "Identifiant",
     "internet": "Internet",
-    "accessibility": "Accessibilité"
+    "accessibility": "Accessibilité",
+    "q": "Recherche",
+    "status": "Statut",
+    "orphans": "Hors de portée de tous",
+    "offset": "À partir de"
   },
   "columns": {
     "name": "Nom",
@@ -327,7 +333,48 @@
     "failed": "Échec."
   },
   "quizzes": {
-    "intro": "Tous les quiz de l’instance, quel que soit leur propriétaire : en transmettre un quand quelqu’un part, l’exporter, en importer un pour un animateur, purger les sessions dont la durée de conservation est passée."
+    "search": "Chercher un quiz",
+    "owner": "Propriétaire",
+    "everyone": "Tout le monde",
+    "status": "Statut",
+    "anyStatus": "Tous",
+    "statuses": {
+      "draft": "Brouillon",
+      "ready": "Prêt",
+      "archived": "Archivé"
+    },
+    "orphans": "Hors de portée de tous",
+    "none": "Aucun quiz ne correspond.",
+    "count_one": "{{count}} quiz",
+    "count_other": "{{count}} quiz",
+    "questions_one": "{{count}} question",
+    "questions_other": "{{count}} questions",
+    "live": "En cours dans un salon (PIN {{pin}})",
+    "unreachable": "Son propriétaire n’y a plus accès",
+    "close": "Fermer",
+    "columns": {
+      "quiz": "Quiz",
+      "owner": "Propriétaire",
+      "updated": "Modifié",
+      "actions": "Actions"
+    },
+    "actions": {
+      "quizzes_import": "Importer un quiz pour un compte",
+      "samples_load": "Ajouter les quiz d’exemple",
+      "sessions_purge": "Purger les anciennes sessions",
+      "open": "Ouvrir",
+      "export": "Exporter",
+      "transfer": "Transmettre",
+      "archive": "Archiver",
+      "restore": "Restaurer",
+      "delete": "Supprimer"
+    },
+    "transfer": {
+      "title": "Transmettre « {{title}} »",
+      "help": "À un autre compte : les médias que seul ce quiz utilise et son historique le suivent ; {{owner}} garde le reste.",
+      "search": "Nom, sujet ou adresse e-mail",
+      "player": "participant"
+    }
   },
   "audit": {
     "filter": "Opération",

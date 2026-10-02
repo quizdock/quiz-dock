@@ -196,7 +196,8 @@
     },
     "users": {
       "list": "Cuentas",
-      "set-role": "Conceder o retirar un rol"
+      "set-role": "Conceder o retirar un rol",
+      "find": "Buscar una cuenta"
     },
     "samples": {
       "load": "Añadir los quizzes de ejemplo a una cuenta"
@@ -209,7 +210,8 @@
       "archive": "Archivar un quiz",
       "restore": "Restaurar un quiz archivado",
       "delete": "Eliminar un quiz",
-      "orphans": "Quizzes a los que nadie puede acceder"
+      "orphans": "Quizzes a los que nadie puede acceder",
+      "search": "Buscar en los quizzes"
     },
     "sessions": {
       "purge": "Purgar sesiones antiguas"
@@ -266,7 +268,11 @@
     "address": "Dirección",
     "id": "ID",
     "internet": "Internet",
-    "accessibility": "Accesibilidad"
+    "accessibility": "Accesibilidad",
+    "q": "Búsqueda",
+    "status": "Estado",
+    "orphans": "Nadie puede acceder a ellos",
+    "offset": "Desde"
   },
   "columns": {
     "name": "Nombre",
@@ -327,7 +333,48 @@
     "failed": "Error."
   },
   "quizzes": {
-    "intro": "Todos los quizzes de la instancia, sea quien sea su propietario: traspasa uno cuando alguien se va, expórtalo, importa uno para un anfitrión, purga las sesiones que superaron su plazo de conservación."
+    "search": "Buscar un quiz",
+    "owner": "Propietario",
+    "everyone": "Todos",
+    "status": "Estado",
+    "anyStatus": "Cualquiera",
+    "statuses": {
+      "draft": "Borrador",
+      "ready": "Listo",
+      "archived": "Archivado"
+    },
+    "orphans": "Nadie puede acceder a ellos",
+    "none": "Ningún quiz coincide.",
+    "count_one": "{{count}} quiz",
+    "count_other": "{{count}} quizzes",
+    "questions_one": "{{count}} pregunta",
+    "questions_other": "{{count}} preguntas",
+    "live": "En curso en una sala (PIN {{pin}})",
+    "unreachable": "Su propietario ya no puede acceder a él",
+    "close": "Cerrar",
+    "columns": {
+      "quiz": "Quiz",
+      "owner": "Propietario",
+      "updated": "Actualizado",
+      "actions": "Acciones"
+    },
+    "actions": {
+      "quizzes_import": "Importar un quiz para una cuenta",
+      "samples_load": "Añadir los quizzes de ejemplo",
+      "sessions_purge": "Purgar sesiones antiguas",
+      "open": "Abrir",
+      "export": "Exportar",
+      "transfer": "Traspasar",
+      "archive": "Archivar",
+      "restore": "Restaurar",
+      "delete": "Eliminar"
+    },
+    "transfer": {
+      "title": "Traspasar «{{title}}»",
+      "help": "A otra cuenta: los medios que solo usa este quiz y su historial lo acompañan; {{owner}} conserva el resto.",
+      "search": "Nombre, sujeto o correo electrónico",
+      "player": "participante"
+    }
   },
   "audit": {
     "filter": "Operación",

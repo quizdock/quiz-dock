@@ -62,30 +62,6 @@ export function AccountsPage() {
   );
 }
 
-/** Every quiz, and what `qd` alone could do to them. */
-export function QuizzesAdminPage() {
-  const { t } = useTranslation('admin');
-  return (
-    <div className="flex flex-col gap-6">
-      <p className="text-muted-foreground text-sm">{t('quizzes.intro')}</p>
-      <Operations
-        ids={[
-          'quizzes.list',
-          'quizzes.orphans',
-          'quizzes.archive',
-          'quizzes.restore',
-          'quizzes.delete',
-          'quizzes.transfer',
-          'quizzes.export',
-          'quizzes.import',
-          'samples.load',
-          'sessions.purge',
-        ]}
-      />
-    </div>
-  );
-}
-
 const PAGE = 50;
 
 /** The audit log (§3.3, step 7): who did what, through what, when, and how it ended. */

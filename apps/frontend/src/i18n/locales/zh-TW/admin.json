@@ -196,7 +196,8 @@
     },
     "users": {
       "list": "帳號",
-      "set-role": "授予或撤銷角色"
+      "set-role": "授予或撤銷角色",
+      "find": "尋找帳號"
     },
     "samples": {
       "load": "為帳號新增範例測驗"
@@ -209,7 +210,8 @@
       "archive": "封存測驗",
       "restore": "還原已封存的測驗",
       "delete": "刪除測驗",
-      "orphans": "無人可存取的測驗"
+      "orphans": "無人可存取的測驗",
+      "search": "搜尋測驗"
     },
     "sessions": {
       "purge": "清除舊會話"
@@ -266,7 +268,11 @@
     "address": "網址",
     "id": "ID",
     "internet": "網際網路",
-    "accessibility": "無障礙"
+    "accessibility": "無障礙",
+    "q": "搜尋",
+    "status": "狀態",
+    "orphans": "無人可存取",
+    "offset": "起始位置"
   },
   "columns": {
     "name": "名稱",
@@ -327,7 +333,48 @@
     "failed": "失敗。"
   },
   "quizzes": {
-    "intro": "本執行個體的所有測驗，無論擁有者是誰：有人離開時移交測驗、匯出測驗、為主持人匯入測驗、清除超過保留期限的會話。"
+    "search": "搜尋測驗",
+    "owner": "擁有者",
+    "everyone": "所有人",
+    "status": "狀態",
+    "anyStatus": "全部",
+    "statuses": {
+      "draft": "草稿",
+      "ready": "就緒",
+      "archived": "已歸檔"
+    },
+    "orphans": "無人可存取",
+    "none": "沒有符合的測驗。",
+    "count_one": "{{count}} 個測驗",
+    "count_other": "{{count}} 個測驗",
+    "questions_one": "{{count}} 道題目",
+    "questions_other": "{{count}} 道題目",
+    "live": "正在房間中進行（PIN {{pin}}）",
+    "unreachable": "擁有者已無法存取",
+    "close": "關閉",
+    "columns": {
+      "quiz": "測驗",
+      "owner": "擁有者",
+      "updated": "更新時間",
+      "actions": "操作"
+    },
+    "actions": {
+      "quizzes_import": "為帳號匯入測驗",
+      "samples_load": "新增範例測驗",
+      "sessions_purge": "清除舊會話",
+      "open": "開啟",
+      "export": "匯出",
+      "transfer": "移交",
+      "archive": "封存",
+      "restore": "還原",
+      "delete": "刪除"
+    },
+    "transfer": {
+      "title": "移交「{{title}}」",
+      "help": "移交給另一個帳號：僅此測驗使用的媒體及其歷史會隨之轉移；其餘內容仍歸 {{owner}} 所有。",
+      "search": "名稱、主體識別碼或電子郵件",
+      "player": "參與者"
+    }
   },
   "audit": {
     "filter": "操作",

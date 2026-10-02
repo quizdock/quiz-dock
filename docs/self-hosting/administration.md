@@ -49,10 +49,14 @@ and audit:
 - **Accounts** — the accounts and their roles, granting or revoking one, the
   local mode's host seat.
 - **Audit** — every administrative action (below).
-- **Quizzes** — every quiz of the instance: the operations `qd` had alone, and
-  archiving, restoring or deleting someone's quiz (the confirmation names the
-  quiz and its owner: export it first), the quizzes whose owner can no longer
-  reach them.
+- **Quizzes** — every quiz of the instance, whoever owns it, a page at a time:
+  searched by title, filtered by owner and status, or only the ones nobody can
+  reach any more (an account deleted, or without the host role); a quiz being
+  played says so. Each row opens the quiz, exports it, hands it over to another
+  account (the media only it uses and its history follow), archives or restores
+  it, deletes it — the confirmation names the quiz and its owner: export it
+  first. Above the list: import a quiz for an account, add the sample quizzes to
+  a bank, purge the sessions past their retention date.
 - **Media** — the instance's media library ([unchanged](#1-three-domains)).
 
 A form is generated for each operation; one that destroys asks for a

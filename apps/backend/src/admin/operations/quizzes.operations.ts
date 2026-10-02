@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { QuizStatus, UserRole } from '@prisma/client';
+import { type Prisma, QuizStatus, UserRole } from '@prisma/client';
+import { livePinOf } from '../../game/game.keys';
+import { RedisService } from '../../redis/redis.service';
 import { z } from 'zod';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QuizzesService } from '../../quizzes/quizzes.service';
@@ -13,6 +15,14 @@ import {
 
 const quizId = z.string().trim().min(1).max(64);
 
+/** An owner who can no longer reach their quizzes: an account deleted, or without the host role. */
+const ORPHAN_OWNER: Prisma.UserWhereInput = {
+  OR: [
+    { deletedAt: { not: null } },
+    { NOT: [{ roles: { has: UserRole.host } }, { assignedRoles: { has: UserRole.host } }] },
+  ],
+};
+
 /**
  * The Quizzes domain (§0.1): someone else's quiz, managed administratively —
  * archived, restored, deleted — and the quizzes nobody can reach any more.
@@ -23,6 +33,7 @@ export class QuizzesOperations {
   constructor(
     private readonly prisma: PrismaService,
     private readonly quizzes: QuizzesService,
+    private readonly redis: RedisService,
   ) {}
 
   private async quiz(id: string) {
@@ -36,6 +47,131 @@ export class QuizzesOperations {
 
   list(): AdminOperation[] {
     return [
+      defineOperation({
+        id: 'quizzes.search',
+        domain: 'quizzes',
+        category: 'quizzes',
+        effect: 'read',
+        summary:
+          'Every quiz of the instance, a page at a time: searched by title, filtered by owner and status, or the ones nobody can reach.',
+        params: z.object({
+          q: z.string().trim().max(100).optional(),
+          owner: z.string().max(64).optional(),
+          status: z.enum(['draft', 'ready', 'archived']).optional(),
+          orphans: z.boolean().optional(),
+          limit: z.number().int().min(1).max(100).default(25),
+          offset: z.number().int().min(0).default(0),
+        }),
+        run: async (_ctx, { q, owner, status, orphans, limit, offset }) => {
+          const where: Prisma.QuizWhereInput = {
+            ...(q ? { title: { contains: q, mode: 'insensitive' } } : {}),
+            ...(owner ? { ownerId: owner } : {}),
+            ...(status ? { status } : {}),
+            ...(orphans ? { owner: ORPHAN_OWNER } : {}),
+          };
+          const [total, quizzes, owners] = await Promise.all([
+            this.prisma.quiz.count({ where }),
+            this.prisma.quiz.findMany({
+              where,
+              orderBy: { updatedAt: 'desc' },
+              skip: offset,
+              take: limit,
+              include: {
+                owner: {
+                  select: {
+                    id: true,
+                    displayName: true,
+                    oidcSubject: true,
+                    deletedAt: true,
+                    roles: true,
+                    assignedRoles: true,
+                  },
+                },
+              },
+            }),
+            this.prisma.user.findMany({
+              where: { quizzes: { some: {} } },
+              orderBy: { displayName: 'asc' },
+              select: {
+                id: true,
+                displayName: true,
+                oidcSubject: true,
+                _count: { select: { quizzes: true } },
+              },
+            }),
+          ]);
+          const items = await Promise.all(
+            quizzes.map(async (quiz) => ({
+              id: quiz.id,
+              title: quiz.title,
+              status: quiz.status,
+              questionCount: quiz.questionCount,
+              updatedAt: quiz.updatedAt.toISOString(),
+              owner: {
+                id: quiz.owner.id,
+                name: quiz.owner.displayName,
+                subject: quiz.owner.oidcSubject,
+                // The owner can still reach it: an account not deleted, with the host role.
+                reachable:
+                  !quiz.owner.deletedAt &&
+                  (quiz.owner.roles.includes(UserRole.host) ||
+                    quiz.owner.assignedRoles.includes(UserRole.host)),
+              },
+              // Played right now: not handed over nor deleted until the session ends.
+              livePin: await livePinOf(this.redis, quiz.ownerId, quiz.id).catch(() => null),
+            })),
+          );
+          return done({
+            total,
+            items,
+            owners: owners.map((o) => ({
+              id: o.id,
+              name: o.displayName,
+              subject: o.oidcSubject,
+              quizzes: o._count.quizzes,
+            })),
+          });
+        },
+      }),
+      defineOperation({
+        id: 'users.find',
+        domain: 'instance',
+        category: 'users',
+        effect: 'read',
+        summary: 'Accounts whose name, subject or e-mail contains a text (to pick one).',
+        params: z.object({
+          q: z.string().trim().max(100).default(''),
+          limit: z.number().int().min(1).max(50).default(20),
+        }),
+        run: async (_ctx, { q, limit }) => {
+          const users = await this.prisma.user.findMany({
+            where: {
+              deletedAt: null,
+              NOT: { oidcSubject: { startsWith: 'system:' } },
+              ...(q
+                ? {
+                    OR: [
+                      { displayName: { contains: q, mode: 'insensitive' } },
+                      { oidcSubject: { contains: q, mode: 'insensitive' } },
+                      { email: { contains: q, mode: 'insensitive' } },
+                    ],
+                  }
+                : {}),
+            },
+            orderBy: { displayName: 'asc' },
+            take: limit,
+            select: { displayName: true, oidcSubject: true, email: true, roles: true },
+          });
+          return done({
+            accounts: users.map((u) => ({
+              name: u.displayName,
+              subject: u.oidcSubject,
+              email: u.email,
+              roles: u.roles,
+            })),
+          });
+        },
+      }),
       defineOperation({
         id: 'quizzes.archive',
         domain: 'quizzes',
@@ -98,19 +234,7 @@ export class QuizzesOperations {
         params: z.object({}),
         run: async () => {
           const quizzes = await this.prisma.quiz.findMany({
-            where: {
-              OR: [
-                { owner: { deletedAt: { not: null } } },
-                {
-                  owner: {
-                    NOT: [
-                      { roles: { has: UserRole.host } },
-                      { assignedRoles: { has: UserRole.host } },
-                    ],
-                  },
-                },
-              ],
-            },
+            where: { owner: ORPHAN_OWNER },
             orderBy: { updatedAt: 'desc' },
             include: { owner: { select: { oidcSubject: true, deletedAt: true } } },
           });

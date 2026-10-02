@@ -196,7 +196,8 @@
     },
     "users": {
       "list": "Hesaplar",
-      "set-role": "Rol ver veya geri al"
+      "set-role": "Rol ver veya geri al",
+      "find": "Bir hesap bul"
     },
     "samples": {
       "load": "Örnek quizleri bir hesaba ekle"
@@ -209,7 +210,8 @@
       "archive": "Bir quizi arşivle",
       "restore": "Arşivlenmiş bir quizi geri yükle",
       "delete": "Bir quizi sil",
-      "orphans": "Kimsenin erişemediği quizler"
+      "orphans": "Kimsenin erişemediği quizler",
+      "search": "Quizlerde ara"
     },
     "sessions": {
       "purge": "Eski oturumları temizle"
@@ -266,7 +268,11 @@
     "address": "Adres",
     "id": "Kimlik",
     "internet": "İnternet",
-    "accessibility": "Erişilebilirlik"
+    "accessibility": "Erişilebilirlik",
+    "q": "Arama",
+    "status": "Durum",
+    "orphans": "Kimsenin erişemedikleri",
+    "offset": "Başlangıç"
   },
   "columns": {
     "name": "Ad",
@@ -327,7 +333,48 @@
     "failed": "Başarısız."
   },
   "quizzes": {
-    "intro": "Sahibi kim olursa olsun kurulumdaki tüm quizler: biri ayrıldığında quizini devredin, dışa aktarın, bir sunucu için quiz içe aktarın, saklama süresi geçmiş oturumları temizleyin."
+    "search": "Quiz arayın",
+    "owner": "Sahip",
+    "everyone": "Herkes",
+    "status": "Durum",
+    "anyStatus": "Hepsi",
+    "statuses": {
+      "draft": "Taslak",
+      "ready": "Hazır",
+      "archived": "Arşivlendi"
+    },
+    "orphans": "Kimsenin erişemedikleri",
+    "none": "Eşleşen quiz yok.",
+    "count_one": "{{count}} quiz",
+    "count_other": "{{count}} quiz",
+    "questions_one": "{{count}} soru",
+    "questions_other": "{{count}} soru",
+    "live": "Bir odada oynatılıyor (PIN {{pin}})",
+    "unreachable": "Sahibi artık erişemiyor",
+    "close": "Kapat",
+    "columns": {
+      "quiz": "Quiz",
+      "owner": "Sahip",
+      "updated": "Güncellenme",
+      "actions": "İşlemler"
+    },
+    "actions": {
+      "quizzes_import": "Bir hesap için quiz içe aktar",
+      "samples_load": "Örnek quizleri ekle",
+      "sessions_purge": "Eski oturumları temizle",
+      "open": "Aç",
+      "export": "Dışa aktar",
+      "transfer": "Devret",
+      "archive": "Arşivle",
+      "restore": "Geri yükle",
+      "delete": "Sil"
+    },
+    "transfer": {
+      "title": "“{{title}}” quizini devret",
+      "help": "Başka bir hesaba: yalnızca bu quizin kullandığı medya ve geçmişi onunla gider; geri kalanı {{owner}} hesabında kalır.",
+      "search": "Ad, subject değeri veya e-posta",
+      "player": "katılımcı"
+    }
   },
   "audit": {
     "filter": "İşlem",

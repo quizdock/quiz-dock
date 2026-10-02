@@ -179,6 +179,35 @@ describe('AdminModule (integration)', () => {
       quizId = (await prisma.quiz.create({ data: { ownerId: owner.id, title: 'Capitals' } })).id;
     });
 
+    it('is found by its title, its owner, its status, and among the orphans', async () => {
+      type Search = {
+        result: {
+          data: {
+            total: number;
+            items: { id: string; owner: { reachable: boolean }; livePin: string | null }[];
+            owners: { id: string }[];
+          };
+        };
+      };
+      const search = async (raw: Record<string, unknown>) =>
+        ((await run('quizzes.search', raw)) as Search).result.data;
+      const owner = await prisma.user.findUniqueOrThrow({ where: { oidcSubject: subject } });
+      const found = await search({ q: 'capit', owner: owner.id });
+      expect(found.items.map((i) => i.id)).toEqual([quizId]);
+      expect(found.items[0]).toMatchObject({ owner: { reachable: false }, livePin: null });
+      expect(found.owners.map((o) => o.id)).toContain(owner.id);
+      expect((await search({ q: 'capit', status: 'ready' })).items).toEqual([]);
+      expect((await search({ orphans: true, owner: owner.id })).total).toBe(1);
+      expect((await search({ q: 'capit', limit: 1, offset: 1 })).items).toEqual([]);
+    });
+
+    it('an account is found by its name, subject or e-mail', async () => {
+      const found = (await run('users.find', { q: 'admin-db' })) as {
+        result: { data: { accounts: { subject: string }[] } };
+      };
+      expect(found.result.data.accounts.map((a) => a.subject)).toEqual([subject]);
+    });
+
     it('is archived, then restored as a draft', async () => {
       expect(await run('quizzes.archive', { quiz: quizId })).toMatchObject({
         result: { outcome: 'done' },
