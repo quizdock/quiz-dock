@@ -8,6 +8,7 @@
     "media": "Media"
   },
   "sections": {
+    "statistics": "Statistics",
     "settings": "Settings",
     "health": "Health",
     "accounts": "Accounts",
@@ -565,6 +566,51 @@
           "help": "No transitions, more time to read."
         }
       }
+    }
+  },
+  "stats": {
+    "live": {
+      "title": "Live",
+      "updated": "Updated at {{time}}",
+      "stale": "Could not be read again — figures from {{ago}}",
+      "games": "Games under way",
+      "players": "Players connected",
+      "none": "No game is being played right now.",
+      "lobby_one": "{{count}} in the lobby",
+      "lobby_other": "{{count}} in the lobby",
+      "playing_one": "{{count}} being played",
+      "playing_other": "{{count}} being played"
+    },
+    "columns": {
+      "quiz": "Quiz",
+      "host": "Host",
+      "progress": "Where it is",
+      "players": "Players",
+      "since": "Opened"
+    },
+    "pin": "PIN {{pin}}",
+    "phase": {
+      "lobby": "Lobby",
+      "question": "Question {{index}} of {{total}}"
+    },
+    "instance": {
+      "title": "The instance",
+      "accounts": "Accounts",
+      "quizzes": "Quizzes ready to play",
+      "media": "Media",
+      "mediaDetail_one": "{{count}} file",
+      "mediaDetail_other": "{{count}} files",
+      "history": "Games played",
+      "lastGame": "the last one ended {{ago}}",
+      "noGame": "none yet",
+      "hosts_one": "{{count}} host",
+      "hosts_other": "{{count}} hosts",
+      "admins_one": "{{count}} administrator",
+      "admins_other": "{{count}} administrators",
+      "drafts_one": "{{count}} draft",
+      "drafts_other": "{{count}} drafts",
+      "archived_one": "{{count}} archived",
+      "archived_other": "{{count}} archived"
     }
   }
 }

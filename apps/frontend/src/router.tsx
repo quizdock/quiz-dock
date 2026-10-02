@@ -25,6 +25,7 @@ import { AdminMediaPage } from './routes/admin-media-page';
 import { AdminLayout } from './routes/admin/admin-layout';
 import { AccountsPage, AuditPage, HealthPage } from './routes/admin/admin-pages';
 import { AdminQuizzesPage } from './routes/admin/admin-quizzes-page';
+import { AdminStatsPage } from './routes/admin/admin-stats-page';
 import { AdminSettingsPage } from './routes/admin/admin-settings-page';
 import { SetupPage } from './routes/setup/setup-page';
 import type { QuizImportDtoImportReport } from './api/generated/model';
@@ -305,10 +306,16 @@ const adminIndexRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: '/',
   beforeLoad: () => {
-    throw redirect({ to: '/admin/quizzes' });
+    throw redirect({ to: '/admin/statistics' });
   },
 });
 
+/** The administration's home: what is played right now, the instance at a glance. */
+export const adminStatsRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: 'statistics',
+  component: AdminStatsPage,
+});
 export const adminSettingsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'settings',
@@ -355,6 +362,7 @@ export const routeTree = rootRoute.addChildren([
   setupRoute,
   adminRoute.addChildren([
     adminIndexRoute,
+    adminStatsRoute,
     adminSettingsRoute,
     adminHealthRoute,
     adminAccountsRoute,

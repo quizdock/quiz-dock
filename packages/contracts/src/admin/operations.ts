@@ -16,7 +16,8 @@ export type OperationCategory =
   | 'presets'
   | 'setup'
   | 'media'
-  | 'audit';
+  | 'audit'
+  | 'stats';
 
 /** What an operation does to the instance: reading, changing, or destroying. */
 export type OperationEffect = 'read' | 'write' | 'destructive';

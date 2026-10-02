@@ -12,11 +12,12 @@ import { setAdminToken, useAdminToken, useReadOperation } from './admin-api';
 import type { SettingsList } from './settings-model';
 
 /**
- * The administration's sections, by domain (§0.1): the instance's content
- * first — its quizzes, its media —, then the instance itself, its accounts
- * before its settings.
+ * The administration's sections, by domain (§0.1): its statistics, its home,
+ * first; the instance's content next — its quizzes, its media —, then the
+ * instance itself, its accounts before its settings.
  */
 const SECTIONS = [
+  { domain: null, links: [{ to: '/admin/statistics', key: 'statistics' }] },
   { domain: 'quizzes', links: [{ to: '/admin/quizzes', key: 'quizzes' }] },
   { domain: 'media', links: [{ to: '/admin/media', key: 'media' }] },
   {
@@ -42,10 +43,12 @@ export function AdminLayout() {
       <PageTitle>{t('title')}</PageTitle>
       <nav aria-label={t('title')} className="flex flex-wrap gap-x-6 gap-y-2 border-b pb-2">
         {SECTIONS.map((section) => (
-          <div key={section.domain} className="flex items-center gap-1">
-            <span className="text-muted-foreground mr-1 text-xs font-medium uppercase">
-              {t(`domains.${section.domain}`)}
-            </span>
+          <div key={section.domain ?? 'home'} className="flex items-center gap-1">
+            {section.domain ? (
+              <span className="text-muted-foreground mr-1 text-xs font-medium uppercase">
+                {t(`domains.${section.domain}`)}
+              </span>
+            ) : null}
             {section.links.map((link) => (
               <Link
                 key={link.to}

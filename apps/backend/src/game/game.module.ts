@@ -5,14 +5,14 @@ import { UsersModule } from '../users/users.module';
 import { GameController } from './game.controller';
 import { GameEngine } from './game.engine';
 import { GameGateway } from './game.gateway';
-import { GameService } from './game.service';
+import { GameStateModule } from './game-state.module';
 import { PinAttempts } from './pin-attempts';
 import { SessionArchiveService } from './session-archive.service';
 
 // PrismaModule / RedisModule sont @Global → injectables sans réimport.
 @Module({
-  imports: [AuthModule, UsersModule, MediaModule],
+  imports: [AuthModule, UsersModule, MediaModule, GameStateModule],
   controllers: [GameController],
-  providers: [GameGateway, GameService, GameEngine, SessionArchiveService, PinAttempts],
+  providers: [GameGateway, GameEngine, SessionArchiveService, PinAttempts],
 })
 export class GameModule {}

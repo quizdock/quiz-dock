@@ -8,6 +8,7 @@
     "media": "Medya"
   },
   "sections": {
+    "statistics": "İstatistikler",
     "settings": "Ayarlar",
     "health": "Sağlık",
     "accounts": "Hesaplar",
@@ -565,6 +566,51 @@
           "help": "Geçiş yok, okumak için daha fazla süre."
         }
       }
+    }
+  },
+  "stats": {
+    "live": {
+      "title": "Canlı",
+      "updated": "{{time}} itibarıyla güncel",
+      "stale": "Yeniden okunamadı — {{ago}} tarihli rakamlar",
+      "games": "Süren oyunlar",
+      "players": "Bağlı oyuncular",
+      "none": "Şu anda oynanan bir oyun yok.",
+      "lobby_one": "{{count}} bekleme odasında",
+      "lobby_other": "{{count}} bekleme odasında",
+      "playing_one": "{{count}} oynanıyor",
+      "playing_other": "{{count}} oynanıyor"
+    },
+    "columns": {
+      "quiz": "Quiz",
+      "host": "Sunucu",
+      "progress": "Durum",
+      "players": "Oyuncular",
+      "since": "Açılış"
+    },
+    "pin": "PIN {{pin}}",
+    "phase": {
+      "lobby": "Bekleme odası",
+      "question": "Soru {{index}} / {{total}}"
+    },
+    "instance": {
+      "title": "Örnek",
+      "accounts": "Hesaplar",
+      "quizzes": "Oynanmaya hazır quizler",
+      "media": "Medya",
+      "mediaDetail_one": "{{count}} dosya",
+      "mediaDetail_other": "{{count}} dosya",
+      "history": "Oynanan oyunlar",
+      "lastGame": "sonuncusu {{ago}} bitti",
+      "noGame": "henüz yok",
+      "hosts_one": "{{count}} sunucu",
+      "hosts_other": "{{count}} sunucu",
+      "admins_one": "{{count}} yönetici",
+      "admins_other": "{{count}} yönetici",
+      "drafts_one": "{{count}} taslak",
+      "drafts_other": "{{count}} taslak",
+      "archived_one": "{{count}} arşivlenmiş",
+      "archived_other": "{{count}} arşivlenmiş"
     }
   }
 }

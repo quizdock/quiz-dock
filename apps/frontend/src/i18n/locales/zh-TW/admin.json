@@ -8,6 +8,7 @@
     "media": "媒體"
   },
   "sections": {
+    "statistics": "統計",
     "settings": "設定",
     "health": "健康狀態",
     "accounts": "帳號",
@@ -565,6 +566,51 @@
           "help": "無轉場效果、更多閱讀時間。"
         }
       }
+    }
+  },
+  "stats": {
+    "live": {
+      "title": "即時",
+      "updated": "更新於 {{time}}",
+      "stale": "無法重新讀取 — 資料來自 {{ago}}",
+      "games": "進行中的遊戲",
+      "players": "已連線的玩家",
+      "none": "目前沒有進行中的遊戲。",
+      "lobby_one": "{{count}} 個在等候室",
+      "lobby_other": "{{count}} 個在等候室",
+      "playing_one": "{{count}} 個進行中",
+      "playing_other": "{{count}} 個進行中"
+    },
+    "columns": {
+      "quiz": "測驗",
+      "host": "主持人",
+      "progress": "進度",
+      "players": "玩家",
+      "since": "開始"
+    },
+    "pin": "PIN {{pin}}",
+    "phase": {
+      "lobby": "等候室",
+      "question": "第 {{index}} 題，共 {{total}} 題"
+    },
+    "instance": {
+      "title": "實例",
+      "accounts": "帳戶",
+      "quizzes": "可開始的測驗",
+      "media": "媒體",
+      "mediaDetail_one": "{{count}} 個檔案",
+      "mediaDetail_other": "{{count}} 個檔案",
+      "history": "已進行的遊戲",
+      "lastGame": "最近一場結束於 {{ago}}",
+      "noGame": "尚無",
+      "hosts_one": "{{count}} 位主持人",
+      "hosts_other": "{{count}} 位主持人",
+      "admins_one": "{{count}} 位管理員",
+      "admins_other": "{{count}} 位管理員",
+      "drafts_one": "{{count}} 個草稿",
+      "drafts_other": "{{count}} 個草稿",
+      "archived_one": "{{count}} 個已封存",
+      "archived_other": "{{count}} 個已封存"
     }
   }
 }

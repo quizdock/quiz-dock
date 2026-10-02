@@ -8,6 +8,7 @@
     "media": "Medios"
   },
   "sections": {
+    "statistics": "Estadísticas",
     "settings": "Ajustes",
     "health": "Estado",
     "accounts": "Cuentas",
@@ -565,6 +566,51 @@
           "help": "Sin transiciones, más tiempo para leer."
         }
       }
+    }
+  },
+  "stats": {
+    "live": {
+      "title": "En directo",
+      "updated": "Actualizado a las {{time}}",
+      "stale": "No se pudo leer de nuevo — cifras de {{ago}}",
+      "games": "Partidas en curso",
+      "players": "Jugadores conectados",
+      "none": "No hay ninguna partida en curso.",
+      "lobby_one": "{{count}} en la sala de espera",
+      "lobby_other": "{{count}} en la sala de espera",
+      "playing_one": "{{count}} en juego",
+      "playing_other": "{{count}} en juego"
+    },
+    "columns": {
+      "quiz": "Quiz",
+      "host": "Anfitrión",
+      "progress": "Progreso",
+      "players": "Jugadores",
+      "since": "Abierta"
+    },
+    "pin": "PIN {{pin}}",
+    "phase": {
+      "lobby": "Sala de espera",
+      "question": "Pregunta {{index}} de {{total}}"
+    },
+    "instance": {
+      "title": "La instancia",
+      "accounts": "Cuentas",
+      "quizzes": "Quizzes listos para jugar",
+      "media": "Medios",
+      "mediaDetail_one": "{{count}} archivo",
+      "mediaDetail_other": "{{count}} archivos",
+      "history": "Partidas jugadas",
+      "lastGame": "la última terminó {{ago}}",
+      "noGame": "ninguna todavía",
+      "hosts_one": "{{count}} anfitrión",
+      "hosts_other": "{{count}} anfitriones",
+      "admins_one": "{{count}} administrador",
+      "admins_other": "{{count}} administradores",
+      "drafts_one": "{{count}} borrador",
+      "drafts_other": "{{count}} borradores",
+      "archived_one": "{{count}} archivado",
+      "archived_other": "{{count}} archivados"
     }
   }
 }

@@ -8,6 +8,7 @@
     "media": "媒体"
   },
   "sections": {
+    "statistics": "统计",
     "settings": "设置",
     "health": "健康状况",
     "accounts": "账号",
@@ -565,6 +566,51 @@
           "help": "无过渡效果、更多阅读时间。"
         }
       }
+    }
+  },
+  "stats": {
+    "live": {
+      "title": "实时",
+      "updated": "更新于 {{time}}",
+      "stale": "无法重新读取 — 数据来自 {{ago}}",
+      "games": "进行中的游戏",
+      "players": "已连接的玩家",
+      "none": "当前没有进行中的游戏。",
+      "lobby_one": "{{count}} 个在等候室",
+      "lobby_other": "{{count}} 个在等候室",
+      "playing_one": "{{count}} 个进行中",
+      "playing_other": "{{count}} 个进行中"
+    },
+    "columns": {
+      "quiz": "测验",
+      "host": "主持人",
+      "progress": "进度",
+      "players": "玩家",
+      "since": "开始"
+    },
+    "pin": "PIN {{pin}}",
+    "phase": {
+      "lobby": "等候室",
+      "question": "第 {{index}} 题，共 {{total}} 题"
+    },
+    "instance": {
+      "title": "实例",
+      "accounts": "账户",
+      "quizzes": "可开始的测验",
+      "media": "媒体",
+      "mediaDetail_one": "{{count}} 个文件",
+      "mediaDetail_other": "{{count}} 个文件",
+      "history": "已进行的游戏",
+      "lastGame": "最近一场结束于 {{ago}}",
+      "noGame": "暂无",
+      "hosts_one": "{{count}} 位主持人",
+      "hosts_other": "{{count}} 位主持人",
+      "admins_one": "{{count}} 位管理员",
+      "admins_other": "{{count}} 位管理员",
+      "drafts_one": "{{count}} 个草稿",
+      "drafts_other": "{{count}} 个草稿",
+      "archived_one": "{{count}} 个已归档",
+      "archived_other": "{{count}} 个已归档"
     }
   }
 }

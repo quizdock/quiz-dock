@@ -15,6 +15,8 @@ import { SetupOperations, WIZARD_OPERATIONS } from './operations/setup.operation
 import { SetupService } from './setup/setup.service';
 import type { AdminOperation } from './operations/operation';
 import { SettingsOperations } from './operations/settings.operations';
+import { StatsOperations } from './operations/stats.operations';
+import { GameStateModule } from '../game/game-state.module';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
 import { OperationRunner } from './runner/operation-runner';
 import { OverridesService } from './settings/overrides.service';
@@ -28,6 +30,7 @@ const OPERATION_GROUPS = [
   PresetsOperations,
   SetupOperations,
   MediaOperations,
+  StatsOperations,
 ];
 
 /**
@@ -35,7 +38,7 @@ const OPERATION_GROUPS = [
  * stores. The accesses — `qd`, the admin API — sit on top of it.
  */
 @Module({
-  imports: [UsersModule, QuizzesModule, MediaModule],
+  imports: [UsersModule, QuizzesModule, MediaModule, GameStateModule],
   providers: [
     OverridesService,
     PresetService,

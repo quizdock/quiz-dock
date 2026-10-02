@@ -8,6 +8,7 @@
     "media": "Médias"
   },
   "sections": {
+    "statistics": "Statistiques",
     "settings": "Réglages",
     "health": "Santé",
     "accounts": "Comptes",
@@ -565,6 +566,51 @@
           "help": "Pas de transitions, plus de temps pour lire."
         }
       }
+    }
+  },
+  "stats": {
+    "live": {
+      "title": "En direct",
+      "updated": "Mis à jour à {{time}}",
+      "stale": "Lecture impossible — chiffres d’il y a {{ago}}",
+      "games": "Parties en cours",
+      "players": "Joueurs connectés",
+      "none": "Aucune partie en cours.",
+      "lobby_one": "{{count}} en salle d’attente",
+      "lobby_other": "{{count}} en salle d’attente",
+      "playing_one": "{{count}} en jeu",
+      "playing_other": "{{count}} en jeu"
+    },
+    "columns": {
+      "quiz": "Quiz",
+      "host": "Animateur",
+      "progress": "Avancement",
+      "players": "Joueurs",
+      "since": "Ouverte"
+    },
+    "pin": "PIN {{pin}}",
+    "phase": {
+      "lobby": "Salle d’attente",
+      "question": "Question {{index}} sur {{total}}"
+    },
+    "instance": {
+      "title": "L’instance",
+      "accounts": "Comptes",
+      "quizzes": "Quiz prêts à jouer",
+      "media": "Médias",
+      "mediaDetail_one": "{{count}} fichier",
+      "mediaDetail_other": "{{count}} fichiers",
+      "history": "Parties jouées",
+      "lastGame": "la dernière s’est terminée {{ago}}",
+      "noGame": "aucune pour l’instant",
+      "hosts_one": "{{count}} animateur",
+      "hosts_other": "{{count}} animateurs",
+      "admins_one": "{{count}} administrateur",
+      "admins_other": "{{count}} administrateurs",
+      "drafts_one": "{{count}} brouillon",
+      "drafts_other": "{{count}} brouillons",
+      "archived_one": "{{count}} archivé",
+      "archived_other": "{{count}} archivés"
     }
   }
 }

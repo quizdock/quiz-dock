@@ -23,10 +23,14 @@ The role comes from the identity provider's claims (OIDC) or from
 
 ## 2. The web administration
 
-*Administration* in the account menu (administrators only) opens on the
-quizzes; the media follow, then the instance — its accounts, settings, health
-and audit:
+*Administration* in the account menu (administrators only) opens on its
+statistics; the quizzes and the media follow, then the instance — its accounts,
+settings, health and audit:
 
+- **Statistics** — what is played right now, read again every five seconds:
+  the games under way (in the lobby or at which question), their host and their
+  connected players; then the instance at a glance — accounts, quizzes, media,
+  games kept in the history (`qd stats.live` gives the same figures).
 - **Settings** — every variable the application reads: its value (in megabytes
   and seconds, whatever unit the variable is written in; a secret only as *set*
   or *not set*), where it comes from (*default*, *.env*, *changed here*), its level (C1–C4),
@@ -57,7 +61,8 @@ and audit:
   it, deletes it — the confirmation names the quiz and its owner: export it
   first. Above the list: import a quiz for an account, add the sample quizzes to
   a bank, purge the sessions past their retention date.
-- **Media** — the instance's media library ([unchanged](#1-three-domains)).
+- **Media** — the instance's media library ([unchanged](#1-three-domains)); the
+  file chosen in the list shows beside it, with every quiz that uses it.
 
 A form is generated for each operation; one that destroys asks for a
 confirmation, one that can says first what it would do (*Preview*).

@@ -111,11 +111,14 @@ export function useReadOperation<T>(
   id: string,
   params: Record<string, unknown> = {},
   enabled = true,
+  /** Read again every so many ms (while the tab is shown), for live figures. */
+  refetchInterval?: number,
 ) {
   const channel = useContext(OperationChannelContext);
   return useQuery({
     queryKey: operationKey(id, params, channel.name),
     enabled,
+    refetchInterval,
     retry: false,
     queryFn: async () => {
       const answer = await channel.run(id, params);

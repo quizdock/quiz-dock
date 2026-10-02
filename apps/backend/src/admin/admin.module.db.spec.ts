@@ -6,6 +6,7 @@ import { AdminModule } from './admin.module';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { operationsHelp } from '../cli/adapter';
 import { WIZARD_OPERATIONS } from './operations/setup.operations';
+import type { LiveStats } from './operations/stats.operations';
 import { OperationRunner } from './runner/operation-runner';
 import { settings } from './settings/settings.service';
 
@@ -50,6 +51,20 @@ describe('AdminModule (integration)', () => {
     ).result.data.output;
     expect(output[0].level).toBe('table');
     expect(output[0].rows!.map((r) => r.subject)).toContain(subject);
+  });
+
+  it('stats.live counts the instance as the database holds it, the games played right now', async () => {
+    const outcome = await runner.run({ id: 'stats.live', raw: {}, actor: cli });
+    const stats = (outcome as { result: { data: LiveStats } }).result.data;
+    expect(stats.instance.accounts.total).toBe(
+      await prisma.user.count({ where: { deletedAt: null } }),
+    );
+    expect(stats.instance.quizzes.draft).toBe(
+      await prisma.quiz.count({ where: { status: 'draft' } }),
+    );
+    expect(stats.instance.history.sessions).toBe(await prisma.gameSessionLog.count());
+    expect(stats.totals.games).toBe(stats.games.length);
+    expect(stats.totals.lobby + stats.totals.playing).toBe(stats.totals.games);
   });
 
   it('users.set-role grants, is confirmed and audited', async () => {
