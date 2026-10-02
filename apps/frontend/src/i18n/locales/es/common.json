@@ -61,5 +61,7 @@
     "errorText": "Esta página ha dejado de funcionar. Lo que guardaste está a salvo.",
     "backHome": "Volver al inicio",
     "tryAgain": "Reintentar"
-  }
+  },
+  "stale": "No se pudo volver a leer: lo que se muestra es la última lectura.",
+  "retry": "Reintentar"
 }

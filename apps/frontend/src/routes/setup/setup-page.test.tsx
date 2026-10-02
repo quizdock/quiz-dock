@@ -101,6 +101,37 @@ describe('SetupPage (§3.8)', () => {
     );
   });
 
+  it('a blocking health problem stops the wizard at its health step', async () => {
+    mockApi([
+      { path: '/setup/status', body: { open: true, authMode: 'none', signedIn: true } },
+      { method: 'POST', path: '/setup/session', body: { session: 'sess-sess-sess-sess-sess' } },
+      { method: 'POST', path: '/setup/operations/settings.list', body: result(list) },
+      {
+        method: 'POST',
+        path: '/setup/operations/presets.list',
+        body: result({ axes: [], current: {} }),
+      },
+      {
+        method: 'POST',
+        path: '/setup/operations/health.doctor',
+        body: result({
+          output: [
+            { level: 'line', text: 'Database' },
+            { level: 'fail', text: 'PostgreSQL unreachable' },
+          ],
+        }),
+      },
+    ]);
+    renderPage();
+    fireEvent.change(await screen.findByLabelText('Jeton'), { target: { value: 'tok3n' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Commencer' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Santé/ }));
+    expect(await screen.findByText('PostgreSQL unreachable')).toBeInTheDocument();
+    expect(screen.getByText(/problème bloquant/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Suivant/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Identité/ })).toBeDisabled();
+  });
+
   it('a set-up instance keeps the wizard closed', async () => {
     mockApi([{ path: '/setup/status', body: { open: false, authMode: 'none', signedIn: true } }]);
     renderPage();

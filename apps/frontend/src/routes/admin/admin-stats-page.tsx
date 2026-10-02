@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { FileQuestion, History, Image, Radio, UserCog, Users } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
@@ -227,7 +228,8 @@ function HistorySection() {
       <h2 id="stats-history" className="text-lg font-semibold">
         {t('stats.history.title')}
       </h2>
-      {read.isError ? (
+      {read.isError && history ? <StaleNotice onRetry={() => void read.refetch()} /> : null}
+      {read.isError && !history ? (
         <LoadFailed error={read.error} />
       ) : !history ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />

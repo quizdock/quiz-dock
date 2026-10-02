@@ -2,6 +2,7 @@ import { DEPLOYMENT_VARIABLES, type SettingDefinition } from '@quiz-dock/contrac
 import { ExternalLink, LayoutGrid, Lock, PanelLeft, Rows3, Search, SearchX } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -67,7 +68,7 @@ export function SettingsPage({
     [data, query, filters, t],
   );
 
-  if (list.isError) return <LoadFailed error={list.error} />;
+  if (list.isError && !data) return <LoadFailed error={list.error} />;
   if (!data) return <Spinner label={t('loading')} showLabel className="text-sm" />;
 
   const toggle = (f: SettingFilter) =>
@@ -82,6 +83,7 @@ export function SettingsPage({
 
   return (
     <div className="flex flex-col gap-4">
+      {list.isError ? <StaleNotice onRetry={() => void list.refetch()} /> : null}
       <AccessBanner access={data.access} />
       {data.rules.length ? (
         <Notice role="status">

@@ -11,13 +11,13 @@ import {
   UserRoundCog,
   SearchX,
 } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
 import { EmptyState } from '@/components/ui/empty-state';
 import { QuizStatusBadge } from '@/components/quiz-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { FilterField } from '@/components/ui/filter-field';
 import { Input } from '@/components/ui/input';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
@@ -27,15 +27,11 @@ import { Pagination } from '@/components/ui/pagination';
 import { Popover } from '@/components/ui/popover';
 import { Select } from '@/components/ui/select';
 import { formatAgo } from '@/lib/format';
+import { useDebounced } from '@/lib/use-debounced';
 import { cn } from '@/lib/utils';
-import { apiErrorText } from '../../api/http';
-import {
-  type Answer,
-  useCatalogue,
-  useReadOperation,
-  useRefreshAdmin,
-  useRunOperation,
-} from './admin-api';
+import { saveBase64 } from '../../api/download';
+import { useCatalogue, useReadOperation } from './admin-api';
+import { useOperationAction } from './use-operation-action';
 import { OperationPanel } from './operation-panel';
 
 const PAGE = 25;
@@ -69,8 +65,9 @@ export function AdminQuizzesPage() {
   const [status, setStatus] = useState('');
   const [orphans, setOrphans] = useState(false);
   const [page, setPage] = useState(1);
+  const sought = useDebounced(q.trim());
   const params = {
-    ...(q.trim() ? { q: q.trim() } : {}),
+    ...(sought ? { q: sought } : {}),
     ...(owner ? { owner } : {}),
     ...(status ? { status } : {}),
     ...(orphans ? { orphans: true } : {}),
@@ -79,6 +76,11 @@ export function AdminQuizzesPage() {
   };
   const search = useReadOperation<SearchData>('quizzes.search', params);
   const data = search.data?.data;
+  const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE));
+  // The last row of the last page gone (deleted, archived away): back to a page that has rows.
+  useEffect(() => {
+    if (data && page > pages) setPage(pages);
+  }, [data, page, pages]);
   const filter = (apply: () => void) => {
     apply();
     setPage(1);
@@ -135,7 +137,8 @@ export function AdminQuizzesPage() {
         </button>
       </div>
 
-      {search.isError ? (
+      {search.isError && data ? <StaleNotice onRetry={() => void search.refetch()} /> : null}
+      {search.isError && !data ? (
         <LoadFailed error={search.error} />
       ) : !data ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />
@@ -198,9 +201,9 @@ export function AdminQuizzesPage() {
               </tbody>
             </table>
           </div>
-          <Pagination page={page} pages={Math.ceil(data.total / PAGE)} onChange={setPage} />
         </>
       )}
+      <Pagination page={page} pages={pages} onChange={setPage} />
     </div>
   );
 }
@@ -218,7 +221,12 @@ function PageActions() {
           {t(`quizzes.actions.${id.replace('.', '_')}`)}
         </Button>
       ))}
-      <Modal open={!!descriptor} onClose={() => setOpen(null)} className="w-full max-w-lg">
+      <Modal
+        open={!!descriptor}
+        onClose={() => setOpen(null)}
+        className="w-full max-w-lg"
+        aria-label={open ? t(`quizzes.actions.${open.replace('.', '_')}`) : undefined}
+      >
         {descriptor ? (
           <div className="flex flex-col gap-3 p-2">
             <OperationPanel descriptor={descriptor} />
@@ -240,30 +248,15 @@ function PageActions() {
 /** What an administrator does to one quiz, from its row. */
 function QuizActions({ quiz }: { quiz: QuizItem }) {
   const { t } = useTranslation('admin');
-  const run = useRunOperation();
-  const refresh = useRefreshAdmin();
-  const [confirm, setConfirm] = useState<{
-    answer: Extract<Answer, { kind: 'confirm' }>;
-    id: string;
-  } | null>(null);
+  const action = useOperationAction();
   const [transfer, setTransfer] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const playing = !!quiz.livePin;
+  const named = { title: quiz.title };
 
-  const call = async (id: string, params: Record<string, unknown>, confirmation?: string) => {
-    setError(null);
-    try {
-      const answer = await run(id, params, { confirmation });
-      if (answer.kind === 'confirm') {
-        setConfirm({ answer, id });
-        return;
-      }
-      const data = answer.result.data as { base64?: string; filename?: string } | undefined;
-      if (data?.base64 && data.filename) download(data.base64, data.filename);
-      else await refresh();
-    } catch (err) {
-      setError(apiErrorText(err));
-    }
+  const exportIt = async () => {
+    const result = await action.act('quizzes.export', { quiz: quiz.id });
+    const data = result?.data as { base64?: string; filename?: string } | undefined;
+    if (data?.base64 && data.filename) saveBase64(data.base64, data.filename);
   };
 
   return (
@@ -276,7 +269,7 @@ function QuizActions({ quiz }: { quiz: QuizItem }) {
             type="button"
             size="icon"
             variant="ghost"
-            aria-label={t('quizzes.columns.actions')}
+            aria-label={t('quizzes.actionsFor', named)}
             aria-expanded={open}
             onClick={toggle}
           >
@@ -294,21 +287,28 @@ function QuizActions({ quiz }: { quiz: QuizItem }) {
               <ExternalLink aria-hidden className="size-4" />
               {t('quizzes.actions.open')}
             </Link>
-            <MenuItem onClick={() => (close(), void call('quizzes.export', { quiz: quiz.id }))}>
+            <MenuItem onClick={() => (close(), void exportIt())}>
               <Download aria-hidden className="size-4" />
               {t('quizzes.actions.export')}
             </MenuItem>
-            <MenuItem disabled={playing} onClick={() => (close(), setTransfer(true))}>
+            <MenuItem
+              disabled={playing}
+              onClick={() => (close(), action.clearError(), setTransfer(true))}
+            >
               <UserRoundCog aria-hidden className="size-4" />
               {t('quizzes.actions.transfer')}
             </MenuItem>
             {quiz.status === 'archived' ? (
-              <MenuItem onClick={() => (close(), void call('quizzes.restore', { quiz: quiz.id }))}>
+              <MenuItem
+                onClick={() => (close(), void action.act('quizzes.restore', { quiz: quiz.id }))}
+              >
                 <ArchiveRestore aria-hidden className="size-4" />
                 {t('quizzes.actions.restore')}
               </MenuItem>
             ) : (
-              <MenuItem onClick={() => (close(), void call('quizzes.archive', { quiz: quiz.id }))}>
+              <MenuItem
+                onClick={() => (close(), void action.act('quizzes.archive', { quiz: quiz.id }))}
+              >
                 <Archive aria-hidden className="size-4" />
                 {t('quizzes.actions.archive')}
               </MenuItem>
@@ -317,7 +317,18 @@ function QuizActions({ quiz }: { quiz: QuizItem }) {
             <MenuItem
               destructive
               disabled={playing}
-              onClick={() => (close(), void call('quizzes.delete', { quiz: quiz.id }))}
+              onClick={() => (
+                close(),
+                void action.act(
+                  'quizzes.delete',
+                  { quiz: quiz.id },
+                  {
+                    title: quiz.title,
+                    confirmLabel: t('quizzes.actions.delete'),
+                    destructive: true,
+                  },
+                )
+              )}
             >
               <Trash2 aria-hidden className="size-4" />
               {t('quizzes.actions.delete')}
@@ -325,57 +336,49 @@ function QuizActions({ quiz }: { quiz: QuizItem }) {
           </>
         )}
       </Popover>
-      {error ? (
+      {action.error && !transfer ? (
         <p role="alert" className="text-destructive max-w-56 text-left text-xs">
-          {error}
+          {action.error}
         </p>
-      ) : null}
-      {/* Mounted when it asks: one closed dialog per row would weigh on a long list. */}
-      {confirm ? (
-        <ConfirmDialog
-          open
-          title={quiz.title}
-          description={confirm?.answer.summary}
-          destructive
-          confirmLabel={t('quizzes.actions.delete')}
-          onCancel={() => setConfirm(null)}
-          onConfirm={() => {
-            const pending = confirm;
-            setConfirm(null);
-            if (pending) void call(pending.id, { quiz: quiz.id }, pending.answer.token);
-          }}
-        />
       ) : null}
       {transfer ? (
         <TransferDialog
           quiz={quiz}
+          busy={action.busy}
+          error={action.error}
           onClose={() => setTransfer(false)}
           onTransfer={async (to) => {
-            await call('quizzes.transfer', { quiz: quiz.id, to });
-            setTransfer(false);
+            if (await action.act('quizzes.transfer', { quiz: quiz.id, to })) setTransfer(false);
           }}
         />
       ) : null}
+      {action.confirmDialog}
     </div>
   );
 }
 
-/** Hands a quiz over to another account, picked by its name, subject or e-mail. */
 function TransferDialog({
   quiz,
+  busy,
+  error,
   onClose,
   onTransfer,
 }: {
   quiz: QuizItem;
+  busy: boolean;
+  /** A refusal, said here: the dialog stays open on it. */
+  error: string | null;
   onClose: () => void;
   onTransfer: (to: string) => Promise<void>;
 }) {
   const { t } = useTranslation('admin');
+  const titleId = useId();
   const [q, setQ] = useState('');
   const [to, setTo] = useState('');
+  const sought = useDebounced(q.trim());
   const found = useReadOperation<{
     accounts: { name: string; subject: string; email: string | null; roles: string[] }[];
-  }>('users.find', { q: q.trim(), limit: 10 });
+  }>('users.find', { q: sought, limit: 10 });
   const accounts = (found.data?.data?.accounts ?? []).filter(
     (a) => a.subject !== quiz.owner.subject,
   );
@@ -384,9 +387,9 @@ function TransferDialog({
     if (to) void onTransfer(to);
   };
   return (
-    <Modal onClose={onClose} className="w-full max-w-md">
+    <Modal onClose={onClose} className="w-full max-w-md" aria-labelledby={titleId}>
       <form onSubmit={submit} className="flex flex-col gap-3 p-6 text-left">
-        <h2 className="text-lg font-semibold">
+        <h2 id={titleId} className="text-lg font-semibold">
           {t('quizzes.transfer.title', { title: quiz.title })}
         </h2>
         <p className="text-muted-foreground text-sm">
@@ -397,6 +400,7 @@ function TransferDialog({
           autoFocus
           value={q}
           placeholder={t('quizzes.transfer.search')}
+          aria-label={t('quizzes.transfer.search')}
           onChange={(e) => setQ(e.target.value)}
         />
         <ul className="flex max-h-60 flex-col overflow-y-auto">
@@ -413,29 +417,30 @@ function TransferDialog({
               >
                 {a.name}
                 <span className="text-muted-foreground text-xs">
-                  {a.email ?? a.subject} · {a.roles.join('+') || t('quizzes.transfer.player')}
+                  {a.email ?? a.subject} ·{' '}
+                  {(['admin', 'host'] as const)
+                    .filter((r) => a.roles.includes(r))
+                    .map((r) => t(`accounts.roles.${r}`))
+                    .join(', ') || t('accounts.roles.player')}
                 </span>
               </button>
             </li>
           ))}
         </ul>
+        {error ? (
+          <p role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        ) : null}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
             {t('edit.cancel')}
           </Button>
-          <Button type="submit" disabled={!to}>
+          <Button type="submit" disabled={!to || busy}>
             {t('quizzes.actions.transfer')}
           </Button>
         </div>
       </form>
     </Modal>
   );
-}
-
-/** Saves a bundle the API handed over as base64. */
-function download(base64: string, filename: string) {
-  const link = document.createElement('a');
-  link.href = `data:application/zip;base64,${base64}`;
-  link.download = filename;
-  link.click();
 }

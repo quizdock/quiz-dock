@@ -61,5 +61,7 @@
     "errorText": "Bu sayfa çalışmayı durdurdu. Kaydettiğiniz veriler güvende.",
     "backHome": "Ana sayfaya dön",
     "tryAgain": "Yeniden dene"
-  }
+  },
+  "stale": "Yeniden okunamadı: gösterilen son okumadır.",
+  "retry": "Yeniden dene"
 }

@@ -1,5 +1,5 @@
 import { customFetch } from '../../api/http';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 import type {
   AuditEntry,
@@ -111,10 +111,15 @@ export async function runOperationWithFile(
  */
 export interface OperationChannel {
   name: 'admin' | 'setup';
+  /**
+   * What the cached readings belong to: the administration, or one wizard
+   * session — a new session never reads what an ended one cached.
+   */
+  scope: string;
   run: typeof runOperation;
 }
 
-export const adminChannel: OperationChannel = { name: 'admin', run: runOperation };
+export const adminChannel: OperationChannel = { name: 'admin', scope: 'admin', run: runOperation };
 
 export const OperationChannelContext = createContext<OperationChannel>(adminChannel);
 
@@ -129,7 +134,12 @@ export const operationKey = (
   channel = 'admin',
 ) => ['admin-operation', id, params, channel];
 
-/** A reading operation, as a query: run on mount, again on demand. */
+/**
+ * A reading operation, as a query: run on mount, again on demand. It keeps the
+ * app's retry policy (a 5xx or a lost network is tried again, never a 4xx),
+ * and what it last read while it reads again — a new search, a refresh — so a
+ * page never blinks to a spinner, nor loses what is typed in it.
+ */
 export function useReadOperation<T>(
   id: string,
   params: Record<string, unknown> = {},
@@ -139,10 +149,10 @@ export function useReadOperation<T>(
 ) {
   const channel = useContext(OperationChannelContext);
   return useQuery({
-    queryKey: operationKey(id, params, channel.name),
+    queryKey: operationKey(id, params, channel.scope),
     enabled,
     refetchInterval,
-    retry: false,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const answer = await channel.run(id, params);
       if (answer.kind !== 'result') throw new Error('A reading operation asked to confirm');

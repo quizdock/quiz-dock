@@ -310,7 +310,8 @@
     "write": "Run",
     "preview": "Preview",
     "confirm": "Confirm",
-    "again": "Read again"
+    "again": "Read again",
+    "confirmTitle": "Confirm this change?"
   },
   "form": {
     "choose": "Choose…"
@@ -380,7 +381,8 @@
       "help": "To another account: the media only this quiz uses and its history follow it; {{owner}} keeps the rest.",
       "search": "Name, subject or e-mail",
       "player": "participant"
-    }
+    },
+    "actionsFor": "Actions for {{title}}"
   },
   "audit": {
     "filter": "Operation",
@@ -516,7 +518,8 @@
     "summary": {
       "set": "Set apart from the defaults",
       "env": "What was set here, as a .env excerpt — to pin it there:"
-    }
+    },
+    "blocked": "A blocking problem above: fix it (in .env, then restart), check again, and the wizard goes on."
   },
   "usage": {
     "preview": "What these answers set:",
@@ -693,6 +696,11 @@
       "failed_one": "{{count}} failed",
       "failed_other": "{{count}} failed",
       "list": "Applied migrations, newest first"
+    },
+    "level": {
+      "ok": "OK",
+      "warn": "Warning",
+      "fail": "Problem"
     }
   }
 }

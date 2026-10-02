@@ -1,14 +1,12 @@
 import { Plus, RotateCcw, Save, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MEDIA_LIBRARY_KINDS, type MediaLibraryLink } from '@quiz-dock/contracts';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
-import { apiErrorText } from '../../api/http';
-import { type Answer, useRunOperation, useRefreshAdmin } from './admin-api';
+import { useOperationAction } from './use-operation-action';
 import {
   type SettingRow,
   type SettingsAccess,
@@ -19,8 +17,6 @@ import {
   rawOf,
 } from './settings-model';
 
-type Confirm = Extract<Answer, { kind: 'confirm' }> & { run: (token: string) => Promise<void> };
-
 /**
  * The control of a row the web may change (§3.7): by type, checked as it is
  * typed, saved explicitly — never on each keystroke —, with the way back to
@@ -29,13 +25,15 @@ type Confirm = Extract<Answer, { kind: 'confirm' }> & { run: (token: string) => 
 export function SettingEditor({ row }: { row: SettingRow; access: SettingsAccess }) {
   const { t } = useTranslation('admin');
   const def = definitionOf(row.key);
-  const refresh = useRefreshAdmin();
-  const runOperation = useRunOperation();
+  const action = useOperationAction();
+  const { busy, error } = action;
   const [draft, setDraft] = useState<unknown>(() => (def ? draftOf(def, row.value) : row.value));
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [confirm, setConfirm] = useState<Confirm | null>(null);
+  // The value read again (after a save, a change elsewhere): the draft follows it.
+  const value = JSON.stringify(row.value);
+  useEffect(() => {
+    if (def) setDraft(draftOf(def, JSON.parse(value) as unknown));
+  }, [def, value]);
   if (!def) return null;
   const control = controlOf(def);
   const raw = rawOf(def, draft);
@@ -43,23 +41,12 @@ export function SettingEditor({ row }: { row: SettingRow; access: SettingsAccess
   const current = rawOf(def, draftOf(def, row.value));
   const changed = raw !== current;
 
-  const call = async (id: string, params: Record<string, unknown>, confirmation?: string) => {
-    setBusy(true);
-    setError(null);
+  const call = async (id: string, params: Record<string, unknown>) => {
     setSaved(false);
-    try {
-      const answer = await runOperation(id, params, { confirmation });
-      if (answer.kind === 'confirm') {
-        setConfirm({ ...answer, run: (token) => call(id, params, token) });
-      } else {
-        setSaved(true);
-        await refresh();
-      }
-    } catch (err) {
-      setError(apiErrorText(err));
-    } finally {
-      setBusy(false);
-    }
+    const done = await action.act(id, params, {
+      title: t(`labels.${row.key}`, { defaultValue: row.key }),
+    });
+    if (done) setSaved(true);
   };
 
   const id = `setting-${row.key}`;
@@ -185,18 +172,7 @@ export function SettingEditor({ row }: { row: SettingRow; access: SettingsAccess
           {t(`edit.saved.${row.applies}`)}
         </p>
       ) : null}
-      <ConfirmDialog
-        open={confirm !== null}
-        title={t(`labels.${row.key}`, { defaultValue: row.key })}
-        description={confirm?.summary}
-        confirmLabel={t('run.confirm')}
-        onCancel={() => setConfirm(null)}
-        onConfirm={() => {
-          const pending = confirm;
-          setConfirm(null);
-          if (pending) void pending.run(pending.token);
-        }}
-      />
+      {action.confirmDialog}
     </div>
   );
 }

@@ -32,13 +32,26 @@ export async function downloadFile(
     throw new ApiError(res.status, data);
   }
   const match = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '');
-  const blob = await res.blob();
+  saveBlob(await res.blob(), match?.[1] ?? fallbackName);
+}
+
+/** Hands a blob to the browser as a file to save. */
+export function saveBlob(blob: Blob, filename: string): void {
   const href = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = href;
-  a.download = match?.[1] ?? fallbackName;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(href);
+}
+
+/**
+ * A file an operation handed over as base64 (a quiz bundle), saved as a blob —
+ * not as a `data:` URL, which holds the whole file a second time as text.
+ */
+export function saveBase64(base64: string, filename: string, type = 'application/zip'): void {
+  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  saveBlob(new Blob([bytes], { type }), filename);
 }

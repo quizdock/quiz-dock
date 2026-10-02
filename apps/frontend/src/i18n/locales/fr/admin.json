@@ -310,7 +310,8 @@
     "write": "Exécuter",
     "preview": "Aperçu",
     "confirm": "Confirmer",
-    "again": "Relire"
+    "again": "Relire",
+    "confirmTitle": "Confirmer ce changement ?"
   },
   "form": {
     "choose": "Choisir…"
@@ -380,7 +381,8 @@
       "help": "À un autre compte : les médias que seul ce quiz utilise et son historique le suivent ; {{owner}} garde le reste.",
       "search": "Nom, sujet ou adresse e-mail",
       "player": "participant"
-    }
+    },
+    "actionsFor": "Actions pour {{title}}"
   },
   "audit": {
     "filter": "Opération",
@@ -516,7 +518,8 @@
     "summary": {
       "set": "Réglé autrement que par défaut",
       "env": "Ce qui a été réglé ici, en extrait de .env — pour l’y fixer :"
-    }
+    },
+    "blocked": "Un problème bloquant ci-dessus : corrigez-le (dans .env, puis redémarrez), vérifiez à nouveau, et l’assistant reprend."
   },
   "usage": {
     "preview": "Ce que ces réponses règlent :",
@@ -693,6 +696,11 @@
       "failed_one": "{{count}} en échec",
       "failed_other": "{{count}} en échec",
       "list": "Migrations appliquées, la plus récente d’abord"
+    },
+    "level": {
+      "ok": "OK",
+      "warn": "Avertissement",
+      "fail": "Problème"
     }
   }
 }

@@ -10,25 +10,22 @@ import {
 } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
+import { saveBase64 } from '../../api/download';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { Select } from '@/components/ui/select';
-import { apiErrorText } from '../../api/http';
 import {
-  type Answer,
   type OperationDescriptor,
   type OperationResult,
   type OutputEntry,
-  useRunOperation,
   useReadOperation,
-  useRefreshAdmin,
-  runOperationWithFile,
 } from './admin-api';
+import { useOperationAction } from './use-operation-action';
 
 interface PropertySchema {
   type?: string | string[];
@@ -85,43 +82,31 @@ export function OperationPanel({
   intro?: ReactNode;
 }) {
   const { t } = useTranslation('admin');
-  const refresh = useRefreshAdmin();
-  const runOperation = useRunOperation();
+  const action = useOperationAction();
   const fields = fieldsOf(descriptor);
   const [values, setValues] = useState<Record<string, string | boolean>>({});
   // The file of an operation that takes one as such (`upload`): sent as a file.
   const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ result: OperationResult; preview: boolean } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<Extract<Answer, { kind: 'confirm' }> | null>(null);
   const params = () => paramsFrom(fields, values);
+  const title = t(`operations.${descriptor.id}`, { defaultValue: descriptor.id });
+  const { busy, error } = action;
 
-  const call = async (options: { dryRun?: boolean; confirmation?: string } = {}) => {
-    setBusy(true);
-    setError(null);
-    try {
-      const answer =
-        descriptor.upload && file
-          ? await runOperationWithFile(descriptor.id, params(), file, options)
-          : await runOperation(descriptor.id, params(), options);
-      if (answer.kind === 'confirm') setConfirm(answer);
-      else {
-        setResult({ result: answer.result, preview: !!options.dryRun });
-        if (!options.dryRun && descriptor.effect !== 'read') await refresh();
-      }
-    } catch (err) {
-      setError(apiErrorText(err));
-    } finally {
-      setBusy(false);
-    }
+  const call = async (dryRun = false) => {
+    const done = await action.act(descriptor.id, params(), {
+      dryRun,
+      ...(descriptor.upload && file ? { file } : {}),
+      refresh: !dryRun && descriptor.effect !== 'read',
+      title,
+      destructive: descriptor.effect === 'destructive',
+    });
+    if (done) setResult({ result: done, preview: dryRun });
   };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void call();
   };
-  const title = t(`operations.${descriptor.id}`, { defaultValue: descriptor.id });
 
   return (
     <Card className="flex flex-col gap-3 p-4">
@@ -177,7 +162,7 @@ export function OperationPanel({
                 size="sm"
                 variant="outline"
                 disabled={busy}
-                onClick={() => void call({ dryRun: true })}
+                onClick={() => void call(true)}
               >
                 <Eye aria-hidden className="size-4" />
                 {t('run.preview')}
@@ -192,19 +177,7 @@ export function OperationPanel({
         </p>
       ) : null}
       {result ? <ResultView result={result.result} preview={result.preview} /> : null}
-      <ConfirmDialog
-        open={confirm !== null}
-        title={title}
-        description={confirm?.summary}
-        destructive={descriptor.effect === 'destructive'}
-        confirmLabel={t('run.confirm')}
-        onCancel={() => setConfirm(null)}
-        onConfirm={() => {
-          const token = confirm?.token;
-          setConfirm(null);
-          void call({ confirmation: token });
-        }}
-      />
+      {action.confirmDialog}
     </Card>
   );
 }
@@ -404,14 +377,14 @@ export function ResultView({
       {data?.output ? <OutputView entries={data.output} /> : null}
       {data?.rows ? <RowsTable rows={data.rows} /> : null}
       {data?.base64 && data.filename ? (
-        <a
-          href={`data:application/zip;base64,${data.base64}`}
-          download={data.filename}
-          className="inline-flex items-center gap-1 text-sm underline"
+        <button
+          type="button"
+          onClick={() => saveBase64(data.base64!, data.filename!)}
+          className="inline-flex items-center gap-1 self-start text-sm underline"
         >
           <Download aria-hidden className="size-4" />
           {t('result.download', { name: data.filename })}
-        </a>
+        </button>
       ) : null}
     </div>
   );
@@ -446,7 +419,8 @@ export function ReadPanel({
           <RefreshCw aria-hidden className={read.isFetching ? 'size-4 animate-spin' : 'size-4'} />
         </Button>
       </div>
-      {read.isError ? (
+      {read.isError && read.data ? <StaleNotice onRetry={() => void read.refetch()} /> : null}
+      {read.isError && !read.data ? (
         <LoadFailed error={read.error} />
       ) : !read.data ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />

@@ -3,15 +3,11 @@ import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 import { apiErrorText } from '../../api/http';
-import {
-  type Answer,
-  useReadOperation,
-  useRefreshAdmin,
-  useRunOperation,
-} from '../admin/admin-api';
+import { useReadOperation, useRunOperation } from '../admin/admin-api';
+import { useOperationAction } from '../admin/use-operation-action';
 import type { SettingRow } from '../admin/settings-model';
 import { Value } from '../admin/settings-page';
 
@@ -41,11 +37,12 @@ export function UsageStep() {
   const { t } = useTranslation('admin');
   const presets = useReadOperation<PresetsData>('presets.list');
   const run = useRunOperation();
-  const refresh = useRefreshAdmin();
+  const action = useOperationAction();
   const [answers, setAnswers] = useState<Answers | null>(null);
   const [changes, setChanges] = useState<PlanChange[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<Extract<Answer, { kind: 'confirm' }> | null>(null);
+  // The preview being read again: what is shown no longer matches the answers.
+  const [planning, setPlanning] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
   const data = presets.data?.data;
 
@@ -66,38 +63,37 @@ export function UsageStep() {
     if (!answers) return;
     if (Object.keys(answers).length === 0) {
       setChanges([]);
+      setPlanError(null);
       return;
     }
     let live = true;
+    setPlanning(true);
     run('presets.plan', answers)
       .then((a) => {
-        if (live && a.kind === 'result') {
-          setChanges((a.result.data as { plan: { changes: PlanChange[] } }).plan.changes);
-        }
+        if (!live || a.kind !== 'result') return;
+        setChanges((a.result.data as { plan: { changes: PlanChange[] } }).plan.changes);
+        setPlanError(null);
       })
-      .catch((err) => live && setError(apiErrorText(err)));
+      .catch((err) => live && setPlanError(apiErrorText(err)))
+      .finally(() => live && setPlanning(false));
     return () => {
       live = false;
     };
   }, [answers, run]);
 
-  if (!data || !answers) return null;
+  if (presets.isError && !data) return <LoadFailed error={presets.error} />;
+  if (!data || !answers) return <Spinner className="text-sm" />;
 
-  const apply = async (confirmation?: string) => {
-    setError(null);
-    try {
-      const a = await run('presets.apply', answers, { confirmation });
-      if (a.kind === 'confirm') setConfirm(a);
-      else {
-        setApplied(true);
-        await refresh();
-        // The preview, read again: what is left to change.
-        setAnswers((prev) => ({ ...prev }));
-      }
-    } catch (err) {
-      setError(apiErrorText(err));
-    }
+  const apply = async () => {
+    const done = await action.act('presets.apply', answers, {
+      title: t('setup.step.usage.title'),
+    });
+    if (!done) return;
+    setApplied(true);
+    // The preview, read again: what is left to change.
+    setAnswers((prev) => ({ ...prev }));
   };
+  const error = planError ?? action.error;
 
   return (
     <div className="flex flex-col gap-5">
@@ -171,7 +167,8 @@ export function UsageStep() {
             <Button
               type="button"
               size="sm"
-              disabled={!changes.some((c) => !c.skipped)}
+              // Never the answers of a preview not shown yet, nor twice at once.
+              disabled={planning || action.busy || !changes.some((c) => !c.skipped)}
               onClick={() => void apply()}
             >
               {t('usage.apply')}
@@ -189,18 +186,7 @@ export function UsageStep() {
           {error}
         </p>
       ) : null}
-      <ConfirmDialog
-        open={confirm !== null}
-        title={t('setup.step.usage.title')}
-        description={confirm?.summary}
-        confirmLabel={t('run.confirm')}
-        onCancel={() => setConfirm(null)}
-        onConfirm={() => {
-          const token = confirm?.token;
-          setConfirm(null);
-          void apply(token);
-        }}
-      />
+      {action.confirmDialog}
     </div>
   );
 }

@@ -1,8 +1,17 @@
 import { Link } from '@tanstack/react-router';
-import { Check, ChevronLeft, ChevronRight, CircleCheck, KeyRound, Smartphone } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  KeyRound,
+  RefreshCw,
+  Smartphone,
+} from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DoctorChecks, groupChecks, isBlocking } from '../admin/admin-health-page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,8 +34,9 @@ import {
   type OperationDescriptor,
   useReadOperation,
   useRunOperation,
+  type OutputEntry,
 } from '../admin/admin-api';
-import { OperationPanel, ReadPanel } from '../admin/operation-panel';
+import { OperationPanel } from '../admin/operation-panel';
 import { UsageStep } from './usage-step';
 import { SettingEditor } from '../admin/setting-editor';
 import type { SettingsList } from '../admin/settings-model';
@@ -46,6 +56,7 @@ function readSession(): string {
 function setupChannel(session: string): OperationChannel {
   return {
     name: 'setup',
+    scope: `setup:${session}`,
     run: async (id, params = {}, options = {}) => {
       const { data } = await setupControllerRun(
         id,
@@ -82,7 +93,7 @@ export function SetupPage() {
   const channel = useMemo(() => setupChannel(session), [session]);
   const data = status.data?.data;
 
-  if (status.isError) return <LoadFailed error={status.error} />;
+  if (status.isError && !data) return <LoadFailed error={status.error} />;
   if (!data) return <Spinner label={t('loading')} showLabel className="text-sm" />;
   return (
     <div className="content-lg flex flex-col gap-6">
@@ -186,6 +197,11 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
   const [step, setStep] = useState<Step>('usage');
   const [finished, setFinished] = useState(false);
   const list = useReadOperation<SettingsList>('settings.list');
+  const doctor = useReadOperation<{ output: OutputEntry[] }>('health.doctor');
+  const groups = doctor.data?.data ? groupChecks(doctor.data.data.output) : null;
+  // A blocking problem stops the wizard at its health step (§3.8).
+  const blocked = isBlocking(groups);
+  const healthAt = STEPS.indexOf('health');
   const at = STEPS.indexOf(step);
   // A session that ended (expired, the setup completed elsewhere): back to the token.
   useEffect(() => {
@@ -207,7 +223,7 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
       </Card>
     );
   }
-  if (list.isError) return <LoadFailed error={list.error} />;
+  if (list.isError && !list.data) return <LoadFailed error={list.error} />;
   if (!list.data?.data) return <Spinner label={t('loading')} showLabel className="text-sm" />;
   const data = list.data.data;
 
@@ -219,12 +235,13 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
             <button
               type="button"
               onClick={() => setStep(s)}
+              disabled={blocked && i > healthAt}
               aria-current={s === step ? 'step' : undefined}
               className={cn(
                 'flex items-center gap-1.5 rounded-full border px-3 py-1',
                 s === step
                   ? 'bg-primary text-primary-foreground border-transparent'
-                  : 'hover:bg-accent',
+                  : 'hover:bg-accent disabled:opacity-50 disabled:hover:bg-transparent',
               )}
             >
               {i < at ? (
@@ -237,11 +254,13 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
           </li>
         ))}
       </ol>
+      {/* The step's own heading: a step change is announced, not only seen. */}
+      <h2 className="text-lg font-semibold">{t(`setup.step.${step}.title`)}</h2>
       <p className="text-muted-foreground text-sm">{t(`setup.step.${step}.help`)}</p>
       {step === 'usage' ? (
         <UsageStep />
       ) : step === 'health' ? (
-        <HealthStep />
+        <HealthStep groups={groups} blocked={blocked} onAgain={() => void doctor.refetch()} />
       ) : step === 'identity' ? (
         <Settings data={data} keys={['APP_NAME', 'APP_LANG', 'APP_LOGO_URL', 'APP_FEEDBACK_URL']} />
       ) : step === 'address' ? (
@@ -273,7 +292,11 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
           {t('setup.previous')}
         </Button>
         {at < STEPS.length - 1 ? (
-          <Button type="button" onClick={() => setStep(STEPS[at + 1])}>
+          <Button
+            type="button"
+            disabled={blocked && at >= healthAt}
+            onClick={() => setStep(STEPS[at + 1])}
+          >
             {t('setup.next')}
             <ChevronRight aria-hidden className="size-4" />
           </Button>
@@ -294,9 +317,7 @@ function Settings({ data, keys }: { data: SettingsList; keys: string[] }) {
             row={row}
             access={data.access}
             wizard
-            editor={(r, access) => (
-              <SettingEditor key={`${r.key}:${JSON.stringify(r.value)}`} row={r} access={access} />
-            )}
+            editor={(r, access) => <SettingEditor key={r.key} row={r} access={access} />}
           />
         </Card>
       ))}
@@ -304,9 +325,27 @@ function Settings({ data, keys }: { data: SettingsList; keys: string[] }) {
   );
 }
 
-function HealthStep() {
+function HealthStep({
+  groups,
+  blocked,
+  onAgain,
+}: {
+  groups: ReturnType<typeof groupChecks> | null;
+  blocked: boolean;
+  onAgain: () => void;
+}) {
   const { t } = useTranslation('admin');
-  return <ReadPanel id="health.doctor" title={t('operations.health.doctor')} />;
+  if (!groups) return <Spinner label={t('loading')} showLabel className="text-sm" />;
+  return (
+    <div className="flex flex-col gap-3">
+      {blocked ? <Notice>{t('setup.blocked')}</Notice> : null}
+      <DoctorChecks groups={groups} />
+      <Button type="button" variant="outline" size="sm" className="self-start" onClick={onAgain}>
+        <RefreshCw aria-hidden className="size-4" />
+        {t('health.again')}
+      </Button>
+    </div>
+  );
 }
 
 function AddressStep({ data }: { data: SettingsList }) {

@@ -1,6 +1,7 @@
 import { ScrollText } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -62,9 +63,10 @@ export function AuditPage() {
           ))}
         </Select>
       </FilterField>
-      {audit.isError ? (
+      {audit.isError && audit.data ? <StaleNotice onRetry={() => void audit.refetch()} /> : null}
+      {audit.isError && !audit.data ? (
         <LoadFailed error={audit.error} />
-      ) : audit.isLoading ? (
+      ) : !audit.data ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />
       ) : entries.length === 0 ? (
         <EmptyState icon={ScrollText}>{t('audit.empty')}</EmptyState>

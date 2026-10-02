@@ -118,6 +118,35 @@ describe('AccountsPage', () => {
     );
   });
 
+  it('a refusal is said inside the dialog, which stays open', async () => {
+    mockApi([
+      { method: 'POST', path: '/admin/operations/users.search', body: result(page()) },
+      { method: 'GET', path: '/admin/operations', body: catalogue(true) },
+      {
+        method: 'POST',
+        path: '/admin/operations/users.set-role',
+        status: 409,
+        body: {
+          code: 'admin.conflict',
+          params: { message: 'The last administrator cannot lose the role.' },
+        },
+      },
+    ]);
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <AccountsPage />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Actions pour Claire' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Accorder ou retirer/ }));
+    const dialog = screen.getByRole('dialog', { name: 'Rôles accordés à Claire' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(/last administrator/);
+    expect(screen.getByRole('dialog', { name: 'Rôles accordés à Claire' })).toBeInTheDocument();
+  });
+
   it('says why roles cannot be changed from the web, and shows the seat in local mode', async () => {
     renderPage({ reachable: false, localMode: true });
     expect(await screen.findByText(/Tenue par Claire/)).toBeInTheDocument();

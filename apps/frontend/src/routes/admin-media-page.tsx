@@ -126,7 +126,7 @@ function Overview() {
     }
   };
 
-  if (overview.isError) return <LoadFailed error={overview.error} />;
+  if (overview.isError && !data) return <LoadFailed error={overview.error} />;
   if (!data) return <Spinner label={t('mediaAdmin.loading')} showLabel className="text-sm" />;
   const { cleanup } = data;
   return (
@@ -407,7 +407,7 @@ function Files() {
           {error}
         </p>
       ) : null}
-      {files.isError ? (
+      {files.isError && !list ? (
         <LoadFailed error={files.error} />
       ) : !list ? (
         <Spinner label={t('mediaAdmin.loading')} showLabel className="text-sm" />

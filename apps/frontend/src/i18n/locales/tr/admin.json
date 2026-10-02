@@ -310,7 +310,8 @@
     "write": "Çalıştır",
     "preview": "Önizle",
     "confirm": "Onayla",
-    "again": "Yeniden oku"
+    "again": "Yeniden oku",
+    "confirmTitle": "Bu değişiklik onaylansın mı?"
   },
   "form": {
     "choose": "Seçin…"
@@ -380,7 +381,8 @@
       "help": "Başka bir hesaba: yalnızca bu quizin kullandığı medya ve geçmişi onunla gider; geri kalanı {{owner}} hesabında kalır.",
       "search": "Ad, subject değeri veya e-posta",
       "player": "katılımcı"
-    }
+    },
+    "actionsFor": "{{title}} için işlemler"
   },
   "audit": {
     "filter": "İşlem",
@@ -516,7 +518,8 @@
     "summary": {
       "set": "Varsayılandan farklı ayarlananlar",
       "env": "Burada ayarlananlar, bir .env alıntısı olarak — oraya sabitlemek için:"
-    }
+    },
+    "blocked": "Yukarıda engelleyici bir sorun var: düzeltin (.env içinde, sonra yeniden başlatın), yeniden denetleyin ve sihirbaz devam eder."
   },
   "usage": {
     "preview": "Bu yanıtların ayarladıkları:",
@@ -693,6 +696,11 @@
       "failed_one": "{{count}} başarısız",
       "failed_other": "{{count}} başarısız",
       "list": "Uygulanan geçişler, en yenisi önce"
+    },
+    "level": {
+      "ok": "Tamam",
+      "warn": "Uyarı",
+      "fail": "Sorun"
     }
   }
 }

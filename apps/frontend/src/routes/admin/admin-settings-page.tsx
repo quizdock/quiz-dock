@@ -2,13 +2,12 @@ import { FileDown, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { apiErrorText } from '../../api/http';
-import { type Answer, useRunOperation, useReadOperation, useRefreshAdmin } from './admin-api';
+import { useReadOperation } from './admin-api';
 import { SettingEditor } from './setting-editor';
 import type { SettingsList } from './settings-model';
 import { SettingsPage } from './settings-page';
+import { useOperationAction } from './use-operation-action';
 
 /** The settings of the instance, read here; changed here where the scope allows (§3.7). */
 export function AdminSettingsPage() {
@@ -16,13 +15,9 @@ export function AdminSettingsPage() {
     <div className="flex flex-col gap-4">
       <OverridesActions />
       <SettingsPage
-        editor={(row, access) => (
-          <SettingEditor
-            key={`${row.key}:${JSON.stringify(row.value)}`}
-            row={row}
-            access={access}
-          />
-        )}
+        // Keyed by the setting alone: a save reads the row again without remounting
+        // its editor, which keeps saying it was saved and when it applies.
+        editor={(row, access) => <SettingEditor key={row.key} row={row} access={access} />}
       />
     </div>
   );
@@ -31,34 +26,17 @@ export function AdminSettingsPage() {
 /** What was changed here, as a `.env` excerpt; and all of it taken back at once. */
 function OverridesActions() {
   const { t } = useTranslation('admin');
-  const refresh = useRefreshAdmin();
-  const runOperation = useRunOperation();
   const list = useReadOperation<SettingsList>('settings.list');
+  const action = useOperationAction();
   const [env, setEnv] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<Extract<Answer, { kind: 'confirm' }> | null>(null);
   const data = list.data?.data;
   const changed = data?.rows.filter((r) => r.source === 'override').length ?? 0;
   if (!data || changed === 0) return null;
+  const writable = data.access.scope === 'write';
 
   const exportEnv = async () => {
-    setError(null);
-    try {
-      const answer = await runOperation('settings.export');
-      if (answer.kind === 'result') setEnv((answer.result.data as { env: string }).env);
-    } catch (err) {
-      setError(apiErrorText(err));
-    }
-  };
-  const resetAll = async (confirmation?: string) => {
-    setError(null);
-    try {
-      const answer = await runOperation('settings.reset', { all: true }, { confirmation });
-      if (answer.kind === 'confirm') setConfirm(answer);
-      else await refresh();
-    } catch (err) {
-      setError(apiErrorText(err));
-    }
+    const result = await action.act('settings.export', {}, { refresh: false });
+    if (result) setEnv((result.data as { env: string }).env);
   };
 
   return (
@@ -70,23 +48,33 @@ function OverridesActions() {
           size="sm"
           variant="outline"
           className="ml-auto"
+          disabled={action.busy}
           onClick={() => void exportEnv()}
         >
           <FileDown aria-hidden className="size-4" />
           {t('overrides.export')}
         </Button>
-        {data.access.scope === 'write' ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="destructive-outline"
-            onClick={() => void resetAll()}
-          >
-            <RotateCcw aria-hidden className="size-4" />
-            {t('overrides.resetAll')}
-          </Button>
-        ) : null}
+        {/* Greyed with its reason in read scope: never a missing button. */}
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive-outline"
+          disabled={!writable || action.busy}
+          onClick={() =>
+            void action.act(
+              'settings.reset',
+              { all: true },
+              { title: t('overrides.resetAll'), destructive: true },
+            )
+          }
+        >
+          <RotateCcw aria-hidden className="size-4" />
+          {t('overrides.resetAll')}
+        </Button>
       </div>
+      {!writable ? (
+        <p className="text-muted-foreground text-xs">{t('refusals.scope_read')}</p>
+      ) : null}
       {env !== null ? (
         <label className="flex flex-col gap-1 text-sm">
           {t('overrides.exportHelp')}
@@ -98,24 +86,12 @@ function OverridesActions() {
           />
         </label>
       ) : null}
-      {error ? (
+      {action.error ? (
         <p role="alert" className="text-destructive text-sm">
-          {error}
+          {action.error}
         </p>
       ) : null}
-      <ConfirmDialog
-        open={confirm !== null}
-        title={t('overrides.resetAll')}
-        description={confirm?.summary}
-        destructive
-        confirmLabel={t('run.confirm')}
-        onCancel={() => setConfirm(null)}
-        onConfirm={() => {
-          const token = confirm?.token;
-          setConfirm(null);
-          void resetAll(token);
-        }}
-      />
+      {action.confirmDialog}
     </div>
   );
 }

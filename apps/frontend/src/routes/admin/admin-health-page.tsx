@@ -1,5 +1,6 @@
 import { CircleAlert, CircleCheck, RefreshCw, TriangleAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
 import { Button } from '@/components/ui/button';
 import { Disclosure } from '@/components/ui/disclosure';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
@@ -59,7 +60,8 @@ export function HealthPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {doctor.isError ? (
+      {doctor.isError && groups ? <StaleNotice onRetry={() => void doctor.refetch()} /> : null}
+      {doctor.isError && !groups ? (
         <LoadFailed error={doctor.error} />
       ) : !groups ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />
@@ -104,26 +106,7 @@ export function HealthPage() {
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {groups.map((group) => (
-              <section key={group.title} className="flex flex-col gap-2 rounded-lg border p-4">
-                <h2 className="flex items-center justify-between gap-2 font-medium">
-                  {group.title}
-                  <GroupMark checks={group.checks} />
-                </h2>
-                <ul className="flex flex-col gap-1.5 text-sm">
-                  {group.checks.map((check, i) => {
-                    const Icon = ICON[check.level];
-                    return (
-                      <li key={i} className="flex items-start gap-2">
-                        <Icon
-                          aria-hidden
-                          className={cn('mt-0.5 size-4 shrink-0', TONE[check.level])}
-                        />
-                        <span className="break-words">{check.text}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
+              <CheckGroup key={group.title} group={group} />
             ))}
             {m ? (
               <section className="flex flex-col gap-2 rounded-lg border p-4">
@@ -165,6 +148,51 @@ export function HealthPage() {
   );
 }
 
+/**
+ * The doctor's checks, part by part (the administration's health page and the
+ * setup wizard's health step): a check's level is said in words too, not only
+ * by its icon's colour.
+ */
+export function DoctorChecks({ groups }: { groups: Group[] }) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {groups.map((group) => (
+        <CheckGroup key={group.title} group={group} />
+      ))}
+    </div>
+  );
+}
+
+/** Whether the doctor found a problem that keeps the instance from working (a `fail`). */
+export const isBlocking = (groups: Group[] | null) =>
+  !!groups?.some((g) => g.checks.some((c) => c.level === 'fail'));
+
+function CheckGroup({ group }: { group: Group }) {
+  const { t } = useTranslation('admin');
+  return (
+    <section className="flex flex-col gap-2 rounded-lg border p-4">
+      <h2 className="flex items-center justify-between gap-2 font-medium">
+        {group.title}
+        <GroupMark checks={group.checks} />
+      </h2>
+      <ul className="flex flex-col gap-1.5 text-sm">
+        {group.checks.map((check, i) => {
+          const Icon = ICON[check.level];
+          return (
+            <li key={i} className="flex items-start gap-2">
+              <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', TONE[check.level])} />
+              <span className="break-words">
+                <span className="sr-only">{t(`health.level.${check.level}`)}: </span>
+                {check.text}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 /** A group's verdict at a glance: the worst of its checks. */
 function GroupMark({ checks }: { checks: Check[] }) {
   const level = checks.some((c) => c.level === 'fail')
@@ -172,6 +200,11 @@ function GroupMark({ checks }: { checks: Check[] }) {
     : checks.some((c) => c.level === 'warn')
       ? 'warn'
       : 'ok';
+  const { t } = useTranslation('admin');
   const Icon = ICON[level];
-  return <Icon aria-hidden className={cn('size-4', TONE[level])} />;
+  return (
+    <span role="img" aria-label={t(`health.level.${level}`)}>
+      <Icon aria-hidden className={cn('size-4', TONE[level])} />
+    </span>
+  );
 }

@@ -1,10 +1,10 @@
 import { Armchair, EllipsisVertical, Search, ShieldCheck, Users } from 'lucide-react';
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StaleNotice } from '@/components/ui/stale-notice';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
-import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FilterField } from '@/components/ui/filter-field';
 import { Input } from '@/components/ui/input';
@@ -15,14 +15,9 @@ import { Pagination } from '@/components/ui/pagination';
 import { Popover } from '@/components/ui/popover';
 import { Select } from '@/components/ui/select';
 import { formatAgo } from '@/lib/format';
-import { apiErrorText } from '../../api/http';
-import {
-  type Answer,
-  useCatalogue,
-  useReadOperation,
-  useRefreshAdmin,
-  useRunOperation,
-} from './admin-api';
+import { useDebounced } from '@/lib/use-debounced';
+import { useCatalogue, useReadOperation } from './admin-api';
+import { useOperationAction } from './use-operation-action';
 
 type Role = 'host' | 'admin';
 
@@ -57,13 +52,18 @@ export function AccountsPage() {
   const [q, setQ] = useState('');
   const [role, setRole] = useState('');
   const [page, setPage] = useState(1);
+  const sought = useDebounced(q.trim());
   const read = useReadOperation<AccountsData>('users.search', {
-    ...(q.trim() ? { q: q.trim() } : {}),
+    ...(sought ? { q: sought } : {}),
     ...(role ? { role } : {}),
     limit: PAGE,
     offset: (page - 1) * PAGE,
   });
   const data = read.data?.data;
+  const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE));
+  useEffect(() => {
+    if (data && page > pages) setPage(pages);
+  }, [data, page, pages]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -95,7 +95,8 @@ export function AccountsPage() {
         </FilterField>
       </div>
 
-      {read.isError ? (
+      {read.isError && data ? <StaleNotice onRetry={() => void read.refetch()} /> : null}
+      {read.isError && !data ? (
         <LoadFailed error={read.error} />
       ) : !data ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />
@@ -131,13 +132,9 @@ export function AccountsPage() {
               </tbody>
             </table>
           </div>
-          <Pagination
-            page={page}
-            pages={Math.max(1, Math.ceil(data.total / PAGE))}
-            onChange={setPage}
-          />
         </>
       )}
+      <Pagination page={page} pages={pages} onChange={setPage} />
     </div>
   );
 }
@@ -183,31 +180,6 @@ function AccountRow({ account }: { account: Account }) {
   );
 }
 
-/** Runs an operation from the page: asks its confirmation when it wants one. */
-function useAct() {
-  const run = useRunOperation();
-  const refresh = useRefreshAdmin();
-  const [confirm, setConfirm] = useState<{
-    answer: Extract<Answer, { kind: 'confirm' }>;
-    id: string;
-    params: Record<string, unknown>;
-  } | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const act = async (id: string, params: Record<string, unknown>, confirmation?: string) => {
-    setError(null);
-    try {
-      const answer = await run(id, params, { confirmation });
-      if (answer.kind === 'confirm') setConfirm({ answer, id, params });
-      else await refresh();
-      return answer.kind === 'result';
-    } catch (err) {
-      setError(apiErrorText(err));
-      return false;
-    }
-  };
-  return { act, confirm, setConfirm, error };
-}
-
 /** Whether the web may run an operation here, and if not, why. */
 function useReachable(id: string): { reachable: boolean; why?: string } {
   const { t } = useTranslation('admin');
@@ -222,9 +194,9 @@ function AccountActions({ account }: { account: Account }) {
   const { t } = useTranslation('admin');
   const [editing, setEditing] = useState(false);
   const setRole = useReachable('users.set-role');
-  const { act, confirm, setConfirm, error } = useAct();
+  const action = useOperationAction();
   return (
-    <div className="flex flex-col items-end gap-1">
+    <>
       <Popover
         align="end"
         className="w-64 p-1"
@@ -243,7 +215,10 @@ function AccountActions({ account }: { account: Account }) {
       >
         {(close) => (
           <>
-            <MenuItem disabled={!setRole.reachable} onClick={() => (close(), setEditing(true))}>
+            <MenuItem
+              disabled={!setRole.reachable}
+              onClick={() => (close(), action.clearError(), setEditing(true))}
+            >
               <ShieldCheck aria-hidden className="size-4" />
               {t('accounts.editRoles')}
             </MenuItem>
@@ -253,54 +228,47 @@ function AccountActions({ account }: { account: Account }) {
           </>
         )}
       </Popover>
-      {error ? (
-        <p role="alert" className="text-destructive max-w-56 text-left text-xs">
-          {error}
-        </p>
-      ) : null}
       {editing ? (
         <RolesDialog
           account={account}
+          busy={action.busy}
+          error={action.error}
           onClose={() => setEditing(false)}
           onSave={async (roles) => {
-            if (await act('users.set-role', { user: account.subject, roles })) setEditing(false);
-          }}
-        />
-      ) : null}
-      {confirm ? (
-        <ConfirmDialog
-          open
-          title={account.name}
-          description={confirm.answer.summary}
-          confirmLabel={t('accounts.save')}
-          onCancel={() => setConfirm(null)}
-          onConfirm={() => {
-            const pending = confirm;
-            setConfirm(null);
-            void act(pending.id, pending.params, pending.answer.token).then(
-              (ok) => ok && setEditing(false),
+            const done = await action.act(
+              'users.set-role',
+              { user: account.subject, roles },
+              { title: account.name, confirmLabel: t('accounts.save') },
             );
+            if (done) setEditing(false);
           }}
         />
       ) : null}
-    </div>
+      {action.confirmDialog}
+    </>
   );
 }
 
 /**
  * The roles an administrator grants an account. The identity provider's own
- * roles stay whatever is ticked here: this changes only the grant.
+ * roles stay whatever is ticked here: this changes only the grant. A refusal
+ * is said here, where the person looks; the dialog closes once it is saved.
  */
 function RolesDialog({
   account,
+  busy,
+  error,
   onClose,
   onSave,
 }: {
   account: Account;
+  busy: boolean;
+  error: string | null;
   onClose: () => void;
   onSave: (roles: string) => Promise<void>;
 }) {
   const { t } = useTranslation('admin');
+  const titleId = useId();
   const [granted, setGranted] = useState<Set<Role>>(
     new Set(account.granted.filter((r): r is Role => r === 'host' || r === 'admin')),
   );
@@ -317,9 +285,9 @@ function RolesDialog({
     void onSave(roles || 'player');
   };
   return (
-    <Modal onClose={onClose} className="w-full max-w-md">
+    <Modal onClose={onClose} className="w-full max-w-md" aria-labelledby={titleId}>
       <form onSubmit={submit} className="flex flex-col gap-4 p-6 text-left">
-        <h2 className="text-lg font-semibold">
+        <h2 id={titleId} className="text-lg font-semibold">
           {t('accounts.rolesTitle', { name: account.name })}
         </h2>
         <p className="text-muted-foreground text-sm">{t('accounts.rolesHelp')}</p>
@@ -334,11 +302,18 @@ function RolesDialog({
             />
           ))}
         </div>
+        {error ? (
+          <p role="alert" className="text-destructive text-sm">
+            {error}
+          </p>
+        ) : null}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
             {t('accounts.cancel')}
           </Button>
-          <Button type="submit">{t('accounts.save')}</Button>
+          <Button type="submit" disabled={busy}>
+            {t('accounts.save')}
+          </Button>
         </div>
       </form>
     </Modal>
@@ -349,7 +324,7 @@ function RolesDialog({
 function SeatCard({ seat }: { seat: AccountsData['seat'] }) {
   const { t, i18n } = useTranslation('admin');
   const release = useReachable('seat.release');
-  const { act, confirm, setConfirm, error } = useAct();
+  const action = useOperationAction();
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
       <div className="flex items-center gap-3">
@@ -374,34 +349,31 @@ function SeatCard({ seat }: { seat: AccountsData['seat'] }) {
             type="button"
             size="sm"
             variant="outline"
-            disabled={!release.reachable}
-            title={release.why}
-            onClick={() => void act('seat.release', {})}
+            disabled={!release.reachable || action.busy}
+            onClick={() =>
+              void action.act(
+                'seat.release',
+                {},
+                {
+                  title: t('accounts.seat.release'),
+                  confirmLabel: t('accounts.seat.release'),
+                  destructive: true,
+                },
+              )
+            }
           >
             {t('accounts.seat.release')}
           </Button>
-          {error ? (
+          {/* The reason in words, not only in a tooltip. */}
+          {release.why ? <p className="text-muted-foreground text-xs">{release.why}</p> : null}
+          {action.error ? (
             <p role="alert" className="text-destructive text-xs">
-              {error}
+              {action.error}
             </p>
           ) : null}
         </div>
       ) : null}
-      {confirm ? (
-        <ConfirmDialog
-          open
-          destructive
-          title={t('accounts.seat.release')}
-          description={confirm.answer.summary}
-          confirmLabel={t('accounts.seat.release')}
-          onCancel={() => setConfirm(null)}
-          onConfirm={() => {
-            const pending = confirm;
-            setConfirm(null);
-            void act(pending.id, pending.params, pending.answer.token);
-          }}
-        />
-      ) : null}
+      {action.confirmDialog}
     </div>
   );
 }

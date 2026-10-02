@@ -61,5 +61,7 @@
     "errorText": "This page stopped working. What you saved is safe.",
     "backHome": "Back to home",
     "tryAgain": "Try again"
-  }
+  },
+  "stale": "Could not read again: what is shown is the last reading.",
+  "retry": "Try again"
 }

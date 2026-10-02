@@ -61,5 +61,7 @@
     "errorText": "Cette page a cessé de fonctionner. Ce que vous avez enregistré est en sécurité.",
     "backHome": "Retour à l’accueil",
     "tryAgain": "Réessayer"
-  }
+  },
+  "stale": "Impossible de relire : ce qui est affiché est la dernière lecture.",
+  "retry": "Réessayer"
 }

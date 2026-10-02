@@ -310,7 +310,8 @@
     "write": "运行",
     "preview": "预览",
     "confirm": "确认",
-    "again": "重新读取"
+    "again": "重新读取",
+    "confirmTitle": "确认此更改？"
   },
   "form": {
     "choose": "选择…"
@@ -380,7 +381,8 @@
       "help": "移交给另一个账号：仅此测验使用的媒体及其历史会随之转移；其余内容仍归 {{owner}} 所有。",
       "search": "名称、主体标识或邮箱",
       "player": "参与者"
-    }
+    },
+    "actionsFor": "{{title}} 的操作"
   },
   "audit": {
     "filter": "操作",
@@ -516,7 +518,8 @@
     "summary": {
       "set": "与默认值不同的设置",
       "env": "此处设置的内容，以 .env 片段形式呈现——可将其固定到 .env 中："
-    }
+    },
+    "blocked": "上方有阻塞性问题：修正它（在 .env 中，然后重启），重新检查后向导继续。"
   },
   "usage": {
     "preview": "这些回答将设置：",
@@ -693,6 +696,11 @@
       "failed_one": "{{count}} 个失败",
       "failed_other": "{{count}} 个失败",
       "list": "已应用的迁移，最新的在前"
+    },
+    "level": {
+      "ok": "正常",
+      "warn": "警告",
+      "fail": "问题"
     }
   }
 }
