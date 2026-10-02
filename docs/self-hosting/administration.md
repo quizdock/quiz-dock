@@ -8,6 +8,7 @@ from the command line — and what the operator allows the web to do.
 - [3. What the web may change](#3-what-the-web-may-change)
 - [4. The audit](#4-the-audit)
 - [5. From the command line](#5-from-the-command-line)
+- [6. The setup of a fresh instance](#6-the-setup-of-a-fresh-instance)
 
 ## 1. Three domains
 
@@ -75,7 +76,7 @@ confirmation, one that can says first what it would do (*Preview*).
 These live in `.env` only — never changed from the web — and apply at restart.
 `ADMIN_OVERRIDES=ignore` starts the instance on `.env` alone: every value changed
 from the administration is ignored (kept, not deleted) — the way back when one
-went wrong; `qd settings.reset --all=true` removes them from a shell.
+went wrong; `qd settings.reset --all` removes them from a shell.
 A critical variable (level C1: start-up, data, security) is never changed from
 the web. Too many wrong tokens from one address make it wait a quarter of an
 hour.
@@ -93,3 +94,40 @@ backed up with the database. Read it in *Administration → Audit*, or with
 Every operation of the web is one of `qd` too, never gated by
 `ADMIN_WEB_SCOPE`: a shell in the container already holds every right. See
 [CLI → operations](cli.md#operations).
+
+## 6. The setup of a fresh instance
+
+A fresh instance — no account yet — offers a **setup wizard** in the browser:
+the home page links to it (`/setup`). What the container needs before it starts
+(database, Redis, `AUTH_MODE`, ports, volumes) is set before, by
+`quizdock init` or in `.env`; the wizard shows it, read-only.
+
+**Who may run it.** Whoever reaches a fresh instance must not own it: at start,
+the backend writes a **setup token** in its logs (`docker compose logs quizdock`,
+or `docker logs quizdock`), valid a day, single use; `qd setup.token` gives a new
+one. With OIDC, the wizard also needs a signed-in account, and the administrator
+role from the provider to finish. Ten wrong tokens from one address make it wait
+a quarter of an hour.
+
+**Steps** — health (the checks of `qd doctor`: what fails is fixed in `.env`),
+identity (name, language, logo, feedback links), address (the public address,
+the local network addresses, and a test from a phone), access (the
+authentication mode as set; with OIDC, open access for participants; in local
+mode, the first administrator's name), limits and pace (a preset, or a value at
+a time), content (the sample quizzes for a host's bank), summary (what is set,
+and from where; a `.env` excerpt to pin it), *Finish*. The wizard sets the levels
+C2 to C4 whatever `ADMIN_WEB_SCOPE` says — it runs once, under the token —, never
+a variable `ADMIN_LOCK` names, never a C1. Every change is audited.
+
+**The phone test.** The server cannot tell whether a phone reaches it: for each
+candidate address the wizard shows a QR code to a test page; opened from a phone
+— on the guests' Wi-Fi or on mobile data, as a participant would be —, it marks
+the address as reached, and the host console then offers it first. When it fails,
+the wizard lists the usual causes (another network, isolated guests, a firewall,
+a public address without its name or port, Docker Desktop's bridge).
+
+**Once finished**, the wizard is closed for good; `qd setup.reopen` opens it
+again (from a shell only), with a new token. An automated deployment skips it
+with `qd setup.complete`; an instance already in use when it is upgraded is
+considered set up.
+

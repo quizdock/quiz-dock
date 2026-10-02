@@ -235,6 +235,17 @@
       "list": "Presets",
       "plan": "Preview a preset",
       "apply": "Apply a preset"
+    },
+    "setup": {
+      "status": "Setup",
+      "token": "New setup token",
+      "complete": "Finish the setup",
+      "reopen": "Reopen the setup",
+      "first-admin": "First administrator"
+    },
+    "invite": {
+      "test": "Test an address from a phone",
+      "test-status": "Phone test"
     }
   },
   "params": {
@@ -253,7 +264,10 @@
     "preset": "Preset",
     "pace": "Pace",
     "venue": "Venue",
-    "audience": "Audience"
+    "audience": "Audience",
+    "name": "Name",
+    "address": "Address",
+    "id": "Id"
   },
   "columns": {
     "name": "Name",
@@ -417,6 +431,84 @@
         "title": "Accessible",
         "help": "Time to read, no transitions, light videos."
       }
+    }
+  },
+  "setup": {
+    "title": "Setting up this instance",
+    "invite": "This instance is not set up yet.",
+    "inviteLink": "Set it up",
+    "closed": "This instance is set up: the wizard is closed (`qd setup.reopen` opens it again, from a shell).",
+    "home": "Home",
+    "signIn": "With an identity provider, the setup needs a signed-in account — the administrator role from the provider, to finish.",
+    "signInLink": "Sign in",
+    "steps": "Steps",
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Finish the setup",
+    "finished": "The instance is set up.",
+    "finishedHelp": "The wizard is closed for good. Everything set here can be changed later from the administration, as ADMIN_WEB_SCOPE allows.",
+    "token": {
+      "title": "Setup token",
+      "help": "Whoever reaches a fresh instance must not own it: give the setup token written in the instance's logs at start (or given by `qd setup.token` in the container). It works once, for a day.",
+      "label": "Token",
+      "open": "Start"
+    },
+    "step": {
+      "health": {
+        "title": "Health",
+        "help": "The database, Redis, the migrations, the folders, the critical variables. What fails here is fixed in .env, then the instance restarted."
+      },
+      "identity": {
+        "title": "Identity",
+        "help": "The name, the language, the logo, where the feedback links lead."
+      },
+      "address": {
+        "title": "Address",
+        "help": "The addresses offered to participants (QR code, join link), and a test from a phone."
+      },
+      "access": {
+        "title": "Access",
+        "help": "Who may enter. The authentication mode is set in .env, before the start."
+      },
+      "limits": {
+        "title": "Limits & pace",
+        "help": "The defaults suit most instances: a preset, or a value at a time, if yours differs."
+      },
+      "content": {
+        "title": "Content",
+        "help": "The sample quizzes, ready to present, for a host's bank."
+      },
+      "summary": {
+        "title": "Summary",
+        "help": "What is set, and where it comes from. Finishing closes the wizard for good."
+      }
+    },
+    "phone": {
+      "title": "Test from a phone",
+      "help": "The server cannot tell whether a phone reaches it: only a phone can. Scan the code of an address with a phone — on the guests' Wi-Fi or on mobile data, as a participant would be. A tested address is offered first.",
+      "start": "Test this address",
+      "again": "Test again",
+      "scan": "Scan with a phone: the page tells this one it got through.",
+      "reached": "Reached from a phone ({{agent}}).",
+      "why": {
+        "title": "Not reached? The usual causes",
+        "network": "Not the same network: a local address (192.168…, 10…) only answers phones on that network — the guests' Wi-Fi is often another one; on mobile data it never answers.",
+        "isolation": "Isolated guests: many guest or public Wi-Fi networks keep devices from seeing each other. Use the public address, or a network without it.",
+        "firewall": "A firewall: the machine may refuse incoming connections on the application's port.",
+        "public": "A public address needs a name pointing to the machine and its port open from the internet (or a reverse proxy) — and https for phones to install the app.",
+        "docker": "Docker Desktop, a bridge network: the container cannot see the machine's own addresses — set them in HOST_LAN_IPS."
+      }
+    },
+    "access": {
+      "firstAdmin": "Local mode: the name that will administer the instance (they sign in with it). Changes from the web also need ADMIN_TOKEN.",
+      "oidcAdmin": "With an identity provider, the administrator role comes from it (or from `qd user:set-role`)."
+    },
+    "content": {
+      "samples": "An account (its subject — local:<name> in local mode — or its e-mail): the sample quizzes go to its bank."
+    },
+    "summary": {
+      "set": "Set apart from the defaults",
+      "env": "What was set here, as a .env excerpt — to pin it there:"
     }
   }
 }

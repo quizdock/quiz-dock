@@ -199,5 +199,10 @@
     "timeout": "İşlem çok uzun sürdü.",
     "failed": "İşlem başarısız oldu: {{message}}",
     "too_many_requests": "Çok fazla deneme: biraz bekleyin."
+  },
+  "setup": {
+    "token_invalid": "Bu kurulum belirteci geçerli değil (yanlış, kullanılmış veya süresi dolmuş): `qd setup.token` yenisini verir.",
+    "session_invalid": "Kurulum oturumu sona erdi: yeni bir kurulum belirteci girin.",
+    "too_many_attempts": "Çok fazla yanlış belirteç: on beş dakika bekleyin."
   }
 }

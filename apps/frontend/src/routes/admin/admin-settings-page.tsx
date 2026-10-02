@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { apiErrorText } from '../../api/http';
-import { type Answer, runOperation, useReadOperation, useRefreshAdmin } from './admin-api';
+import { type Answer, useRunOperation, useReadOperation, useRefreshAdmin } from './admin-api';
 import { PresetsPanel } from './presets-panel';
 import { SettingEditor } from './setting-editor';
 import type { SettingsList } from './settings-model';
@@ -34,6 +34,7 @@ export function AdminSettingsPage() {
 function OverridesActions() {
   const { t } = useTranslation('admin');
   const refresh = useRefreshAdmin();
+  const runOperation = useRunOperation();
   const list = useReadOperation<SettingsList>('settings.list');
   const [env, setEnv] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);

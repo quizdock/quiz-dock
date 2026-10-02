@@ -235,6 +235,17 @@
       "list": "Préréglages",
       "plan": "Prévisualiser un préréglage",
       "apply": "Appliquer un préréglage"
+    },
+    "setup": {
+      "status": "Mise en service",
+      "token": "Nouveau jeton de mise en service",
+      "complete": "Terminer la mise en service",
+      "reopen": "Rouvrir la mise en service",
+      "first-admin": "Premier administrateur"
+    },
+    "invite": {
+      "test": "Tester une adresse depuis un téléphone",
+      "test-status": "Test depuis un téléphone"
     }
   },
   "params": {
@@ -253,7 +264,10 @@
     "preset": "Préréglage",
     "pace": "Rythme",
     "venue": "Lieu",
-    "audience": "Public"
+    "audience": "Public",
+    "name": "Nom",
+    "address": "Adresse",
+    "id": "Identifiant"
   },
   "columns": {
     "name": "Nom",
@@ -417,6 +431,84 @@
         "title": "Accessible",
         "help": "Le temps de lire, sans transitions, vidéos légères."
       }
+    }
+  },
+  "setup": {
+    "title": "Mise en service de cette instance",
+    "invite": "Cette instance n’est pas encore mise en service.",
+    "inviteLink": "La mettre en service",
+    "closed": "Cette instance est en service : l’assistant est fermé (`qd setup.reopen` le rouvre, depuis un shell).",
+    "home": "Accueil",
+    "signIn": "Avec un fournisseur d’identité, la mise en service demande un compte connecté — avec le rôle administrateur du fournisseur, pour la terminer.",
+    "signInLink": "Se connecter",
+    "steps": "Étapes",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "finish": "Terminer la mise en service",
+    "finished": "L’instance est en service.",
+    "finishedHelp": "L’assistant est fermé pour de bon. Tout ce qui a été réglé ici pourra être modifié plus tard depuis l’administration, dans la limite d’ADMIN_WEB_SCOPE.",
+    "token": {
+      "title": "Jeton de mise en service",
+      "help": "Qui atteint une instance neuve ne doit pas pouvoir se l’approprier : donnez le jeton de mise en service écrit dans les journaux de l’instance au démarrage (ou fourni par `qd setup.token` dans le conteneur). Il sert une seule fois, pendant une journée.",
+      "label": "Jeton",
+      "open": "Commencer"
+    },
+    "step": {
+      "health": {
+        "title": "Santé",
+        "help": "La base de données, Redis, les migrations, les dossiers, les variables critiques. Ce qui échoue ici se corrige dans .env, puis l’instance redémarrée."
+      },
+      "identity": {
+        "title": "Identité",
+        "help": "Le nom, la langue, le logo, la destination des liens de retours."
+      },
+      "address": {
+        "title": "Adresse",
+        "help": "Les adresses proposées aux participants (QR code, lien pour rejoindre), et un test depuis un téléphone."
+      },
+      "access": {
+        "title": "Accès",
+        "help": "Qui peut entrer. Le mode d’authentification se règle dans .env, avant le démarrage."
+      },
+      "limits": {
+        "title": "Limites et rythme",
+        "help": "Les valeurs par défaut conviennent à la plupart des instances : un préréglage, ou une valeur à la fois, si la vôtre diffère."
+      },
+      "content": {
+        "title": "Contenu",
+        "help": "Les quiz d’exemple, prêts à présenter, pour la banque d’un animateur."
+      },
+      "summary": {
+        "title": "Récapitulatif",
+        "help": "Ce qui est réglé, et d’où cela vient. Terminer ferme l’assistant pour de bon."
+      }
+    },
+    "phone": {
+      "title": "Test depuis un téléphone",
+      "help": "Le serveur ne peut pas savoir si un téléphone l’atteint : seul un téléphone le peut. Scannez le code d’une adresse avec un téléphone — sur le Wi-Fi des invités ou en données mobiles, comme le serait un participant. Une adresse testée est proposée en premier.",
+      "start": "Tester cette adresse",
+      "again": "Tester à nouveau",
+      "scan": "Scannez avec un téléphone : la page signale à celle-ci qu’elle est bien arrivée.",
+      "reached": "Atteinte depuis un téléphone ({{agent}}).",
+      "why": {
+        "title": "Pas atteinte ? Les causes habituelles",
+        "network": "Pas le même réseau : une adresse locale (192.168…, 10…) ne répond qu’aux téléphones de ce réseau — le Wi-Fi des invités en est souvent un autre ; en données mobiles, elle ne répond jamais.",
+        "isolation": "Invités isolés : beaucoup de Wi-Fi invités ou publics empêchent les appareils de se voir. Utilisez l’adresse publique, ou un réseau sans cette isolation.",
+        "firewall": "Un pare-feu : la machine refuse peut-être les connexions entrantes sur le port de l’application.",
+        "public": "Une adresse publique demande un nom qui pointe vers la machine et son port ouvert depuis Internet (ou un proxy inverse) — et https pour que les téléphones installent l’application.",
+        "docker": "Docker Desktop, un réseau bridge : le conteneur ne voit pas les adresses de la machine elle-même — indiquez-les dans HOST_LAN_IPS."
+      }
+    },
+    "access": {
+      "firstAdmin": "Mode local : le nom qui administrera l’instance (il se connecte avec). Les modifications depuis le web demandent aussi ADMIN_TOKEN.",
+      "oidcAdmin": "Avec un fournisseur d’identité, le rôle administrateur vient de lui (ou de `qd user:set-role`)."
+    },
+    "content": {
+      "samples": "Un compte (son sujet — local:<nom> en mode local — ou son adresse e-mail) : les quiz d’exemple vont dans sa banque."
+    },
+    "summary": {
+      "set": "Réglé autrement que par défaut",
+      "env": "Ce qui a été réglé ici, en extrait de .env — pour l’y fixer :"
     }
   }
 }

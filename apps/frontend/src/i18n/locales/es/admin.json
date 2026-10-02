@@ -235,6 +235,17 @@
       "list": "Preajustes",
       "plan": "Previsualizar un preajuste",
       "apply": "Aplicar un preajuste"
+    },
+    "setup": {
+      "status": "Puesta en marcha",
+      "token": "Nuevo token de puesta en marcha",
+      "complete": "Terminar la puesta en marcha",
+      "reopen": "Reabrir la puesta en marcha",
+      "first-admin": "Primer administrador"
+    },
+    "invite": {
+      "test": "Probar una dirección desde un teléfono",
+      "test-status": "Prueba desde un teléfono"
     }
   },
   "params": {
@@ -253,7 +264,10 @@
     "preset": "Preajuste",
     "pace": "Ritmo",
     "venue": "Lugar",
-    "audience": "Público"
+    "audience": "Público",
+    "name": "Nombre",
+    "address": "Dirección",
+    "id": "ID"
   },
   "columns": {
     "name": "Nombre",
@@ -417,6 +431,84 @@
         "title": "Accesible",
         "help": "Tiempo para leer, sin transiciones, vídeos ligeros."
       }
+    }
+  },
+  "setup": {
+    "title": "Puesta en marcha de esta instancia",
+    "invite": "Esta instancia aún no está configurada.",
+    "inviteLink": "Configurarla",
+    "closed": "Esta instancia ya está configurada: el asistente está cerrado (`qd setup.reopen` lo vuelve a abrir, desde una shell).",
+    "home": "Inicio",
+    "signIn": "Con un proveedor de identidad, la puesta en marcha requiere una cuenta con sesión iniciada — con el rol de administrador del proveedor, para terminarla.",
+    "signInLink": "Iniciar sesión",
+    "steps": "Pasos",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "finish": "Terminar la puesta en marcha",
+    "finished": "La instancia está configurada.",
+    "finishedHelp": "El asistente queda cerrado definitivamente. Todo lo definido aquí se puede cambiar más tarde desde la administración, según lo permita ADMIN_WEB_SCOPE.",
+    "token": {
+      "title": "Token de puesta en marcha",
+      "help": "Quien llegue a una instancia nueva no debe poder apropiársela: introduce el token de puesta en marcha escrito en los registros de la instancia al arrancar (o el que da `qd setup.token` en el contenedor). Sirve una sola vez, durante un día.",
+      "label": "Token",
+      "open": "Empezar"
+    },
+    "step": {
+      "health": {
+        "title": "Estado",
+        "help": "La base de datos, Redis, las migraciones, las carpetas, las variables críticas. Lo que falle aquí se corrige en .env y después se reinicia la instancia."
+      },
+      "identity": {
+        "title": "Identidad",
+        "help": "El nombre, el idioma, el logotipo, adónde llevan los enlaces de comentarios."
+      },
+      "address": {
+        "title": "Dirección",
+        "help": "Las direcciones ofrecidas a los participantes (código QR, enlace para unirse) y una prueba desde un teléfono."
+      },
+      "access": {
+        "title": "Acceso",
+        "help": "Quién puede entrar. El modo de autenticación se define en .env, antes del arranque."
+      },
+      "limits": {
+        "title": "Límites y ritmo",
+        "help": "Los valores por defecto sirven para la mayoría de las instancias: un preajuste, o un valor cada vez, si la tuya es distinta."
+      },
+      "content": {
+        "title": "Contenido",
+        "help": "Los quizzes de ejemplo, listos para presentar, para el banco de un anfitrión."
+      },
+      "summary": {
+        "title": "Resumen",
+        "help": "Lo que está definido y de dónde viene. Terminar cierra el asistente definitivamente."
+      }
+    },
+    "phone": {
+      "title": "Prueba desde un teléfono",
+      "help": "El servidor no puede saber si un teléfono llega hasta él: solo un teléfono puede. Escanea el código de una dirección con un teléfono — en la Wi-Fi de invitados o con datos móviles, como lo haría un participante. Una dirección probada se ofrece primero.",
+      "start": "Probar esta dirección",
+      "again": "Probar de nuevo",
+      "scan": "Escanea con un teléfono: la página le avisa a esta de que ha llegado.",
+      "reached": "Alcanzada desde un teléfono ({{agent}}).",
+      "why": {
+        "title": "¿No se alcanza? Las causas habituales",
+        "network": "No es la misma red: una dirección local (192.168…, 10…) solo responde a los teléfonos de esa red — la Wi-Fi de invitados suele ser otra; con datos móviles nunca responde.",
+        "isolation": "Invitados aislados: muchas Wi-Fi de invitados o públicas impiden que los dispositivos se vean entre sí. Usa la dirección pública, o una red sin ese aislamiento.",
+        "firewall": "Un cortafuegos: puede que la máquina rechace las conexiones entrantes en el puerto de la aplicación.",
+        "public": "Una dirección pública necesita un nombre que apunte a la máquina y su puerto abierto desde Internet (o un proxy inverso) — y https para que los teléfonos instalen la aplicación.",
+        "docker": "Docker Desktop, una red bridge: el contenedor no ve las direcciones de la propia máquina — defínelas en HOST_LAN_IPS."
+      }
+    },
+    "access": {
+      "firstAdmin": "Modo local: el nombre que administrará la instancia (inicia sesión con él). Los cambios desde la web también requieren ADMIN_TOKEN.",
+      "oidcAdmin": "Con un proveedor de identidad, el rol de administrador viene de él (o de `qd user:set-role`)."
+    },
+    "content": {
+      "samples": "Una cuenta (su sujeto — local:<nombre> en modo local — o su correo electrónico): los quizzes de ejemplo van a su banco."
+    },
+    "summary": {
+      "set": "Distinto de los valores por defecto",
+      "env": "Lo definido aquí, como extracto de .env — para fijarlo allí:"
     }
   }
 }

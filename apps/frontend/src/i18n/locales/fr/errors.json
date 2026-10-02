@@ -199,5 +199,10 @@
     "timeout": "L’opération a pris trop de temps.",
     "failed": "L’opération a échoué : {{message}}",
     "too_many_requests": "Trop de tentatives : patientez un instant."
+  },
+  "setup": {
+    "token_invalid": "Ce jeton de mise en service n’est pas valide (erroné, utilisé ou expiré) : `qd setup.token` en donne un nouveau.",
+    "session_invalid": "La session de mise en service est terminée : donnez un nouveau jeton de mise en service.",
+    "too_many_attempts": "Trop de jetons erronés : patientez un quart d’heure."
   }
 }

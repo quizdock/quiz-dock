@@ -93,6 +93,11 @@ qd users.set-role --user=ada@example.org --roles=host,admin
 qd sessions.purge --dry-run          # what it would delete
 qd settings.list --key=APP_NAME      # a setting: value, source, default, problems
 qd audit.list --limit=20             # the last administrative actions
+qd settings.set --key=GAME_READ_DELAY_MS --value=4000   # an override, over .env
+qd settings.reset --key=GAME_READ_DELAY_MS              # back to .env (--all for every one)
+qd presets.apply --preset=classroom --dry-run           # what a preset would change
+qd setup.token                       # a new setup token for the web wizard
+qd setup.complete                    # skip the wizard (automated deployments)
 ```
 
 | Option | Effect |

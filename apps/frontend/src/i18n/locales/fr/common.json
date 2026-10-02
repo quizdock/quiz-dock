@@ -44,7 +44,8 @@
     "profile": "Mon compte",
     "template": "Modèle",
     "instanceMedia": "Médias de l’instance",
-    "admin": "Administration"
+    "admin": "Administration",
+    "setup": "Mise en service"
   },
   "demo": {
     "banner": "Démo publique — un seul compte animateur partagé par tous les visiteurs ; tout est effacé chaque heure."

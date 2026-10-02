@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { apiErrorText } from '../../api/http';
-import { type Answer, runOperation, useReadOperation, useRefreshAdmin } from './admin-api';
+import { type Answer, useRunOperation, useReadOperation, useRefreshAdmin } from './admin-api';
 import type { SettingRow, SettingsAccess } from './settings-model';
 import { Value } from './settings-page';
 
@@ -46,9 +46,17 @@ export function AxisBadge({ settingKey }: { settingKey: string }) {
  * Ready-made sets of values (§3.9): the named presets, one selector per axis,
  * the preview of every change before it is applied — at once, or not at all.
  */
-export function PresetsPanel({ access }: { access: SettingsAccess }) {
+export function PresetsPanel({
+  access,
+  wizard = false,
+}: {
+  access: SettingsAccess;
+  /** The setup wizard applies presets whatever the scope (§3.8). */
+  wizard?: boolean;
+}) {
   const { t } = useTranslation('admin');
   const refresh = useRefreshAdmin();
+  const runOperation = useRunOperation();
   const presets = usePresets();
   const [target, setTarget] = useState<Target | null>(null);
   const [changes, setChanges] = useState<PlanChange[] | null>(null);
@@ -57,7 +65,7 @@ export function PresetsPanel({ access }: { access: SettingsAccess }) {
   const [done, setDone] = useState(false);
   const data = presets.data?.data;
   if (!data) return null;
-  const readOnly = access.scope !== 'write' || access.safeMode;
+  const readOnly = (access.scope !== 'write' && !wizard) || access.safeMode;
   const matching = data.presets.find((p) =>
     Object.entries(p.levels).every(([axis, level]) => data.current[axis as PresetAxisId] === level),
   );

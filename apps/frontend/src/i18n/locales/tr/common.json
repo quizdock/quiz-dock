@@ -44,7 +44,8 @@
     "profile": "Hesabım",
     "template": "Şablon",
     "instanceMedia": "Kurulum medyası",
-    "admin": "Yönetim"
+    "admin": "Yönetim",
+    "setup": "İlk ayarlar"
   },
   "demo": {
     "banner": "Herkese açık demo — tüm ziyaretçiler aynı sunucu hesabını paylaşır; veriler her saat silinir."

@@ -6,6 +6,8 @@ import { Link } from '@tanstack/react-router';
 import { JoinPin } from '@/components/join-pin';
 import { useRole } from '../auth/use-role';
 import { PageTitle } from '@/components/ui/page-title';
+import { Notice } from '@/components/ui/notice';
+import { useSetupControllerStatus } from '../api/generated/setup/setup';
 
 export function LandingPage() {
   const { t } = useTranslation(['auth', 'common']);
@@ -14,6 +16,7 @@ export function LandingPage() {
   return (
     <section className="qd-home flex flex-col items-center gap-6 py-8 text-center">
       <PageTitle>{t('landing.title')}</PageTitle>
+      <SetupInvite />
       <Card className="content-sm">
         <CardHeader>
           <CardTitle>{t('landing.joinTitle')}</CardTitle>
@@ -133,5 +136,20 @@ function DemoLimits() {
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+/** A fresh instance: the way to its setup wizard (§3.8). */
+function SetupInvite() {
+  const { t } = useTranslation('admin');
+  const { data } = useSetupControllerStatus({ query: { retry: false, staleTime: 60_000 } });
+  if (!data?.data.open) return null;
+  return (
+    <Notice tone="info" className="content-sm text-left">
+      {t('setup.invite')}{' '}
+      <Link to="/setup" className="font-medium underline">
+        {t('setup.inviteLink')}
+      </Link>
+    </Notice>
   );
 }

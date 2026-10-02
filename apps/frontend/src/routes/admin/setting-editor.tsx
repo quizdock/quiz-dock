@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
 import { apiErrorText } from '../../api/http';
-import { type Answer, runOperation, useRefreshAdmin } from './admin-api';
+import { type Answer, useRunOperation, useRefreshAdmin } from './admin-api';
 import {
   type SettingRow,
   type SettingsAccess,
@@ -30,6 +30,7 @@ export function SettingEditor({ row }: { row: SettingRow; access: SettingsAccess
   const { t } = useTranslation('admin');
   const def = definitionOf(row.key);
   const refresh = useRefreshAdmin();
+  const runOperation = useRunOperation();
   const [draft, setDraft] = useState<unknown>(() => (def ? draftOf(def, row.value) : row.value));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -199,5 +199,10 @@
     "timeout": "操作耗时过长。",
     "failed": "操作失败：{{message}}",
     "too_many_requests": "尝试次数过多：请稍候。"
+  },
+  "setup": {
+    "token_invalid": "此初始化令牌无效（错误、已使用或已过期）：运行 `qd setup.token` 获取新令牌。",
+    "session_invalid": "初始化会话已结束：请提供新的初始化令牌。",
+    "too_many_attempts": "错误令牌过多：请等待一刻钟。"
   }
 }

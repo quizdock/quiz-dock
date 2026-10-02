@@ -235,6 +235,17 @@
       "list": "Hazır ayarlar",
       "plan": "Bir hazır ayarı önizle",
       "apply": "Bir hazır ayarı uygula"
+    },
+    "setup": {
+      "status": "İlk ayarlar",
+      "token": "Yeni kurulum belirteci",
+      "complete": "İlk ayarları bitir",
+      "reopen": "İlk ayarları yeniden aç",
+      "first-admin": "İlk yönetici"
+    },
+    "invite": {
+      "test": "Bir adresi telefondan test et",
+      "test-status": "Telefon testi"
     }
   },
   "params": {
@@ -253,7 +264,10 @@
     "preset": "Hazır ayar",
     "pace": "Tempo",
     "venue": "Mekân",
-    "audience": "Kitle"
+    "audience": "Kitle",
+    "name": "Ad",
+    "address": "Adres",
+    "id": "Kimlik"
   },
   "columns": {
     "name": "Ad",
@@ -417,6 +431,84 @@
         "title": "Erişilebilir",
         "help": "Okuma süresi, geçiş yok, hafif videolar."
       }
+    }
+  },
+  "setup": {
+    "title": "Bu kurulumun ilk ayarları",
+    "invite": "Bu kurulumun ilk ayarları henüz yapılmadı.",
+    "inviteLink": "Ayarları yap",
+    "closed": "Bu kurulumun ilk ayarları yapıldı: sihirbaz kapalı (bir kabukta `qd setup.reopen` onu yeniden açar).",
+    "home": "Ana sayfa",
+    "signIn": "Kimlik sağlayıcısı kullanılırken ilk ayarlar için oturum açmış bir hesap gerekir — bitirmek için de sağlayıcıdan gelen yönetici rolü.",
+    "signInLink": "Oturum aç",
+    "steps": "Adımlar",
+    "previous": "Önceki",
+    "next": "Sonraki",
+    "finish": "İlk ayarları bitir",
+    "finished": "Kurulumun ilk ayarları yapıldı.",
+    "finishedHelp": "Sihirbaz kalıcı olarak kapandı. Burada ayarlanan her şey daha sonra, ADMIN_WEB_SCOPE izin verdiği ölçüde yönetim ekranından değiştirilebilir.",
+    "token": {
+      "title": "Kurulum belirteci",
+      "help": "Yeni bir kuruluma erişen herkes onun sahibi olmamalı: kurulumun başlangıçta günlüklerine yazdığı kurulum belirtecini girin (veya konteynerde `qd setup.token` ile alın). Yalnızca bir kez ve bir gün boyunca geçerlidir.",
+      "label": "Belirteç",
+      "open": "Başla"
+    },
+    "step": {
+      "health": {
+        "title": "Sağlık",
+        "help": "Veritabanı, Redis, geçişler, klasörler, kritik değişkenler. Burada başarısız olanlar .env içinde düzeltilir, ardından kurulum yeniden başlatılır."
+      },
+      "identity": {
+        "title": "Kimlik",
+        "help": "Ad, dil, logo, geri bildirim bağlantılarının hedefi."
+      },
+      "address": {
+        "title": "Adres",
+        "help": "Katılımcılara sunulan adresler (QR kod, katılma bağlantısı) ve bir telefondan test."
+      },
+      "access": {
+        "title": "Erişim",
+        "help": "Kimin girebileceği. Kimlik doğrulama modu başlatmadan önce .env içinde ayarlanır."
+      },
+      "limits": {
+        "title": "Sınırlar ve tempo",
+        "help": "Varsayılanlar çoğu kuruluma uyar: sizinki farklıysa bir hazır ayar seçin veya değerleri tek tek ayarlayın."
+      },
+      "content": {
+        "title": "İçerik",
+        "help": "Sunuma hazır örnek quizler, bir sunucunun bankası için."
+      },
+      "summary": {
+        "title": "Özet",
+        "help": "Neyin ayarlandığı ve nereden geldiği. Bitirmek sihirbazı kalıcı olarak kapatır."
+      }
+    },
+    "phone": {
+      "title": "Telefondan test",
+      "help": "Sunucu bir telefonun kendisine ulaşıp ulaşamadığını bilemez: bunu yalnızca bir telefon bilebilir. Bir adresin kodunu telefonla tarayın — bir katılımcı gibi misafir Wi-Fi'ında veya mobil veriyle. Test edilmiş bir adres önce sunulur.",
+      "start": "Bu adresi test et",
+      "again": "Yeniden test et",
+      "scan": "Telefonla tarayın: sayfa, ulaştığını buraya bildirir.",
+      "reached": "Bir telefondan ulaşıldı ({{agent}}).",
+      "why": {
+        "title": "Ulaşılamadı mı? Olağan nedenler",
+        "network": "Aynı ağ değil: yerel bir adres (192.168…, 10…) yalnızca o ağdaki telefonlara yanıt verir — misafir Wi-Fi'ı çoğu zaman başka bir ağdır; mobil veriyle asla yanıt vermez.",
+        "isolation": "Misafir yalıtımı: birçok misafir veya genel Wi-Fi ağı cihazların birbirini görmesini engeller. Genel adresi veya yalıtımı olmayan bir ağı kullanın.",
+        "firewall": "Güvenlik duvarı: makine, uygulamanın portundaki gelen bağlantıları reddediyor olabilir.",
+        "public": "Genel bir adres, makineyi gösteren bir alan adı ve internetten açık bir port (veya ters proxy) gerektirir — telefonların uygulamayı yükleyebilmesi için de https.",
+        "docker": "Docker Desktop, bridge ağı: konteyner makinenin kendi adreslerini göremez — bunları HOST_LAN_IPS içinde ayarlayın."
+      }
+    },
+    "access": {
+      "firstAdmin": "Yerel mod: kurulumu yönetecek ad (bu adla oturum açar). Web üzerinden değişiklikler için ayrıca ADMIN_TOKEN gerekir.",
+      "oidcAdmin": "Kimlik sağlayıcısı kullanılırken yönetici rolü ondan gelir (veya `qd user:set-role` ile verilir)."
+    },
+    "content": {
+      "samples": "Bir hesap (subject değeri — yerel modda local:<ad> — veya e-postası): örnek quizler onun bankasına eklenir."
+    },
+    "summary": {
+      "set": "Varsayılandan farklı ayarlananlar",
+      "env": "Burada ayarlananlar, bir .env alıntısı olarak — oraya sabitlemek için:"
     }
   }
 }

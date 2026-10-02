@@ -1,3 +1,4 @@
+import type { PrismaService } from '../../prisma/prisma.service';
 import type { RedisService } from '../../redis/redis.service';
 import type { OverridesService } from '../settings/overrides.service';
 import { fakeRedis, memoryFlags } from '../testing/fake-redis';
@@ -8,12 +9,14 @@ import {
   SetupService,
 } from './setup.service';
 
-function setup() {
+function setup(accounts = 0) {
   const flags = memoryFlags();
   const redis = fakeRedis();
+  const prisma = { user: { count: () => Promise.resolve(accounts) } };
   const service = new SetupService(
     flags as unknown as OverridesService,
     redis as unknown as RedisService,
+    prisma as unknown as PrismaService,
   );
   return { service, flags, redis };
 }
@@ -79,5 +82,16 @@ describe('SetupService (§3.8)', () => {
     expect((await service.phoneTest(id))?.reached?.agent).toBe('Mozilla/5.0 (iPhone)');
     expect(await service.testedAddresses()).toEqual(['http://192.168.1.10:18080']);
     expect(await service.reached('unknown-unknown', 'x')).toBe(false);
+  });
+
+  it('a fresh instance announces a token; one already in use is set up', async () => {
+    const fresh = setup(0);
+    await fresh.service.announce();
+    expect(fresh.flags.flags.has('token')).toBe(true);
+    expect(await fresh.service.completed()).toBe(false);
+    const used = setup(3);
+    await used.service.announce();
+    expect(await used.service.completed()).toBe(true);
+    expect(used.flags.flags.has('token')).toBe(false);
   });
 });

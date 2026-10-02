@@ -63,6 +63,7 @@ describe('the setup wizard API (§3.8)', () => {
     setup = new SetupService(
       memoryFlags() as unknown as OverridesService,
       fakeRedis() as unknown as RedisService,
+      { user: { count: () => Promise.resolve(0) } } as never,
     );
     const runner = new OperationRunner(
       ops,

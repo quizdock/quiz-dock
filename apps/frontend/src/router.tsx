@@ -25,6 +25,7 @@ import { AdminMediaPage } from './routes/admin-media-page';
 import { AdminLayout } from './routes/admin/admin-layout';
 import { AccountsPage, AuditPage, HealthPage, QuizzesAdminPage } from './routes/admin/admin-pages';
 import { AdminSettingsPage } from './routes/admin/admin-settings-page';
+import { SetupPage } from './routes/setup/setup-page';
 import type { QuizImportDtoImportReport } from './api/generated/model';
 
 const requireAuth = () => {
@@ -284,6 +285,13 @@ export const joinScreenRoute = createRoute({
   component: FollowScreenPage,
 });
 
+/** The setup wizard of a fresh instance (SPECIFICATIONS-ADMIN §3.8): public, behind its token. */
+export const setupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/setup',
+  component: SetupPage,
+});
+
 /** The administration (SPECIFICATIONS-ADMIN): its sections by domain, for administrators. */
 export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -343,6 +351,7 @@ export const routeTree = rootRoute.addChildren([
   templateRoute,
   liveRoute,
   profileRoute,
+  setupRoute,
   adminRoute.addChildren([
     adminIndexRoute,
     adminSettingsRoute,

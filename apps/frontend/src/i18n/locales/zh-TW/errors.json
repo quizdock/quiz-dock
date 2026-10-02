@@ -199,5 +199,10 @@
     "timeout": "操作耗時過長。",
     "failed": "操作失敗：{{message}}",
     "too_many_requests": "嘗試次數過多：請稍候。"
+  },
+  "setup": {
+    "token_invalid": "此初始設定權杖無效（錯誤、已使用或已逾期）：執行 `qd setup.token` 取得新權杖。",
+    "session_invalid": "初始設定工作階段已結束：請提供新的初始設定權杖。",
+    "too_many_attempts": "錯誤權杖過多：請等待十五分鐘。"
   }
 }

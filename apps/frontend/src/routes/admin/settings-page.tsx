@@ -392,10 +392,11 @@ export function SettingDetail({
   access,
   editor,
   history = false,
-}: { row: SettingRow; history?: boolean } & Parts) {
+  wizard = false,
+}: { row: SettingRow; history?: boolean; wizard?: boolean } & Parts) {
   const { t } = useTranslation('admin');
   const def = definitionOf(row.key);
-  const reason = readOnlyReason(row, access);
+  const reason = readOnlyReason(row, access, wizard);
   return (
     <>
       <div className="flex flex-col gap-0.5">

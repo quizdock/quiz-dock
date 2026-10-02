@@ -84,11 +84,13 @@ export function editable(row: SettingRow, access: SettingsAccess): boolean {
 export function readOnlyReason(
   row: SettingRow,
   access: SettingsAccess,
+  /** The setup wizard sets C2–C4 whatever the scope (§3.8). */
+  wizard = false,
 ): 'critical' | 'locked' | 'scope' | 'safe-mode' | null {
   if (!row.overridable) return 'critical';
   if (row.locked) return 'locked';
   if (access.safeMode) return 'safe-mode';
-  if (access.scope !== 'write') return 'scope';
+  if (access.scope !== 'write' && !wizard) return 'scope';
   return null;
 }
 

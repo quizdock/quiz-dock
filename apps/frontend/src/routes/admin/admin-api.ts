@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useSyncExternalStore } from 'react';
+import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 import type {
   AuditEntry,
   OperationDescriptor,
@@ -82,11 +82,29 @@ export async function runOperation(
   return data as Answer;
 }
 
-export const operationKey = (id: string, params: Record<string, unknown> = {}) => [
-  'admin-operation',
-  id,
-  params,
-];
+/**
+ * How the pages reach the operations: the admin API, or the setup wizard's
+ * session (§3.8) — the same components on either.
+ */
+export interface OperationChannel {
+  name: 'admin' | 'setup';
+  run: typeof runOperation;
+}
+
+export const adminChannel: OperationChannel = { name: 'admin', run: runOperation };
+
+export const OperationChannelContext = createContext<OperationChannel>(adminChannel);
+
+/** Runs an operation through the page's channel. */
+export function useRunOperation(): typeof runOperation {
+  return useContext(OperationChannelContext).run;
+}
+
+export const operationKey = (
+  id: string,
+  params: Record<string, unknown> = {},
+  channel = 'admin',
+) => ['admin-operation', id, params, channel];
 
 /** A reading operation, as a query: run on mount, again on demand. */
 export function useReadOperation<T>(
@@ -94,12 +112,13 @@ export function useReadOperation<T>(
   params: Record<string, unknown> = {},
   enabled = true,
 ) {
+  const channel = useContext(OperationChannelContext);
   return useQuery({
-    queryKey: operationKey(id, params),
+    queryKey: operationKey(id, params, channel.name),
     enabled,
     retry: false,
     queryFn: async () => {
-      const answer = await runOperation(id, params);
+      const answer = await channel.run(id, params);
       if (answer.kind !== 'result') throw new Error('A reading operation asked to confirm');
       return answer.result as OperationResult<T>;
     },

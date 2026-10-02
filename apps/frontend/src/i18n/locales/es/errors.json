@@ -199,5 +199,10 @@
     "timeout": "La operación tardó demasiado.",
     "failed": "La operación falló: {{message}}",
     "too_many_requests": "Demasiados intentos: espera un momento."
+  },
+  "setup": {
+    "token_invalid": "Este token de puesta en marcha no es válido (incorrecto, usado o caducado): `qd setup.token` da uno nuevo.",
+    "session_invalid": "La sesión de puesta en marcha ha terminado: introduce un nuevo token de puesta en marcha.",
+    "too_many_attempts": "Demasiados tokens incorrectos: espera un cuarto de hora."
   }
 }

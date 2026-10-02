@@ -24,7 +24,7 @@ import {
   type OperationDescriptor,
   type OperationResult,
   type OutputEntry,
-  runOperation,
+  useRunOperation,
   useReadOperation,
   useRefreshAdmin,
 } from './admin-api';
@@ -85,6 +85,7 @@ export function OperationPanel({
 }) {
   const { t } = useTranslation('admin');
   const refresh = useRefreshAdmin();
+  const runOperation = useRunOperation();
   const fields = fieldsOf(descriptor);
   const [values, setValues] = useState<Record<string, string | boolean>>({});
   const [busy, setBusy] = useState(false);

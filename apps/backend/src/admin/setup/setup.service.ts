@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../redis/redis.service';
 import { OverridesService } from '../settings/overrides.service';
 
@@ -33,6 +34,7 @@ export class SetupService {
   constructor(
     private readonly overrides: OverridesService,
     private readonly redis: RedisService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async completed(): Promise<boolean> {
@@ -47,9 +49,21 @@ export class SetupService {
     return token;
   }
 
-  /** At the application's start: while the setup is open, a token in the logs. */
+  /**
+   * At the application's start: while the setup is open, a token in the logs.
+   * An instance already in use (accounts other than the application's own)
+   * predates the wizard: it is set up.
+   */
   async announce(): Promise<void> {
     if (await this.completed()) return;
+    const accounts = await this.prisma.user.count({
+      where: { NOT: { oidcSubject: { startsWith: 'system:' } } },
+    });
+    if (accounts > 0) {
+      await this.complete({ name: 'already in use' });
+      this.log.log('Instance already in use: the setup wizard is not offered.');
+      return;
+    }
     const token = await this.newToken({ name: 'start' });
     this.log.warn(
       `This instance is not set up yet. Open it in a browser and give the setup token ${token} ` +
