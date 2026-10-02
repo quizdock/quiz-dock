@@ -18,6 +18,7 @@ import { RedisService } from './redis/redis.service';
 import { QuizPortableService } from './quizzes/portable/quiz-portable.service';
 import { SampleQuizzesService } from './quizzes/samples/sample-quizzes.service';
 import { HostSeatService } from './users/host-seat.service';
+import { settings } from './admin/settings/settings.service';
 
 const USAGE = `QuizDock admin CLI — runs inside the app container.
 
@@ -109,7 +110,7 @@ async function main(argv: string[]): Promise<number> {
       case 'doctor': {
         const ok = await doctor(out, {
           prisma,
-          env: process.env,
+          settings,
           fetch,
           pingRedis: defaultPingRedis,
           probeWritable: defaultProbeWritable,

@@ -10,11 +10,13 @@ import {
   type OidcSettings,
 } from '../../auth/oidc/oidc-client';
 import { migrationStatus } from './migrate-status';
-import { settingsFrom } from '../../admin/settings/settings.service';
+import { SETTING_LIST, SETTINGS } from '@quiz-dock/contracts';
+import type { SettingsService } from '../../admin/settings/settings.service';
 
 export interface DoctorDeps {
   prisma: Pick<PrismaService, '$queryRaw'>;
-  env: NodeJS.ProcessEnv;
+  /** The configuration to check (the backend's, or a fixed one in tests). */
+  settings: SettingsService;
   fetch: typeof fetch;
   /** Redis ping (injected for tests). */
   pingRedis: (url: string) => Promise<void>;
@@ -23,6 +25,10 @@ export interface DoctorDeps {
   /** Shipped migrations folder; default `<cwd>/prisma/migrations`. */
   migrationsDir?: string;
 }
+
+/** Whether a variable is critical (C1): its problems fail the check. */
+const critical = (key: string) =>
+  SETTING_LIST.some((def) => def.key === key && def.criticality === 'C1');
 
 export async function defaultPingRedis(url: string): Promise<void> {
   const client = new Redis(url, {
@@ -47,7 +53,7 @@ export function defaultProbeWritable(dir: string): void {
  * troubleshooting table of the self-hosting guide. Returns `true` when healthy.
  */
 export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
-  const { env } = deps;
+  const { settings } = deps;
   let healthy = true;
   const fail = (msg: string) => {
     healthy = false;
@@ -55,13 +61,20 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
   };
 
   out.line('Environment');
-  const mode = env.AUTH_MODE ?? 'none';
-  if (mode === 'none' || mode === 'oidc') out.ok(`AUTH_MODE=${mode}`);
-  else fail(`AUTH_MODE=${mode} is not one of none|oidc`);
-  out.ok(`APP_NAME=${env.APP_NAME ?? 'QuizDock'}  APP_LANG=${env.APP_LANG ?? 'en'}`);
+  const mode = settings.get(SETTINGS.AUTH_MODE);
+  out.ok(`AUTH_MODE=${mode}`);
+  out.ok(
+    `APP_NAME=${settings.get(SETTINGS.APP_NAME)}  APP_LANG=${settings.get(SETTINGS.APP_LANG)}`,
+  );
+  // Values that cannot be read or fall outside their range, rules between variables:
+  // a critical one fails the check, the others are warnings.
+  for (const issue of settings.issues()) {
+    if (critical(issue.key)) fail(issue.message);
+    else out.warn(issue.message);
+  }
 
   out.line('Database');
-  if (!env.DATABASE_URL) fail('DATABASE_URL is not set');
+  if (!settings.get(SETTINGS.DATABASE_URL)) fail('DATABASE_URL is not set');
   else {
     try {
       await deps.prisma.$queryRaw`SELECT 1`;
@@ -82,10 +95,10 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
   }
 
   out.line('Redis');
-  if (!env.REDIS_URL) fail('REDIS_URL is not set');
+  if (settings.describe(SETTINGS.REDIS_URL).source === 'default') fail('REDIS_URL is not set');
   else {
     try {
-      await deps.pingRedis(env.REDIS_URL);
+      await deps.pingRedis(settings.get(SETTINGS.REDIS_URL));
       out.ok('Redis reachable');
     } catch (err) {
       fail(`Redis: ${(err as Error).message}`);
@@ -94,7 +107,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
 
   out.line('Media');
   // The uploaded media, and the shared templates' catalogue.
-  for (const dir of [env.MEDIA_DIR ?? '/data/media', env.STORE_DIR ?? '/data/store']) {
+  for (const dir of [settings.path(SETTINGS.MEDIA_DIR), settings.path(SETTINGS.STORE_DIR)]) {
     try {
       deps.probeWritable(dir);
       out.ok(`${dir} is writable`);
@@ -103,10 +116,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
     }
   }
 
-  const anonymous = env.ALLOW_ANONYMOUS_PARTICIPANTS === 'true';
-  if (anonymous && mode !== 'oidc') {
-    out.warn('ALLOW_ANONYMOUS_PARTICIPANTS=true has no effect outside AUTH_MODE=oidc');
-  }
+  const anonymous = settings.get(SETTINGS.ALLOW_ANONYMOUS_PARTICIPANTS);
 
   if (mode === 'oidc') {
     out.line('OIDC');
@@ -115,20 +125,18 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         ? 'participants: accounts or open access, chosen at each launch'
         : 'participants: accounts required (ALLOW_ANONYMOUS_PARTICIPANTS not set)',
     );
-    let settings: OidcSettings | null = null;
+    let oidc: OidcSettings | null = null;
     try {
-      settings = oidcSettings(settingsFrom(env));
+      oidc = oidcSettings(settings);
     } catch (err) {
       fail((err as Error).message);
     }
-    if (settings) {
-      const { issuer, internalUrl, clientSecret } = settings;
+    if (oidc) {
+      const { issuer, internalUrl, clientSecret } = oidc;
       out.ok(`issuer ${issuer}`);
       out.ok(
-        `client_id ${settings.clientId} (${clientSecret ? 'confidential' : 'public, PKCE'})  roles claim ${env.OIDC_ROLES_CLAIM || 'roles'}`,
+        `client_id ${oidc.clientId} (${clientSecret ? 'confidential' : 'public, PKCE'})  roles claim ${settings.get(SETTINGS.OIDC_ROLES_CLAIM)}`,
       );
-      if (env.OIDC_SESSION_SCOPE)
-        out.warn('OIDC_SESSION_SCOPE is ignored (sessions are server-side)');
       // The backend talks to the provider itself now: discovery gives it the token endpoint.
       const onBackChannel = (url: string) =>
         internalUrl && url.startsWith(new URL(issuer).origin)
@@ -136,7 +144,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
           : url;
       const url = onBackChannel(discoveryUrl(issuer));
       if (internalUrl) out.ok(`provider reached at ${internalUrl} from here`);
-      let jwksUri = settings.jwksUri ?? undefined;
+      let jwksUri = oidc.jwksUri ?? undefined;
       try {
         const res = await deps.fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

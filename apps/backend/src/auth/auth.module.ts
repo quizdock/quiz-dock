@@ -1,4 +1,4 @@
-import { Logger, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { RedisService } from '../redis/redis.service';
 import { UsersModule } from '../users/users.module';
@@ -26,11 +26,6 @@ import { OidcSessions } from './oidc/oidc-sessions';
       provide: OidcClient,
       useFactory: (): OidcClient | null => {
         if (!isOidcMode()) return null;
-        if (process.env.OIDC_SESSION_SCOPE) {
-          new Logger('Auth').warn(
-            'OIDC_SESSION_SCOPE is ignored: the session is a cookie the tabs share, the tokens stay on the server.',
-          );
-        }
         return new OidcClient(oidcSettings());
       },
     },

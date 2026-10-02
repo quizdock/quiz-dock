@@ -44,6 +44,23 @@ export default tseslint.config(
       'react-hooks/exhaustive-deps': 'warn',
     },
   },
+  // The backend reads its environment through the settings registry only
+  // (apps/backend/src/admin/settings): every variable declared, validated, documented.
+  {
+    files: ['apps/backend/src/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'process',
+          property: 'env',
+          message:
+            'Read a setting with settings.get(SETTINGS.…) (admin/settings), not process.env.',
+        },
+      ],
+    },
+  },
   // Fichiers de test : globals de test
   {
     files: ['**/*.spec.{ts,tsx}', '**/*.test.{ts,tsx}'],

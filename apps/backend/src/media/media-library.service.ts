@@ -1,8 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { type MediaAsset, type MediaKind, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { readableBy } from '../quizzes/quiz-access';
 import { ARCHIVED_MEDIA_REFS, QUIZ_MEDIA_REFS } from './media-usage.sql';
+import { type MediaLibraryLink, SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** One entry of an author's library: a file, whatever number of their media use it. */
 export interface MediaLibraryItem {
@@ -27,35 +29,6 @@ export interface MediaLibraryItem {
 }
 
 /** A free media library an author can look in, for the kinds it offers. */
-export interface MediaLibraryLink {
-  name: string;
-  url: string;
-  kinds: MediaKind[];
-}
-
-/**
- * Free libraries under open licences (Creative Commons, public domain), several for
- * each kind: images, videos, sounds and music. Content free of charge but under a
- * site's own licence (Pexels, Pixabay…) is left out: an author can add it.
- */
-const DEFAULT_LINKS: MediaLibraryLink[] = [
-  { name: 'OpenSoundLibrary', url: 'https://opensoundlibrary.com/', kinds: ['audio'] },
-  { name: 'Freesound', url: 'https://freesound.org/', kinds: ['audio'] },
-  { name: 'ccMixter', url: 'https://ccmixter.org/', kinds: ['audio'] },
-  { name: 'Openverse', url: 'https://openverse.org/', kinds: ['image', 'audio'] },
-  {
-    name: 'Wikimedia Commons',
-    url: 'https://commons.wikimedia.org/',
-    kinds: ['image', 'video', 'audio'],
-  },
-  {
-    name: 'NASA Image and Video Library',
-    url: 'https://images.nasa.gov/',
-    kinds: ['image', 'video', 'audio'],
-  },
-  { name: 'Internet Archive', url: 'https://archive.org/', kinds: ['image', 'video', 'audio'] },
-];
-
 const KINDS: MediaKind[] = ['image', 'video', 'audio'];
 const LIST_MAX = 300;
 
@@ -65,8 +38,6 @@ const LIST_MAX = 300;
  */
 @Injectable()
 export class MediaLibraryService {
-  private readonly log = new Logger(MediaLibraryService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -205,27 +176,7 @@ export class MediaLibraryService {
    * the defaults otherwise (or when the variable cannot be read).
    */
   links(): MediaLibraryLink[] {
-    const raw = process.env.MEDIA_LIBRARY_LINKS?.trim();
-    if (!raw) return DEFAULT_LINKS;
-    if (raw === 'none') return [];
-    try {
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) throw new Error('not a list');
-      return parsed.flatMap((l: Partial<MediaLibraryLink>) =>
-        typeof l?.name === 'string' && typeof l.url === 'string' && /^https?:\/\//.test(l.url)
-          ? [
-              {
-                name: l.name,
-                url: l.url,
-                kinds: Array.isArray(l.kinds) ? l.kinds.filter((k) => KINDS.includes(k)) : KINDS,
-              },
-            ]
-          : [],
-      );
-    } catch (err) {
-      this.log.warn(`MEDIA_LIBRARY_LINKS unreadable (${(err as Error).message}): defaults used`);
-      return DEFAULT_LINKS;
-    }
+    return settings.get(SETTINGS.MEDIA_LIBRARY_LINKS);
   }
 }
 

@@ -11,6 +11,7 @@ import { sessionsPurge } from './commands/sessions';
 import { samplesLoad, userList, userSetRole } from './commands/users';
 import { CliError, type Output } from './output';
 import type { HostSeatService } from '../users/host-seat.service';
+import { settingsFrom } from '../admin/settings/settings.service';
 
 function memOutput() {
   const lines: string[] = [];
@@ -72,7 +73,10 @@ describe('doctor', () => {
   });
   afterAll(() => rmSync(migrationsDir, { recursive: true, force: true }));
 
-  function deps(over: Partial<DoctorDeps> = {}, env: NodeJS.ProcessEnv = {}): DoctorDeps {
+  function deps(
+    over: Partial<DoctorDeps> = {},
+    env: Record<string, string | undefined> = {},
+  ): DoctorDeps {
     return {
       prisma: {
         $queryRaw: jest
@@ -82,14 +86,14 @@ describe('doctor', () => {
             { migration_name: '20260101_init', finished_at: new Date(), rolled_back_at: null },
           ]),
       },
-      env: {
+      settings: settingsFrom({
         AUTH_MODE: 'none',
         DATABASE_URL: 'postgres://x',
         REDIS_URL: 'redis://x',
         MEDIA_DIR: '/tmp',
         STORE_DIR: '/srv/store',
         ...env,
-      },
+      }),
       fetch: jest.fn() as unknown as typeof fetch,
       pingRedis: jest.fn().mockResolvedValue(undefined),
       probeWritable: jest.fn(),

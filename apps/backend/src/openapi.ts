@@ -12,9 +12,10 @@ async function generate(): Promise<void> {
   // La génération du document n'a pas besoin de base : on fournit une URL de
   // repli (sinon PrismaService refuse de s'instancier) et on coupe la connexion
   // Prisma — la CI génère l'OpenAPI sans Postgres.
-
+  /* eslint-disable no-restricted-properties -- a tool setting its own environment */
   process.env.DATABASE_URL ??= 'postgresql://openapi:openapi@localhost:5432/openapi';
   process.env.PRISMA_SKIP_CONNECT = '1';
+  /* eslint-enable no-restricted-properties */
 
   const app = await NestFactory.create(AppModule, { logger: false });
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
