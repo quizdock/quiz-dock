@@ -1,7 +1,5 @@
 import {
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
   Film,
   Image as ImageIcon,
   LayoutGrid,
@@ -51,7 +49,8 @@ import type {
 } from '../api/generated/model';
 import { useRole } from '../auth/use-role';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
-import { Modal } from '@/components/ui/modal';
+import { Drawer } from '@/components/ui/drawer';
+import { cn } from '@/lib/utils';
 import { PageTitle } from '@/components/ui/page-title';
 
 const PAGE_SIZE = 25;
@@ -243,7 +242,8 @@ function Files() {
   const [page, setPage] = useState(1);
   const [toDelete, setToDelete] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [toWithdraw, setToWithdraw] = useState<MediaFilesPageDtoItemsItem | null>(null);
-  const [previewAt, setPreviewAt] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const isWide = useWide();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const refreshAll = useRefreshAll();
@@ -294,16 +294,19 @@ function Files() {
     }
   };
 
-  const actions = (file: MediaFilesPageDtoItemsItem) => (
-    <FileActions
-      file={file}
-      scope={scope}
-      onDelete={() => setToDelete(file)}
-      onWithdraw={() => setToWithdraw(file)}
+  const selected = list?.items.find((f) => f.id === selectedId) ?? null;
+  const detail = selected ? (
+    <FileDetail
+      file={selected}
+      onDelete={() => setToDelete(selected)}
+      onWithdraw={() => setToWithdraw(selected)}
       onChanged={() => void refreshAll()}
       onError={setError}
+      // The sheet has its own title and close button.
+      onClose={isWide ? () => setSelectedId(null) : undefined}
     />
-  );
+  ) : null;
+  const isSelected = (file: MediaFilesPageDtoItemsItem) => file.id === selectedId;
 
   return (
     <section className="flex flex-col gap-3">
@@ -408,42 +411,68 @@ function Files() {
         <p className="text-muted-foreground text-sm">
           {scope === 'global' && !q ? t('mediaAdmin.instance.empty') : t('mediaAdmin.files.none')}
         </p>
-      ) : view === 'list' ? (
-        <ul className="divide-y rounded-lg border">
-          {list.items.map((file, i) => (
-            <li key={file.id} className="flex items-center gap-3 p-2">
-              <Thumb file={file} className="size-14" onOpen={() => setPreviewAt(i)} />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <FileTitle file={file} locale={i18n.language} />
-                <FileMeta file={file} locale={i18n.language} />
-              </div>
-              {actions(file)}
-            </li>
-          ))}
-        </ul>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {list.items.map((file, i) => (
-            <li key={file.id} className="flex flex-col gap-1.5 rounded-lg border p-2">
-              <Thumb file={file} className="aspect-video w-full" onOpen={() => setPreviewAt(i)} />
-              <FileTitle file={file} locale={i18n.language} />
-              <FileMeta file={file} locale={i18n.language} />
-              {actions(file)}
-            </li>
-          ))}
-        </ul>
+        // The list, and beside it the file chosen: what it is, where it is used,
+        // what can be done to it (a bottom sheet on a narrow screen).
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          {view === 'list' ? (
+            <ul className="divide-y rounded-lg border">
+              {list.items.map((file) => (
+                <li key={file.id}>
+                  <FileRow
+                    file={file}
+                    selected={isSelected(file)}
+                    onSelect={() => setSelectedId(file.id)}
+                  >
+                    <Thumb file={file} className="size-14" />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <FileTitle file={file} locale={i18n.language} />
+                      <FileMeta file={file} locale={i18n.language} />
+                    </div>
+                    <FileUsage file={file} />
+                  </FileRow>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+              {list.items.map((file) => (
+                <li key={file.id}>
+                  <FileRow
+                    file={file}
+                    selected={isSelected(file)}
+                    onSelect={() => setSelectedId(file.id)}
+                    className="flex-col items-stretch rounded-lg border"
+                  >
+                    <Thumb file={file} className="aspect-video w-full" />
+                    <FileTitle file={file} locale={i18n.language} />
+                    <FileMeta file={file} locale={i18n.language} />
+                    <FileUsage file={file} />
+                  </FileRow>
+                </li>
+              ))}
+            </ul>
+          )}
+          {isWide ? (
+            <aside aria-label={selected ? (selected.name ?? selected.mime) : undefined}>
+              <div className="sticky top-4 rounded-lg border p-4">
+                {detail ?? (
+                  <p className="text-muted-foreground text-sm">{t('mediaAdmin.detail.empty')}</p>
+                )}
+              </div>
+            </aside>
+          ) : (
+            <Drawer
+              open={!!selected}
+              onClose={() => setSelectedId(null)}
+              title={selected?.name ?? undefined}
+            >
+              {detail}
+            </Drawer>
+          )}
+        </div>
       )}
       <Pagination page={page} pages={pages} onChange={setPage} />
-      {list && previewAt !== null && list.items[previewAt] ? (
-        <PreviewDialog
-          files={list.items}
-          index={previewAt}
-          onIndex={setPreviewAt}
-          onClose={() => setPreviewAt(null)}
-          actions={actions(list.items[previewAt])}
-        />
-      ) : null}
-
       {toDelete ? (
         <DeleteFileDialog
           file={toDelete}
@@ -478,24 +507,12 @@ function Files() {
   );
 }
 
-/** A file's thumbnail; a click opens its preview. */
-function Thumb({
-  file,
-  className,
-  onOpen,
-}: {
-  file: MediaFilesPageDtoItemsItem;
-  className: string;
-  onOpen: () => void;
-}) {
-  const { t } = useTranslation('dashboard');
+/** A file's thumbnail. */
+function Thumb({ file, className }: { file: MediaFilesPageDtoItemsItem; className: string }) {
   const Icon = KIND_ICON[file.kind];
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      aria-label={t('mediaAdmin.preview.open', { name: file.name ?? file.mime })}
-      className={`bg-muted hover:ring-primary focus-visible:ring-primary flex shrink-0 cursor-zoom-in items-center justify-center overflow-hidden rounded hover:ring-2 focus-visible:ring-2 focus-visible:outline-none ${className}`}
+    <span
+      className={`bg-muted flex shrink-0 items-center justify-center overflow-hidden rounded ${className}`}
     >
       {file.kind === 'image' ? (
         <img src={file.url} alt="" loading="lazy" className="size-full object-cover" />
@@ -510,8 +527,73 @@ function Thumb({
       ) : (
         <Icon className="text-muted-foreground size-5" />
       )}
+    </span>
+  );
+}
+
+/** A file in the list: chosen with a click, shown beside it. */
+function FileRow({
+  file,
+  selected,
+  onSelect,
+  className,
+  children,
+}: {
+  file: MediaFilesPageDtoItemsItem;
+  selected: boolean;
+  onSelect: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation('dashboard');
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={t('mediaAdmin.detail.show', { name: file.name ?? file.mime })}
+      onClick={onSelect}
+      className={cn(
+        'flex w-full items-center gap-3 p-2 text-left',
+        selected ? 'bg-accent' : 'hover:bg-accent/50',
+        className,
+      )}
+    >
+      {children}
     </button>
   );
+}
+
+/** Where a file is used, at a glance; an older format said so. */
+function FileUsage({ file }: { file: MediaFilesPageDtoItemsItem }) {
+  const { t } = useTranslation('dashboard');
+  return (
+    <span className="flex shrink-0 flex-wrap items-center gap-1.5 text-xs">
+      {file.legacy ? <Badge variant="muted">{t('mediaAdmin.files.legacy')}</Badge> : null}
+      <span className="text-muted-foreground">
+        {file.quizCount > 0
+          ? t('mediaAdmin.files.usedIn', { count: file.quizCount })
+          : file.inHistory
+            ? t('mediaAdmin.files.inHistory')
+            : t('mediaAdmin.files.unused')}
+      </span>
+    </span>
+  );
+}
+
+/** Whether the screen is wide enough for the detail beside the list (`lg`). */
+function useWide(): boolean {
+  const query = '(min-width: 1024px)';
+  const [wide, setWide] = useState(
+    () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia?.(query);
+    if (!media) return;
+    const on = () => setWide(media.matches);
+    media.addEventListener('change', on);
+    return () => media.removeEventListener('change', on);
+  }, []);
+  return wide;
 }
 
 const duration = (ms: number | null) => {
@@ -521,32 +603,30 @@ const duration = (ms: number | null) => {
 };
 
 /**
- * A file seen in full: the image, or the video or sound playing, with what the
- * list says of it. Previous / next (and the arrow keys) walk the page shown.
- * A `Modal`, mounted while a file is shown.
+ * The file chosen: seen in full (the image, the video or the sound playing),
+ * what it is, every quiz that uses it, its credit when it is one of the global
+ * media, and all that can be done to it.
  */
-function PreviewDialog({
-  files,
-  index,
-  onIndex,
+function FileDetail({
+  file,
+  onDelete,
+  onWithdraw,
+  onChanged,
+  onError,
   onClose,
-  actions,
 }: {
-  files: MediaFilesPageDtoItemsItem[];
-  index: number;
-  onIndex: (index: number) => void;
-  onClose: () => void;
-  /** What can be done to the file shown, without going back to the list. */
-  actions?: ReactNode;
+  file: MediaFilesPageDtoItemsItem;
+  onDelete: () => void;
+  onWithdraw: () => void;
+  onChanged: () => void;
+  onError: (message: string | null) => void;
+  onClose?: () => void;
 }) {
   const { t, i18n } = useTranslation('dashboard');
-  const file = files[index];
   const locale = i18n.language;
-
-  const go = (step: number) => {
-    const next = index + step;
-    if (next >= 0 && next < files.length) onIndex(next);
-  };
+  const usages = useMediaAdminControllerUsages(file.id);
+  const info = usages.data?.data;
+  const add = useMediaAdminControllerAddFile();
   const owners = [...(file.inCatalog ? [t('mediaAdmin.global')] : []), ...file.owners];
   const facts: Array<[string, string | null]> = [
     [t('mediaAdmin.preview.format'), `${formatName(file.mime)} (${file.mime})`],
@@ -554,107 +634,138 @@ function PreviewDialog({
     [t('mediaAdmin.preview.duration'), duration(file.durationMs)],
     [t('mediaAdmin.preview.size'), formatBytes(file.sizeBytes, locale)],
     [t('mediaAdmin.preview.owners'), owners.join(', ')],
-    [
-      t('mediaAdmin.preview.usages'),
-      file.quizCount > 0
-        ? t('mediaAdmin.files.usedIn', { count: file.quizCount })
-        : file.inHistory
-          ? t('mediaAdmin.files.inHistory')
-          : t('mediaAdmin.files.unused'),
-    ],
-    [t('mediaAdmin.preview.credit'), file.instanceCredit],
     [t('mediaAdmin.preview.added'), new Date(file.createdAt).toLocaleString(locale)],
   ];
 
   return (
-    <Modal
-      onClose={onClose}
-      aria-label={file.name ?? file.mime}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft') go(-1);
-        if (e.key === 'ArrowRight') go(1);
-      }}
-      className="w-[96vw] max-w-5xl backdrop:bg-black/70"
-    >
-      <div className="flex max-h-[90dvh] flex-col gap-3 p-4 md:flex-row">
-        <div className="bg-muted flex min-h-48 flex-1 items-center justify-center overflow-hidden rounded-md">
-          {file.kind === 'image' ? (
-            <img
+    <div className="flex flex-col gap-3">
+      {onClose ? (
+        <div className="flex items-start justify-between gap-2">
+          <h2 className="text-base font-semibold break-all">
+            {file.name ?? new Date(file.createdAt).toLocaleDateString(locale)}
+          </h2>
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+            <X className="size-4" />
+            <span className="sr-only">{t('mediaAdmin.preview.close')}</span>
+          </Button>
+        </div>
+      ) : null}
+      <div className="bg-muted flex min-h-32 items-center justify-center overflow-hidden rounded-md">
+        {file.kind === 'image' ? (
+          <img
+            key={file.id}
+            src={file.url}
+            alt={file.name ?? ''}
+            className="max-h-72 max-w-full object-contain"
+          />
+        ) : file.kind === 'video' ? (
+          <video key={file.id} src={file.url} controls className="max-h-72 max-w-full" />
+        ) : (
+          <div className="flex w-full flex-col items-center gap-4 p-4">
+            <WaveformPlayer
               key={file.id}
               src={file.url}
-              alt={file.name ?? ''}
-              className="max-h-[75dvh] max-w-full object-contain"
+              peaks={file.peaks}
+              durationMs={file.durationMs}
             />
-          ) : file.kind === 'video' ? (
-            <video key={file.id} src={file.url} controls className="max-h-[75dvh] max-w-full" />
-          ) : (
-            <div className="flex w-full flex-col items-center gap-4 p-6">
-              <WaveformPlayer
-                key={file.id}
-                src={file.url}
-                peaks={file.peaks}
-                durationMs={file.durationMs}
-              />
-            </div>
-          )}
-        </div>
-        <aside className="flex w-full shrink-0 flex-col gap-3 md:w-72">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className="text-base font-semibold break-all">
-              {file.name ?? new Date(file.createdAt).toLocaleDateString(locale)}
-            </h2>
-            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-              <X className="size-4" />
-              <span className="sr-only">{t('mediaAdmin.preview.close')}</span>
-            </Button>
           </div>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-            {facts
-              .filter(([, value]) => value)
-              .map(([label, value]) => (
-                <div key={label} className="contents">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd className="break-words">{value}</dd>
-                </div>
-              ))}
-          </dl>
-          <a
-            href={file.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm underline-offset-2 hover:underline"
-          >
-            {t('mediaAdmin.preview.openFile')}
-          </a>
-          {actions ? <div className="border-t pt-3">{actions}</div> : null}
-          <div className="mt-auto flex items-center justify-between gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={index === 0}
-              onClick={() => go(-1)}
-            >
-              <ChevronLeft className="size-4" />
-              {t('mediaAdmin.preview.previous')}
-            </Button>
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {index + 1} / {files.length}
-            </span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={index >= files.length - 1}
-              onClick={() => go(1)}
-            >
-              {t('mediaAdmin.preview.next')}
-              <ChevronRight className="size-4" />
-            </Button>
-          </div>
-        </aside>
+        )}
       </div>
-    </Modal>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+        {facts
+          .filter(([, value]) => value)
+          .map(([label, value]) => (
+            <div key={label} className="contents">
+              <dt className="text-muted-foreground">{label}</dt>
+              <dd className="break-words">{value}</dd>
+            </div>
+          ))}
+      </dl>
+      <a
+        href={file.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm underline-offset-2 hover:underline"
+      >
+        {t('mediaAdmin.preview.openFile')}
+      </a>
+
+      <section className="flex flex-col gap-1 border-t pt-3 text-sm">
+        <h3 className="font-medium">{t('mediaAdmin.preview.usages')}</h3>
+        {!info ? (
+          <Spinner className="text-sm" />
+        ) : info.quizzes.length === 0 && info.archivedSessions === 0 ? (
+          <p className="text-muted-foreground">{t('mediaAdmin.delete.unused')}</p>
+        ) : (
+          <ul className="text-muted-foreground list-disc pl-5">
+            {info.quizzes.map((quiz) => (
+              <li key={quiz.id}>
+                {t('mediaAdmin.delete.quiz', { title: quiz.title, owner: quiz.owner })}
+              </li>
+            ))}
+            {info.archivedSessions > 0 ? (
+              <li>{t('mediaAdmin.delete.sessions', { count: info.archivedSessions })}</li>
+            ) : null}
+          </ul>
+        )}
+        {info?.playing ? (
+          <p className="text-warning-text">{t('mediaAdmin.delete.playing')}</p>
+        ) : null}
+      </section>
+
+      {file.instanceId ? (
+        <section className="flex flex-col gap-1 border-t pt-3">
+          <label htmlFor={`credit-${file.instanceId}`} className="text-sm font-medium">
+            {t('mediaAdmin.preview.credit')}
+          </label>
+          {/* Keyed by file: another file's credit never shows in this one's field. */}
+          <CreditInput
+            key={file.instanceId}
+            id={file.instanceId}
+            initial={file.instanceCredit ?? ''}
+            onError={onError}
+          />
+        </section>
+      ) : null}
+
+      <div className="flex flex-wrap gap-2 border-t pt-3">
+        {file.inCatalog && file.instanceId ? (
+          <Button type="button" size="sm" variant="outline" onClick={onWithdraw}>
+            {t('mediaAdmin.instance.remove')}
+          </Button>
+        ) : !file.inCatalog ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={add.isPending}
+            aria-label={t('mediaAdmin.files.addToCatalogNamed', { name: file.name ?? file.mime })}
+            onClick={() => {
+              onError(null);
+              add
+                .mutateAsync({ id: file.id })
+                .then(onChanged)
+                .catch((err: unknown) =>
+                  onError(apiErrorText(err, t('mediaAdmin.instance.addFailed'))),
+                );
+            }}
+          >
+            <Library className="size-4" />
+            {t('mediaAdmin.files.addToCatalog')}
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          size="sm"
+          variant="destructive-outline"
+          aria-label={t('mediaAdmin.files.delete', { name: file.name ?? file.mime })}
+          onClick={onDelete}
+        >
+          <Trash2 className="size-4" />
+          {t('mediaAdmin.delete.confirm')}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -684,84 +795,6 @@ function FileMeta({ file, locale }: { file: MediaFilesPageDtoItemsItem; locale: 
   );
 }
 
-/**
- * What can be done to a file. *All*: its usages, putting it among the global
- * media, deleting it. *Global*: its credit, withdrawing it (the hosts' copies stay).
- */
-function FileActions({
-  file,
-  scope,
-  onDelete,
-  onWithdraw,
-  onChanged,
-  onError,
-}: {
-  file: MediaFilesPageDtoItemsItem;
-  scope: Scope;
-  onDelete: () => void;
-  onWithdraw: () => void;
-  onChanged: () => void;
-  onError: (message: string | null) => void;
-}) {
-  const { t } = useTranslation('dashboard');
-  const add = useMediaAdminControllerAddFile();
-  const name = file.name ?? file.mime;
-  if (scope === 'global') {
-    return (
-      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        {file.instanceId ? (
-          <CreditInput id={file.instanceId} initial={file.instanceCredit ?? ''} onError={onError} />
-        ) : null}
-        <Button type="button" size="sm" variant="ghost" onClick={onWithdraw}>
-          {t('mediaAdmin.instance.remove')}
-        </Button>
-      </div>
-    );
-  }
-  return (
-    <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-xs">
-      {file.legacy ? <Badge variant="muted">{t('mediaAdmin.files.legacy')}</Badge> : null}
-      <span className="text-muted-foreground">
-        {file.quizCount > 0
-          ? t('mediaAdmin.files.usedIn', { count: file.quizCount })
-          : file.inHistory
-            ? t('mediaAdmin.files.inHistory')
-            : t('mediaAdmin.files.unused')}
-      </span>
-      {file.inCatalog ? null : (
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          disabled={add.isPending}
-          title={t('mediaAdmin.files.addToCatalog')}
-          aria-label={t('mediaAdmin.files.addToCatalogNamed', { name })}
-          onClick={() => {
-            onError(null);
-            add
-              .mutateAsync({ id: file.id })
-              .then(onChanged)
-              .catch((err: unknown) =>
-                onError(apiErrorText(err, t('mediaAdmin.instance.addFailed'))),
-              );
-          }}
-        >
-          <Library className="size-4" />
-        </Button>
-      )}
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        onClick={onDelete}
-        aria-label={t('mediaAdmin.files.delete', { name })}
-      >
-        <Trash2 className="size-4" />
-      </Button>
-    </div>
-  );
-}
-
 /** A global media's credit, saved on blur — recorded as saved once the server has it. */
 function CreditInput({
   id,
@@ -778,11 +811,11 @@ function CreditInput({
   const saved = useRef(initial);
   return (
     <Input
-      className="h-7 w-64 max-w-full min-w-0"
+      id={`credit-${id}`}
+      className="w-full min-w-0"
       value={credit}
       maxLength={300}
       placeholder={t('mediaAdmin.instance.credit')}
-      aria-label={t('mediaAdmin.instance.credit')}
       onChange={(e) => setValue(e.target.value)}
       onBlur={() => {
         if (credit === saved.current) return;

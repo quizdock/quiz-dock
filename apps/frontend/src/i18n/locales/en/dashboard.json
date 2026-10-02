@@ -162,7 +162,6 @@
     },
     "global": "Global",
     "preview": {
-      "open": "Preview {{name}}",
       "format": "Format",
       "dimensions": "Dimensions",
       "duration": "Duration",
@@ -172,9 +171,11 @@
       "credit": "Credit",
       "added": "Added",
       "openFile": "Open the file in a new tab",
-      "previous": "Previous",
-      "next": "Next",
       "close": "Close"
+    },
+    "detail": {
+      "empty": "Choose a file to see it in full, where it is used and what can be done to it.",
+      "show": "Show {{name}}"
     }
   },
   "starter": {

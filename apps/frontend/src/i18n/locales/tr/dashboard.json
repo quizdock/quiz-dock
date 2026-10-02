@@ -162,7 +162,6 @@
     },
     "global": "Genel",
     "preview": {
-      "open": "{{name}} önizle",
       "format": "Biçim",
       "dimensions": "Boyutlar",
       "duration": "Süre",
@@ -172,9 +171,11 @@
       "credit": "Kaynak bilgisi",
       "added": "Eklendi",
       "openFile": "Dosyayı yeni bir sekmede aç",
-      "previous": "Önceki",
-      "next": "Sonraki",
       "close": "Kapat"
+    },
+    "detail": {
+      "empty": "Tamamını görmek, nerede kullanıldığını öğrenmek ve üzerinde işlem yapmak için bir dosya seçin.",
+      "show": "{{name}} dosyasını göster"
     }
   },
   "starter": {

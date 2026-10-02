@@ -162,7 +162,6 @@
     },
     "global": "Global",
     "preview": {
-      "open": "Vista previa de {{name}}",
       "format": "Formato",
       "dimensions": "Dimensiones",
       "duration": "Duración",
@@ -172,9 +171,11 @@
       "credit": "Crédito",
       "added": "Añadido",
       "openFile": "Abrir el archivo en una pestaña nueva",
-      "previous": "Anterior",
-      "next": "Siguiente",
       "close": "Cerrar"
+    },
+    "detail": {
+      "empty": "Elija un archivo para verlo completo, saber dónde se usa y actuar sobre él.",
+      "show": "Mostrar {{name}}"
     }
   },
   "starter": {

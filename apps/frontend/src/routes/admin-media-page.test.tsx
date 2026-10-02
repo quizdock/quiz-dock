@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, within, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { mockApi } from '../test/harness';
 import { AdminMediaPage } from './admin-media-page';
@@ -103,9 +103,11 @@ describe('AdminMediaPage', () => {
       { method: 'DELETE', path: '/admin/media/files/m1', status: 204 },
     ]);
     renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Afficher night-market.webp' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Supprimer night-market.webp' }));
-    expect(await screen.findByText('« Discover Taiwan » (Billy)')).toBeInTheDocument();
-    expect(screen.getByText('3 parties archivées')).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog', { name: 'Supprimer ce fichier ?' });
+    expect(await within(dialog).findByText('« Discover Taiwan » (Billy)')).toBeInTheDocument();
+    expect(within(dialog).getByText('3 parties archivées')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
     await waitFor(() =>
       expect(
@@ -130,6 +132,7 @@ describe('AdminMediaPage', () => {
       },
     ]);
     renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Afficher night-market.webp' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Supprimer night-market.webp' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Supprimer' })).toBeDisabled());
   });
@@ -173,8 +176,9 @@ describe('AdminMediaPage', () => {
     ]);
     renderPage();
     expect(await screen.findByText(/1920 × 1080/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher night-market.webp' }));
     fireEvent.click(
-      screen.getByRole('button', { name: 'Ajouter night-market.webp aux médias globaux' }),
+      await screen.findByRole('button', { name: 'Ajouter night-market.webp aux médias globaux' }),
     );
     await waitFor(() =>
       expect(
@@ -191,7 +195,9 @@ describe('AdminMediaPage', () => {
     expect(await screen.findByText('logo.webp')).toBeInTheDocument();
     expect(screen.getByText(/· Global$/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Texte alternatif')).toBeNull();
-    const credit = screen.getByDisplayValue('In-house');
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher logo.webp' }));
+    const credit = screen.getByLabelText('Crédit');
+    expect(credit).toHaveValue('In-house');
     fireEvent.change(credit, { target: { value: 'CC0' } });
     fireEvent.blur(credit);
     await waitFor(() =>
@@ -216,7 +222,7 @@ describe('AdminMediaPage', () => {
     expect(document.querySelector('ul.grid')).not.toBeNull();
   });
 
-  it('previews a file in full with what the list says of it, and walks to the next', async () => {
+  it('shows the file chosen beside the list: in full, what it is, where it is used', async () => {
     const song = {
       ...files.body.items[0],
       id: 'm2',
@@ -233,19 +239,39 @@ describe('AdminMediaPage', () => {
       me(['admin']),
       overview,
       { ...files, body: { total: 2, items: [files.body.items[0], song] } },
+      {
+        method: 'GET',
+        path: '/admin/media/files/m1/usages',
+        body: {
+          quizzes: [{ id: 'q1', title: 'Discover Taiwan', owner: 'Billy' }],
+          archivedSessions: 0,
+          playing: false,
+        },
+      },
+      {
+        method: 'GET',
+        path: '/admin/media/files/m2/usages',
+        body: { quizzes: [], archivedSessions: 0, playing: false },
+      },
     ]);
     renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: 'Aperçu de night-market.webp' }));
-    const dialog = await screen.findByRole('dialog', { name: 'night-market.webp' });
-    expect(dialog).toHaveTextContent('1920 × 1080');
-    expect(dialog).toHaveTextContent('Billy, Alice');
-    expect(dialog.querySelector('img')).toHaveAttribute('src', '/api/v1/media/m1');
-    fireEvent.click(screen.getByRole('button', { name: /Suivant/ }));
-    const next = await screen.findByRole('dialog', { name: 'jingle.m4a' });
-    expect(next).toHaveTextContent('1:23');
+    const row = await screen.findByRole('button', { name: 'Afficher night-market.webp' });
+    fireEvent.click(row);
+    expect(row).toHaveAttribute('aria-pressed', 'true');
+    // Beside the list on a wide screen (a bottom sheet on a phone).
+    const panel = await screen.findByRole('complementary', { name: 'night-market.webp' });
+    expect(panel).toHaveTextContent('1920 × 1080');
+    expect(panel).toHaveTextContent('Billy, Alice');
+    expect(panel.querySelector('img')).toHaveAttribute('src', '/api/v1/media/m1');
+    // Where it is used, before any deletion is asked for.
+    expect(await within(panel).findByText('« Discover Taiwan » (Billy)')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher jingle.m4a' }));
+    const shown = await screen.findByRole('complementary', { name: 'jingle.m4a' });
+    expect(shown).toHaveTextContent('1:23');
     // The sound plays over its waveform.
-    expect(next.querySelector('audio')).toHaveAttribute('src', '/api/v1/media/m2');
-    expect(screen.getByRole('button', { name: 'Lire' })).toBeInTheDocument();
+    expect(shown.querySelector('audio')).toHaveAttribute('src', '/api/v1/media/m2');
+    expect(await within(shown).findByText('Rien ne l’utilise.')).toBeInTheDocument();
   });
 
   it('says so when the media cannot be read, instead of loading forever (audit E5)', async () => {

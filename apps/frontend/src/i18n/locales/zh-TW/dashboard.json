@@ -162,7 +162,6 @@
     },
     "global": "全域",
     "preview": {
-      "open": "預覽 {{name}}",
       "format": "格式",
       "dimensions": "尺寸",
       "duration": "時長",
@@ -172,9 +171,11 @@
       "credit": "出處",
       "added": "新增時間",
       "openFile": "在新分頁中開啟檔案",
-      "previous": "上一個",
-      "next": "下一個",
       "close": "關閉"
+    },
+    "detail": {
+      "empty": "選擇一個檔案，查看完整內容、使用位置以及可執行的操作。",
+      "show": "顯示 {{name}}"
     }
   },
   "starter": {
