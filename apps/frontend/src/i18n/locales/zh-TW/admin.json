@@ -205,13 +205,20 @@
       "list": "測驗",
       "transfer": "移交測驗",
       "export": "匯出測驗",
-      "import": "為帳號匯入測驗"
+      "import": "為帳號匯入測驗",
+      "archive": "封存測驗",
+      "restore": "還原已封存的測驗",
+      "delete": "刪除測驗",
+      "orphans": "無人可存取的測驗"
     },
     "sessions": {
       "purge": "清除舊會話"
     },
     "settings": {
-      "list": "設定"
+      "list": "設定",
+      "set": "變更設定",
+      "reset": "復原變更",
+      "export": "以 .env 格式匯出變更"
     },
     "audit": {
       "list": "稽核"
@@ -223,6 +230,11 @@
       "remove": "從執行個體媒體中移除媒體",
       "delete-file": "刪除檔案",
       "sweep": "清理媒體"
+    },
+    "presets": {
+      "list": "預設組合",
+      "plan": "預覽預設組合",
+      "apply": "套用預設組合"
     }
   },
   "params": {
@@ -235,7 +247,13 @@
     "key": "設定",
     "limit": "數量",
     "operation": "操作",
-    "setting": "設定"
+    "setting": "設定",
+    "value": "值",
+    "all": "全部",
+    "preset": "預設組合",
+    "pace": "節奏",
+    "venue": "場地",
+    "audience": "對象"
   },
   "columns": {
     "name": "名稱",
@@ -255,7 +273,8 @@
     "updatedAt": "更新時間",
     "holder": "持有者",
     "claimedAt": "取得時間",
-    "expiresAt": "到期時間"
+    "expiresAt": "到期時間",
+    "why": "原因"
   },
   "effects": {
     "write": "會變更",
@@ -319,6 +338,85 @@
       "partial": "部分完成",
       "refused": "已拒絕",
       "failed": "失敗"
+    }
+  },
+  "edit": {
+    "save": "儲存",
+    "back": "還原為 .env",
+    "cancel": "取消",
+    "accepts": "可接受 {{accepts}}。",
+    "remove": "移除",
+    "add": "新增",
+    "linkName": "名稱",
+    "linkUrl": "網址",
+    "kinds": {
+      "image": "圖片",
+      "video": "影片",
+      "audio": "聲音"
+    },
+    "noLinks": "沒有媒體庫：編輯器不顯示任何媒體庫（沒有網際網路的執行個體）。",
+    "saved": {
+      "live": "已儲存：立即生效。",
+      "next-room": "已儲存：對之後開啟的房間生效。",
+      "restart": "已儲存：下次重新啟動後生效。"
+    }
+  },
+  "overrides": {
+    "count_one": "在此變更了 {{count}} 項設定。",
+    "count_other": "在此變更了 {{count}} 項設定。",
+    "export": "匯出為 .env",
+    "exportHelp": "用於將它們固定到 .env 中（然後在此復原），或移到另一個執行個體：",
+    "resetAll": "全部復原"
+  },
+  "presets": {
+    "title": "預設組合",
+    "intro": "針對某類活動的現成值：選擇一個，查看它會變更什麼，然後套用。每個面向也可以單獨設定。",
+    "readOnly": "針對某類活動的現成值。此處為唯讀：ADMIN_WEB_SCOPE=read。",
+    "notHere": "僅適用於 AUTH_MODE=oidc：在本機模式下，參與者從不登入。",
+    "preview": "將變更的內容：",
+    "nothing": "執行個體已是此狀態。",
+    "apply": "套用",
+    "applied": "已套用。",
+    "skipped": {
+      "locked": "未變更：被 ADMIN_LOCK 鎖定",
+      "not-applicable": "未變更：不適用於此驗證模式"
+    },
+    "axes": {
+      "pace": "節奏",
+      "venue": "場地",
+      "audience": "對象"
+    },
+    "levels": {
+      "fast": "快速",
+      "standard": "標準",
+      "comfortable": "寬鬆",
+      "large": "大型活動",
+      "modest": "設備有限",
+      "accounts": "需要帳號",
+      "open": "對所有人開放",
+      "custom": "自訂"
+    },
+    "named": {
+      "party": {
+        "title": "派對、酒吧",
+        "help": "標準節奏，對所有人開放。"
+      },
+      "classroom": {
+        "title": "課堂、培訓",
+        "help": "留出閱讀時間，需要帳號。"
+      },
+      "event": {
+        "title": "大型活動",
+        "help": "100–200 名參與者共用擁擠的 Wi-Fi：等待媒體的時間更長。"
+      },
+      "express": {
+        "title": "快速測驗",
+        "help": "快速節奏，對所有人開放。"
+      },
+      "accessible": {
+        "title": "無障礙",
+        "help": "留出閱讀時間，無轉場效果，輕量影片。"
+      }
     }
   }
 }

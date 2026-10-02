@@ -205,13 +205,20 @@
       "list": "测验",
       "transfer": "移交测验",
       "export": "导出测验",
-      "import": "为账号导入测验"
+      "import": "为账号导入测验",
+      "archive": "归档测验",
+      "restore": "恢复已归档的测验",
+      "delete": "删除测验",
+      "orphans": "无人可访问的测验"
     },
     "sessions": {
       "purge": "清除旧会话"
     },
     "settings": {
-      "list": "设置"
+      "list": "设置",
+      "set": "更改设置",
+      "reset": "撤销更改",
+      "export": "以 .env 格式导出更改"
     },
     "audit": {
       "list": "审计"
@@ -223,6 +230,11 @@
       "remove": "从实例媒体中移除媒体",
       "delete-file": "删除文件",
       "sweep": "清理媒体"
+    },
+    "presets": {
+      "list": "预设",
+      "plan": "预览预设",
+      "apply": "应用预设"
     }
   },
   "params": {
@@ -235,7 +247,13 @@
     "key": "设置",
     "limit": "数量",
     "operation": "操作",
-    "setting": "设置"
+    "setting": "设置",
+    "value": "值",
+    "all": "全部",
+    "preset": "预设",
+    "pace": "节奏",
+    "venue": "场地",
+    "audience": "受众"
   },
   "columns": {
     "name": "名称",
@@ -255,7 +273,8 @@
     "updatedAt": "更新时间",
     "holder": "持有者",
     "claimedAt": "占用时间",
-    "expiresAt": "到期时间"
+    "expiresAt": "到期时间",
+    "why": "原因"
   },
   "effects": {
     "write": "会更改",
@@ -319,6 +338,85 @@
       "partial": "部分完成",
       "refused": "已拒绝",
       "failed": "失败"
+    }
+  },
+  "edit": {
+    "save": "保存",
+    "back": "恢复为 .env",
+    "cancel": "取消",
+    "accepts": "可接受 {{accepts}}。",
+    "remove": "移除",
+    "add": "添加",
+    "linkName": "名称",
+    "linkUrl": "地址",
+    "kinds": {
+      "image": "图片",
+      "video": "视频",
+      "audio": "声音"
+    },
+    "noLinks": "没有媒体库：编辑器不显示任何媒体库（无互联网的实例）。",
+    "saved": {
+      "live": "已保存：立即生效。",
+      "next-room": "已保存：对此后开启的房间生效。",
+      "restart": "已保存：下次重启后生效。"
+    }
+  },
+  "overrides": {
+    "count_one": "在此更改了 {{count}} 项设置。",
+    "count_other": "在此更改了 {{count}} 项设置。",
+    "export": "导出为 .env",
+    "exportHelp": "用于将它们固定到 .env 中（然后在此撤销），或迁移到另一个实例：",
+    "resetAll": "全部撤销"
+  },
+  "presets": {
+    "title": "预设",
+    "intro": "针对某类活动的现成值：选择一个，查看它会更改什么，然后应用。每个维度也可以单独设置。",
+    "readOnly": "针对某类活动的现成值。此处只读：ADMIN_WEB_SCOPE=read。",
+    "notHere": "仅适用于 AUTH_MODE=oidc：在本地模式下，参与者从不登录。",
+    "preview": "将更改的内容：",
+    "nothing": "实例已是此状态。",
+    "apply": "应用",
+    "applied": "已应用。",
+    "skipped": {
+      "locked": "未更改：被 ADMIN_LOCK 锁定",
+      "not-applicable": "未更改：不适用于此认证模式"
+    },
+    "axes": {
+      "pace": "节奏",
+      "venue": "场地",
+      "audience": "受众"
+    },
+    "levels": {
+      "fast": "快速",
+      "standard": "标准",
+      "comfortable": "宽松",
+      "large": "大型活动",
+      "modest": "设备有限",
+      "accounts": "需要账号",
+      "open": "对所有人开放",
+      "custom": "自定义"
+    },
+    "named": {
+      "party": {
+        "title": "聚会、酒吧",
+        "help": "标准节奏，对所有人开放。"
+      },
+      "classroom": {
+        "title": "课堂、培训",
+        "help": "留出阅读时间，需要账号。"
+      },
+      "event": {
+        "title": "大型活动",
+        "help": "100–200 名参与者共用拥挤的 Wi-Fi：等待媒体的时间更长。"
+      },
+      "express": {
+        "title": "快速测验",
+        "help": "快速节奏，对所有人开放。"
+      },
+      "accessible": {
+        "title": "无障碍",
+        "help": "留出阅读时间，无过渡效果，轻量视频。"
+      }
     }
   }
 }

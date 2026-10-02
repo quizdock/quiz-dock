@@ -3,6 +3,11 @@ import { fieldsOf, paramsFrom } from './operation-panel';
 import {
   type SettingRow,
   type SettingsAccess,
+  controlOf,
+  definitionOf,
+  draftOf,
+  problemOf,
+  rawOf,
   editable,
   matches,
   readOnlyReason,
@@ -118,5 +123,51 @@ describe('operation forms', () => {
       all: true,
     });
     expect(paramsFrom(fieldsOf(descriptor), { user: 'ada', limit: '' })).toEqual({ user: 'ada' });
+  });
+});
+
+describe('editing a setting', () => {
+  const def = (key: string) => definitionOf(key)!;
+
+  it('picks the control from the definition', () => {
+    expect(controlOf(def('ALLOW_ANONYMOUS_PARTICIPANTS'))).toEqual({ kind: 'flag' });
+    expect(controlOf(def('LIVE_MOTION'))).toEqual({ kind: 'choice', options: ['on', 'off'] });
+    expect(controlOf(def('APP_LANG'))).toMatchObject({
+      kind: 'choice',
+      options: expect.arrayContaining(['fr', 'zh-TW']),
+    });
+    expect(controlOf(def('GAME_READ_DELAY_MS'))).toEqual({
+      kind: 'number',
+      min: 0,
+      max: 10,
+      step: 0.5,
+      unit: 's',
+    });
+    expect(controlOf(def('MEDIA_MAX_BYTES'))).toEqual({
+      kind: 'number',
+      min: 1,
+      max: 50,
+      step: 1,
+      unit: 'MB',
+    });
+    expect(controlOf(def('HOST_LAN_IPS'))).toEqual({ kind: 'list' });
+    expect(controlOf(def('MEDIA_LIBRARY_LINKS'))).toEqual({ kind: 'links' });
+    expect(controlOf(def('APP_NAME'))).toEqual({ kind: 'text' });
+  });
+
+  it('writes the value back in the variable own unit', () => {
+    expect(rawOf(def('GAME_READ_DELAY_MS'), 1.5)).toBe('1500');
+    expect(rawOf(def('MEDIA_MAX_BYTES'), 12)).toBe(String(12 * 1024 * 1024));
+    expect(rawOf(def('MEDIA_MAX_VIDEO_MB'), 80)).toBe('80');
+    expect(rawOf(def('HOST_LAN_IPS'), ['10.0.0.2', ' ', '10.0.0.3'])).toBe('10.0.0.2,10.0.0.3');
+    expect(rawOf(def('MEDIA_LIBRARY_LINKS'), [])).toBe('none');
+    expect(draftOf(def('GAME_READ_DELAY_MS'), 3000)).toBe(3);
+  });
+
+  it('checks as typed, as the server will', () => {
+    expect(problemOf(def('GAME_READ_DELAY_MS'), '1500')).toBeNull();
+    expect(problemOf(def('GAME_READ_DELAY_MS'), '20000')).toContain('10000');
+    expect(problemOf(def('APP_LANG'), 'xx')).not.toBeNull();
+    expect(problemOf(def('APP_NAME'), '')).not.toBeNull();
   });
 });

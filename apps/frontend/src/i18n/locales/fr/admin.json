@@ -205,13 +205,20 @@
       "list": "Quiz",
       "transfer": "Transmettre un quiz",
       "export": "Exporter un quiz",
-      "import": "Importer un quiz pour un compte"
+      "import": "Importer un quiz pour un compte",
+      "archive": "Archiver un quiz",
+      "restore": "Restaurer un quiz archivé",
+      "delete": "Supprimer un quiz",
+      "orphans": "Quiz que personne ne peut atteindre"
     },
     "sessions": {
       "purge": "Purger les anciennes sessions"
     },
     "settings": {
-      "list": "Réglages"
+      "list": "Réglages",
+      "set": "Modifier un réglage",
+      "reset": "Annuler une modification",
+      "export": "Modifications en .env"
     },
     "audit": {
       "list": "Audit"
@@ -223,6 +230,11 @@
       "remove": "Retirer un média de ceux de l’instance",
       "delete-file": "Supprimer un fichier",
       "sweep": "Nettoyer les médias"
+    },
+    "presets": {
+      "list": "Préréglages",
+      "plan": "Prévisualiser un préréglage",
+      "apply": "Appliquer un préréglage"
     }
   },
   "params": {
@@ -235,7 +247,13 @@
     "key": "Réglage",
     "limit": "Combien",
     "operation": "Opération",
-    "setting": "Réglage"
+    "setting": "Réglage",
+    "value": "Valeur",
+    "all": "Tous",
+    "preset": "Préréglage",
+    "pace": "Rythme",
+    "venue": "Lieu",
+    "audience": "Public"
   },
   "columns": {
     "name": "Nom",
@@ -255,7 +273,8 @@
     "updatedAt": "Modifié",
     "holder": "Titulaire",
     "claimedAt": "Pris",
-    "expiresAt": "Expire"
+    "expiresAt": "Expire",
+    "why": "Pourquoi"
   },
   "effects": {
     "write": "Modifie",
@@ -319,6 +338,85 @@
       "partial": "En partie",
       "refused": "Refusé",
       "failed": "Échec"
+    }
+  },
+  "edit": {
+    "save": "Enregistrer",
+    "back": "Revenir à .env",
+    "cancel": "Annuler",
+    "accepts": "Accepte {{accepts}}.",
+    "remove": "Retirer",
+    "add": "Ajouter",
+    "linkName": "Nom",
+    "linkUrl": "Adresse",
+    "kinds": {
+      "image": "Images",
+      "video": "Vidéos",
+      "audio": "Sons"
+    },
+    "noLinks": "Aucune médiathèque : l’éditeur n’en affiche aucune (une instance sans Internet).",
+    "saved": {
+      "live": "Enregistré : s’applique dès maintenant.",
+      "next-room": "Enregistré : s’applique aux salons ouverts à partir de maintenant.",
+      "restart": "Enregistré : s’applique au prochain redémarrage."
+    }
+  },
+  "overrides": {
+    "count_one": "{{count}} réglage modifié ici.",
+    "count_other": "{{count}} réglages modifiés ici.",
+    "export": "Exporter en .env",
+    "exportHelp": "Pour les fixer dans .env (puis les annuler ici), ou les reporter sur une autre instance :",
+    "resetAll": "Tout annuler"
+  },
+  "presets": {
+    "title": "Préréglages",
+    "intro": "Des valeurs toutes prêtes pour un type d’événement : choisissez-en un, voyez ce qu’il change, puis appliquez-le. Chaque axe peut aussi se régler séparément.",
+    "readOnly": "Des valeurs toutes prêtes pour un type d’événement. Lecture seule ici : ADMIN_WEB_SCOPE=read.",
+    "notHere": "Seulement avec AUTH_MODE=oidc : en mode local, les participants ne se connectent jamais.",
+    "preview": "Ce qu’il change :",
+    "nothing": "L’instance y est déjà.",
+    "apply": "Appliquer",
+    "applied": "Appliqué.",
+    "skipped": {
+      "locked": "laissé tel quel : verrouillé par ADMIN_LOCK",
+      "not-applicable": "laissé tel quel : sans objet avec ce mode d’authentification"
+    },
+    "axes": {
+      "pace": "Rythme",
+      "venue": "Lieu",
+      "audience": "Public"
+    },
+    "levels": {
+      "fast": "Rapide",
+      "standard": "Standard",
+      "comfortable": "Confortable",
+      "large": "Grand événement",
+      "modest": "Équipement modeste",
+      "accounts": "Comptes obligatoires",
+      "open": "Ouvert à tous",
+      "custom": "Personnalisé"
+    },
+    "named": {
+      "party": {
+        "title": "Soirée, bar",
+        "help": "Rythme standard, ouvert à tous."
+      },
+      "classroom": {
+        "title": "Classe, formation",
+        "help": "Le temps de lire, comptes obligatoires."
+      },
+      "event": {
+        "title": "Grand événement",
+        "help": "100 à 200 participants sur un Wi-Fi chargé : les médias sont attendus plus longtemps."
+      },
+      "express": {
+        "title": "Quiz express",
+        "help": "Rythme rapide, ouvert à tous."
+      },
+      "accessible": {
+        "title": "Accessible",
+        "help": "Le temps de lire, sans transitions, vidéos légères."
+      }
     }
   }
 }

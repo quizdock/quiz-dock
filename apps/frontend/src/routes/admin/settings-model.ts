@@ -153,3 +153,82 @@ export function docLink(category: SettingDefinition['category']): string | null 
   const anchor = DOC_ANCHORS[category];
   return anchor ? `${DOCS_URL}#${anchor}` : null;
 }
+
+// ── Editing (§3.7, the control of a row) ────────────────────────────────────
+
+export type Control =
+  | { kind: 'flag' }
+  | { kind: 'choice'; options: string[] }
+  | { kind: 'number'; min?: number; max?: number; step: number; unit?: 'MB' | 's' }
+  | { kind: 'list' }
+  | { kind: 'links' }
+  | { kind: 'text' };
+
+/** The words a variable accepts, when it accepts a few: `` `on` · `off` ``. */
+const CHOICES = /^`[^`]+`( · `[^`]+`)+$/;
+
+interface NumberBounds {
+  minValue?: number | null;
+  maxValue?: number | null;
+}
+
+/** The control a setting is edited with, from its definition. */
+export function controlOf(def: SettingDefinition): Control {
+  if (def.key === 'MEDIA_LIBRARY_LINKS') return { kind: 'links' };
+  if (CHOICES.test(def.accepts)) {
+    const options = def.accepts.split(' · ').map((o) => o.replace(/`/g, ''));
+    return options.length === 2 && options.includes('true') && options.includes('false')
+      ? { kind: 'flag' }
+      : { kind: 'choice', options };
+  }
+  if (typeof def.default === 'number') {
+    const bounds = (def.bounds ?? {}) as NumberBounds;
+    const shown = (n: number | null | undefined) =>
+      typeof n === 'number' && Number.isFinite(n) ? displayNumber(def, n).amount : undefined;
+    const unit = displayNumber(def, 0).unit;
+    return {
+      kind: 'number',
+      min: shown(bounds.minValue),
+      max: shown(bounds.maxValue),
+      step: unit === 's' ? 0.5 : 1,
+      unit,
+    };
+  }
+  if (Array.isArray(def.default)) return { kind: 'list' };
+  return { kind: 'text' };
+}
+
+/** The value as the control holds it: numbers in the administration's unit, lists as items. */
+export function draftOf(def: SettingDefinition, value: unknown): unknown {
+  if (typeof value === 'number') return displayNumber(def, value).amount;
+  if (value === true || value === false) return value ? 'true' : 'false';
+  return value;
+}
+
+/** The raw text an override stores, as `.env` would have it. */
+export function rawOf(def: SettingDefinition, draft: unknown): string {
+  if (def.key === 'MEDIA_LIBRARY_LINKS') {
+    const links = draft as { name: string; url: string; kinds?: string[] }[];
+    return links.length ? JSON.stringify(links) : 'none';
+  }
+  if (Array.isArray(draft))
+    return draft
+      .map((d) => String(d).trim())
+      .filter(Boolean)
+      .join(',');
+  if (typeof draft === 'number') {
+    if (def.unit === 'bytes') return String(Math.round(draft * MB));
+    if (def.unit === 'ms') return String(Math.round(draft * 1000));
+    return String(draft);
+  }
+  return String(draft ?? '');
+}
+
+/** Checked as typed, as the server will (§3.10: the server always decides). */
+export function problemOf(def: SettingDefinition, raw: string): string | null {
+  if (raw === '' && !def.allowEmpty) return def.accepts;
+  const parsed = def.schema.safeParse(raw);
+  if (!parsed.success) return def.accepts;
+  if (def.bounds && !def.bounds.safeParse(parsed.data).success) return def.accepts;
+  return null;
+}

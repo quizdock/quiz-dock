@@ -65,6 +65,10 @@ export function QuizzesAdminPage() {
       <Operations
         ids={[
           'quizzes.list',
+          'quizzes.orphans',
+          'quizzes.archive',
+          'quizzes.restore',
+          'quizzes.delete',
           'quizzes.transfer',
           'quizzes.export',
           'quizzes.import',

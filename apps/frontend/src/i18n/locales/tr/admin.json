@@ -205,13 +205,20 @@
       "list": "Quizler",
       "transfer": "Bir quizi devret",
       "export": "Bir quizi dışa aktar",
-      "import": "Bir hesap için quiz içe aktar"
+      "import": "Bir hesap için quiz içe aktar",
+      "archive": "Bir quizi arşivle",
+      "restore": "Arşivlenmiş bir quizi geri yükle",
+      "delete": "Bir quizi sil",
+      "orphans": "Kimsenin erişemediği quizler"
     },
     "sessions": {
       "purge": "Eski oturumları temizle"
     },
     "settings": {
-      "list": "Ayarlar"
+      "list": "Ayarlar",
+      "set": "Bir ayarı değiştir",
+      "reset": "Bir değişikliği geri al",
+      "export": ".env olarak değişiklikler"
     },
     "audit": {
       "list": "Denetim"
@@ -223,6 +230,11 @@
       "remove": "Bir medyayı kurulum medyasından çıkar",
       "delete-file": "Bir dosyayı sil",
       "sweep": "Medyayı temizle"
+    },
+    "presets": {
+      "list": "Hazır ayarlar",
+      "plan": "Bir hazır ayarı önizle",
+      "apply": "Bir hazır ayarı uygula"
     }
   },
   "params": {
@@ -235,7 +247,13 @@
     "key": "Ayar",
     "limit": "Kaç tane",
     "operation": "İşlem",
-    "setting": "Ayar"
+    "setting": "Ayar",
+    "value": "Değer",
+    "all": "Hepsi",
+    "preset": "Hazır ayar",
+    "pace": "Tempo",
+    "venue": "Mekân",
+    "audience": "Kitle"
   },
   "columns": {
     "name": "Ad",
@@ -255,7 +273,8 @@
     "updatedAt": "Güncellenme",
     "holder": "Tutan",
     "claimedAt": "Alınma",
-    "expiresAt": "Bitiş"
+    "expiresAt": "Bitiş",
+    "why": "Neden"
   },
   "effects": {
     "write": "Değiştirir",
@@ -319,6 +338,85 @@
       "partial": "Kısmen",
       "refused": "Reddedildi",
       "failed": "Başarısız"
+    }
+  },
+  "edit": {
+    "save": "Kaydet",
+    "back": ".env değerine dön",
+    "cancel": "İptal",
+    "accepts": "Kabul edilen: {{accepts}}.",
+    "remove": "Kaldır",
+    "add": "Ekle",
+    "linkName": "Ad",
+    "linkUrl": "Adres",
+    "kinds": {
+      "image": "Görseller",
+      "video": "Videolar",
+      "audio": "Sesler"
+    },
+    "noLinks": "Kütüphane yok: düzenleyici hiçbirini göstermez (İnternet'i olmayan bir kurulum).",
+    "saved": {
+      "live": "Kaydedildi: hemen geçerli.",
+      "next-room": "Kaydedildi: bundan sonra açılan odalarda geçerli.",
+      "restart": "Kaydedildi: bir sonraki yeniden başlatmada geçerli."
+    }
+  },
+  "overrides": {
+    "count_one": "Burada {{count}} ayar değiştirildi.",
+    "count_other": "Burada {{count}} ayar değiştirildi.",
+    "export": ".env olarak dışa aktar",
+    "exportHelp": "Bunları .env içine sabitlemek (sonra buradan geri almak) veya başka bir kuruluma taşımak için:",
+    "resetAll": "Hepsini geri al"
+  },
+  "presets": {
+    "title": "Hazır ayarlar",
+    "intro": "Bir etkinlik türü için hazır değerler: birini seçin, neyi değiştirdiğini görün, sonra uygulayın. Her eksen ayrıca tek başına da ayarlanabilir.",
+    "readOnly": "Bir etkinlik türü için hazır değerler. Burada salt okunur: ADMIN_WEB_SCOPE=read.",
+    "notHere": "Yalnızca AUTH_MODE=oidc ile: yerel modda katılımcılar hiçbir zaman oturum açmaz.",
+    "preview": "Değiştirdikleri:",
+    "nothing": "Kurulum zaten bu durumda.",
+    "apply": "Uygula",
+    "applied": "Uygulandı.",
+    "skipped": {
+      "locked": "değiştirilmedi: ADMIN_LOCK ile kilitli",
+      "not-applicable": "değiştirilmedi: bu kimlik doğrulama moduyla geçerli değil"
+    },
+    "axes": {
+      "pace": "Tempo",
+      "venue": "Mekân",
+      "audience": "Kitle"
+    },
+    "levels": {
+      "fast": "Hızlı",
+      "standard": "Standart",
+      "comfortable": "Rahat",
+      "large": "Büyük etkinlik",
+      "modest": "Mütevazı donanım",
+      "accounts": "Hesap zorunlu",
+      "open": "Herkese açık",
+      "custom": "Özel"
+    },
+    "named": {
+      "party": {
+        "title": "Parti, bar",
+        "help": "Standart tempo, herkese açık."
+      },
+      "classroom": {
+        "title": "Sınıf, eğitim",
+        "help": "Okuma süresi, hesap zorunlu."
+      },
+      "event": {
+        "title": "Büyük etkinlik",
+        "help": "Yoğun bir Wi-Fi üzerinde 100–200 katılımcı: medya için daha uzun beklenir."
+      },
+      "express": {
+        "title": "Hızlı quiz",
+        "help": "Hızlı tempo, herkese açık."
+      },
+      "accessible": {
+        "title": "Erişilebilir",
+        "help": "Okuma süresi, geçiş yok, hafif videolar."
+      }
     }
   }
 }

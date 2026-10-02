@@ -205,13 +205,20 @@
       "list": "Quizzes",
       "transfer": "Traspasar un quiz",
       "export": "Exportar un quiz",
-      "import": "Importar un quiz para una cuenta"
+      "import": "Importar un quiz para una cuenta",
+      "archive": "Archivar un quiz",
+      "restore": "Restaurar un quiz archivado",
+      "delete": "Eliminar un quiz",
+      "orphans": "Quizzes a los que nadie puede acceder"
     },
     "sessions": {
       "purge": "Purgar sesiones antiguas"
     },
     "settings": {
-      "list": "Ajustes"
+      "list": "Ajustes",
+      "set": "Cambiar un ajuste",
+      "reset": "Deshacer un cambio",
+      "export": "Cambios como .env"
     },
     "audit": {
       "list": "Auditoría"
@@ -223,6 +230,11 @@
       "remove": "Quitar un medio de los de la instancia",
       "delete-file": "Eliminar un archivo",
       "sweep": "Limpiar los medios"
+    },
+    "presets": {
+      "list": "Preajustes",
+      "plan": "Previsualizar un preajuste",
+      "apply": "Aplicar un preajuste"
     }
   },
   "params": {
@@ -235,7 +247,13 @@
     "key": "Ajuste",
     "limit": "Cuántos",
     "operation": "Operación",
-    "setting": "Ajuste"
+    "setting": "Ajuste",
+    "value": "Valor",
+    "all": "Todos",
+    "preset": "Preajuste",
+    "pace": "Ritmo",
+    "venue": "Lugar",
+    "audience": "Público"
   },
   "columns": {
     "name": "Nombre",
@@ -255,7 +273,8 @@
     "updatedAt": "Actualizado",
     "holder": "Titular",
     "claimedAt": "Ocupado",
-    "expiresAt": "Caduca"
+    "expiresAt": "Caduca",
+    "why": "Por qué"
   },
   "effects": {
     "write": "Modifica",
@@ -319,6 +338,85 @@
       "partial": "En parte",
       "refused": "Rechazado",
       "failed": "Error"
+    }
+  },
+  "edit": {
+    "save": "Guardar",
+    "back": "Volver a .env",
+    "cancel": "Cancelar",
+    "accepts": "Acepta {{accepts}}.",
+    "remove": "Quitar",
+    "add": "Añadir",
+    "linkName": "Nombre",
+    "linkUrl": "Dirección",
+    "kinds": {
+      "image": "Imágenes",
+      "video": "Vídeos",
+      "audio": "Sonidos"
+    },
+    "noLinks": "Ningún banco: el editor no muestra ninguno (una instancia sin Internet).",
+    "saved": {
+      "live": "Guardado: se aplica ahora.",
+      "next-room": "Guardado: se aplica a las salas que se abran a partir de ahora.",
+      "restart": "Guardado: se aplica en el próximo reinicio."
+    }
+  },
+  "overrides": {
+    "count_one": "{{count}} ajuste cambiado aquí.",
+    "count_other": "{{count}} ajustes cambiados aquí.",
+    "export": "Exportar como .env",
+    "exportHelp": "Para fijarlos en .env (y luego deshacerlos aquí), o para llevarlos a otra instancia:",
+    "resetAll": "Deshacerlo todo"
+  },
+  "presets": {
+    "title": "Preajustes",
+    "intro": "Valores listos para un tipo de evento: elige uno, mira lo que cambia y aplícalo. Cada eje también se puede ajustar por separado.",
+    "readOnly": "Valores listos para un tipo de evento. Aquí solo lectura: ADMIN_WEB_SCOPE=read.",
+    "notHere": "Solo con AUTH_MODE=oidc: en modo local, los participantes nunca inician sesión.",
+    "preview": "Lo que cambia:",
+    "nothing": "La instancia ya está así.",
+    "apply": "Aplicar",
+    "applied": "Aplicado.",
+    "skipped": {
+      "locked": "sin cambios: bloqueado por ADMIN_LOCK",
+      "not-applicable": "sin cambios: no aplica con este modo de autenticación"
+    },
+    "axes": {
+      "pace": "Ritmo",
+      "venue": "Lugar",
+      "audience": "Público"
+    },
+    "levels": {
+      "fast": "Rápido",
+      "standard": "Estándar",
+      "comfortable": "Cómodo",
+      "large": "Gran evento",
+      "modest": "Equipo modesto",
+      "accounts": "Cuentas obligatorias",
+      "open": "Abierto a todos",
+      "custom": "Personalizado"
+    },
+    "named": {
+      "party": {
+        "title": "Fiesta, bar",
+        "help": "Ritmo estándar, abierto a todos."
+      },
+      "classroom": {
+        "title": "Aula, formación",
+        "help": "Tiempo para leer, cuentas obligatorias."
+      },
+      "event": {
+        "title": "Gran evento",
+        "help": "De 100 a 200 participantes en una Wi-Fi saturada: se espera más a los medios."
+      },
+      "express": {
+        "title": "Quiz exprés",
+        "help": "Ritmo rápido, abierto a todos."
+      },
+      "accessible": {
+        "title": "Accesible",
+        "help": "Tiempo para leer, sin transiciones, vídeos ligeros."
+      }
     }
   }
 }

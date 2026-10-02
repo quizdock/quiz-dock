@@ -25,6 +25,7 @@ import {
   readOnlyReason,
   shownValue,
 } from './settings-model';
+import { AxisBadge } from './presets-panel';
 import { useStoredChoice } from './use-stored-choice';
 
 export type SettingsView = 'cards' | 'split' | 'table';
@@ -44,8 +45,11 @@ const defaultView = (): SettingsView =>
  */
 export function SettingsPage({
   editor,
+  above,
 }: {
   editor?: (row: SettingRow, access: SettingsAccess) => ReactNode;
+  /** Above the three views: the presets (§3.9). */
+  above?: (access: SettingsAccess) => ReactNode;
 }) {
   const { t } = useTranslation('admin');
   const list = useReadOperation<SettingsList>('settings.list');
@@ -92,6 +96,8 @@ export function SettingsPage({
           </ul>
         </Notice>
       ) : null}
+
+      {above?.(data.access)}
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="relative min-w-48 flex-1">
@@ -415,6 +421,7 @@ export function SettingDetail({
           {row.criticality}
         </Badge>
         <Badge variant="muted">{t(`applies.${row.applies}`)}</Badge>
+        {definitionOf(row.key)?.preset ? <AxisBadge settingKey={row.key} /> : null}
         {reason ? (
           <Badge variant="muted" className="gap-1">
             <Lock aria-hidden className="size-3" />

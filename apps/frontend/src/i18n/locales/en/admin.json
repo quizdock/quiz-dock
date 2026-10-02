@@ -205,13 +205,20 @@
       "list": "Quizzes",
       "transfer": "Hand a quiz over",
       "export": "Export a quiz",
-      "import": "Import a quiz for an account"
+      "import": "Import a quiz for an account",
+      "archive": "Archive a quiz",
+      "restore": "Restore an archived quiz",
+      "delete": "Delete a quiz",
+      "orphans": "Quizzes nobody can reach"
     },
     "sessions": {
       "purge": "Purge old sessions"
     },
     "settings": {
-      "list": "Settings"
+      "list": "Settings",
+      "set": "Change a setting",
+      "reset": "Take a change back",
+      "export": "Changes as .env"
     },
     "audit": {
       "list": "Audit"
@@ -223,6 +230,11 @@
       "remove": "Take a media out of the instance's",
       "delete-file": "Delete a file",
       "sweep": "Clean up the media"
+    },
+    "presets": {
+      "list": "Presets",
+      "plan": "Preview a preset",
+      "apply": "Apply a preset"
     }
   },
   "params": {
@@ -235,7 +247,13 @@
     "key": "Setting",
     "limit": "How many",
     "operation": "Operation",
-    "setting": "Setting"
+    "setting": "Setting",
+    "value": "Value",
+    "all": "All of them",
+    "preset": "Preset",
+    "pace": "Pace",
+    "venue": "Venue",
+    "audience": "Audience"
   },
   "columns": {
     "name": "Name",
@@ -255,7 +273,8 @@
     "updatedAt": "Updated",
     "holder": "Holder",
     "claimedAt": "Claimed",
-    "expiresAt": "Expires"
+    "expiresAt": "Expires",
+    "why": "Why"
   },
   "effects": {
     "write": "Changes",
@@ -319,6 +338,85 @@
       "partial": "Partly",
       "refused": "Refused",
       "failed": "Failed"
+    }
+  },
+  "edit": {
+    "save": "Save",
+    "back": "Back to .env",
+    "cancel": "Cancel",
+    "accepts": "Accepts {{accepts}}.",
+    "remove": "Remove",
+    "add": "Add",
+    "linkName": "Name",
+    "linkUrl": "Address",
+    "kinds": {
+      "image": "Images",
+      "video": "Videos",
+      "audio": "Sounds"
+    },
+    "noLinks": "No library: the editor shows none (an instance without Internet).",
+    "saved": {
+      "live": "Saved: it applies now.",
+      "next-room": "Saved: it applies to the rooms opened from now on.",
+      "restart": "Saved: it applies at the next restart."
+    }
+  },
+  "overrides": {
+    "count_one": "{{count}} setting changed here.",
+    "count_other": "{{count}} settings changed here.",
+    "export": "Export as .env",
+    "exportHelp": "To pin them in .env (then take them back here), or to move them to another instance:",
+    "resetAll": "Take everything back"
+  },
+  "presets": {
+    "title": "Presets",
+    "intro": "Ready-made values for a kind of event: pick one, see what it changes, then apply it. Each axis can also be set on its own.",
+    "readOnly": "Ready-made values for a kind of event. Read only here: ADMIN_WEB_SCOPE=read.",
+    "notHere": "Only with AUTH_MODE=oidc: in local mode, participants never sign in.",
+    "preview": "What it changes:",
+    "nothing": "The instance is already there.",
+    "apply": "Apply",
+    "applied": "Applied.",
+    "skipped": {
+      "locked": "left alone: locked by ADMIN_LOCK",
+      "not-applicable": "left alone: not with this authentication mode"
+    },
+    "axes": {
+      "pace": "Pace",
+      "venue": "Venue",
+      "audience": "Audience"
+    },
+    "levels": {
+      "fast": "Fast",
+      "standard": "Standard",
+      "comfortable": "Comfortable",
+      "large": "Large event",
+      "modest": "Modest equipment",
+      "accounts": "Accounts required",
+      "open": "Open to all",
+      "custom": "Custom"
+    },
+    "named": {
+      "party": {
+        "title": "Party, bar",
+        "help": "Standard pace, open to all."
+      },
+      "classroom": {
+        "title": "Classroom, training",
+        "help": "Time to read, accounts required."
+      },
+      "event": {
+        "title": "Large event",
+        "help": "100–200 players on a busy Wi-Fi: media waited for longer."
+      },
+      "express": {
+        "title": "Express quiz",
+        "help": "Fast pace, open to all."
+      },
+      "accessible": {
+        "title": "Accessible",
+        "help": "Time to read, no transitions, light videos."
+      }
     }
   }
 }
