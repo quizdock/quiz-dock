@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { FileQuestion, History, Image, Radio, UserCog, Users } from 'lucide-react';
 import type { ComponentType, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { formatAgo, formatBytes } from '@/lib/format';
@@ -102,9 +103,7 @@ export function AdminStatsPage() {
         </div>
 
         {stats.games.length === 0 ? (
-          <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
-            {t('stats.live.none')}
-          </p>
+          <EmptyState icon={Radio}>{t('stats.live.none')}</EmptyState>
         ) : (
           <div className="overflow-x-auto rounded-lg border">
             <table className="w-full text-sm">
@@ -233,9 +232,7 @@ function HistorySection() {
       ) : !history ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />
       ) : history.totals.games === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-sm">
-          {t('stats.history.none')}
-        </p>
+        <EmptyState icon={History}>{t('stats.history.none')}</EmptyState>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

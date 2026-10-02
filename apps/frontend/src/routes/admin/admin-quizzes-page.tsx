@@ -9,9 +9,11 @@ import {
   Search,
   Trash2,
   UserRoundCog,
+  SearchX,
 } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '@/components/ui/empty-state';
 import { QuizStatusBadge } from '@/components/quiz-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -138,7 +140,7 @@ export function AdminQuizzesPage() {
       ) : !data ? (
         <Spinner label={t('loading')} showLabel className="text-sm" />
       ) : data.items.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{t('quizzes.none')}</p>
+        <EmptyState icon={SearchX}>{t('quizzes.none')}</EmptyState>
       ) : (
         <>
           <p className="text-muted-foreground text-sm">

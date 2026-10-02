@@ -1,5 +1,7 @@
+import { ScrollText } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
@@ -94,7 +96,7 @@ export function AuditPage() {
       ) : audit.isLoading ? (
         <Spinner className="text-sm" />
       ) : entries.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{t('audit.empty')}</p>
+        <EmptyState icon={ScrollText}>{t('audit.empty')}</EmptyState>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">

@@ -1,7 +1,8 @@
 import { DEPLOYMENT_VARIABLES, type SettingDefinition } from '@quiz-dock/contracts';
-import { ExternalLink, LayoutGrid, Lock, PanelLeft, Rows3, Search } from 'lucide-react';
+import { ExternalLink, LayoutGrid, Lock, PanelLeft, Rows3, Search, SearchX } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -139,7 +140,7 @@ export function SettingsPage({
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{t('settings.none')}</p>
+        <EmptyState icon={SearchX}>{t('settings.none')}</EmptyState>
       ) : view === 'cards' ? (
         <CardsView rows={rows} {...parts} />
       ) : view === 'split' ? (

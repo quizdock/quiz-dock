@@ -10,10 +10,14 @@ import {
   RefreshCw,
   Trash2,
   X,
+  ImagePlus,
+  SearchX,
+  MousePointerClick,
 } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -408,9 +412,11 @@ function Files() {
       ) : !list ? (
         <Spinner label={t('mediaAdmin.loading')} showLabel className="text-sm" />
       ) : list.items.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {scope === 'global' && !q ? t('mediaAdmin.instance.empty') : t('mediaAdmin.files.none')}
-        </p>
+        scope === 'global' && !q ? (
+          <EmptyState icon={ImagePlus}>{t('mediaAdmin.instance.empty')}</EmptyState>
+        ) : (
+          <EmptyState icon={SearchX}>{t('mediaAdmin.files.none')}</EmptyState>
+        )
       ) : (
         // The list, and beside it the file chosen: what it is, where it is used,
         // what can be done to it (a bottom sheet on a narrow screen).
@@ -455,11 +461,13 @@ function Files() {
           )}
           {isWide ? (
             <aside aria-label={selected ? (selected.name ?? selected.mime) : undefined}>
-              <div className="sticky top-4 rounded-lg border p-4">
-                {detail ?? (
-                  <p className="text-muted-foreground text-sm">{t('mediaAdmin.detail.empty')}</p>
-                )}
-              </div>
+              {detail ? (
+                <div className="sticky top-4 rounded-lg border p-4">{detail}</div>
+              ) : (
+                <EmptyState icon={MousePointerClick} className="sticky top-4">
+                  {t('mediaAdmin.detail.empty')}
+                </EmptyState>
+              )}
             </aside>
           ) : (
             <Drawer
