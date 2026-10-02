@@ -8,7 +8,9 @@ import { ADMIN_OPERATIONS, AUDIT_REPOSITORY, CONFIRMATION_STORE } from './admin.
 import { type AuditRepository, PrismaAuditRepository } from './audit/audit.repository';
 import { CliCommandOperations } from './operations/cli-commands.operations';
 import { MediaOperations } from './operations/media.operations';
+import { PresetsOperations } from './operations/presets.operations';
 import { QuizzesOperations } from './operations/quizzes.operations';
+import { PresetService } from './presets/preset.service';
 import type { AdminOperation } from './operations/operation';
 import { SettingsOperations } from './operations/settings.operations';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
@@ -21,6 +23,7 @@ const OPERATION_GROUPS = [
   CliCommandOperations,
   SettingsOperations,
   QuizzesOperations,
+  PresetsOperations,
   MediaOperations,
 ];
 
@@ -32,6 +35,7 @@ const OPERATION_GROUPS = [
   imports: [UsersModule, QuizzesModule, MediaModule],
   providers: [
     OverridesService,
+    PresetService,
     ...OPERATION_GROUPS,
     {
       provide: AUDIT_REPOSITORY,

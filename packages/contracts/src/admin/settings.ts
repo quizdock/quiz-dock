@@ -66,7 +66,54 @@ export interface SettingDefinition<T = unknown> {
   deprecated?: string;
   /** Not for operators: set by an image, a tool or the tests. Left out of `.env.example`. */
   internal?: boolean;
+  /** Its axis of presets (§3.9), and its value at each level of it. */
+  preset?: SettingPreset<T>;
 }
+
+// ── Presets (§3.9) ──────────────────────────────────────────────────────────
+
+export type PresetAxisId = 'pace' | 'venue' | 'audience';
+
+export interface PresetAxis {
+  id: PresetAxisId;
+  levels: readonly string[];
+  /** The level equal to the defaults. */
+  standard: string;
+  /** Only where this holds (the audience: participants authenticate under OIDC only). */
+  requires?: { key: 'AUTH_MODE'; value: string };
+}
+
+export interface SettingPreset<T> {
+  axis: PresetAxisId;
+  /** A value for every level of the axis. */
+  levels: Record<string, T>;
+}
+
+export interface NamedPreset {
+  id: 'party' | 'classroom' | 'event' | 'express' | 'accessible';
+  /** An absent axis is left alone. */
+  levels: Partial<Record<PresetAxisId, string>>;
+}
+
+export const PRESET_AXES: PresetAxis[] = [
+  { id: 'pace', levels: ['fast', 'standard', 'comfortable'], standard: 'standard' },
+  { id: 'venue', levels: ['standard', 'large', 'modest'], standard: 'standard' },
+  {
+    id: 'audience',
+    levels: ['accounts', 'open'],
+    standard: 'accounts',
+    requires: { key: 'AUTH_MODE', value: 'oidc' },
+  },
+];
+
+/** Shortcuts to levels of the axes, never to variables. */
+export const NAMED_PRESETS: NamedPreset[] = [
+  { id: 'party', levels: { pace: 'standard', venue: 'standard', audience: 'open' } },
+  { id: 'classroom', levels: { pace: 'comfortable', venue: 'standard', audience: 'accounts' } },
+  { id: 'event', levels: { pace: 'standard', venue: 'large', audience: 'open' } },
+  { id: 'express', levels: { pace: 'fast', venue: 'standard', audience: 'open' } },
+  { id: 'accessible', levels: { pace: 'comfortable', venue: 'modest' } },
+];
 
 /** Who reads a variable the backend never sees. */
 export type DeploymentReader = 'compose' | 'keycloak' | 'script' | 'build' | 'dev' | 'image';
@@ -301,6 +348,7 @@ export const SETTINGS = {
     default: false,
     applies: 'live',
     overridable: true,
+    preset: { axis: 'audience', levels: { accounts: false, open: true } },
   }),
   OIDC_ISSUER: define({
     key: 'OIDC_ISSUER',
@@ -621,6 +669,7 @@ export const SETTINGS = {
     display: 'MB',
     applies: 'live',
     overridable: true,
+    preset: { axis: 'venue', levels: { standard: 50, large: 50, modest: 20 } },
   }),
   MEDIA_MAX_AUDIO_MB: define({
     key: 'MEDIA_MAX_AUDIO_MB',
@@ -696,6 +745,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
+    preset: { axis: 'pace', levels: { fast: 1500, standard: 3000, comfortable: 6000 } },
   }),
   GAME_ALL_ANSWERED_DELAY_MS: define({
     key: 'GAME_ALL_ANSWERED_DELAY_MS',
@@ -711,6 +761,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
+    preset: { axis: 'pace', levels: { fast: 500, standard: 1000, comfortable: 2000 } },
   }),
   GAME_AUTO_ADVANCE_MS: define({
     key: 'GAME_AUTO_ADVANCE_MS',
@@ -726,6 +777,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
+    preset: { axis: 'pace', levels: { fast: 3000, standard: 5000, comfortable: 8000 } },
   }),
   GAME_MEDIA_WAIT_S: define({
     key: 'GAME_MEDIA_WAIT_S',
@@ -741,6 +793,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
+    preset: { axis: 'venue', levels: { standard: 10, large: 20, modest: 30 } },
   }),
   LIVE_MOTION: define({
     key: 'LIVE_MOTION',
@@ -753,6 +806,7 @@ export const SETTINGS = {
     default: 'on' as 'on' | 'off',
     applies: 'next-room',
     overridable: true,
+    preset: { axis: 'venue', levels: { standard: 'on', large: 'on', modest: 'off' } },
   }),
   GAME_HOST_GRACE_MS: define({
     key: 'GAME_HOST_GRACE_MS',

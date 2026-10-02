@@ -210,4 +210,43 @@ describe('AdminModule (integration)', () => {
       expect(await prisma.quiz.findUnique({ where: { id: quizId } })).toBeNull();
     });
   });
+
+  describe('presets', () => {
+    it('a named preset applies its levels at once, previewed first, then taken back', async () => {
+      const preview = (await runner.run({
+        id: 'presets.apply',
+        raw: { preset: 'express' },
+        actor: cli,
+        dryRun: true,
+      })) as {
+        result: { data: { plan: { changes: { key: string; to: unknown; skipped?: string }[] } } };
+      };
+      expect(preview.result.data.plan.changes.map((c) => [c.key, c.skipped ?? null])).toEqual([
+        ['GAME_READ_DELAY_MS', null],
+        ['GAME_ALL_ANSWERED_DELAY_MS', null],
+        ['GAME_AUTO_ADVANCE_MS', null],
+        // Local mode: no participant signs in, the audience does not apply.
+        ['ALLOW_ANONYMOUS_PARTICIPANTS', 'not-applicable'],
+      ]);
+      expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(3000);
+      expect(
+        await runner.run({ id: 'presets.apply', raw: { preset: 'express' }, actor: cli }),
+      ).toMatchObject({
+        kind: 'result',
+      });
+      expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(1500);
+      const listed = (await runner.run({ id: 'presets.list', raw: {}, actor: cli })) as {
+        result: { data: { current: Record<string, string> } };
+      };
+      expect(listed.result.data.current.pace).toBe('fast');
+      const ask = await runner.run({ id: 'settings.reset', raw: { all: true }, actor: cli });
+      await runner.run({
+        id: 'settings.reset',
+        raw: { all: true },
+        actor: cli,
+        confirmation: (ask as { token: string }).token,
+      });
+      expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(3000);
+    });
+  });
 });
