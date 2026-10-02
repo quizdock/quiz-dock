@@ -516,12 +516,27 @@ function SettingHistory({ settingKey }: { settingKey: string }) {
             <li key={e.id}>
               {formatAgo(e.at, i18n.language)} · {e.actor} ·{' '}
               {t(`operations.${e.operation}`, { defaultValue: e.operation })}
-              {e.params.value !== undefined ? ` → ${String(e.params.value)}` : ''}
+              {e.params.value !== undefined ? (
+                <>
+                  {' → '}
+                  <HistoryValue settingKey={settingKey} raw={String(e.params.value)} />
+                </>
+              ) : null}
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+/** A value as the audit kept it (the raw text of `.env`), shown in the administration's units. */
+function HistoryValue({ settingKey, raw }: { settingKey: string; raw: string }) {
+  const parsed = definitionOf(settingKey)?.schema.safeParse(raw);
+  return parsed?.success ? (
+    <Value row={{ key: settingKey, secret: false }} value={parsed.data} />
+  ) : (
+    <span>{raw}</span>
   );
 }
 
