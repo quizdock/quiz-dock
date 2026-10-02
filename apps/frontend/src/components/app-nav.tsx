@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ShieldCheck, LogOut, Menu, UserRound, X } from 'lucide-react';
+import { LogOut, Menu, UserRound, X } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LiveSessions } from '@/components/live-sessions';
@@ -23,7 +23,6 @@ interface NavProps {
  */
 export function AppNav({ user, mode, onLogout }: NavProps) {
   const { t } = useTranslation('auth');
-  const { isManager } = useRole();
   return (
     <div className="flex items-center gap-2">
       {/* Ce qui signale une échéance ou une partie en cours reste visible à toutes
@@ -56,16 +55,6 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
             <Separator />
             <p className="text-muted-foreground truncate px-2 pt-1.5 text-xs">{user}</p>
             {/* The same entries as the user menu (UI system §4). */}
-            {isManager ? (
-              <Link
-                to="/admin/quizzes"
-                onClick={close}
-                className="hover:bg-accent flex items-center gap-2 rounded-md px-2 py-2 text-sm"
-              >
-                <ShieldCheck className="size-4" />
-                {t('nav.admin')}
-              </Link>
-            ) : null}
             <Link
               to="/profile"
               onClick={close}
@@ -94,6 +83,7 @@ export function AppNav({ user, mode, onLogout }: NavProps) {
 
 function NavLinks({ stacked = false, onNavigate }: { stacked?: boolean; onNavigate?: () => void }) {
   const { t } = useTranslation('auth');
+  const { isManager } = useRole();
   const className = stacked
     ? 'hover:bg-accent rounded-md px-2 py-2 text-sm'
     : 'whitespace-nowrap hover:underline';
@@ -105,6 +95,12 @@ function NavLinks({ stacked = false, onNavigate }: { stacked?: boolean; onNaviga
       <Link to="/templates" className={className} onClick={onNavigate}>
         {t('nav.templates')}
       </Link>
+      {/* The administration beside the app's own pages, not tucked in the account menu. */}
+      {isManager ? (
+        <Link to="/admin" className={className} onClick={onNavigate}>
+          {t('nav.admin')}
+        </Link>
+      ) : null}
     </>
   );
 }

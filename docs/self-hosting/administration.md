@@ -23,7 +23,7 @@ The role comes from the identity provider's claims (OIDC) or from
 
 ## 2. The web administration
 
-*Administration* in the account menu (administrators only) opens on its
+*Administration* in the top bar (administrators only) opens on its
 statistics; the quizzes and the media follow, then the instance — its accounts,
 settings, health and audit:
 
