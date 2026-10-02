@@ -54,15 +54,25 @@ describe('AdminModule (integration)', () => {
   });
 
   it('stats.live counts the instance as the database holds it, the games played right now', async () => {
+    // Other suites write to the same database meanwhile: a figure is checked
+    // between the counts read just before and just after it.
+    const counts = () =>
+      Promise.all([
+        prisma.user.count({ where: { deletedAt: null } }),
+        prisma.quiz.count({ where: { status: 'draft' } }),
+        prisma.gameSessionLog.count(),
+      ]);
+    const before = await counts();
     const outcome = await runner.run({ id: 'stats.live', raw: {}, actor: cli });
+    const after = await counts();
     const stats = (outcome as { result: { data: LiveStats } }).result.data;
-    expect(stats.instance.accounts.total).toBe(
-      await prisma.user.count({ where: { deletedAt: null } }),
-    );
-    expect(stats.instance.quizzes.draft).toBe(
-      await prisma.quiz.count({ where: { status: 'draft' } }),
-    );
-    expect(stats.instance.history.sessions).toBe(await prisma.gameSessionLog.count());
+    const between = (value: number, i: number) => {
+      expect(value).toBeGreaterThanOrEqual(Math.min(before[i], after[i]));
+      expect(value).toBeLessThanOrEqual(Math.max(before[i], after[i]));
+    };
+    between(stats.instance.accounts.total, 0);
+    between(stats.instance.quizzes.draft, 1);
+    between(stats.instance.history.sessions, 2);
     expect(stats.totals.games).toBe(stats.games.length);
     expect(stats.totals.lobby + stats.totals.playing).toBe(stats.totals.games);
   });
