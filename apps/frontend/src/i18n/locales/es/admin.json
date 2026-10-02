@@ -538,7 +538,7 @@
   },
   "usage": {
     "preview": "Lo que definen estas respuestas:",
-    "nothing": "La instancia ya responde así.",
+    "nothing": "Nada que cambiar.",
     "apply": "Aplicar",
     "applied": "Aplicado: los pasos siguientes lo muestran.",
     "skipped": {
@@ -572,6 +572,10 @@
         "public": {
           "title": "El público, un gran evento",
           "help": "Abierto a todos — con un proveedor de identidad — y más tiempo para que carguen sonidos y vídeos en una Wi-Fi saturada."
+        },
+        "other": {
+          "title": "Un poco de todo, otro",
+          "help": "No se cambia nada: ajusta lo que necesites en los pasos siguientes."
         }
       }
     },

@@ -538,7 +538,7 @@
   },
   "usage": {
     "preview": "What these answers set:",
-    "nothing": "The instance already answers this way.",
+    "nothing": "Nothing to change.",
     "apply": "Apply",
     "applied": "Applied: the next steps show it.",
     "skipped": {
@@ -572,6 +572,10 @@
         "public": {
           "title": "The public, a large event",
           "help": "Open to all — with an identity provider — and more time for sounds and videos to load on a busy Wi-Fi."
+        },
+        "other": {
+          "title": "A bit of everything, other",
+          "help": "Nothing is changed: set what you need at the next steps."
         }
       }
     },

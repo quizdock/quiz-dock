@@ -538,7 +538,7 @@
   },
   "usage": {
     "preview": "Ce que ces réponses règlent :",
-    "nothing": "L’instance répond déjà ainsi.",
+    "nothing": "Rien à modifier.",
     "apply": "Appliquer",
     "applied": "Appliqué : les étapes suivantes le montrent.",
     "skipped": {
@@ -572,6 +572,10 @@
         "public": {
           "title": "Le public, un grand événement",
           "help": "Ouvert à tous — avec un fournisseur d’identité — et plus de temps pour charger sons et vidéos sur un Wi-Fi chargé."
+        },
+        "other": {
+          "title": "Un peu de tout, autre",
+          "help": "Rien n’est modifié : réglez ce qu’il faut aux étapes suivantes."
         }
       }
     },

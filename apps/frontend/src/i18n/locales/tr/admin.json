@@ -538,7 +538,7 @@
   },
   "usage": {
     "preview": "Bu yanıtların ayarladıkları:",
-    "nothing": "Kurulum zaten bu şekilde.",
+    "nothing": "Değiştirilecek bir şey yok.",
     "apply": "Uygula",
     "applied": "Uygulandı: sonraki adımlarda görünür.",
     "skipped": {
@@ -572,6 +572,10 @@
         "public": {
           "title": "Halk, büyük bir etkinlik",
           "help": "Herkese açık — bir kimlik sağlayıcısıyla — ve yoğun bir Wi-Fi'da seslerin ve videoların yüklenmesi için daha fazla süre."
+        },
+        "other": {
+          "title": "Biraz her şey, diğer",
+          "help": "Hiçbir şey değiştirilmez: ihtiyacınız olanı sonraki adımlarda ayarlayın."
         }
       }
     },

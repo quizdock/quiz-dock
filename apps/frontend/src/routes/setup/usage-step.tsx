@@ -29,6 +29,9 @@ interface PlanChange {
 
 type Answers = Partial<Record<PresetAxisId, string>>;
 
+/** « Other, a bit of everything »: no answer, nothing changed. */
+const OTHER = 'other';
+
 /**
  * The quick setup of a new instance (§3.9): three questions in plain words —
  * internet, who plays, accessibility —, each answer setting several variables
@@ -60,7 +63,11 @@ export function UsageStep() {
 
   // What the answers would change, read again at each answer.
   useEffect(() => {
-    if (!answers || Object.keys(answers).length === 0) return;
+    if (!answers) return;
+    if (Object.keys(answers).length === 0) {
+      setChanges([]);
+      return;
+    }
     let live = true;
     run('presets.plan', answers)
       .then((a) => {
@@ -98,16 +105,24 @@ export function UsageStep() {
         <fieldset key={axis.id} className="flex flex-col gap-2">
           <legend className="mb-1 font-medium">{t(`usage.${axis.id}.question`)}</legend>
           <div className="grid gap-2 sm:grid-cols-3">
-            {axis.levels.map((level) => {
-              const chosen = answers[axis.id] === level;
+            {[...axis.levels, ...(axis.id === 'audience' ? [OTHER] : [])].map((level) => {
+              const chosen =
+                level === OTHER ? answers[axis.id] === undefined : answers[axis.id] === level;
               return (
                 <button
                   key={level}
                   type="button"
                   aria-pressed={chosen}
+                  // No answer forces anything: choosing the one already chosen, or
+                  // « other », leaves the question unanswered and its settings alone.
                   onClick={() => {
                     setApplied(false);
-                    setAnswers((prev) => ({ ...prev, [axis.id]: level }));
+                    setAnswers((prev) => {
+                      const next = { ...prev };
+                      if (level === OTHER || prev?.[axis.id] === level) delete next[axis.id];
+                      else next[axis.id] = level;
+                      return next;
+                    });
                   }}
                   className={cn(
                     'flex flex-col gap-1 rounded-md border p-3 text-left text-sm',
