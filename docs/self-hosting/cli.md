@@ -64,7 +64,7 @@ which still works too.)
 
 | Command | Description |
 |---|---|
-| `doctor` | Checks `AUTH_MODE`, PostgreSQL, applied / pending / failed migrations, Redis, that `MEDIA_DIR` is writable, and in OIDC mode fetches the discovery document and the JWKS. Exit code 1 when something fails — the message says what to fix. |
+| `doctor` | Lists every configuration value it cannot read or that falls outside its range, and the settings that contradict each other (the same warnings the backend logs at start); checks PostgreSQL, applied / pending / failed migrations, Redis, that `MEDIA_DIR` and `STORE_DIR` are writable, and in OIDC mode fetches the discovery document and the JWKS. Exit code 1 when something fails, a critical variable included — the message says what to fix. |
 | `migrate:status` | Applied / pending / failed migrations (folders shipped in the image vs `_prisma_migrations`). |
 | `seat:status` | Local mode: who holds the host seat, since when, until when. |
 | `seat:release` | Operator override: free the seat whoever holds it (e.g. claimed with no expiry and abandoned). |
