@@ -14,7 +14,7 @@ from the command line — and what the operator allows the web to do.
 
 | Domain | What | From the web |
 |---|---|---|
-| **Instance** | settings and presets, accounts and roles, the host seat, health, the audit | read always; changed only with `ADMIN_WEB_SCOPE=write` |
+| **Instance** | settings and presets, the look, accounts and roles, the host seat, health, the audit | read always; changed only with `ADMIN_WEB_SCOPE=write` |
 | **Quizzes** | every quiz and its sessions, whoever owns them: hand one over, export, import for a host, archive, restore, delete, find the ones nobody can reach, purge old sessions | the `admin` role |
 | **Media** | the instance's shared media library | the `admin` role |
 
@@ -52,7 +52,17 @@ domain:
   levels. A preset is previewed — each variable, from what to what — before it
   is applied, all at once; a variable locked by `ADMIN_LOCK` is left alone and
   said so.
-- **Health** — the checks of `qd doctor` and the state of the migrations.
+- **Look** — the instance's palette: the brand's colours (the main colour and
+  its text, the focus ring, destructive, success, warning), light and dark,
+  shown on the application's own components before they are saved; a colour that
+  makes a text or a control unreadable (WCAG 2) is refused. Served as
+  `/branding/theme.css`, after the application's styles and before
+  `branding/override.css`, which keeps the last word. Below it, how the answers
+  are drawn (`ANSWER_THEME`): *classic*, *letters*, *numbers*, or *colour vision*
+  — each shown as seen with typical colour vision and with protanopia,
+  deuteranopia and tritanopia. The quizzes keep their answers as they are.
+- **Health** — the checks of `qd doctor`, the state of the migrations, and the
+  phone test of the invitation addresses (a new network, a new venue).
 - **Accounts** — the accounts and their roles, granting or revoking one, the
   local mode's host seat.
 - **Audit** — every administrative action (below).

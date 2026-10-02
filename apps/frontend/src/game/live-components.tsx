@@ -23,7 +23,7 @@ import { Avatar } from './avatar';
 import { BACKDROP_EDGE, BACKDROP_PANEL, PICKED_RING, Surface } from './surface';
 import { SlideVariablesContext } from './slide-variables';
 import { SlidePlaybackContext, SlideSound, SlideVideoLayer, showsVideo } from './media/slide-media';
-import { ShapeIcon } from '@/components/shape-icon';
+import { AnswerGlyph } from '@/components/answer-glyph';
 import { optionLabel } from './image-choice';
 import { mediaUrl } from '@/lib/media-url';
 import type { QuestionClock } from './use-countdown';
@@ -139,7 +139,7 @@ export function OptionGrid({
             style={gauges ? { background: gaugeFill(o.color, pct, !!isCorrect) } : undefined}
           >
             <span aria-hidden className="shrink-0 text-[1.35em] leading-none">
-              <ShapeIcon shape={o.shape} />
+              <AnswerGlyph shape={o.shape} index={i} />
             </span>
             {o.text ? (
               <Markdown
@@ -195,7 +195,7 @@ export function OptionKey({
       className={cn('qd-answers flex w-full flex-col gap-[0.4em] text-left', BACKDROP_PANEL)}
       data-layout="list"
     >
-      {options.map((o) => (
+      {options.map((o, i) => (
         <li
           key={o.id}
           data-color={o.color}
@@ -211,7 +211,7 @@ export function OptionKey({
             aria-hidden
             className={cn('shrink-0 text-[1.25em] leading-none', COLOR_TEXT[o.color])}
           >
-            <ShapeIcon shape={o.shape} />
+            <AnswerGlyph shape={o.shape} index={i} />
           </span>
           {o.media ? <OptionThumb media={o.media} /> : null}
           {o.text ? (
@@ -284,7 +284,7 @@ export function OptionTiles({
             )}
           >
             <span aria-hidden>
-              <ShapeIcon shape={o.shape} />
+              <AnswerGlyph shape={o.shape} index={i} />
             </span>
             {/* A state is a mark, never a ring colour alone. */}
             {isCorrect ? (
@@ -349,7 +349,7 @@ export function Distribution({
       data-motion="own"
       className={cn('qd-distribution flex w-full flex-col gap-[0.5em]', BACKDROP_PANEL)}
     >
-      {options.map((o) => {
+      {options.map((o, i) => {
         const n = reveal.distribution[o.id] ?? 0;
         const pct = Math.round((n / total) * 100);
         const isCorrect = reveal.correctOptionIds?.includes(o.id);
@@ -371,7 +371,7 @@ export function Distribution({
                 COLOR_TEXT[o.color],
               )}
             >
-              <ShapeIcon shape={o.shape} />
+              <AnswerGlyph shape={o.shape} index={i} />
             </span>
             {/* A picture answer shows its picture: the bar alone would say only its colour. */}
             {o.media ? <OptionThumb media={o.media} /> : null}

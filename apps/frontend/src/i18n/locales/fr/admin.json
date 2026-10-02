@@ -14,7 +14,8 @@
     "audit": "Audit",
     "quizzes": "Quiz",
     "media": "Médias",
-    "changes": "Modifications"
+    "changes": "Modifications",
+    "look": "Apparence"
   },
   "token": {
     "unset": "Mode local : rien ne peut être changé depuis le web tant qu’ADMIN_TOKEN n’est pas défini dans .env (32 caractères ou plus), puis l’instance redémarrée.",
@@ -181,7 +182,8 @@
     "ADMIN_TOKEN": "Jeton d’administration (mode local)",
     "ADMIN_OVERRIDES": "Valeurs modifiées depuis le web",
     "QUIZDOCK_FLAVOR": "Variante de l’image",
-    "PRISMA_SKIP_CONNECT": "Démarrer sans base de données"
+    "PRISMA_SKIP_CONNECT": "Démarrer sans base de données",
+    "ANSWER_THEME": "Dessin des réponses"
   },
   "operations": {
     "health": {
@@ -246,6 +248,11 @@
     "invite": {
       "test": "Tester une adresse depuis un téléphone",
       "test-status": "Test depuis un téléphone"
+    },
+    "theme": {
+      "get": "Palette",
+      "set": "Modifier la palette",
+      "reset": "Revenir à la palette de l’application"
     }
   },
   "params": {
@@ -509,6 +516,72 @@
     "summary": {
       "set": "Réglé autrement que par défaut",
       "env": "Ce qui a été réglé ici, en extrait de .env — pour l’y fixer :"
+    }
+  },
+  "look": {
+    "title": "Palette",
+    "intro": "Les couleurs de la marque, en clair et en sombre, montrées sur les propres composants de l’application avant d’être enregistrées. Une couleur s’écrit #rrggbb ou oklch(L C H) ; les neutres restent ceux de l’application, et branding/override.css a toujours le dernier mot.",
+    "readOnly": "Les couleurs de la marque, en clair et en sombre. Lecture seule ici : ADMIN_WEB_SCOPE=read.",
+    "mode": "Mode",
+    "light": "Clair",
+    "dark": "Sombre",
+    "pick": "Choisir {{token}}",
+    "default": "Revenir à la couleur de l’application",
+    "preview": "Aperçu",
+    "contrasts": "Contraste",
+    "contrastsHelp": "WCAG 2 : 4,5:1 pour un texte, 3:1 pour une commande sur la page. Seules les paires touchées par une modification sont vérifiées : l’application répond de ses propres couleurs.",
+    "background": "Page",
+    "unreadable": "Une couleur est illisible : #rrggbb, ou oklch(L C H) avec L de 0 à 1 (ou un pourcentage).",
+    "reset": "Revenir à la palette de l’application",
+    "saved": "Enregistré : chaque page suit à son prochain chargement.",
+    "tokens": {
+      "primary": "Couleur principale",
+      "primary-foreground": "Texte sur la couleur principale",
+      "ring": "Anneau de focus",
+      "destructive": "Destructif",
+      "destructive-foreground": "Texte sur destructif",
+      "success": "Succès",
+      "success-foreground": "Texte sur succès",
+      "warning": "Avertissement",
+      "warning-text": "Texte d’avertissement"
+    },
+    "sample": {
+      "primary": "Principal",
+      "success": "Présenter",
+      "destructive": "Supprimer",
+      "focus": "Focus",
+      "badge": "Badge",
+      "warningText": "La moitié du temps écoulée",
+      "link": "Un lien"
+    }
+  },
+  "answers": {
+    "title": "Réponses",
+    "intro": "La façon dont les réponses sont dessinées sur la projection, les téléphones et la console : une couleur, et à côté la forme choisie par l’auteur — ou une lettre, ou un chiffre. Les quiz gardent leurs réponses telles quelles.",
+    "distanceHelp": "Chaque ligne montre les quatre premières réponses telles que les voit une vision des couleurs typique et chaque daltonisme courant ; le nombre indique l’écart entre les deux plus proches (en dessous de 0,10, elles se confondent au premier coup d’œil). Le glyphe les distingue quelles que soient les couleurs.",
+    "vision": {
+      "typical": "Typique",
+      "protanopia": "Protanopie",
+      "deuteranopia": "Deutéranopie",
+      "tritanopia": "Tritanopie"
+    },
+    "themes": {
+      "classic": {
+        "title": "Classique",
+        "help": "Les couleurs de l’application, la forme de chaque réponse."
+      },
+      "letters": {
+        "title": "Lettres",
+        "help": "Les couleurs de l’application, et A, B, C… selon la position."
+      },
+      "numbers": {
+        "title": "Chiffres",
+        "help": "Les couleurs de l’application, et 1, 2, 3… selon la position."
+      },
+      "colorblind": {
+        "title": "Daltonisme",
+        "help": "Des couleurs distinctes sous chaque daltonisme courant, et les formes."
+      }
     }
   }
 }

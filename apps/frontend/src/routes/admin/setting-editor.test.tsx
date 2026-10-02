@@ -73,7 +73,7 @@ describe('SettingEditor', () => {
         body: { kind: 'result', result: { outcome: 'done', notes: [] } },
       },
     ]);
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirmer' }));
     await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
     expect(bodies(fetchMock)).toEqual([
       ['settings.set', { params: { key: 'MEDIA_MAX_VIDEO_MB', value: '80' } }],

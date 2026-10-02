@@ -26,6 +26,7 @@ import { AdminLayout } from './routes/admin/admin-layout';
 import { AccountsPage, AuditPage, HealthPage, QuizzesAdminPage } from './routes/admin/admin-pages';
 import { AdminSettingsPage } from './routes/admin/admin-settings-page';
 import { SetupPage } from './routes/setup/setup-page';
+import { LookPage } from './routes/admin/theme-page';
 import type { QuizImportDtoImportReport } from './api/generated/model';
 
 const requireAuth = () => {
@@ -323,6 +324,11 @@ export const adminAccountsRoute = createRoute({
   path: 'accounts',
   component: AccountsPage,
 });
+export const adminLookRoute = createRoute({
+  getParentRoute: () => adminRoute,
+  path: 'look',
+  component: LookPage,
+});
 export const adminAuditRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'audit',
@@ -358,6 +364,7 @@ export const routeTree = rootRoute.addChildren([
     adminHealthRoute,
     adminAccountsRoute,
     adminAuditRoute,
+    adminLookRoute,
     adminQuizzesRoute,
     adminMediaRoute,
   ]),

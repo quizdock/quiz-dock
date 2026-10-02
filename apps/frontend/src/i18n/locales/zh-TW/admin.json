@@ -14,7 +14,8 @@
     "audit": "稽核",
     "quizzes": "測驗",
     "media": "媒體",
-    "changes": "變更"
+    "changes": "變更",
+    "look": "外觀"
   },
   "token": {
     "unset": "本機模式：在 .env 中設定 ADMIN_TOKEN（32 個字元以上）並重新啟動執行個體之前，無法從網頁變更任何內容。",
@@ -181,7 +182,8 @@
     "ADMIN_TOKEN": "管理權杖（本機模式）",
     "ADMIN_OVERRIDES": "從網頁變更的值",
     "QUIZDOCK_FLAVOR": "映像檔版本類型",
-    "PRISMA_SKIP_CONNECT": "不連線資料庫啟動"
+    "PRISMA_SKIP_CONNECT": "不連線資料庫啟動",
+    "ANSWER_THEME": "答案的呈現方式"
   },
   "operations": {
     "health": {
@@ -246,6 +248,11 @@
     "invite": {
       "test": "從手機測試網址",
       "test-status": "手機測試"
+    },
+    "theme": {
+      "get": "配色",
+      "set": "變更配色",
+      "reset": "還原為應用程式的配色"
     }
   },
   "params": {
@@ -509,6 +516,72 @@
     "summary": {
       "set": "與預設值不同的設定",
       "env": "此處設定的內容，以 .env 片段呈現——可將其固定到 .env 中："
+    }
+  },
+  "look": {
+    "title": "配色",
+    "intro": "品牌的顏色（淺色與深色），在儲存前於應用程式本身的元件上預覽。顏色格式為 #rrggbb 或 oklch(L C H)；中性色仍沿用應用程式的配色，且 branding/override.css 始終有最終決定權。",
+    "readOnly": "品牌的顏色（淺色與深色）。此處為唯讀：ADMIN_WEB_SCOPE=read。",
+    "mode": "模式",
+    "light": "淺色",
+    "dark": "深色",
+    "pick": "選擇 {{token}}",
+    "default": "還原為應用程式的顏色",
+    "preview": "預覽",
+    "contrasts": "對比度",
+    "contrastsHelp": "WCAG 2：文字需 4.5:1，控制項相對頁面需 3:1。僅檢查變更所涉及的顏色組合：應用程式本身的顏色由應用程式負責。",
+    "background": "頁面",
+    "unreadable": "有顏色無法辨識：請使用 #rrggbb，或 oklch(L C H)，其中 L 為 0 到 1（或百分比）。",
+    "reset": "還原為應用程式的配色",
+    "saved": "已儲存：每個頁面在下次載入時生效。",
+    "tokens": {
+      "primary": "主色",
+      "primary-foreground": "主色上的文字",
+      "ring": "焦點外框",
+      "destructive": "危險操作",
+      "destructive-foreground": "危險操作上的文字",
+      "success": "成功",
+      "success-foreground": "成功色上的文字",
+      "warning": "警告",
+      "warning-text": "警告文字"
+    },
+    "sample": {
+      "primary": "主要",
+      "success": "示範",
+      "destructive": "刪除",
+      "focus": "已聚焦",
+      "badge": "徽章",
+      "warningText": "時間已過半",
+      "link": "一個連結"
+    }
+  },
+  "answers": {
+    "title": "答案",
+    "intro": "答案在投影、手機和控制台上的呈現方式：一種顏色，旁邊是作者選定的形狀——或字母，或數字。測驗中的答案本身保持不變。",
+    "distanceHelp": "每一列顯示前四個答案在一般色覺及各種常見色覺缺陷下的樣子；數字表示其中最接近的兩個之間的差距（低於 0.10 時一眼看去難以區分）。無論顏色如何，圖形符號都能區分它們。",
+    "vision": {
+      "typical": "一般色覺",
+      "protanopia": "紅色盲",
+      "deuteranopia": "綠色盲",
+      "tritanopia": "藍色盲"
+    },
+    "themes": {
+      "classic": {
+        "title": "經典",
+        "help": "應用程式的顏色，每個答案的形狀。"
+      },
+      "letters": {
+        "title": "字母",
+        "help": "應用程式的顏色，並依位置顯示 A、B、C…"
+      },
+      "numbers": {
+        "title": "數字",
+        "help": "應用程式的顏色，並依位置顯示 1、2、3…"
+      },
+      "colorblind": {
+        "title": "色覺友善",
+        "help": "在各種常見色覺缺陷下皆可區分的顏色，以及形狀。"
+      }
     }
   }
 }

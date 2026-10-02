@@ -4,6 +4,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisModule } from '../redis/redis.module';
 import { AdminModule } from './admin.module';
 import { SETTINGS } from '@quiz-dock/contracts';
+import { operationsHelp } from '../cli/adapter';
+import { WIZARD_OPERATIONS } from './operations/setup.operations';
 import { OperationRunner } from './runner/operation-runner';
 import { settings } from './settings/settings.service';
 import { ThemeService } from './theme/theme.service';
@@ -272,6 +274,37 @@ describe('AdminModule (integration)', () => {
       expect(await theme.css()).toContain('--primary: #1d4ed8;');
       await runner.run({ id: 'theme.reset', raw: {}, actor: cli });
       expect(await theme.css()).not.toContain('--primary');
+    });
+  });
+
+  describe('the registry, operation by operation (§3.6, §3.11)', () => {
+    const ids = () => runner.catalogue(cli).map((d) => d.id);
+    const host = { via: 'api' as const, name: 'h', userId: 'x', roles: ['host' as const] };
+    const admin = { via: 'api' as const, name: 'a', userId: 'y', roles: ['admin' as const] };
+    const wizard = { via: 'api' as const, name: 'w', setup: true };
+
+    it('every operation has a JSON Schema of its parameters and a line of CLI help', () => {
+      for (const d of runner.catalogue(cli)) {
+        expect(d.params).toMatchObject({ type: 'object' });
+        expect(operationsHelp([d])).toContain(d.id);
+      }
+    });
+
+    it('the matrix: a host never reaches one; the setup wizard only its own; the shell all', () => {
+      const reach = (actor: Parameters<OperationRunner['catalogue']>[0]) =>
+        Object.fromEntries(runner.catalogue(actor).map((d) => [d.id, d.refusal ?? 'ok']));
+      for (const id of ids()) expect(reach(host)[id]).toBe('forbidden');
+      expect(Object.values(reach(cli)).every((r) => r === 'ok')).toBe(true);
+      const wizardReach = reach(wizard);
+      for (const id of ids()) {
+        expect([id, wizardReach[id] === 'ok']).toEqual([id, WIZARD_OPERATIONS.has(id)]);
+      }
+      // An administrator reaches every operation of the web but the shell's own.
+      const adminReach = reach(admin);
+      for (const id of ids()) {
+        const op = runner.operation(id)!;
+        expect([id, adminReach[id] === 'forbidden']).toEqual([id, op.access === 'cli']);
+      }
     });
   });
 });

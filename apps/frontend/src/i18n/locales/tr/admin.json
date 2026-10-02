@@ -14,7 +14,8 @@
     "audit": "Denetim",
     "quizzes": "Quizler",
     "media": "Medya",
-    "changes": "Değişiklikler"
+    "changes": "Değişiklikler",
+    "look": "Görünüm"
   },
   "token": {
     "unset": "Yerel mod: ADMIN_TOKEN .env içinde ayarlanıp (32 karakter veya daha uzun) kurulum yeniden başlatılana kadar web üzerinden hiçbir şey değiştirilemez.",
@@ -181,7 +182,8 @@
     "ADMIN_TOKEN": "Yönetim belirteci (yerel mod)",
     "ADMIN_OVERRIDES": "Web üzerinden değiştirilen değerler",
     "QUIZDOCK_FLAVOR": "İmaj türü",
-    "PRISMA_SKIP_CONNECT": "Veritabanı olmadan başlat"
+    "PRISMA_SKIP_CONNECT": "Veritabanı olmadan başlat",
+    "ANSWER_THEME": "Yanıtların çizimi"
   },
   "operations": {
     "health": {
@@ -246,6 +248,11 @@
     "invite": {
       "test": "Bir adresi telefondan test et",
       "test-status": "Telefon testi"
+    },
+    "theme": {
+      "get": "Renk paleti",
+      "set": "Renk paletini değiştir",
+      "reset": "Uygulamanın paletine dön"
     }
   },
   "params": {
@@ -509,6 +516,72 @@
     "summary": {
       "set": "Varsayılandan farklı ayarlananlar",
       "env": "Burada ayarlananlar, bir .env alıntısı olarak — oraya sabitlemek için:"
+    }
+  },
+  "look": {
+    "title": "Renk paleti",
+    "intro": "Markanın açık ve koyu renkleri, kaydedilmeden önce uygulamanın kendi bileşenleri üzerinde gösterilir. Bir renk #rrggbb veya oklch(L C H) biçimindedir; nötr renkler uygulamanınki olarak kalır ve son söz her zaman branding/override.css dosyasındadır.",
+    "readOnly": "Markanın açık ve koyu renkleri. Burada salt okunur: ADMIN_WEB_SCOPE=read.",
+    "mode": "Mod",
+    "light": "Açık",
+    "dark": "Koyu",
+    "pick": "{{token}} seçin",
+    "default": "Uygulamanın rengine dön",
+    "preview": "Önizleme",
+    "contrasts": "Kontrast",
+    "contrastsHelp": "WCAG 2: metin için 4,5:1, sayfaya karşı bir kontrol için 3:1. Yalnızca bir değişikliğin etkilediği çiftler denetlenir: uygulama kendi renklerinden kendisi sorumludur.",
+    "background": "Sayfa",
+    "unreadable": "Bir renk okunamıyor: #rrggbb veya L değeri 0 ile 1 arasında (ya da yüzde) olan oklch(L C H) kullanın.",
+    "reset": "Uygulamanın paletine dön",
+    "saved": "Kaydedildi: her sayfa bir sonraki yüklemede uygular.",
+    "tokens": {
+      "primary": "Ana renk",
+      "primary-foreground": "Ana renk üzerindeki metin",
+      "ring": "Odak halkası",
+      "destructive": "Yıkıcı",
+      "destructive-foreground": "Yıkıcı renk üzerindeki metin",
+      "success": "Başarı",
+      "success-foreground": "Başarı rengi üzerindeki metin",
+      "warning": "Uyarı",
+      "warning-text": "Uyarı metni"
+    },
+    "sample": {
+      "primary": "Ana",
+      "success": "Sun",
+      "destructive": "Sil",
+      "focus": "Odakta",
+      "badge": "Rozet",
+      "warningText": "Sürenin yarısı kaldı",
+      "link": "Bir bağlantı"
+    }
+  },
+  "answers": {
+    "title": "Yanıtlar",
+    "intro": "Yanıtların yansıtma ekranında, telefonlarda ve kontrol panelinde nasıl çizildiği: bir renk ve yanında yazarın seçtiği şekil — ya da bir harf veya bir sayı. Quizlerdeki yanıtlar olduğu gibi kalır.",
+    "distanceHelp": "Her satır, ilk dört yanıtı tipik renk görüşüyle ve her yaygın renk görme bozukluğuyla göründüğü hâliyle gösterir; sayı, en yakın iki yanıtın birbirinden ne kadar ayrık olduğunu belirtir (0,10'un altında ilk bakışta birbirine benzerler). Simge, renkler ne olursa olsun onları ayırt eder.",
+    "vision": {
+      "typical": "Tipik",
+      "protanopia": "Protanopi",
+      "deuteranopia": "Döteranopi",
+      "tritanopia": "Tritanopi"
+    },
+    "themes": {
+      "classic": {
+        "title": "Klasik",
+        "help": "Uygulamanın renkleri, her yanıtın şekli."
+      },
+      "letters": {
+        "title": "Harfler",
+        "help": "Uygulamanın renkleri ve sıraya göre A, B, C…"
+      },
+      "numbers": {
+        "title": "Sayılar",
+        "help": "Uygulamanın renkleri ve sıraya göre 1, 2, 3…"
+      },
+      "colorblind": {
+        "title": "Renk körlüğü",
+        "help": "Her yaygın renk görme bozukluğunda ayırt edilebilen renkler ve şekiller."
+      }
     }
   }
 }

@@ -19,6 +19,7 @@ const SECTIONS = [
       { to: '/admin/settings', key: 'settings' },
       { to: '/admin/health', key: 'health' },
       { to: '/admin/accounts', key: 'accounts' },
+      { to: '/admin/look', key: 'look' },
       { to: '/admin/audit', key: 'audit' },
     ],
   },
