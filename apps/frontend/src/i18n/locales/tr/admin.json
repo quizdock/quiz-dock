@@ -198,7 +198,8 @@
     "users": {
       "list": "Hesaplar",
       "set-role": "Rol ver veya geri al",
-      "find": "Bir hesap bul"
+      "find": "Bir hesap bul",
+      "search": "Hesapları ara"
     },
     "samples": {
       "load": "Örnek quizleri bir hesaba ekle"
@@ -249,6 +250,10 @@
     "invite": {
       "test": "Bir adresi telefondan test et",
       "test-status": "Telefon testi"
+    },
+    "stats": {
+      "live": "Şu anda oynananlar",
+      "history": "Son on iki ay"
     }
   },
   "params": {
@@ -399,7 +404,9 @@
       "partial": "Kısmen",
       "refused": "Reddedildi",
       "failed": "Başarısız"
-    }
+    },
+    "anyOperation": "Tüm işlemler",
+    "previous": "Yerine geçtiği değer"
   },
   "edit": {
     "save": "Kaydet",
@@ -630,6 +637,62 @@
         "hosts": "En etkin sunucular"
       },
       "oldest": "Geçmiş {{date}} tarihinde başlıyor: daha eski oyunlar silinir."
+    }
+  },
+  "accounts": {
+    "search": "Hesap ara (ad, kimlik, e-posta)",
+    "role": "Rol",
+    "anyRole": "Tüm roller",
+    "roles": {
+      "admin": "Yönetici",
+      "host": "Sunucu",
+      "player": "Katılımcı"
+    },
+    "none": "Eşleşen hesap yok.",
+    "count_one": "{{count}} hesap",
+    "count_other": "{{count}} hesap",
+    "columns": {
+      "account": "Hesap",
+      "roles": "Roller",
+      "quizzes": "Quizler",
+      "games": "Sunulan oyunlar",
+      "created": "Oluşturulma",
+      "actions": "İşlemler"
+    },
+    "grantedHere": "Yönetimden verildi",
+    "actionsFor": "{{name}} için işlemler",
+    "editRoles": "Rol ver veya geri al…",
+    "rolesTitle": "{{name}} hesabına verilen roller",
+    "rolesHelp": "Yönetimin, kimlik sağlayıcının verdiklerine ek olarak verdiği roller: o roller burada ne işaretlenirse işaretlensin kalır.",
+    "rolesHint": {
+      "host": "Quiz oluşturur ve oyun sunar.",
+      "admin": "Yönetime erişir."
+    },
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "seat": {
+      "title": "Sunucu koltuğu",
+      "held": "{{name}} tarafından tutuluyor, {{since}}",
+      "free": "Boş: ilk alan sunar.",
+      "release": "Koltuğu boşalt"
+    }
+  },
+  "health": {
+    "problems_one": "Bakılması gereken {{count}} sorun",
+    "problems_other": "Bakılması gereken {{count}} sorun",
+    "allGood": "Her şey yolunda",
+    "checked_one": "{{count}} denetim yapıldı",
+    "checked_other": "{{count}} denetim yapıldı",
+    "again": "Yeniden denetle",
+    "migrations": {
+      "title": "Veritabanı geçişleri",
+      "applied_one": "{{count}} uygulandı",
+      "applied_other": "{{count}} uygulandı",
+      "pending_one": "{{count}} bekliyor",
+      "pending_other": "{{count}} bekliyor",
+      "failed_one": "{{count}} başarısız",
+      "failed_other": "{{count}} başarısız",
+      "list": "Uygulanan geçişler, en yenisi önce"
     }
   }
 }

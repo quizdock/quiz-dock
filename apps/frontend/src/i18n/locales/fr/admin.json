@@ -198,7 +198,8 @@
     "users": {
       "list": "Comptes",
       "set-role": "Octroyer ou retirer un rôle",
-      "find": "Trouver un compte"
+      "find": "Trouver un compte",
+      "search": "Chercher les comptes"
     },
     "samples": {
       "load": "Ajouter les quiz d’exemple à un compte"
@@ -249,6 +250,10 @@
     "invite": {
       "test": "Tester une adresse depuis un téléphone",
       "test-status": "Test depuis un téléphone"
+    },
+    "stats": {
+      "live": "Ce qui se joue en ce moment",
+      "history": "Les douze derniers mois"
     }
   },
   "params": {
@@ -399,7 +404,9 @@
       "partial": "En partie",
       "refused": "Refusé",
       "failed": "Échec"
-    }
+    },
+    "anyOperation": "Toutes les opérations",
+    "previous": "Ce qui a été remplacé"
   },
   "edit": {
     "save": "Enregistrer",
@@ -630,6 +637,62 @@
         "hosts": "Animateurs les plus actifs"
       },
       "oldest": "L’historique commence le {{date}} : les parties plus anciennes sont purgées."
+    }
+  },
+  "accounts": {
+    "search": "Chercher un compte (nom, identifiant, e-mail)",
+    "role": "Rôle",
+    "anyRole": "Tous les rôles",
+    "roles": {
+      "admin": "Administrateur",
+      "host": "Animateur",
+      "player": "Participant"
+    },
+    "none": "Aucun compte ne correspond.",
+    "count_one": "{{count}} compte",
+    "count_other": "{{count}} comptes",
+    "columns": {
+      "account": "Compte",
+      "roles": "Rôles",
+      "quizzes": "Quiz",
+      "games": "Parties animées",
+      "created": "Créé",
+      "actions": "Actions"
+    },
+    "grantedHere": "Accordé depuis l’administration",
+    "actionsFor": "Actions pour {{name}}",
+    "editRoles": "Accorder ou retirer un rôle…",
+    "rolesTitle": "Rôles accordés à {{name}}",
+    "rolesHelp": "Ce que l’administration accorde, en plus de ce que donne le fournisseur d’identité : ces rôles-là restent, quoi qu’on coche ici.",
+    "rolesHint": {
+      "host": "Crée des quiz et anime des parties.",
+      "admin": "Accède à l’administration."
+    },
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "seat": {
+      "title": "Place d’animateur",
+      "held": "Tenue par {{name}}, {{since}}",
+      "free": "Libre : le prochain qui la prend anime.",
+      "release": "Libérer la place"
+    }
+  },
+  "health": {
+    "problems_one": "{{count}} problème à regarder",
+    "problems_other": "{{count}} problèmes à regarder",
+    "allGood": "Tout va bien",
+    "checked_one": "{{count}} vérification effectuée",
+    "checked_other": "{{count}} vérifications effectuées",
+    "again": "Vérifier à nouveau",
+    "migrations": {
+      "title": "Migrations de la base",
+      "applied_one": "{{count}} appliquée",
+      "applied_other": "{{count}} appliquées",
+      "pending_one": "{{count}} en attente",
+      "pending_other": "{{count}} en attente",
+      "failed_one": "{{count}} en échec",
+      "failed_other": "{{count}} en échec",
+      "list": "Migrations appliquées, la plus récente d’abord"
     }
   }
 }

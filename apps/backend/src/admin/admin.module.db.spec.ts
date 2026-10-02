@@ -67,6 +67,16 @@ describe('AdminModule (integration)', () => {
     expect(stats.totals.lobby + stats.totals.playing).toBe(stats.totals.games);
   });
 
+  it('users.search finds an account by name, subject or e-mail, and filters by role', async () => {
+    type Page = { result: { data: { total: number; items: { subject: string }[] } } };
+    const search = async (raw: Record<string, unknown>) =>
+      ((await runner.run({ id: 'users.search', raw, actor: cli })) as Page).result.data;
+    expect((await search({ q: 'admin-db' })).items.map((i) => i.subject)).toEqual([subject]);
+    // Ada holds no role yet: a participant.
+    expect((await search({ q: 'admin-db', role: 'player' })).total).toBe(1);
+    expect((await search({ q: 'admin-db', role: 'host' })).total).toBe(0);
+  });
+
   it('users.set-role grants, is confirmed and audited', async () => {
     const call = { id: 'users.set-role', raw: { user: subject, roles: 'admin' }, actor: cli };
     const ask = await runner.run(call);

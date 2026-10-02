@@ -198,7 +198,8 @@
     "users": {
       "list": "Accounts",
       "set-role": "Grant or revoke a role",
-      "find": "Find an account"
+      "find": "Find an account",
+      "search": "Search the accounts"
     },
     "samples": {
       "load": "Add the sample quizzes to an account"
@@ -249,6 +250,10 @@
     "invite": {
       "test": "Test an address from a phone",
       "test-status": "Phone test"
+    },
+    "stats": {
+      "live": "What is played right now",
+      "history": "The last twelve months"
     }
   },
   "params": {
@@ -399,7 +404,9 @@
       "partial": "Partly",
       "refused": "Refused",
       "failed": "Failed"
-    }
+    },
+    "anyOperation": "Every operation",
+    "previous": "What it replaced"
   },
   "edit": {
     "save": "Save",
@@ -630,6 +637,62 @@
         "hosts": "Most active hosts"
       },
       "oldest": "The history starts on {{date}}: older games are purged."
+    }
+  },
+  "accounts": {
+    "search": "Search an account (name, subject, e-mail)",
+    "role": "Role",
+    "anyRole": "Any role",
+    "roles": {
+      "admin": "Administrator",
+      "host": "Host",
+      "player": "Participant"
+    },
+    "none": "No account matches.",
+    "count_one": "{{count}} account",
+    "count_other": "{{count}} accounts",
+    "columns": {
+      "account": "Account",
+      "roles": "Roles",
+      "quizzes": "Quizzes",
+      "games": "Games hosted",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "grantedHere": "Granted from the administration",
+    "actionsFor": "Actions for {{name}}",
+    "editRoles": "Grant or revoke a role…",
+    "rolesTitle": "Roles granted to {{name}}",
+    "rolesHelp": "What the administration grants, on top of what the identity provider gives: those roles stay whatever is ticked here.",
+    "rolesHint": {
+      "host": "Creates quizzes and hosts games.",
+      "admin": "Reaches the administration."
+    },
+    "cancel": "Cancel",
+    "save": "Save",
+    "seat": {
+      "title": "Host seat",
+      "held": "Held by {{name}}, since {{since}}",
+      "free": "Free: the next one to claim it hosts.",
+      "release": "Free the seat"
+    }
+  },
+  "health": {
+    "problems_one": "{{count}} problem to look at",
+    "problems_other": "{{count}} problems to look at",
+    "allGood": "Everything is fine",
+    "checked_one": "{{count}} check passed through",
+    "checked_other": "{{count}} checks passed through",
+    "again": "Check again",
+    "migrations": {
+      "title": "Database migrations",
+      "applied_one": "{{count}} applied",
+      "applied_other": "{{count}} applied",
+      "pending_one": "{{count}} pending",
+      "pending_other": "{{count}} pending",
+      "failed_one": "{{count}} failed",
+      "failed_other": "{{count}} failed",
+      "list": "Applied migrations, newest first"
     }
   }
 }

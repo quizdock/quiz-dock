@@ -198,7 +198,8 @@
     "users": {
       "list": "Cuentas",
       "set-role": "Conceder o retirar un rol",
-      "find": "Buscar una cuenta"
+      "find": "Buscar una cuenta",
+      "search": "Buscar las cuentas"
     },
     "samples": {
       "load": "Añadir los quizzes de ejemplo a una cuenta"
@@ -249,6 +250,10 @@
     "invite": {
       "test": "Probar una dirección desde un teléfono",
       "test-status": "Prueba desde un teléfono"
+    },
+    "stats": {
+      "live": "Lo que se juega ahora",
+      "history": "Los últimos doce meses"
     }
   },
   "params": {
@@ -399,7 +404,9 @@
       "partial": "En parte",
       "refused": "Rechazado",
       "failed": "Error"
-    }
+    },
+    "anyOperation": "Todas las operaciones",
+    "previous": "Lo que se reemplazó"
   },
   "edit": {
     "save": "Guardar",
@@ -630,6 +637,62 @@
         "hosts": "Anfitriones más activos"
       },
       "oldest": "El historial empieza el {{date}}: las partidas más antiguas se purgan."
+    }
+  },
+  "accounts": {
+    "search": "Buscar una cuenta (nombre, identificador, correo)",
+    "role": "Rol",
+    "anyRole": "Todos los roles",
+    "roles": {
+      "admin": "Administrador",
+      "host": "Anfitrión",
+      "player": "Participante"
+    },
+    "none": "Ninguna cuenta coincide.",
+    "count_one": "{{count}} cuenta",
+    "count_other": "{{count}} cuentas",
+    "columns": {
+      "account": "Cuenta",
+      "roles": "Roles",
+      "quizzes": "Quizzes",
+      "games": "Partidas dirigidas",
+      "created": "Creada",
+      "actions": "Acciones"
+    },
+    "grantedHere": "Concedido desde la administración",
+    "actionsFor": "Acciones para {{name}}",
+    "editRoles": "Conceder o retirar un rol…",
+    "rolesTitle": "Roles concedidos a {{name}}",
+    "rolesHelp": "Lo que concede la administración, además de lo que da el proveedor de identidad: esos roles se mantienen, se marque lo que se marque aquí.",
+    "rolesHint": {
+      "host": "Crea quizzes y dirige partidas.",
+      "admin": "Accede a la administración."
+    },
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "seat": {
+      "title": "Puesto de anfitrión",
+      "held": "Ocupado por {{name}}, {{since}}",
+      "free": "Libre: quien lo tome primero dirige.",
+      "release": "Liberar el puesto"
+    }
+  },
+  "health": {
+    "problems_one": "{{count}} problema que revisar",
+    "problems_other": "{{count}} problemas que revisar",
+    "allGood": "Todo va bien",
+    "checked_one": "{{count}} comprobación realizada",
+    "checked_other": "{{count}} comprobaciones realizadas",
+    "again": "Comprobar de nuevo",
+    "migrations": {
+      "title": "Migraciones de la base de datos",
+      "applied_one": "{{count}} aplicada",
+      "applied_other": "{{count}} aplicadas",
+      "pending_one": "{{count}} pendiente",
+      "pending_other": "{{count}} pendientes",
+      "failed_one": "{{count}} fallida",
+      "failed_other": "{{count}} fallidas",
+      "list": "Migraciones aplicadas, la más reciente primero"
     }
   }
 }

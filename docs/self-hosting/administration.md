@@ -52,10 +52,13 @@ settings, health and audit:
   it replaces, and *Back to .env* takes it back. *Export as .env* gives every
   change as a `.env` excerpt — to pin them in `.env`, or move them to another
   instance —, *Take everything back* removes them all.
-- **Health** — the checks of `qd doctor`, the state of the migrations, and the
-  phone test of the invitation addresses (a new network, a new venue).
-- **Accounts** — the accounts and their roles, granting or revoking one, the
-  local mode's host seat.
+- **Health** — a verdict first, then the checks of `qd doctor` part by part,
+  the state of the migrations, and the phone test of the invitation addresses
+  (a new network, a new venue).
+- **Accounts** — the accounts, searched by name, subject or e-mail and filtered
+  by role, with their quizzes and the games they hosted; granting or revoking a
+  role from a row (on top of what the identity provider gives); in local mode,
+  who holds the host seat, and freeing it.
 - **Audit** — every administrative action (below).
 - **Quizzes** — every quiz of the instance, whoever owns it, a page at a time:
   searched by title, filtered by owner and status, or only the ones nobody can

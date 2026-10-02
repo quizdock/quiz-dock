@@ -198,7 +198,8 @@
     "users": {
       "list": "帳號",
       "set-role": "授予或撤銷角色",
-      "find": "尋找帳號"
+      "find": "尋找帳號",
+      "search": "搜尋帳戶"
     },
     "samples": {
       "load": "為帳號新增範例測驗"
@@ -249,6 +250,10 @@
     "invite": {
       "test": "從手機測試網址",
       "test-status": "手機測試"
+    },
+    "stats": {
+      "live": "目前正在進行的遊戲",
+      "history": "過去十二個月"
     }
   },
   "params": {
@@ -399,7 +404,9 @@
       "partial": "部分完成",
       "refused": "已拒絕",
       "failed": "失敗"
-    }
+    },
+    "anyOperation": "所有操作",
+    "previous": "被取代的內容"
   },
   "edit": {
     "save": "儲存",
@@ -630,6 +637,62 @@
         "hosts": "最活躍的主持人"
       },
       "oldest": "歷史紀錄從 {{date}} 開始：更早的遊戲已被清除。"
+    }
+  },
+  "accounts": {
+    "search": "搜尋帳戶（名稱、識別碼、電子郵件）",
+    "role": "角色",
+    "anyRole": "所有角色",
+    "roles": {
+      "admin": "管理員",
+      "host": "主持人",
+      "player": "參與者"
+    },
+    "none": "沒有符合的帳戶。",
+    "count_one": "{{count}} 個帳戶",
+    "count_other": "{{count}} 個帳戶",
+    "columns": {
+      "account": "帳戶",
+      "roles": "角色",
+      "quizzes": "測驗",
+      "games": "主持的遊戲",
+      "created": "建立",
+      "actions": "操作"
+    },
+    "grantedHere": "由管理後台授予",
+    "actionsFor": "{{name}} 的操作",
+    "editRoles": "授予或撤銷角色…",
+    "rolesTitle": "授予 {{name}} 的角色",
+    "rolesHelp": "管理後台在身分提供者給予的角色之外授予的角色：身分提供者的角色不受此處勾選影響。",
+    "rolesHint": {
+      "host": "建立測驗並主持遊戲。",
+      "admin": "可進入管理後台。"
+    },
+    "cancel": "取消",
+    "save": "儲存",
+    "seat": {
+      "title": "主持席位",
+      "held": "由 {{name}} 占用，{{since}}",
+      "free": "空閒：下一個領取的人主持。",
+      "release": "釋放席位"
+    }
+  },
+  "health": {
+    "problems_one": "{{count}} 個問題需要查看",
+    "problems_other": "{{count}} 個問題需要查看",
+    "allGood": "一切正常",
+    "checked_one": "已完成 {{count}} 項檢查",
+    "checked_other": "已完成 {{count}} 項檢查",
+    "again": "重新檢查",
+    "migrations": {
+      "title": "資料庫遷移",
+      "applied_one": "{{count}} 個已套用",
+      "applied_other": "{{count}} 個已套用",
+      "pending_one": "{{count}} 個待套用",
+      "pending_other": "{{count}} 個待套用",
+      "failed_one": "{{count}} 個失敗",
+      "failed_other": "{{count}} 個失敗",
+      "list": "已套用的遷移，最新的在前"
     }
   }
 }

@@ -16,6 +16,7 @@ import { SetupService } from './setup/setup.service';
 import type { AdminOperation } from './operations/operation';
 import { SettingsOperations } from './operations/settings.operations';
 import { StatsOperations } from './operations/stats.operations';
+import { AccountsOperations } from './operations/accounts.operations';
 import { GameStateModule } from '../game/game-state.module';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
 import { OperationRunner } from './runner/operation-runner';
@@ -31,6 +32,7 @@ const OPERATION_GROUPS = [
   SetupOperations,
   MediaOperations,
   StatsOperations,
+  AccountsOperations,
 ];
 
 /**
