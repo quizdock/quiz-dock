@@ -6,7 +6,7 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { Public } from '../auth/public.decorator';
 import { instanceLanguage } from '../common/instance-language';
-import { SETTINGS } from '@quiz-dock/contracts';
+import { SETTINGS, answerTheme } from '@quiz-dock/contracts';
 import { settings } from '../admin/settings/settings.service';
 
 /** The icon (tab, home screen), which an operator may give in `branding/`. */
@@ -40,7 +40,9 @@ export class AppConfigController {
     // JSON is valid JavaScript, whatever the values hold (quotes, backslashes, line breaks).
     // A new room's screens move between steps unless the instance says `off` (UI system §1.8).
     const liveMotion = liveMotionDefault();
-    const config = JSON.stringify({ appName, lang, logoUrl, feedbackUrl, liveMotion });
+    // How the answers are drawn: the author's shape, or a letter or number by position (lot 6).
+    const answerGlyph = answerTheme(settings.get(SETTINGS.ANSWER_THEME)).glyph;
+    const config = JSON.stringify({ appName, lang, logoUrl, feedbackUrl, liveMotion, answerGlyph });
     return `window.__APP_CONFIG__ = ${config};\n`;
   }
 

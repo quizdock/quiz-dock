@@ -143,6 +143,8 @@ services:
       GAME_AUTO_ADVANCE_MS: ${GAME_AUTO_ADVANCE_MS:-5000}
       # Transitions between steps on the live screens, the rooms' default (on | off).
       LIVE_MOTION: ${LIVE_MOTION:-on}
+      # How the answers are drawn: classic | letters | numbers | colorblind.
+      ANSWER_THEME: ${ANSWER_THEME:-classic}
       GAME_READ_DELAY_MS: ${GAME_READ_DELAY_MS:-3000}
       GAME_ALL_ANSWERED_DELAY_MS: ${GAME_ALL_ANSWERED_DELAY_MS:-1000}
       GAME_MEDIA_WAIT_S: ${GAME_MEDIA_WAIT_S:-10}

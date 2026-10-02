@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { type Theme, themeCss } from '@quiz-dock/contracts';
+import { SETTINGS, type Theme, answerTheme, answerThemeCss, themeCss } from '@quiz-dock/contracts';
+import { settings } from '../settings/settings.service';
 import { OverridesService } from '../settings/overrides.service';
 
 export const THEME_KEY = 'theme.palette';
@@ -13,7 +14,7 @@ const CACHE_MS = 30_000;
  */
 @Injectable()
 export class ThemeService {
-  private cached: { at: number; css: string } | null = null;
+  private cached: { at: number; answers: string; css: string } | null = null;
 
   constructor(private readonly values: OverridesService) {}
 
@@ -31,10 +32,14 @@ export class ThemeService {
     this.cached = null;
   }
 
+  /** The palette, then the answer theme's colours (`ANSWER_THEME`, lot 6). */
   async css(): Promise<string> {
-    if (this.cached && Date.now() - this.cached.at < CACHE_MS) return this.cached.css;
-    const css = themeCss(await this.get());
-    this.cached = { at: Date.now(), css };
+    const answers = settings.get(SETTINGS.ANSWER_THEME);
+    if (this.cached && this.cached.answers === answers && Date.now() - this.cached.at < CACHE_MS) {
+      return this.cached.css;
+    }
+    const css = themeCss(await this.get()) + answerThemeCss(answerTheme(answers));
+    this.cached = { at: Date.now(), answers, css };
     return css;
   }
 }
