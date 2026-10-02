@@ -38,7 +38,7 @@ export class RedisConfirmationStore implements ConfirmationStore {
   }
 }
 
-/** For the tests, and a CLI without Redis. */
+/** For the tests. */
 export class MemoryConfirmationStore implements ConfirmationStore {
   private readonly tokens = new Map<string, { digest: string; until: number }>();
 

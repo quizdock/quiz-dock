@@ -8,7 +8,6 @@ import type {
 } from '@quiz-dock/contracts';
 import type { RoleSet } from '../../auth/roles';
 import type { z } from 'zod';
-import { CliError } from '../../cli/output';
 
 /** The caller as the runner sees it: the API adds the account's roles. */
 export interface CallActor extends Actor {
@@ -92,17 +91,21 @@ export function defineOperation<S extends z.ZodType, R>(
 }
 
 /**
- * A refusal with a stable code, thrown by an operation or a step. Also a
- * `CliError`, so the commands that predate the runner keep their exit codes.
+ * A refusal with a stable code, thrown by an operation or a step. It carries
+ * the exit code a shell gives it (the CLI reads `exitCode` on whatever it
+ * catches): the domain knows nothing of its accesses.
  */
-export class OperationError extends CliError {
+export class OperationError extends Error {
+  readonly exitCode: number;
+
   constructor(
     readonly code: RefusalCode,
     message: string,
     readonly params?: Record<string, unknown>,
   ) {
-    super(message, code === 'invalid_params' ? 2 : 1);
+    super(message);
     this.name = 'OperationError';
+    this.exitCode = code === 'invalid_params' ? 2 : 1;
   }
 }
 

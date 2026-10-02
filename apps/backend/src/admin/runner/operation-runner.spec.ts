@@ -419,3 +419,85 @@ describe('OperationRunner', () => {
     });
   });
 });
+
+/**
+ * The gate, for every way the web reaches an operation (§3.10, R3/R4): the
+ * authentication mode × the web's scope × the local-mode token × the domain ×
+ * the effect — what an administrator from the API may run. Confirmations are
+ * given (preconfirmed) so the gate alone decides.
+ */
+describe('the gate, as a matrix', () => {
+  const TOKEN = 't'.repeat(40);
+  const op = (domain: 'media' | 'quizzes' | 'instance', effect: 'read' | 'write') =>
+    defineOperation({
+      id: `${domain}.${effect}`,
+      domain,
+      category: 'settings',
+      effect,
+      summary: '',
+      params: z.object({}),
+      run: () => Promise.resolve(done()),
+    });
+  const matrixOps = (['media', 'quizzes', 'instance'] as const).flatMap((d) =>
+    (['read', 'write'] as const).map((e) => op(d, e)),
+  );
+
+  // [auth, scope, token given, domain, effect] → runs, or the refusal's code.
+  const cases: [string, string, boolean, string, string, string][] = [];
+  for (const auth of ['oidc', 'none'])
+    for (const scope of ['read', 'write'])
+      for (const token of [false, true])
+        for (const domain of ['media', 'quizzes', 'instance'])
+          for (const effect of ['read', 'write']) {
+            const expected =
+              effect === 'read' || domain === 'media'
+                ? 'runs'
+                : auth === 'none' && !token
+                  ? 'local_mode_token'
+                  : domain === 'instance' && scope === 'read'
+                    ? 'scope_read'
+                    : 'runs';
+            cases.push([auth, scope, token, domain, effect, expected]);
+          }
+
+  it.each(cases)(
+    'AUTH_MODE=%s, ADMIN_WEB_SCOPE=%s, token %s: %s %s → %s',
+    async (auth, scope, token, domain, effect, expected) => {
+      const env = {
+        AUTH_MODE: auth,
+        ADMIN_WEB_SCOPE: scope,
+        ADMIN_TOKEN: TOKEN,
+        ...(auth === 'oidc' ? { OIDC_ISSUER: 'https://id.example.org' } : {}),
+      };
+      const runner = new OperationRunner(
+        matrixOps,
+        settingsFrom(env),
+        new MemoryAuditRepository(),
+        new MemoryConfirmationStore(),
+      );
+      const outcome = await runner.run({
+        id: `${domain}.${effect}`,
+        raw: {},
+        actor: { ...ADMIN, ...(token ? { adminToken: TOKEN } : {}) },
+        preconfirmed: true,
+      });
+      if (expected === 'runs') expect(outcome.kind).toBe('result');
+      else expect(outcome).toMatchObject({ kind: 'refused', code: expected });
+    },
+  );
+
+  it('a host reaches none of them, whatever the settings', async () => {
+    const runner = new OperationRunner(
+      matrixOps,
+      settingsFrom(WRITE_ENV),
+      new MemoryAuditRepository(),
+      new MemoryConfirmationStore(),
+    );
+    for (const o of matrixOps) {
+      expect(await runner.run({ id: o.id, raw: {}, actor: HOST })).toMatchObject({
+        kind: 'refused',
+        code: 'forbidden',
+      });
+    }
+  });
+});

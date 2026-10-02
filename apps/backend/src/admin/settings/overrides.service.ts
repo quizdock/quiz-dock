@@ -75,11 +75,6 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
     this.store.replace(rows.filter((r) => SETTING_KEYS.has(r.key)).map((r) => [r.key, r.value]));
   }
 
-  /** The overrides with who changed them and when. */
-  list() {
-    return this.prisma.instanceSetting.findMany({ orderBy: { key: 'asc' } });
-  }
-
   /** Applies changes all together, or none (§3.11, unit of work), then tells every replica. */
   async apply(changes: OverrideChange[], actor: { name: string; userId?: string }): Promise<void> {
     await this.prisma.$transaction(

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type Prisma, QuizStatus, UserRole } from '@prisma/client';
+import { holdsRole } from '../../users/user-filters';
 import type { QuizSearchPage } from '@quiz-dock/contracts';
 import { livePinOf } from '../../game/game.keys';
 import { RedisService } from '../../redis/redis.service';
@@ -18,10 +19,7 @@ const quizId = z.string().trim().min(1).max(64);
 
 /** An owner who can no longer reach their quizzes: an account deleted, or without the host role. */
 const ORPHAN_OWNER: Prisma.UserWhereInput = {
-  OR: [
-    { deletedAt: { not: null } },
-    { NOT: [{ roles: { has: UserRole.host } }, { assignedRoles: { has: UserRole.host } }] },
-  ],
+  OR: [{ deletedAt: { not: null } }, { NOT: holdsRole(UserRole.host) }],
 };
 
 /**

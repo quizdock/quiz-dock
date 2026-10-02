@@ -103,7 +103,7 @@ qd setup.complete                    # skip the wizard (automated deployments)
 | Option | Effect |
 |---|---|
 | `--yes` | Confirms a destructive operation, or one that changes administrator rights. Without it, `qd` asks on a terminal and refuses elsewhere. The commands of the table above never ask, as before. |
-| `--dry-run` | Says what the operation would do, for those that can (`sessions.purge`). |
+| `--dry-run` | Says what the operation would do, for those that can (`sessions.purge`, `presets.apply`). |
 | `--json` | The outcome as JSON, for scripts. |
 | `--as=<name>` | Who the audit records (default: the container's user). |
 

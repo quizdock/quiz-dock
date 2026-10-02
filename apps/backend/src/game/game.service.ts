@@ -142,6 +142,10 @@ type ActiveGame = {
   state: string;
   playerCount: number;
   host?: string;
+  /** When its host opened it (ms epoch); the question on screen (from 0), out of how many. */
+  createdAt: number;
+  currentIndex: number;
+  totalQuestions: number;
 };
 
 /**
@@ -863,6 +867,9 @@ export class GameService {
         title: meta.title,
         state: meta.state,
         playerCount: await this.connectedCount(pin),
+        createdAt: meta.createdAt,
+        currentIndex: meta.currentIndex,
+        totalQuestions: meta.totalQuestions,
       });
     }
     return games;

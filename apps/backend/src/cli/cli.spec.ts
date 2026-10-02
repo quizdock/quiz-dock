@@ -9,7 +9,7 @@ import { type BundleIo, quizExport, quizImport, quizList, quizTransfer } from '.
 import { seatRelease, seatStatus } from './commands/seat';
 import { sessionsPurge } from './commands/sessions';
 import { samplesLoad, userList, userSetRole } from './commands/users';
-import { CliError, type Output } from './output';
+import type { Output } from './output';
 import type { HostSeatService } from '../users/host-seat.service';
 import { settingsFrom } from '../admin/settings/settings.service';
 
@@ -287,7 +287,9 @@ describe('user commands', () => {
       where: { id: 'u1' },
       data: { assignedRoles: ['admin', 'host'], roles: ['admin', 'host'] },
     });
-    await expect(userSetRole(out, prisma, 'alice@ex.io', 'root')).rejects.toThrow(CliError);
+    await expect(userSetRole(out, prisma, 'alice@ex.io', 'root')).rejects.toMatchObject({
+      exitCode: 2,
+    });
     await expect(userSetRole(out, db(null), 'nobody', 'admin')).rejects.toThrow('No user');
   });
 
@@ -422,7 +424,10 @@ describe('quiz commands', () => {
       const { out } = memOutput();
       const { prisma, redis } = transferDb();
       (prisma.quiz.findUnique as jest.Mock).mockResolvedValue(null);
-      await expect(quizTransfer(out, prisma, redis, 'nope', 'bob@ex.io')).rejects.toThrow(CliError);
+      await expect(quizTransfer(out, prisma, redis, 'nope', 'bob@ex.io')).rejects.toMatchObject({
+        code: 'not_found',
+        exitCode: 1,
+      });
     });
   });
 

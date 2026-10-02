@@ -96,10 +96,17 @@ together — make it wait a quarter of an hour.
 ## 4. The audit
 
 Every change — from the web or from the command line — and every refusal is
-kept: when, who, through what (and from which address), the operation and its
-parameters (secrets masked), what it replaced, how it ended. Nothing edits or deletes it; it is
-backed up with the database. Read it in *Administration → Audit*, or with
-`qd audit.list`.
+kept: when, who, through what (and from which address — the connection's own
+next to the one proxies give, when they differ), the operation and its
+parameters (secrets masked, a secret setting's value included), what it
+replaced, how it ended. A refusal is kept wherever it happens: an account
+without the administrator role turned away, a wrong setup token. A change
+that outlasts its time is answered *timeout* and goes on: its real outcome
+joins the audit when it ends (code `late`) — check it before running it
+again. Nothing edits or deletes the audit; it is backed up with the
+database. Read it in *Administration → Audit*, or with `qd audit.list`; a
+setting's own history (`--setting=KEY`) includes the quick setup and *Take
+everything back*.
 
 ## 5. From the command line
 

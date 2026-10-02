@@ -30,22 +30,23 @@ describe('every variable is declared', () => {
   });
 
   it('the backend reads process.env in the settings module only', () => {
-    const offenders: string[] = [];
+    // Named here, not excused by a lint comment (which would excuse anything): the
+    // settings' environment source, and the tool that writes the OpenAPI document.
+    const allowed = new Set(['admin/settings/settings.service.ts', 'openapi.ts']);
+    const readers: string[] = [];
+    const src = join(ROOT, 'apps/backend/src');
     const walk = (dir: string) => {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const path = join(dir, entry.name);
         if (entry.isDirectory()) walk(path);
         else if (/\.ts$/.test(entry.name) && !/\.spec\.ts$/.test(entry.name)) {
-          const text = readFileSync(path, 'utf8');
-          const reads = text.match(/process\.env\b/g)?.length ?? 0;
-          const allowed =
-            text.match(/eslint-disable(-next-line)? no-restricted-properties/g)?.length ?? 0;
-          if (reads && !allowed) offenders.push(path.slice(ROOT.length + 1));
+          if (/process\.env\b/.test(readFileSync(path, 'utf8')))
+            readers.push(path.slice(src.length + 1));
         }
       }
     };
-    walk(join(ROOT, 'apps/backend/src'));
-    expect(offenders).toEqual([]);
+    walk(src);
+    expect(readers.filter((p) => !allowed.has(p))).toEqual([]);
   });
 
   it('an application setting and a deployment variable never share a name', () => {

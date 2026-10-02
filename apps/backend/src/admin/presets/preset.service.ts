@@ -31,7 +31,7 @@ const raw = (def: SettingDefinition, value: unknown): string => {
 };
 
 /**
- * Presets (§3.9): levels on independent axes, and named shortcuts to them. Goes
+ * Presets (§3.9): the quick setup's answers, levels on independent axes. Goes
  * through the overrides like any change — validation, locks and audit apply
  * with no rule of its own.
  */

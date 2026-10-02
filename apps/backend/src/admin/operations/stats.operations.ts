@@ -8,6 +8,7 @@ import {
   type LiveStats,
 } from '@quiz-dock/contracts';
 import { Prisma, QuizStatus, UserRole } from '@prisma/client';
+import { holdsRole } from '../../users/user-filters';
 import { z } from 'zod';
 import { GameService } from '../../game/game.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -16,10 +17,6 @@ import { type AdminOperation, defineOperation, done } from './operation';
 /** The months the history shows, and the ranks' length. */
 export const HISTORY_MONTHS = 12;
 export const HISTORY_TOP = 5;
-
-const hasRole = (role: UserRole): Prisma.UserWhereInput => ({
-  OR: [{ roles: { has: role } }, { assignedRoles: { has: role } }],
-});
 
 /**
  * The instance's statistics: what is played right now, and the state of the
@@ -75,18 +72,17 @@ export class StatsOperations {
 
   private async liveGames(): Promise<LiveGame[]> {
     const games: LiveGame[] = [];
+    // What the listing read already: no second read of each game's state.
     for (const game of await this.games.listAllActiveGames()) {
-      const meta = await this.games.getMeta(game.pin);
-      if (!meta) continue;
-      const lobby = meta.state === GameState.Lobby;
+      const lobby = game.state === GameState.Lobby;
       games.push({
         pin: game.pin,
         title: game.title,
-        host: game.host ?? meta.hostName,
+        host: game.host ?? '',
         phase: lobby ? 'lobby' : 'playing',
         players: game.playerCount,
-        since: new Date(meta.createdAt).toISOString(),
-        question: lobby ? null : { index: meta.currentIndex + 1, total: meta.totalQuestions },
+        since: new Date(game.createdAt).toISOString(),
+        question: lobby ? null : { index: game.currentIndex + 1, total: game.totalQuestions },
       });
     }
     // The oldest first: the order they were opened in.
@@ -97,8 +93,8 @@ export class StatsOperations {
     const alive: Prisma.UserWhereInput = { deletedAt: null };
     const [total, hosts, admins, quizzes, media, sessions, last] = await Promise.all([
       this.prisma.user.count({ where: alive }),
-      this.prisma.user.count({ where: { ...alive, ...hasRole(UserRole.host) } }),
-      this.prisma.user.count({ where: { ...alive, ...hasRole(UserRole.admin) } }),
+      this.prisma.user.count({ where: { ...alive, ...holdsRole(UserRole.host) } }),
+      this.prisma.user.count({ where: { ...alive, ...holdsRole(UserRole.admin) } }),
       this.prisma.quiz.groupBy({ by: ['status'], _count: true }),
       // One file counted once, however many media share it (the media page's own key).
       this.prisma.$queryRaw<Array<{ files: number; bytes: bigint | null }>>`

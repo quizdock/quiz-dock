@@ -19,7 +19,7 @@
     "incremental": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "src/**/testing/**"],
   "watchOptions": {
     // `nest start --watch` (tsc) tourne dans le conteneur sur des sources montées
     // (bind mount) : les events inotify ne traversent pas la frontière WSL2/Docker.

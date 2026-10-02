@@ -1,15 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { type AccountsPage, SETTINGS } from '@quiz-dock/contracts';
 import { type Prisma, UserRole } from '@prisma/client';
+import { holdsRole } from '../../users/user-filters';
 import { z } from 'zod';
 import { PrismaService } from '../../prisma/prisma.service';
 import { HostSeatService } from '../../users/host-seat.service';
 import { SettingsService } from '../settings/settings.service';
 import { type AdminOperation, defineOperation, done } from './operation';
-
-const hasRole = (role: UserRole): Prisma.UserWhereInput => ({
-  OR: [{ roles: { has: role } }, { assignedRoles: { has: role } }],
-});
 
 /** The accounts of the instance, a page at a time (§0.1, Instance domain). */
 @Injectable()
@@ -51,9 +48,9 @@ export class AccountsOperations {
                   ]
                 : []),
               ...(role === 'player'
-                ? [{ NOT: [hasRole(UserRole.host), hasRole(UserRole.admin)] }]
+                ? [{ NOT: [holdsRole(UserRole.host), holdsRole(UserRole.admin)] }]
                 : role
-                  ? [hasRole(role)]
+                  ? [holdsRole(role)]
                   : []),
             ],
           };

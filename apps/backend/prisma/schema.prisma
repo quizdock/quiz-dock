@@ -499,6 +499,8 @@ model GameSessionLog {
   @@index([hostId, startedAt])
   @@index([retainUntil])
   @@index([roomId])
+  @@index([startedAt])
+  @@index([endedAt])
   @@map("game_session_log")
 }
 
@@ -603,7 +605,7 @@ model AdminAudit {
   durationMs Int      @map("duration_ms")
 
   @@index([at])
-  @@index([operation, at])
+  @@index([operation, id])
   @@map("admin_audit")
 }
 

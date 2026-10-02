@@ -5,13 +5,14 @@ import type { User } from '@prisma/client';
 import { AllowManager } from '../auth/allow-manager.decorator';
 import { isManager } from '../auth/roles';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { ActiveGameDto } from './dto/active-game.dto';
+import { ActiveGameDto, activeGameSchema } from './dto/active-game.dto';
 import { JoinAddressesDto } from './dto/join-addresses.dto';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from '../admin/settings/settings.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { FLAG_PREFIX } from '../admin/settings/overrides.service';
 import { readTestedAddresses } from '../admin/setup/setup.service';
 
 /** Addresses Docker gives its bridge networks (172.17–31.x.x): never an invitation address. */
@@ -39,12 +40,14 @@ export class GameController {
   @Get('mine')
   @AllowManager()
   @ApiOkResponse({ type: ActiveGameDto, isArray: true })
-  mine(@CurrentUser() user: User): Promise<ActiveGameDto[]> {
+  async mine(@CurrentUser() user: User): Promise<ActiveGameDto[]> {
     // Le gestionnaire voit l'instance ; s'il anime aussi, ses propres parties y
     // sont de toute façon (RG-14).
-    return isManager(user.roles)
-      ? this.games.listAllActiveGames()
-      : this.games.listActiveHostGames(user.id);
+    const games = isManager(user.roles)
+      ? await this.games.listAllActiveGames()
+      : await this.games.listActiveHostGames(user.id);
+    // What the API declares, nothing more (the listing carries internals for the statistics).
+    return activeGameSchema.array().parse(games);
   }
 
   /**
@@ -62,8 +65,8 @@ export class GameController {
     const configured = settings.get(SETTINGS.HOST_LAN_IPS);
     const tested = await readTestedAddresses({
       flag: async (key) =>
-        (await this.prisma.instanceSetting.findUnique({ where: { key: `setup.${key}` } }))?.value ??
-        null,
+        (await this.prisma.instanceSetting.findUnique({ where: { key: FLAG_PREFIX + key } }))
+          ?.value ?? null,
     }).catch(() => []);
     if (configured.length) {
       return {
