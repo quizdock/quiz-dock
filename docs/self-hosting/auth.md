@@ -1,7 +1,7 @@
 # Authentication — local mode & OIDC
 
 > Part of the [self-hosting guides](README.md). The variables themselves are listed in
-> [configuration → access & instance mode](configuration.md#access--instance-mode).
+> [configuration → access & authentication](configuration.md#access--authentication).
 
 By default (`AUTH_MODE=none`) QuizDock runs in **local mode**: no identity provider,
 hosts identify with a name, and there is a single **host seat**:

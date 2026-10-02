@@ -1,7 +1,7 @@
 # Where participants connect (the invitation address)
 
 > Part of the [self-hosting guides](README.md). The variables are in
-> [configuration → invitation address](configuration.md#invitation-address).
+> [configuration → network & invitation](configuration.md#network--invitation).
 
 Participants' phones open the address on the QR code / join link. The host
 picks it in the console lobby (**Invitation address**); this table says what to

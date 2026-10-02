@@ -10,6 +10,7 @@
     "start:dev": "nest start --watch",
     "openapi": "node dist/openapi.js",
     "bundle-schema": "node dist/bundle-schema.js",
+    "settings-docs": "node dist/settings-docs.js",
     "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "jest",

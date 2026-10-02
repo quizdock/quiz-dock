@@ -1,7 +1,7 @@
 # Audio & video
 
 > Part of the [self-hosting guides](README.md). The variables are in
-> [configuration → limits](configuration.md#limits--game-pacing).
+> [configuration → limits](configuration.md#limits).
 
 > Video and sound in questions and slides are built and tested in Chromium
 > browsers (Chrome, Edge); **Safari on iPhone has not been tested yet**. Remote
@@ -51,7 +51,7 @@ author has uploaded — one entry per file, with how many of their quizzes use i
 Picking one puts it to a new use without uploading it again (its alternative
 text and credit are copied, then edited separately); an unused entry can be
 deleted. Below the list, links to free media libraries
-([`MEDIA_LIBRARY_LINKS`](configuration.md#limits--game-pacing); `none` hides
+([`MEDIA_LIBRARY_LINKS`](configuration.md#limits); `none` hides
 them on an instance without Internet) — nothing is fetched by the server.
 
 Every media has a **credit** field: author, licence, source. A CC-BY or CC-BY-SA
