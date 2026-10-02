@@ -183,13 +183,15 @@ describe('Access & authentication', () => {
     expect(authMode()).toBe(mode);
   });
 
-  it('the health probe reports AUTH_MODE as written, none when unset', () => {
+  it('the health probe reports the mode the backend runs in', () => {
     const health = () => new HealthController().check().authMode;
     expect(health()).toBe('none');
+    setEnv({ AUTH_MODE: 'oidc' });
+    expect(health()).toBe('oidc');
     setEnv({ AUTH_MODE: 'OIDC' });
-    expect(health()).toBe('OIDC');
+    expect(health()).toBe('none');
     setEnv({ AUTH_MODE: '' });
-    expect(health()).toBe('');
+    expect(health()).toBe('none');
   });
 
   it('the host seat is empty under AUTH_MODE=oidc exactly, without reading it', async () => {

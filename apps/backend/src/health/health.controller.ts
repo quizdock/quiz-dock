@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { CONTRACTS_VERSION } from '@quiz-dock/contracts';
 import { Public } from '../auth/public.decorator';
+import { authMode } from '../auth/auth-mode';
 
 export interface HealthStatus {
   status: 'ok';
@@ -23,7 +24,7 @@ export class HealthController {
       service: 'quiz-dock-backend',
       version: '0.1.0',
       contracts: CONTRACTS_VERSION,
-      authMode: process.env.AUTH_MODE ?? 'none',
+      authMode: authMode(),
     };
   }
 }
