@@ -586,7 +586,8 @@
       "host": "Host",
       "progress": "Where it is",
       "players": "Players",
-      "since": "Opened"
+      "since": "Opened",
+      "month": "Month"
     },
     "pin": "PIN {{pin}}",
     "phase": {
@@ -611,6 +612,24 @@
       "drafts_other": "{{count}} drafts",
       "archived_one": "{{count}} archived",
       "archived_other": "{{count}} archived"
+    },
+    "history": {
+      "title": "Over the last 12 months",
+      "none": "No game has been played in the last 12 months.",
+      "games": "Games",
+      "players": "Players",
+      "success": "Success rate",
+      "withAccount": "Players with an account",
+      "accounts_one": "{{count}} with an account",
+      "accounts_other": "{{count}} with an account",
+      "guests_one": "{{count}} guest",
+      "guests_other": "{{count}} guests",
+      "byMonth": "By month",
+      "top": {
+        "quizzes": "Most played quizzes",
+        "hosts": "Most active hosts"
+      },
+      "oldest": "The history starts on {{date}}: older games are purged."
     }
   }
 }

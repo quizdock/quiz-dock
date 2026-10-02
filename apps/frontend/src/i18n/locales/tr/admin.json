@@ -586,7 +586,8 @@
       "host": "Sunucu",
       "progress": "Durum",
       "players": "Oyuncular",
-      "since": "Açılış"
+      "since": "Açılış",
+      "month": "Ay"
     },
     "pin": "PIN {{pin}}",
     "phase": {
@@ -611,6 +612,24 @@
       "drafts_other": "{{count}} taslak",
       "archived_one": "{{count}} arşivlenmiş",
       "archived_other": "{{count}} arşivlenmiş"
+    },
+    "history": {
+      "title": "Son 12 ayda",
+      "none": "Son 12 ayda hiç oyun oynanmadı.",
+      "games": "Oyunlar",
+      "players": "Oyuncular",
+      "success": "Başarı oranı",
+      "withAccount": "Hesabı olan oyuncular",
+      "accounts_one": "{{count}} hesaplı",
+      "accounts_other": "{{count}} hesaplı",
+      "guests_one": "{{count}} misafir",
+      "guests_other": "{{count}} misafir",
+      "byMonth": "Aylara göre",
+      "top": {
+        "quizzes": "En çok oynanan quizler",
+        "hosts": "En etkin sunucular"
+      },
+      "oldest": "Geçmiş {{date}} tarihinde başlıyor: daha eski oyunlar silinir."
     }
   }
 }

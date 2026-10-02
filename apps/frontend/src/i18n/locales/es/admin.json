@@ -586,7 +586,8 @@
       "host": "Anfitrión",
       "progress": "Progreso",
       "players": "Jugadores",
-      "since": "Abierta"
+      "since": "Abierta",
+      "month": "Mes"
     },
     "pin": "PIN {{pin}}",
     "phase": {
@@ -611,6 +612,24 @@
       "drafts_other": "{{count}} borradores",
       "archived_one": "{{count}} archivado",
       "archived_other": "{{count}} archivados"
+    },
+    "history": {
+      "title": "En los últimos 12 meses",
+      "none": "No se ha jugado ninguna partida en los últimos 12 meses.",
+      "games": "Partidas",
+      "players": "Jugadores",
+      "success": "Tasa de aciertos",
+      "withAccount": "Jugadores con cuenta",
+      "accounts_one": "{{count}} con cuenta",
+      "accounts_other": "{{count}} con cuenta",
+      "guests_one": "{{count}} invitado",
+      "guests_other": "{{count}} invitados",
+      "byMonth": "Por mes",
+      "top": {
+        "quizzes": "Quizzes más jugados",
+        "hosts": "Anfitriones más activos"
+      },
+      "oldest": "El historial empieza el {{date}}: las partidas más antiguas se purgan."
     }
   }
 }

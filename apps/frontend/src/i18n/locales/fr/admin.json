@@ -586,7 +586,8 @@
       "host": "Animateur",
       "progress": "Avancement",
       "players": "Joueurs",
-      "since": "Ouverte"
+      "since": "Ouverte",
+      "month": "Mois"
     },
     "pin": "PIN {{pin}}",
     "phase": {
@@ -611,6 +612,24 @@
       "drafts_other": "{{count}} brouillons",
       "archived_one": "{{count}} archivé",
       "archived_other": "{{count}} archivés"
+    },
+    "history": {
+      "title": "Sur les 12 derniers mois",
+      "none": "Aucune partie jouée sur les 12 derniers mois.",
+      "games": "Parties",
+      "players": "Joueurs",
+      "success": "Taux de réussite",
+      "withAccount": "Joueurs avec un compte",
+      "accounts_one": "{{count}} avec un compte",
+      "accounts_other": "{{count}} avec un compte",
+      "guests_one": "{{count}} invité",
+      "guests_other": "{{count}} invités",
+      "byMonth": "Par mois",
+      "top": {
+        "quizzes": "Quiz les plus joués",
+        "hosts": "Animateurs les plus actifs"
+      },
+      "oldest": "L’historique commence le {{date}} : les parties plus anciennes sont purgées."
     }
   }
 }

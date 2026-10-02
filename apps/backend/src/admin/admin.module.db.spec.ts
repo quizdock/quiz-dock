@@ -6,7 +6,7 @@ import { AdminModule } from './admin.module';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { operationsHelp } from '../cli/adapter';
 import { WIZARD_OPERATIONS } from './operations/setup.operations';
-import type { LiveStats } from './operations/stats.operations';
+import type { HistoryStats, LiveStats } from './operations/stats.operations';
 import { OperationRunner } from './runner/operation-runner';
 import { settings } from './settings/settings.service';
 
@@ -181,6 +181,72 @@ describe('AdminModule (integration)', () => {
       expect(settings.get(SETTINGS.MEDIA_MAX_AUDIO_MB)).toBe(20);
       await run('settings.reset', { key: 'MEDIA_MAX_AUDIO_MB' });
       expect(settings.get(SETTINGS.MEDIA_MAX_AUDIO_MB)).toBe(10);
+    });
+  });
+
+  describe('the history', () => {
+    let quizId: string;
+
+    beforeAll(async () => {
+      const host = await prisma.user.findUniqueOrThrow({ where: { oidcSubject: subject } });
+      quizId = (await prisma.quiz.create({ data: { ownerId: host.id, title: 'History' } })).id;
+      const now = new Date();
+      const twoMonthsAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 15, 12));
+      for (const [startedAt, players, rate] of [
+        [twoMonthsAgo, 4, 0.5],
+        [now, 6, 1],
+      ] as const) {
+        await prisma.gameSessionLog.create({
+          data: {
+            quizId,
+            hostId: host.id,
+            pin: '000000',
+            language: 'en',
+            playerCount: players,
+            successRate: rate,
+            startedAt,
+            endedAt: startedAt,
+            retainUntil: new Date(startedAt.getTime() + 86_400_000),
+            playerResults: {
+              create: [
+                { userId: host.id, nickname: 'Ada', finalRank: 1 },
+                { nickname: 'Guest', finalRank: 2 },
+              ],
+            },
+          },
+        });
+      }
+    });
+
+    afterAll(async () => {
+      await prisma.gameSessionLog.deleteMany({ where: { quizId } });
+      await prisma.quiz.delete({ where: { id: quizId } });
+    });
+
+    it('stats.history: the months since the first played, the quizzes and hosts ranked', async () => {
+      const outcome = await runner.run({ id: 'stats.history', raw: {}, actor: cli });
+      const history = (outcome as { result: { data: HistoryStats } }).result.data;
+      const month = (offset: number) => {
+        const d = new Date();
+        return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - offset, 1))
+          .toISOString()
+          .slice(0, 7);
+      };
+      const byMonth = new Map(history.months.map((m) => [m.month, m]));
+      // The quiet month between the two is listed, empty or not.
+      expect(byMonth.has(month(1))).toBe(true);
+      expect(byMonth.get(month(2))!.games).toBeGreaterThanOrEqual(1);
+      expect(byMonth.get(month(0))!.players).toBeGreaterThanOrEqual(6);
+      expect(history.quizzes).toContainEqual({
+        id: quizId,
+        name: 'History',
+        owner: 'Ada',
+        games: 2,
+        players: 10,
+      });
+      expect(history.totals.participants.withAccount).toBeGreaterThanOrEqual(2);
+      expect(history.totals.participants.guests).toBeGreaterThanOrEqual(2);
+      expect(history.months.length).toBeLessThanOrEqual(12);
     });
   });
 

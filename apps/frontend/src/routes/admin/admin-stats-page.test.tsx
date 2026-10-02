@@ -33,8 +33,35 @@ const stats = (games: unknown[]) => ({
   },
 });
 
+const history = {
+  kind: 'result',
+  result: {
+    outcome: 'done',
+    notes: [],
+    data: {
+      from: '2025-11-01T00:00:00.000Z',
+      months: [
+        { month: '2026-08', games: 3, players: 20, successRate: 0.62 },
+        { month: '2026-09', games: 0, players: 0, successRate: null },
+      ],
+      totals: {
+        games: 3,
+        players: 20,
+        successRate: 0.62,
+        participants: { withAccount: 5, guests: 15 },
+      },
+      quizzes: [{ id: 'q1', name: 'Capitales', owner: 'Billy', games: 2, players: 14 }],
+      hosts: [{ id: 'u1', name: 'Claire', owner: null, games: 3, players: 20 }],
+      oldest: '2026-08-03T10:00:00.000Z',
+    },
+  },
+};
+
 function renderPage(games: unknown[]) {
-  mockApi([{ method: 'POST', path: '/admin/operations/stats.live', body: stats(games) }]);
+  mockApi([
+    { method: 'POST', path: '/admin/operations/stats.live', body: stats(games) },
+    { method: 'POST', path: '/admin/operations/stats.history', body: history },
+  ]);
   render(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
@@ -82,5 +109,19 @@ describe('AdminStatsPage', () => {
     expect(screen.getByText('3 brouillons · 2 archivés')).toBeInTheDocument();
     expect(screen.getByText('32 fichiers')).toBeInTheDocument();
     expect(screen.getByText('41')).toBeInTheDocument();
+  });
+
+  it('shows the last twelve months by month, the most played quizzes, the most active hosts', async () => {
+    renderPage([]);
+    const months = (await screen.findByText('Par mois')).closest('table')!;
+    expect(within(months).getByText('août 2026')).toBeInTheDocument();
+    expect(within(months).getByText('62 %')).toBeInTheDocument();
+    const quizzes = screen.getByText('Quiz les plus joués').closest('table')!;
+    expect(within(quizzes).getByText('Capitales')).toBeInTheDocument();
+    expect(within(quizzes).getByText('Billy')).toBeInTheDocument();
+    const hosts = screen.getByText('Animateurs les plus actifs').closest('table')!;
+    expect(within(hosts).getByText('Claire')).toBeInTheDocument();
+    expect(screen.getByText('25 %')).toBeInTheDocument();
+    expect(screen.getByText('5 avec un compte · 15 invités')).toBeInTheDocument();
   });
 });

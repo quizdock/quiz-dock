@@ -30,7 +30,11 @@ settings, health and audit:
 - **Statistics** — what is played right now, read again every five seconds:
   the games under way (in the lobby or at which question), their host and their
   connected players; then the instance at a glance — accounts, quizzes, media,
-  games kept in the history (`qd stats.live` gives the same figures).
+  games kept in the history (`qd stats.live` gives the same figures). Below,
+  the last twelve months, read from the games' history: games, players and
+  success rate by month, the most played quizzes and most active hosts, the
+  share of players with an account (`qd stats.history`). The history holds what
+  is kept: older games are purged.
 - **Settings** — every variable the application reads: its value (in megabytes
   and seconds, whatever unit the variable is written in; a secret only as *set*
   or *not set*), where it comes from (*default*, *.env*, *changed here*), its level (C1–C4),
