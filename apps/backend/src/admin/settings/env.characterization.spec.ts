@@ -414,10 +414,10 @@ describe('Limits', () => {
   it.each([
     [undefined, 50 * MB],
     ['1000', 1000],
-    ['', 0],
+    ['', 50 * MB],
+    ['abc', 50 * MB],
     ['-1', -1],
-    ['abc', NaN],
-  ])('IMPORT_MAX_BYTES=%p, read once at load, is %p — unchecked', (raw, bytes) => {
+  ])('IMPORT_MAX_BYTES=%p, read once at load, is %p', (raw, bytes) => {
     setEnv({ IMPORT_MAX_BYTES: raw });
     const { IMPORT_MAX_BYTES } = loadFresh<typeof import('../../quizzes/portable/bundle-archive')>(
       '../../quizzes/portable/bundle-archive',
