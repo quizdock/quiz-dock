@@ -7,6 +7,8 @@ import { SectionTitle } from '@/components/ui/page-title';
 import { formatAgo } from '@/lib/format';
 import { type AuditEntry, useCatalogue, useReadOperation } from './admin-api';
 import { OperationPanel, ReadPanel } from './operation-panel';
+import type { SettingsList } from './settings-model';
+import { PhoneTests } from '../setup/setup-page';
 
 /** Panels for some operations of the catalogue, in this order. */
 function Operations({ ids }: { ids: string[] }) {
@@ -32,13 +34,17 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-/** The instance's health: the doctor's checks, the migrations. */
+/** The instance's health: the doctor's checks, the migrations, the invitation addresses from a phone. */
 export function HealthPage() {
   const { t } = useTranslation('admin');
+  const list = useReadOperation<SettingsList>('settings.list');
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <ReadPanel id="health.doctor" title={t('operations.health.doctor')} />
-      <ReadPanel id="migrations.status" title={t('operations.migrations.status')} />
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ReadPanel id="health.doctor" title={t('operations.health.doctor')} />
+        <ReadPanel id="migrations.status" title={t('operations.migrations.status')} />
+      </div>
+      {list.data?.data ? <PhoneTests data={list.data.data} /> : null}
     </div>
   );
 }

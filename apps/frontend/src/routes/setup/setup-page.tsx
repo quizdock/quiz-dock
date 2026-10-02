@@ -300,6 +300,19 @@ function HealthStep() {
 }
 
 function AddressStep({ data }: { data: SettingsList }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <Settings data={data} keys={['APP_PUBLIC_URL', 'HOST_LAN_IPS']} />
+      <PhoneTests data={data} />
+    </div>
+  );
+}
+
+/**
+ * The phone test of every candidate invitation address (§3.8): in the wizard,
+ * and again from the administration — a new network, a new venue.
+ */
+export function PhoneTests({ data }: { data: SettingsList }) {
   const { t } = useTranslation('admin');
   const publicUrl = data.rows.find((r) => r.key === 'APP_PUBLIC_URL')?.value;
   const lan =
@@ -315,29 +328,26 @@ function AddressStep({ data }: { data: SettingsList }) {
     ),
   ];
   return (
-    <div className="flex flex-col gap-4">
-      <Settings data={data} keys={['APP_PUBLIC_URL', 'HOST_LAN_IPS']} />
-      <section className="flex flex-col gap-2">
-        <h2 className="flex items-center gap-2 font-semibold">
-          <Smartphone aria-hidden className="size-5" />
-          {t('setup.phone.title')}
-        </h2>
-        <p className="text-muted-foreground text-sm">{t('setup.phone.help')}</p>
-        <div className="grid gap-3 md:grid-cols-2">
-          {candidates.map((address) => (
-            <PhoneTest key={address} address={address} />
+    <section className="flex flex-col gap-2">
+      <h2 className="flex items-center gap-2 font-semibold">
+        <Smartphone aria-hidden className="size-5" />
+        {t('setup.phone.title')}
+      </h2>
+      <p className="text-muted-foreground text-sm">{t('setup.phone.help')}</p>
+      <div className="grid gap-3 md:grid-cols-2">
+        {candidates.map((address) => (
+          <PhoneTest key={address} address={address} />
+        ))}
+      </div>
+      <details className="rounded-lg border px-3 py-2 text-sm">
+        <summary className="cursor-pointer font-medium">{t('setup.phone.why.title')}</summary>
+        <ul className="text-muted-foreground mt-2 flex list-disc flex-col gap-1 pl-5">
+          {(['network', 'isolation', 'firewall', 'public', 'docker'] as const).map((k) => (
+            <li key={k}>{t(`setup.phone.why.${k}`)}</li>
           ))}
-        </div>
-        <details className="rounded-lg border px-3 py-2 text-sm">
-          <summary className="cursor-pointer font-medium">{t('setup.phone.why.title')}</summary>
-          <ul className="text-muted-foreground mt-2 flex list-disc flex-col gap-1 pl-5">
-            {(['network', 'isolation', 'firewall', 'public', 'docker'] as const).map((k) => (
-              <li key={k}>{t(`setup.phone.why.${k}`)}</li>
-            ))}
-          </ul>
-        </details>
-      </section>
-    </div>
+        </ul>
+      </details>
+    </section>
   );
 }
 
