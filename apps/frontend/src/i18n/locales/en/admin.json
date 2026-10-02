@@ -61,6 +61,10 @@
       "default": "Default",
       "level": "Level",
       "applies": "Applies"
+    },
+    "issue": {
+      "unreadable": "Cannot be read (accepts {{accepts}}): the default is used.",
+      "out-of-bounds": "Outside what it accepts ({{accepts}}): used as is for now; a later release will enforce it."
     }
   },
   "categories": {
@@ -702,5 +706,37 @@
       "warn": "Warning",
       "fail": "Problem"
     }
+  },
+  "doctor": {
+    "group": {
+      "environment": "Environment",
+      "database": "Database",
+      "redis": "Redis",
+      "media": "Media",
+      "oidc": "Identity provider (OIDC)"
+    },
+    "issue": {
+      "unreadable": "{{key}}: cannot be read — the default is used.",
+      "out-of-bounds": "{{key}}: outside what it accepts — used as is for now."
+    },
+    "unset": "{{key}} is not set.",
+    "postgres_ok": "PostgreSQL reachable",
+    "migrations_applied_one": "{{count}} migration applied",
+    "migrations_applied_other": "{{count}} migrations applied",
+    "migrations_pending": "{{count}} migration(s) pending: run the migrate step.",
+    "migrations_failed": "{{count}} migration(s) failed: see prisma migrate resolve.",
+    "postgres_failed": "PostgreSQL unreachable: {{error}}",
+    "redis_ok": "Redis reachable",
+    "redis_failed": "Redis unreachable: {{error}}",
+    "dir_ok": "{{dir}} is writable",
+    "dir_failed": "{{dir}}: {{error}}",
+    "participants_open": "Participants: accounts or open access, chosen at each launch",
+    "participants_accounts": "Participants: accounts required (ALLOW_ANONYMOUS_PARTICIPANTS not set)",
+    "provider_internal": "Provider reached at {{url}} from the server",
+    "discovery_ok": "Discovery OK — token endpoint {{url}}",
+    "discovery_failed": "Discovery {{url}} failed ({{error}}): set OIDC_INTERNAL_URL if the issuer is not reachable from the server.",
+    "jwks_ok_one": "Signing keys reachable ({{count}} key)",
+    "jwks_ok_other": "Signing keys reachable ({{count}} keys)",
+    "jwks_failed": "Signing keys {{url}}: {{error}}"
   }
 }

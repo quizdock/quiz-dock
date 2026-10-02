@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import admin from './locales/en/admin.json';
 import errors from './locales/en/errors.json';
 
 // The repository's root: Vitest runs from apps/frontend.
@@ -20,7 +21,8 @@ function tsFiles(dir: string): string[] {
 const CODE = /(?:Exception\(\s*|message:\s*|code:\s*)['"]([a-z][a-z_]*(?:\.[a-z][a-z_]*)+)['"]/g;
 
 function translated(code: string): boolean {
-  let node: unknown = errors;
+  // The doctor's lines (`doctor.redis_ok`) are said by the administration, not as errors.
+  let node: unknown = code.startsWith('doctor.') ? admin : errors;
   for (const part of code.split('.')) {
     if (typeof node !== 'object' || node === null || !(part in node)) return false;
     node = (node as Record<string, unknown>)[part];

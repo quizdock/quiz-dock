@@ -61,6 +61,10 @@
       "default": "Por defecto",
       "level": "Nivel",
       "applies": "Se aplica"
+    },
+    "issue": {
+      "unreadable": "Ilegible (acepta: {{accepts}}): se usa el valor por defecto.",
+      "out-of-bounds": "Fuera de lo que acepta ({{accepts}}): se usa tal cual por ahora; una versión futura lo impondrá."
     }
   },
   "categories": {
@@ -702,5 +706,37 @@
       "warn": "Advertencia",
       "fail": "Problema"
     }
+  },
+  "doctor": {
+    "group": {
+      "environment": "Entorno",
+      "database": "Base de datos",
+      "redis": "Redis",
+      "media": "Medios",
+      "oidc": "Proveedor de identidad (OIDC)"
+    },
+    "issue": {
+      "unreadable": "{{key}}: ilegible — se usa el valor por defecto.",
+      "out-of-bounds": "{{key}}: fuera de lo que acepta — se usa tal cual por ahora."
+    },
+    "unset": "{{key}} no está definido.",
+    "postgres_ok": "PostgreSQL accesible",
+    "migrations_applied_one": "{{count}} migración aplicada",
+    "migrations_applied_other": "{{count}} migraciones aplicadas",
+    "migrations_pending": "{{count}} migración(es) pendiente(s): ejecute el paso de migración.",
+    "migrations_failed": "{{count}} migración(es) fallida(s): vea prisma migrate resolve.",
+    "postgres_failed": "PostgreSQL inaccesible: {{error}}",
+    "redis_ok": "Redis accesible",
+    "redis_failed": "Redis inaccesible: {{error}}",
+    "dir_ok": "{{dir}} admite escritura",
+    "dir_failed": "{{dir}}: {{error}}",
+    "participants_open": "Participantes: cuentas o acceso libre, a elegir en cada lanzamiento",
+    "participants_accounts": "Participantes: cuenta obligatoria (ALLOW_ANONYMOUS_PARTICIPANTS no definido)",
+    "provider_internal": "Proveedor alcanzado en {{url}} desde el servidor",
+    "discovery_ok": "Descubrimiento correcto — punto de token {{url}}",
+    "discovery_failed": "Descubrimiento {{url}} fallido ({{error}}): defina OIDC_INTERNAL_URL si el emisor no es accesible desde el servidor.",
+    "jwks_ok_one": "Claves de firma accesibles ({{count}} clave)",
+    "jwks_ok_other": "Claves de firma accesibles ({{count}} claves)",
+    "jwks_failed": "Claves de firma {{url}}: {{error}}"
   }
 }

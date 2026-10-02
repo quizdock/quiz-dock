@@ -61,6 +61,10 @@
       "default": "Varsayılan",
       "level": "Düzey",
       "applies": "Geçerlilik"
+    },
+    "issue": {
+      "unreadable": "Okunamıyor (kabul eder: {{accepts}}): varsayılan değer kullanılıyor.",
+      "out-of-bounds": "Kabul ettiğinin dışında ({{accepts}}): şimdilik olduğu gibi kullanılıyor; sonraki bir sürüm bunu zorunlu kılacak."
     }
   },
   "categories": {
@@ -702,5 +706,37 @@
       "warn": "Uyarı",
       "fail": "Sorun"
     }
+  },
+  "doctor": {
+    "group": {
+      "environment": "Ortam",
+      "database": "Veritabanı",
+      "redis": "Redis",
+      "media": "Medya",
+      "oidc": "Kimlik sağlayıcı (OIDC)"
+    },
+    "issue": {
+      "unreadable": "{{key}}: okunamıyor — varsayılan değer kullanılıyor.",
+      "out-of-bounds": "{{key}}: kabul ettiğinin dışında — şimdilik olduğu gibi kullanılıyor."
+    },
+    "unset": "{{key}} tanımlı değil.",
+    "postgres_ok": "PostgreSQL erişilebilir",
+    "migrations_applied_one": "{{count}} geçiş uygulandı",
+    "migrations_applied_other": "{{count}} geçiş uygulandı",
+    "migrations_pending": "{{count}} geçiş bekliyor: geçiş adımını çalıştırın.",
+    "migrations_failed": "{{count}} geçiş başarısız: prisma migrate resolve bakın.",
+    "postgres_failed": "PostgreSQL erişilemiyor: {{error}}",
+    "redis_ok": "Redis erişilebilir",
+    "redis_failed": "Redis erişilemiyor: {{error}}",
+    "dir_ok": "{{dir}} yazılabilir",
+    "dir_failed": "{{dir}}: {{error}}",
+    "participants_open": "Katılımcılar: hesap veya serbest erişim, her başlatmada seçilir",
+    "participants_accounts": "Katılımcılar: hesap gerekli (ALLOW_ANONYMOUS_PARTICIPANTS tanımlı değil)",
+    "provider_internal": "Sağlayıcıya sunucudan {{url}} adresinde ulaşıldı",
+    "discovery_ok": "Keşif tamam — belirteç uç noktası {{url}}",
+    "discovery_failed": "Keşif {{url}} başarısız ({{error}}): veren sunucudan erişilemiyorsa OIDC_INTERNAL_URL tanımlayın.",
+    "jwks_ok_one": "İmza anahtarları erişilebilir ({{count}} anahtar)",
+    "jwks_ok_other": "İmza anahtarları erişilebilir ({{count}} anahtar)",
+    "jwks_failed": "İmza anahtarları {{url}}: {{error}}"
   }
 }

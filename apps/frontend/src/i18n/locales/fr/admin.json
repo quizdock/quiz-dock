@@ -61,6 +61,10 @@
       "default": "Par défaut",
       "level": "Niveau",
       "applies": "Prise en compte"
+    },
+    "issue": {
+      "unreadable": "Illisible (accepte : {{accepts}}) : la valeur par défaut est utilisée.",
+      "out-of-bounds": "Hors de ce qu’il accepte ({{accepts}}) : utilisé tel quel pour l’instant ; une version ultérieure l’imposera."
     }
   },
   "categories": {
@@ -702,5 +706,37 @@
       "warn": "Avertissement",
       "fail": "Problème"
     }
+  },
+  "doctor": {
+    "group": {
+      "environment": "Environnement",
+      "database": "Base de données",
+      "redis": "Redis",
+      "media": "Médias",
+      "oidc": "Fournisseur d’identité (OIDC)"
+    },
+    "issue": {
+      "unreadable": "{{key}} : illisible — la valeur par défaut est utilisée.",
+      "out-of-bounds": "{{key}} : hors de ce qu’il accepte — utilisé tel quel pour l’instant."
+    },
+    "unset": "{{key}} n’est pas défini.",
+    "postgres_ok": "PostgreSQL joignable",
+    "migrations_applied_one": "{{count}} migration appliquée",
+    "migrations_applied_other": "{{count}} migrations appliquées",
+    "migrations_pending": "{{count}} migration(s) en attente : lancez l’étape de migration.",
+    "migrations_failed": "{{count}} migration(s) en échec : voir prisma migrate resolve.",
+    "postgres_failed": "PostgreSQL injoignable : {{error}}",
+    "redis_ok": "Redis joignable",
+    "redis_failed": "Redis injoignable : {{error}}",
+    "dir_ok": "{{dir}} est accessible en écriture",
+    "dir_failed": "{{dir}} : {{error}}",
+    "participants_open": "Participants : comptes ou accès libre, au choix à chaque lancement",
+    "participants_accounts": "Participants : compte obligatoire (ALLOW_ANONYMOUS_PARTICIPANTS non défini)",
+    "provider_internal": "Fournisseur joint à {{url}} depuis le serveur",
+    "discovery_ok": "Découverte OK — point de jeton {{url}}",
+    "discovery_failed": "Découverte {{url}} en échec ({{error}}) : définissez OIDC_INTERNAL_URL si l’émetteur n’est pas joignable depuis le serveur.",
+    "jwks_ok_one": "Clés de signature joignables ({{count}} clé)",
+    "jwks_ok_other": "Clés de signature joignables ({{count}} clés)",
+    "jwks_failed": "Clés de signature {{url}} : {{error}}"
   }
 }

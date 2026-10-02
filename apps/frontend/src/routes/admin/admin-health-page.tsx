@@ -8,10 +8,23 @@ import { cn } from '@/lib/utils';
 import { PhoneTests } from '../setup/setup-page';
 import { type OutputEntry, useReadOperation } from './admin-api';
 
-type Check = { level: 'ok' | 'warn' | 'fail'; text: string };
+type Check = {
+  level: 'ok' | 'warn' | 'fail';
+  text: string;
+  code?: string;
+  params?: Record<string, unknown>;
+};
 interface Group {
   title: string;
+  code?: string;
   checks: Check[];
+}
+
+/** A line in the page's language when it has a code; the shell's English otherwise. */
+function useSay() {
+  const { t } = useTranslation('admin');
+  return (line: { text: string; code?: string; params?: Record<string, unknown> }) =>
+    line.code ? t(line.code, { ...line.params, defaultValue: line.text }) : line.text;
 }
 
 /**
@@ -22,10 +35,17 @@ interface Group {
 export function groupChecks(output: OutputEntry[]): Group[] {
   const groups: Group[] = [];
   for (const entry of output) {
-    if (entry.level === 'line') groups.push({ title: entry.text, checks: [] });
+    if (entry.level === 'line')
+      groups.push({ title: entry.text, ...(entry.code ? { code: entry.code } : {}), checks: [] });
     else if (entry.level === 'ok' || entry.level === 'warn' || entry.level === 'fail') {
       if (!groups.length) groups.push({ title: '', checks: [] });
-      groups[groups.length - 1].checks.push({ level: entry.level, text: entry.text });
+      const { level, text, code, params } = entry;
+      groups[groups.length - 1].checks.push({
+        level,
+        text,
+        ...(code ? { code } : {}),
+        ...(params ? { params } : {}),
+      });
     }
   }
   return groups.filter((g) => g.checks.length > 0);
@@ -162,10 +182,11 @@ export const isBlocking = (groups: Group[] | null) =>
 
 function CheckGroup({ group }: { group: Group }) {
   const { t } = useTranslation('admin');
+  const say = useSay();
   return (
     <section className="flex flex-col gap-2 rounded-lg border p-4">
       <h2 className="flex items-center justify-between gap-2 font-medium">
-        {group.title}
+        {say({ text: group.title, code: group.code })}
         <GroupMark checks={group.checks} />
       </h2>
       <ul className="flex flex-col gap-1.5 text-sm">
@@ -176,7 +197,7 @@ function CheckGroup({ group }: { group: Group }) {
               <Icon aria-hidden className={cn('mt-0.5 size-4 shrink-0', TONE[check.level])} />
               <span className="break-words">
                 <span className="sr-only">{t(`health.level.${check.level}`)}: </span>
-                {check.text}
+                {say(check)}
               </span>
             </li>
           );

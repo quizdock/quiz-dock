@@ -112,7 +112,7 @@ describe('SettingsPage', () => {
       .closest('div')!.parentElement!;
     expect(within(token).getAllByText('Non défini').length).toBeGreaterThan(0);
     // A problem found at start, and the help from the registry.
-    expect(screen.getByText(/is outside what it accepts/)).toBeInTheDocument();
+    expect(screen.getByText(/Hors de ce qu’il accepte/)).toBeInTheDocument();
     expect(screen.getAllByText(/Reading window shown before/).length).toBeGreaterThan(0);
     expect(screen.getByText('900 Mo')).toBeInTheDocument();
   });

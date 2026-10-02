@@ -1,9 +1,12 @@
+import type { OutputEntry, Said } from '@quiz-dock/contracts';
+
 /** Minimal, dependency-free console output for the admin CLI (English only). */
 export interface Output {
-  line(text?: string): void;
-  ok(text: string): void;
-  warn(text: string): void;
-  fail(text: string): void;
+  /** `said`: the line's code and parameters, for a page to translate it (the shell prints `text`). */
+  line(text?: string, said?: Said): void;
+  ok(text: string, said?: Said): void;
+  warn(text: string, said?: Said): void;
+  fail(text: string, said?: Said): void;
   table(rows: Record<string, unknown>[]): void;
 }
 
@@ -47,25 +50,23 @@ export class CliError extends Error {
   }
 }
 
-/** A line of output, as data: what a command printed, for any access to render. */
-import type { OutputEntry } from '@quiz-dock/contracts';
-export type { OutputEntry };
+export type { OutputEntry, Said };
 
 /** Keeps what a command prints, in order, instead of printing it. */
 export class RecordingOutput implements Output {
   readonly entries: OutputEntry[] = [];
 
-  line(text = ''): void {
-    this.entries.push({ level: 'line', text });
+  line(text = '', said?: Said): void {
+    this.entries.push({ level: 'line', text, ...said });
   }
-  ok(text: string): void {
-    this.entries.push({ level: 'ok', text });
+  ok(text: string, said?: Said): void {
+    this.entries.push({ level: 'ok', text, ...said });
   }
-  warn(text: string): void {
-    this.entries.push({ level: 'warn', text });
+  warn(text: string, said?: Said): void {
+    this.entries.push({ level: 'warn', text, ...said });
   }
-  fail(text: string): void {
-    this.entries.push({ level: 'fail', text });
+  fail(text: string, said?: Said): void {
+    this.entries.push({ level: 'fail', text, ...said });
   }
   table(rows: Record<string, unknown>[]): void {
     this.entries.push({ level: 'table', rows });

@@ -61,6 +61,10 @@
       "default": "預設值",
       "level": "等級",
       "applies": "生效時機"
+    },
+    "issue": {
+      "unreadable": "無法讀取（接受：{{accepts}}）：使用預設值。",
+      "out-of-bounds": "超出可接受範圍（{{accepts}}）：暫時按原樣使用；後續版本將強制執行。"
     }
   },
   "categories": {
@@ -702,5 +706,37 @@
       "warn": "警告",
       "fail": "問題"
     }
+  },
+  "doctor": {
+    "group": {
+      "environment": "環境",
+      "database": "資料庫",
+      "redis": "Redis",
+      "media": "媒體",
+      "oidc": "身分提供者（OIDC）"
+    },
+    "issue": {
+      "unreadable": "{{key}}：無法讀取——使用預設值。",
+      "out-of-bounds": "{{key}}：超出可接受範圍——暫時按原樣使用。"
+    },
+    "unset": "{{key}} 未設定。",
+    "postgres_ok": "PostgreSQL 可連線",
+    "migrations_applied_one": "已套用 {{count}} 個遷移",
+    "migrations_applied_other": "已套用 {{count}} 個遷移",
+    "migrations_pending": "{{count}} 個遷移待套用：請執行遷移步驟。",
+    "migrations_failed": "{{count}} 個遷移失敗：參見 prisma migrate resolve。",
+    "postgres_failed": "PostgreSQL 無法連線：{{error}}",
+    "redis_ok": "Redis 可連線",
+    "redis_failed": "Redis 無法連線：{{error}}",
+    "dir_ok": "{{dir}} 可寫入",
+    "dir_failed": "{{dir}}：{{error}}",
+    "participants_open": "參與者：帳戶或開放存取，每次啟動時選擇",
+    "participants_accounts": "參與者：需要帳戶（未設定 ALLOW_ANONYMOUS_PARTICIPANTS）",
+    "provider_internal": "伺服器透過 {{url}} 連線身分提供者",
+    "discovery_ok": "探索成功——權杖端點 {{url}}",
+    "discovery_failed": "探索 {{url}} 失敗（{{error}}）：若伺服器無法連線簽發者，請設定 OIDC_INTERNAL_URL。",
+    "jwks_ok_one": "簽章金鑰可連線（{{count}} 個金鑰）",
+    "jwks_ok_other": "簽章金鑰可連線（{{count}} 個金鑰）",
+    "jwks_failed": "簽章金鑰 {{url}}：{{error}}"
   }
 }

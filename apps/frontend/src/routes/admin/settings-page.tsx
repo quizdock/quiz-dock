@@ -429,7 +429,14 @@ export function SettingDetail({
         <Notice role="status">
           <ul className="flex flex-col gap-1">
             {row.issues.map((issue) => (
-              <li key={issue.message}>{issue.message}</li>
+              <li key={issue.message}>
+                {/* Readable or in range: said in the page's language; a deprecation or
+                    a rule is the registry's own text (English, as the help is). */}
+                {t(`settings.issue.${issue.code}`, {
+                  accepts: definitionOf(row.key)?.accepts,
+                  defaultValue: issue.message,
+                })}
+              </li>
             ))}
           </ul>
         </Notice>

@@ -6,10 +6,25 @@
 import type { AuditEntry } from './operations';
 import type { PresetAxis, PresetAxisId, SettingDefinition } from './settings';
 
-/** A line a command printed, as data: for any access to render. */
+/**
+ * A line a command printed, as data: for any access to render. `code` and
+ * `params` say it in a way a page translates (`doctor.redis_ok`); `text` is
+ * the English the shell prints, and the page's fallback.
+ */
 export type OutputEntry =
-  | { level: 'line' | 'ok' | 'warn' | 'fail'; text: string }
+  | {
+      level: 'line' | 'ok' | 'warn' | 'fail';
+      text: string;
+      code?: string;
+      params?: Record<string, unknown>;
+    }
   | { level: 'table'; rows: Record<string, unknown>[] };
+
+/** A line's code and parameters, for a page to translate it. */
+export interface Said {
+  code: string;
+  params?: Record<string, unknown>;
+}
 
 // ── Settings (§3.1, §3.7) ────────────────────────────────────────────────────
 

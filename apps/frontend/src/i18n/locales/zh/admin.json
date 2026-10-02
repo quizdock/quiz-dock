@@ -61,6 +61,10 @@
       "default": "默认值",
       "level": "级别",
       "applies": "生效时机"
+    },
+    "issue": {
+      "unreadable": "无法读取（接受：{{accepts}}）：使用默认值。",
+      "out-of-bounds": "超出可接受范围（{{accepts}}）：暂时按原样使用；后续版本将强制执行。"
     }
   },
   "categories": {
@@ -702,5 +706,37 @@
       "warn": "警告",
       "fail": "问题"
     }
+  },
+  "doctor": {
+    "group": {
+      "environment": "环境",
+      "database": "数据库",
+      "redis": "Redis",
+      "media": "媒体",
+      "oidc": "身份提供方（OIDC）"
+    },
+    "issue": {
+      "unreadable": "{{key}}：无法读取——使用默认值。",
+      "out-of-bounds": "{{key}}：超出可接受范围——暂时按原样使用。"
+    },
+    "unset": "{{key}} 未设置。",
+    "postgres_ok": "PostgreSQL 可访问",
+    "migrations_applied_one": "已应用 {{count}} 个迁移",
+    "migrations_applied_other": "已应用 {{count}} 个迁移",
+    "migrations_pending": "{{count}} 个迁移待应用：请运行迁移步骤。",
+    "migrations_failed": "{{count}} 个迁移失败：参见 prisma migrate resolve。",
+    "postgres_failed": "PostgreSQL 无法访问：{{error}}",
+    "redis_ok": "Redis 可访问",
+    "redis_failed": "Redis 无法访问：{{error}}",
+    "dir_ok": "{{dir}} 可写",
+    "dir_failed": "{{dir}}：{{error}}",
+    "participants_open": "参与者：账户或开放访问，每次启动时选择",
+    "participants_accounts": "参与者：需要账户（未设置 ALLOW_ANONYMOUS_PARTICIPANTS）",
+    "provider_internal": "服务器通过 {{url}} 访问身份提供方",
+    "discovery_ok": "发现成功——令牌端点 {{url}}",
+    "discovery_failed": "发现 {{url}} 失败（{{error}}）：如果服务器无法访问颁发者，请设置 OIDC_INTERNAL_URL。",
+    "jwks_ok_one": "签名密钥可访问（{{count}} 个密钥）",
+    "jwks_ok_other": "签名密钥可访问（{{count}} 个密钥）",
+    "jwks_failed": "签名密钥 {{url}}：{{error}}"
   }
 }
