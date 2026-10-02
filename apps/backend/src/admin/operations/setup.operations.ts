@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { localPrincipal } from '../../auth/no-auth.provider';
 import { canonical, isManager } from '../../auth/roles';
 import { PrismaService } from '../../prisma/prisma.service';
-import { settings } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { SetupService } from '../setup/setup.service';
 import {
   type AdminOperation,
@@ -51,6 +51,7 @@ export class SetupOperations {
   constructor(
     private readonly setup: SetupService,
     private readonly prisma: PrismaService,
+    private readonly settings: SettingsService,
   ) {}
 
   list(): AdminOperation[] {
@@ -100,7 +101,7 @@ export class SetupOperations {
           // OIDC: whoever finishes holds the administrator role from the provider.
           if (
             ctx.actor.via === 'api' &&
-            settings.get(SETTINGS.AUTH_MODE) === 'oidc' &&
+            this.settings.get(SETTINGS.AUTH_MODE) === 'oidc' &&
             !isManager(ctx.actor.roles ?? [])
           ) {
             throw new OperationError(
@@ -138,7 +139,7 @@ export class SetupOperations {
           'Local mode: makes a name the first administrator (granted, kept whatever the host seat).',
         params: z.object({ name: z.string().trim().min(1).max(60) }),
         validate: () => {
-          if (settings.get(SETTINGS.AUTH_MODE) !== 'none') {
+          if (this.settings.get(SETTINGS.AUTH_MODE) !== 'none') {
             throw new OperationError(
               'conflict',
               'With OIDC, the administrator role comes from the identity provider.',

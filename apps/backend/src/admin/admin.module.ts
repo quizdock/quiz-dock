@@ -21,7 +21,7 @@ import { GameStateModule } from '../game/game-state.module';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
 import { OperationRunner } from './runner/operation-runner';
 import { OverridesService } from './settings/overrides.service';
-import { settings } from './settings/settings.service';
+import { OverrideStore, SettingsService, overrides, settings } from './settings/settings.service';
 
 /** Every group of operations: the registry, reviewed in one place (§3.2, no discovery). */
 const OPERATION_GROUPS = [
@@ -42,6 +42,11 @@ const OPERATION_GROUPS = [
 @Module({
   imports: [UsersModule, QuizzesModule, MediaModule, GameStateModule],
   providers: [
+    // The settings by injection, here: the one instance the whole backend reads
+    // (module functions read at load or per request, where nothing is injected,
+    // import it directly — see settings.service).
+    { provide: SettingsService, useValue: settings },
+    { provide: OverrideStore, useValue: overrides },
     OverridesService,
     PresetService,
     SetupService,
@@ -66,14 +71,15 @@ const OPERATION_GROUPS = [
     },
     {
       provide: OperationRunner,
-      inject: [ADMIN_OPERATIONS, AUDIT_REPOSITORY, CONFIRMATION_STORE],
+      inject: [ADMIN_OPERATIONS, SettingsService, AUDIT_REPOSITORY, CONFIRMATION_STORE],
       useFactory: (
         ops: AdminOperation[],
+        appSettings: SettingsService,
         audit: AuditRepository,
         confirmations: ConfirmationStore,
-      ) => new OperationRunner(ops, settings, audit, confirmations),
+      ) => new OperationRunner(ops, appSettings, audit, confirmations),
     },
   ],
-  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService, SetupService],
+  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService, SetupService, SettingsService],
 })
 export class AdminModule {}

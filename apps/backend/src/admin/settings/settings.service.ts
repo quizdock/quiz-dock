@@ -234,7 +234,13 @@ export const SETTING_RULES: SettingRule[] = [
 /** The values changed from the administration, as the backend holds them. */
 export const overrides = new OverrideStore();
 
-/** The backend's settings: the administration's overrides, then its environment. */
+/**
+ * The backend's settings: the administration's overrides, then its environment.
+ * One instance. A class receives it by injection (`SettingsService`, provided
+ * by the administration's module); this export is for what nothing injects —
+ * a module function read per request or at load (an upload's limit, a
+ * decorator's options, the start-up), and the code that predates the registry.
+ */
 export const settings = new SettingsService([overrideSource(overrides, envSource), envSource]);
 
 /** Settings over a fixed environment (and overrides), for tests and tools. */

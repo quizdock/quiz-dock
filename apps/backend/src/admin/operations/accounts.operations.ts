@@ -4,7 +4,7 @@ import { type Prisma, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { PrismaService } from '../../prisma/prisma.service';
 import { HostSeatService } from '../../users/host-seat.service';
-import { settings } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { type AdminOperation, defineOperation, done } from './operation';
 
 const hasRole = (role: UserRole): Prisma.UserWhereInput => ({
@@ -17,6 +17,7 @@ export class AccountsOperations {
   constructor(
     private readonly prisma: PrismaService,
     private readonly seat: HostSeatService,
+    private readonly settings: SettingsService,
   ) {}
 
   list(): AdminOperation[] {
@@ -56,7 +57,7 @@ export class AccountsOperations {
                   : []),
             ],
           };
-          const localMode = settings.get(SETTINGS.AUTH_MODE) === 'none';
+          const localMode = this.settings.get(SETTINGS.AUTH_MODE) === 'none';
           const [total, users, seat] = await Promise.all([
             this.prisma.user.count({ where }),
             this.prisma.user.findMany({

@@ -13,7 +13,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { CallActor } from '../operations/operation';
 import { OperationError } from '../operations/operation';
 import { OverridesService } from '../settings/overrides.service';
-import { type SettingsService, settings as appSettings } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 
 export type { AxisLevels, PresetChange, PresetPlan };
 
@@ -37,9 +37,10 @@ const raw = (def: SettingDefinition, value: unknown): string => {
  */
 @Injectable()
 export class PresetService {
-  settings: SettingsService = appSettings;
-
-  constructor(private readonly overrides: OverridesService) {}
+  constructor(
+    private readonly overrides: OverridesService,
+    private readonly settings: SettingsService,
+  ) {}
 
   /** Each axis's level, `custom` once one of its variables strays from every level. */
   current(): Record<PresetAxisId, string> {

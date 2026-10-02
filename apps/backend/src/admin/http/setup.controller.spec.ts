@@ -14,7 +14,7 @@ import { defineOperation, done } from '../operations/operation';
 import { MemoryConfirmationStore } from '../runner/confirmations';
 import { OperationRunner } from '../runner/operation-runner';
 import type { OverridesService } from '../settings/overrides.service';
-import { settingsFrom } from '../settings/settings.service';
+import { settingsFrom, SettingsService } from '../settings/settings.service';
 import { SetupService } from '../setup/setup.service';
 import { fakeRedis, memoryFlags } from '../testing/fake-redis';
 import { SetupController } from './setup.controller';
@@ -79,6 +79,7 @@ describe('the setup wizard API (§3.8)', () => {
         { provide: OperationRunner, useValue: runner },
         { provide: AUTH_PROVIDER, useValue: auth },
         { provide: UsersService, useValue: users },
+        { provide: SettingsService, useValue: settingsFrom({}) },
       ],
     }).compile();
     nest = module.createNestApplication();

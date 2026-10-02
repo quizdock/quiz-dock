@@ -28,13 +28,15 @@ describe('PresetService', () => {
     const store = new OverrideStore();
     store.replace(overrides);
     const applied: unknown[] = [];
-    const svc = new PresetService({
-      apply: (changes: unknown) => {
-        applied.push(changes);
-        return Promise.resolve();
-      },
-    } as unknown as OverridesService);
-    svc.settings = settingsFrom(env, store);
+    const svc = new PresetService(
+      {
+        apply: (changes: unknown) => {
+          applied.push(changes);
+          return Promise.resolve();
+        },
+      } as unknown as OverridesService,
+      settingsFrom(env, store),
+    );
     return { svc, applied };
   }
   const api = { via: 'api' as const, name: 'ada' };

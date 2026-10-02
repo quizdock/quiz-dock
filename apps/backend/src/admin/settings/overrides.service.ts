@@ -3,7 +3,7 @@ import type Redis from 'ioredis';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../redis/redis.service';
 import { SETTING_LIST } from '@quiz-dock/contracts';
-import { type OverrideStore, overrides } from './settings.service';
+import { OverrideStore } from './settings.service';
 
 const SETTING_KEYS = new Set(SETTING_LIST.map((d) => d.key));
 
@@ -32,13 +32,13 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
   private subscriber: Redis | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
 
-  /** The store the backend's settings read (a fresh one in tests). */
-  store: OverrideStore = overrides;
   private generation = 0;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    /** The store the backend's settings read. */
+    readonly store: OverrideStore,
   ) {}
 
   async onModuleInit(): Promise<void> {

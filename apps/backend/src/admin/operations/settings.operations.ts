@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { AUDIT_REPOSITORY } from '../admin.tokens';
 import type { AuditRepository } from '../audit/audit.repository';
 import { OverridesService } from '../settings/overrides.service';
-import { settings } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import {
   type AdminOperation,
   OperationError,
@@ -64,7 +64,10 @@ function changeable(key: string): SettingDefinition {
 }
 
 /** The rules between variables a change would break, that hold now. */
-function brokenRules(changes: Record<string, string | undefined>): string[] {
+function brokenRules(
+  settings: SettingsService,
+  changes: Record<string, string | undefined>,
+): string[] {
   const now = new Set(
     settings
       .issues()
@@ -82,7 +85,11 @@ function brokenRules(changes: Record<string, string | undefined>): string[] {
  * Checks a value as an override is checked (§3.1): readable, within its
  * bounds — strictly, unlike an environment value — and breaking no rule.
  */
-export function checkOverride(key: string, value: string): SettingDefinition {
+export function checkOverride(
+  settings: SettingsService,
+  key: string,
+  value: string,
+): SettingDefinition {
   const def = changeable(key);
   if (value === '' && !def.allowEmpty) {
     throw new OperationError('invalid_params', `${key}: empty — go back to .env instead.`, {
@@ -96,13 +103,13 @@ export function checkOverride(key: string, value: string): SettingDefinition {
       accepts: def.accepts,
     });
   }
-  const broken = brokenRules({ [key]: value });
+  const broken = brokenRules(settings, { [key]: value });
   if (broken.length)
     throw new OperationError('invalid_params', broken.join(' '), { path: 'value' });
   return def;
 }
 
-export function settingsAccess(): SettingsAccess {
+export function settingsAccess(settings: SettingsService): SettingsAccess {
   const authMode = settings.get(SETTINGS.AUTH_MODE);
   return {
     scope: settings.get(SETTINGS.ADMIN_WEB_SCOPE),
@@ -115,7 +122,7 @@ export function settingsAccess(): SettingsAccess {
 }
 
 /** One boundary for secrets (§3.11): a secret's value never leaves through here. */
-export function settingRow(def: SettingDefinition): SettingRow {
+export function settingRow(settings: SettingsService, def: SettingDefinition): SettingRow {
   const state = settings.describe(def);
   const show = (value: unknown) =>
     def.secret ? value !== '' && value !== undefined && value !== null : value;
@@ -141,6 +148,7 @@ export class SettingsOperations {
   constructor(
     @Inject(AUDIT_REPOSITORY) private readonly audit: AuditRepository,
     private readonly overrides: OverridesService,
+    private readonly settings: SettingsService,
   ) {}
 
   list(): AdminOperation[] {
@@ -156,12 +164,14 @@ export class SettingsOperations {
         run: (_ctx, { key }) => {
           const defs = key ? SETTING_LIST.filter((d) => d.key === key.toUpperCase()) : SETTING_LIST;
           if (key && !defs.length) throw new OperationError('not_found', `No setting "${key}".`);
-          const rows = defs.filter((d) => !d.internal || key).map(settingRow);
-          const rules = key ? [] : settings.issues().filter((i) => i.code === 'rule');
+          const rows = defs
+            .filter((d) => !d.internal || key)
+            .map((d) => settingRow(this.settings, d));
+          const rules = key ? [] : this.settings.issues().filter((i) => i.code === 'rule');
           return Promise.resolve({
             outcome: 'done',
             notes: [],
-            data: { rows, rules, access: settingsAccess() } satisfies SettingsList,
+            data: { rows, rules, access: settingsAccess(this.settings) } satisfies SettingsList,
           });
         },
       }),
@@ -174,7 +184,7 @@ export class SettingsOperations {
         params: z.object({ key: settingKey, value: z.string().max(10_000) }),
         settings: ({ key }) => [key],
         redact: redactSecretValue,
-        validate: ({ key, value }) => void checkOverride(key, value),
+        validate: ({ key, value }) => void checkOverride(this.settings, key, value),
         confirmation: ({ key, value }) => {
           const def = DEFINITIONS.get(key);
           return def?.criticality === 'C2' ? `Change ${key} to ${JSON.stringify(value)}.` : null;
@@ -210,7 +220,10 @@ export class SettingsOperations {
           );
           if (!Object.keys(removed).length)
             return nothingToDo('Nothing was changed here.', 'settings.unchanged');
-          const broken = brokenRules(Object.fromEntries(keys.map((k) => [k, undefined])));
+          const broken = brokenRules(
+            this.settings,
+            Object.fromEntries(keys.map((k) => [k, undefined])),
+          );
           if (broken.length) throw new OperationError('invalid_params', broken.join(' '));
           await this.overrides.apply(
             Object.keys(removed).map((k) => ({ key: k, value: null })),

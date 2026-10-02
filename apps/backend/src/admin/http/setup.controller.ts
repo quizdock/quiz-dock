@@ -20,7 +20,7 @@ import { AUTH_PROVIDER, type AuthProvider } from '../../auth/auth-provider';
 import { Public } from '../../auth/public.decorator';
 import { UsersService } from '../../users/users.service';
 import { OperationRunner } from '../runner/operation-runner';
-import { settings } from '../settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { SetupLockedError, SetupService } from '../setup/setup.service';
 import { OperationAnswerDto, RunOperationDto } from './admin-operations.dto';
 import { refusalError, clientAddress } from './outcome-http';
@@ -58,6 +58,7 @@ export class SetupController {
     private readonly runner: OperationRunner,
     @Inject(AUTH_PROVIDER) private readonly auth: AuthProvider,
     private readonly users: UsersService,
+    private readonly settings: SettingsService,
   ) {}
 
   /** The account signed in, when there is one (the wizard's routes are public). */
@@ -69,7 +70,7 @@ export class SetupController {
   @Get('status')
   @ApiOkResponse({ type: SetupStatusDto })
   async status(@Req() req: Request): Promise<SetupStatusDto> {
-    const authMode = settings.get(SETTINGS.AUTH_MODE);
+    const authMode = this.settings.get(SETTINGS.AUTH_MODE);
     return {
       open: !(await this.setup.completed()),
       authMode,
@@ -109,7 +110,7 @@ export class SetupController {
       throw new HttpException({ code: 'setup.session_invalid' }, HttpStatus.FORBIDDEN);
     }
     const user = await this.account(req);
-    if (settings.get(SETTINGS.AUTH_MODE) === 'oidc' && !user) {
+    if (this.settings.get(SETTINGS.AUTH_MODE) === 'oidc' && !user) {
       throw new HttpException({ code: 'auth.required' }, HttpStatus.UNAUTHORIZED);
     }
     const outcome = await this.runner.run({
@@ -140,7 +141,7 @@ export class SetupController {
   @Header('Cache-Control', 'no-store')
   async phone(@Req() req: Request, @Param('id') id: string): Promise<string> {
     const ok = await this.setup.reached(id, String(req.headers['user-agent'] ?? ''));
-    const name = escape(settings.get(SETTINGS.APP_NAME) || 'QuizDock');
+    const name = escape(this.settings.get(SETTINGS.APP_NAME) || 'QuizDock');
     const [title, text] = ok
       ? ['✓', 'This phone reaches the instance: the participants will reach it the same way.']
       : ['✗', 'This test is over or unknown: start a new one from the administration.'];
