@@ -1,6 +1,6 @@
 import { type PublicOption, TILE_RATIO } from '@quiz-dock/contracts';
 import type { ReactNode } from 'react';
-import { AnswerGlyph } from '@/components/answer-glyph';
+import { ShapeIcon } from '@/components/shape-icon';
 import { COLOR_BG, OPTION_BG_FALLBACK } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
 import { BACKDROP_EDGE } from './surface';
@@ -13,13 +13,10 @@ import { BACKDROP_EDGE } from './surface';
 export function ShapeBadge({
   color,
   shape,
-  index = 0,
   className,
 }: {
   color: string;
   shape: string;
-  /** Its place among the answers, for a letter or number theme. */
-  index?: number;
   className?: string;
 }) {
   return (
@@ -32,11 +29,7 @@ export function ShapeBadge({
         className,
       )}
     >
-      <AnswerGlyph
-        shape={shape}
-        index={index}
-        className="size-[1.1em] drop-shadow-[0_0_0.08em_rgb(0_0_0/0.7)]"
-      />
+      <ShapeIcon shape={shape} className="size-[1.1em] drop-shadow-[0_0_0.08em_rgb(0_0_0/0.7)]" />
     </span>
   );
 }
@@ -55,7 +48,6 @@ export function ImageTile({
   alt,
   color,
   shape,
-  index = 0,
   state = 'idle',
   className,
   children,
@@ -65,8 +57,6 @@ export function ImageTile({
   alt: string;
   color: string;
   shape: string;
-  /** Its place among the answers (the glyph of a letter or number theme). */
-  index?: number;
   state?: TileState;
   className?: string;
   /** Laid over the picture, bottom right: a count, a tick. */
@@ -93,12 +83,7 @@ export function ImageTile({
         ) : null}
         {state === 'dim' ? <div aria-hidden className="absolute inset-0 bg-black/65" /> : null}
       </div>
-      <ShapeBadge
-        color={color}
-        shape={shape}
-        index={index}
-        className="absolute top-[0.5em] left-[0.5em]"
-      />
+      <ShapeBadge color={color} shape={shape} className="absolute top-[0.5em] left-[0.5em]" />
       {children ? (
         <div className="absolute right-[0.5em] bottom-[0.5em] flex items-center gap-[0.3em]">
           {children}
@@ -166,7 +151,7 @@ export function ImageChoiceGrid({
       data-layout="images"
       style={{ gap: `${GAP_EM}em`, ...(fit === 'screen' ? { width } : {}) }}
     >
-      {options.map((o, i) => {
+      {options.map((o) => {
         const state: TileState = !correctIds
           ? 'idle'
           : correctIds.includes(o.id)
@@ -179,7 +164,6 @@ export function ImageChoiceGrid({
             alt={o.media?.alt ?? ''}
             color={o.color}
             shape={o.shape}
-            index={i}
             state={state}
             className={cn(
               picked && 'outline-foreground outline-[0.25em] outline-offset-[0.15em] outline',

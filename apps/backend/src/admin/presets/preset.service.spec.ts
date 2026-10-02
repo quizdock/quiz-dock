@@ -53,7 +53,6 @@ describe('PresetService', () => {
   it('plans each variable from what it is to what it becomes, leaving a locked one alone', () => {
     const { svc } = service({ ADMIN_LOCK: 'LIVE_MOTION' });
     expect(svc.plan(svc.resolve({ accessibility: 'adapted' }), api).changes).toEqual([
-      { key: 'ANSWER_THEME', from: { value: 'classic', source: 'default' }, to: 'colorblind' },
       { key: 'GAME_READ_DELAY_MS', from: { value: 3000, source: 'default' }, to: 6000 },
       { key: 'GAME_ALL_ANSWERED_DELAY_MS', from: { value: 1000, source: 'default' }, to: 2000 },
       {

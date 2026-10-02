@@ -14,8 +14,7 @@
     "audit": "Audit",
     "quizzes": "Quizzes",
     "media": "Media",
-    "changes": "Changes",
-    "look": "Look"
+    "changes": "Changes"
   },
   "token": {
     "unset": "Local mode: nothing can be changed from the web until ADMIN_TOKEN is set in .env (32 characters or more), then the instance restarted.",
@@ -182,8 +181,7 @@
     "ADMIN_TOKEN": "Administration token (local mode)",
     "ADMIN_OVERRIDES": "Values changed from the web",
     "QUIZDOCK_FLAVOR": "Image flavour",
-    "PRISMA_SKIP_CONNECT": "Start without a database",
-    "ANSWER_THEME": "How the answers are drawn"
+    "PRISMA_SKIP_CONNECT": "Start without a database"
   },
   "operations": {
     "health": {
@@ -248,11 +246,6 @@
     "invite": {
       "test": "Test an address from a phone",
       "test-status": "Phone test"
-    },
-    "theme": {
-      "get": "Palette",
-      "set": "Change the palette",
-      "reset": "Back to the application's palette"
     }
   },
   "params": {
@@ -470,72 +463,6 @@
       "env": "What was set here, as a .env excerpt — to pin it there:"
     }
   },
-  "look": {
-    "title": "Palette",
-    "intro": "The brand's colours, light and dark, shown on the application's own components before they are saved. A colour is #rrggbb or oklch(L C H); the neutrals stay the application's, and branding/override.css still has the last word.",
-    "readOnly": "The brand's colours, light and dark. Read only here: ADMIN_WEB_SCOPE=read.",
-    "mode": "Mode",
-    "light": "Light",
-    "dark": "Dark",
-    "pick": "Pick {{token}}",
-    "default": "Back to the application's colour",
-    "preview": "Preview",
-    "contrasts": "Contrast",
-    "contrastsHelp": "WCAG 2: 4.5:1 for a text, 3:1 for a control against the page. Only the pairs a change touches are checked: the application answers for its own colours.",
-    "background": "Page",
-    "unreadable": "A colour cannot be read: #rrggbb, or oklch(L C H) with L from 0 to 1 (or a percentage).",
-    "reset": "Back to the application's palette",
-    "saved": "Saved: every page follows on its next load.",
-    "tokens": {
-      "primary": "Main colour",
-      "primary-foreground": "Text on the main colour",
-      "ring": "Focus ring",
-      "destructive": "Destructive",
-      "destructive-foreground": "Text on destructive",
-      "success": "Success",
-      "success-foreground": "Text on success",
-      "warning": "Warning",
-      "warning-text": "Warning text"
-    },
-    "sample": {
-      "primary": "Main",
-      "success": "Present",
-      "destructive": "Delete",
-      "focus": "Focused",
-      "badge": "Badge",
-      "warningText": "Half the time left",
-      "link": "A link"
-    }
-  },
-  "answers": {
-    "title": "Answers",
-    "intro": "How the answers are drawn on the projection, the phones and the console: a colour, and beside it the author's shape — or a letter, or a number. The quizzes keep their answers as they are.",
-    "distanceHelp": "Each row shows the first four answers as seen with typical colour vision and with each common colour vision deficiency; the number is how far apart the two closest of them are (below 0.10 they read as alike at a glance). The glyph tells them apart whatever the colours.",
-    "vision": {
-      "typical": "Typical",
-      "protanopia": "Protanopia",
-      "deuteranopia": "Deuteranopia",
-      "tritanopia": "Tritanopia"
-    },
-    "themes": {
-      "classic": {
-        "title": "Classic",
-        "help": "The application's colours, each answer's shape."
-      },
-      "letters": {
-        "title": "Letters",
-        "help": "The application's colours, and A, B, C… by position."
-      },
-      "numbers": {
-        "title": "Numbers",
-        "help": "The application's colours, and 1, 2, 3… by position."
-      },
-      "colorblind": {
-        "title": "Colour vision",
-        "help": "Colours told apart under every common colour vision deficiency, and the shapes."
-      }
-    }
-  },
   "usage": {
     "preview": "What these answers set:",
     "nothing": "Nothing to change.",
@@ -588,7 +515,7 @@
         },
         "adapted": {
           "title": "Yes",
-          "help": "Colours told apart by colour-blind people, no transitions, more time to read."
+          "help": "No transitions, more time to read."
         }
       }
     }

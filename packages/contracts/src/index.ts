@@ -907,5 +907,3 @@ export interface ServerToClientEvents {
   error: (p: { code: string; params?: Record<string, string | number> }) => void;
   pong: (p: { t0: number; t1: number }) => void;
 }
-export * from './admin/theme';
-export * from './admin/answer-themes';

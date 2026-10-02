@@ -36,7 +36,6 @@ const serveStatic = clientDir
           '/health',
           '/config.js',
           '/branding/override.css',
-          '/branding/theme.css',
           ...ICONS.map((icon) => `/${icon}`),
           '/manifest.webmanifest',
           '/socket.io/{*splat}',

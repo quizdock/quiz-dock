@@ -14,8 +14,7 @@
     "audit": "审计",
     "quizzes": "测验",
     "media": "媒体",
-    "changes": "更改",
-    "look": "外观"
+    "changes": "更改"
   },
   "token": {
     "unset": "本地模式：在 .env 中设置 ADMIN_TOKEN（32 个字符或以上）并重启实例之前，无法通过网页更改任何内容。",
@@ -182,8 +181,7 @@
     "ADMIN_TOKEN": "管理令牌（本地模式）",
     "ADMIN_OVERRIDES": "通过网页更改的值",
     "QUIZDOCK_FLAVOR": "镜像版本类型",
-    "PRISMA_SKIP_CONNECT": "不连接数据库启动",
-    "ANSWER_THEME": "答案的呈现方式"
+    "PRISMA_SKIP_CONNECT": "不连接数据库启动"
   },
   "operations": {
     "health": {
@@ -248,11 +246,6 @@
     "invite": {
       "test": "从手机测试地址",
       "test-status": "手机测试"
-    },
-    "theme": {
-      "get": "配色",
-      "set": "更改配色",
-      "reset": "恢复为应用的配色"
     }
   },
   "params": {
@@ -470,72 +463,6 @@
       "env": "此处设置的内容，以 .env 片段形式呈现——可将其固定到 .env 中："
     }
   },
-  "look": {
-    "title": "配色",
-    "intro": "品牌的颜色（浅色和深色），在保存前于应用自身的组件上预览。颜色格式为 #rrggbb 或 oklch(L C H)；中性色仍沿用应用的配色，且 branding/override.css 始终具有最终决定权。",
-    "readOnly": "品牌的颜色（浅色和深色）。此处只读：ADMIN_WEB_SCOPE=read。",
-    "mode": "模式",
-    "light": "浅色",
-    "dark": "深色",
-    "pick": "选择 {{token}}",
-    "default": "恢复为应用的颜色",
-    "preview": "预览",
-    "contrasts": "对比度",
-    "contrastsHelp": "WCAG 2：文本需 4.5:1，控件相对页面需 3:1。仅检查更改所涉及的颜色对：应用自身的颜色由应用负责。",
-    "background": "页面",
-    "unreadable": "有颜色无法识别：请使用 #rrggbb，或 oklch(L C H)，其中 L 为 0 到 1（或百分比）。",
-    "reset": "恢复为应用的配色",
-    "saved": "已保存：每个页面在下次加载时生效。",
-    "tokens": {
-      "primary": "主色",
-      "primary-foreground": "主色上的文字",
-      "ring": "焦点环",
-      "destructive": "危险操作",
-      "destructive-foreground": "危险操作上的文字",
-      "success": "成功",
-      "success-foreground": "成功色上的文字",
-      "warning": "警告",
-      "warning-text": "警告文字"
-    },
-    "sample": {
-      "primary": "主要",
-      "success": "演示",
-      "destructive": "删除",
-      "focus": "已聚焦",
-      "badge": "徽章",
-      "warningText": "时间已过半",
-      "link": "一个链接"
-    }
-  },
-  "answers": {
-    "title": "答案",
-    "intro": "答案在投影、手机和控制台上的呈现方式：一种颜色，旁边是作者选定的形状——或字母，或数字。测验中的答案本身保持不变。",
-    "distanceHelp": "每一行显示前四个答案在正常色觉及各种常见色觉缺陷下的样子；数字表示其中最接近的两个之间的差距（低于 0.10 时一眼看去难以区分）。无论颜色如何，图形符号都能区分它们。",
-    "vision": {
-      "typical": "正常色觉",
-      "protanopia": "红色盲",
-      "deuteranopia": "绿色盲",
-      "tritanopia": "蓝色盲"
-    },
-    "themes": {
-      "classic": {
-        "title": "经典",
-        "help": "应用的颜色，每个答案的形状。"
-      },
-      "letters": {
-        "title": "字母",
-        "help": "应用的颜色，并按位置显示 A、B、C…"
-      },
-      "numbers": {
-        "title": "数字",
-        "help": "应用的颜色，并按位置显示 1、2、3…"
-      },
-      "colorblind": {
-        "title": "色觉友好",
-        "help": "在各种常见色觉缺陷下均可区分的颜色，以及形状。"
-      }
-    }
-  },
   "usage": {
     "preview": "这些回答将设置：",
     "nothing": "无需更改。",
@@ -588,7 +515,7 @@
         },
         "adapted": {
           "title": "是",
-          "help": "色盲人士可区分的颜色、无过渡效果、更多阅读时间。"
+          "help": "无过渡效果、更多阅读时间。"
         }
       }
     }

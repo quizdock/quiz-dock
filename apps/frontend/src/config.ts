@@ -30,11 +30,6 @@ export interface AppConfig {
    * the host switches it for their room.
    */
   liveMotion?: boolean;
-  /**
-   * What stands beside an answer's colour (`ANSWER_THEME`, administration lot 6):
-   * its shape, or a letter or number by position.
-   */
-  answerGlyph?: 'shape' | 'letter' | 'number';
 }
 
 const DEFAULTS: AppConfig = {

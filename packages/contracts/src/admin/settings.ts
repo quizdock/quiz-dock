@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ANSWER_THEMES } from './answer-themes';
 
 /**
  * The settings registry (administration spec §1, §3.1): every environment
@@ -296,20 +295,6 @@ export const SETTINGS = {
     default: '',
     applies: 'live',
     overridable: true,
-  }),
-
-  ANSWER_THEME: define<string>({
-    key: 'ANSWER_THEME',
-    description:
-      "How the answers are drawn on the projection, the phones and the console — the quizzes keep their slots: `classic` (the application's colours, each answer's shape), `letters` (A, B, C…), `numbers` (1, 2, 3…), `colorblind` (colours told apart under every common colour vision deficiency, and the shapes).",
-    category: 'identity',
-    criticality: 'C4',
-    schema: oneOf(ANSWER_THEMES.map((t) => t.id)),
-    accepts: ANSWER_THEMES.map((t) => `\`${t.id}\``).join(' · '),
-    default: 'classic',
-    applies: 'live',
-    overridable: true,
-    preset: { axis: 'accessibility', levels: { standard: 'classic', adapted: 'colorblind' } },
   }),
 
   // Access & authentication

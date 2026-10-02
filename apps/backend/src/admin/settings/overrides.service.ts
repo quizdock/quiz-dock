@@ -95,7 +95,7 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
     await this.redis.publish(SETTINGS_CHANNEL, changes.map((c) => c.key).join(',')).catch(() => 0);
   }
 
-  /** A value of the instance that is not a setting (`setup.completed`, `theme.palette`…). */
+  /** A value of the instance that is not a setting (`setup.completed`…). */
   async value(key: string): Promise<string | null> {
     return (await this.prisma.instanceSetting.findUnique({ where: { key } }))?.value ?? null;
   }

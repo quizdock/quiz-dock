@@ -14,8 +14,7 @@
     "audit": "Auditoría",
     "quizzes": "Quizzes",
     "media": "Medios",
-    "changes": "Cambios",
-    "look": "Aspecto"
+    "changes": "Cambios"
   },
   "token": {
     "unset": "Modo local: no se puede cambiar nada desde la web hasta que ADMIN_TOKEN esté definido en .env (32 caracteres o más) y la instancia se haya reiniciado.",
@@ -182,8 +181,7 @@
     "ADMIN_TOKEN": "Token de administración (modo local)",
     "ADMIN_OVERRIDES": "Valores cambiados desde la web",
     "QUIZDOCK_FLAVOR": "Variante de la imagen",
-    "PRISMA_SKIP_CONNECT": "Arrancar sin base de datos",
-    "ANSWER_THEME": "Cómo se dibujan las respuestas"
+    "PRISMA_SKIP_CONNECT": "Arrancar sin base de datos"
   },
   "operations": {
     "health": {
@@ -248,11 +246,6 @@
     "invite": {
       "test": "Probar una dirección desde un teléfono",
       "test-status": "Prueba desde un teléfono"
-    },
-    "theme": {
-      "get": "Paleta",
-      "set": "Cambiar la paleta",
-      "reset": "Volver a la paleta de la aplicación"
     }
   },
   "params": {
@@ -470,72 +463,6 @@
       "env": "Lo definido aquí, como extracto de .env — para fijarlo allí:"
     }
   },
-  "look": {
-    "title": "Paleta",
-    "intro": "Los colores de la marca, en claro y en oscuro, mostrados en los propios componentes de la aplicación antes de guardarlos. Un color se escribe #rrggbb u oklch(L C H); los neutros siguen siendo los de la aplicación, y branding/override.css sigue teniendo la última palabra.",
-    "readOnly": "Los colores de la marca, en claro y en oscuro. Aquí solo lectura: ADMIN_WEB_SCOPE=read.",
-    "mode": "Modo",
-    "light": "Claro",
-    "dark": "Oscuro",
-    "pick": "Elegir {{token}}",
-    "default": "Volver al color de la aplicación",
-    "preview": "Vista previa",
-    "contrasts": "Contraste",
-    "contrastsHelp": "WCAG 2: 4,5:1 para un texto, 3:1 para un control sobre la página. Solo se comprueban los pares que afecta un cambio: la aplicación responde de sus propios colores.",
-    "background": "Página",
-    "unreadable": "Un color no se puede leer: #rrggbb, u oklch(L C H) con L de 0 a 1 (o un porcentaje).",
-    "reset": "Volver a la paleta de la aplicación",
-    "saved": "Guardado: cada página lo sigue en su próxima carga.",
-    "tokens": {
-      "primary": "Color principal",
-      "primary-foreground": "Texto sobre el color principal",
-      "ring": "Anillo de foco",
-      "destructive": "Destructivo",
-      "destructive-foreground": "Texto sobre destructivo",
-      "success": "Éxito",
-      "success-foreground": "Texto sobre éxito",
-      "warning": "Advertencia",
-      "warning-text": "Texto de advertencia"
-    },
-    "sample": {
-      "primary": "Principal",
-      "success": "Presentar",
-      "destructive": "Eliminar",
-      "focus": "Con foco",
-      "badge": "Insignia",
-      "warningText": "Queda la mitad del tiempo",
-      "link": "Un enlace"
-    }
-  },
-  "answers": {
-    "title": "Respuestas",
-    "intro": "Cómo se dibujan las respuestas en la proyección, los teléfonos y la consola: un color y, a su lado, la forma elegida por el autor — o una letra, o un número. Los quizzes conservan sus respuestas tal cual.",
-    "distanceHelp": "Cada fila muestra las cuatro primeras respuestas tal como se ven con una visión del color típica y con cada daltonismo habitual; el número indica cuánto se separan las dos más cercanas (por debajo de 0,10 se confunden a simple vista). El glifo las distingue sean cuales sean los colores.",
-    "vision": {
-      "typical": "Típica",
-      "protanopia": "Protanopía",
-      "deuteranopia": "Deuteranopía",
-      "tritanopia": "Tritanopía"
-    },
-    "themes": {
-      "classic": {
-        "title": "Clásico",
-        "help": "Los colores de la aplicación, la forma de cada respuesta."
-      },
-      "letters": {
-        "title": "Letras",
-        "help": "Los colores de la aplicación, y A, B, C… según la posición."
-      },
-      "numbers": {
-        "title": "Números",
-        "help": "Los colores de la aplicación, y 1, 2, 3… según la posición."
-      },
-      "colorblind": {
-        "title": "Daltonismo",
-        "help": "Colores distinguibles con cada daltonismo habitual, y las formas."
-      }
-    }
-  },
   "usage": {
     "preview": "Lo que definen estas respuestas:",
     "nothing": "Nada que cambiar.",
@@ -588,7 +515,7 @@
         },
         "adapted": {
           "title": "Sí",
-          "help": "Colores que distinguen las personas daltónicas, sin transiciones, más tiempo para leer."
+          "help": "Sin transiciones, más tiempo para leer."
         }
       }
     }

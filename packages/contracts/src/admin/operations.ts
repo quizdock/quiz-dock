@@ -15,7 +15,6 @@ export type OperationCategory =
   | 'settings'
   | 'presets'
   | 'setup'
-  | 'theme'
   | 'media'
   | 'audit';
 

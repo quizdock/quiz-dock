@@ -8,7 +8,6 @@ import { operationsHelp } from '../cli/adapter';
 import { WIZARD_OPERATIONS } from './operations/setup.operations';
 import { OperationRunner } from './runner/operation-runner';
 import { settings } from './settings/settings.service';
-import { ThemeService } from './theme/theme.service';
 
 /**
  * Against the test database: the operations of `qd`, through the real runner —
@@ -18,7 +17,6 @@ describe('AdminModule (integration)', () => {
   let runner: OperationRunner;
   let prisma: PrismaService;
   let close: () => Promise<void>;
-  let moduleTheme: () => ThemeService;
   const subject = `local:admin-db-${Date.now()}`;
   const cli = { via: 'cli' as const, name: 'tester' };
 
@@ -34,13 +32,11 @@ describe('AdminModule (integration)', () => {
     runner = app.get(OperationRunner);
     prisma = app.get(PrismaService);
     close = () => app.close();
-    moduleTheme = () => app.get(ThemeService);
     await prisma.user.create({ data: { oidcSubject: subject, displayName: 'Ada', roles: [] } });
   });
 
   afterAll(async () => {
     await prisma.instanceSetting.deleteMany({ where: { updatedBy: 'tester' } });
-    await prisma.instanceSetting.deleteMany({ where: { key: 'theme.palette' } });
     await prisma.user.deleteMany({ where: { oidcSubject: subject } });
     await prisma.adminAudit.deleteMany({ where: { actor: 'tester' } });
     await close();
@@ -229,7 +225,6 @@ describe('AdminModule (integration)', () => {
         result: { data: { plan: { changes: { key: string; skipped?: string }[] } } };
       };
       expect(preview.result.data.plan.changes.map((c) => c.key)).toEqual([
-        'ANSWER_THEME',
         'GAME_READ_DELAY_MS',
         'GAME_ALL_ANSWERED_DELAY_MS',
         'LIVE_MOTION',
@@ -238,7 +233,7 @@ describe('AdminModule (integration)', () => {
       expect(await runner.run({ id: 'presets.apply', raw, actor: cli })).toMatchObject({
         kind: 'result',
       });
-      expect(settings.get(SETTINGS.ANSWER_THEME)).toBe('colorblind');
+      expect(settings.get(SETTINGS.LIVE_MOTION)).toBe('off');
       const listed = (await runner.run({ id: 'presets.list', raw: {}, actor: cli })) as {
         result: { data: { current: Record<string, string> } };
       };
@@ -251,27 +246,6 @@ describe('AdminModule (integration)', () => {
         confirmation: (ask as { token: string }).token,
       });
       expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(3000);
-    });
-  });
-
-  describe('the palette', () => {
-    it('a readable palette is served as a stylesheet; an unreadable one refused; then taken back', async () => {
-      const theme = moduleTheme();
-      expect(
-        await runner.run({ id: 'theme.set', raw: { light: { primary: '#fde68a' } }, actor: cli }),
-      ).toMatchObject({
-        kind: 'refused',
-        code: 'invalid_params',
-        message: expect.stringContaining('primary-foreground on primary'),
-      });
-      expect(
-        await runner.run({ id: 'theme.set', raw: { light: { primary: '#1d4ed8' } }, actor: cli }),
-      ).toMatchObject({
-        kind: 'result',
-      });
-      expect(await theme.css()).toContain('--primary: #1d4ed8;');
-      await runner.run({ id: 'theme.reset', raw: {}, actor: cli });
-      expect(await theme.css()).not.toContain('--primary');
     });
   });
 

@@ -14,7 +14,7 @@ from the command line — and what the operator allows the web to do.
 
 | Domain | What | From the web |
 |---|---|---|
-| **Instance** | settings, the look, accounts and roles, the host seat, health, the audit | read always; changed only with `ADMIN_WEB_SCOPE=write` |
+| **Instance** | settings, accounts and roles, the host seat, health, the audit | read always; changed only with `ADMIN_WEB_SCOPE=write` |
 | **Quizzes** | every quiz and its sessions, whoever owns them: hand one over, export, import for a host, archive, restore, delete, find the ones nobody can reach, purge old sessions | the `admin` role |
 | **Media** | the instance's shared media library | the `admin` role |
 
@@ -24,8 +24,8 @@ The role comes from the identity provider's claims (OIDC) or from
 ## 2. The web administration
 
 *Administration* in the account menu (administrators only) opens on the
-quizzes; the media follow, then the instance — its accounts, settings, look,
-health and audit:
+quizzes; the media follow, then the instance — its accounts, settings, health
+and audit:
 
 - **Settings** — every variable the application reads: its value (in megabytes
   and seconds, whatever unit the variable is written in; a secret only as *set*
@@ -44,15 +44,6 @@ health and audit:
   it replaces, and *Back to .env* takes it back. *Export as .env* gives every
   change as a `.env` excerpt — to pin them in `.env`, or move them to another
   instance —, *Take everything back* removes them all.
-- **Look** — the instance's palette: the brand's colours (the main colour and
-  its text, the focus ring, destructive, success, warning), light and dark,
-  shown on the application's own components before they are saved; a colour that
-  makes a text or a control unreadable (WCAG 2) is refused. Served as
-  `/branding/theme.css`, after the application's styles and before
-  `branding/override.css`, which keeps the last word. Below it, how the answers
-  are drawn (`ANSWER_THEME`): *classic*, *letters*, *numbers*, or *colour vision*
-  — each shown as seen with typical colour vision and with protanopia,
-  deuteranopia and tritanopia. The quizzes keep their answers as they are.
 - **Health** — the checks of `qd doctor`, the state of the migrations, and the
   phone test of the invitation addresses (a new network, a new venue).
 - **Accounts** — the accounts and their roles, granting or revoking one, the
@@ -116,7 +107,7 @@ several settings at once, previewed before it is applied — does the instance
 reach the Internet (if not, no links to online media libraries), who plays
 (colleagues; a class, accounts required; the public, open to all with an identity
 provider and more time for media to load), do some participants need it easier
-(colours told apart by colour-blind people, no transitions, more time to read).
+(no transitions, more time to read).
 The steps after it come filled in: health (the checks of `qd doctor`: what fails is fixed in `.env`),
 identity (name, language, logo, feedback links), address (the public address,
 the local network addresses, and a test from a phone), access (the

@@ -3,7 +3,7 @@
 > Part of the [self-hosting guides](README.md). The variables themselves are listed in
 > [configuration → identity & branding](configuration.md#identity--branding).
 
-These are brandable **at runtime**, without rebuilding the image:
+Three things are brandable **at runtime**, without rebuilding the image:
 
 | What | How |
 |---|---|
@@ -11,7 +11,6 @@ These are brandable **at runtime**, without rebuilding the image:
 | **Language** | `APP_LANG` (`en`/`fr`/`es`/`zh`/`zh-TW`/`tr`). |
 | **Logo & CSS** | files served at fixed paths — replace them via a mounted folder, or point `APP_LOGO_URL` at a logo hosted elsewhere. |
 | **Icon** | `favicon.png` in the same folder: the browser tab and the home screen (below). |
-| **Colours** | the brand's palette and how the answers are drawn (`ANSWER_THEME`), from the [administration](administration.md#2-the-web-administration) (*Look*) — or, as before, `override.css`, which keeps the last word. |
 
 ## How it works
 

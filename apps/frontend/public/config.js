@@ -8,6 +8,4 @@ window.__APP_CONFIG__ = {
   logoUrl: '',
   // Home page's feedback links: '' = the QuizDock repository, a URL = yours, 'none' = hidden.
   feedbackUrl: '',
-  // How the answers are drawn beside their colour: shape | letter | number.
-  answerGlyph: 'shape',
 };

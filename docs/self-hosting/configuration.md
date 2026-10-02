@@ -67,7 +67,6 @@ Level: **C1** critical (start-up, data, security — shown, never changed by the
 | `APP_LANG` | `en` | `en` · `fr` · `es` · `zh` · `zh-TW` · `tr` | C4 | UI language for the instance. One per deployment (no browser detection). New quizzes start in this language; each quiz can be set to another in its settings. |
 | `APP_LOGO_URL` | — | an `https://` URL | C4 | Logo served from somewhere else (a CDN, a path outside `branding/`). Empty by default, which is the usual setup: the logo is then looked up in the mounted `branding/` folder. |
 | `APP_FEEDBACK_URL` | — | an `http(s)://` URL, or `none` | C4 | Where the home page's *Report a bug · Suggest a feature · Fix a translation · Ask a question* links lead. Empty: the QuizDock repository, its forms filled in with the version, the browser and the language. Another GitHub repository (`https://github.com/owner/repo`): the same forms there — copy `.github/ISSUE_TEMPLATE/` into it. Any other address: a single *Send feedback* link. `none`: no links. |
-| `ANSWER_THEME` | `classic` | `classic` · `letters` · `numbers` · `colorblind` | C4 | How the answers are drawn on the projection, the phones and the console — the quizzes keep their slots: `classic` (the application's colours, each answer's shape), `letters` (A, B, C…), `numbers` (1, 2, 3…), `colorblind` (colours told apart under every common colour vision deficiency, and the shapes). |
 
 How to replace the logo and the stylesheet: **[branding](branding.md)**.
 

@@ -95,7 +95,6 @@ describe('Identity & branding', () => {
       logoUrl: '',
       feedbackUrl: '',
       liveMotion: true,
-      answerGlyph: 'shape',
     });
   });
 
