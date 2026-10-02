@@ -343,4 +343,49 @@ describe('OperationRunner', () => {
     const write = runner.catalogue(ADMIN).find((d) => d.id === 'thing.write')!;
     expect(write.params).toMatchObject({ type: 'object', required: ['key'] });
   });
+
+  describe('the setup wizard and shell-only operations', () => {
+    const extra = [
+      { ...ops[1], id: 'wizard.write', wizard: true },
+      { ...ops[0], id: 'shell.only', access: 'cli' as const },
+    ];
+    const runner = () =>
+      new OperationRunner(
+        [...ops, ...extra],
+        settingsFrom({ ADMIN_LOCK: 'APP_NAME' }),
+        new MemoryAuditRepository(),
+        new MemoryConfirmationStore(),
+      );
+    const WIZARD = { via: 'api' as const, name: 'setup', setup: true };
+
+    it('the wizard runs its own operations, whatever the scope and without the local token', async () => {
+      expect(
+        await runner().run({ id: 'wizard.write', raw: { key: 'APP_LANG' }, actor: WIZARD }),
+      ).toMatchObject({
+        kind: 'result',
+      });
+      expect(
+        await runner().run({ id: 'thing.write', raw: { key: 'APP_LANG' }, actor: WIZARD }),
+      ).toMatchObject({
+        code: 'forbidden',
+      });
+    });
+
+    it('the wizard never changes a locked variable', async () => {
+      expect(
+        await runner().run({ id: 'wizard.write', raw: { key: 'APP_NAME' }, actor: WIZARD }),
+      ).toMatchObject({
+        code: 'locked',
+      });
+    });
+
+    it('a shell-only operation is refused to the web, even to an administrator', async () => {
+      expect(await runner().run({ id: 'shell.only', raw: {}, actor: ADMIN })).toMatchObject({
+        code: 'forbidden',
+      });
+      expect(await runner().run({ id: 'shell.only', raw: {}, actor: CLI })).toMatchObject({
+        kind: 'result',
+      });
+    });
+  });
 });

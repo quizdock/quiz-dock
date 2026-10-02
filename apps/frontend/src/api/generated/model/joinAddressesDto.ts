@@ -17,4 +17,6 @@ export interface JoinAddressesDto {
   lanIps: string[];
   /** How the LAN addresses were obtained: "configured" (HOST_LAN_IPS), "detected" (host interfaces), or "hidden" (the process only sees a container bridge — Docker Desktop, bridge network). */
   lanSource: JoinAddressesDtoLanSource;
+  /** Invitation addresses (origins) a phone reached in the phone test of the administration: offered first. */
+  tested: string[];
 }

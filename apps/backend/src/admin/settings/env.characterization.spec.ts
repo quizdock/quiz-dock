@@ -315,32 +315,35 @@ describe('Access & authentication', () => {
 });
 
 describe('Network & invitation', () => {
-  const addresses = () => new GameController({} as never, {} as never).joinAddresses();
+  const noFlags = { instanceSetting: { findUnique: () => Promise.resolve(null) } };
+  const addresses = () =>
+    new GameController({} as never, {} as never, noFlags as never).joinAddresses();
 
   beforeEach(() => setEnv({ APP_PUBLIC_URL: undefined, HOST_LAN_IPS: undefined }));
 
-  it('APP_PUBLIC_URL is trimmed and loses its trailing slashes; empty is none', () => {
+  it('APP_PUBLIC_URL is trimmed and loses its trailing slashes; empty is none', async () => {
     setEnv({ HOST_LAN_IPS: '10.0.0.2' });
-    expect(addresses().publicUrl).toBeNull();
+    expect((await addresses()).publicUrl).toBeNull();
     setEnv({ APP_PUBLIC_URL: '  https://quiz.example.org/// ' });
-    expect(addresses().publicUrl).toBe('https://quiz.example.org');
+    expect((await addresses()).publicUrl).toBe('https://quiz.example.org');
     setEnv({ APP_PUBLIC_URL: 'quiz.example.org/path/' });
-    expect(addresses().publicUrl).toBe('quiz.example.org/path');
+    expect((await addresses()).publicUrl).toBe('quiz.example.org/path');
   });
 
-  it('HOST_LAN_IPS is split on commas, trimmed, deduplicated, unchecked', () => {
+  it('HOST_LAN_IPS is split on commas, trimmed, deduplicated, unchecked', async () => {
     setEnv({ HOST_LAN_IPS: ' 10.0.0.2, 10.0.0.2,,not-an-ip ' });
-    expect(addresses()).toEqual({
+    expect(await addresses()).toEqual({
       publicUrl: null,
       lanIps: ['10.0.0.2', 'not-an-ip'],
       lanSource: 'configured',
+      tested: [],
     });
   });
 
-  it('HOST_LAN_IPS unset or blank: the interfaces are read instead', () => {
-    expect(addresses().lanSource).not.toBe('configured');
+  it('HOST_LAN_IPS unset or blank: the interfaces are read instead', async () => {
+    expect((await addresses()).lanSource).not.toBe('configured');
     setEnv({ HOST_LAN_IPS: ' , ' });
-    expect(addresses().lanSource).not.toBe('configured');
+    expect((await addresses()).lanSource).not.toBe('configured');
   });
 });
 

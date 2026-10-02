@@ -11,6 +11,8 @@ import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from '../admin/settings/settings.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { readTestedAddresses } from '../admin/setup/setup.service';
 
 /** Addresses Docker gives its bridge networks (172.17–31.x.x): never an invitation address. */
 const DOCKER_BRIDGE = /^172\.(1[7-9]|2\d|3[01])\./;
@@ -26,6 +28,7 @@ export class GameController {
   constructor(
     private readonly games: GameService,
     private readonly engine: GameEngine,
+    private readonly prisma: PrismaService,
   ) {}
 
   /**
@@ -54,14 +57,20 @@ export class GameController {
    */
   @Get('join-addresses')
   @ApiOkResponse({ type: JoinAddressesDto })
-  joinAddresses(): JoinAddressesDto {
+  async joinAddresses(): Promise<JoinAddressesDto> {
     const publicUrl = settings.get(SETTINGS.APP_PUBLIC_URL);
     const configured = settings.get(SETTINGS.HOST_LAN_IPS);
+    const tested = await readTestedAddresses({
+      flag: async (key) =>
+        (await this.prisma.instanceSetting.findUnique({ where: { key: `setup.${key}` } }))?.value ??
+        null,
+    }).catch(() => []);
     if (configured.length) {
       return {
         publicUrl: publicUrl || null,
         lanIps: [...new Set(configured)],
         lanSource: 'configured',
+        tested,
       };
     }
     const detected = Object.values(networkInterfaces())
@@ -74,6 +83,7 @@ export class GameController {
       publicUrl: publicUrl || null,
       lanIps: [...new Set(detected)],
       lanSource: detected.length ? 'detected' : 'hidden',
+      tested,
     };
   }
 

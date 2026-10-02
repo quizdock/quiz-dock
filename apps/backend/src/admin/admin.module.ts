@@ -11,6 +11,8 @@ import { MediaOperations } from './operations/media.operations';
 import { PresetsOperations } from './operations/presets.operations';
 import { QuizzesOperations } from './operations/quizzes.operations';
 import { PresetService } from './presets/preset.service';
+import { SetupOperations, WIZARD_OPERATIONS } from './operations/setup.operations';
+import { SetupService } from './setup/setup.service';
 import type { AdminOperation } from './operations/operation';
 import { SettingsOperations } from './operations/settings.operations';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
@@ -24,6 +26,7 @@ const OPERATION_GROUPS = [
   SettingsOperations,
   QuizzesOperations,
   PresetsOperations,
+  SetupOperations,
   MediaOperations,
 ];
 
@@ -36,6 +39,7 @@ const OPERATION_GROUPS = [
   providers: [
     OverridesService,
     PresetService,
+    SetupService,
     ...OPERATION_GROUPS,
     {
       provide: AUDIT_REPOSITORY,
@@ -50,7 +54,10 @@ const OPERATION_GROUPS = [
     {
       provide: ADMIN_OPERATIONS,
       inject: OPERATION_GROUPS,
-      useFactory: (...groups: { list(): AdminOperation[] }[]) => groups.flatMap((g) => g.list()),
+      useFactory: (...groups: { list(): AdminOperation[] }[]) =>
+        groups
+          .flatMap((g) => g.list())
+          .map((op) => (WIZARD_OPERATIONS.has(op.id) ? { ...op, wizard: true } : op)),
     },
     {
       provide: OperationRunner,
@@ -62,6 +69,6 @@ const OPERATION_GROUPS = [
       ) => new OperationRunner(ops, settings, audit, confirmations),
     },
   ],
-  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService],
+  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService, SetupService],
 })
 export class AdminModule {}

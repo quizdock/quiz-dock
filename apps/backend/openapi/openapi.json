@@ -2621,6 +2621,98 @@
           "admin"
         ]
       }
+    },
+    "/api/v1/setup/status": {
+      "get": {
+        "operationId": "SetupController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupStatusDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/api/v1/setup/session": {
+      "post": {
+        "operationId": "SetupController_session",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "setup"
+        ]
+      }
+    },
+    "/api/v1/setup/operations/{id}": {
+      "post": {
+        "operationId": "SetupController_run",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunOperationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationAnswerDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "setup"
+        ]
+      }
     }
   },
   "info": {
@@ -10081,12 +10173,20 @@
               "detected",
               "hidden"
             ]
+          },
+          "tested": {
+            "description": "Invitation addresses (origins) a phone reached in the phone test of the administration: offered first.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "publicUrl",
           "lanIps",
-          "lanSource"
+          "lanSource",
+          "tested"
         ]
       },
       "OperationCatalogueDto": {
@@ -10671,6 +10771,53 @@
         "required": [
           "ran",
           "result"
+        ]
+      },
+      "SetupStatusDto": {
+        "type": "object",
+        "properties": {
+          "open": {
+            "type": "boolean"
+          },
+          "authMode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "oidc"
+            ]
+          },
+          "signedIn": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "open",
+          "authMode",
+          "signedIn"
+        ]
+      },
+      "SetupTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "SetupSessionDto": {
+        "type": "object",
+        "properties": {
+          "session": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "session"
         ]
       }
     }

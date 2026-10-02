@@ -253,6 +253,11 @@ export class OperationRunner {
   private rights(op: AdminOperation, actor: CallActor): Refusal | null {
     // A shell in the container already holds every right.
     if (actor.via === 'cli') return null;
+    if (op.access === 'cli') return refused('forbidden', `${op.id} runs from a shell only.`);
+    // The wizard, under its token: its own operations, nothing else.
+    if (actor.setup) {
+      return op.wizard ? null : refused('forbidden', `The setup wizard cannot run ${op.id}.`);
+    }
     const policy = POLICIES[op.domain];
     return policy && policy(actor)
       ? null
@@ -291,7 +296,7 @@ export class OperationRunner {
 
   /** What the web may change (§3.7, §3.10): the scope, local mode's token. */
   private scope(op: AdminOperation, actor: CallActor): Refusal | null {
-    if (actor.via === 'cli' || op.effect === 'read') return null;
+    if (actor.via === 'cli' || op.effect === 'read' || actor.setup) return null;
     if (this.settings.get(SETTINGS.AUTH_MODE) === 'none' && op.domain !== 'media') {
       const token = this.settings.get(SETTINGS.ADMIN_TOKEN);
       if (!token || !actor.adminToken || !sameSecret(token, actor.adminToken)) {

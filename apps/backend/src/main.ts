@@ -14,6 +14,7 @@ import { trustProxy } from './common/trust-proxy';
 import { buildSwaggerDocument } from './swagger';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from './admin/settings/settings.service';
+import { SetupService } from './admin/setup/setup.service';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -43,6 +44,8 @@ async function bootstrap(): Promise<void> {
 
   // What the operator should know about the configuration (also listed by `qd doctor`).
   for (const issue of settings.issues()) Logger.warn(issue.message, 'Settings');
+  // A fresh instance: the setup wizard's token, in the logs (§3.8).
+  await app.get(SetupService).announce();
 
   const port = settings.get(SETTINGS.PORT);
   await app.listen(port, '0.0.0.0');

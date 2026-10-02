@@ -22,4 +22,11 @@ export class JoinAddressesDto {
     enum: ['configured', 'detected', 'hidden'],
   })
   lanSource!: 'configured' | 'detected' | 'hidden';
+
+  @ApiProperty({
+    description:
+      'Invitation addresses (origins) a phone reached in the phone test of the administration: offered first.',
+    type: [String],
+  })
+  tested!: string[];
 }

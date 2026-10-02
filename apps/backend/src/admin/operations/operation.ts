@@ -15,6 +15,8 @@ export interface CallActor extends Actor {
   roles?: RoleSet;
   /** API, local mode: the `ADMIN_TOKEN` the request carried. */
   adminToken?: string;
+  /** The setup wizard, under its token (§3.8): the wizard's operations, whatever the scope. */
+  setup?: boolean;
 }
 
 export interface OperationContext {
@@ -48,6 +50,10 @@ export interface AdminOperation<P = unknown, R = unknown> {
   validate?(params: P): void | Promise<void>;
   /** Can say what it would do without doing it. */
   dryRun?: boolean;
+  /** `cli`: from a shell only (a setup token is never handed to the web). */
+  access?: 'cli';
+  /** The setup wizard may run it (§3.8). */
+  wizard?: boolean;
   /**
    * What the caller is asked to confirm, when the operation needs it beyond
    * being destructive (a critical setting, say); `null` when it does not.
