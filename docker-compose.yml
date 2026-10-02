@@ -84,6 +84,11 @@ services:
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}
       HOST_LAN_IPS: ${HOST_LAN_IPS:-}
+      # Administration: what the web may change (read | write), what it never may.
+      ADMIN_WEB_SCOPE: ${ADMIN_WEB_SCOPE:-read}
+      ADMIN_LOCK: ${ADMIN_LOCK:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      ADMIN_OVERRIDES: ${ADMIN_OVERRIDES:-apply}
       # Auth OIDC (utilisé seulement si AUTH_MODE=oidc). En Docker, l'issuer (host
       # vu par le navigateur) diffère de l'URI JWKS (host interne) — d'où deux
       # variables. Les défauts ciblent l'IdP d'exemple du profil `keycloak`.

@@ -3,7 +3,7 @@ import { SETTING_LIST, SETTINGS, type SettingDefinition } from '@quiz-dock/contr
 
 /** Where a raw value comes from, in order of precedence (default < `.env` < interface). */
 export interface SettingSource {
-  readonly name: 'env';
+  readonly name: 'override' | 'env';
   /** The raw text, or `undefined` when this source does not hold the variable. */
   read(key: string): string | undefined;
 }
@@ -20,6 +20,8 @@ export interface SettingState<T = unknown> {
   key: string;
   value: T;
   source: SettingSource['name'] | 'default';
+  /** The value the environment gives, when an override replaces it. */
+  envValue?: T;
   issues: SettingIssue[];
 }
 

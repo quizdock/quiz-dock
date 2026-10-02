@@ -155,6 +155,11 @@ services:
       # Vide = logo cherché dans `branding/` (tous formats web), sinon celui de l'image.
       APP_LOGO_URL: ${APP_LOGO_URL:-}
       APP_FEEDBACK_URL: ${APP_FEEDBACK_URL:-}
+      # Administration: what the web may change (read | write), what it never may.
+      ADMIN_WEB_SCOPE: ${ADMIN_WEB_SCOPE:-read}
+      ADMIN_LOCK: ${ADMIN_LOCK:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      ADMIN_OVERRIDES: ${ADMIN_OVERRIDES:-apply}
       CLIENT_DIR: /app/client
       # Auth OIDC (si AUTH_MODE=oidc).
       OIDC_ISSUER: ${OIDC_ISSUER:-}

@@ -8,7 +8,8 @@ import {
   type ExportableQuiz,
 } from '../../quizzes/portable/quiz-bundle';
 import type { QuizPortableService } from '../../quizzes/portable/quiz-portable.service';
-import { CliError, type Output } from '../output';
+import { OperationError } from '../../admin/operations/operation';
+import type { Output } from '../output';
 import { findUser } from './users';
 
 type Db = Pick<PrismaService, 'user' | 'quiz'>;
@@ -96,7 +97,8 @@ export async function quizImport(
       originalname: source === '-' ? undefined : source,
     });
   } catch (err) {
-    if (err instanceof BadRequestException) throw new CliError(`Import refused: ${reason(err)}`);
+    if (err instanceof BadRequestException)
+      throw new OperationError('invalid_params', `Import refused: ${reason(err)}`);
     throw err;
   }
   out.line(`Imported "${quiz.title}" (${quiz.id}) as a draft of ${user.displayName}.`);
@@ -145,7 +147,7 @@ export async function quizTransfer(
   who: string,
 ): Promise<void> {
   const quiz = await prisma.quiz.findUnique({ where: { id: quizId }, include: EXPORT_INCLUDE });
-  if (!quiz) throw new CliError(`No quiz with id "${quizId}".`);
+  if (!quiz) throw new OperationError('not_found', `No quiz with id "${quizId}".`);
   const target = await findUser(prisma, who);
   if (quiz.ownerId === target.id) {
     out.line(`"${quiz.title}" already belongs to ${target.displayName}.`);
@@ -184,7 +186,8 @@ export async function quizTransfer(
 async function refuseWhilePlayed(redis: LiveIndex, ownerId: string, quizId: string): Promise<void> {
   const pin = await livePinOf(redis, ownerId, quizId);
   if (pin) {
-    throw new CliError(
+    throw new OperationError(
+      'conflict',
       `"${quizId}" is being played right now (PIN ${pin}): end the session first.`,
     );
   }

@@ -61,6 +61,7 @@ const GROUPS: Group[] = [
       '(`client_max_body_size 50m;`).',
   },
   { title: 'Game pace', categories: ['pace'] },
+  { title: 'Administration', categories: ['admin'] },
 ];
 
 const LEVELS =
@@ -226,6 +227,7 @@ const SECTIONS: { title: string; categories: SettingCategory[] }[] = [
   { title: 'Network & invitation', categories: ['network'] },
   { title: 'Limits', categories: ['limits'] },
   { title: 'Game pace', categories: ['pace'] },
+  { title: 'Administration', categories: ['admin'] },
 ];
 
 /** The development stack's `.env.example`. */

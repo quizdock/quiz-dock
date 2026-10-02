@@ -46,3 +46,37 @@ export class CliError extends Error {
     this.name = 'CliError';
   }
 }
+
+/** A line of output, as data: what a command printed, for any access to render. */
+export type OutputEntry =
+  | { level: 'line' | 'ok' | 'warn' | 'fail'; text: string }
+  | { level: 'table'; rows: Record<string, unknown>[] };
+
+/** Keeps what a command prints, in order, instead of printing it. */
+export class RecordingOutput implements Output {
+  readonly entries: OutputEntry[] = [];
+
+  line(text = ''): void {
+    this.entries.push({ level: 'line', text });
+  }
+  ok(text: string): void {
+    this.entries.push({ level: 'ok', text });
+  }
+  warn(text: string): void {
+    this.entries.push({ level: 'warn', text });
+  }
+  fail(text: string): void {
+    this.entries.push({ level: 'fail', text });
+  }
+  table(rows: Record<string, unknown>[]): void {
+    this.entries.push({ level: 'table', rows });
+  }
+}
+
+/** Prints recorded output again. */
+export function replay(entries: OutputEntry[], out: Output): void {
+  for (const entry of entries) {
+    if (entry.level === 'table') out.table(entry.rows);
+    else out[entry.level](entry.text);
+  }
+}

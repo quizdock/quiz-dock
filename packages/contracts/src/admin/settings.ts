@@ -28,6 +28,7 @@ export type SettingCategory =
   | 'storage'
   | 'limits'
   | 'pace'
+  | 'admin'
   | 'internal';
 
 /** A variable the backend reads. */
@@ -778,6 +779,59 @@ export const SETTINGS = {
     applies: 'live',
     overridable: false,
     internal: true,
+  }),
+
+  // Administration
+  ADMIN_WEB_SCOPE: define({
+    key: 'ADMIN_WEB_SCOPE',
+    description:
+      'What the web administration may change in the Instance domain (settings, presets, accounts, host seat): `read` shows everything and changes nothing; `write` lets administrators change the C2–C4 settings and run the instance operations, each critical one confirmed. Media and quizzes are not concerned.',
+    category: 'admin',
+    criticality: 'C1',
+    schema: oneOf(['read', 'write'] as const),
+    accepts: '`read` · `write`',
+    default: 'read' as 'read' | 'write',
+    applies: 'restart',
+    overridable: false,
+  }),
+  ADMIN_LOCK: define({
+    key: 'ADMIN_LOCK',
+    description:
+      'Variables the web administration may never change, whatever `ADMIN_WEB_SCOPE` says: comma-separated names (e.g. `APP_NAME,MEDIA_MAX_VIDEO_MB`). The CLI is not concerned.',
+    category: 'admin',
+    criticality: 'C1',
+    schema: list((key) => key.toUpperCase()),
+    accepts: 'comma-separated variable names',
+    default: [] as string[],
+    applies: 'restart',
+    overridable: false,
+    example: 'APP_NAME,MEDIA_MAX_VIDEO_MB',
+  }),
+  ADMIN_TOKEN: define({
+    key: 'ADMIN_TOKEN',
+    description:
+      'Local mode (`AUTH_MODE=none`) has no accounts, so whoever reaches the instance could administer it: the web administration changes nothing there unless this token is set, and asks for it before any change. At least 32 characters.',
+    category: 'admin',
+    criticality: 'C1',
+    schema: text(),
+    bounds: z.string().min(32),
+    accepts: 'text, 32 characters or more',
+    default: '',
+    applies: 'restart',
+    overridable: false,
+    secret: true,
+  }),
+  ADMIN_OVERRIDES: define({
+    key: 'ADMIN_OVERRIDES',
+    description:
+      '`ignore` starts the instance on its environment alone: every value changed from the web administration is ignored (kept, not deleted) — the way back when one of them went wrong.',
+    category: 'admin',
+    criticality: 'C1',
+    schema: oneOf(['apply', 'ignore'] as const),
+    accepts: '`apply` · `ignore`',
+    default: 'apply' as 'apply' | 'ignore',
+    applies: 'restart',
+    overridable: false,
   }),
 
   // Internal

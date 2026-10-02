@@ -140,6 +140,15 @@ request body limit to the largest of these sizes** — nginx refuses anything ov
 | `GAME_MEDIA_WAIT_S` | `10` | 0 to 60 (s) | C3 | How long the room waits at most, before a question, for the devices that play its sound or video to load it (the host can start anyway), in seconds. `0` never waits. |
 | `LIVE_MOTION` | `on` | `on` · `off` | C4 | Transitions between steps on the projection and the phones, as a new room starts: the previous background fades out, the step comes in, the standings slide. `off` for old projectors or low-end devices. The host switches it for their room at any time (console, *Animations*); a device asking the system to reduce motion keeps fades only. |
 
+### Administration
+
+| Variable | Default | Accepts | Level | Description |
+|---|---|---|---|---|
+| `ADMIN_WEB_SCOPE` | `read` | `read` · `write` | C1 | What the web administration may change in the Instance domain (settings, presets, accounts, host seat): `read` shows everything and changes nothing; `write` lets administrators change the C2–C4 settings and run the instance operations, each critical one confirmed. Media and quizzes are not concerned. |
+| `ADMIN_LOCK` | — | comma-separated variable names | C1 | Variables the web administration may never change, whatever `ADMIN_WEB_SCOPE` says: comma-separated names (e.g. `APP_NAME,MEDIA_MAX_VIDEO_MB`). The CLI is not concerned. |
+| `ADMIN_TOKEN` | — | text, 32 characters or more | C1 | Local mode (`AUTH_MODE=none`) has no accounts, so whoever reaches the instance could administer it: the web administration changes nothing there unless this token is set, and asks for it before any change. At least 32 characters. |
+| `ADMIN_OVERRIDES` | `apply` | `apply` · `ignore` | C1 | `ignore` starts the instance on its environment alone: every value changed from the web administration is ignored (kept, not deleted) — the way back when one of them went wrong. |
+
 ### Deployment (Compose)
 
 Read by `docker-compose.prod.yml` and the `quizdock` script, never by the application.

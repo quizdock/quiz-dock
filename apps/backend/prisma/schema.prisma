@@ -585,3 +585,24 @@ model QuizFeedback {
   @@index([quizId, createdAt])
   @@map("quiz_feedback")
 }
+
+/// Administration (SPECIFICATIONS-ADMIN §3.3): every administrative action — who,
+/// through what, which operation and its parameters (secrets masked), the outcome.
+/// Append-only: the code has no update nor delete of it; backed up with the base.
+model AdminAudit {
+  id         String   @id @default(ulid()) @db.Char(26)
+  at         DateTime @default(now()) @db.Timestamptz(6)
+  via        String   @db.VarChar(8)
+  actor      String
+  userId     String?  @map("user_id") @db.Char(26)
+  address    String?
+  operation  String   @db.VarChar(64)
+  params     Json     @default("{}")
+  outcome    String   @db.VarChar(16)
+  code       String?  @db.VarChar(64)
+  durationMs Int      @map("duration_ms")
+
+  @@index([at])
+  @@index([operation, at])
+  @@map("admin_audit")
+}
