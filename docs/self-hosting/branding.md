@@ -14,8 +14,8 @@ Three things are brandable **at runtime**, without rebuilding the image:
 
 ## How it works
 
-At startup the container serves a tiny `/config.js` generated from `APP_NAME`/`APP_LANG`,
-which the SPA reads (`window.__APP_CONFIG__`). Two asset files are served at fixed paths:
+The backend serves a tiny `/config.js` built from `APP_NAME`, `APP_LANG`, `APP_LOGO_URL` and
+`APP_FEEDBACK_URL` on each request, which the SPA reads (`window.__APP_CONFIG__`). Two asset files are served at fixed paths:
 
 - `/branding/logo.<ext>` — the header logo, in any web image format. The page tries
   `logo.svg`, `logo.avif`, `logo.webp`, `logo.png`, `logo.jpg`, `logo.jpeg`, `logo.gif`

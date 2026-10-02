@@ -1,6 +1,6 @@
-// Config de marque runtime (white-label). Valeurs par défaut servies tel quel ;
-// en conteneur, ce fichier est régénéré depuis l'env (APP_NAME, APP_LANG) au démarrage.
-// Voir apps/frontend/src/config.ts.
+// Runtime configuration (white-label): the defaults, built into the bundle. The
+// backend serves the instance's own at /config.js (directly, through nginx or
+// Vite's proxy), which takes this one's place. See apps/frontend/src/config.ts.
 window.__APP_CONFIG__ = {
   appName: 'QuizDock',
   lang: 'en',

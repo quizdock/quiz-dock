@@ -50,6 +50,10 @@ export default defineConfig({
       '/api': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',
       },
+      // The runtime configuration (name, language, logo…): the backend's, as in production.
+      '/config.js': {
+        target: process.env.VITE_API_URL ?? 'http://localhost:3000',
+      },
       // Temps réel : Socket.IO (handshake + upgrade WebSocket) vers le backend.
       '/socket.io': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',

@@ -2,8 +2,8 @@ import defaultLogoUrl from '@/assets/default-logo.svg';
 
 /**
  * Config de marque **runtime** (white-label). Surchargée sans rebuild via
- * `window.__APP_CONFIG__`, injecté par `/config.js` que le conteneur génère
- * depuis l'env au démarrage (cf. docker entrypoint + `APP_NAME`). Logo et CSS
+ * `window.__APP_CONFIG__`, injected by `/config.js`, which the backend builds
+ * from the instance's settings on each request (`APP_NAME`…). Logo et CSS
  * sont des fichiers servis à chemin fixe, remplaçables par un volume Docker
  * monté sur `branding/`.
  */

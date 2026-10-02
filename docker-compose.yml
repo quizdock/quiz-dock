@@ -126,12 +126,9 @@ services:
       dockerfile: apps/frontend/Dockerfile
       target: runtime
     environment:
-      # White-label : nom d'app + langue injectés au runtime dans /config.js (sans rebuild).
+      # The installed app's name and language (manifest); /config.js is the backend's.
       APP_NAME: ${APP_NAME:-QuizDock}
       APP_LANG: ${APP_LANG:-en}
-      # Vide = logo cherché dans `branding/` (tous formats web), sinon celui de l'image.
-      APP_LOGO_URL: ${APP_LOGO_URL:-}
-      APP_FEEDBACK_URL: ${APP_FEEDBACK_URL:-}
     depends_on:
       backend:
         condition: service_healthy
