@@ -13,6 +13,8 @@ import { QuizzesOperations } from './operations/quizzes.operations';
 import { PresetService } from './presets/preset.service';
 import { SetupOperations, WIZARD_OPERATIONS } from './operations/setup.operations';
 import { SetupService } from './setup/setup.service';
+import { ThemeOperations } from './operations/theme.operations';
+import { ThemeService } from './theme/theme.service';
 import type { AdminOperation } from './operations/operation';
 import { SettingsOperations } from './operations/settings.operations';
 import { type ConfirmationStore, RedisConfirmationStore } from './runner/confirmations';
@@ -27,6 +29,7 @@ const OPERATION_GROUPS = [
   QuizzesOperations,
   PresetsOperations,
   SetupOperations,
+  ThemeOperations,
   MediaOperations,
 ];
 
@@ -40,6 +43,7 @@ const OPERATION_GROUPS = [
     OverridesService,
     PresetService,
     SetupService,
+    ThemeService,
     ...OPERATION_GROUPS,
     {
       provide: AUDIT_REPOSITORY,
@@ -69,6 +73,6 @@ const OPERATION_GROUPS = [
       ) => new OperationRunner(ops, settings, audit, confirmations),
     },
   ],
-  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService, SetupService],
+  exports: [OperationRunner, AUDIT_REPOSITORY, OverridesService, SetupService, ThemeService],
 })
 export class AdminModule {}

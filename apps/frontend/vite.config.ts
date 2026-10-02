@@ -54,6 +54,10 @@ export default defineConfig({
       '/config.js': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',
       },
+      // The instance's palette (lot 5 of the administration): the backend's too.
+      '/branding/theme.css': {
+        target: process.env.VITE_API_URL ?? 'http://localhost:3000',
+      },
       // Temps réel : Socket.IO (handshake + upgrade WebSocket) vers le backend.
       '/socket.io': {
         target: process.env.VITE_API_URL ?? 'http://localhost:3000',

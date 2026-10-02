@@ -2,7 +2,10 @@ import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@ne
 import type Redis from 'ioredis';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../redis/redis.service';
+import { SETTING_LIST } from '@quiz-dock/contracts';
 import { type OverrideStore, overrides } from './settings.service';
+
+const SETTING_KEYS = new Set(SETTING_LIST.map((d) => d.key));
 
 /** The Redis channel a replica publishes on when it changed an override (§3.1). */
 export const SETTINGS_CHANNEL = 'settings:changed';
@@ -61,9 +64,8 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
   /** Reads every override again: the settings swap to them at once. */
   async reload(): Promise<void> {
     const rows = await this.prisma.instanceSetting.findMany({ select: { key: true, value: true } });
-    this.store.replace(
-      rows.filter((r) => !r.key.startsWith(FLAG_PREFIX)).map((r) => [r.key, r.value]),
-    );
+    // The settings only: the instance's flags and palette live in the same table.
+    this.store.replace(rows.filter((r) => SETTING_KEYS.has(r.key)).map((r) => [r.key, r.value]));
   }
 
   /** The overrides with who changed them and when. */
@@ -93,26 +95,35 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
     await this.redis.publish(SETTINGS_CHANNEL, changes.map((c) => c.key).join(',')).catch(() => 0);
   }
 
-  /** An instance flag (`setup.completed`…), not a setting. */
-  async flag(key: string): Promise<string | null> {
-    return (
-      (await this.prisma.instanceSetting.findUnique({ where: { key: FLAG_PREFIX + key } }))
-        ?.value ?? null
-    );
+  /** A value of the instance that is not a setting (`setup.completed`, `theme.palette`…). */
+  async value(key: string): Promise<string | null> {
+    return (await this.prisma.instanceSetting.findUnique({ where: { key } }))?.value ?? null;
   }
 
-  async setFlag(
+  async setValue(
     key: string,
     value: string | null,
     actor: { name: string; userId?: string },
   ): Promise<void> {
-    const full = FLAG_PREFIX + key;
-    if (value === null) await this.prisma.instanceSetting.deleteMany({ where: { key: full } });
+    if (value === null) await this.prisma.instanceSetting.deleteMany({ where: { key } });
     else
       await this.prisma.instanceSetting.upsert({
-        where: { key: full },
-        create: { key: full, value, updatedBy: actor.name, userId: actor.userId ?? null },
+        where: { key },
+        create: { key, value, updatedBy: actor.name, userId: actor.userId ?? null },
         update: { value, updatedBy: actor.name, userId: actor.userId ?? null },
       });
+  }
+
+  /** An instance flag (`setup.completed`…), not a setting. */
+  flag(key: string): Promise<string | null> {
+    return this.value(FLAG_PREFIX + key);
+  }
+
+  setFlag(
+    key: string,
+    value: string | null,
+    actor: { name: string; userId?: string },
+  ): Promise<void> {
+    return this.setValue(FLAG_PREFIX + key, value, actor);
   }
 }

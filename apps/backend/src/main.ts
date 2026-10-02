@@ -30,7 +30,9 @@ async function bootstrap(): Promise<void> {
   app.use(cspMiddleware());
   // The browser session is a cookie: what changes something comes from our own pages.
   if (isOidcMode()) app.use(sameOriginMiddleware());
-  app.setGlobalPrefix('api/v1', { exclude: ['health', 'config.js', 'branding/override.css'] });
+  app.setGlobalPrefix('api/v1', {
+    exclude: ['health', 'config.js', 'branding/override.css', 'branding/theme.css'],
+  });
   // Validation runtime des DTO Zod (createZodDto) sur toutes les routes.
   app.useGlobalPipes(new ZodValidationPipe());
   // Sérialise les erreurs en corps tokenisé { code, params? } (ADR 0001).
