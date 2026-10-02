@@ -15,6 +15,7 @@ import {
 import { type FormEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StaleNotice } from '@/components/ui/stale-notice';
+import { DataTable, type DataColumn } from '@/components/ui/data-table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { QuizStatusBadge } from '@/components/quiz-status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -136,63 +137,75 @@ export function AdminQuizzesPage() {
           <p className="text-muted-foreground text-sm">
             {t('quizzes.count', { count: data.total })}
           </p>
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-muted-foreground text-left text-xs">
-                <tr>
-                  <th className="px-3 py-2 font-medium">{t('quizzes.columns.quiz')}</th>
-                  <th className="px-3 py-2 font-medium">{t('quizzes.columns.owner')}</th>
-                  <th className="px-3 py-2 font-medium">{t('quizzes.columns.updated')}</th>
-                  <th className="px-3 py-2">
-                    <span className="sr-only">{t('quizzes.columns.actions')}</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((quiz) => (
-                  <tr key={quiz.id} className="border-t align-top">
-                    <td className="px-3 py-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium">{quiz.title}</span>
-                        <QuizStatusBadge status={quiz.status} />
-                        {quiz.livePin ? (
-                          <Badge variant="warning" className="gap-1">
-                            <Radio aria-hidden className="size-3" />
-                            {t('quizzes.live', { pin: quiz.livePin })}
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <span className="text-muted-foreground text-xs">
-                        {t('quizzes.questions', { count: quiz.questionCount })}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      {quiz.owner.name}
-                      <span className="text-muted-foreground block text-xs">
-                        {quiz.owner.subject}
-                      </span>
-                      {!quiz.owner.reachable ? (
-                        <Badge variant="muted" className="mt-1">
-                          {t('quizzes.unreachable')}
-                        </Badge>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2 whitespace-nowrap" title={quiz.updatedAt}>
-                      {formatAgo(quiz.updatedAt, i18n.language)}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <QuizActions quiz={quiz} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={quizColumns(t, i18n.language)} data={data.items} />
         </>
       )}
       <Pagination page={page} pages={pages} onChange={setPage} />
     </div>
   );
+}
+
+type T = (key: string, options?: Record<string, unknown>) => string;
+
+/** The quizzes' columns: a page of a server-side search, so none sorts. */
+function quizColumns(t: T, locale: string): DataColumn<QuizItem>[] {
+  return [
+    {
+      id: 'quiz',
+      header: t('quizzes.columns.quiz'),
+      enableSorting: false,
+      cell: ({ row: { original: quiz } }) => (
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium">{quiz.title}</span>
+            <QuizStatusBadge status={quiz.status} />
+            {quiz.livePin ? (
+              <Badge variant="warning" className="gap-1">
+                <Radio aria-hidden className="size-3" />
+                {t('quizzes.live', { pin: quiz.livePin })}
+              </Badge>
+            ) : null}
+          </div>
+          <span className="text-muted-foreground text-xs">
+            {t('quizzes.questions', { count: quiz.questionCount })}
+          </span>
+        </>
+      ),
+    },
+    {
+      id: 'owner',
+      header: t('quizzes.columns.owner'),
+      enableSorting: false,
+      cell: ({ row: { original: quiz } }) => (
+        <>
+          {quiz.owner.name}
+          <span className="text-muted-foreground block text-xs">{quiz.owner.subject}</span>
+          {!quiz.owner.reachable ? (
+            <Badge variant="muted" className="mt-1">
+              {t('quizzes.unreachable')}
+            </Badge>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      id: 'updated',
+      header: t('quizzes.columns.updated'),
+      enableSorting: false,
+      cell: ({ row: { original: quiz } }) => (
+        <span className="whitespace-nowrap" title={quiz.updatedAt}>
+          {formatAgo(quiz.updatedAt, locale)}
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">{t('quizzes.columns.actions')}</span>,
+      enableSorting: false,
+      meta: { align: 'right' },
+      cell: ({ row }) => <QuizActions quiz={row.original} />,
+    },
+  ];
 }
 
 /** Above the list: what concerns no quiz in particular. */

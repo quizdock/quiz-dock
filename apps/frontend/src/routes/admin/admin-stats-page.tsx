@@ -7,7 +7,8 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { formatAgo, formatBytes } from '@/lib/format';
-import { cn } from '@/lib/utils';
+import { DataTable, type DataColumn, ShareBar } from '@/components/ui/data-table';
+import type { HistoryMonth, HistoryRank, LiveGame } from '@quiz-dock/contracts';
 import { useReadOperation } from './admin-api';
 
 /** How often the live figures are read again (paused while the tab is hidden). */
@@ -49,60 +50,27 @@ export function AdminStatsPage() {
           <Figure
             icon={Radio}
             label={t('stats.live.games')}
-            value={totals.games}
+            value={count(totals.games, locale)}
             detail={[
               t('stats.live.lobby', { count: totals.lobby }),
               t('stats.live.playing', { count: totals.playing }),
             ].join(' · ')}
           />
-          <Figure icon={Users} label={t('stats.live.players')} value={totals.players} />
+          <Figure
+            icon={Users}
+            label={t('stats.live.players')}
+            value={count(totals.players, locale)}
+          />
         </div>
 
         {stats.games.length === 0 ? (
           <EmptyState icon={Radio}>{t('stats.live.none')}</EmptyState>
         ) : (
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-muted-foreground text-left text-xs">
-                <tr>
-                  <th className="px-3 py-2 font-medium">{t('stats.columns.quiz')}</th>
-                  <th className="px-3 py-2 font-medium">{t('stats.columns.host')}</th>
-                  <th className="px-3 py-2 font-medium">{t('stats.columns.progress')}</th>
-                  <th className="px-3 py-2 text-right font-medium">{t('stats.columns.players')}</th>
-                  <th className="px-3 py-2 font-medium">{t('stats.columns.since')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.games.map((game) => (
-                  <tr key={game.pin} className="border-t">
-                    <td className="px-3 py-2">
-                      <div className="font-medium">{game.title}</div>
-                      <div className="text-muted-foreground text-xs tabular-nums">
-                        {t('stats.pin', { pin: game.pin })}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2">{game.host}</td>
-                    <td className="px-3 py-2">
-                      {game.question ? (
-                        <Badge variant="success">
-                          {t('stats.phase.question', {
-                            index: game.question.index,
-                            total: game.question.total,
-                          })}
-                        </Badge>
-                      ) : (
-                        <Badge variant="muted">{t('stats.phase.lobby')}</Badge>
-                      )}
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">{game.players}</td>
-                    <td className="px-3 py-2 whitespace-nowrap" title={game.since}>
-                      {formatAgo(game.since, locale)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={liveColumns(t, locale)}
+            data={stats.games}
+            initialSort={[{ id: 'since', desc: false }]}
+          />
         )}
       </section>
 
@@ -114,7 +82,7 @@ export function AdminStatsPage() {
           <Figure
             icon={UserCog}
             label={t('stats.instance.accounts')}
-            value={instance.accounts.total}
+            value={count(instance.accounts.total, locale)}
             detail={[
               t('stats.instance.hosts', { count: instance.accounts.hosts }),
               t('stats.instance.admins', { count: instance.accounts.admins }),
@@ -124,7 +92,7 @@ export function AdminStatsPage() {
           <Figure
             icon={FileQuestion}
             label={t('stats.instance.quizzes')}
-            value={instance.quizzes.ready}
+            value={count(instance.quizzes.ready, locale)}
             detail={[
               t('stats.instance.drafts', { count: instance.quizzes.draft }),
               t('stats.instance.archived', { count: instance.quizzes.archived }),
@@ -141,7 +109,7 @@ export function AdminStatsPage() {
           <Figure
             icon={History}
             label={t('stats.instance.history')}
-            value={instance.history.sessions}
+            value={count(instance.history.sessions, locale)}
             detail={
               instance.history.lastEndedAt
                 ? t('stats.instance.lastGame', {
@@ -173,11 +141,6 @@ function HistorySection() {
   const locale = i18n.language;
   const read = useReadOperation('stats.history');
   const history = read.data?.data;
-  const monthName = (month: string) =>
-    new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
-      new Date(`${month}-01T00:00:00Z`),
-    );
-
   return (
     <section className="flex flex-col gap-3" aria-labelledby="stats-history">
       <h2 id="stats-history" className="text-lg font-semibold">
@@ -193,11 +156,15 @@ function HistorySection() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Figure icon={Radio} label={t('stats.history.games')} value={history.totals.games} />
+            <Figure
+              icon={Radio}
+              label={t('stats.history.games')}
+              value={count(history.totals.games, locale)}
+            />
             <Figure
               icon={Users}
               label={t('stats.history.players')}
-              value={history.totals.players}
+              value={count(history.totals.players, locale)}
             />
             <Figure
               icon={FileQuestion}
@@ -222,50 +189,20 @@ function HistorySection() {
             />
           </div>
 
-          <StatsTable
+          <DataTable
             caption={t('stats.history.byMonth')}
-            columns={[
-              t('stats.columns.month'),
-              t('stats.history.games'),
-              t('stats.history.players'),
-              t('stats.history.success'),
-            ]}
-            rows={history.months.map((m) => ({
-              key: m.month,
-              cells: [
-                monthName(m.month),
-                m.games,
-                m.players,
-                m.games ? percent(m.successRate, locale) : '—',
-              ],
-            }))}
+            columns={monthColumns(t, locale)}
+            data={history.months}
+            initialSort={[{ id: 'month', desc: true }]}
           />
 
           <div className="grid gap-3 md:grid-cols-2">
             {(['quizzes', 'hosts'] as const).map((kind) => (
-              <StatsTable
+              <DataTable
                 key={kind}
                 caption={t(`stats.history.top.${kind}`)}
-                columns={[
-                  t(`stats.columns.${kind === 'quizzes' ? 'quiz' : 'host'}`),
-                  t('stats.history.games'),
-                  t('stats.history.players'),
-                ]}
-                rows={history[kind].map((r) => ({
-                  key: r.id,
-                  cells: [
-                    r.owner ? (
-                      <>
-                        <div>{r.name}</div>
-                        <div className="text-muted-foreground text-xs">{r.owner}</div>
-                      </>
-                    ) : (
-                      r.name
-                    ),
-                    r.games,
-                    r.players,
-                  ],
-                }))}
+                columns={rankColumns(t, locale, kind)}
+                data={history[kind]}
               />
             ))}
           </div>
@@ -283,45 +220,132 @@ function HistorySection() {
   );
 }
 
-/** A small table: its title above, the figures right-aligned. */
-function StatsTable({
-  caption,
-  columns,
-  rows,
-}: {
-  caption: string;
-  columns: string[];
-  rows: Array<{ key: string; cells: ReactNode[] }>;
-}) {
-  return (
-    <div className="overflow-x-auto rounded-lg border">
-      <table className="w-full text-sm">
-        <caption className="px-3 pt-2 pb-1 text-left text-sm font-medium">{caption}</caption>
-        <thead className="bg-muted/50 text-muted-foreground text-left text-xs">
-          <tr>
-            {columns.map((column, i) => (
-              <th key={column} className={cn('px-3 py-2 font-medium', i > 0 && 'text-right')}>
-                {column}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.key} className="border-t">
-              {row.cells.map((cell, i) => (
-                <td key={i} className={cn('px-3 py-2', i > 0 && 'text-right tabular-nums')}>
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+type T = (key: string, options?: Record<string, unknown>) => string;
+
+const count = (n: number, locale: string) => n.toLocaleString(locale);
+
+/** The games under way: the oldest first, sortable by any column. */
+function liveColumns(t: T, locale: string): DataColumn<LiveGame>[] {
+  return [
+    {
+      id: 'quiz',
+      accessorFn: (g) => g.title,
+      header: t('stats.columns.quiz'),
+      cell: ({ row }) => (
+        <>
+          <div className="font-medium">{row.original.title}</div>
+          <div className="text-muted-foreground text-xs tabular-nums">
+            {t('stats.pin', { pin: row.original.pin })}
+          </div>
+        </>
+      ),
+    },
+    { id: 'host', accessorFn: (g) => g.host, header: t('stats.columns.host') },
+    {
+      id: 'progress',
+      accessorFn: (g) => g.question?.index ?? 0,
+      header: t('stats.columns.progress'),
+      cell: ({ row }) =>
+        row.original.question ? (
+          <Badge variant="success">
+            {t('stats.phase.question', {
+              index: row.original.question.index,
+              total: row.original.question.total,
+            })}
+          </Badge>
+        ) : (
+          <Badge variant="muted">{t('stats.phase.lobby')}</Badge>
+        ),
+    },
+    {
+      id: 'players',
+      accessorFn: (g) => g.players,
+      header: t('stats.columns.players'),
+      meta: { align: 'right' },
+      cell: ({ row }) => count(row.original.players, locale),
+    },
+    {
+      id: 'since',
+      accessorFn: (g) => g.since,
+      header: t('stats.columns.since'),
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap" title={row.original.since}>
+          {formatAgo(row.original.since, locale)}
+        </span>
+      ),
+    },
+  ];
 }
 
+/** The months of the history: the latest first. */
+function monthColumns(t: T, locale: string): DataColumn<HistoryMonth>[] {
+  const monthName = (month: string) =>
+    new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(`${month}-01T00:00:00Z`),
+    );
+  return [
+    {
+      id: 'month',
+      accessorFn: (m) => m.month,
+      header: t('stats.columns.month'),
+      cell: ({ row }) => monthName(row.original.month),
+    },
+    {
+      id: 'games',
+      accessorFn: (m) => m.games,
+      header: t('stats.history.games'),
+      meta: { align: 'right' },
+      cell: ({ row }) => count(row.original.games, locale),
+    },
+    {
+      id: 'players',
+      accessorFn: (m) => m.players,
+      header: t('stats.history.players'),
+      meta: { align: 'right' },
+      cell: ({ row }) => count(row.original.players, locale),
+    },
+    {
+      id: 'success',
+      accessorFn: (m) => m.successRate ?? -1,
+      header: t('stats.history.success'),
+      meta: { align: 'right' },
+      cell: ({ row }) => <ShareBar value={row.original.games ? row.original.successRate : null} />,
+    },
+  ];
+}
+
+/** The most played quizzes (with their owner: copies share a title), the most active hosts. */
+function rankColumns(t: T, locale: string, kind: 'quizzes' | 'hosts'): DataColumn<HistoryRank>[] {
+  return [
+    {
+      id: 'name',
+      accessorFn: (r) => r.name,
+      header: t(`stats.columns.${kind === 'quizzes' ? 'quiz' : 'host'}`),
+      cell: ({ row }) => (
+        <>
+          <div>{row.original.name}</div>
+          {row.original.owner ? (
+            <div className="text-muted-foreground text-xs">{row.original.owner}</div>
+          ) : null}
+        </>
+      ),
+    },
+    {
+      id: 'games',
+      accessorFn: (r) => r.games,
+      header: t('stats.history.games'),
+      meta: { align: 'right' },
+      cell: ({ row }) => count(row.original.games, locale),
+    },
+    {
+      id: 'players',
+      accessorFn: (r) => r.players,
+      header: t('stats.history.players'),
+      meta: { align: 'right' },
+      cell: ({ row }) => count(row.original.players, locale),
+    },
+  ];
+}
 /** One figure: what it counts, how many, and what it is made of. */
 function Figure({
   icon: Icon,

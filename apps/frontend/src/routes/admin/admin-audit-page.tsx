@@ -4,12 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { StaleNotice } from '@/components/ui/stale-notice';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { DataTable, type DataColumn } from '@/components/ui/data-table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FilterField } from '@/components/ui/filter-field';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { Select } from '@/components/ui/select';
 import { formatAgo } from '@/lib/format';
-import { useCatalogue, useReadOperation } from './admin-api';
+import { type AuditEntry, useCatalogue, useReadOperation } from './admin-api';
 
 const PAGE = 50;
 
@@ -71,77 +72,7 @@ export function AuditPage() {
       ) : entries.length === 0 ? (
         <EmptyState icon={ScrollText}>{t('audit.empty')}</EmptyState>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-muted-foreground text-left text-xs">
-              <tr>
-                <th className="px-3 py-2 font-medium">{t('audit.columns.at')}</th>
-                <th className="px-3 py-2 font-medium">{t('audit.columns.who')}</th>
-                <th className="px-3 py-2 font-medium">{t('audit.columns.operation')}</th>
-                <th className="px-3 py-2 font-medium">{t('audit.columns.params')}</th>
-                <th className="px-3 py-2 font-medium">{t('audit.columns.outcome')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((e) => {
-                const { before: previous, ...params } = e.params;
-                const pairs = Object.entries(params);
-                return (
-                  <tr key={e.id} className="border-t align-top">
-                    <td className="px-3 py-2 whitespace-nowrap" title={e.at}>
-                      {formatAgo(e.at, i18n.language)}
-                    </td>
-                    <td className="px-3 py-2">
-                      {e.actor}
-                      <span className="text-muted-foreground block text-xs">
-                        {t(`audit.via.${e.via}`)}
-                        {e.address ? ` · ${e.address}` : ''}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2">
-                      {label(e.operation)}
-                      <code className="text-muted-foreground block text-xs">{e.operation}</code>
-                    </td>
-                    <td className="px-3 py-2">
-                      {pairs.length === 0 && previous === undefined ? (
-                        <span className="text-muted-foreground">—</span>
-                      ) : (
-                        <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs">
-                          {pairs.map(([key, value]) => (
-                            <div key={key} className="contents">
-                              <dt className="text-muted-foreground">{key}</dt>
-                              <dd className="font-mono break-all">{shown(value)}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      )}
-                      {previous !== undefined ? (
-                        <details className="mt-1 text-xs">
-                          <summary className="text-muted-foreground cursor-pointer">
-                            {t('audit.previous')}
-                          </summary>
-                          <pre className="bg-muted mt-1 max-w-md overflow-x-auto rounded p-2 whitespace-pre-wrap">
-                            {JSON.stringify(previous, null, 2)}
-                          </pre>
-                        </details>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-2">
-                      <Badge variant={OUTCOME_TONE[e.outcome]}>
-                        {t(`audit.outcomes.${e.outcome}`)}
-                      </Badge>
-                      {e.code ? (
-                        <span className="text-muted-foreground mt-1 block max-w-48 text-xs">
-                          {t(`refusals.${e.code}`, { defaultValue: e.code })}
-                        </span>
-                      ) : null}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <DataTable columns={auditColumns(t, i18n.language, label)} data={entries} />
       )}
       <div className="flex gap-2">
         <Button
@@ -164,5 +95,104 @@ export function AuditPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+type T = (key: string, options?: Record<string, unknown>) => string;
+
+/** The audit's columns: a page of the log, newest first from the server, so none sorts. */
+function auditColumns(
+  t: T,
+  locale: string,
+  label: (id: string) => string,
+): DataColumn<AuditEntry>[] {
+  return [
+    {
+      id: 'at',
+      header: t('audit.columns.at'),
+      enableSorting: false,
+      cell: ({ row: { original: e } }) => (
+        <span className="whitespace-nowrap" title={e.at}>
+          {formatAgo(e.at, locale)}
+        </span>
+      ),
+    },
+    {
+      id: 'who',
+      header: t('audit.columns.who'),
+      enableSorting: false,
+      cell: ({ row: { original: e } }) => (
+        <>
+          {e.actor}
+          <span className="text-muted-foreground block text-xs">
+            {t(`audit.via.${e.via}`)}
+            {e.address ? ` · ${e.address}` : ''}
+          </span>
+        </>
+      ),
+    },
+    {
+      id: 'operation',
+      header: t('audit.columns.operation'),
+      enableSorting: false,
+      cell: ({ row: { original: e } }) => (
+        <>
+          {label(e.operation)}
+          <code className="text-muted-foreground block text-xs">{e.operation}</code>
+        </>
+      ),
+    },
+    {
+      id: 'params',
+      header: t('audit.columns.params'),
+      enableSorting: false,
+      cell: ({ row: { original: e } }) => <Params params={e.params} />,
+    },
+    {
+      id: 'outcome',
+      header: t('audit.columns.outcome'),
+      enableSorting: false,
+      cell: ({ row: { original: e } }) => (
+        <>
+          <Badge variant={OUTCOME_TONE[e.outcome]}>{t(`audit.outcomes.${e.outcome}`)}</Badge>
+          {e.code ? (
+            <span className="text-muted-foreground mt-1 block max-w-48 text-xs">
+              {t(`refusals.${e.code}`, { defaultValue: e.code })}
+            </span>
+          ) : null}
+        </>
+      ),
+    },
+  ];
+}
+
+/** Parameters read by name; what a change replaced (`before`), folded. */
+function Params({ params: all }: { params: Record<string, unknown> }) {
+  const { t } = useTranslation('admin');
+  const { before: previous, ...params } = all;
+  const pairs = Object.entries(params);
+  if (pairs.length === 0 && previous === undefined)
+    return <span className="text-muted-foreground">—</span>;
+  return (
+    <>
+      {pairs.length ? (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs">
+          {pairs.map(([key, value]) => (
+            <div key={key} className="contents">
+              <dt className="text-muted-foreground">{key}</dt>
+              <dd className="font-mono break-all">{shown(value)}</dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      {previous !== undefined ? (
+        <details className="mt-1 text-xs">
+          <summary className="text-muted-foreground cursor-pointer">{t('audit.previous')}</summary>
+          <pre className="bg-muted mt-1 max-w-md overflow-x-auto rounded p-2 whitespace-pre-wrap">
+            {JSON.stringify(previous, null, 2)}
+          </pre>
+        </details>
+      ) : null}
+    </>
   );
 }

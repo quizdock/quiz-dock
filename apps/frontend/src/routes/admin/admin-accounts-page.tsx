@@ -6,6 +6,7 @@ import { StaleNotice } from '@/components/ui/stale-notice';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckboxField } from '@/components/ui/checkbox-field';
+import { DataTable, type DataColumn } from '@/components/ui/data-table';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FilterField } from '@/components/ui/filter-field';
 import { Input } from '@/components/ui/input';
@@ -33,7 +34,7 @@ const PAGE = 25;
  * role from its row. In local mode, who holds the host seat, above them.
  */
 export function AccountsPage() {
-  const { t } = useTranslation('admin');
+  const { t, i18n } = useTranslation('admin');
   const [q, setQ] = useState('');
   const [role, setRole] = useState('');
   const [page, setPage] = useState(1);
@@ -92,31 +93,7 @@ export function AccountsPage() {
           <p className="text-muted-foreground text-sm">
             {t('accounts.count', { count: data.total })}
           </p>
-          <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-muted-foreground text-left text-xs">
-                <tr>
-                  <th className="px-3 py-2 font-medium">{t('accounts.columns.account')}</th>
-                  <th className="px-3 py-2 font-medium">{t('accounts.columns.roles')}</th>
-                  <th className="px-3 py-2 text-right font-medium">
-                    {t('accounts.columns.quizzes')}
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium">
-                    {t('accounts.columns.games')}
-                  </th>
-                  <th className="px-3 py-2 font-medium">{t('accounts.columns.created')}</th>
-                  <th className="px-3 py-2">
-                    <span className="sr-only">{t('accounts.columns.actions')}</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((account) => (
-                  <AccountRow key={account.id} account={account} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={accountColumns(t, i18n.language)} data={data.items} />
         </>
       )}
       <Pagination page={page} pages={pages} onChange={setPage} />
@@ -124,45 +101,82 @@ export function AccountsPage() {
   );
 }
 
-function AccountRow({ account }: { account: Account }) {
-  const { t, i18n } = useTranslation('admin');
-  const roles = (['admin', 'host'] as const).filter((r) => account.roles.includes(r));
-  return (
-    <tr className="border-t align-top">
-      <td className="px-3 py-2">
-        <div className="font-medium">{account.name}</div>
-        <div className="text-muted-foreground text-xs">
-          {account.email ?? account.subject}
-          {account.email ? <span className="block">{account.subject}</span> : null}
-        </div>
-      </td>
-      <td className="px-3 py-2">
-        <div className="flex flex-wrap gap-1">
-          {roles.length === 0 ? (
-            <Badge variant="muted">{t('accounts.roles.player')}</Badge>
-          ) : (
-            roles.map((r) => (
-              <Badge
-                key={r}
-                variant={r === 'admin' ? 'warning' : 'default'}
-                title={account.granted.includes(r) ? t('accounts.grantedHere') : undefined}
-              >
-                {t(`accounts.roles.${r}`)}
-              </Badge>
-            ))
-          )}
-        </div>
-      </td>
-      <td className="px-3 py-2 text-right tabular-nums">{account.quizzes}</td>
-      <td className="px-3 py-2 text-right tabular-nums">{account.games}</td>
-      <td className="px-3 py-2 whitespace-nowrap" title={account.createdAt}>
-        {formatAgo(account.createdAt, i18n.language)}
-      </td>
-      <td className="px-3 py-2 text-right">
-        <AccountActions account={account} />
-      </td>
-    </tr>
-  );
+type T = (key: string, options?: Record<string, unknown>) => string;
+
+/** The accounts' columns: a page of a server-side search, so none sorts. */
+function accountColumns(t: T, locale: string): DataColumn<Account>[] {
+  return [
+    {
+      id: 'account',
+      header: t('accounts.columns.account'),
+      enableSorting: false,
+      cell: ({ row: { original: account } }) => (
+        <>
+          <div className="font-medium">{account.name}</div>
+          <div className="text-muted-foreground text-xs">
+            {account.email ?? account.subject}
+            {account.email ? <span className="block">{account.subject}</span> : null}
+          </div>
+        </>
+      ),
+    },
+    {
+      id: 'roles',
+      header: t('accounts.columns.roles'),
+      enableSorting: false,
+      cell: ({ row: { original: account } }) => {
+        const roles = (['admin', 'host'] as const).filter((r) => account.roles.includes(r));
+        return (
+          <div className="flex flex-wrap gap-1">
+            {roles.length === 0 ? (
+              <Badge variant="muted">{t('accounts.roles.player')}</Badge>
+            ) : (
+              roles.map((r) => (
+                <Badge
+                  key={r}
+                  variant={r === 'admin' ? 'warning' : 'default'}
+                  title={account.granted.includes(r) ? t('accounts.grantedHere') : undefined}
+                >
+                  {t(`accounts.roles.${r}`)}
+                </Badge>
+              ))
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      id: 'quizzes',
+      header: t('accounts.columns.quizzes'),
+      enableSorting: false,
+      meta: { align: 'right' },
+      cell: ({ row }) => row.original.quizzes.toLocaleString(locale),
+    },
+    {
+      id: 'games',
+      header: t('accounts.columns.games'),
+      enableSorting: false,
+      meta: { align: 'right' },
+      cell: ({ row }) => row.original.games.toLocaleString(locale),
+    },
+    {
+      id: 'created',
+      header: t('accounts.columns.created'),
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className="whitespace-nowrap" title={row.original.createdAt}>
+          {formatAgo(row.original.createdAt, locale)}
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">{t('accounts.columns.actions')}</span>,
+      enableSorting: false,
+      meta: { align: 'right' },
+      cell: ({ row }) => <AccountActions account={row.original} />,
+    },
+  ];
 }
 
 /** Whether the web may run an operation here, and if not, why. */

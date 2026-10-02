@@ -36,6 +36,7 @@ export function DataTable<TData extends RowData>({
   onRowClick,
   className,
   footer,
+  caption,
 }: {
   columns: DataColumn<TData>[];
   data: TData[];
@@ -43,6 +44,8 @@ export function DataTable<TData extends RowData>({
   onRowClick?: (row: TData) => void;
   className?: string;
   footer?: ReactNode;
+  /** What the table lists, as its title: read first by a screen reader too. */
+  caption?: ReactNode;
 }) {
   const table = useTable({
     features,
@@ -53,6 +56,9 @@ export function DataTable<TData extends RowData>({
   return (
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full text-sm">
+        {caption ? (
+          <caption className="pb-2 text-left text-sm font-medium">{caption}</caption>
+        ) : null}
         <thead className="text-muted-foreground border-b text-left">
           {table.getHeaderGroups().map((group) => (
             <tr key={group.id}>
