@@ -145,7 +145,7 @@ request body limit to the largest of these sizes** — nginx refuses anything ov
 
 | Variable | Default | Accepts | Level | Description |
 |---|---|---|---|---|
-| `ADMIN_WEB_SCOPE` | `read` | `read` · `write` | C1 | What the web administration may change in the Instance domain (settings, presets, accounts, host seat): `read` shows everything and changes nothing; `write` lets administrators change the C2–C4 settings and run the instance operations, each critical one confirmed. Media and quizzes are not concerned. |
+| `ADMIN_WEB_SCOPE` | `read` | `read` · `write` | C1 | What the web administration may change in the Instance domain (settings, accounts, host seat): `read` shows everything and changes nothing; `write` lets administrators change the C2–C4 settings and run the instance operations, each critical one confirmed. Media and quizzes are not concerned. |
 | `ADMIN_LOCK` | — | comma-separated variable names | C1 | Variables the web administration may never change, whatever `ADMIN_WEB_SCOPE` says: comma-separated names (e.g. `APP_NAME,MEDIA_MAX_VIDEO_MB`). The CLI is not concerned. |
 | `ADMIN_TOKEN` | — | text, 32 characters or more | C1 | Local mode (`AUTH_MODE=none`) has no accounts, so whoever reaches the instance could administer it: the web administration changes nothing there unless this token is set, and asks for it before any change. At least 32 characters. |
 | `ADMIN_OVERRIDES` | `apply` | `apply` · `ignore` | C1 | `ignore` starts the instance on its environment alone: every value changed from the web administration is ignored (kept, not deleted) — the way back when one of them went wrong. |

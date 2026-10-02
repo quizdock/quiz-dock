@@ -218,33 +218,31 @@ describe('AdminModule (integration)', () => {
   });
 
   describe('presets', () => {
-    it('a named preset applies its levels at once, previewed first, then taken back', async () => {
+    it('answers apply their variables at once, previewed first, then taken back', async () => {
+      const raw = { accessibility: 'adapted' };
       const preview = (await runner.run({
         id: 'presets.apply',
-        raw: { preset: 'express' },
+        raw,
         actor: cli,
         dryRun: true,
       })) as {
-        result: { data: { plan: { changes: { key: string; to: unknown; skipped?: string }[] } } };
+        result: { data: { plan: { changes: { key: string; skipped?: string }[] } } };
       };
-      expect(preview.result.data.plan.changes.map((c) => [c.key, c.skipped ?? null])).toEqual([
-        ['GAME_READ_DELAY_MS', null],
-        ['GAME_ALL_ANSWERED_DELAY_MS', null],
-        ['GAME_AUTO_ADVANCE_MS', null],
-        // Local mode: no participant signs in, the audience does not apply.
-        ['ALLOW_ANONYMOUS_PARTICIPANTS', 'not-applicable'],
+      expect(preview.result.data.plan.changes.map((c) => c.key)).toEqual([
+        'ANSWER_THEME',
+        'GAME_READ_DELAY_MS',
+        'GAME_ALL_ANSWERED_DELAY_MS',
+        'LIVE_MOTION',
       ]);
       expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(3000);
-      expect(
-        await runner.run({ id: 'presets.apply', raw: { preset: 'express' }, actor: cli }),
-      ).toMatchObject({
+      expect(await runner.run({ id: 'presets.apply', raw, actor: cli })).toMatchObject({
         kind: 'result',
       });
-      expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(1500);
+      expect(settings.get(SETTINGS.ANSWER_THEME)).toBe('colorblind');
       const listed = (await runner.run({ id: 'presets.list', raw: {}, actor: cli })) as {
         result: { data: { current: Record<string, string> } };
       };
-      expect(listed.result.data.current.pace).toBe('fast');
+      expect(listed.result.data.current.accessibility).toBe('adapted');
       const ask = await runner.run({ id: 'settings.reset', raw: { all: true }, actor: cli });
       await runner.run({
         id: 'settings.reset',

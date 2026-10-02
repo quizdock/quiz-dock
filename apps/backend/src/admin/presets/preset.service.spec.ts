@@ -1,13 +1,13 @@
-import { NAMED_PRESETS, PRESET_AXES, SETTING_LIST } from '@quiz-dock/contracts';
+import { PRESET_AXES, SETTING_LIST } from '@quiz-dock/contracts';
 import type { OverridesService } from '../settings/overrides.service';
 import { OverrideStore, settingsFrom } from '../settings/settings.service';
 import { PresetService } from './preset.service';
 
-describe('the presets of the registry (§3.9)', () => {
+describe('the questions of the quick setup (§3.9)', () => {
   const inAxis = SETTING_LIST.filter((d) => d.preset);
 
   it.each(inAxis.map((d) => [d.key, d]))(
-    '%s has a value within its bounds at every level of its axis',
+    '%s has a value within its bounds for every answer, the standard one its default',
     (_k, def) => {
       const axis = PRESET_AXES.find((a) => a.id === def.preset!.axis)!;
       expect(Object.keys(def.preset!.levels).sort()).toEqual([...axis.levels].sort());
@@ -18,16 +18,8 @@ describe('the presets of the registry (§3.9)', () => {
     },
   );
 
-  it('no critical variable has an axis', () => {
+  it('no critical variable answers a question', () => {
     expect(inAxis.filter((d) => d.criticality === 'C1')).toEqual([]);
-  });
-
-  it('a named preset only names axes and levels that exist', () => {
-    for (const preset of NAMED_PRESETS) {
-      for (const [axis, level] of Object.entries(preset.levels)) {
-        expect(PRESET_AXES.find((a) => a.id === axis)?.levels).toContain(level);
-      }
-    }
   });
 });
 
@@ -47,31 +39,23 @@ describe('PresetService', () => {
   }
   const api = { via: 'api' as const, name: 'ada' };
 
-  it('the defaults stand at each axis standard; a stray value is custom', () => {
+  it("the defaults are each question's standard answer; a stray value is custom", () => {
     expect(service().svc.current()).toEqual({
-      pace: 'standard',
-      venue: 'standard',
-      audience: 'accounts',
+      internet: 'connected',
+      audience: 'colleagues',
+      accessibility: 'standard',
     });
-    expect(service({}, [['GAME_READ_DELAY_MS', '4000']]).svc.current().pace).toBe('custom');
-    expect(
-      service({}, [
-        ['GAME_READ_DELAY_MS', '6000'],
-        ['GAME_AUTO_ADVANCE_MS', '8000'],
-        ['GAME_ALL_ANSWERED_DELAY_MS', '2000'],
-      ]).svc.current().pace,
-    ).toBe('comfortable');
+    expect(service({}, [['GAME_READ_DELAY_MS', '4000']]).svc.current().accessibility).toBe(
+      'custom',
+    );
   });
 
-  it('plans each variable from what it is to what it becomes, leaving a locked one and an axis that does not apply', () => {
+  it('plans each variable from what it is to what it becomes, leaving a locked one alone', () => {
     const { svc } = service({ ADMIN_LOCK: 'LIVE_MOTION' });
-    const plan = svc.plan(svc.resolve({ preset: 'accessible' }), api);
-    expect(plan.changes).toEqual([
+    expect(svc.plan(svc.resolve({ accessibility: 'adapted' }), api).changes).toEqual([
+      { key: 'ANSWER_THEME', from: { value: 'classic', source: 'default' }, to: 'colorblind' },
       { key: 'GAME_READ_DELAY_MS', from: { value: 3000, source: 'default' }, to: 6000 },
       { key: 'GAME_ALL_ANSWERED_DELAY_MS', from: { value: 1000, source: 'default' }, to: 2000 },
-      { key: 'GAME_AUTO_ADVANCE_MS', from: { value: 5000, source: 'default' }, to: 8000 },
-      { key: 'MEDIA_MAX_VIDEO_MB', from: { value: 50, source: 'default' }, to: 20 },
-      { key: 'GAME_MEDIA_WAIT_S', from: { value: 10, source: 'default' }, to: 30 },
       {
         key: 'LIVE_MOTION',
         from: { value: 'on', source: 'default' },
@@ -79,27 +63,30 @@ describe('PresetService', () => {
         skipped: 'locked',
       },
     ]);
-    // Local mode: no participant authenticates, the audience does not apply.
-    const party = svc.plan(svc.resolve({ preset: 'party' }), api);
-    expect(party.changes).toContainEqual(
-      expect.objectContaining({ key: 'ALLOW_ANONYMOUS_PARTICIPANTS', skipped: 'not-applicable' }),
-    );
   });
 
-  it('applies every change at once, as overrides, skipping what it must', async () => {
-    const { svc, applied } = service({ ADMIN_LOCK: 'LIVE_MOTION' });
-    await svc.apply(svc.plan(svc.resolve({ axes: { venue: 'modest' } }), api), api);
-    expect(applied).toEqual([
-      [
-        { key: 'MEDIA_MAX_VIDEO_MB', value: '20' },
-        { key: 'GAME_MEDIA_WAIT_S', value: '30' },
-      ],
-    ]);
-  });
-
-  it('refuses an unknown preset or level', () => {
+  it('open access only with OIDC: in local mode, left alone and said so', () => {
     const { svc } = service();
-    expect(() => svc.resolve({ preset: 'rave' })).toThrow('No preset');
-    expect(() => svc.resolve({ axes: { pace: 'warp' } })).toThrow('No level');
+    expect(svc.plan(svc.resolve({ audience: 'public' }), api).changes).toEqual([
+      {
+        key: 'ALLOW_ANONYMOUS_PARTICIPANTS',
+        from: { value: false, source: 'default' },
+        to: true,
+        skipped: 'not-applicable',
+      },
+      { key: 'GAME_MEDIA_WAIT_S', from: { value: 10, source: 'default' }, to: 20 },
+    ]);
+    const oidc = service({ AUTH_MODE: 'oidc', OIDC_ISSUER: 'https://id.example.org' }).svc;
+    expect(oidc.plan(oidc.resolve({ audience: 'public' }), api).changes[0].skipped).toBeUndefined();
+  });
+
+  it('applies every change at once; offline, no media library', async () => {
+    const { svc, applied } = service();
+    await svc.apply(svc.plan(svc.resolve({ internet: 'offline' }), api), api);
+    expect(applied).toEqual([[{ key: 'MEDIA_LIBRARY_LINKS', value: 'none' }]]);
+  });
+
+  it('refuses an unknown answer', () => {
+    expect(() => service().svc.resolve({ internet: 'satellite' })).toThrow('No answer');
   });
 });

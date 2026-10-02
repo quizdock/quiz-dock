@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  NAMED_PRESETS,
   PRESET_AXES,
   type PresetAxisId,
   SETTING_LIST,
@@ -33,7 +32,13 @@ export const axisSettings = (axis: PresetAxisId): SettingDefinition[] =>
   SETTING_LIST.filter((d) => d.preset?.axis === axis);
 
 /** The raw text a typed value is written as, in an override. */
-const raw = (value: unknown) => String(value);
+const raw = (def: SettingDefinition, value: unknown): string => {
+  // The media libraries: a JSON list, or `none` for no library at all.
+  if (def.key === 'MEDIA_LIBRARY_LINKS') {
+    return Array.isArray(value) && value.length ? JSON.stringify(value) : 'none';
+  }
+  return Array.isArray(value) ? value.join(',') : String(value);
+};
 
 /**
  * Presets (§3.9): levels on independent axes, and named shortcuts to them. Goes
@@ -59,18 +64,12 @@ export class PresetService {
     ) as Record<PresetAxisId, string>;
   }
 
-  /** The levels a target stands for: a named preset, or axes chosen one by one. */
-  resolve(target: { preset?: string; axes?: AxisLevels }): AxisLevels {
-    if (target.preset) {
-      const named = NAMED_PRESETS.find((p) => p.id === target.preset);
-      if (!named) throw new OperationError('not_found', `No preset "${target.preset}".`);
-      return named.levels;
-    }
-    const axes = target.axes ?? {};
+  /** The answers, checked against the questions. */
+  resolve(axes: AxisLevels): AxisLevels {
     for (const [id, level] of Object.entries(axes)) {
       const axis = PRESET_AXES.find((a) => a.id === id);
       if (!axis?.levels.includes(level)) {
-        throw new OperationError('invalid_params', `No level "${level}" on the axis "${id}".`);
+        throw new OperationError('invalid_params', `No answer "${level}" to "${id}".`);
       }
     }
     return axes;
@@ -83,10 +82,10 @@ export class PresetService {
     for (const axis of PRESET_AXES) {
       const level = axes[axis.id];
       if (!level) continue;
-      const applies =
-        !axis.requires ||
-        String(this.settings.get(SETTINGS[axis.requires.key])) === axis.requires.value;
       for (const def of axisSettings(axis.id)) {
+        const requires = def.preset!.requires;
+        const applies =
+          !requires || String(this.settings.get(SETTINGS[requires.key])) === requires.value;
         const state = this.settings.describe(def);
         const to = def.preset!.levels[level];
         if (isDeepStrictEqual(state.value, to)) continue;
@@ -110,7 +109,10 @@ export class PresetService {
     const applied = plan.changes.filter((c) => !c.skipped);
     if (applied.length) {
       await this.overrides.apply(
-        applied.map((c) => ({ key: c.key, value: raw(c.to) })),
+        applied.map((c) => ({
+          key: c.key,
+          value: raw(SETTING_LIST.find((d) => d.key === c.key)!, c.to),
+        })),
         actor,
       );
     }

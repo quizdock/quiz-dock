@@ -14,7 +14,7 @@ from the command line — and what the operator allows the web to do.
 
 | Domain | What | From the web |
 |---|---|---|
-| **Instance** | settings and presets, the look, accounts and roles, the host seat, health, the audit | read always; changed only with `ADMIN_WEB_SCOPE=write` |
+| **Instance** | settings, the look, accounts and roles, the host seat, health, the audit | read always; changed only with `ADMIN_WEB_SCOPE=write` |
 | **Quizzes** | every quiz and its sessions, whoever owns them: hand one over, export, import for a host, archive, restore, delete, find the ones nobody can reach, purge old sessions | the `admin` role |
 | **Media** | the instance's shared media library | the `admin` role |
 
@@ -44,15 +44,6 @@ health and audit:
   it replaces, and *Back to .env* takes it back. *Export as .env* gives every
   change as a `.env` excerpt — to pin them in `.env`, or move them to another
   instance —, *Take everything back* removes them all.
-- **Presets**, above the settings — ready-made values on three independent axes:
-  *pace* (fast, standard, comfortable: the reading time, the automatic mode, the
-  pause once everyone answered), *venue* (standard, large event, modest
-  equipment: the wait for media, the transitions, the largest video) and
-  *audience* (accounts required or open to all — OIDC only). The named presets
-  (party, classroom, large event, express quiz, accessible) are shortcuts to
-  levels. A preset is previewed — each variable, from what to what — before it
-  is applied, all at once; a variable locked by `ADMIN_LOCK` is left alone and
-  said so.
 - **Look** — the instance's palette: the brand's colours (the main colour and
   its text, the focus ring, destructive, success, warning), light and dark,
   shown on the application's own components before they are saved; a colour that
@@ -120,12 +111,17 @@ one. With OIDC, the wizard also needs a signed-in account, and the administrator
 role from the provider to finish. Ten wrong tokens from one address make it wait
 a quarter of an hour.
 
-**Steps** — health (the checks of `qd doctor`: what fails is fixed in `.env`),
+**Steps** — usage first: three questions in plain words, each answer setting
+several settings at once, previewed before it is applied — does the instance
+reach the Internet (if not, no links to online media libraries), who plays
+(colleagues; a class, accounts required; the public, open to all with an identity
+provider and more time for media to load), do some participants need it easier
+(colours told apart by colour-blind people, no transitions, more time to read).
+The steps after it come filled in: health (the checks of `qd doctor`: what fails is fixed in `.env`),
 identity (name, language, logo, feedback links), address (the public address,
 the local network addresses, and a test from a phone), access (the
 authentication mode as set; with OIDC, open access for participants; in local
-mode, the first administrator's name), limits and pace (a preset, or a value at
-a time), content (the sample quizzes for a host's bank), summary (what is set,
+mode, the first administrator's name), limits and pace, content (the sample quizzes for a host's bank), summary (what is set,
 and from where; a `.env` excerpt to pin it), *Finish*. The wizard sets the levels
 C2 to C4 whatever `ADMIN_WEB_SCOPE` says — it runs once, under the token —, never
 a variable `ADMIN_LOCK` names, never a C1. Every change is audited.

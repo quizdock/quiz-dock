@@ -71,49 +71,34 @@ export interface SettingDefinition<T = unknown> {
   preset?: SettingPreset<T>;
 }
 
-// ── Presets (§3.9) ──────────────────────────────────────────────────────────
+// ── Presets (§3.9): the quick setup of a new instance ──────────────────────
 
-export type PresetAxisId = 'pace' | 'venue' | 'audience';
+/**
+ * Three questions the setup wizard asks someone who is not technical, each
+ * answer setting several variables at once. The standard answer of each equals
+ * the defaults.
+ */
+export type PresetAxisId = 'internet' | 'audience' | 'accessibility';
 
 export interface PresetAxis {
   id: PresetAxisId;
   levels: readonly string[];
   /** The level equal to the defaults. */
   standard: string;
-  /** Only where this holds (the audience: participants authenticate under OIDC only). */
-  requires?: { key: 'AUTH_MODE'; value: string };
 }
 
 export interface SettingPreset<T> {
   axis: PresetAxisId;
   /** A value for every level of the axis. */
   levels: Record<string, T>;
-}
-
-export interface NamedPreset {
-  id: 'party' | 'classroom' | 'event' | 'express' | 'accessible';
-  /** An absent axis is left alone. */
-  levels: Partial<Record<PresetAxisId, string>>;
+  /** Only where this holds: participants sign in with OIDC only. */
+  requires?: { key: 'AUTH_MODE'; value: string };
 }
 
 export const PRESET_AXES: PresetAxis[] = [
-  { id: 'pace', levels: ['fast', 'standard', 'comfortable'], standard: 'standard' },
-  { id: 'venue', levels: ['standard', 'large', 'modest'], standard: 'standard' },
-  {
-    id: 'audience',
-    levels: ['accounts', 'open'],
-    standard: 'accounts',
-    requires: { key: 'AUTH_MODE', value: 'oidc' },
-  },
-];
-
-/** Shortcuts to levels of the axes, never to variables. */
-export const NAMED_PRESETS: NamedPreset[] = [
-  { id: 'party', levels: { pace: 'standard', venue: 'standard', audience: 'open' } },
-  { id: 'classroom', levels: { pace: 'comfortable', venue: 'standard', audience: 'accounts' } },
-  { id: 'event', levels: { pace: 'standard', venue: 'large', audience: 'open' } },
-  { id: 'express', levels: { pace: 'fast', venue: 'standard', audience: 'open' } },
-  { id: 'accessible', levels: { pace: 'comfortable', venue: 'modest' } },
+  { id: 'internet', levels: ['connected', 'offline'], standard: 'connected' },
+  { id: 'audience', levels: ['colleagues', 'class', 'public'], standard: 'colleagues' },
+  { id: 'accessibility', levels: ['standard', 'adapted'], standard: 'standard' },
 ];
 
 /** Who reads a variable the backend never sees. */
@@ -324,6 +309,7 @@ export const SETTINGS = {
     default: 'classic',
     applies: 'live',
     overridable: true,
+    preset: { axis: 'accessibility', levels: { standard: 'classic', adapted: 'colorblind' } },
   }),
 
   // Access & authentication
@@ -362,7 +348,11 @@ export const SETTINGS = {
     default: false,
     applies: 'live',
     overridable: true,
-    preset: { axis: 'audience', levels: { accounts: false, open: true } },
+    preset: {
+      axis: 'audience',
+      levels: { colleagues: false, class: false, public: true },
+      requires: { key: 'AUTH_MODE', value: 'oidc' },
+    },
   }),
   OIDC_ISSUER: define({
     key: 'OIDC_ISSUER',
@@ -683,7 +673,6 @@ export const SETTINGS = {
     display: 'MB',
     applies: 'live',
     overridable: true,
-    preset: { axis: 'venue', levels: { standard: 50, large: 50, modest: 20 } },
   }),
   MEDIA_MAX_AUDIO_MB: define({
     key: 'MEDIA_MAX_AUDIO_MB',
@@ -743,6 +732,10 @@ export const SETTINGS = {
     defaultText: '_(seven free libraries)_',
     applies: 'live',
     overridable: true,
+    preset: {
+      axis: 'internet',
+      levels: { connected: DEFAULT_MEDIA_LIBRARY_LINKS, offline: [] as MediaLibraryLink[] },
+    },
   }),
 
   // Game pace
@@ -759,7 +752,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
-    preset: { axis: 'pace', levels: { fast: 1500, standard: 3000, comfortable: 6000 } },
+    preset: { axis: 'accessibility', levels: { standard: 3000, adapted: 6000 } },
   }),
   GAME_ALL_ANSWERED_DELAY_MS: define({
     key: 'GAME_ALL_ANSWERED_DELAY_MS',
@@ -775,7 +768,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
-    preset: { axis: 'pace', levels: { fast: 500, standard: 1000, comfortable: 2000 } },
+    preset: { axis: 'accessibility', levels: { standard: 1000, adapted: 2000 } },
   }),
   GAME_AUTO_ADVANCE_MS: define({
     key: 'GAME_AUTO_ADVANCE_MS',
@@ -791,7 +784,6 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
-    preset: { axis: 'pace', levels: { fast: 3000, standard: 5000, comfortable: 8000 } },
   }),
   GAME_MEDIA_WAIT_S: define({
     key: 'GAME_MEDIA_WAIT_S',
@@ -807,7 +799,7 @@ export const SETTINGS = {
     display: 's',
     applies: 'live',
     overridable: true,
-    preset: { axis: 'venue', levels: { standard: 10, large: 20, modest: 30 } },
+    preset: { axis: 'audience', levels: { colleagues: 10, class: 10, public: 20 } },
   }),
   LIVE_MOTION: define({
     key: 'LIVE_MOTION',
@@ -820,7 +812,7 @@ export const SETTINGS = {
     default: 'on' as 'on' | 'off',
     applies: 'next-room',
     overridable: true,
-    preset: { axis: 'venue', levels: { standard: 'on', large: 'on', modest: 'off' } },
+    preset: { axis: 'accessibility', levels: { standard: 'on', adapted: 'off' } },
   }),
   GAME_HOST_GRACE_MS: define({
     key: 'GAME_HOST_GRACE_MS',
@@ -853,7 +845,7 @@ export const SETTINGS = {
   ADMIN_WEB_SCOPE: define({
     key: 'ADMIN_WEB_SCOPE',
     description:
-      'What the web administration may change in the Instance domain (settings, presets, accounts, host seat): `read` shows everything and changes nothing; `write` lets administrators change the C2–C4 settings and run the instance operations, each critical one confirmed. Media and quizzes are not concerned.',
+      'What the web administration may change in the Instance domain (settings, accounts, host seat): `read` shows everything and changes nothing; `write` lets administrators change the C2–C4 settings and run the instance operations, each critical one confirmed. Media and quizzes are not concerned.',
     category: 'admin',
     criticality: 'C1',
     schema: oneOf(['read', 'write'] as const),
