@@ -7,7 +7,6 @@ import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
 import { PhoneTests } from '../setup/setup-page';
 import { type OutputEntry, useReadOperation } from './admin-api';
-import type { SettingsList } from './settings-model';
 
 type Check = { level: 'ok' | 'warn' | 'fail'; text: string };
 interface Group {
@@ -35,12 +34,6 @@ export function groupChecks(output: OutputEntry[]): Group[] {
 const ICON = { ok: CircleCheck, warn: TriangleAlert, fail: CircleAlert } as const;
 const TONE = { ok: 'text-success', warn: 'text-warning-text', fail: 'text-destructive' } as const;
 
-interface Migrations {
-  applied: string[];
-  pending: string[];
-  failed: string[];
-}
-
 /**
  * The instance's health (§3.7): a verdict first — everything fine, or what is
  * not —, then each part checked, the database migrations, and the invitation
@@ -48,9 +41,9 @@ interface Migrations {
  */
 export function HealthPage() {
   const { t } = useTranslation('admin');
-  const doctor = useReadOperation<{ output: OutputEntry[] }>('health.doctor');
-  const migrations = useReadOperation<Migrations>('migrations.status');
-  const list = useReadOperation<SettingsList>('settings.list');
+  const doctor = useReadOperation('health.doctor');
+  const migrations = useReadOperation('migrations.status');
+  const list = useReadOperation('settings.list');
   const groups = doctor.data?.data ? groupChecks(doctor.data.data.output) : null;
   const checks = groups?.flatMap((g) => g.checks) ?? [];
   const problems = checks.filter((c) => c.level !== 'ok');

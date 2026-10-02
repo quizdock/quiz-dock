@@ -1,10 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { SETTING_LIST, SETTINGS, type SettingDefinition } from '@quiz-dock/contracts';
+import {
+  SETTING_LIST,
+  SETTINGS,
+  type SettingDefinition,
+  type SettingRow,
+  type SettingsAccess,
+  type SettingsList,
+  type OperationResults,
+} from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { AUDIT_REPOSITORY } from '../admin.tokens';
 import type { AuditRepository } from '../audit/audit.repository';
 import { OverridesService } from '../settings/overrides.service';
-import { type SettingIssue, settings } from '../settings/settings.service';
+import { settings } from '../settings/settings.service';
 import {
   type AdminOperation,
   OperationError,
@@ -94,37 +102,6 @@ export function checkOverride(key: string, value: string): SettingDefinition {
   return def;
 }
 
-/** A setting as the administration shows it: never a secret's value. */
-export interface SettingRow {
-  key: string;
-  category: SettingDefinition['category'];
-  criticality: SettingDefinition['criticality'];
-  applies: SettingDefinition['applies'];
-  overridable: boolean;
-  secret: boolean;
-  /** The value in use; for a secret, whether it is set. */
-  value: unknown;
-  source: 'default' | 'env' | 'override';
-  /** The value `.env` gives, when an override replaces it. */
-  envValue?: unknown;
-  default: unknown;
-  /** Named by `ADMIN_LOCK`: the web never changes it. */
-  locked: boolean;
-  issues: SettingIssue[];
-}
-
-/** What the web may do with the settings (§3.7): shown above them. */
-export interface SettingsAccess {
-  scope: 'read' | 'write';
-  locks: string[];
-  authMode: 'none' | 'oidc';
-  /** Local mode: a change needs `ADMIN_TOKEN`, and whether it is set at all. */
-  tokenRequired: boolean;
-  tokenSet: boolean;
-  /** `ADMIN_OVERRIDES=ignore`: the values changed from the web are not applied. */
-  safeMode: boolean;
-}
-
 export function settingsAccess(): SettingsAccess {
   const authMode = settings.get(SETTINGS.AUTH_MODE);
   return {
@@ -184,7 +161,7 @@ export class SettingsOperations {
           return Promise.resolve({
             outcome: 'done',
             notes: [],
-            data: { rows, rules, access: settingsAccess() },
+            data: { rows, rules, access: settingsAccess() } satisfies SettingsList,
           });
         },
       }),
@@ -280,7 +257,7 @@ export class SettingsOperations {
         run: async (_ctx, query) => ({
           outcome: 'done',
           notes: [],
-          data: { entries: await this.audit.list(query) },
+          data: { entries: await this.audit.list(query) } satisfies OperationResults['audit.list'],
         }),
       }),
     ];

@@ -9,7 +9,7 @@ import { FilterField } from '@/components/ui/filter-field';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { Select } from '@/components/ui/select';
 import { formatAgo } from '@/lib/format';
-import { type AuditEntry, useCatalogue, useReadOperation } from './admin-api';
+import { useCatalogue, useReadOperation } from './admin-api';
 
 const PAGE = 50;
 
@@ -37,7 +37,7 @@ export function AuditPage() {
   const catalogue = useCatalogue();
   const [operation, setOperation] = useState('');
   const [before, setBefore] = useState<string[]>([]);
-  const audit = useReadOperation<{ entries: AuditEntry[] }>('audit.list', {
+  const audit = useReadOperation('audit.list', {
     limit: PAGE,
     ...(operation ? { operation } : {}),
     ...(before.length ? { before: before[before.length - 1] } : {}),

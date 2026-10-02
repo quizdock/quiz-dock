@@ -1,3 +1,4 @@
+import type { QuizSearchItem } from '@quiz-dock/contracts';
 import { Link } from '@tanstack/react-router';
 import {
   Archive,
@@ -36,21 +37,7 @@ import { OperationPanel } from './operation-panel';
 
 const PAGE = 25;
 
-interface QuizItem {
-  id: string;
-  title: string;
-  status: 'draft' | 'ready' | 'archived';
-  questionCount: number;
-  updatedAt: string;
-  owner: { id: string; name: string; subject: string; reachable: boolean };
-  livePin: string | null;
-}
-
-interface SearchData {
-  total: number;
-  items: QuizItem[];
-  owners: { id: string; name: string; subject: string; quizzes: number }[];
-}
+type QuizItem = QuizSearchItem;
 
 /**
  * Every quiz of the instance, whoever owns it (§0.1, Quizzes domain): searched
@@ -74,7 +61,7 @@ export function AdminQuizzesPage() {
     limit: PAGE,
     offset: (page - 1) * PAGE,
   };
-  const search = useReadOperation<SearchData>('quizzes.search', params);
+  const search = useReadOperation('quizzes.search', params);
   const data = search.data?.data;
   const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE));
   // The last row of the last page gone (deleted, archived away): back to a page that has rows.

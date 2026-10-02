@@ -34,7 +34,6 @@ import {
   type OperationDescriptor,
   useReadOperation,
   useRunOperation,
-  type OutputEntry,
 } from '../admin/admin-api';
 import { OperationPanel } from '../admin/operation-panel';
 import { UsageStep } from './usage-step';
@@ -196,8 +195,8 @@ function Wizard({ authMode, onLost }: { authMode: 'none' | 'oidc'; onLost: () =>
   const { t } = useTranslation('admin');
   const [step, setStep] = useState<Step>('usage');
   const [finished, setFinished] = useState(false);
-  const list = useReadOperation<SettingsList>('settings.list');
-  const doctor = useReadOperation<{ output: OutputEntry[] }>('health.doctor');
+  const list = useReadOperation('settings.list');
+  const doctor = useReadOperation('health.doctor');
   const groups = doctor.data?.data ? groupChecks(doctor.data.data.output) : null;
   // A blocking problem stops the wizard at its health step (§3.8).
   const blocked = isBlocking(groups);

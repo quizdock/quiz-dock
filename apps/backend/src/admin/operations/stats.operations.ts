@@ -1,74 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { GameState } from '@quiz-dock/contracts';
+import {
+  GameState,
+  type HistoryMonth,
+  type HistoryRank,
+  type HistoryStats,
+  type LiveGame,
+  type LiveStats,
+} from '@quiz-dock/contracts';
 import { Prisma, QuizStatus, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { GameService } from '../../game/game.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { type AdminOperation, defineOperation, done } from './operation';
-
-/** A game being played right now, as the statistics show it. */
-export interface LiveGame {
-  pin: string;
-  title: string;
-  host: string;
-  /** Its players still waiting for it to start, or playing it. */
-  phase: 'lobby' | 'playing';
-  /** Players connected right now. */
-  players: number;
-  /** When its host opened it (ISO). */
-  since: string;
-  /** The question on screen, from 1, out of how many; null in the lobby. */
-  question: { index: number; total: number } | null;
-}
-
-export interface LiveStats {
-  at: string;
-  games: LiveGame[];
-  totals: { games: number; lobby: number; playing: number; players: number };
-  instance: {
-    accounts: { total: number; hosts: number; admins: number };
-    quizzes: Record<QuizStatus, number>;
-    media: { files: number; bytes: number };
-    /** The games kept in the history, and when the last one ended (ISO). */
-    history: { sessions: number; lastEndedAt: string | null };
-  };
-}
-
-/** One month of the history (UTC), as `YYYY-MM`. */
-export interface HistoryMonth {
-  month: string;
-  games: number;
-  players: number;
-  /** Right answers out of the answers given, weighted by players; null without answers. */
-  successRate: number | null;
-}
-
-/** A quiz or a host, ranked by the games played. */
-export interface HistoryRank {
-  id: string;
-  name: string;
-  /** A quiz's owner: copies of one quiz share its title. Null for a host. */
-  owner: string | null;
-  games: number;
-  players: number;
-}
-
-export interface HistoryStats {
-  /** The months read, from `from` (the first of a month, UTC) on. */
-  from: string;
-  months: HistoryMonth[];
-  totals: {
-    games: number;
-    players: number;
-    successRate: number | null;
-    /** Among the games that kept each participant's result: with an account, or as a guest. */
-    participants: { withAccount: number; guests: number };
-  };
-  quizzes: HistoryRank[];
-  hosts: HistoryRank[];
-  /** The oldest game the history still holds (ISO): older ones are purged. */
-  oldest: string | null;
-}
 
 /** The months the history shows, and the ranks' length. */
 export const HISTORY_MONTHS = 12;

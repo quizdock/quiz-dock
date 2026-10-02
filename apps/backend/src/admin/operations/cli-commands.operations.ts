@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
+import type { MigrationsStatus } from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { isManager } from '../../auth/roles';
 import { defaultPingRedis, defaultProbeWritable, doctor } from '../../cli/commands/doctor';
@@ -99,7 +100,7 @@ export class CliCommandOperations {
           return {
             outcome: status.pending.length || status.failed.length ? 'partial' : 'done',
             notes: [],
-            data: { ...status, output: out.entries },
+            data: { ...status, output: out.entries } satisfies MigrationsStatus,
           };
         },
       }),

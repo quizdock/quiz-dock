@@ -1,4 +1,4 @@
-import type { PresetAxis, PresetAxisId } from '@quiz-dock/contracts';
+import type { PresetAxisId, PresetChange } from '@quiz-dock/contracts';
 import { Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,20 +8,10 @@ import { cn } from '@/lib/utils';
 import { apiErrorText } from '../../api/http';
 import { useReadOperation, useRunOperation } from '../admin/admin-api';
 import { useOperationAction } from '../admin/use-operation-action';
-import type { SettingRow } from '../admin/settings-model';
+
 import { Value } from '../admin/settings-page';
 
-interface PresetsData {
-  axes: PresetAxis[];
-  current: Record<PresetAxisId, string>;
-}
-
-interface PlanChange {
-  key: string;
-  from: { value: unknown; source: SettingRow['source'] };
-  to: unknown;
-  skipped?: 'locked' | 'not-applicable';
-}
+type PlanChange = PresetChange;
 
 type Answers = Partial<Record<PresetAxisId, string>>;
 
@@ -35,7 +25,7 @@ const OTHER = 'other';
  */
 export function UsageStep() {
   const { t } = useTranslation('admin');
-  const presets = useReadOperation<PresetsData>('presets.list');
+  const presets = useReadOperation('presets.list');
   const run = useRunOperation();
   const action = useOperationAction();
   const [answers, setAnswers] = useState<Answers | null>(null);

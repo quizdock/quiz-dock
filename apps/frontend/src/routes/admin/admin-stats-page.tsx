@@ -13,58 +13,13 @@ import { useReadOperation } from './admin-api';
 /** How often the live figures are read again (paused while the tab is hidden). */
 export const LIVE_REFRESH_MS = 5_000;
 
-interface LiveGame {
-  pin: string;
-  title: string;
-  host: string;
-  phase: 'lobby' | 'playing';
-  players: number;
-  since: string;
-  question: { index: number; total: number } | null;
-}
-
-interface LiveStats {
-  at: string;
-  games: LiveGame[];
-  totals: { games: number; lobby: number; playing: number; players: number };
-  instance: {
-    accounts: { total: number; hosts: number; admins: number };
-    quizzes: { draft: number; ready: number; archived: number };
-    media: { files: number; bytes: number };
-    history: { sessions: number; lastEndedAt: string | null };
-  };
-}
-
-interface HistoryRank {
-  id: string;
-  name: string;
-  /** A quiz's owner: copies of one quiz share its title. */
-  owner: string | null;
-  games: number;
-  players: number;
-}
-
-interface HistoryStats {
-  from: string;
-  months: Array<{ month: string; games: number; players: number; successRate: number | null }>;
-  totals: {
-    games: number;
-    players: number;
-    successRate: number | null;
-    participants: { withAccount: number; guests: number };
-  };
-  quizzes: HistoryRank[];
-  hosts: HistoryRank[];
-  oldest: string | null;
-}
-
 /**
  * The administration's home: what is played right now — every game, its host,
  * its players —, and the instance at a glance. Read again every few seconds.
  */
 export function AdminStatsPage() {
   const { t, i18n } = useTranslation('admin');
-  const live = useReadOperation<LiveStats>('stats.live', {}, true, LIVE_REFRESH_MS);
+  const live = useReadOperation('stats.live', {}, true, LIVE_REFRESH_MS);
   const stats = live.data?.data;
   const locale = i18n.language;
 
@@ -216,7 +171,7 @@ const percent = (rate: number | null, locale: string) =>
 function HistorySection() {
   const { t, i18n } = useTranslation('admin');
   const locale = i18n.language;
-  const read = useReadOperation<HistoryStats>('stats.history');
+  const read = useReadOperation('stats.history');
   const history = read.data?.data;
   const monthName = (month: string) =>
     new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(

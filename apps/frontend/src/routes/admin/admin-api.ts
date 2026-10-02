@@ -1,27 +1,29 @@
 import { customFetch } from '../../api/http';
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  type UseQueryResult,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 import type {
   AuditEntry,
   OperationDescriptor,
   OperationNote,
   OperationResult,
+  OperationResults,
+  OutputEntry,
 } from '@quiz-dock/contracts';
 import {
   adminOperationsControllerCatalogue,
   adminOperationsControllerRun,
 } from '../../api/generated/admin/admin';
 
-/** What a command printed, as data (the backend's `OutputEntry`). */
-export type OutputEntry =
-  | { level: 'line' | 'ok' | 'warn' | 'fail'; text: string }
-  | { level: 'table'; rows: Record<string, unknown>[] };
-
 export type Answer =
   | { kind: 'result'; result: OperationResult }
   | { kind: 'confirm'; token: string; summary: string };
 
-export type { AuditEntry, OperationDescriptor, OperationNote, OperationResult };
+export type { AuditEntry, OperationDescriptor, OperationNote, OperationResult, OutputEntry };
 
 // ── The local mode's administration token ───────────────────────────────────
 
@@ -140,6 +142,19 @@ export const operationKey = (
  * and what it last read while it reads again — a new search, a refresh — so a
  * page never blinks to a spinner, nor loses what is typed in it.
  */
+export function useReadOperation<K extends keyof OperationResults>(
+  id: K,
+  params?: Record<string, unknown>,
+  enabled?: boolean,
+  refetchInterval?: number,
+): UseQueryResult<OperationResult<OperationResults[K]>>;
+/** An operation the results map does not name (`users.find`…): typed by the caller. */
+export function useReadOperation<T>(
+  id: string,
+  params?: Record<string, unknown>,
+  enabled?: boolean,
+  refetchInterval?: number,
+): UseQueryResult<OperationResult<T>>;
 export function useReadOperation<T>(
   id: string,
   params: Record<string, unknown> = {},

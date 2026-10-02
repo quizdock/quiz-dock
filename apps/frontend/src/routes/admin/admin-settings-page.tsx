@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useReadOperation } from './admin-api';
 import { SettingEditor } from './setting-editor';
-import type { SettingsList } from './settings-model';
+
 import { SettingsPage } from './settings-page';
 import { useOperationAction } from './use-operation-action';
 
@@ -26,7 +26,7 @@ export function AdminSettingsPage() {
 /** What was changed here, as a `.env` excerpt; and all of it taken back at once. */
 function OverridesActions() {
   const { t } = useTranslation('admin');
-  const list = useReadOperation<SettingsList>('settings.list');
+  const list = useReadOperation('settings.list');
   const action = useOperationAction();
   const [env, setEnv] = useState<string | null>(null);
   const data = list.data?.data;

@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import {
+  type AxisLevels,
   PRESET_AXES,
   type PresetAxisId,
+  type PresetChange,
+  type PresetPlan,
   SETTING_LIST,
   SETTINGS,
   type SettingDefinition,
@@ -12,20 +15,7 @@ import { OperationError } from '../operations/operation';
 import { OverridesService } from '../settings/overrides.service';
 import { type SettingsService, settings as appSettings } from '../settings/settings.service';
 
-export type AxisLevels = Partial<Record<PresetAxisId, string>>;
-
-export interface PresetChange {
-  key: string;
-  from: { value: unknown; source: 'default' | 'env' | 'override' };
-  to: unknown;
-  /** Left alone, and why: locked by `ADMIN_LOCK`, or an axis that does not apply here. */
-  skipped?: 'locked' | 'not-applicable';
-}
-
-export interface PresetPlan {
-  axes: AxisLevels;
-  changes: PresetChange[];
-}
+export type { AxisLevels, PresetChange, PresetPlan };
 
 /** The variables of an axis: those whose definition names it (§3.9). */
 export const axisSettings = (axis: PresetAxisId): SettingDefinition[] =>

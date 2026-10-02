@@ -1,5 +1,10 @@
 import { join } from 'node:path';
-import { SETTING_LIST, SETTINGS, type SettingDefinition } from '@quiz-dock/contracts';
+import {
+  SETTING_LIST,
+  SETTINGS,
+  type SettingDefinition,
+  type SettingIssue,
+} from '@quiz-dock/contracts';
 
 /** Where a raw value comes from, in order of precedence (default < `.env` < interface). */
 export interface SettingSource {
@@ -9,11 +14,7 @@ export interface SettingSource {
 }
 
 /** Something to tell the operator about a value: logged at start, listed by `qd doctor`. */
-export interface SettingIssue {
-  key: string;
-  code: 'unreadable' | 'out-of-bounds' | 'deprecated' | 'rule';
-  message: string;
-}
+export type { SettingIssue };
 
 /** What a setting resolves to, and why. */
 export interface SettingState<T = unknown> {

@@ -13,14 +13,13 @@ import { SectionTitle } from '@/components/ui/page-title';
 import { Segmented } from '@/components/ui/segmented';
 import { formatAgo } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { type AuditEntry, useReadOperation } from './admin-api';
+import { useReadOperation } from './admin-api';
 import {
   CATEGORIES,
   RULES,
   type SettingFilter,
   type SettingRow,
   type SettingsAccess,
-  type SettingsList,
   definitionOf,
   docLink,
   matches,
@@ -50,7 +49,7 @@ export function SettingsPage({
   editor?: (row: SettingRow, access: SettingsAccess) => ReactNode;
 }) {
   const { t } = useTranslation('admin');
-  const list = useReadOperation<SettingsList>('settings.list');
+  const list = useReadOperation('settings.list');
   const [view, setView] = useStoredChoice<SettingsView>(
     'qd-admin-settings-view',
     VIEWS,
@@ -494,7 +493,7 @@ function SettingHelp({ def, row }: { def: SettingDefinition; row: SettingRow }) 
 /** Its last changes, from the audit. */
 function SettingHistory({ settingKey }: { settingKey: string }) {
   const { t, i18n } = useTranslation('admin');
-  const audit = useReadOperation<{ entries: AuditEntry[] }>('audit.list', {
+  const audit = useReadOperation('audit.list', {
     setting: settingKey,
     limit: 5,
   });

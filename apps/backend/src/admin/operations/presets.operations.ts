@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PRESET_AXES, SETTING_LIST } from '@quiz-dock/contracts';
+import {
+  PRESET_AXES,
+  SETTING_LIST,
+  type OperationResults,
+  type PresetsList,
+} from '@quiz-dock/contracts';
 import { z } from 'zod';
 import { PresetService } from '../presets/preset.service';
 import { type AdminOperation, defineOperation, done, nothingToDo } from './operation';
@@ -41,7 +46,7 @@ export class PresetsOperations {
         params: z.object({}),
         run: () =>
           Promise.resolve(
-            done({
+            done<PresetsList>({
               axes: PRESET_AXES.map((a) => ({
                 ...a,
                 settings: SETTING_LIST.filter((d) => d.preset?.axis === a.id).map((d) => ({
@@ -62,7 +67,8 @@ export class PresetsOperations {
           'What these answers would change, variable by variable, and what they would leave alone.',
         params: target,
         validate: (t) => void this.presets.resolve(axesOf(t)),
-        run: (ctx, t) => Promise.resolve(done({ plan: plan(t, ctx.actor) })),
+        run: (ctx, t) =>
+          Promise.resolve(done<OperationResults['presets.plan']>({ plan: plan(t, ctx.actor) })),
       }),
       defineOperation({
         id: 'presets.apply',

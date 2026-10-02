@@ -1,36 +1,14 @@
-import { SETTINGS, type SettingDefinition, type SettingKey } from '@quiz-dock/contracts';
+import {
+  SETTINGS,
+  type SettingDefinition,
+  type SettingKey,
+  type SettingRow,
+  type SettingsAccess,
+  type SettingsList,
+} from '@quiz-dock/contracts';
 import { QUIZDOCK_REPOSITORY } from '@/lib/feedback';
 
-/** A setting as `settings.list` gives it (the backend's `SettingRow`). */
-export interface SettingRow {
-  key: string;
-  category: SettingDefinition['category'];
-  criticality: SettingDefinition['criticality'];
-  applies: SettingDefinition['applies'];
-  overridable: boolean;
-  secret: boolean;
-  value: unknown;
-  source: 'default' | 'env' | 'override';
-  envValue?: unknown;
-  default: unknown;
-  locked: boolean;
-  issues: { key: string; code: string; message: string }[];
-}
-
-export interface SettingsAccess {
-  scope: 'read' | 'write';
-  locks: string[];
-  authMode: 'none' | 'oidc';
-  tokenRequired: boolean;
-  tokenSet: boolean;
-  safeMode: boolean;
-}
-
-export interface SettingsList {
-  rows: SettingRow[];
-  rules: { key: string; code: string; message: string }[];
-  access: SettingsAccess;
-}
+export type { SettingRow, SettingsAccess, SettingsList };
 
 export const definitionOf = (key: string): SettingDefinition | undefined =>
   (SETTINGS as Record<string, SettingDefinition>)[key];

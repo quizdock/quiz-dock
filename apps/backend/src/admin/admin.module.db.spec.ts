@@ -6,7 +6,7 @@ import { AdminModule } from './admin.module';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { operationsHelp } from '../cli/adapter';
 import { WIZARD_OPERATIONS } from './operations/setup.operations';
-import type { HistoryStats, LiveStats } from './operations/stats.operations';
+import type { HistoryStats, LiveStats } from '@quiz-dock/contracts';
 import { OperationRunner } from './runner/operation-runner';
 import { settings } from './settings/settings.service';
 

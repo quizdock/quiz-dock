@@ -1,3 +1,4 @@
+import type { AccountItem, AccountsPage } from '@quiz-dock/contracts';
 import { Armchair, EllipsisVertical, Search, ShieldCheck, Users } from 'lucide-react';
 import { type FormEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,24 +22,8 @@ import { useOperationAction } from './use-operation-action';
 
 type Role = 'host' | 'admin';
 
-interface Account {
-  id: string;
-  name: string;
-  subject: string;
-  email: string | null;
-  roles: string[];
-  granted: string[];
-  quizzes: number;
-  games: number;
-  createdAt: string;
-}
-
-interface AccountsData {
-  total: number;
-  items: Account[];
-  seat: { holder: string; subject: string; since: string; expiresAt: string | null } | null;
-  localMode: boolean;
-}
+type Account = AccountItem;
+type AccountsData = AccountsPage;
 
 const PAGE = 25;
 
@@ -53,7 +38,7 @@ export function AccountsPage() {
   const [role, setRole] = useState('');
   const [page, setPage] = useState(1);
   const sought = useDebounced(q.trim());
-  const read = useReadOperation<AccountsData>('users.search', {
+  const read = useReadOperation('users.search', {
     ...(sought ? { q: sought } : {}),
     ...(role ? { role } : {}),
     limit: PAGE,

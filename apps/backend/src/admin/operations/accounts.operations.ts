@@ -1,35 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { SETTINGS } from '@quiz-dock/contracts';
+import { type AccountsPage, SETTINGS } from '@quiz-dock/contracts';
 import { type Prisma, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { PrismaService } from '../../prisma/prisma.service';
 import { HostSeatService } from '../../users/host-seat.service';
 import { settings } from '../settings/settings.service';
 import { type AdminOperation, defineOperation, done } from './operation';
-
-/** An account, as the accounts page lists it. */
-export interface AccountItem {
-  id: string;
-  name: string;
-  subject: string;
-  email: string | null;
-  /** What it holds now: the identity provider's claims, the seat, and what was granted. */
-  roles: UserRole[];
-  /** What an administrator granted (`users.set-role`): kept whatever the provider says. */
-  granted: UserRole[];
-  quizzes: number;
-  /** Games it hosted that the history still holds. */
-  games: number;
-  createdAt: string;
-}
-
-export interface AccountsPage {
-  total: number;
-  items: AccountItem[];
-  /** Local mode only (`AUTH_MODE=none`): who holds the host seat; null elsewhere or when free. */
-  seat: { holder: string; subject: string; since: string; expiresAt: string | null } | null;
-  localMode: boolean;
-}
 
 const hasRole = (role: UserRole): Prisma.UserWhereInput => ({
   OR: [{ roles: { has: role } }, { assignedRoles: { has: role } }],

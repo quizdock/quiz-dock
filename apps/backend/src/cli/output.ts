@@ -48,9 +48,8 @@ export class CliError extends Error {
 }
 
 /** A line of output, as data: what a command printed, for any access to render. */
-export type OutputEntry =
-  | { level: 'line' | 'ok' | 'warn' | 'fail'; text: string }
-  | { level: 'table'; rows: Record<string, unknown>[] };
+import type { OutputEntry } from '@quiz-dock/contracts';
+export type { OutputEntry };
 
 /** Keeps what a command prints, in order, instead of printing it. */
 export class RecordingOutput implements Output {

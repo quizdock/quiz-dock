@@ -20,6 +20,7 @@ export * from './slide-content';
 export * from './slide-media';
 export * from './admin/settings';
 export * from './admin/operations';
+export * from './admin/results';
 import type { ParticipantAccess } from './preferences';
 import type { AudioTarget, LiveAudio, LiveQuestionMedia } from './question-media';
 

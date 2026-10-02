@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { type Prisma, QuizStatus, UserRole } from '@prisma/client';
+import type { QuizSearchPage } from '@quiz-dock/contracts';
 import { livePinOf } from '../../game/game.keys';
 import { RedisService } from '../../redis/redis.service';
 import { z } from 'zod';
@@ -121,7 +122,7 @@ export class QuizzesOperations {
               livePin: await livePinOf(this.redis, quiz.ownerId, quiz.id).catch(() => null),
             })),
           );
-          return done({
+          return done<QuizSearchPage>({
             total,
             items,
             owners: owners.map((o) => ({
