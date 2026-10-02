@@ -6,6 +6,7 @@ import { AllowAnyRole } from './allow-any-role.decorator';
 import { CurrentUser } from './current-user.decorator';
 import { ClaimHostSeatDto, HostSeatDto, HostSeatReleaseDto } from './dto/host-seat.dto';
 import { Public } from './public.decorator';
+import { isOidcMode } from './auth-mode';
 
 const toDto = (s: HostSeatState): HostSeatDto => ({
   holder: s.holder,
@@ -26,7 +27,7 @@ export class HostSeatController {
   @Get()
   @ApiOkResponse({ type: HostSeatDto })
   async state(): Promise<HostSeatDto> {
-    if (process.env.AUTH_MODE === 'oidc') return { holder: null, expiresAt: null, claimedAt: null };
+    if (isOidcMode()) return { holder: null, expiresAt: null, claimedAt: null };
     return toDto(await this.seat.state());
   }
 

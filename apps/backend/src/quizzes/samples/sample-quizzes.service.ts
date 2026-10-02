@@ -9,6 +9,8 @@ import { MediaService } from '../../media/media.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QuizPortableService } from '../portable/quiz-portable.service';
 import { loadSamples, type SampleBundle } from './samples';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../../admin/settings/settings.service';
 
 /**
  * Owner of the samples' media in the instance's media: an account nobody signs in
@@ -76,7 +78,7 @@ export class SampleQuizzesService implements OnApplicationBootstrap {
    */
   private async seedInstanceMedia(): Promise<void> {
     if (isDemoMode()) return;
-    const marker = join(process.env.MEDIA_DIR ?? join(process.cwd(), '.media'), MARKER);
+    const marker = join(settings.path(SETTINGS.MEDIA_DIR), MARKER);
     if (existsSync(marker)) return;
     const curated = (await this.prisma.mediaAsset.count({ where: { instance: true } })) > 0;
     let added = 0;

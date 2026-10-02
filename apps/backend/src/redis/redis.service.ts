@@ -1,5 +1,7 @@
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /**
  * Client Redis (ioredis) exposé en injection NestJS — état live des parties
@@ -10,7 +12,7 @@ export class RedisService extends Redis implements OnModuleDestroy {
   private readonly log = new Logger(RedisService.name);
 
   constructor() {
-    super(process.env.REDIS_URL ?? 'redis://localhost:16379', {
+    super(settings.get(SETTINGS.REDIS_URL), {
       maxRetriesPerRequest: 3,
       lazyConnect: false,
     });

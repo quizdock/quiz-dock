@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { type MediaKind, QuizStatus } from '@prisma/client';
-import { LANGUAGE_RE, isQuizLicense } from '@quiz-dock/contracts';
+import { LANGUAGE_RE, isQuizLicense, SETTINGS } from '@quiz-dock/contracts';
 import { PrismaService } from '../../prisma/prisma.service';
 import { collectMediaIds, EXPORT_INCLUDE, slugify } from './quiz-bundle';
 import { slugSchema } from './quiz-bundle.schema';
 import { QuizPortableService } from './quiz-portable.service';
+import { settings } from '../../admin/settings/settings.service';
 
 /**
  * Largest bundle a store accepts, in bytes (`PUBLICATION_MAX_MB`, 20 by default:
@@ -12,8 +13,7 @@ import { QuizPortableService } from './quiz-portable.service';
  * format rule: a closed store may set its own.
  */
 export function publicationMaxBytes(): number {
-  const mb = Number(process.env.PUBLICATION_MAX_MB);
-  return (Number.isFinite(mb) && mb > 0 ? mb : 20) * 1024 * 1024;
+  return settings.get(SETTINGS.PUBLICATION_MAX_MB) * 1024 * 1024;
 }
 
 /** What stops a quiz from being exported for publication, or deserves a look first. */

@@ -1,10 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 import { Unzip, UnzipInflate, UnzipPassThrough } from 'fflate';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../../admin/settings/settings.service';
 
-/** A bundle is a zip of media: sized like a handful of uploads. Unset, empty or not a number: 50 MiB. */
-export const IMPORT_MAX_BYTES = ((raw) => (Number.isFinite(raw) ? raw : 50 * 1024 * 1024))(
-  process.env.IMPORT_MAX_BYTES?.trim() ? Number(process.env.IMPORT_MAX_BYTES) : NaN,
-);
+/** A bundle is a zip of media: sized like a handful of uploads. */
+export const IMPORT_MAX_BYTES = settings.get(SETTINGS.IMPORT_MAX_BYTES);
 
 /**
  * What an archive may unpack to. The bundle can come from anyone (a shared

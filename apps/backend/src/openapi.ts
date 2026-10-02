@@ -12,6 +12,7 @@ async function generate(): Promise<void> {
   // La génération du document n'a pas besoin de base : on fournit une URL de
   // repli (sinon PrismaService refuse de s'instancier) et on coupe la connexion
   // Prisma — la CI génère l'OpenAPI sans Postgres.
+
   process.env.DATABASE_URL ??= 'postgresql://openapi:openapi@localhost:5432/openapi';
   process.env.PRISMA_SKIP_CONNECT = '1';
 

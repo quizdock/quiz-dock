@@ -6,26 +6,12 @@ const ENDED: string = GameState.Ended;
 /** Durée de vie de l'état live d'une partie (~4 h — SPECIFICATIONS-DONNEES §4). */
 export const GAME_TTL_S = 4 * 60 * 60;
 
-/** Délai de lecture de l'énoncé avant ouverture des réponses (§8, défaut 3 s). */
-export const READ_DELAY_MS = 3_000;
-/**
- * Everyone answered: the reveal waits this long, so the last answer's tick is
- * heard on its own before the gong (the two would run together otherwise).
- */
-export const ALL_ANSWERED_DELAY_MS = 1_000;
-
 /**
  * How often, at most, a room's answer count goes out while answers come in: ten
  * times a second, too quick to see; each answer still gets its tick (up to five
  * at once, `game/media/game-sounds.ts` on the screens).
  */
 export const ANSWER_COUNT_EVERY_MS = 100;
-
-/**
- * How long the room waits at most for the devices that play a question's sound
- * or video to load it (`GAME_MEDIA_WAIT_S`, 0 = never wait).
- */
-export const MEDIA_WAIT_S = 10;
 
 /**
  * How far ahead the server sets the common start of a question's media (ms):
@@ -39,39 +25,10 @@ export const MEDIA_LEAD_MS = 1_600;
 export const GRACE_MS = 300;
 
 /**
- * Délai de grâce avant de déclarer l'hôte parti (§7.1) : absorbe un simple
- * rechargement de la fenêtre de contrôle avant de passer en `HOST_DISCONNECTED`.
- */
-export const HOST_GRACE_MS = 5_000;
-
-/**
- * Fenêtre de reconnexion de l'hôte (§7.3) : passé ce délai en `HOST_DISCONNECTED`
- * sans retour, la partie se termine (résultats persistés en l'état).
- */
-export const HOST_RECONNECT_WINDOW_MS = 120_000;
-
-/**
- * Mode auto (§8) : temps d'affichage du reveal/classement avant d'enchaîner
- * automatiquement la question suivante. La pause suspend ce minuteur.
- */
-export const AUTO_ADVANCE_MS = 5_000;
-
-/**
  * Plancher du chrono après un retrait de temps (`host:adjust-time`) : en deçà,
  * la question est révélée immédiatement plutôt que de laisser un timer mort.
  */
 export const CHRONO_FLOOR_MS = 1_000;
-
-/**
- * A timing of the engine, overridable from the environment (`GAME_*`, the tests
- * shorten them): the number set there, or `fallback` when it is unset, empty or
- * not a number. 0 stays 0 (`GAME_MEDIA_WAIT_S=0`: never wait).
- */
-export function gameSetting(name: string, fallback: number): number {
-  const raw = process.env[name];
-  const value = raw === undefined || raw.trim() === '' ? NaN : Number(raw);
-  return Number.isFinite(value) ? value : fallback;
-}
 
 /**
  * A game's id (`meta.id`): the key of everything one quiz played in a room

@@ -13,6 +13,7 @@ import {
   mediaDurationMs,
   slideHasPlayback,
   slideSoundMedia,
+  SETTINGS,
 } from '@quiz-dock/contracts';
 import type {
   AnswerValue,
@@ -34,21 +35,14 @@ import type {
 import type { Server } from 'socket.io';
 import { GameService } from './game.service';
 import {
-  ALL_ANSWERED_DELAY_MS,
   ANSWER_COUNT_EVERY_MS,
-  AUTO_ADVANCE_MS,
   CHRONO_FLOOR_MS,
   GAME_TTL_S,
   GRACE_MS,
-  HOST_GRACE_MS,
-  HOST_RECONNECT_WINDOW_MS,
   MEDIA_LEAD_MS,
-  MEDIA_WAIT_S,
-  READ_DELAY_MS,
   type GameId,
   ROOM_HASH_KEY,
   gameKeys,
-  gameSetting,
 } from './game.keys';
 import { gameHash, roomHash } from './game-hash';
 import type {
@@ -102,6 +96,7 @@ import {
   stepRef,
   waitedStep,
 } from './steps';
+import { settings } from '../admin/settings/settings.service';
 
 type GameServer = Server<Record<string, never>, ServerToClientEvents>;
 
@@ -115,7 +110,7 @@ return redis.call('HSETNX', KEYS[1], ARGV[1], ARGV[2])
 `;
 
 /** Auto-mode delay on a REVEAL when the question sets none (#6): env override, else constant. */
-const defaultAutoAdvanceMs = () => gameSetting('GAME_AUTO_ADVANCE_MS', AUTO_ADVANCE_MS);
+const defaultAutoAdvanceMs = () => settings.get(SETTINGS.GAME_AUTO_ADVANCE_MS);
 
 /** The media's start derived from `startedAt`, as a payload fragment (empty when silent). */
 function mediaStartOf(
@@ -636,7 +631,7 @@ export class GameEngine {
     step: PreloadStep,
   ): Promise<boolean> {
     const { pin } = ref;
-    const waitS = gameSetting('GAME_MEDIA_WAIT_S', MEDIA_WAIT_S);
+    const waitS = settings.get(SETTINGS.GAME_MEDIA_WAIT_S);
     const readiness = waitS > 0 ? await this.readiness(ref, step) : null;
     if (!readiness || readiness.ready >= readiness.total) return false;
     const until = Date.now() + waitS * 1000;
@@ -693,7 +688,7 @@ export class GameEngine {
     const question = snapshot.questions[index];
     const now = Date.now();
     // Délai de lecture configurable (§8, défaut 3 s) — lu au runtime (tests rapides).
-    const readDelay = gameSetting('GAME_READ_DELAY_MS', READ_DELAY_MS);
+    const readDelay = settings.get(SETTINGS.GAME_READ_DELAY_MS);
     // Every device starts the sound or video on the same instant of the server's clock.
     const mediaStartAt = now + MEDIA_LEAD_MS;
     // Listen first: the answers open once the media has played, not after the reading.
@@ -1354,7 +1349,7 @@ export class GameEngine {
     if ((await this.countHostSockets(pin, hostUserId)) > 0) return;
 
     const ref = refOf(pin, meta);
-    const graceMs = gameSetting('GAME_HOST_GRACE_MS', HOST_GRACE_MS);
+    const graceMs = settings.get(SETTINGS.GAME_HOST_GRACE_MS);
     this.timers.arm('hostGrace', pin, graceMs, () => this.declareHostDisconnected(ref, hostUserId));
   }
 
@@ -1388,7 +1383,7 @@ export class GameEngine {
       totalQuestions: meta.totalQuestions,
     });
 
-    const windowMs = gameSetting('GAME_HOST_WINDOW_MS', HOST_RECONNECT_WINDOW_MS);
+    const windowMs = settings.get(SETTINGS.GAME_HOST_WINDOW_MS);
     this.timers.arm('hostWindow', pin, windowMs, () => this.endOrphaned(ref, hostUserId));
   }
 
@@ -2155,7 +2150,7 @@ export class GameEngine {
     const { answered, total, allAnswered } = await this.connectedProgress(ref, questionIndex);
     this.server.to(ref.pin).emit('answer:count', { answered, total });
     if (converge && allAnswered && meta.state === GameState.Answering) {
-      const delay = gameSetting('GAME_ALL_ANSWERED_DELAY_MS', ALL_ANSWERED_DELAY_MS);
+      const delay = settings.get(SETTINGS.GAME_ALL_ANSWERED_DELAY_MS);
       this.scheduleReveal(ref, questionIndex, delay, 'all');
     }
   }

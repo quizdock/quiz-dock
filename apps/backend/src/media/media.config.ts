@@ -1,9 +1,7 @@
-const MB = 1024 * 1024;
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
-const megabytes = (value: string | undefined, fallback: number) => {
-  const n = Number(value);
-  return (Number.isFinite(n) && n > 0 ? n : fallback) * MB;
-};
+const MB = 1024 * 1024;
 
 /**
  * Largest file accepted per kind, in bytes. Only sizes are imposed: quality is
@@ -13,11 +11,10 @@ const megabytes = (value: string | undefined, fallback: number) => {
  * - audio: `MEDIA_MAX_AUDIO_MB`, 10 by default.
  */
 export function mediaLimits(): { image: number; video: number; audio: number } {
-  const image = Number(process.env.MEDIA_MAX_BYTES);
   return {
-    image: Number.isFinite(image) && image > 0 ? image : 10 * MB,
-    video: megabytes(process.env.MEDIA_MAX_VIDEO_MB, 50),
-    audio: megabytes(process.env.MEDIA_MAX_AUDIO_MB, 10),
+    image: settings.get(SETTINGS.MEDIA_MAX_BYTES),
+    video: settings.get(SETTINGS.MEDIA_MAX_VIDEO_MB) * MB,
+    audio: settings.get(SETTINGS.MEDIA_MAX_AUDIO_MB) * MB,
   };
 }
 

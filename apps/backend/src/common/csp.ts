@@ -1,4 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings, type SettingsService } from '../admin/settings/settings.service';
 
 /** The origin of a configured URL, or nothing when it is empty or unreadable. */
 function originOf(url: string | undefined): string | null {
@@ -21,8 +23,8 @@ function originOf(url: string | undefined): string | null {
  * - `style-src 'unsafe-inline'`: style attributes and the few style tags libraries
  *   insert; no script runs inline, and script is what the policy guards.
  */
-export function contentSecurityPolicy(env: NodeJS.ProcessEnv = process.env): string {
-  const logo = originOf(env.APP_LOGO_URL);
+export function contentSecurityPolicy(from: SettingsService = settings): string {
+  const logo = originOf(from.get(SETTINGS.APP_LOGO_URL));
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
     'script-src': ["'self'", "'wasm-unsafe-eval'"],
@@ -47,8 +49,8 @@ export function contentSecurityPolicy(env: NodeJS.ProcessEnv = process.env): str
 const NOT_A_PAGE = /^\/(api|socket\.io|health)(\/|$)/;
 
 /** Sends the policy with every page of the application (the SPA and its assets). */
-export function cspMiddleware(env: NodeJS.ProcessEnv = process.env) {
-  const policy = contentSecurityPolicy(env);
+export function cspMiddleware(from: SettingsService = settings) {
+  const policy = contentSecurityPolicy(from);
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!NOT_A_PAGE.test(req.path)) res.setHeader('Content-Security-Policy', policy);
     next();

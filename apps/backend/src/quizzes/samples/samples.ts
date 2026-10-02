@@ -1,5 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../../admin/settings/settings.service';
 
 /**
  * The sample quizzes ship with the application as bundles (docs/quiz-bundle.md):
@@ -34,7 +36,7 @@ export interface SampleBundle {
 
 /** `SAMPLES_DIR`, else `samples/` in the working directory (the image's `/app`, the dev `apps/backend`). */
 export function samplesDir(): string {
-  return process.env.SAMPLES_DIR ?? join(process.cwd(), 'samples');
+  return settings.path(SETTINGS.SAMPLES_DIR);
 }
 
 let cache: { dir: string; samples: SampleBundle[] } | null = null;

@@ -1,8 +1,11 @@
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
+
 /** The two authentication modes (`AUTH_MODE`), read wherever the behaviour differs. */
 export type AuthMode = 'none' | 'oidc';
 
 export function authMode(): AuthMode {
-  return process.env.AUTH_MODE === 'oidc' ? 'oidc' : 'none';
+  return settings.get(SETTINGS.AUTH_MODE);
 }
 
 /**
@@ -21,5 +24,5 @@ export function isOidcMode(): boolean {
  * Meaningless in local mode, where the PIN is the only barrier anyway.
  */
 export function allowsAnonymousParticipants(): boolean {
-  return isOidcMode() && process.env.ALLOW_ANONYMOUS_PARTICIPANTS === 'true';
+  return isOidcMode() && settings.get(SETTINGS.ALLOW_ANONYMOUS_PARTICIPANTS);
 }

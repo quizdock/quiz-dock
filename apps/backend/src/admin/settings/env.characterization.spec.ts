@@ -11,15 +11,6 @@ import { contentSecurityPolicy } from '../../common/csp';
 import { instanceLanguage } from '../../common/instance-language';
 import { isDemoMode } from '../../demo/demo.config';
 import { GameController } from '../../game/game.controller';
-import {
-  ALL_ANSWERED_DELAY_MS,
-  AUTO_ADVANCE_MS,
-  HOST_GRACE_MS,
-  HOST_RECONNECT_WINDOW_MS,
-  MEDIA_WAIT_S,
-  READ_DELAY_MS,
-  gameSetting,
-} from '../../game/game.keys';
 import { liveMotionDefault } from '../../game/live-motion';
 import { HealthController } from '../../health/health.controller';
 import { MediaLibraryService } from '../../media/media-library.service';
@@ -30,6 +21,8 @@ import { publicationMaxBytes } from '../../quizzes/portable/quiz-publication.ser
 import { samplesDir } from '../../quizzes/samples/samples';
 import { communityHosts, communityRegistries } from '../../store/community/community-config';
 import { StoreService } from '../../store/store.service';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings, settingsFrom } from './settings.service';
 
 /**
  * Characterization of the environment as the backend reads it today, before the
@@ -149,7 +142,7 @@ describe('Identity & branding', () => {
 
   it('APP_LOGO_URL adds its origin to the CSP images, an unreadable one adds nothing', () => {
     const imgSrc = (url?: string) =>
-      contentSecurityPolicy({ APP_LOGO_URL: url })
+      contentSecurityPolicy(settingsFrom({ APP_LOGO_URL: url }))
         .split('; ')
         .find((d) => d.startsWith('img-src'));
     expect(imgSrc()).toBe("img-src 'self' data: blob: https:");
@@ -241,7 +234,7 @@ describe('Access & authentication', () => {
     const issuer = 'https://id.example.org/realms/quiz';
 
     it('defaults around a bare issuer', () => {
-      expect(oidcSettings({ OIDC_ISSUER: issuer })).toEqual({
+      expect(oidcSettings(settingsFrom({ OIDC_ISSUER: issuer }))).toEqual({
         issuer,
         clientId: 'quiz-dock-frontend',
         clientSecret: null,
@@ -254,14 +247,16 @@ describe('Access & authentication', () => {
 
     it('empty values count as unset', () => {
       expect(
-        oidcSettings({
-          OIDC_ISSUER: issuer,
-          OIDC_CLIENT_ID: '',
-          OIDC_CLIENT_SECRET: '',
-          OIDC_AUDIENCE: '',
-          OIDC_JWKS_URI: '',
-          OIDC_INTERNAL_URL: '',
-        }),
+        oidcSettings(
+          settingsFrom({
+            OIDC_ISSUER: issuer,
+            OIDC_CLIENT_ID: '',
+            OIDC_CLIENT_SECRET: '',
+            OIDC_AUDIENCE: '',
+            OIDC_JWKS_URI: '',
+            OIDC_INTERNAL_URL: '',
+          }),
+        ),
       ).toMatchObject({
         clientId: 'quiz-dock-frontend',
         clientSecret: null,
@@ -271,33 +266,49 @@ describe('Access & authentication', () => {
     });
 
     it('OIDC_ISSUER is required, a URL, http(s), without query or fragment; trimmed', () => {
-      expect(() => oidcSettings({})).toThrow('OIDC_ISSUER is required');
-      expect(() => oidcSettings({ OIDC_ISSUER: '  ' })).toThrow('OIDC_ISSUER is required');
-      expect(() => oidcSettings({ OIDC_ISSUER: 'id.example.org' })).toThrow('is not a URL');
-      expect(() => oidcSettings({ OIDC_ISSUER: 'ftp://id.example.org' })).toThrow('http(s) URL');
-      expect(() => oidcSettings({ OIDC_ISSUER: `${issuer}?x=1` })).toThrow('http(s) URL');
-      expect(oidcSettings({ OIDC_ISSUER: ` ${issuer} ` }).issuer).toBe(issuer);
+      expect(() => oidcSettings(settingsFrom({}))).toThrow('OIDC_ISSUER is required');
+      expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: '  ' }))).toThrow(
+        'OIDC_ISSUER is required',
+      );
+      expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: 'id.example.org' }))).toThrow(
+        'is not a URL',
+      );
+      expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: 'ftp://id.example.org' }))).toThrow(
+        'http(s) URL',
+      );
+      expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: `${issuer}?x=1` }))).toThrow(
+        'http(s) URL',
+      );
+      expect(oidcSettings(settingsFrom({ OIDC_ISSUER: ` ${issuer} ` })).issuer).toBe(issuer);
     });
 
     it('OIDC_INTERNAL_URL is kept as an origin, else derived from a JWKS URI elsewhere', () => {
       expect(
-        oidcSettings({ OIDC_ISSUER: issuer, OIDC_INTERNAL_URL: 'http://keycloak:8080/some/path' })
-          .internalUrl,
+        oidcSettings(
+          settingsFrom({
+            OIDC_ISSUER: issuer,
+            OIDC_INTERNAL_URL: 'http://keycloak:8080/some/path',
+          }),
+        ).internalUrl,
       ).toBe('http://keycloak:8080');
       expect(
-        oidcSettings({
-          OIDC_ISSUER: issuer,
-          OIDC_JWKS_URI: 'http://keycloak:8080/realms/quiz/certs',
-        }),
+        oidcSettings(
+          settingsFrom({
+            OIDC_ISSUER: issuer,
+            OIDC_JWKS_URI: 'http://keycloak:8080/realms/quiz/certs',
+          }),
+        ),
       ).toMatchObject({
         internalUrl: 'http://keycloak:8080',
         jwksUri: 'http://keycloak:8080/realms/quiz/certs',
       });
       expect(
-        oidcSettings({
-          OIDC_ISSUER: issuer,
-          OIDC_JWKS_URI: 'https://id.example.org/realms/quiz/certs',
-        }).internalUrl,
+        oidcSettings(
+          settingsFrom({
+            OIDC_ISSUER: issuer,
+            OIDC_JWKS_URI: 'https://id.example.org/realms/quiz/certs',
+          }),
+        ).internalUrl,
       ).toBeNull();
     });
   });
@@ -501,20 +512,22 @@ describe('Limits', () => {
 
 describe('Game pace', () => {
   it('the defaults of the engine', () => {
-    expect({
-      READ_DELAY_MS,
-      ALL_ANSWERED_DELAY_MS,
-      AUTO_ADVANCE_MS,
-      MEDIA_WAIT_S,
-      HOST_GRACE_MS,
-      HOST_RECONNECT_WINDOW_MS,
-    }).toEqual({
-      READ_DELAY_MS: 3000,
-      ALL_ANSWERED_DELAY_MS: 1000,
-      AUTO_ADVANCE_MS: 5000,
-      MEDIA_WAIT_S: 10,
-      HOST_GRACE_MS: 5000,
-      HOST_RECONNECT_WINDOW_MS: 120_000,
+    const keys = [
+      'GAME_READ_DELAY_MS',
+      'GAME_ALL_ANSWERED_DELAY_MS',
+      'GAME_AUTO_ADVANCE_MS',
+      'GAME_MEDIA_WAIT_S',
+      'GAME_HOST_GRACE_MS',
+      'GAME_HOST_WINDOW_MS',
+    ] as const;
+    setEnv(Object.fromEntries(keys.map((k) => [k, undefined])));
+    expect(Object.fromEntries(keys.map((k) => [k, settings.get(SETTINGS[k])]))).toEqual({
+      GAME_READ_DELAY_MS: 3000,
+      GAME_ALL_ANSWERED_DELAY_MS: 1000,
+      GAME_AUTO_ADVANCE_MS: 5000,
+      GAME_MEDIA_WAIT_S: 10,
+      GAME_HOST_GRACE_MS: 5000,
+      GAME_HOST_WINDOW_MS: 120_000,
     });
   });
 
@@ -532,7 +545,7 @@ describe('Game pace', () => {
     ['0x10', 16],
   ])('GAME_READ_DELAY_MS=%p reads %p — no bounds', (raw, value) => {
     setEnv({ GAME_READ_DELAY_MS: raw });
-    expect(gameSetting('GAME_READ_DELAY_MS', READ_DELAY_MS)).toBe(value);
+    expect(settings.get(SETTINGS.GAME_READ_DELAY_MS)).toBe(value);
   });
 
   it.each([

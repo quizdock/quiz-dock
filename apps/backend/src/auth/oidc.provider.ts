@@ -5,6 +5,8 @@ import type { AuthPrincipal, AuthProvider } from './auth-provider';
 import type { OidcClient } from './oidc/oidc-client';
 import type { OidcSessions } from './oidc/oidc-sessions';
 import { readCookie, SESSION_COOKIE } from './oidc/session-cookie';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** Reads a value by dotted path (`resource_access.app.roles`). */
 function getByPath(obj: unknown, path: string): unknown {
@@ -46,8 +48,8 @@ export class OidcProvider implements AuthProvider {
     private readonly client: OidcClient,
     private readonly sessions: OidcSessions,
   ) {
-    this.rolesClaim = process.env.OIDC_ROLES_CLAIM || 'roles';
-    this.nameClaim = process.env.OIDC_NAME_CLAIM || undefined;
+    this.rolesClaim = settings.get(SETTINGS.OIDC_ROLES_CLAIM);
+    this.nameClaim = settings.get(SETTINGS.OIDC_NAME_CLAIM) || undefined;
   }
 
   async authenticate(req: Request): Promise<AuthPrincipal | null> {

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { contentSecurityPolicy, cspMiddleware } from './csp';
+import { settingsFrom } from '../admin/settings/settings.service';
 
 const directive = (policy: string, name: string) =>
   policy
@@ -9,7 +10,7 @@ const directive = (policy: string, name: string) =>
 
 describe('contentSecurityPolicy', () => {
   it('keeps everything to this origin in local mode', () => {
-    const policy = contentSecurityPolicy({ AUTH_MODE: 'none' });
+    const policy = contentSecurityPolicy(settingsFrom({ AUTH_MODE: 'none' }));
     expect(directive(policy, 'default-src')).toBe("'self'");
     expect(directive(policy, 'script-src')).toBe("'self' 'wasm-unsafe-eval'");
     expect(directive(policy, 'connect-src')).toBe("'self'");
@@ -18,21 +19,25 @@ describe('contentSecurityPolicy', () => {
   });
 
   it('needs no exception for the OIDC provider: the backend talks to it, the browser navigates', () => {
-    const policy = contentSecurityPolicy({
-      AUTH_MODE: 'oidc',
-      OIDC_ISSUER: 'https://sso.example.org/realms/quiz-dock',
-    });
+    const policy = contentSecurityPolicy(
+      settingsFrom({
+        AUTH_MODE: 'oidc',
+        OIDC_ISSUER: 'https://sso.example.org/realms/quiz-dock',
+      }),
+    );
     expect(directive(policy, 'connect-src')).toBe("'self'");
     expect(directive(policy, 'frame-src')).toBe("'none'");
   });
 
   it('lets a logo served from another host in, even over plain http', () => {
-    const policy = contentSecurityPolicy({ APP_LOGO_URL: 'http://cdn.example.org/logo.svg' });
+    const policy = contentSecurityPolicy(
+      settingsFrom({ APP_LOGO_URL: 'http://cdn.example.org/logo.svg' }),
+    );
     expect(directive(policy, 'img-src')).toContain('http://cdn.example.org');
   });
 
   it('ignores a configured URL it cannot read', () => {
-    const policy = contentSecurityPolicy({ APP_LOGO_URL: 'not a url' });
+    const policy = contentSecurityPolicy(settingsFrom({ APP_LOGO_URL: 'not a url' }));
     expect(directive(policy, 'img-src')).toBe("'self' data: blob: https:");
   });
 });
@@ -41,7 +46,7 @@ describe('cspMiddleware', () => {
   const run = (path: string) => {
     const setHeader = jest.fn();
     const next = jest.fn() as NextFunction;
-    cspMiddleware({ AUTH_MODE: 'none' })(
+    cspMiddleware(settingsFrom({ AUTH_MODE: 'none' }))(
       { path } as Request,
       { setHeader } as unknown as Response,
       next,

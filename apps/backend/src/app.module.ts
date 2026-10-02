@@ -14,6 +14,8 @@ import { QuizzesModule } from './quizzes/quizzes.module';
 import { StoreModule } from './store/store.module';
 import { RedisModule } from './redis/redis.module';
 import { UsersModule } from './users/users.module';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from './admin/settings/settings.service';
 
 /**
  * En image unique (front+back), `CLIENT_DIR` pointe le SPA buildé : le backend
@@ -22,10 +24,11 @@ import { UsersModule } from './users/users.module';
  * `/api/docs`), `/health`, le WebSocket `/socket.io`, et `/config.js` (contrôleur
  * white-label runtime). En dev, `CLIENT_DIR` est absent → le SPA passe par Vite.
  */
-const serveStatic = process.env.CLIENT_DIR
+const clientDir = settings.get(SETTINGS.CLIENT_DIR);
+const serveStatic = clientDir
   ? [
       ServeStaticModule.forRoot({
-        rootPath: process.env.CLIENT_DIR,
+        rootPath: clientDir,
         exclude: [
           '/api/{*splat}',
           '/api',

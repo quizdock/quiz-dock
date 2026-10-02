@@ -6,6 +6,7 @@ import {
   oidcSettings,
   pkceChallenge,
 } from './oidc-client';
+import { settingsFrom } from '../../admin/settings/settings.service';
 
 const ISSUER = 'http://localhost:18080/realms/quiz-dock';
 const INTERNAL = 'http://keycloak:8080';
@@ -27,31 +28,40 @@ const json = (status: number, body: unknown) => ({
 
 describe('oidcSettings', () => {
   it('requires the issuer, as an http(s) URL without query or fragment', () => {
-    expect(() => oidcSettings({})).toThrow(/OIDC_ISSUER is required/);
-    expect(() => oidcSettings({ OIDC_ISSUER: '  ' })).toThrow(/OIDC_ISSUER is required/);
-    expect(() => oidcSettings({ OIDC_ISSUER: 'idp.example.com' })).toThrow(/not a URL/);
+    expect(() => oidcSettings(settingsFrom({}))).toThrow(/OIDC_ISSUER is required/);
+    expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: '  ' }))).toThrow(
+      /OIDC_ISSUER is required/,
+    );
+    expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: 'idp.example.com' }))).toThrow(
+      /not a URL/,
+    );
     for (const bad of ['ftp://idp/x', 'https://idp/x?a=1', 'https://idp/x#f', 'https://idp/x?']) {
-      expect(() => oidcSettings({ OIDC_ISSUER: bad })).toThrow(/without query or fragment/);
+      expect(() => oidcSettings(settingsFrom({ OIDC_ISSUER: bad }))).toThrow(
+        /without query or fragment/,
+      );
     }
   });
 
   it('keeps the issuer as written, trailing slash included (OIDC Core §3.1.3.7, #99)', () => {
     const slashed = 'https://idp.example.com/tenant/app/';
-    expect(oidcSettings({ OIDC_ISSUER: ` ${slashed}\n` }).issuer).toBe(slashed);
-    expect(oidcSettings({ OIDC_ISSUER: ISSUER }).issuer).toBe(ISSUER);
+    expect(oidcSettings(settingsFrom({ OIDC_ISSUER: ` ${slashed}\n` })).issuer).toBe(slashed);
+    expect(oidcSettings(settingsFrom({ OIDC_ISSUER: ISSUER })).issuer).toBe(ISSUER);
   });
 
   it('reads the internal address, or takes it from a JWKS URI on another host', () => {
     expect(
-      oidcSettings({ OIDC_ISSUER: ISSUER, OIDC_INTERNAL_URL: `${INTERNAL}/` }).internalUrl,
+      oidcSettings(settingsFrom({ OIDC_ISSUER: ISSUER, OIDC_INTERNAL_URL: `${INTERNAL}/` }))
+        .internalUrl,
     ).toBe(INTERNAL);
-    const derived = oidcSettings({
-      OIDC_ISSUER: `${ISSUER}/`,
-      OIDC_JWKS_URI: `${INTERNAL}/realms/quiz-dock/protocol/openid-connect/certs`,
-    });
+    const derived = oidcSettings(
+      settingsFrom({
+        OIDC_ISSUER: `${ISSUER}/`,
+        OIDC_JWKS_URI: `${INTERNAL}/realms/quiz-dock/protocol/openid-connect/certs`,
+      }),
+    );
     expect(derived.issuer).toBe(`${ISSUER}/`);
     expect(derived.internalUrl).toBe(INTERNAL);
-    expect(oidcSettings({ OIDC_ISSUER: ISSUER }).internalUrl).toBeNull();
+    expect(oidcSettings(settingsFrom({ OIDC_ISSUER: ISSUER })).internalUrl).toBeNull();
   });
 });
 
@@ -91,7 +101,9 @@ describe('OidcClient', () => {
   });
 
   const client = (env: NodeJS.ProcessEnv = {}) =>
-    new OidcClient(oidcSettings({ OIDC_ISSUER: ISSUER, OIDC_INTERNAL_URL: INTERNAL, ...env }));
+    new OidcClient(
+      oidcSettings(settingsFrom({ OIDC_ISSUER: ISSUER, OIDC_INTERNAL_URL: INTERNAL, ...env })),
+    );
 
   it('fetches discovery on the internal address, sends the browser to the public one', async () => {
     const url = new URL(
@@ -121,14 +133,14 @@ describe('OidcClient', () => {
   it('finds the discovery of an issuer whose path ends in a slash, on either address', async () => {
     const slashed = 'https://idp.example.com/tenant/app/';
     fetchMock.mockImplementation(async () => json(200, { ...discovery, issuer: slashed }));
-    await new OidcClient(oidcSettings({ OIDC_ISSUER: slashed })).authorizationUrl({
+    await new OidcClient(oidcSettings(settingsFrom({ OIDC_ISSUER: slashed }))).authorizationUrl({
       redirectUri: 'http://app/auth/callback',
       state: 'st',
       nonce: 'no',
       codeVerifier: 'v',
     });
     await new OidcClient(
-      oidcSettings({ OIDC_ISSUER: slashed, OIDC_INTERNAL_URL: 'http://idp:9000' }),
+      oidcSettings(settingsFrom({ OIDC_ISSUER: slashed, OIDC_INTERNAL_URL: 'http://idp:9000' })),
     ).authorizationUrl({
       redirectUri: 'http://app/auth/callback',
       state: 'st',

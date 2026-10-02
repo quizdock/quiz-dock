@@ -5,6 +5,8 @@ import { allowsAnonymousParticipants, authMode } from './auth-mode';
 import { AuthConfigDto } from './dto/auth-config.dto';
 import { communityRegistries } from '../store/community/community-config';
 import { Public } from './public.decorator';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** Expose la config d'auth à la SPA (publique, pas de JWT requis). */
 @ApiTags('auth')
@@ -19,7 +21,7 @@ export class AuthConfigController {
       mode,
       communityStore: communityRegistries().length > 0,
       demo: isDemoMode() ? { user: DEMO_USER } : null,
-      standalone: process.env.QUIZDOCK_FLAVOR === 'standalone',
+      standalone: settings.get(SETTINGS.QUIZDOCK_FLAVOR) === 'standalone',
       anonymousParticipants: allowsAnonymousParticipants(),
     };
   }

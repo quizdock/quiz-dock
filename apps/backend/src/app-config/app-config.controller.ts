@@ -6,6 +6,8 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { Public } from '../auth/public.decorator';
 import { instanceLanguage } from '../common/instance-language';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** The icon (tab, home screen), which an operator may give in `branding/`. */
 export const ICONS = ['favicon.png'];
@@ -28,13 +30,13 @@ export class AppConfigController {
   @Header('Content-Type', 'application/javascript; charset=utf-8')
   @Header('Cache-Control', 'no-store')
   configJs(): string {
-    const appName = process.env.APP_NAME ?? 'QuizDock';
+    const appName = settings.get(SETTINGS.APP_NAME);
     const lang = instanceLanguage();
 
     // Vide (le défaut) = le SPA cherche le logo dans `branding/`, tous formats web.
-    const logoUrl = process.env.APP_LOGO_URL ?? '';
+    const logoUrl = settings.get(SETTINGS.APP_LOGO_URL);
     // The home page's feedback links: empty = the QuizDock repository, `none` = hidden.
-    const feedbackUrl = process.env.APP_FEEDBACK_URL ?? '';
+    const feedbackUrl = settings.get(SETTINGS.APP_FEEDBACK_URL);
     // JSON is valid JavaScript, whatever the values hold (quotes, backslashes, line breaks).
     // A new room's screens move between steps unless the instance says `off` (UI system §1.8).
     const liveMotion = liveMotionDefault();
@@ -53,7 +55,7 @@ export class AppConfigController {
   @ApiExcludeEndpoint() // asset CSS (chargé via <link>), pas un endpoint d'API
   @Header('Content-Type', 'text/css; charset=utf-8')
   async overrideCss(@Res({ passthrough: true }) res: Response): Promise<string> {
-    const dir = process.env.CLIENT_DIR;
+    const dir = settings.get(SETTINGS.CLIENT_DIR);
     try {
       if (dir) return await readFile(join(dir, 'branding', 'override.css'), 'utf8');
     } catch {
@@ -73,13 +75,13 @@ export class AppConfigController {
   @Header('Content-Type', 'application/manifest+json; charset=utf-8')
   @Header('Cache-Control', 'no-cache')
   async manifest(): Promise<string> {
-    const dir = process.env.CLIENT_DIR;
+    const dir = settings.get(SETTINGS.CLIENT_DIR);
     if (!dir) throw new NotFoundException();
     const built = JSON.parse(await readFile(join(dir, 'manifest.webmanifest'), 'utf8')) as Record<
       string,
       unknown
     >;
-    const name = process.env.APP_NAME ?? 'QuizDock';
+    const name = settings.get(SETTINGS.APP_NAME);
     return JSON.stringify({ ...built, name, short_name: name, lang: instanceLanguage() });
   }
 
@@ -93,7 +95,7 @@ export class AppConfigController {
   @ApiExcludeEndpoint()
   @Header('Cache-Control', 'no-cache')
   async icon(@Req() req: Request, @Res() res: Response): Promise<void> {
-    const dir = process.env.CLIENT_DIR;
+    const dir = settings.get(SETTINGS.CLIENT_DIR);
     const name = ICONS.find((icon) => req.path === `/${icon}`);
     if (!dir || !name) throw new NotFoundException();
     const own = join(dir, 'branding', name);

@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { Logger } from '@nestjs/common';
 import { createRemoteJWKSet, type JWTPayload, jwtVerify } from 'jose';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings, type SettingsService } from '../../admin/settings/settings.service';
 
 type Jwks = ReturnType<typeof createRemoteJWKSet>;
 
@@ -89,18 +91,19 @@ export function issuerMismatch(discovered: string, configured: string): string |
  * `OIDC_JWKS_URI` pointing elsewhere than the issuer — the setup that variable
  * already described (the provider seen under another name from the backend).
  */
-export function oidcSettings(env: NodeJS.ProcessEnv = process.env): OidcSettings {
-  const issuer = readIssuer(env.OIDC_ISSUER);
-  const jwksUri = env.OIDC_JWKS_URI || null;
-  let internalUrl = env.OIDC_INTERNAL_URL ? originOf(env.OIDC_INTERNAL_URL) : null;
+export function oidcSettings(from: SettingsService = settings): OidcSettings {
+  const issuer = readIssuer(from.get(SETTINGS.OIDC_ISSUER));
+  const jwksUri = from.get(SETTINGS.OIDC_JWKS_URI) || null;
+  const configuredInternal = from.get(SETTINGS.OIDC_INTERNAL_URL);
+  let internalUrl = configuredInternal ? originOf(configuredInternal) : null;
   if (!internalUrl && jwksUri && originOf(jwksUri) !== originOf(issuer)) {
     internalUrl = originOf(jwksUri);
   }
   return {
     issuer,
-    clientId: env.OIDC_CLIENT_ID || 'quiz-dock-frontend',
-    clientSecret: env.OIDC_CLIENT_SECRET || null,
-    audience: env.OIDC_AUDIENCE || null,
+    clientId: from.get(SETTINGS.OIDC_CLIENT_ID),
+    clientSecret: from.get(SETTINGS.OIDC_CLIENT_SECRET) || null,
+    audience: from.get(SETTINGS.OIDC_AUDIENCE) || null,
     internalUrl,
     jwksUri,
     scope: 'openid profile email',

@@ -21,9 +21,11 @@ import {
   slideHasPlayback,
   slideSoundMedia,
   slideTimedMs,
+  SETTINGS,
 } from '@quiz-dock/contracts';
 import { QUESTION_MEDIA_INCLUDE, liveMediaOf } from '../questions/question-media';
-import { MEDIA_LEAD_MS, READ_DELAY_MS, gameSetting } from './game.keys';
+import { MEDIA_LEAD_MS } from './game.keys';
+import { settings } from '../admin/settings/settings.service';
 import { basePointsFor } from './scoring';
 import type { QuizSnapshot, SnapshotQuestion, SnapshotSlide } from './game.types';
 import type {
@@ -112,7 +114,7 @@ const optionImageOf = (
     : null;
 
 /** Reading window before the answers open (configurable, like the engine reads it). */
-const readDelayMs = () => gameSetting('GAME_READ_DELAY_MS', READ_DELAY_MS);
+const readDelayMs = () => settings.get(SETTINGS.GAME_READ_DELAY_MS);
 
 /**
  * Construit le snapshot serveur figé d'un quiz (SPECIFICATIONS §8). Fonction pure :

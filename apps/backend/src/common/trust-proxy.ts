@@ -1,5 +1,7 @@
 import { isIP } from 'node:net';
 import proxyaddr from 'proxy-addr';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** Decides whether the hop at `addr` (the `i`-th from the backend) is a proxy of ours. */
 export type TrustProxy = (addr: string, i: number) => boolean;
@@ -33,7 +35,7 @@ let trust: TrustProxy | null = null;
 
 /** The deployment's rule, read once from the environment. */
 export function trustProxy(): TrustProxy {
-  trust ??= parseTrustProxy(process.env.TRUST_PROXY);
+  trust ??= parseTrustProxy(settings.get(SETTINGS.TRUST_PROXY));
   return trust;
 }
 

@@ -10,6 +10,7 @@ import {
   type OidcSettings,
 } from '../../auth/oidc/oidc-client';
 import { migrationStatus } from './migrate-status';
+import { settingsFrom } from '../../admin/settings/settings.service';
 
 export interface DoctorDeps {
   prisma: Pick<PrismaService, '$queryRaw'>;
@@ -116,7 +117,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
     );
     let settings: OidcSettings | null = null;
     try {
-      settings = oidcSettings(env);
+      settings = oidcSettings(settingsFrom(env));
     } catch (err) {
       fail((err as Error).message);
     }

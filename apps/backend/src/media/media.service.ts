@@ -24,7 +24,7 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import type { MediaAsset, MediaKind } from '@prisma/client';
-import { GameState, type MediaRejection, sniffMedia } from '@quiz-dock/contracts';
+import { GameState, type MediaRejection, sniffMedia, SETTINGS } from '@quiz-dock/contracts';
 import { isDemoMode } from '../demo/demo.config';
 import { type GameId, ROOM_HASH_KEY, gameKeys } from '../game/game.keys';
 import { PrismaService } from '../prisma/prisma.service';
@@ -33,6 +33,7 @@ import { parseUploadMeta } from './dto/media-upload-meta';
 import { mediaLimits, mediaUrl, uploadCeiling } from './media.config';
 import { mediaDimensions } from './media-dimensions';
 import { MEDIA_SLOTS, shownInText } from './media-usage.sql';
+import { settings } from '../admin/settings/settings.service';
 
 interface UploadFile {
   buffer: Buffer;
@@ -125,7 +126,7 @@ const REJECTION_CODE: Record<MediaRejection, string> = {
 @Injectable()
 export class MediaService implements OnModuleInit {
   private readonly logger = new Logger(MediaService.name);
-  private readonly dir = process.env.MEDIA_DIR ?? join(process.cwd(), '.media');
+  private readonly dir = settings.path(SETTINGS.MEDIA_DIR);
 
   constructor(
     private readonly prisma: PrismaService,

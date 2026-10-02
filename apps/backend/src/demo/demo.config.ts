@@ -1,3 +1,6 @@
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
+
 /**
  * `DEMO_MODE=true` — a public, unattended instance. Independent of `AUTH_MODE`:
  * local mode says who may host, demo mode says the instance is open to all and
@@ -5,7 +8,7 @@
  * no media uploads, a periodic reset to a blank state. Read lazily so tests can
  * flip the variable.
  */
-export const isDemoMode = (): boolean => process.env.DEMO_MODE === 'true';
+export const isDemoMode = (): boolean => settings.get(SETTINGS.DEMO_MODE);
 
 /**
  * The one host account every visitor shares. Whatever name a request carries, a

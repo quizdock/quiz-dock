@@ -9,6 +9,8 @@ import { ActiveGameDto } from './dto/active-game.dto';
 import { JoinAddressesDto } from './dto/join-addresses.dto';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** Addresses Docker gives its bridge networks (172.17–31.x.x): never an invitation address. */
 const DOCKER_BRIDGE = /^172\.(1[7-9]|2\d|3[01])\./;
@@ -53,11 +55,8 @@ export class GameController {
   @Get('join-addresses')
   @ApiOkResponse({ type: JoinAddressesDto })
   joinAddresses(): JoinAddressesDto {
-    const publicUrl = (process.env.APP_PUBLIC_URL ?? '').trim().replace(/\/+$/, '');
-    const configured = (process.env.HOST_LAN_IPS ?? '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const publicUrl = settings.get(SETTINGS.APP_PUBLIC_URL);
+    const configured = settings.get(SETTINGS.HOST_LAN_IPS);
     if (configured.length) {
       return {
         publicUrl: publicUrl || null,

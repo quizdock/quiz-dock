@@ -18,6 +18,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { QuizPortableService } from '../quizzes/portable/quiz-portable.service';
 import { loadSamples, questionCountOf, type SampleBundle } from '../quizzes/samples/samples';
 import { type TemplateSteps, templateSteps } from './store-preview';
+import { SETTINGS } from '@quiz-dock/contracts';
+import { settings } from '../admin/settings/settings.service';
 
 /** One entry of the catalogue, as `index.json` holds it. */
 export interface StoreEntry {
@@ -211,7 +213,7 @@ const MANIFEST = 'quiz.json';
 @Injectable()
 export class StoreService implements OnModuleInit {
   private readonly log = new Logger(StoreService.name);
-  private readonly dir = process.env.STORE_DIR ?? join(process.cwd(), '.store');
+  private readonly dir = settings.path(SETTINGS.STORE_DIR);
   /** The last change of the index, which the next one waits for (see `updateIndex`). */
   private indexWrites: Promise<unknown> = Promise.resolve();
 
