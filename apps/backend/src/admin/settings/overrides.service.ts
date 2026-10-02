@@ -34,6 +34,7 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
 
   /** The store the backend's settings read (a fresh one in tests). */
   store: OverrideStore = overrides;
+  private generation = 0;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -61,10 +62,16 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
     await this.subscriber?.quit().catch(() => undefined);
   }
 
-  /** Reads every override again: the settings swap to them at once. */
+  /**
+   * Reads every override again: the settings swap to them at once. Reads may
+   * overlap (the timer, a replica's message, a change here): only the latest
+   * started is kept, so one begun before a change never undoes it.
+   */
   async reload(): Promise<void> {
+    const generation = ++this.generation;
     const rows = await this.prisma.instanceSetting.findMany({ select: { key: true, value: true } });
-    // The settings only: the instance's flags and palette live in the same table.
+    if (generation !== this.generation) return;
+    // The settings only: the instance's flags live in the same table.
     this.store.replace(rows.filter((r) => SETTING_KEYS.has(r.key)).map((r) => [r.key, r.value]));
   }
 
@@ -117,6 +124,17 @@ export class OverridesService implements OnModuleInit, OnModuleDestroy {
   /** An instance flag (`setup.completed`…), not a setting. */
   flag(key: string): Promise<string | null> {
     return this.value(FLAG_PREFIX + key);
+  }
+
+  /**
+   * Removes a flag if it still holds this value: true for the one caller that
+   * removed it, however many race (a single-use token).
+   */
+  async takeFlag(key: string, value: string): Promise<boolean> {
+    const { count } = await this.prisma.instanceSetting.deleteMany({
+      where: { key: FLAG_PREFIX + key, value },
+    });
+    return count === 1;
   }
 
   setFlag(

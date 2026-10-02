@@ -63,6 +63,12 @@ export interface AdminOperation<P = unknown, R = unknown> {
   describe?(params: P): string | Promise<string>;
   /** The settings it changes: the gate checks `ADMIN_LOCK` against them. */
   settings?(params: P): string[];
+  /**
+   * What the audit keeps of the parameters, as they came (valid or not): an
+   * operation masks there what they carry — a secret setting's value — before
+   * the runner masks the names that say a secret.
+   */
+  redact?(params: Record<string, unknown>): Record<string, unknown>;
   /** Longer than the runner's default, for a long purge or an import. */
   timeoutMs?: number;
   run(ctx: OperationContext, params: P): Promise<OperationResult<R>>;

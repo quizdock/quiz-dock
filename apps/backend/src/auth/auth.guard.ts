@@ -44,8 +44,9 @@ export class AuthGuard implements CanActivate {
     const user = await this.users.upsertFromPrincipal(principal);
     // The instance's own administration (`@ManagerOnly`): the `admin` role, nothing else.
     if (this.reflector.getAllAndOverride<boolean>(MANAGER_ONLY_KEY, targets)) {
-      if (!isManager(user.roles)) throw new ForbiddenException('auth.admin_required');
+      // Known before the refusal: the administration audits who was turned away.
       req.user = user;
+      if (!isManager(user.roles)) throw new ForbiddenException('auth.admin_required');
       return true;
     }
     const anyRole = this.reflector.getAllAndOverride<boolean>(ALLOW_ANY_ROLE_KEY, targets);

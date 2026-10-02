@@ -11,7 +11,9 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
+  UseFilters,
 } from '@nestjs/common';
+import { RefusalAuditFilter } from '../admin/http/refusal-audit.filter';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { User } from '@prisma/client';
 import {
@@ -50,6 +52,7 @@ import { uploadCeiling } from './media.config';
 @ApiTags('admin')
 @ApiBearerAuth()
 @ManagerOnly()
+@UseFilters(RefusalAuditFilter)
 @Controller('admin/media')
 export class MediaAdminController {
   constructor(

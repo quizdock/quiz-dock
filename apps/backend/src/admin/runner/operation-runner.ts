@@ -6,7 +6,8 @@ import {
   type RefusalCode,
   SETTINGS,
 } from '@quiz-dock/contracts';
-import { HttpException } from '@nestjs/common';
+import { HttpException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { isManager } from '../../auth/roles';
 import type { AuditRepository } from '../audit/audit.repository';
@@ -112,6 +113,7 @@ const fingerprint = (state: RunState) =>
  * rights, validation, gate, dry run, confirmation, execution.
  */
 export class OperationRunner {
+  private readonly log = new Logger('Administration');
   private readonly byId: Map<string, AdminOperation>;
   readonly steps: OperationStep[];
 
@@ -146,7 +148,9 @@ export class OperationRunner {
   /** Every operation, and whether this caller may run it (§3.4 `catalogue`). */
   catalogue(actor: CallActor): OperationDescriptor[] {
     return [...this.byId.values()].map((op) => {
-      const refusal = this.rights(op, actor) ?? this.scope(op, actor);
+      // The token is not checked here: a catalogue that told a right token from a
+      // wrong one would let anyone guess it, unthrottled. A run checks it, counted.
+      const refusal = this.rights(op, actor) ?? this.scope(op, actor, false);
       return {
         id: op.id,
         domain: op.domain,
@@ -185,32 +189,45 @@ export class OperationRunner {
         const { op, call } = state;
         const changes = op && op.effect !== 'read' && !call.dryRun;
         if (outcome.kind === 'confirm' || !(changes || outcome.kind === 'refused')) return outcome;
-        await this.audit.append({
-          via: call.actor.via,
-          actor: call.actor.name,
-          userId: call.actor.userId ?? null,
-          address: call.actor.address ?? null,
-          operation: call.id.slice(0, 64),
-          params: maskParams({
-            ...((state.params ?? call.raw ?? {}) as Record<string, unknown>),
-            ...(outcome.kind === 'result' && outcome.result.memento
-              ? { before: outcome.result.memento }
-              : {}),
-          }),
-          outcome: outcome.kind === 'result' ? outcome.result.outcome : 'refused',
-          code: outcome.kind === 'refused' ? outcome.code : null,
-          durationMs: Date.now() - started,
-        });
+        const params = (state.params ?? call.raw ?? {}) as Record<string, unknown>;
+        // The audit failing must not turn a change made into an error: logged, the answer kept.
+        await this.audit
+          .append({
+            via: call.actor.via,
+            actor: call.actor.name,
+            userId: call.actor.userId ?? null,
+            address: call.actor.address ?? null,
+            operation: call.id.slice(0, 64),
+            // The operation masks what its parameters carry (a secret setting's value),
+            // then the names that say a secret.
+            params: maskParams({
+              ...(op?.redact ? op.redact(params) : params),
+              ...(outcome.kind === 'result' && outcome.result.memento
+                ? { before: outcome.result.memento }
+                : {}),
+            }),
+            outcome: outcome.kind === 'result' ? outcome.result.outcome : 'refused',
+            code: outcome.kind === 'refused' ? (outcome.domain?.code ?? outcome.code) : null,
+            durationMs: Date.now() - started,
+          })
+          .catch((err: Error) =>
+            this.log.error(`${call.id} not audited: ${err.message}`, err.stack),
+          );
         return outcome;
       },
     };
   }
 
-  /** 8 — whatever goes wrong becomes a stable code; no stack, no internal value. */
+  /**
+   * 8 — whatever goes wrong becomes a stable code; no stack, no internal value
+   * in the answer. A domain error keeps its own code and status (§3.3, no
+   * regression for the pages that predate the runner); an unknown one is
+   * logged with its stack and answered in general terms.
+   */
   private errorsStep(): OperationStep {
     return {
       name: 'errors',
-      handle: async (_state, next) => {
+      handle: async (state, next) => {
         try {
           return await next();
         } catch (err) {
@@ -227,9 +244,26 @@ export class OperationRunner {
                     : status < 500
                       ? 'invalid_params'
                       : 'failed';
-            return refused(code, err.message);
+            const body = err.getResponse() as { code?: unknown; params?: unknown } | string;
+            const domain =
+              typeof body === 'object' && typeof body.code === 'string'
+                ? {
+                    code: body.code,
+                    status,
+                    ...(body.params && typeof body.params === 'object'
+                      ? { params: body.params as Record<string, unknown> }
+                      : {}),
+                  }
+                : undefined;
+            return { ...refused(code, domain?.code ?? err.message), ...(domain ? { domain } : {}) };
           }
-          return refused('failed', (err as Error)?.message ?? 'The operation failed.');
+          if (err instanceof Prisma.PrismaClientKnownRequestError) {
+            // Two callers on the same row: what the global filter answers outside the runner.
+            if (err.code === 'P2025') return refused('not_found', 'It no longer exists.');
+            if (err.code === 'P2002') return refused('conflict', 'It already exists.');
+          }
+          this.log.error(`${state.call.id} failed`, (err as Error)?.stack ?? String(err));
+          return refused('failed', 'The operation failed; the details are in the server log.');
         }
       },
     };
@@ -295,11 +329,12 @@ export class OperationRunner {
   }
 
   /** What the web may change (§3.7, §3.10): the scope, local mode's token. */
-  private scope(op: AdminOperation, actor: CallActor): Refusal | null {
+  private scope(op: AdminOperation, actor: CallActor, verify = true): Refusal | null {
     if (actor.via === 'cli' || op.effect === 'read' || actor.setup) return null;
     if (this.settings.get(SETTINGS.AUTH_MODE) === 'none' && op.domain !== 'media') {
       const token = this.settings.get(SETTINGS.ADMIN_TOKEN);
-      if (!token || !actor.adminToken || !sameSecret(token, actor.adminToken)) {
+      const given = !!actor.adminToken && (!verify || sameSecret(token, actor.adminToken));
+      if (!token || !given) {
         return refused(
           'local_mode_token',
           token

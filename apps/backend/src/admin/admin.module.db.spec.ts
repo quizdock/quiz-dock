@@ -77,6 +77,22 @@ describe('AdminModule (integration)', () => {
     expect((await search({ q: 'admin-db', role: 'host' })).total).toBe(0);
   });
 
+  it("a secret setting's value never reaches the audit, even refused", async () => {
+    const outcome = await runner.run({
+      id: 'settings.set',
+      raw: { key: 'OIDC_CLIENT_SECRET', value: 'S3cret-in-clear' },
+      actor: cli,
+    });
+    expect(outcome.kind).toBe('refused');
+    const [entry] = await prisma.adminAudit.findMany({
+      where: { actor: 'tester', operation: 'settings.set' },
+      orderBy: { id: 'desc' },
+      take: 1,
+    });
+    expect(JSON.stringify(entry.params)).not.toContain('S3cret');
+    expect(entry.params).toMatchObject({ key: 'OIDC_CLIENT_SECRET', value: '***' });
+  });
+
   it('users.set-role grants, is confirmed and audited', async () => {
     const call = { id: 'users.set-role', raw: { user: subject, roles: 'admin' }, actor: cli };
     const ask = await runner.run(call);

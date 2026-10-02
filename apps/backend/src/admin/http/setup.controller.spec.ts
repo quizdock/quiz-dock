@@ -64,6 +64,7 @@ describe('the setup wizard API (§3.8)', () => {
       memoryFlags() as unknown as OverridesService,
       fakeRedis() as unknown as RedisService,
       { user: { count: () => Promise.resolve(0) } } as never,
+      new MemoryAuditRepository(),
     );
     const runner = new OperationRunner(
       ops,
@@ -112,7 +113,7 @@ describe('the setup wizard API (§3.8)', () => {
   });
 
   it('the phone test page answers a phone with a page of its own', async () => {
-    const { id } = await setup.startPhoneTest('http://192.168.1.10:18080');
+    const { id } = await setup.startPhoneTest('http://192.168.1.10:18080', true);
     const res = await request(nest.getHttpServer())
       .get(`/setup/phone/${id}`)
       .set('User-Agent', 'Phone')
@@ -120,5 +121,11 @@ describe('the setup wizard API (§3.8)', () => {
     expect(res.headers['content-type']).toContain('text/html');
     expect(res.text).toContain('✓');
     expect(await setup.testedAddresses()).toEqual(['http://192.168.1.10:18080']);
+  });
+
+  it('a test started outside the wizard remembers nothing', async () => {
+    const { id } = await setup.startPhoneTest('https://elsewhere.example', false);
+    await request(nest.getHttpServer()).get(`/setup/phone/${id}`).expect(200);
+    expect(await setup.testedAddresses()).not.toContain('https://elsewhere.example');
   });
 });

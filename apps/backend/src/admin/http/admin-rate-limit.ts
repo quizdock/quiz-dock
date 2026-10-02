@@ -6,7 +6,10 @@ export const ADMIN_CALLS_MAX = 120;
 export const ADMIN_CALLS_WINDOW_S = 60;
 /** Wrong administration tokens one address may give (local mode) before it waits. */
 export const ADMIN_TOKEN_FAILURES_MAX = 10;
+/** …and from every address together. */
+export const ADMIN_TOKEN_FAILURES_GLOBAL_MAX = 50;
 export const ADMIN_TOKEN_WINDOW_S = 15 * 60;
+const GLOBAL = 'admin-token:*';
 
 /**
  * Limits on the admin API (§3.10): a steady pace per account, and few wrong
@@ -25,14 +28,23 @@ export class AdminRateLimit {
 
   /** Refuses an address that gave too many wrong tokens. */
   async tokenAllowed(address: string): Promise<void> {
-    const failures = Number((await this.redis.get(`admin-token:${address}`)) ?? 0);
-    if (failures >= ADMIN_TOKEN_FAILURES_MAX) {
+    const [mine, all] = await Promise.all([
+      this.redis.get(`admin-token:${address}`),
+      this.redis.get(GLOBAL),
+    ]);
+    if (
+      Number(mine ?? 0) >= ADMIN_TOKEN_FAILURES_MAX ||
+      Number(all ?? 0) >= ADMIN_TOKEN_FAILURES_GLOBAL_MAX
+    ) {
       throw new HttpException({ code: 'admin.too_many_requests' }, HttpStatus.TOO_MANY_REQUESTS);
     }
   }
 
   async tokenFailed(address: string): Promise<void> {
-    await this.bump(`admin-token:${address}`, ADMIN_TOKEN_WINDOW_S);
+    await Promise.all([
+      this.bump(`admin-token:${address}`, ADMIN_TOKEN_WINDOW_S),
+      this.bump(GLOBAL, ADMIN_TOKEN_WINDOW_S),
+    ]);
   }
 
   /** INCR within a window opened by the first hit (SET … NX with its expiry). */

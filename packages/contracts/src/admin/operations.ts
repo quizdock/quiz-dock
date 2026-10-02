@@ -71,7 +71,18 @@ export type OperationOutcome =
   | { kind: 'result'; result: OperationResult }
   /** Ask, then call again with the token. */
   | { kind: 'confirm'; token: string; summary: string }
-  | { kind: 'refused'; code: RefusalCode; message: string; params?: Record<string, unknown> };
+  | {
+      kind: 'refused';
+      code: RefusalCode;
+      message: string;
+      params?: Record<string, unknown>;
+      /**
+       * The domain's own error behind the refusal (`media.playing`, with its
+       * status and parameters): the API answers it as is, so a page that
+       * predates the runner keeps its messages.
+       */
+      domain?: { code: string; status: number; params?: Record<string, unknown> };
+    };
 
 /** An operation as the catalogue lists it. */
 export interface OperationDescriptor {

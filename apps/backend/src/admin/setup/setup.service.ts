@@ -1,23 +1,34 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RedisService } from '../../redis/redis.service';
+import { AUDIT_REPOSITORY } from '../admin.tokens';
+import type { AuditRepository } from '../audit/audit.repository';
 import { OverridesService } from '../settings/overrides.service';
 
 /** How long a setup token stays valid, unused (§3.10). */
 export const SETUP_TOKEN_TTL_MS = 24 * 60 * 60_000;
 /** How long the wizard's session lasts once the token was given. */
 export const SETUP_SESSION_TTL_S = 2 * 60 * 60;
-/** Wrong tokens one address may try before it waits. */
-export const SETUP_ATTEMPTS_MAX = 10;
+/**
+ * Wrong tokens tried, from every address together, before the wizard waits:
+ * the token's 144 bits need no lock — this one only stops a flood. A new token
+ * (`qd setup.token`) lifts it.
+ */
+export const SETUP_ATTEMPTS_MAX = 100;
 export const SETUP_ATTEMPTS_WINDOW_S = 15 * 60;
 /** How long a phone test waits for the phone. */
 export const PHONE_TEST_TTL_S = 10 * 60;
+
+const ATTEMPTS = 'setup-attempts';
+const SESSION = 'setup-session:';
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 
 export interface PhoneTest {
   address: string;
+  /** Started from the wizard: the address is remembered once a phone reached it. */
+  remember: boolean;
   reached: { at: string; agent: string } | null;
 }
 
@@ -35,6 +46,7 @@ export class SetupService {
     private readonly overrides: OverridesService,
     private readonly redis: RedisService,
     private readonly prisma: PrismaService,
+    @Inject(AUDIT_REPOSITORY) private readonly audit: AuditRepository,
   ) {}
 
   async completed(): Promise<boolean> {
@@ -46,6 +58,9 @@ export class SetupService {
     const token = randomBytes(18).toString('base64url');
     const until = Date.now() + SETUP_TOKEN_TTL_MS;
     await this.overrides.setFlag('token', JSON.stringify({ hash: hash(token), until }), actor);
+    // The setup has begun: a restart in the middle of it keeps it open (see announce).
+    await this.overrides.setFlag('started', new Date().toISOString(), actor);
+    await this.redis.del(ATTEMPTS);
     return token;
   }
 
@@ -56,9 +71,13 @@ export class SetupService {
    */
   async announce(): Promise<void> {
     if (await this.completed()) return;
-    const accounts = await this.prisma.user.count({
-      where: { NOT: { oidcSubject: { startsWith: 'system:' } } },
-    });
+    // An instance that never began a setup and has accounts predates the wizard.
+    // One that began it keeps it, whatever accounts the wizard itself created.
+    const accounts = (await this.overrides.flag('started'))
+      ? 0
+      : await this.prisma.user.count({
+          where: { NOT: { oidcSubject: { startsWith: 'system:' } } },
+        });
     if (accounts > 0) {
       await this.complete({ name: 'already in use' });
       this.log.log('Instance already in use: the setup wizard is not offered.');
@@ -71,10 +90,12 @@ export class SetupService {
     );
   }
 
-  /** Exchanges the token for a wizard session; the token is spent. Attempts limited per address. */
+  /**
+   * Exchanges the token for a wizard session; the token is spent — by one
+   * request only, however many race for it. A wrong token is audited.
+   */
   async open(token: string, address: string): Promise<string | null> {
-    const attempts = `setup-attempts:${address}`;
-    if (Number((await this.redis.get(attempts)) ?? 0) >= SETUP_ATTEMPTS_MAX) {
+    if (Number((await this.redis.get(ATTEMPTS)) ?? 0) >= SETUP_ATTEMPTS_MAX) {
       throw new SetupLockedError();
     }
     const stored = await this.overrides.flag('token');
@@ -91,40 +112,65 @@ export class SetupService {
     if (!ok) {
       await this.redis
         .multi()
-        .set(attempts, '0', 'EX', SETUP_ATTEMPTS_WINDOW_S, 'NX')
-        .incr(attempts)
+        .set(ATTEMPTS, '0', 'EX', SETUP_ATTEMPTS_WINDOW_S, 'NX')
+        .incr(ATTEMPTS)
         .exec();
+      await this.audit
+        .append({
+          via: 'api',
+          actor: 'setup',
+          userId: null,
+          address,
+          operation: 'setup.session',
+          params: {},
+          outcome: 'refused',
+          code: 'forbidden',
+          durationMs: 0,
+        })
+        .catch((err: Error) => this.log.error(`A wrong setup token not audited: ${err.message}`));
       return null;
     }
-    await this.overrides.setFlag('token', null, { name: 'setup' });
+    if (!stored || !(await this.overrides.takeFlag('token', stored))) return null;
     const session = randomBytes(24).toString('base64url');
-    await this.redis.set(`setup-session:${session}`, '1', 'EX', SETUP_SESSION_TTL_S);
+    await this.redis.set(`${SESSION}${session}`, '1', 'EX', SETUP_SESSION_TTL_S);
     return session;
   }
 
   /** Whether a wizard session is valid (and the setup still open). */
   async session(session: string | undefined): Promise<boolean> {
     if (!session || !/^[\w-]{20,64}$/.test(session)) return false;
-    return (await this.redis.get(`setup-session:${session}`)) !== null && !(await this.completed());
+    return (await this.redis.get(`${SESSION}${session}`)) !== null && !(await this.completed());
   }
 
   async complete(actor: { name: string; userId?: string }): Promise<void> {
     await this.overrides.setFlag('completed', new Date().toISOString(), actor);
     await this.overrides.setFlag('token', null, actor);
+    await this.endSessions();
   }
 
+  /** Reopened: a new token, and none of the sessions opened before works again. */
   async reopen(actor: { name: string; userId?: string }): Promise<string> {
+    await this.endSessions();
     await this.overrides.setFlag('completed', null, actor);
     return this.newToken(actor);
   }
 
+  private async endSessions(): Promise<void> {
+    const keys = await this.redis.scanKeys(`${SESSION}*`);
+    if (keys.length) await this.redis.del(...keys);
+  }
+
   // ── Phone test (§3.8, step 3) ──────────────────────────────────────────────
 
-  async startPhoneTest(address: string): Promise<{ id: string }> {
+  /**
+   * `remember`: from the wizard only — an address a phone reached is then offered
+   * first. From the administration, a test checks and leaves nothing behind.
+   */
+  async startPhoneTest(address: string, remember: boolean): Promise<{ id: string }> {
     const id = randomBytes(12).toString('base64url');
     await this.redis.set(
       `phone-test:${id}`,
-      JSON.stringify({ address, reached: null } satisfies PhoneTest),
+      JSON.stringify({ address, remember, reached: null } satisfies PhoneTest),
       'EX',
       PHONE_TEST_TTL_S,
     );
@@ -142,7 +188,9 @@ export class SetupService {
     const test = await this.phoneTest(id);
     if (!test) return false;
     test.reached = { at: new Date().toISOString(), agent: agent.slice(0, 200) };
-    await this.redis.set(`phone-test:${id}`, JSON.stringify(test), 'EX', PHONE_TEST_TTL_S);
+    // Its expiry stays: a page reloaded on the phone does not keep a test alive.
+    await this.redis.set(`phone-test:${id}`, JSON.stringify(test), 'KEEPTTL');
+    if (!test.remember) return true;
     const tested = new Set(await this.testedAddresses());
     tested.add(test.address);
     await this.overrides.setFlag('tested-addresses', JSON.stringify([...tested].slice(-20)), {
@@ -169,7 +217,7 @@ export async function readTestedAddresses(flags: {
   }
 }
 
-/** Too many wrong setup tokens from one address. */
+/** Too many wrong setup tokens, all addresses together. */
 export class SetupLockedError extends Error {
   constructor() {
     super('setup.too_many_attempts');

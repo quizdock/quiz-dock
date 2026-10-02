@@ -14,6 +14,30 @@ import {
 } from './operation';
 
 const DEFINITIONS = new Map(SETTING_LIST.map((d) => [d.key, d]));
+
+/**
+ * A secret setting's value never reaches the audit — not even when the change
+ * is refused (a secret is never overridable, and the attempt is audited).
+ */
+const redactSecretValue = (params: Record<string, unknown>) =>
+  typeof params.key === 'string' &&
+  DEFINITIONS.get(params.key.toUpperCase())?.secret &&
+  params.value !== undefined
+    ? { ...params, value: '***' }
+    : params;
+
+/**
+ * A value as a `.env` line takes it: bare when nothing in it is special; else in
+ * single quotes, which Compose reads literally — a `${OTHER}` in a value set from
+ * the web must not become another variable's value (a secret) once pasted.
+ */
+export function envLine(key: string, value: string): string {
+  if (!/[\s#"'$\\]/.test(value)) return `${key}=${value}`;
+  if (!value.includes("'")) return `${key}='${value}'`;
+  // A single quote cannot sit in single quotes: double ones, `$` escaped as `$$`.
+  return `${key}="${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\$/g, '$$$$')}"`;
+}
+
 const settingKey = z
   .string()
   .trim()
@@ -172,6 +196,7 @@ export class SettingsOperations {
         summary: 'Changes a setting from the administration; its .env value stays, to go back to.',
         params: z.object({ key: settingKey, value: z.string().max(10_000) }),
         settings: ({ key }) => [key],
+        redact: redactSecretValue,
         validate: ({ key, value }) => void checkOverride(key, value),
         confirmation: ({ key, value }) => {
           const def = DEFINITIONS.get(key);
@@ -229,7 +254,7 @@ export class SettingsOperations {
           const lines = this.overrides.store
             .entries()
             .filter(([k]) => DEFINITIONS.get(k) && !DEFINITIONS.get(k)?.secret)
-            .map(([k, v]) => `${k}=${/[\s#"'$]/.test(v) ? JSON.stringify(v) : v}`);
+            .map(([k, v]) => envLine(k, v));
           return Promise.resolve(
             done({
               env: lines.length

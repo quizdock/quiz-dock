@@ -569,6 +569,8 @@ export const SETTINGS = {
     defaultText: '— (provided by Compose)',
     applies: 'restart',
     overridable: false,
+    // An external Redis carries its password in the URL (`redis://:pw@host`).
+    secret: true,
   }),
   MEDIA_DIR: define({
     key: 'MEDIA_DIR',
@@ -855,11 +857,11 @@ export const SETTINGS = {
   ADMIN_TOKEN: define({
     key: 'ADMIN_TOKEN',
     description:
-      'Local mode (`AUTH_MODE=none`) has no accounts, so whoever reaches the instance could administer it: the web administration changes nothing there unless this token is set, and asks for it before any change. At least 32 characters.',
+      'Local mode (`AUTH_MODE=none`) has no accounts, so whoever reaches the instance could administer it: the web administration changes nothing there — the media library aside — unless this token is set, and asks for it before any change. At least 32 characters: a shorter one is ignored, as if unset.',
     category: 'admin',
     criticality: 'C1',
-    schema: text(),
-    bounds: z.string().min(32),
+    // Strict, not a warning: a short token is guessable, and it is local mode's only lock.
+    schema: z.string().min(32, 'shorter than 32 characters'),
     accepts: 'text, 32 characters or more',
     default: '',
     applies: 'restart',

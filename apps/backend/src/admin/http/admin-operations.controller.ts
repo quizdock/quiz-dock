@@ -1,4 +1,5 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Req, UseFilters } from '@nestjs/common';
+import { RefusalAuditFilter } from './refusal-audit.filter';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import type { Request } from 'express';
@@ -17,6 +18,7 @@ import { apiActor, refusalError } from './outcome-http';
 @ApiTags('admin')
 @ApiBearerAuth()
 @ManagerOnly()
+@UseFilters(RefusalAuditFilter)
 @Controller('admin/operations')
 export class AdminOperationsController {
   constructor(

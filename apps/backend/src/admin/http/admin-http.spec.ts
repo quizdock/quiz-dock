@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import { ConflictException, type INestApplication } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -10,13 +10,18 @@ import { HttpExceptionFilter } from '../../common/http-exception.filter';
 import { MediaAdminController } from '../../media/media-admin.controller';
 import { MediaAdminService } from '../../media/media-admin.service';
 import type { UsersService } from '../../users/users.service';
+import { AUDIT_REPOSITORY } from '../admin.tokens';
 import { MemoryAuditRepository } from '../audit/audit.repository';
 import { defineOperation, done } from '../operations/operation';
 import { MemoryConfirmationStore } from '../runner/confirmations';
 import { OperationRunner } from '../runner/operation-runner';
 import { settingsFrom } from '../settings/settings.service';
 import { AdminOperationsController } from './admin-operations.controller';
-import { ADMIN_TOKEN_FAILURES_MAX, AdminRateLimit } from './admin-rate-limit';
+import {
+  ADMIN_TOKEN_FAILURES_GLOBAL_MAX,
+  ADMIN_TOKEN_FAILURES_MAX,
+  AdminRateLimit,
+} from './admin-rate-limit';
 
 const TOKEN = 't'.repeat(40);
 const ran: string[] = [];
@@ -42,6 +47,25 @@ const ops = [
       ran.push(what);
       return Promise.resolve(done());
     },
+  }),
+  defineOperation({
+    id: 'thing.busy',
+    domain: 'instance',
+    category: 'health',
+    effect: 'read',
+    summary: 'Busy.',
+    params: z.object({}),
+    run: () => Promise.reject(new ConflictException({ code: 'media.playing' })),
+  }),
+  defineOperation({
+    id: 'thing.crash',
+    domain: 'instance',
+    category: 'health',
+    effect: 'read',
+    summary: 'Crashes.',
+    params: z.object({}),
+    run: () =>
+      Promise.reject(new Error('Invalid `prisma.quiz.delete()` invocation in /app/dist/x.js')),
   }),
   defineOperation({
     id: 'media.remove',
@@ -98,6 +122,7 @@ async function app(
       { provide: OperationRunner, useValue: runner },
       { provide: AdminRateLimit, useValue: new AdminRateLimit(fakeRedis() as never) },
       { provide: MediaAdminService, useValue: {} },
+      { provide: AUDIT_REPOSITORY, useValue: audit },
     ],
   }).compile();
   const nest = module.createNestApplication();
@@ -150,6 +175,12 @@ describe('the admin API', () => {
     await call('host', method, path).expect(403);
     await call('player', method, path).expect(403);
     expect(ran).toEqual([]);
+    // A refusal of rights at the guard is audited too (§3.10).
+    expect(audit.entries.at(-1)).toMatchObject({
+      actor: 'player',
+      outcome: 'refused',
+      code: 'forbidden',
+    });
   });
 
   it('lists the catalogue, with each operation reachable or not', async () => {
@@ -157,6 +188,8 @@ describe('the admin API', () => {
     expect(res.body.operations.map((o: { id: string }) => o.id)).toEqual([
       'thing.read',
       'thing.drop',
+      'thing.busy',
+      'thing.crash',
       'media.remove',
     ]);
   });
@@ -193,6 +226,17 @@ describe('the admin API', () => {
     expect(bad.body).toMatchObject({ code: 'admin.invalid_params', params: { path: 'what' } });
   });
 
+  it("keeps a domain's own error code and status (the media page's messages)", async () => {
+    const busy = await call('admin', 'post', '/admin/operations/thing.busy').send({}).expect(409);
+    expect(busy.body.code).toBe('media.playing');
+  });
+
+  it('answers an unexpected error in general terms: nothing of the internals', async () => {
+    const res = await call('admin', 'post', '/admin/operations/thing.crash').send({}).expect(500);
+    expect(res.body.code).toBe('admin.failed');
+    expect(JSON.stringify(res.body)).not.toContain('/app/dist');
+  });
+
   it('the media page still works, now audited, without asking again', async () => {
     await call('admin', 'delete', '/admin/media/instance/m1').expect(204);
     expect(ran).toEqual(['media:m1']);
@@ -219,5 +263,38 @@ describe('the admin API in local mode', () => {
     for (let i = 0; i < ADMIN_TOKEN_FAILURES_MAX; i++) await post('wrong').expect(403);
     expect((await post(TOKEN).expect(429)).body.code).toBe('admin.too_many_requests');
     await nest.close();
+  });
+
+  it('the catalogue never tells a right token from a wrong one', async () => {
+    const { app: nest } = await app({ ADMIN_WEB_SCOPE: 'write', ADMIN_TOKEN: TOKEN });
+    const catalogue = async (token: string) =>
+      (
+        await request(nest.getHttpServer())
+          .get('/admin/operations')
+          .set('X-Test-Role', 'admin')
+          .set('X-Admin-Token', token)
+          .expect(200)
+      ).body;
+    expect(await catalogue('wrong')).toEqual(await catalogue(TOKEN));
+    await nest.close();
+  });
+
+  it('a token shorter than 32 characters is ignored: the web changes nothing', async () => {
+    const { app: nest } = await app({ ADMIN_WEB_SCOPE: 'write', ADMIN_TOKEN: 'short' });
+    const res = await request(nest.getHttpServer())
+      .post('/admin/operations/thing.drop')
+      .set('X-Test-Role', 'admin')
+      .set('X-Admin-Token', 'short')
+      .send({ params: { what: 'z' } })
+      .expect(403);
+    expect(res.body.code).toBe('admin.local_mode_token');
+    await nest.close();
+  });
+
+  it('wrong tokens from many addresses, together, stop the guessing for all', async () => {
+    const limits = new AdminRateLimit(fakeRedis() as never);
+    for (let i = 0; i < ADMIN_TOKEN_FAILURES_GLOBAL_MAX; i++)
+      await limits.tokenFailed(`10.0.${i}.1`);
+    await expect(limits.tokenAllowed('10.9.9.9')).rejects.toMatchObject({ status: 429 });
   });
 });

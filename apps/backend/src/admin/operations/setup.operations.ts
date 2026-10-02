@@ -174,8 +174,10 @@ export class SetupOperations {
         effect: 'read',
         summary: 'Starts a phone test of an invitation address: the page to open from a phone.',
         params: z.object({ address: origin }),
-        run: async (_ctx, { address }) => {
-          const { id } = await this.setup.startPhoneTest(address);
+        run: async (ctx, { address }) => {
+          // Only the wizard remembers a reached address (offered first to hosts):
+          // a read must leave nothing behind (§3.10).
+          const { id } = await this.setup.startPhoneTest(address, !!ctx.actor.setup);
           return done({ id, url: `${address}/api/v1/setup/phone/${id}` });
         },
       }),

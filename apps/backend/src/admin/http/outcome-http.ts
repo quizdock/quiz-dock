@@ -25,6 +25,16 @@ const STATUS: Record<RefusalCode, number> = {
 export function refusalError(
   outcome: Extract<OperationOutcome, { kind: 'refused' }>,
 ): HttpException {
+  // A domain's own error, answered as the route outside the runner answered it.
+  if (outcome.domain) {
+    return new HttpException(
+      {
+        code: outcome.domain.code,
+        ...(outcome.domain.params ? { params: outcome.domain.params } : {}),
+      },
+      outcome.domain.status,
+    );
+  }
   return new HttpException(
     { code: `admin.${outcome.code}`, params: { ...outcome.params, message: outcome.message } },
     STATUS[outcome.code],
@@ -43,6 +53,16 @@ export function unwrap<T>(outcome: OperationOutcome): T {
   return outcome.result.data as T;
 }
 
+/**
+ * The caller's address as the audit keeps it: what the proxies say (`req.ip`),
+ * and the connection's own peer when they differ.
+ */
+export function clientAddress(req: Request): string | null {
+  const ip = req.ip ?? null;
+  const peer = req.socket?.remoteAddress ?? null;
+  return ip && peer && ip !== peer ? `${ip} via ${peer}` : (ip ?? peer);
+}
+
 /** Who calls, as the runner wants it: the account, its roles, its address, the local mode's token. */
 export function apiActor(user: User, req: Request): CallActor {
   const token = req.headers['x-admin-token'];
@@ -51,7 +71,7 @@ export function apiActor(user: User, req: Request): CallActor {
     userId: user.id,
     name: user.displayName,
     roles: user.roles,
-    address: req.ip,
+    address: clientAddress(req) ?? undefined,
     ...(typeof token === 'string' && token ? { adminToken: token } : {}),
   };
 }

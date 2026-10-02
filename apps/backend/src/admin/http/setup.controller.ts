@@ -23,7 +23,7 @@ import { OperationRunner } from '../runner/operation-runner';
 import { settings } from '../settings/settings.service';
 import { SetupLockedError, SetupService } from '../setup/setup.service';
 import { OperationAnswerDto, RunOperationDto } from './admin-operations.dto';
-import { refusalError } from './outcome-http';
+import { refusalError, clientAddress } from './outcome-http';
 
 class SetupStatusDto extends createZodDto(
   z.object({
@@ -84,7 +84,7 @@ export class SetupController {
   async session(@Req() req: Request, @Body() body: SetupTokenDto): Promise<SetupSessionDto> {
     let session: string | null;
     try {
-      session = await this.setup.open(body.token.trim(), req.ip ?? 'unknown');
+      session = await this.setup.open(body.token.trim(), clientAddress(req) ?? 'unknown');
     } catch (err) {
       if (err instanceof SetupLockedError) {
         throw new HttpException({ code: 'setup.too_many_attempts' }, HttpStatus.TOO_MANY_REQUESTS);
@@ -121,7 +121,7 @@ export class SetupController {
         name: user ? `${user.displayName} (setup)` : 'setup wizard',
         userId: user?.id,
         roles: user?.roles,
-        address: req.ip,
+        address: clientAddress(req) ?? undefined,
       },
       dryRun: body.dryRun,
       confirmation: body.confirmation,

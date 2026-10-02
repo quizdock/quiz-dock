@@ -51,7 +51,10 @@ settings, health and audit:
   over `.env` (default < `.env` < administration): the row shows the `.env` value
   it replaces, and *Back to .env* takes it back. *Export as .env* gives every
   change as a `.env` excerpt — to pin them in `.env`, or move them to another
-  instance —, *Take everything back* removes them all.
+  instance; a value with a space, `#`, `$` or a quote comes single-quoted, as
+  Compose reads it literally (the standalone container, started with
+  `docker run --env-file`, takes values unquoted: remove the quotes there) —,
+  *Take everything back* removes them all.
 - **Health** — a verdict first, then the checks of `qd doctor` part by part,
   the state of the migrations, and the phone test of the invitation addresses
   (a new network, a new venue).
@@ -80,15 +83,15 @@ confirmation, one that can says first what it would do (*Preview*).
 |---|---|
 | `ADMIN_WEB_SCOPE` | `read` (default): the web shows the Instance domain and changes nothing in it. `write`: administrators may change it — critical changes and destructive operations confirmed. Quizzes and media are not concerned. |
 | `ADMIN_LOCK` | Variables the web never changes, whatever the scope (`APP_NAME,MEDIA_MAX_VIDEO_MB`). |
-| `ADMIN_TOKEN` | **Local mode** (`AUTH_MODE=none`) has no accounts: anyone who reaches the instance could claim a name. There, the web changes nothing in the Instance and Quizzes domains unless this token is set, and asks for it (kept in the browser tab only). 32 characters or more. |
+| `ADMIN_TOKEN` | **Local mode** (`AUTH_MODE=none`) has no accounts: anyone who reaches the instance could claim a name. There, the web changes nothing in the Instance and Quizzes domains unless this token is set, and asks for it (kept in the browser tab only). 32 characters or more: a shorter one is ignored, as if unset (`qd doctor` says so). |
 
 These live in `.env` only — never changed from the web — and apply at restart.
 `ADMIN_OVERRIDES=ignore` starts the instance on `.env` alone: every value changed
 from the administration is ignored (kept, not deleted) — the way back when one
 went wrong; `qd settings.reset --all` removes them from a shell.
 A critical variable (level C1: start-up, data, security) is never changed from
-the web. Too many wrong tokens from one address make it wait a quarter of an
-hour.
+the web. Too many wrong tokens — from one address, or from all of them
+together — make it wait a quarter of an hour.
 
 ## 4. The audit
 
@@ -115,8 +118,9 @@ the home page links to it (`/setup`). What the container needs before it starts
 the backend writes a **setup token** in its logs (`docker compose logs quizdock`,
 or `docker logs quizdock`), valid a day, single use; `qd setup.token` gives a new
 one. With OIDC, the wizard also needs a signed-in account, and the administrator
-role from the provider to finish. Ten wrong tokens from one address make it wait
-a quarter of an hour.
+role from the provider to finish. Every wrong token is in the audit; past a
+hundred in a quarter of an hour, from any address, the wizard waits — a new
+token (`qd setup.token`) lifts it. Closing the setup ends the wizard's sessions.
 
 **Steps** — usage first: three questions in plain words, each answer setting
 several settings at once, previewed before it is applied — does the instance

@@ -1,4 +1,4 @@
-/** A Redis just good enough for the administration's tests: strings, NX, INCR, GETDEL, MULTI. */
+/** A Redis just good enough for the administration's tests: strings, NX, INCR, GETDEL, DEL, SCAN, MULTI. */
 export function fakeRedis() {
   const values = new Map<string, string>();
   const set = (key: string, value: string, ...args: unknown[]) => {
@@ -31,6 +31,10 @@ export function fakeRedis() {
     get: (key: string) => Promise.resolve(values.get(key) ?? null),
     set: (key: string, value: string, ...args: unknown[]) =>
       Promise.resolve(set(key, value, ...args)),
+    del: (...keys: string[]) => Promise.resolve(keys.filter((k) => values.delete(k)).length),
+    /** Prefix patterns only (`setup-session:*`). */
+    scanKeys: (pattern: string) =>
+      Promise.resolve([...values.keys()].filter((k) => k.startsWith(pattern.replace(/\*$/, '')))),
     getdel: (key: string) => {
       const v = values.get(key) ?? null;
       values.delete(key);
@@ -51,5 +55,7 @@ export function memoryFlags() {
       else flags.set(key, value);
       return Promise.resolve();
     },
+    takeFlag: (key: string, value: string) =>
+      Promise.resolve(flags.get(key) === value && flags.delete(key)),
   };
 }
