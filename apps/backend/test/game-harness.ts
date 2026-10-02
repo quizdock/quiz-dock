@@ -28,11 +28,12 @@ export interface GameContext {
 export interface GameHarness {
   app: INestApplication;
   prisma: PrismaService;
-  /** The `/game` namespace URL. */
+  /** The `/game` namespace URL, and the port it listens on. */
   url: string;
+  port: number;
   hostUserId: string;
-  /** A new client, disconnected on close. */
-  connect(auth?: Record<string, string>): Socket;
+  /** A new client, disconnected on close; `extraHeaders` play a browser's (its Origin). */
+  connect(auth?: Record<string, string>, extraHeaders?: Record<string, string>): Socket;
   /** A client signed in as the seat holder. */
   connectHost(): Socket;
   /** Creates a game of `quizId` from `host` and returns its PIN. */
@@ -107,8 +108,11 @@ export async function bootGameApp(): Promise<GameHarness> {
   const sockets: Socket[] = [];
   const quizIds: string[] = [];
 
-  const connect = (auth?: Record<string, string>): Socket => {
-    const socket = io(url, { transports: ['websocket'], auth, forceNew: true });
+  const connect = (
+    auth?: Record<string, string>,
+    extraHeaders?: Record<string, string>,
+  ): Socket => {
+    const socket = io(url, { transports: ['websocket'], auth, forceNew: true, extraHeaders });
     sockets.push(socket);
     return socket;
   };
@@ -117,6 +121,7 @@ export async function bootGameApp(): Promise<GameHarness> {
     app,
     prisma,
     url,
+    port,
     hostUserId: host.id,
     connect,
     connectHost: () => connect({ localUser: HOST_NAME }),

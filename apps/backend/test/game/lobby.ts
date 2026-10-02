@@ -230,4 +230,16 @@ export function lobbyTests(ctx: GameContext): void {
       expect((await back.emitWithAck('player:reconnect', { sessionToken })).ok).toBe(true);
     }, 15_000);
   });
+
+  it("turns away a browser's handshake from another site; the app's own pages connect", async () => {
+    const outcome = (socket: Socket) =>
+      new Promise<'connected' | 'refused'>((resolve) => {
+        socket.once('connect', () => resolve('connected'));
+        socket.once('connect_error', () => resolve('refused'));
+      });
+    const foreign = ctx.h.connect(undefined, { origin: 'https://elsewhere.example' });
+    expect(await outcome(foreign)).toBe('refused');
+    const own = ctx.h.connect(undefined, { origin: `http://localhost:${ctx.h.port}` });
+    expect(await outcome(own)).toBe('connected');
+  });
 }

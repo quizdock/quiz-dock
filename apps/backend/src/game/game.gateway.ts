@@ -1,4 +1,5 @@
 import { Inject, Logger, UseFilters } from '@nestjs/common';
+import type { IncomingMessage } from 'node:http';
 import {
   ConnectedSocket,
   MessageBody,
@@ -59,7 +60,7 @@ type GameSocket = Socket<
 >;
 
 @UseFilters(WsExceptionFilter)
-@WebSocketGateway({ namespace: '/game', cors: { origin: true } })
+@WebSocketGateway({ namespace: '/game', allowRequest: sameOriginHandshake })
 export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   private readonly log = new Logger(GameGateway.name);
 
@@ -643,6 +644,20 @@ function playerOf(socket: GameSocket, pin: string): { pin: string; playerId: str
 
 /** What the console may do to the question's media. */
 const MEDIA_ACTIONS: readonly HostMediaCommand['action'][] = ['restart', 'play', 'pause', 'seek'];
+
+/**
+ * The game's sockets come from the application's own pages: a browser's
+ * handshake from another site is turned away (a WebSocket is not bound by
+ * CORS, so the server checks it). A client that is not a browser acting for a
+ * page sends no such header and is let through, as on the API.
+ */
+export function sameOriginHandshake(
+  req: IncomingMessage,
+  callback: (err: string | null | undefined, success: boolean) => void,
+): void {
+  const crossOrigin = isCrossOrigin(req.headers, req.headers.host);
+  callback(crossOrigin ? 'cross-origin' : null, !crossOrigin);
+}
 
 /** Adapte le handshake Socket.IO en pseudo-`Request` pour `AuthProvider`. */
 function handshakeAsRequest(socket: GameSocket): Request {

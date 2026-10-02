@@ -24,7 +24,8 @@ async function bootstrap(): Promise<void> {
   // Which hops may speak for the client (`X-Forwarded-For`, `X-Forwarded-Proto`):
   // `req.ip` and `req.secure` follow `TRUST_PROXY`, like the sockets.
   app.getHttpAdapter().getInstance().set('trust proxy', trustProxy());
-  app.enableCors();
+  // No CORS: the API answers its own pages, served from its own origin (nginx in
+  // the two-container setup, the standalone image, Vite's proxy in development).
   configureTextQuizBodyParser(app);
   // The pages say where their scripts, styles, frames and requests may come from.
   app.use(cspMiddleware());
