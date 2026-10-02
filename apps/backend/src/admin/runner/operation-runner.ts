@@ -3,6 +3,7 @@ import {
   type OperationDescriptor,
   type OperationDomain,
   type OperationOutcome,
+  type OperationResult,
   type RefusalCode,
   SETTINGS,
 } from '@quiz-dock/contracts';
@@ -45,6 +46,11 @@ export interface RunState {
   call: OperationCall;
   op?: AdminOperation;
   params?: unknown;
+  /**
+   * A handler past its time goes on — none can be stopped half-way without
+   * leaving things half-done: what it ends with, audited when it ends.
+   */
+  late?: Promise<OperationResult>;
 }
 
 /** A cross-cutting step (§3.3): does its part, then hands over to the next one — or does not. */
@@ -162,6 +168,7 @@ export class OperationRunner {
           unknown
         >,
         dryRun: !!op.dryRun,
+        ...(op.upload ? { upload: op.upload.param } : {}),
         reachable: !refusal,
         ...(refusal ? { refusal: refusal.code } : {}),
       };
@@ -191,6 +198,37 @@ export class OperationRunner {
         if (outcome.kind === 'confirm' || !(changes || outcome.kind === 'refused')) return outcome;
         const params = (state.params ?? call.raw ?? {}) as Record<string, unknown>;
         // The audit failing must not turn a change made into an error: logged, the answer kept.
+        const entry = {
+          via: call.actor.via,
+          actor: call.actor.name,
+          userId: call.actor.userId ?? null,
+          address: call.actor.address ?? null,
+          operation: call.id.slice(0, 64),
+        };
+        // Answered "timeout", a change went on: its real outcome joins the audit once known.
+        if (op?.effect !== 'read')
+          state.late
+            ?.then(
+              (result) =>
+                this.audit.append({
+                  ...entry,
+                  params: maskParams(op?.redact ? op.redact(params) : params),
+                  outcome: result.outcome,
+                  code: 'late',
+                  durationMs: Date.now() - started,
+                }),
+              (err: Error) => {
+                this.log.error(`${call.id} failed after its timeout`, err?.stack);
+                return this.audit.append({
+                  ...entry,
+                  params: maskParams(op?.redact ? op.redact(params) : params),
+                  outcome: 'failed',
+                  code: 'late',
+                  durationMs: Date.now() - started,
+                });
+              },
+            )
+            .catch((err: Error) => this.log.error(`${call.id} not audited: ${err.message}`));
         await this.audit
           .append({
             via: call.actor.via,
@@ -261,6 +299,8 @@ export class OperationRunner {
             // Two callers on the same row: what the global filter answers outside the runner.
             if (err.code === 'P2025') return refused('not_found', 'It no longer exists.');
             if (err.code === 'P2002') return refused('conflict', 'It already exists.');
+            // A serializable transaction lost to a concurrent one: try again.
+            if (err.code === 'P2034') return refused('conflict', 'Changed meanwhile: try again.');
           }
           this.log.error(`${state.call.id} failed`, (err as Error)?.stack ?? String(err));
           return refused('failed', 'The operation failed; the details are in the server log.');
@@ -434,19 +474,27 @@ export class OperationRunner {
           signal.addEventListener('abort', fail, { once: true });
         });
         aborted.catch(() => undefined); // settled after the handler: nobody listens any more
-        const result = await Promise.race([
-          op!.run(
-            {
-              actor: call.actor,
-              dryRun: !!call.dryRun,
-              signal,
-              attachments: call.attachments ?? {},
-            },
-            state.params,
-          ),
-          aborted,
-        ]);
-        return { kind: 'result', result };
+        const running = op!.run(
+          {
+            actor: call.actor,
+            dryRun: !!call.dryRun,
+            signal,
+            attachments: call.attachments ?? {},
+          },
+          state.params,
+        );
+        try {
+          return { kind: 'result', result: await Promise.race([running, aborted]) };
+        } catch (err) {
+          if (err instanceof OperationError && err.code === 'timeout' && signal.aborted) {
+            state.late = running;
+            throw new OperationError(
+              'timeout',
+              `${op!.id} is taking long: it goes on, and its outcome will be in the audit — check it before running it again.`,
+            );
+          }
+          throw err;
+        }
       },
     };
   }

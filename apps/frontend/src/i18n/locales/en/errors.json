@@ -89,7 +89,8 @@
     "media_unsupported": "Unsupported media “{{path}}” (png, jpg, gif, webp, avif, mp3, ogg, wav, m4a).",
     "invalid_item": "Item {{item}} of the bundle is invalid ({{field}}).",
     "kahoot_template": "Use the original Kahoot spreadsheet template (.xlsx), with one sheet.",
-    "kahoot_empty": "No valid questions found. Check row {{row}} and the Kahoot template."
+    "kahoot_empty": "No valid questions found. Check row {{row}} and the Kahoot template.",
+    "file_too_large": "File too large to import (at most {{maxMb}} MB)."
   },
   "question": {
     "not_in_quiz": "Question not part of the quiz.",

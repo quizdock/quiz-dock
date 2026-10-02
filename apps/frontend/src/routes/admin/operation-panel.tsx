@@ -27,6 +27,7 @@ import {
   useRunOperation,
   useReadOperation,
   useRefreshAdmin,
+  runOperationWithFile,
 } from './admin-api';
 
 interface PropertySchema {
@@ -88,6 +89,8 @@ export function OperationPanel({
   const runOperation = useRunOperation();
   const fields = fieldsOf(descriptor);
   const [values, setValues] = useState<Record<string, string | boolean>>({});
+  // The file of an operation that takes one as such (`upload`): sent as a file.
+  const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ result: OperationResult; preview: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +101,10 @@ export function OperationPanel({
     setBusy(true);
     setError(null);
     try {
-      const answer = await runOperation(descriptor.id, params(), options);
+      const answer =
+        descriptor.upload && file
+          ? await runOperationWithFile(descriptor.id, params(), file, options)
+          : await runOperation(descriptor.id, params(), options);
       if (answer.kind === 'confirm') setConfirm(answer);
       else {
         setResult({ result: answer.result, preview: !!options.dryRun });
@@ -144,9 +150,14 @@ export function OperationPanel({
               required={required}
               value={values[name]}
               onChange={(v) => setValues((prev) => ({ ...prev, [name]: v }))}
-              onFile={async (file) => {
-                const base64 = await readBase64(file);
-                setValues((prev) => ({ ...prev, [name]: base64, filename: file.name }));
+              onFile={async (chosen) => {
+                if (descriptor.upload === name) {
+                  setFile(chosen);
+                  setValues((prev) => ({ ...prev, filename: chosen.name }));
+                  return;
+                }
+                const base64 = await readBase64(chosen);
+                setValues((prev) => ({ ...prev, [name]: base64, filename: chosen.name }));
               }}
             />
           ))}

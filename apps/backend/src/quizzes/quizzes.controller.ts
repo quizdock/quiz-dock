@@ -14,7 +14,6 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -38,7 +37,8 @@ import { PublicationExportDto, PublicationReportDto } from './dto/publication.dt
 import { QuizDto, QuizImportDto } from './dto/quiz.dto';
 import { TransitionQuizDto } from './dto/transition-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
-import { IMPORT_MAX_BYTES } from './portable/bundle-archive';
+import { importMaxBytes } from './portable/bundle-archive';
+import { FileUpload } from '../common/file-upload.interceptor';
 import { type BundleFile, QuizPortableService } from './portable/quiz-portable.service';
 import { QuizPublicationService } from './portable/quiz-publication.service';
 import { QuizzesService } from './quizzes.service';
@@ -93,7 +93,7 @@ export class QuizzesController {
     },
   })
   @ApiCreatedResponse({ type: QuizImportDto })
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: IMPORT_MAX_BYTES } }))
+  @UseInterceptors(FileUpload('file', importMaxBytes, 'import.file_too_large'))
   importQuiz(@CurrentUser() user: User, @UploadedFile() file: BundleFile | undefined) {
     return this.portable.importBundle(user.id, file);
   }

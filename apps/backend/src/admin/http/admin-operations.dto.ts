@@ -41,6 +41,7 @@ export const operationDescriptorSchema = z.object({
   summary: z.string(),
   params: z.record(z.string(), z.unknown()),
   dryRun: z.boolean(),
+  upload: z.string().optional(),
   reachable: z.boolean(),
   refusal: z.string().optional(),
 });

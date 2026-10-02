@@ -4,7 +4,7 @@ import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from '../../admin/settings/settings.service';
 
 /** A bundle is a zip of media: sized like a handful of uploads. */
-export const IMPORT_MAX_BYTES = settings.get(SETTINGS.IMPORT_MAX_BYTES);
+export const importMaxBytes = (): number => settings.get(SETTINGS.IMPORT_MAX_BYTES);
 
 /**
  * What an archive may unpack to. The bundle can come from anyone (a shared
@@ -29,7 +29,7 @@ export function archiveLimits(maxEntryBytes: number): ArchiveLimits {
     maxEntryBytes,
     // Media are already compressed (WebP, MP4, M4A): a real bundle barely
     // inflates. Twice the upload is room enough, and bounds a zip bomb.
-    maxTotalBytes: 2 * IMPORT_MAX_BYTES,
+    maxTotalBytes: 2 * importMaxBytes(),
   };
 }
 

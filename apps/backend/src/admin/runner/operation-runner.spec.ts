@@ -90,6 +90,22 @@ const ops: AdminOperation[] = [
   }),
 ];
 
+ops.push(
+  defineOperation({
+    id: 'thing.slow-write',
+    domain: 'instance',
+    category: 'settings',
+    effect: 'write',
+    summary: 'Writes, slowly.',
+    params: z.object({}),
+    timeoutMs: 20,
+    run: async () => {
+      await new Promise((r) => setTimeout(r, 60));
+      return done();
+    },
+  }),
+);
+
 function setup(env: Record<string, string> = WRITE_ENV) {
   const audit = new MemoryAuditRepository();
   const runner = new OperationRunner(ops, settingsFrom(env), audit, new MemoryConfirmationStore());
@@ -288,6 +304,20 @@ describe('OperationRunner', () => {
         code,
       });
     });
+  });
+
+  it('a change past its time is answered "timeout", and its real outcome audited when it ends', async () => {
+    const { run, audit } = setup();
+    expect(await run({ id: 'thing.slow-write' })).toMatchObject({
+      kind: 'refused',
+      code: 'timeout',
+    });
+    await new Promise((r) => setTimeout(r, 120));
+    const entries = await audit.list({ operation: 'thing.slow-write' });
+    expect(entries.map((e) => [e.outcome, e.code])).toEqual([
+      ['done', 'late'],
+      ['refused', 'timeout'],
+    ]);
   });
 
   describe('audit', () => {

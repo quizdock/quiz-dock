@@ -69,6 +69,16 @@ export interface AdminOperation<P = unknown, R = unknown> {
    * the runner masks the names that say a secret.
    */
   redact?(params: Record<string, unknown>): Record<string, unknown>;
+  /**
+   * A parameter that may come as an uploaded file (`POST …/:id/file`), and the
+   * largest file accepted (read at each upload). The handler finds the file in
+   * `ctx.attachments.file`.
+   */
+  upload?: {
+    param: string;
+    maxBytes(): number;
+    /** The error code past the limit. */ tooLarge: string;
+  };
   /** Longer than the runner's default, for a long purge or an import. */
   timeoutMs?: number;
   run(ctx: OperationContext, params: P): Promise<OperationResult<R>>;

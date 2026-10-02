@@ -89,7 +89,8 @@
     "media_unsupported": "Desteklenmeyen medya “{{path}}” (png, jpg, gif, webp, avif, mp3, ogg, wav, m4a).",
     "invalid_item": "Paketin {{item}} öğesi geçersiz ({{field}}).",
     "kahoot_template": "Tek sayfalı özgün Kahoot elektronik tablo şablonunu (.xlsx) kullanın.",
-    "kahoot_empty": "Geçerli soru bulunamadı. {{row}}. satırı ve Kahoot şablonunu kontrol edin."
+    "kahoot_empty": "Geçerli soru bulunamadı. {{row}}. satırı ve Kahoot şablonunu kontrol edin.",
+    "file_too_large": "Dosya içe aktarmak için çok büyük (en fazla {{maxMb}} MB)."
   },
   "question": {
     "not_in_quiz": "Soru, quizin bir parçası değil.",

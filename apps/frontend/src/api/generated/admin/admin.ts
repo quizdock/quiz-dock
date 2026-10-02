@@ -228,6 +228,81 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getAdminOperationsControllerRunMutationOptions(options), queryClient);
     }
+    export type adminOperationsControllerRunWithFileResponse200 = {
+  data: OperationAnswerDto
+  status: 200
+}
+
+export type adminOperationsControllerRunWithFileResponseSuccess = (adminOperationsControllerRunWithFileResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminOperationsControllerRunWithFileResponse = (adminOperationsControllerRunWithFileResponseSuccess)
+
+export const getAdminOperationsControllerRunWithFileUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/admin/operations/${id}/file`
+}
+
+export const adminOperationsControllerRunWithFile = async (id: string, options?: RequestInit): Promise<adminOperationsControllerRunWithFileResponse> => {
+
+  return customFetch<adminOperationsControllerRunWithFileResponse>(getAdminOperationsControllerRunWithFileUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getAdminOperationsControllerRunWithFileMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminOperationsControllerRunWithFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminOperationsControllerRunWithFile>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['adminOperationsControllerRunWithFile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminOperationsControllerRunWithFile>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminOperationsControllerRunWithFile(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminOperationsControllerRunWithFileMutationResult = NonNullable<Awaited<ReturnType<typeof adminOperationsControllerRunWithFile>>>
+
+    export type AdminOperationsControllerRunWithFileMutationError = unknown
+
+    export const useAdminOperationsControllerRunWithFile = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminOperationsControllerRunWithFile>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminOperationsControllerRunWithFile>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getAdminOperationsControllerRunWithFileMutationOptions(options), queryClient);
+    }
     export type mediaAdminControllerAddUploadResponse201 = {
   data: MediaUploadResultDto
   status: 201

@@ -89,7 +89,8 @@
     "media_unsupported": "不支援的媒體「{{path}}」（png、jpg、gif、webp、avif、mp3、ogg、wav、m4a）。",
     "invalid_item": "套件中第 {{item}} 項無效（{{field}}）。",
     "kahoot_template": "請使用只有一個工作表的原始 Kahoot 試算表範本（.xlsx）。",
-    "kahoot_empty": "沒有有效題目。請檢查第 {{row}} 列和 Kahoot 範本。"
+    "kahoot_empty": "沒有有效題目。請檢查第 {{row}} 列和 Kahoot 範本。",
+    "file_too_large": "檔案過大，無法匯入（最多 {{maxMb}} MB）。"
   },
   "question": {
     "not_in_quiz": "該題目不屬於本測驗。",

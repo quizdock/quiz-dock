@@ -89,7 +89,8 @@
     "media_unsupported": "Média « {{path}} » non pris en charge (png, jpg, gif, webp, avif, mp3, ogg, wav, m4a).",
     "invalid_item": "L’élément {{item}} du bundle est invalide ({{field}}).",
     "kahoot_template": "Utilisez le modèle de tableur Kahoot original (.xlsx), avec une seule feuille.",
-    "kahoot_empty": "Aucune question valide. Vérifiez la ligne {{row}} et le modèle Kahoot."
+    "kahoot_empty": "Aucune question valide. Vérifiez la ligne {{row}} et le modèle Kahoot.",
+    "file_too_large": "Fichier trop volumineux pour l’import (maximum {{maxMb}} Mo)."
   },
   "question": {
     "not_in_quiz": "Question hors du quiz.",

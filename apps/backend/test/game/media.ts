@@ -193,7 +193,8 @@ export function mediaTests(ctx: GameContext): void {
       headers: { 'X-Local-User': 'Animateur' },
     });
     expect(res.status).toBe(403);
-    expect(await res.json()).toMatchObject({ message: 'auth.admin_required' });
+    // The administration answers a refusal in the API's own shape (`{ code }`).
+    expect(await res.json()).toMatchObject({ code: 'auth.admin_required' });
   });
 
   it('keeps an uploaded file name as the author typed it, accents and CJK included (#53)', async () => {

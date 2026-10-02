@@ -95,6 +95,11 @@ export interface OperationDescriptor {
   /** Its parameters, as a JSON Schema (forms, CLI help). */
   params: Record<string, unknown>;
   dryRun: boolean;
+  /**
+   * The parameter that may come as an uploaded file instead (a quiz bundle):
+   * the page sends it as such (`POST …/:id/file`), not as base64 in the JSON.
+   */
+  upload?: string;
   /** Whether this caller may run it, and if not, why. */
   reachable: boolean;
   refusal?: RefusalCode;

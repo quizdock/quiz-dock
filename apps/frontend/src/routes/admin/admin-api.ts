@@ -1,3 +1,4 @@
+import { customFetch } from '../../api/http';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react';
 import type {
@@ -80,6 +81,28 @@ export async function runOperation(
     { headers: tokenHeaders() },
   );
   return data as Answer;
+}
+
+/**
+ * Runs an operation that takes a file (`upload` in its descriptor): the file
+ * as is, multipart — never base64 in a JSON body, which has a small limit.
+ */
+export async function runOperationWithFile(
+  id: string,
+  params: Record<string, unknown>,
+  file: File,
+  options: { dryRun?: boolean; confirmation?: string } = {},
+): Promise<Answer> {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('params', JSON.stringify(params));
+  if (options.dryRun) form.append('dryRun', 'true');
+  if (options.confirmation) form.append('confirmation', options.confirmation);
+  const { data } = await customFetch<{ data: Answer }>(
+    `/api/v1/admin/operations/${encodeURIComponent(id)}/file`,
+    { method: 'POST', body: form, headers: tokenHeaders() },
+  );
+  return data;
 }
 
 /**

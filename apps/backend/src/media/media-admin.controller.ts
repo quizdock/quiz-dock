@@ -13,8 +13,8 @@ import {
   UseInterceptors,
   UseFilters,
 } from '@nestjs/common';
+import { FileUpload } from '../common/file-upload.interceptor';
 import { RefusalAuditFilter } from '../admin/http/refusal-audit.filter';
-import { FileInterceptor } from '@nestjs/platform-express';
 import type { User } from '@prisma/client';
 import {
   ApiBearerAuth,
@@ -96,7 +96,7 @@ export class MediaAdminController {
     },
   })
   @ApiCreatedResponse({ type: MediaUploadResultDto })
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: uploadCeiling() } }))
+  @UseInterceptors(FileUpload('file', uploadCeiling))
   addUpload(
     @CurrentUser() user: User,
     @Req() req: Request,

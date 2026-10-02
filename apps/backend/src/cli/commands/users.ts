@@ -1,11 +1,10 @@
-import { type User, UserRole } from '@prisma/client';
+import { type Prisma, type User, UserRole } from '@prisma/client';
 import { parseRoles } from '../../auth/roles';
-import type { PrismaService } from '../../prisma/prisma.service';
 import type { SampleQuizzesService } from '../../quizzes/samples/sample-quizzes.service';
 import { OperationError } from '../../admin/operations/operation';
 import type { Output } from '../output';
 
-type Db = Pick<PrismaService, 'user' | 'quiz'>;
+type Db = Pick<Prisma.TransactionClient, 'user' | 'quiz'>;
 
 /** Finds a user by OIDC subject (`local:<slug>` in local mode) or e-mail. */
 export async function findUser(prisma: Db, who: string): Promise<User> {

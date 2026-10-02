@@ -17,6 +17,7 @@ import { MemoryConfirmationStore } from '../runner/confirmations';
 import { OperationRunner } from '../runner/operation-runner';
 import { settingsFrom } from '../settings/settings.service';
 import { AdminOperationsController } from './admin-operations.controller';
+import { OperationFileInterceptor } from './operation-file.interceptor';
 import {
   ADMIN_TOKEN_FAILURES_GLOBAL_MAX,
   ADMIN_TOKEN_FAILURES_MAX,
@@ -66,6 +67,19 @@ const ops = [
     params: z.object({}),
     run: () =>
       Promise.reject(new Error('Invalid `prisma.quiz.delete()` invocation in /app/dist/x.js')),
+  }),
+  defineOperation({
+    id: 'thing.upload',
+    domain: 'instance',
+    category: 'quizzes',
+    effect: 'read',
+    summary: 'Takes a file.',
+    params: z.object({ note: z.string().optional() }),
+    upload: { param: 'bundle', maxBytes: () => 10, tooLarge: 'import.file_too_large' },
+    run: (ctx, { note }) => {
+      const file = ctx.attachments.file as { buffer: Buffer; name: string };
+      return Promise.resolve(done({ size: file.buffer.length, name: file.name, note }));
+    },
   }),
   defineOperation({
     id: 'media.remove',
@@ -123,6 +137,7 @@ async function app(
       { provide: AdminRateLimit, useValue: new AdminRateLimit(fakeRedis() as never) },
       { provide: MediaAdminService, useValue: {} },
       { provide: AUDIT_REPOSITORY, useValue: audit },
+      OperationFileInterceptor,
     ],
   }).compile();
   const nest = module.createNestApplication();
@@ -190,6 +205,7 @@ describe('the admin API', () => {
       'thing.drop',
       'thing.busy',
       'thing.crash',
+      'thing.upload',
       'media.remove',
     ]);
   });
@@ -229,6 +245,24 @@ describe('the admin API', () => {
   it("keeps a domain's own error code and status (the media page's messages)", async () => {
     const busy = await call('admin', 'post', '/admin/operations/thing.busy').send({}).expect(409);
     expect(busy.body.code).toBe('media.playing');
+  });
+
+  it('takes a file as a file (multipart), bounded by its operation', async () => {
+    const send = (bytes: number) =>
+      call('admin', 'post', '/admin/operations/thing.upload/file')
+        .field('params', JSON.stringify({ note: 'n' }))
+        .attach('file', Buffer.alloc(bytes), 'quiz.zip');
+    expect((await send(5).expect(200)).body.result.data).toEqual({
+      size: 5,
+      name: 'quiz.zip',
+      note: 'n',
+    });
+    const big = await send(20).expect(413);
+    expect(big.body).toMatchObject({ code: 'import.file_too_large', params: { max: 10 } });
+    // An operation that takes no file accepts none.
+    await call('admin', 'post', '/admin/operations/thing.read/file')
+      .attach('file', Buffer.alloc(1), 'x')
+      .expect(413);
   });
 
   it('answers an unexpected error in general terms: nothing of the internals', async () => {

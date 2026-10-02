@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { z } from 'zod';
 import { isManager } from '../../auth/roles';
 import { defaultPingRedis, defaultProbeWritable, doctor } from '../../cli/commands/doctor';
@@ -15,6 +15,7 @@ import { SampleQuizzesService } from '../../quizzes/samples/sample-quizzes.servi
 import { RedisService } from '../../redis/redis.service';
 import { HostSeatService } from '../../users/host-seat.service';
 import { settings } from '../settings/settings.service';
+import { importMaxBytes } from '../../quizzes/portable/bundle-archive';
 import { type AdminOperation, OperationError, defineOperation } from './operation';
 
 /** What a command printed, as the operation's data. */
@@ -154,15 +155,27 @@ export class CliCommandOperations {
             ? `Change the administrator rights of ${user} (${roles}).`
             : null,
         run: async (ctx, { user, roles }) => {
-          const target = await findUser(prisma, user);
-          // No lock-out (§3.10): the last administrator keeps the role.
-          if (!roles.includes('admin') && isManager(target.roles)) {
-            const admins = await prisma.user.count({ where: { roles: { has: UserRole.admin } } });
-            if (admins <= 1 && ctx.actor.via === 'api') {
-              throw new OperationError('conflict', 'The last administrator cannot lose the role.');
-            }
-          }
-          const { data } = await printed((out) => userSetRole(out, prisma, user, roles));
+          // No lock-out (§3.10): the last administrator keeps the role. Counted and
+          // changed in one serializable transaction — two administrators demoting
+          // each other at once cannot both pass (the loser gets a conflict).
+          const { data } = await prisma.$transaction(
+            async (tx) => {
+              const target = await findUser(tx, user);
+              if (!roles.includes('admin') && isManager(target.roles) && ctx.actor.via === 'api') {
+                const admins = await tx.user.count({
+                  where: { deletedAt: null, roles: { has: UserRole.admin } },
+                });
+                if (admins <= 1) {
+                  throw new OperationError(
+                    'conflict',
+                    'The last administrator cannot lose the role.',
+                  );
+                }
+              }
+              return printed((out) => userSetRole(out, tx, user, roles));
+            },
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+          );
           return { outcome: 'done', notes: [], data };
         },
       }),
@@ -227,14 +240,19 @@ export class CliCommandOperations {
         summary: "Creates a draft in an account's bank from a bundle (zip or quiz.json).",
         params: z.object({
           owner: who,
-          bundle: z.string().min(1).describe('The bundle, base64'),
+          bundle: z.string().min(1).optional().describe('The bundle, base64 (or an uploaded file)'),
           filename: z.string().max(255).optional(),
         }),
+        // From the web, the bundle comes as a file: no base64 in a JSON body.
+        upload: { param: 'bundle', maxBytes: importMaxBytes, tooLarge: 'import.file_too_large' },
         timeoutMs: 5 * 60_000,
-        run: async (_ctx, { owner, bundle, filename }) => {
-          const buffer = Buffer.from(bundle, 'base64');
+        run: async (ctx, { owner, bundle, filename }) => {
+          const file = ctx.attachments.file as { buffer: Buffer; name: string } | undefined;
+          if (!file && !bundle) throw new OperationError('invalid_params', 'A bundle is needed.');
+          const buffer = file ? file.buffer : Buffer.from(bundle!, 'base64');
+          const name = filename ?? file?.name ?? '-';
           const { data } = await printed((out) =>
-            quizImport(out, prisma, this.portable, filename ?? '-', owner, {
+            quizImport(out, prisma, this.portable, name, owner, {
               read: () => Promise.resolve(buffer),
               write: () => Promise.reject(new Error('not writable')),
             }),

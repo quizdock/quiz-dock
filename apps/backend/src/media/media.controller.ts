@@ -15,7 +15,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileUpload } from '../common/file-upload.interceptor';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -144,7 +144,7 @@ export class MediaController {
   })
   @ApiCreatedResponse({ type: MediaUploadResultDto })
   // The stream stops at the largest kind's limit; the service applies the one of the kind found.
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: uploadCeiling() } }))
+  @UseInterceptors(FileUpload('file', uploadCeiling))
   upload(
     @CurrentUser() user: User,
     @UploadedFile() file: UploadedMediaFile | undefined,

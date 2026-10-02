@@ -689,7 +689,7 @@ export const SETTINGS = {
     default: 50 * MB,
     unit: 'bytes',
     display: 'MB',
-    applies: 'restart',
+    applies: 'live',
     overridable: true,
   }),
   PUBLICATION_MAX_MB: define({

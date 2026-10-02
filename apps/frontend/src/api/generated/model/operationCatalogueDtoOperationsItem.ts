@@ -17,6 +17,7 @@ export type OperationCatalogueDtoOperationsItem = {
   summary: string;
   params: OperationCatalogueDtoOperationsItemParams;
   dryRun: boolean;
+  upload?: string;
   reachable: boolean;
   refusal?: string;
 };

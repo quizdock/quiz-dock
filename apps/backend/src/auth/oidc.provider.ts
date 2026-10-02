@@ -42,14 +42,12 @@ function getByPath(obj: unknown, path: string): unknown {
 export class OidcProvider implements AuthProvider {
   private readonly logger = new Logger(OidcProvider.name);
   private readonly rolesClaim: string;
-  private readonly nameClaim?: string;
 
   constructor(
     private readonly client: OidcClient,
     private readonly sessions: OidcSessions,
   ) {
     this.rolesClaim = settings.get(SETTINGS.OIDC_ROLES_CLAIM);
-    this.nameClaim = settings.get(SETTINGS.OIDC_NAME_CLAIM) || undefined;
   }
 
   async authenticate(req: Request): Promise<AuthPrincipal | null> {
@@ -82,7 +80,9 @@ export class OidcProvider implements AuthProvider {
     // The configured claim wins when it carries a name; otherwise the standard
     // chain applies, so a deployment may point at `nickname` and still work for
     // the accounts that have none.
-    const configured = this.nameClaim ? getByPath(payload, this.nameClaim) : undefined;
+    // Read at each sign-in: the administration may change it (live).
+    const nameClaim = settings.get(SETTINGS.OIDC_NAME_CLAIM) || undefined;
+    const configured = nameClaim ? getByPath(payload, nameClaim) : undefined;
     const rolesRaw = getByPath(payload, this.rolesClaim);
     return {
       sub,

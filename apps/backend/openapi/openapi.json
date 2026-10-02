@@ -2235,6 +2235,41 @@
         ]
       }
     },
+    "/api/v1/admin/operations/{id}/file": {
+      "post": {
+        "operationId": "AdminOperationsController_runWithFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationAnswerDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/media/instance": {
       "post": {
         "operationId": "MediaAdminController_addUpload",
@@ -10228,6 +10263,9 @@
                 },
                 "dryRun": {
                   "type": "boolean"
+                },
+                "upload": {
+                  "type": "string"
                 },
                 "reachable": {
                   "type": "boolean"

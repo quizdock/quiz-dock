@@ -431,21 +431,22 @@ describe('Limits', () => {
     ['', 50 * MB],
     ['abc', 50 * MB],
     ['-1', -1],
-  ])('IMPORT_MAX_BYTES=%p, read once at load, is %p', (raw, bytes) => {
+  ])('IMPORT_MAX_BYTES=%p is %p', (raw, bytes) => {
     setEnv({ IMPORT_MAX_BYTES: raw });
-    const { IMPORT_MAX_BYTES } = loadFresh<typeof import('../../quizzes/portable/bundle-archive')>(
+    const { importMaxBytes } = loadFresh<typeof import('../../quizzes/portable/bundle-archive')>(
       '../../quizzes/portable/bundle-archive',
     );
-    expect(IMPORT_MAX_BYTES).toBe(bytes);
+    expect(importMaxBytes()).toBe(bytes);
   });
 
-  it('IMPORT_MAX_BYTES changed after load is not seen', () => {
+  // Was read once at load: an override from the administration never applied.
+  it('IMPORT_MAX_BYTES is read on use: a change applies to the next import', () => {
     setEnv({ IMPORT_MAX_BYTES: '1000' });
     const mod = loadFresh<typeof import('../../quizzes/portable/bundle-archive')>(
       '../../quizzes/portable/bundle-archive',
     );
     setEnv({ IMPORT_MAX_BYTES: '2000' });
-    expect(mod.IMPORT_MAX_BYTES).toBe(1000);
+    expect(mod.importMaxBytes()).toBe(2000);
   });
 
   it.each([

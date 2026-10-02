@@ -1,10 +1,15 @@
 import { questionIssues, slideIssues } from '@quiz-dock/contracts';
-import { IMPORT_MAX_BYTES } from './bundle-archive';
+import { importMaxBytes } from './bundle-archive';
 import { quizBundleSchema } from './quiz-bundle.schema';
 import { BundleContentError, collectMediaPaths, fromBundle } from './quiz-bundle';
 
-/** Text-only conversion is bounded independently of uploads carrying binary media. */
-export const TEXT_QUIZ_MAX_BYTES = Math.min(IMPORT_MAX_BYTES, 1024 * 1024);
+/**
+ * Text-only conversion is bounded independently of uploads carrying binary
+ * media: 1 MB at most — the size of the request bodies, fixed at start — and
+ * never more than an import (read at each call: the administration may lower it).
+ */
+export const TEXT_QUIZ_MAX_BYTES = 1024 * 1024;
+const textQuizMaxBytes = () => Math.min(importMaxBytes(), TEXT_QUIZ_MAX_BYTES);
 export interface QuizValidationIssue {
   code: string;
   item?: number;
@@ -20,7 +25,7 @@ export interface QuizValidationResult {
 
 /** Pure dry-run: the importer's structural and content schemas, with no database, media writes or network. */
 export function validateTextQuiz(json: string): QuizValidationResult {
-  if (Buffer.byteLength(json, 'utf8') > TEXT_QUIZ_MAX_BYTES)
+  if (Buffer.byteLength(json, 'utf8') > textQuizMaxBytes())
     return { valid: false, warnings: [], errors: [{ code: 'import.bundle_too_large' }] };
   let input: unknown;
   try {
