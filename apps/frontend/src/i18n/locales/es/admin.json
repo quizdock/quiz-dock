@@ -14,8 +14,7 @@
     "accounts": "Cuentas",
     "audit": "Auditoría",
     "quizzes": "Quizzes",
-    "media": "Medios",
-    "changes": "Cambios"
+    "media": "Medios"
   },
   "token": {
     "unset": "Modo local: no se puede cambiar nada desde la web hasta que ADMIN_TOKEN esté definido en .env (32 caracteres o más) y la instancia se haya reiniciado.",
@@ -510,7 +509,8 @@
         "firewall": "Un cortafuegos: puede que la máquina rechace las conexiones entrantes en el puerto de la aplicación.",
         "public": "Una dirección pública necesita un nombre que apunte a la máquina y su puerto abierto desde Internet (o un proxy inverso) — y https para que los teléfonos instalen la aplicación.",
         "docker": "Docker Desktop, una red bridge: el contenedor no ve las direcciones de la propia máquina — defínelas en HOST_LAN_IPS."
-      }
+      },
+      "expired": "Esta prueba expiró: vuelva a iniciarla."
     },
     "access": {
       "firstAdmin": "Modo local: el nombre que administrará la instancia (inicia sesión con él). Los cambios desde la web también requieren ADMIN_TOKEN.",

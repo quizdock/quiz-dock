@@ -174,8 +174,7 @@
       "close": "Kapat"
     },
     "detail": {
-      "empty": "Tamamını görmek, nerede kullanıldığını öğrenmek ve üzerinde işlem yapmak için bir dosya seçin.",
-      "show": "{{name}} dosyasını göster"
+      "empty": "Tamamını görmek, nerede kullanıldığını öğrenmek ve üzerinde işlem yapmak için bir dosya seçin."
     }
   },
   "starter": {

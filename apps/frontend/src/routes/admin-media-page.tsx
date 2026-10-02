@@ -51,11 +51,10 @@ import type {
   MediaAdminControllerFilesParams,
   MediaFilesPageDtoItemsItem,
 } from '../api/generated/model';
-import { useRole } from '../auth/use-role';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { Drawer } from '@/components/ui/drawer';
+import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
-import { PageTitle } from '@/components/ui/page-title';
 
 const PAGE_SIZE = 25;
 /** The owner key of the instance's own media (#62). */
@@ -88,14 +87,9 @@ const KIND_ICON = { image: ImageIcon, video: Film, audio: Music } as const;
  * (moderation), once the page has said what that breaks.
  */
 export function AdminMediaPage() {
-  const { t } = useTranslation('dashboard');
-  const { isManager, roles } = useRole();
-  if (roles.length > 0 && !isManager) {
-    return <p className="text-muted-foreground">{t('mediaAdmin.adminOnly')}</p>;
-  }
+  // Inside the administration's layout: its title, its width, its admin-only check.
   return (
-    <div className="content-lg flex flex-col gap-6">
-      <PageTitle>{t('mediaAdmin.title')}</PageTitle>
+    <div className="flex flex-col gap-6">
       <Overview />
       <Files />
     </div>
@@ -247,7 +241,7 @@ function Files() {
   const [toDelete, setToDelete] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [toWithdraw, setToWithdraw] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const isWide = useWide();
+  const isWide = useMediaQuery('(min-width: 1024px)');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const refreshAll = useRefreshAll();
@@ -425,11 +419,7 @@ function Files() {
             <ul className="divide-y rounded-lg border">
               {list.items.map((file) => (
                 <li key={file.id}>
-                  <FileRow
-                    file={file}
-                    selected={isSelected(file)}
-                    onSelect={() => setSelectedId(file.id)}
-                  >
+                  <FileRow selected={isSelected(file)} onSelect={() => setSelectedId(file.id)}>
                     <Thumb file={file} className="size-14" />
                     <div className="flex min-w-0 flex-1 flex-col">
                       <FileTitle file={file} locale={i18n.language} />
@@ -445,7 +435,6 @@ function Files() {
               {list.items.map((file) => (
                 <li key={file.id}>
                   <FileRow
-                    file={file}
                     selected={isSelected(file)}
                     onSelect={() => setSelectedId(file.id)}
                     className="flex-col items-stretch rounded-lg border"
@@ -539,26 +528,25 @@ function Thumb({ file, className }: { file: MediaFilesPageDtoItemsItem; classNam
   );
 }
 
-/** A file in the list: chosen with a click, shown beside it. */
+/**
+ * A file in the list: chosen with a click, shown beside it. Named by what it
+ * shows — its name, kind, size, owners, usage —, not by a label hiding them.
+ */
 function FileRow({
-  file,
   selected,
   onSelect,
   className,
   children,
 }: {
-  file: MediaFilesPageDtoItemsItem;
   selected: boolean;
   onSelect: () => void;
   className?: string;
   children: ReactNode;
 }) {
-  const { t } = useTranslation('dashboard');
   return (
     <button
       type="button"
       aria-pressed={selected}
-      aria-label={t('mediaAdmin.detail.show', { name: file.name ?? file.mime })}
       onClick={onSelect}
       className={cn(
         'flex w-full items-center gap-3 p-2 text-left',
@@ -586,22 +574,6 @@ function FileUsage({ file }: { file: MediaFilesPageDtoItemsItem }) {
       </span>
     </span>
   );
-}
-
-/** Whether the screen is wide enough for the detail beside the list (`lg`). */
-function useWide(): boolean {
-  const query = '(min-width: 1024px)';
-  const [wide, setWide] = useState(
-    () => typeof window !== 'undefined' && !!window.matchMedia?.(query).matches,
-  );
-  useEffect(() => {
-    const media = window.matchMedia?.(query);
-    if (!media) return;
-    const on = () => setWide(media.matches);
-    media.addEventListener('change', on);
-    return () => media.removeEventListener('change', on);
-  }, []);
-  return wide;
 }
 
 const duration = (ms: number | null) => {

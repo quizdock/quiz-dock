@@ -14,8 +14,7 @@
     "accounts": "账号",
     "audit": "审计",
     "quizzes": "测验",
-    "media": "媒体",
-    "changes": "更改"
+    "media": "媒体"
   },
   "token": {
     "unset": "本地模式：在 .env 中设置 ADMIN_TOKEN（32 个字符或以上）并重启实例之前，无法通过网页更改任何内容。",
@@ -510,7 +509,8 @@
         "firewall": "防火墙：本机可能拒绝应用端口上的传入连接。",
         "public": "公开地址需要一个指向本机的域名，且其端口可从互联网访问（或通过反向代理）——并需要 https，手机才能安装应用。",
         "docker": "Docker Desktop 的 bridge 网络：容器看不到本机自身的地址——请在 HOST_LAN_IPS 中设置。"
-      }
+      },
+      "expired": "此测试已过期：请重新开始。"
     },
     "access": {
       "firstAdmin": "本地模式：将管理此实例的名称（用它登录）。通过网页进行更改还需要 ADMIN_TOKEN。",

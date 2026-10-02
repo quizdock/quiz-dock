@@ -174,8 +174,7 @@
       "close": "Fermer"
     },
     "detail": {
-      "empty": "Choisissez un fichier pour le voir en entier, savoir où il sert et agir dessus.",
-      "show": "Afficher {{name}}"
+      "empty": "Choisissez un fichier pour le voir en entier, savoir où il sert et agir dessus."
     }
   },
   "starter": {

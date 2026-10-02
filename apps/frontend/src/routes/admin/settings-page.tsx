@@ -26,7 +26,7 @@ import {
   readOnlyReason,
   shownValue,
 } from './settings-model';
-import { useStoredChoice } from './use-stored-choice';
+import { useStoredChoice } from '@/lib/use-stored-choice';
 
 export type SettingsView = 'cards' | 'split' | 'table';
 const VIEWS: SettingsView[] = ['cards', 'split', 'table'];
@@ -223,7 +223,9 @@ function StateDot({ row }: { row: SettingRow }) {
         : 'bg-muted-foreground/30';
   const title = row.issues.length ? t('settings.problem') : t(`source.${row.source}`);
   return (
+    // An image with its words: the colour is not the only signal (a screen reader says it).
     <span
+      role="img"
       aria-label={title}
       title={title}
       className={cn('inline-block size-2 shrink-0 rounded-full', tone)}

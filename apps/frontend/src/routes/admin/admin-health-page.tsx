@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Disclosure } from '@/components/ui/disclosure';
 import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
-import { PhoneTests } from '../setup/setup-page';
+import { PhoneTests } from './phone-tests';
 import { type OutputEntry, useReadOperation } from './admin-api';
 
 type Check = {

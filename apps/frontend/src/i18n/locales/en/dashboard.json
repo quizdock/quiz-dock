@@ -174,8 +174,7 @@
       "close": "Close"
     },
     "detail": {
-      "empty": "Choose a file to see it in full, where it is used and what can be done to it.",
-      "show": "Show {{name}}"
+      "empty": "Choose a file to see it in full, where it is used and what can be done to it."
     }
   },
   "starter": {

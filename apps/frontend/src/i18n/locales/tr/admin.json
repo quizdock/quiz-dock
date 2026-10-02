@@ -14,8 +14,7 @@
     "accounts": "Hesaplar",
     "audit": "Denetim",
     "quizzes": "Quizler",
-    "media": "Medya",
-    "changes": "Değişiklikler"
+    "media": "Medya"
   },
   "token": {
     "unset": "Yerel mod: ADMIN_TOKEN .env içinde ayarlanıp (32 karakter veya daha uzun) kurulum yeniden başlatılana kadar web üzerinden hiçbir şey değiştirilemez.",
@@ -510,7 +509,8 @@
         "firewall": "Güvenlik duvarı: makine, uygulamanın portundaki gelen bağlantıları reddediyor olabilir.",
         "public": "Genel bir adres, makineyi gösteren bir alan adı ve internetten açık bir port (veya ters proxy) gerektirir — telefonların uygulamayı yükleyebilmesi için de https.",
         "docker": "Docker Desktop, bridge ağı: konteyner makinenin kendi adreslerini göremez — bunları HOST_LAN_IPS içinde ayarlayın."
-      }
+      },
+      "expired": "Bu testin süresi doldu: yeniden başlatın."
     },
     "access": {
       "firstAdmin": "Yerel mod: kurulumu yönetecek ad (bu adla oturum açar). Web üzerinden değişiklikler için ayrıca ADMIN_TOKEN gerekir.",

@@ -174,8 +174,7 @@
       "close": "Cerrar"
     },
     "detail": {
-      "empty": "Elija un archivo para verlo completo, saber dónde se usa y actuar sobre él.",
-      "show": "Mostrar {{name}}"
+      "empty": "Elija un archivo para verlo completo, saber dónde se usa y actuar sobre él."
     }
   },
   "starter": {

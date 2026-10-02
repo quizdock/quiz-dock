@@ -14,8 +14,7 @@
     "accounts": "Accounts",
     "audit": "Audit",
     "quizzes": "Quizzes",
-    "media": "Media",
-    "changes": "Changes"
+    "media": "Media"
   },
   "token": {
     "unset": "Local mode: nothing can be changed from the web until ADMIN_TOKEN is set in .env (32 characters or more), then the instance restarted.",
@@ -510,7 +509,8 @@
         "firewall": "A firewall: the machine may refuse incoming connections on the application's port.",
         "public": "A public address needs a name pointing to the machine and its port open from the internet (or a reverse proxy) — and https for phones to install the app.",
         "docker": "Docker Desktop, a bridge network: the container cannot see the machine's own addresses — set them in HOST_LAN_IPS."
-      }
+      },
+      "expired": "This test expired: start it again."
     },
     "access": {
       "firstAdmin": "Local mode: the name that will administer the instance (they sign in with it). Changes from the web also need ADMIN_TOKEN.",

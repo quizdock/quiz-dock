@@ -103,7 +103,7 @@ describe('AdminMediaPage', () => {
       { method: 'DELETE', path: '/admin/media/files/m1', status: 204 },
     ]);
     renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: 'Afficher night-market.webp' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^night-market\.webp/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Supprimer night-market.webp' }));
     const dialog = await screen.findByRole('dialog', { name: 'Supprimer ce fichier ?' });
     expect(await within(dialog).findByText('« Discover Taiwan » (Billy)')).toBeInTheDocument();
@@ -132,15 +132,9 @@ describe('AdminMediaPage', () => {
       },
     ]);
     renderPage();
-    fireEvent.click(await screen.findByRole('button', { name: 'Afficher night-market.webp' }));
+    fireEvent.click(await screen.findByRole('button', { name: /^night-market\.webp/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Supprimer night-market.webp' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Supprimer' })).toBeDisabled());
-  });
-
-  it('tells a host the page is for administrators', async () => {
-    mockApi([me(['host']), overview, files]);
-    renderPage();
-    expect(await screen.findByText(/réservée aux administrateurs/)).toBeInTheDocument();
   });
 
   it('shows sizes, puts a file among the global media, and edits a global media credit (#62)', async () => {
@@ -176,7 +170,7 @@ describe('AdminMediaPage', () => {
     ]);
     renderPage();
     expect(await screen.findByText(/1920 × 1080/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Afficher night-market.webp' }));
+    fireEvent.click(screen.getByRole('button', { name: /^night-market\.webp/ }));
     fireEvent.click(
       await screen.findByRole('button', { name: 'Ajouter night-market.webp aux médias globaux' }),
     );
@@ -195,7 +189,7 @@ describe('AdminMediaPage', () => {
     expect(await screen.findByText('logo.webp')).toBeInTheDocument();
     expect(screen.getByText(/· Global$/)).toBeInTheDocument();
     expect(screen.queryByLabelText('Texte alternatif')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Afficher logo.webp' }));
+    fireEvent.click(screen.getByRole('button', { name: /^logo\.webp/ }));
     const credit = screen.getByLabelText('Crédit');
     expect(credit).toHaveValue('In-house');
     fireEvent.change(credit, { target: { value: 'CC0' } });
@@ -255,7 +249,7 @@ describe('AdminMediaPage', () => {
       },
     ]);
     renderPage();
-    const row = await screen.findByRole('button', { name: 'Afficher night-market.webp' });
+    const row = await screen.findByRole('button', { name: /^night-market\.webp/ });
     fireEvent.click(row);
     expect(row).toHaveAttribute('aria-pressed', 'true');
     // Beside the list on a wide screen (a bottom sheet on a phone).
@@ -266,7 +260,7 @@ describe('AdminMediaPage', () => {
     // Where it is used, before any deletion is asked for.
     expect(await within(panel).findByText('« Discover Taiwan » (Billy)')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Afficher jingle.m4a' }));
+    fireEvent.click(screen.getByRole('button', { name: /^jingle\.m4a/ }));
     const shown = await screen.findByRole('complementary', { name: 'jingle.m4a' });
     expect(shown).toHaveTextContent('1:23');
     // The sound plays over its waveform.

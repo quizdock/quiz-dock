@@ -28,13 +28,17 @@ export function Drawer({
 }) {
   const { t } = useTranslation('common');
   const panel = useRef<HTMLDivElement>(null);
+  // The latest onClose, read when Escape is pressed: a caller re-rendering with a
+  // new function must not run the effect again (it would take the focus back).
+  const close = useRef(onClose);
+  close.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        close.current();
       }
     };
     document.addEventListener('keydown', onKey);
@@ -49,7 +53,7 @@ export function Drawer({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = previous;
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || typeof document === 'undefined') return null;
 

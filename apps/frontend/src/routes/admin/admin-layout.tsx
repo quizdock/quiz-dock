@@ -42,7 +42,7 @@ export function AdminLayout() {
       <PageTitle>{t('title')}</PageTitle>
       <nav aria-label={t('title')} className="flex flex-wrap gap-x-6 gap-y-2 border-b pb-2">
         {SECTIONS.map((section) => (
-          <div key={section.domain ?? 'home'} className="flex items-center gap-1">
+          <div key={section.domain ?? 'home'} className="flex flex-wrap items-center gap-1">
             {section.domain ? (
               <span className="text-muted-foreground mr-1 text-xs font-medium uppercase">
                 {t(`domains.${section.domain}`)}

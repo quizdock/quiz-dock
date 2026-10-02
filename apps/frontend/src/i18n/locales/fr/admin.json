@@ -14,8 +14,7 @@
     "accounts": "Comptes",
     "audit": "Audit",
     "quizzes": "Quiz",
-    "media": "Médias",
-    "changes": "Modifications"
+    "media": "Médias"
   },
   "token": {
     "unset": "Mode local : rien ne peut être changé depuis le web tant qu’ADMIN_TOKEN n’est pas défini dans .env (32 caractères ou plus), puis l’instance redémarrée.",
@@ -510,7 +509,8 @@
         "firewall": "Un pare-feu : la machine refuse peut-être les connexions entrantes sur le port de l’application.",
         "public": "Une adresse publique demande un nom qui pointe vers la machine et son port ouvert depuis Internet (ou un proxy inverse) — et https pour que les téléphones installent l’application.",
         "docker": "Docker Desktop, un réseau bridge : le conteneur ne voit pas les adresses de la machine elle-même — indiquez-les dans HOST_LAN_IPS."
-      }
+      },
+      "expired": "Ce test a expiré : relancez-le."
     },
     "access": {
       "firstAdmin": "Mode local : le nom qui administrera l’instance (il se connecte avec). Les modifications depuis le web demandent aussi ADMIN_TOKEN.",

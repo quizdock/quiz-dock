@@ -75,8 +75,8 @@ async function more(item: string) {
 async function stepMenu(step: string, item: string) {
   const trigger = await screen.findByRole('button', { name: `Actions pour « ${step} »` });
   fireEvent.click(trigger);
-  // The menu opens next to its trigger.
-  fireEvent.click(within(trigger.parentElement!).getByRole('button', { name: item }));
+  // The menu opens next to its trigger, in a portal appended to the page: the last match.
+  fireEvent.click(screen.getAllByRole('button', { name: item }).at(-1)!);
 }
 
 /** A step's row in the list (its ⋯ carries a label, the row does not). */

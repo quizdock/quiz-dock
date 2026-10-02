@@ -14,8 +14,7 @@
     "accounts": "帳號",
     "audit": "稽核",
     "quizzes": "測驗",
-    "media": "媒體",
-    "changes": "變更"
+    "media": "媒體"
   },
   "token": {
     "unset": "本機模式：在 .env 中設定 ADMIN_TOKEN（32 個字元以上）並重新啟動執行個體之前，無法從網頁變更任何內容。",
@@ -510,7 +509,8 @@
         "firewall": "防火牆：本機可能拒絕應用程式連接埠上的連入連線。",
         "public": "公開網址需要一個指向本機的網域名稱，且其連接埠可從網際網路連線（或透過反向 Proxy）——並需要 https，手機才能安裝應用程式。",
         "docker": "Docker Desktop 的 bridge 網路：容器看不到本機自身的位址——請在 HOST_LAN_IPS 中設定。"
-      }
+      },
+      "expired": "此測試已過期：請重新開始。"
     },
     "access": {
       "firstAdmin": "本機模式：將管理此執行個體的名稱（用它登入）。從網頁進行變更還需要 ADMIN_TOKEN。",
