@@ -4,7 +4,7 @@ import {
   ArchiveRestore,
   Download,
   ExternalLink,
-  MoreHorizontal,
+  EllipsisVertical,
   Radio,
   Search,
   Trash2,
@@ -278,7 +278,7 @@ function QuizActions({ quiz }: { quiz: QuizItem }) {
             aria-expanded={open}
             onClick={toggle}
           >
-            <MoreHorizontal aria-hidden className="size-4" />
+            <EllipsisVertical aria-hidden className="size-4" />
           </Button>
         )}
       >
