@@ -120,6 +120,23 @@ describe('sniffMedia — MP4', () => {
   });
 });
 
+describe('sniffMedia — a crafted MP4', () => {
+  it('millions of empty boxes before the movie: read up to a bound, never all kept', () => {
+    // ftyp, then 1.5 M empty 8-byte boxes (12 MB), then a valid movie past the bound.
+    const head = Uint8Array.from(ftyp());
+    const tail = Uint8Array.from(movie(trak('vide', 'avc1')));
+    const empty = 1_500_000;
+    const bytes = new Uint8Array(head.length + empty * 8 + tail.length);
+    bytes.set(head);
+    for (let i = 0; i < empty; i++)
+      bytes.set([0, 0, 0, 8, 0x66, 0x72, 0x65, 0x65], head.length + i * 8);
+    bytes.set(tail, head.length + empty * 8);
+    const started = performance.now();
+    expect(sniffMedia(bytes)).toMatchObject({ ok: false });
+    expect(performance.now() - started).toBeLessThan(1_000);
+  });
+});
+
 describe('sniffMedia — MP3', () => {
   it('accepts frames alone, or after an ID3 tag', () => {
     expect(sniffMedia(Uint8Array.from([...frame(), ...frame()]), 'audio')).toEqual({

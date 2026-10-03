@@ -4,6 +4,8 @@
  * header, an MP4 from the header of its video track (rotation applied, as a
  * phone films sideways and flags it). `null` when the bytes do not say.
  */
+import { firstMp4Box, mp4Boxes, type Mp4Box } from '@quiz-dock/contracts';
+
 export interface Dimensions {
   width: number;
   height: number;
@@ -90,40 +92,15 @@ function avif(b: Uint8Array): Dimensions | null {
   return null;
 }
 
-interface Box {
-  type: string;
-  start: number;
-  end: number;
-}
-
-function boxes(b: Uint8Array, from: number, to: number): Box[] {
-  const out: Box[] = [];
-  let at = from;
-  while (at + 8 <= to) {
-    let size = u32be(b, at);
-    let header = 8;
-    if (size === 1) {
-      if (at + 16 > to) break;
-      size = u32be(b, at + 8) * 2 ** 32 + u32be(b, at + 12);
-      header = 16;
-    } else if (size === 0) {
-      size = to - at;
-    }
-    if (size < header || at + size > to) break;
-    out.push({ type: fourcc(b, at + 4), start: at + header, end: at + size });
-    at += size;
-  }
-  return out;
-}
-
-const child = (b: Uint8Array, parent: Box, type: string) =>
-  boxes(b, parent.start, parent.end).find((x) => x.type === type);
+const child = (b: Uint8Array, parent: Mp4Box, type: string) =>
+  firstMp4Box(b, parent.start, parent.end, type);
 
 /** The video track's `tkhd`: its size (16.16 fixed point) and its rotation matrix. */
 function mp4(b: Uint8Array): Dimensions | null {
-  const moov = boxes(b, 0, b.length).find((x) => x.type === 'moov');
+  const moov = firstMp4Box(b, 0, b.length, 'moov');
   if (!moov) return null;
-  for (const trak of boxes(b, moov.start, moov.end).filter((x) => x.type === 'trak')) {
+  for (const trak of mp4Boxes(b, moov.start, moov.end)) {
+    if (trak.type !== 'trak') continue;
     const mdia = child(b, trak, 'mdia');
     const hdlr = mdia && child(b, mdia, 'hdlr');
     if (!hdlr || fourcc(b, hdlr.start + 8) !== 'vide') continue;
