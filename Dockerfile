@@ -55,6 +55,9 @@ ENV NODE_ENV=production
 ARG APP_VERSION=dev
 ENV APP_VERSION=$APP_VERSION
 ENV PORT=3000
+# `prisma migrate deploy` (the migrate service) would otherwise report to
+# checkpoint.prisma.io: the server makes no outgoing request of its own accord.
+ENV CHECKPOINT_DISABLE=1
 ENV CLIENT_DIR=/app/client
 ENV MEDIA_DIR=/data/media \
     STORE_DIR=/data/store

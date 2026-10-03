@@ -46,7 +46,10 @@ RUN chmod +x /usr/local/bin/start.sh \
 
 # Tells the app it is the all-in-one image, so it can say so where it matters
 # (the limitations shown on a demo instance's home page).
+# CHECKPOINT_DISABLE: `prisma migrate deploy` at start would otherwise report to
+# checkpoint.prisma.io; the server makes no outgoing request of its own accord.
 ENV QUIZDOCK_FLAVOR=standalone \
+    CHECKPOINT_DISABLE=1 \
     NODE_ENV=production \
     PORT=3000 \
     CLIENT_DIR=/app/client \
