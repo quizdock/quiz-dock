@@ -12,7 +12,6 @@
     "image_choice": "Elección con imágenes"
   },
   "header": {
-    "title": "Editor de quiz",
     "history": "Historial",
     "deleteQuiz": "Eliminar quiz",
     "preview": "Vista previa",
@@ -71,7 +70,6 @@
     "saved": "Guardado"
   },
   "broadcast": {
-    "title": "Difusión",
     "fullCaptureHelp": "Conserva el detalle de las respuestas de cada jugador (seguimiento individual). Actívalo antes de presentar.",
     "publish": "Publicar (listo)",
     "presenting": "Iniciando…",
@@ -79,8 +77,6 @@
     "backToDraft": "Volver a borrador",
     "archive": "Archivar",
     "restore": "Restaurar",
-    "archiveTitle": "Archivo",
-    "archiveHelp": "Un quiz archivado sale de la lista principal; se puede restaurar.",
     "fullCaptureNext": "Captura completa de respuestas la próxima vez que se juegue"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "Añadir",
     "moveUp": "Subir",
     "moveDown": "Bajar",
-    "edit": "Editar",
     "deleteQuestion": "Eliminar la pregunta",
     "dragHandle": "Arrastrar para reordenar",
     "itemsCount_one": "{{count}} elemento",
@@ -227,11 +222,9 @@
     "selectHint": "Elige un elemento de la lista para editarlo."
   },
   "deleteConfirm": {
-    "hint": "Eliminar este quiz y todo su historial.",
     "title": "¿Eliminar este quiz?",
     "description": "«{{title}}» y sus preguntas se eliminarán definitivamente. Esta acción es irreversible.",
-    "confirmLabel": "Eliminar",
-    "zoneTitle": "Zona peligrosa"
+    "confirmLabel": "Eliminar"
   },
   "questionForm": {
     "typeLabel": "Tipo",
@@ -269,8 +262,6 @@
     "optionAriaLabel": "opción {{index}}",
     "dragOption": "Arrastrar para reordenar la opción",
     "optionPlaceholder": "Opción {{index}}",
-    "colorAriaLabel": "color {{index}}",
-    "shapeAriaLabel": "forma {{index}}",
     "orderAriaLabel": "Lugar de la respuesta {{index}} en el orden correcto",
     "correct": "Correcta",
     "removeOption": "Quitar la opción {{index}}",
@@ -283,7 +274,6 @@
     "numericToleranceLabel": "Tolerancia ±",
     "submitUpdate": "Guardar",
     "submitAdd": "Añadir",
-    "cancel": "Cancelar",
     "invalidError": "Pregunta no válida.",
     "scoringLabel": "Puntuación",
     "scoring": {

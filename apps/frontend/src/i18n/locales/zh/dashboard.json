@@ -23,7 +23,6 @@
   "running_other": "{{count}} 个房间开放中",
   "seatTaken": "主持人席位已被他人占用：你只能以参与者身份加入房间。",
   "loadSamples": "加载示例测验",
-  "loadSamplesHint": "两套可直接开始的英文测验（法国、台湾），立即体验应用。",
   "seatBackToLogin": "返回登录",
   "allSessions": "本实例的所有房间",
   "hostedBy": "由 {{name}} 主持",
@@ -65,8 +64,6 @@
   "browseTemplates": "浏览模板库",
   "browseTemplatesHint": "现成的测验，可据此创建自己的；不主动取用则不会进入你的题库。",
   "mediaAdmin": {
-    "title": "实例媒体",
-    "adminOnly": "此页面仅供管理员使用。",
     "loading": "加载中…",
     "kind": {
       "image": "图片",
@@ -154,7 +151,6 @@
       "empty": "尚无全局媒体：可用上方按钮添加，或从「全部」视图添加。",
       "credit": "署名（作者、许可、来源）",
       "remove": "撤下",
-      "removeNamed": "撤下 {{name}}",
       "removeTitle": "撤下此全局媒体？",
       "removeDescription": "主持人将无法在媒体库中找到它。使用它的测验保留各自的副本。",
       "removeFailed": "无法撤下该媒体。",

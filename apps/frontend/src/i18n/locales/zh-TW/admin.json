@@ -333,7 +333,6 @@
     "write": "執行",
     "preview": "預覽",
     "confirm": "確認",
-    "again": "重新讀取",
     "confirmTitle": "確認此變更？"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "移交「{{title}}」",
       "help": "移交給另一個帳號：僅此測驗使用的媒體及其歷史會隨之轉移；其餘內容仍歸 {{owner}} 所有。",
-      "search": "名稱、主體識別碼或電子郵件",
-      "player": "參與者"
+      "search": "名稱、主體識別碼或電子郵件"
     },
     "actionsFor": "{{title}} 的操作"
   },

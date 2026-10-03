@@ -12,7 +12,6 @@
     "image_choice": "Image choice"
   },
   "header": {
-    "title": "Quiz editor",
     "history": "History",
     "deleteQuiz": "Delete quiz",
     "preview": "Preview",
@@ -71,7 +70,6 @@
     "saved": "Saved"
   },
   "broadcast": {
-    "title": "Broadcast",
     "fullCaptureHelp": "Keeps each player's answer details (individual tracking). Enable before presenting.",
     "publish": "Publish (ready)",
     "presenting": "Starting…",
@@ -79,8 +77,6 @@
     "backToDraft": "Back to draft",
     "archive": "Archive",
     "restore": "Restore",
-    "archiveTitle": "Archiving",
-    "archiveHelp": "An archived quiz leaves the main list; it can be restored.",
     "fullCaptureNext": "Full answer capture the next time it is played"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "Add",
     "moveUp": "Move up",
     "moveDown": "Move down",
-    "edit": "Edit",
     "deleteQuestion": "Delete question",
     "dragHandle": "Drag to reorder",
     "itemsCount_one": "{{count}} item",
@@ -227,11 +222,9 @@
     "selectHint": "Pick an item in the list to edit it."
   },
   "deleteConfirm": {
-    "hint": "Delete this quiz and all its history.",
     "title": "Delete this quiz?",
     "description": "“{{title}}” and its questions will be permanently deleted. This action cannot be undone.",
-    "confirmLabel": "Delete",
-    "zoneTitle": "Danger zone"
+    "confirmLabel": "Delete"
   },
   "questionForm": {
     "typeLabel": "Type",
@@ -269,8 +262,6 @@
     "optionAriaLabel": "option {{index}}",
     "dragOption": "Drag to reorder the option",
     "optionPlaceholder": "Option {{index}}",
-    "colorAriaLabel": "color {{index}}",
-    "shapeAriaLabel": "shape {{index}}",
     "orderAriaLabel": "Place of answer {{index}} in the right order",
     "correct": "Correct",
     "removeOption": "Remove option {{index}}",
@@ -283,7 +274,6 @@
     "numericToleranceLabel": "Tolerance ±",
     "submitUpdate": "Save",
     "submitAdd": "Add",
-    "cancel": "Cancel",
     "invalidError": "Invalid question.",
     "scoringLabel": "Scoring",
     "scoring": {

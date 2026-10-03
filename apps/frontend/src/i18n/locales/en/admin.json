@@ -333,7 +333,6 @@
     "write": "Run",
     "preview": "Preview",
     "confirm": "Confirm",
-    "again": "Read again",
     "confirmTitle": "Confirm this change?"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "Hand “{{title}}” over",
       "help": "To another account: the media only this quiz uses and its history follow it; {{owner}} keeps the rest.",
-      "search": "Name, subject or e-mail",
-      "player": "participant"
+      "search": "Name, subject or e-mail"
     },
     "actionsFor": "Actions for {{title}}"
   },

@@ -12,7 +12,6 @@
     "image_choice": "Choix en images"
   },
   "header": {
-    "title": "Éditeur de quiz",
     "history": "Historique",
     "deleteQuiz": "Supprimer le quiz",
     "preview": "Aperçu",
@@ -71,7 +70,6 @@
     "saved": "Enregistré"
   },
   "broadcast": {
-    "title": "Diffusion",
     "fullCaptureHelp": "Conserve le détail des réponses de chaque participant (suivi individuel). À activer avant de présenter.",
     "publish": "Publier (prêt)",
     "presenting": "Lancement…",
@@ -79,8 +77,6 @@
     "backToDraft": "Repasser en brouillon",
     "archive": "Archiver",
     "restore": "Restaurer",
-    "archiveTitle": "Archivage",
-    "archiveHelp": "Un quiz archivé disparaît de la liste principale ; il reste restaurable.",
     "fullCaptureNext": "Capture intégrale des réponses la prochaine fois qu’il est joué"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "Ajouter",
     "moveUp": "Monter",
     "moveDown": "Descendre",
-    "edit": "Éditer",
     "deleteQuestion": "Supprimer la question",
     "dragHandle": "Glisser pour réordonner",
     "itemsCount_one": "{{count}} élément",
@@ -227,11 +222,9 @@
     "selectHint": "Choisissez un élément dans la liste pour l’éditer."
   },
   "deleteConfirm": {
-    "hint": "Supprimer ce quiz et tout son historique.",
     "title": "Supprimer ce quiz ?",
     "description": "« {{title}} » et ses questions seront définitivement supprimés. Cette action est irréversible.",
-    "confirmLabel": "Supprimer",
-    "zoneTitle": "Zone dangereuse"
+    "confirmLabel": "Supprimer"
   },
   "questionForm": {
     "typeLabel": "Type",
@@ -269,8 +262,6 @@
     "optionAriaLabel": "option {{index}}",
     "dragOption": "Glisser pour réordonner l’option",
     "optionPlaceholder": "Option {{index}}",
-    "colorAriaLabel": "couleur {{index}}",
-    "shapeAriaLabel": "forme {{index}}",
     "orderAriaLabel": "Place de la réponse {{index}} dans le bon ordre",
     "correct": "Correcte",
     "removeOption": "Retirer l’option {{index}}",
@@ -283,7 +274,6 @@
     "numericToleranceLabel": "Tolérance ±",
     "submitUpdate": "Enregistrer",
     "submitAdd": "Ajouter",
-    "cancel": "Annuler",
     "invalidError": "Question invalide.",
     "scoringLabel": "Barème",
     "scoring": {

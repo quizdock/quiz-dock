@@ -333,7 +333,6 @@
     "write": "Çalıştır",
     "preview": "Önizle",
     "confirm": "Onayla",
-    "again": "Yeniden oku",
     "confirmTitle": "Bu değişiklik onaylansın mı?"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "“{{title}}” quizini devret",
       "help": "Başka bir hesaba: yalnızca bu quizin kullandığı medya ve geçmişi onunla gider; geri kalanı {{owner}} hesabında kalır.",
-      "search": "Ad, subject değeri veya e-posta",
-      "player": "katılımcı"
+      "search": "Ad, subject değeri veya e-posta"
     },
     "actionsFor": "{{title}} için işlemler"
   },

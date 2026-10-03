@@ -23,7 +23,6 @@
   "running_other": "{{count}} oda açık",
   "seatTaken": "Sunucu yetkisi başka biri tarafından tutuluyor: odalara yalnızca katılımcı olarak katılabilirsiniz.",
   "loadSamples": "Örnek quizleri yükleyin",
-  "loadSamplesHint": "Uygulamayı denemek için İngilizce iki hazır quiz (Fransa ve Tayvan).",
   "seatBackToLogin": "Oturum açmaya geri dön",
   "allSessions": "Bu kurulumdaki tüm odalar",
   "hostedBy": "Sunucu: {{name}}",
@@ -65,8 +64,6 @@
   "browseTemplates": "Şablonlara göz atın",
   "browseTemplatesHint": "Kopyalayıp düzenleyebileceğiniz hazır quizler. Seçmedikçe listenize eklenmezler.",
   "mediaAdmin": {
-    "title": "Kurulum medyası",
-    "adminOnly": "Bu sayfa yöneticiler içindir.",
     "loading": "Yükleniyor…",
     "kind": {
       "image": "Görseller",
@@ -154,7 +151,6 @@
       "empty": "Henüz ortak medya yok. Yukarıdaki düğmelerle veya Tümü görünümünden ekleyin.",
       "credit": "Kaynak bilgisi (yazar, lisans, bağlantı)",
       "remove": "Geri çek",
-      "removeNamed": "{{name}}'yi geri çek",
       "removeTitle": "Bu medya katalogdan geri çekilsin mi?",
       "removeDescription": "Sunucular artık bunu kütüphanelerinde bulamıyor. Bunu kullanan quizler kopyalarını saklar.",
       "removeFailed": "Medya geri çekilemedi.",

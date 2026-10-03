@@ -12,7 +12,6 @@
     "image_choice": "图片选择"
   },
   "header": {
-    "title": "测验编辑器",
     "history": "历史",
     "deleteQuiz": "删除测验",
     "preview": "预览",
@@ -71,7 +70,6 @@
     "saved": "已保存"
   },
   "broadcast": {
-    "title": "广播",
     "fullCaptureHelp": "保留每位玩家的回答详情（个人追踪）。请在演示前启用。",
     "publish": "发布（就绪）",
     "presenting": "正在启动…",
@@ -79,8 +77,6 @@
     "backToDraft": "退回草稿",
     "archive": "归档",
     "restore": "恢复",
-    "archiveTitle": "归档",
-    "archiveHelp": "归档的测验会从主列表中隐藏，可以随时恢复。",
     "fullCaptureNext": "下次进行时完整记录回答"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "添加",
     "moveUp": "上移",
     "moveDown": "下移",
-    "edit": "编辑",
     "deleteQuestion": "删除题目",
     "dragHandle": "拖动以排序",
     "itemsCount_one": "{{count}} 个元素",
@@ -227,11 +222,9 @@
     "selectHint": "在列表中选择一项进行编辑。"
   },
   "deleteConfirm": {
-    "hint": "删除此测验及其全部历史。",
     "title": "删除此测验？",
     "description": "“{{title}}”及其题目将被永久删除。此操作不可撤销。",
-    "confirmLabel": "删除",
-    "zoneTitle": "危险区"
+    "confirmLabel": "删除"
   },
   "questionForm": {
     "typeLabel": "类型",
@@ -269,8 +262,6 @@
     "optionAriaLabel": "选项 {{index}}",
     "dragOption": "拖动以排序选项",
     "optionPlaceholder": "选项 {{index}}",
-    "colorAriaLabel": "颜色 {{index}}",
-    "shapeAriaLabel": "形状 {{index}}",
     "orderAriaLabel": "答案 {{index}} 在正确顺序中的位置",
     "correct": "正确",
     "removeOption": "移除选项 {{index}}",
@@ -283,7 +274,6 @@
     "numericToleranceLabel": "容差 ±",
     "submitUpdate": "保存",
     "submitAdd": "添加",
-    "cancel": "取消",
     "invalidError": "题目无效。",
     "scoringLabel": "计分规则",
     "scoring": {

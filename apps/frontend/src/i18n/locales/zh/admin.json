@@ -333,7 +333,6 @@
     "write": "运行",
     "preview": "预览",
     "confirm": "确认",
-    "again": "重新读取",
     "confirmTitle": "确认此更改？"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "移交“{{title}}”",
       "help": "移交给另一个账号：仅此测验使用的媒体及其历史会随之转移；其余内容仍归 {{owner}} 所有。",
-      "search": "名称、主体标识或邮箱",
-      "player": "参与者"
+      "search": "名称、主体标识或邮箱"
     },
     "actionsFor": "{{title}} 的操作"
   },

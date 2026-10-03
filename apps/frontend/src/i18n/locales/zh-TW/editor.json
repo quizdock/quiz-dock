@@ -12,7 +12,6 @@
     "image_choice": "圖片選擇"
   },
   "header": {
-    "title": "測驗編輯器",
     "history": "歷史",
     "deleteQuiz": "刪除測驗",
     "preview": "預覽",
@@ -71,7 +70,6 @@
     "saved": "已儲存"
   },
   "broadcast": {
-    "title": "廣播",
     "fullCaptureHelp": "保留每位玩家的回答詳細資訊（個人追蹤）。請在示範前啟用。",
     "publish": "發布（就緒）",
     "presenting": "正在啟動…",
@@ -79,8 +77,6 @@
     "backToDraft": "退回草稿",
     "archive": "歸檔",
     "restore": "恢復",
-    "archiveTitle": "歸檔",
-    "archiveHelp": "歸檔的測驗會從主清單中隱藏，可以隨時還原。",
     "fullCaptureNext": "下次進行時完整記錄回答"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "新增",
     "moveUp": "上移",
     "moveDown": "下移",
-    "edit": "編輯",
     "deleteQuestion": "刪除題目",
     "dragHandle": "拖曳以重新排序",
     "itemsCount_one": "{{count}} 個項目",
@@ -227,11 +222,9 @@
     "selectHint": "在清單中選取一個項目進行編輯。"
   },
   "deleteConfirm": {
-    "hint": "刪除此測驗及其全部歷史。",
     "title": "刪除此測驗？",
     "description": "「{{title}}」及其題目將被永久刪除。此操作不可撤銷。",
-    "confirmLabel": "刪除",
-    "zoneTitle": "危險區域"
+    "confirmLabel": "刪除"
   },
   "questionForm": {
     "typeLabel": "類型",
@@ -269,8 +262,6 @@
     "optionAriaLabel": "選項 {{index}}",
     "dragOption": "拖曳以重新排序選項",
     "optionPlaceholder": "選項 {{index}}",
-    "colorAriaLabel": "顏色 {{index}}",
-    "shapeAriaLabel": "形狀 {{index}}",
     "orderAriaLabel": "答案 {{index}} 在正確順序中的位置",
     "correct": "正確",
     "removeOption": "移除選項 {{index}}",
@@ -283,7 +274,6 @@
     "numericToleranceLabel": "誤差 ±",
     "submitUpdate": "儲存",
     "submitAdd": "新增",
-    "cancel": "取消",
     "invalidError": "題目無效。",
     "scoringLabel": "計分規則",
     "scoring": {

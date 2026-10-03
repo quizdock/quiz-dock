@@ -56,7 +56,6 @@
       "filenameFallback": "session"
     },
     "room": {
-      "title": "Salon",
       "intro_one": "Cette session a été jouée dans un salon : {{count}} quiz conservé, l’un après l’autre, les participants n’entrant qu’une fois.",
       "intro_other": "Cette session a été jouée dans un salon : {{count}} quiz conservés, l’un après l’autre, les participants n’entrant qu’une fois.",
       "thisSession": "cette session",

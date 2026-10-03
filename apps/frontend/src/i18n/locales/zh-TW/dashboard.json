@@ -23,7 +23,6 @@
   "running_other": "{{count}} 個房間開放中",
   "seatTaken": "主持人席位已被他人佔用：你只能以參與者身分加入房間。",
   "loadSamples": "載入範例測驗",
-  "loadSamplesHint": "兩套可直接開始的英文測驗（法國、臺灣），立即體驗應用程式。",
   "seatBackToLogin": "返回登入",
   "allSessions": "本執行個體的所有房間",
   "hostedBy": "由 {{name}} 主持",
@@ -65,8 +64,6 @@
   "browseTemplates": "瀏覽範本庫",
   "browseTemplatesHint": "現成的測驗，可據此建立自己的；不主動取用則不會進入你的題庫。",
   "mediaAdmin": {
-    "title": "執行個體媒體",
-    "adminOnly": "此頁面僅供管理員使用。",
     "loading": "載入中…",
     "kind": {
       "image": "圖片",
@@ -154,7 +151,6 @@
       "empty": "目前沒有全域媒體：可用上方按鈕新增，或從「全部」檢視新增。",
       "credit": "出處（作者、授權、來源）",
       "remove": "撤下",
-      "removeNamed": "撤下 {{name}}",
       "removeTitle": "撤下這個全域媒體？",
       "removeDescription": "主持人將無法在媒體庫中找到它。使用它的測驗保留各自的副本。",
       "removeFailed": "無法撤下這個媒體。",

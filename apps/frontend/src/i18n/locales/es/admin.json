@@ -333,7 +333,6 @@
     "write": "Ejecutar",
     "preview": "Vista previa",
     "confirm": "Confirmar",
-    "again": "Volver a leer",
     "confirmTitle": "¿Confirmar este cambio?"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "Traspasar «{{title}}»",
       "help": "A otra cuenta: los medios que solo usa este quiz y su historial lo acompañan; {{owner}} conserva el resto.",
-      "search": "Nombre, sujeto o correo electrónico",
-      "player": "participante"
+      "search": "Nombre, sujeto o correo electrónico"
     },
     "actionsFor": "Acciones para {{title}}"
   },
