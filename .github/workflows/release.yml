@@ -66,6 +66,8 @@ jobs:
         if: needs.gate.outputs.stable == 'true'
         uses: orhun/git-cliff-action@f50e11560dce63f7c33227798f90b924471a88b5 # v4.8.0
         with:
+          # 2.13.1 (the action's default) filed 0.11 and 0.12 under 0.10.0; 2.14.2 does not.
+          version: v2.14.2
           config: cliff.toml
           args: --tag ${{ github.ref_name }} --output CHANGELOG.md
 
