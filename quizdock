@@ -8,7 +8,7 @@
 # Deployment modes, chosen at `init` and remembered in `.env` (QUIZDOCK_MODE):
 #   compose     docker-compose.prod.yml — app + PostgreSQL + Redis (production)
 #   full        compose + bundled Keycloak (separate database)
-#   standalone  one container (fchaussin/quizdock:standalone) — demo / first try
+#   standalone  one container (fchaussin/quizdock:standalone) — a first try, one machine
 #
 # Admin commands (doctor, seat:*, user:*, quiz:*, samples:load, sessions:purge)
 # are relayed to the `qd` CLI shipped inside the image (/usr/local/bin/qd);

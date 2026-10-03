@@ -5,7 +5,7 @@
 
 This folder holds the **development documentation**, kept in step **with the code** — as opposed to [`../specifications/`](../specifications/README.md), which freezes the reference design per version.
 
-> Rule (see technique §18): **every iteration** is **tested** and **documented**. Any change of behaviour updates the documentation it concerns **in the same commit/PR**.
+> Rule: **every iteration** is **tested** and **documented**. Any change of behaviour updates the documentation it concerns **in the same commit/PR** — here for contributors, on the site for hosts, administrators and operators.
 
 ## What belongs here
 
@@ -14,26 +14,26 @@ This folder holds the **development documentation**, kept in step **with the cod
 | **ADRs** (Architecture Decision Records) | `adr/0001-i18n-et-glossaire.md` — dated technical decisions and what justified them |
 | **Developer guides** | local setup, code conventions, git/CI workflow |
 | **Living API documentation** | notes alongside the generated OpenAPI, usage examples |
-| **Operations / runbook** | deployment, environment variables, backup and purge, incidents |
 | **Feature notes** | how a shipped feature actually behaves, and where it departs from the spec |
-| **CHANGELOG** | (at the root or here) the history of the `0.x` releases |
+| **Release process** | [`releasing.md`](releasing.md); the history is the root [`CHANGELOG.md`](../CHANGELOG.md) |
 
 ## specifications/ vs docs/
 
-- **`specifications/`** = *what we decided to build* (the intent, frozen and versioned). The source of truth for the design.
-- **`docs/`** = *how it is actually built and operated* (the current state, evolving). The source of truth for the implementation.
+- **`specifications/`** = *what we decided to build* (the founding intent). It is not kept in step with the code, and may drift from it.
+- **`docs/`** = *how it is actually built* (the current state, evolving). The source of truth for the implementation.
 
-When the implementation departs from a spec on purpose, the spec is updated **and** the gap is noted here.
+When the implementation departs from a spec, the gap is noted here when a contributor needs it; the spec stays as it was written.
 
-## Suggested structure (create as needed)
+## Structure
 
 ```
 docs/
 ├── README.md
 ├── adr/                 # architecture decisions
-├── dev/                 # developer guides (setup, conventions)
-├── api/                 # additions to the OpenAPI / WS contract
-└── ops/                 # runbook, deployment, operations
+├── dev/                 # developer notes: load testing, performance, audits
+├── security/            # scanning, hardening, point-in-time audits
+├── self-hosting/        # relay pages to the site's operator Documentation
+└── releasing/           # image retention (a proposal)
 ```
 
 ## Feature notes
@@ -44,5 +44,5 @@ docs/
 - [`dev/load-testing.md`](dev/load-testing.md) — load testing a live game: the benchmark, how many players one instance holds, the sizing it gives (published for operators in [sizing](https://quizdock.github.io/docs/operator/sizing/)).
 - [`dev/performance-roadmap.md`](dev/performance-roadmap.md) — where the live engine spends its time (profiled), what was done, and the options to go further, in order.
 - [`dev/audit-2026-09.md`](dev/audit-2026-09.md) — the September 2026 code audit (bugs, duplicates, CSS), the decisions taken, and what each lot fixed.
-- [`tech-debt.md`](tech-debt.md) — known shortcuts, what they cost and what would replace them (OIDC tokens in the browser, the client address behind a proxy…).
+- [`tech-debt.md`](tech-debt.md) — known shortcuts, what they cost and what would replace them (OIDC tokens at rest in Redis, the CSP's loose points, an unread column, a dark theme nothing turns on).
 - [`../apps/frontend/src/i18n/GLOSSARY.md`](../apps/frontend/src/i18n/GLOSSARY.md) — the interface vocabulary (6 languages) and the choices behind it.

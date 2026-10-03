@@ -7,7 +7,7 @@ big screen shows them. The README shows a selection.
 
 They are the sample quizzes the application ships (France, Taiwan, Türkiye), whose pictures
 and sounds come from Wikimedia Commons, credited in the app. `tools/screenshots/run.sh` takes
-them all again, with the demo GIF, on the demo stack: see its header.
+them all again, with the animated GIF, on a stack of their own (`tools/screenshots/`): see its header.
 
 ## A session
 

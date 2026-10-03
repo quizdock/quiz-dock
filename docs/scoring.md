@@ -12,7 +12,8 @@ covered by golden tests).
 - **Streak**: `+100` per consecutive right answer beyond the first, capped at
   `+500`. A wrong answer resets it; an unscored question (poll, `none`) leaves
   it untouched.
-- Late answers (after the deadline + 300 ms grace) score 0 and reset the streak.
+- A late answer (after the deadline + 300 ms grace) is refused before it is scored: it does
+  not count, and the streak stays as it was — as with no answer at all.
 
 ## Scoring rules per type (`question.scoring`)
 

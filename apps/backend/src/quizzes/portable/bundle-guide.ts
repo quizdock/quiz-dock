@@ -335,13 +335,16 @@ QuizDock. Never write these fields (a zipped export carries them, with its files
 - Valid JSON: double quotes, no comments, no trailing commas.
 - Markdown is read in prompts, options, explanations and slide text: a literal
   \`*\` or \`_\` is written \`\\\\*\` or \`\\\\_\` inside the JSON string.
-- An invalid file is refused as a whole; the message names the item (counted
-  from 1) and the field at fault.
+- An invalid file is refused as a whole. An item outside the rules is named (counted
+  from 1) with the field at fault; a file that is not a quiz at all is refused as such.
+- A step not finished yet (no right answer ticked, a picture without its alt text)
+  does not stop the import: the quiz arrives as a draft, the step marked unfinished.
 
 ## Checklist
 
-Go through it before handing the file over; an item that fails makes the whole
-import fail.
+Go through it before handing the file over: a time, a length or a count outside
+these rules makes the whole import fail; the answers, if left unfinished, make a
+draft to finish in the editor.
 
 - [ ] Every \`timeLimitS\` is a whole number from ${time.minimum} to ${time.maximum}: a longer time is written ${time.maximum}.
 - [ ] Every \`prompt\` has ${q.prompt.maxLength} characters at most, every option \`text\` ${option.text.maxLength}.

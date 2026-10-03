@@ -1,6 +1,6 @@
 #
 # QuizDock ALL-IN-ONE (:standalone) — PostgreSQL + Redis + app in a single
-# container, for one-command demo / beginner use on Docker Desktop:
+# container, for a one-command first try / beginner use on Docker Desktop:
 #
 #   docker run -p 18080:3000 -v quizdock:/data fchaussin/quizdock:standalone
 #

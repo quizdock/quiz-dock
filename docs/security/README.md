@@ -5,8 +5,9 @@ How QuizDock is scanned, hardened and audited.
 ## Continuous scanning
 
 - [`.github/workflows/security.yml`](../../.github/workflows/security.yml) runs on every
-  push to `main`, every PR and weekly:
-  - **`deps`** — `pnpm audit` (high/critical **gate**) + Trivy filesystem scan.
+  push to `main` and `dev`, every PR and weekly:
+  - **`deps`** — `pnpm audit --prod` (high/critical **gate**, production dependencies only) +
+    Trivy filesystem scan.
   - **`image`** — Trivy scan of the published `:latest` and `:standalone` images
     (**reports** to the Security tab, non-blocking for unfixable base-OS CVEs).
 - Findings land in the repository **Security → Code scanning** tab (SARIF).
