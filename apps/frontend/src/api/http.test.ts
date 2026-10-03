@@ -66,7 +66,7 @@ describe('customFetch', () => {
             code: 'validation',
             errors: [
               { field: 'title', code: 'too_small' },
-              { field: 'language', code: 'invalid_enum_value' },
+              { field: 'language', code: 'invalid_value' }, // zod 4: an enum's value not allowed
             ],
           }),
           { status: 400 },

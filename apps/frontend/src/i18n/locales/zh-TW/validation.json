@@ -2,9 +2,8 @@
   "invalid_type": "值的類型無效。",
   "too_small": "值太小或太短。",
   "too_big": "值太大或太長。",
-  "invalid_string": "格式無效。",
   "invalid_format": "格式無效。",
-  "invalid_enum_value": "不允許的值。",
+  "invalid_value": "不允許的值。",
   "unrecognized_keys": "無法識別的欄位。",
   "custom": "無效的值。",
   "_default": "欄位無效。"

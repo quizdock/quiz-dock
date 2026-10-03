@@ -2,9 +2,8 @@
   "invalid_type": "Geçersiz değer türü.",
   "too_small": "Değer çok küçük veya çok kısa.",
   "too_big": "Değer çok büyük veya çok uzun.",
-  "invalid_string": "Geçersiz biçim.",
   "invalid_format": "Geçersiz biçim.",
-  "invalid_enum_value": "Değere izin verilmiyor.",
+  "invalid_value": "Değere izin verilmiyor.",
   "unrecognized_keys": "Tanınmayan alan.",
   "custom": "Geçersiz değer.",
   "_default": "Geçersiz alan."
