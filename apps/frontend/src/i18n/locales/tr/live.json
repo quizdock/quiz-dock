@@ -398,12 +398,18 @@
     "inRoom": "Oda: {{room}}",
     "hostBack": "{{host}} geri döndüğünde quiz kaldığı yerden devam eder.",
     "theHost": "sunucu",
-    "roomClosed": "{{room}} kapalı."
+    "roomClosed": "{{room}} kapalı.",
+    "announce": {
+      "question": "Yeni soru: {{prompt}}",
+      "saved": "Yanıtınız kaydedildi.",
+      "pending": "Yanıtınız bağlantı geri geldiğinde gönderilecek."
+    }
   },
   "reveal": {
     "explanation": "Açıklama",
     "goodOrder": "Doğru sıra:",
     "goodAnswer": "Doğru cevap:",
+    "correctOption": "doğru cevap",
     "or": "veya ",
     "closestTitle": "En yakın cevaplar",
     "closestDistance": "±{{distance}}",

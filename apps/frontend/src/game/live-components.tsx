@@ -310,15 +310,17 @@ export function OptionTiles({
 
 /** The right answer's mark: a filled tick with a two-tone edge, readable on a tile or a background. */
 function CorrectMark({ className }: { className?: string }) {
+  const { t } = useTranslation('live');
   return (
     <span
-      aria-hidden
       className={cn(
         'bg-success text-success-foreground inline-flex size-[1.3em] shrink-0 items-center justify-center rounded-full text-[0.85em] font-bold ring-1 ring-black/70 ring-offset-1 ring-offset-white/70 [text-shadow:none]',
         className,
       )}
     >
-      ✓
+      <span aria-hidden>✓</span>
+      {/* Said, not only seen: the right answer is otherwise shown by colour alone. */}
+      <span className="sr-only">{t('reveal.correctOption')}</span>
     </span>
   );
 }

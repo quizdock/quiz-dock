@@ -398,12 +398,18 @@
     "inRoom": "在 {{room}}",
     "hostBack": "{{host}} 一回来，测验就会从停下的地方继续。",
     "theHost": "主持人",
-    "roomClosed": "{{room}} 已关闭。"
+    "roomClosed": "{{room}} 已关闭。",
+    "announce": {
+      "question": "新问题：{{prompt}}",
+      "saved": "你的回答已保存。",
+      "pending": "连接恢复后将发送你的回答。"
+    }
   },
   "reveal": {
     "explanation": "解析",
     "goodOrder": "正确顺序：",
     "goodAnswer": "正确答案：",
+    "correctOption": "正确答案",
     "or": " 或 ",
     "closestTitle": "最接近的答案",
     "closestDistance": "±{{distance}}",

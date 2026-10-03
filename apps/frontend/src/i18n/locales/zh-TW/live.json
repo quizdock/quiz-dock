@@ -398,12 +398,18 @@
     "inRoom": "在 {{room}}",
     "hostBack": "{{host}} 一回來，測驗就會從停下的地方繼續。",
     "theHost": "主持人",
-    "roomClosed": "{{room}} 已關閉。"
+    "roomClosed": "{{room}} 已關閉。",
+    "announce": {
+      "question": "新問題：{{prompt}}",
+      "saved": "你的回答已儲存。",
+      "pending": "連線恢復後將送出你的回答。"
+    }
   },
   "reveal": {
     "explanation": "解析",
     "goodOrder": "正確順序：",
     "goodAnswer": "正確答案：",
+    "correctOption": "正確答案",
     "or": " 或 ",
     "closestTitle": "最接近的答案",
     "closestDistance": "±{{distance}}",

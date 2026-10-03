@@ -398,12 +398,18 @@
     "inRoom": "in {{room}}",
     "hostBack": "The quiz picks up where it stopped as soon as {{host}} is back.",
     "theHost": "the host",
-    "roomClosed": "{{room}} is closed."
+    "roomClosed": "{{room}} is closed.",
+    "announce": {
+      "question": "New question: {{prompt}}",
+      "saved": "Your answer is saved.",
+      "pending": "Your answer will be sent when the connection is back."
+    }
   },
   "reveal": {
     "explanation": "Explanation",
     "goodOrder": "Correct order:",
     "goodAnswer": "Correct answer:",
+    "correctOption": "right answer",
     "or": " or ",
     "closestTitle": "Closest answers",
     "closestDistance": "±{{distance}}",

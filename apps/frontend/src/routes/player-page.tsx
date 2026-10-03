@@ -116,11 +116,39 @@ export function PlayerPage() {
   return (
     <>
       <ConnectionLost lost={session.view.connectionLost} />
+      <PlayerAnnouncer view={session.view} />
       {/* A hook for override.css, with the game's state (no box: the layout is the page's). */}
       <div className="qd-player contents" data-state={session.view.state ?? 'none'}>
         <PlayerView pin={pin} session={session} />
       </div>
     </>
+  );
+}
+
+/**
+ * One region a screen reader follows for the whole game, kept on the page (a
+ * region that appears with its text is often not read): the new question, the
+ * answer taken or waiting, the verdict. The screen changes; this says how.
+ */
+function PlayerAnnouncer({ view }: { view: ReturnType<typeof useGameSession>['view'] }) {
+  const { t } = useTranslation('live');
+  const question = view.question;
+  let said = '';
+  if (view.state === 'ANSWERING' && question) {
+    said = view.answerPending
+      ? t('player.announce.pending')
+      : view.answerAccepted
+        ? t('player.announce.saved')
+        : t('player.announce.question', { prompt: question.prompt });
+  } else if ((view.state === 'REVEAL' || view.state === 'LEADERBOARD') && view.result) {
+    said = `${view.result.correct ? t('player.correct') : t('player.wrong')} ${t('player.points', {
+      points: view.result.points,
+    })}`;
+  }
+  return (
+    <p className="sr-only" aria-live="polite" role="status">
+      {said}
+    </p>
   );
 }
 

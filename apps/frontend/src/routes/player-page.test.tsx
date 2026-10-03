@@ -858,8 +858,10 @@ describe('PlayerPage (client participant)', () => {
     });
     renderApp('/join/771122');
 
-    expect(await screen.findByText(/Juste/)).toBeInTheDocument();
-    expect(screen.getByText(/\+850 points/)).toBeInTheDocument();
+    expect(await screen.findByText('Juste !')).toBeInTheDocument();
+    expect(screen.getByText('+850 points')).toBeInTheDocument();
+    // Said too, in the region a screen reader follows.
+    expect(screen.getByText('Juste ! +850 points')).toHaveAttribute('aria-live', 'polite');
     expect(screen.getByText(/Rang : 3/)).toBeInTheDocument();
   });
 
