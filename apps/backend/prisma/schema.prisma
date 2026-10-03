@@ -489,7 +489,8 @@ model GameSessionLog {
   retainUntil      DateTime      @map("retain_until") @db.Timestamptz(6)
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  quiz          Quiz                 @relation(fields: [quizId], references: [id])
+  /// A quiz takes its archived sessions with it.
+  quiz          Quiz                 @relation(fields: [quizId], references: [id], onDelete: Cascade)
   host          User                 @relation(fields: [hostId], references: [id])
   playerResults PlayerResultLog[]
   questionStats QuestionResultStat[]
@@ -530,7 +531,8 @@ model PlayerResultLog {
 model QuestionResultStat {
   id            String  @id @default(ulid()) @db.Char(26)
   sessionLogId  String  @map("session_log_id") @db.Char(26)
-  questionId    String  @map("question_id") @db.Char(26)
+  /// Null once the question is deleted: history reads the session's frozen snapshot.
+  questionId    String? @map("question_id") @db.Char(26)
   orderIndex    Int     @map("order_index")
   correctCount  Int     @default(0) @map("correct_count")
   answerCount   Int     @default(0) @map("answer_count")
@@ -539,7 +541,7 @@ model QuestionResultStat {
   distribution  Json    @default("{}")
 
   sessionLog GameSessionLog @relation(fields: [sessionLogId], references: [id], onDelete: Cascade)
-  question   Question       @relation(fields: [questionId], references: [id])
+  question   Question?      @relation(fields: [questionId], references: [id], onDelete: SetNull)
 
   @@index([sessionLogId, orderIndex])
   @@map("question_result_stat")
@@ -550,7 +552,8 @@ model AnswerLog {
   id                String   @id @default(ulid()) @db.Char(26)
   sessionLogId      String   @map("session_log_id") @db.Char(26)
   playerResultLogId String   @map("player_result_log_id") @db.Char(26)
-  questionId        String   @map("question_id") @db.Char(26)
+  /// Null once the question is deleted: history reads the session's frozen snapshot.
+  questionId        String?  @map("question_id") @db.Char(26)
   orderIndex        Int      @map("order_index")
   answerValue       Json     @map("answer_value")
   isCorrect         Boolean  @map("is_correct")
@@ -560,7 +563,7 @@ model AnswerLog {
 
   sessionLog      GameSessionLog  @relation(fields: [sessionLogId], references: [id], onDelete: Cascade)
   playerResultLog PlayerResultLog @relation(fields: [playerResultLogId], references: [id], onDelete: Cascade)
-  question        Question        @relation(fields: [questionId], references: [id])
+  question        Question?       @relation(fields: [questionId], references: [id], onDelete: SetNull)
 
   @@index([sessionLogId, orderIndex])
   @@index([playerResultLogId])

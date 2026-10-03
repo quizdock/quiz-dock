@@ -20,7 +20,7 @@ describe('QuestionsService (integration)', () => {
       throw new Error('DATABASE_URL must point at a test database (see test/jest.global-setup.ts)');
     }
     prisma = new PrismaService();
-    service = new QuestionsService(prisma, {} as MediaService);
+    service = new QuestionsService(prisma, { releaseUnused: jest.fn() } as unknown as MediaService);
     const owner = await prisma.user.create({
       data: { oidcSubject: `local:questions-db-${Date.now()}`, displayName: 'Q', roles: ['host'] },
     });
@@ -61,5 +61,49 @@ describe('QuestionsService (integration)', () => {
     expect(question.options).toHaveLength(2);
     expect(overlapping).toBe(0);
     expect((await prisma.quiz.findUniqueOrThrow({ where: { id: quizId } })).questionCount).toBe(1);
+  });
+
+  it('deletes a played question, and then its quiz, the archive following', async () => {
+    const question = await prisma.question.findFirstOrThrow({ where: { quizId } });
+    const now = new Date();
+    const session = await prisma.gameSessionLog.create({
+      data: {
+        quizId,
+        hostId: ownerId,
+        pin: '123456',
+        language: 'en',
+        startedAt: now,
+        endedAt: now,
+        retainUntil: now,
+        questionStats: { create: { questionId: question.id, orderIndex: 0 } },
+        playerResults: { create: { nickname: 'Ada', finalRank: 1 } },
+      },
+      include: { playerResults: true },
+    });
+    await prisma.answerLog.create({
+      data: {
+        sessionLogId: session.id,
+        playerResultLogId: session.playerResults[0].id,
+        questionId: question.id,
+        orderIndex: 0,
+        answerValue: 'x',
+        isCorrect: false,
+        responseMs: 1000,
+        receivedAt: now,
+      },
+    });
+
+    // The question goes; its results stay, read by their position in the snapshot.
+    await service.remove(ownerId, question.id);
+    const stat = await prisma.questionResultStat.findFirstOrThrow({
+      where: { sessionLogId: session.id },
+    });
+    expect(stat.questionId).toBeNull();
+    const answer = await prisma.answerLog.findFirstOrThrow({ where: { sessionLogId: session.id } });
+    expect(answer.questionId).toBeNull();
+
+    // The quiz goes with its archived sessions.
+    await prisma.quiz.delete({ where: { id: quizId } });
+    expect(await prisma.gameSessionLog.findUnique({ where: { id: session.id } })).toBeNull();
   });
 });

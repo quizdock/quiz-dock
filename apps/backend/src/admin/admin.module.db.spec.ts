@@ -255,8 +255,9 @@ describe('AdminModule (integration)', () => {
     });
 
     afterAll(async () => {
-      await prisma.gameSessionLog.deleteMany({ where: { quizId } });
+      // Its archived sessions go with it.
       await prisma.quiz.delete({ where: { id: quizId } });
+      expect(await prisma.gameSessionLog.count({ where: { quizId } })).toBe(0);
     });
 
     it('stats.history: the months since the first played, the quizzes and hosts ranked', async () => {
