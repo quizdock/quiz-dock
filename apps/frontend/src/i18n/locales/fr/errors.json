@@ -145,7 +145,9 @@
   "error": "Une erreur est survenue.",
   "host_seat": {
     "taken": "Le siège d’animateur est déjà pris.",
-    "manager_forbidden": "Un administrateur ne prend pas le siège d’animateur."
+    "manager_forbidden": "Un administrateur ne prend pas le siège d’animateur.",
+    "local_only": "Seul le mode local a un siège d’animateur.",
+    "already_host": "Vous êtes déjà animateur : aucun siège à prendre."
   },
   "store": {
     "demo_disabled": "Le partage est désactivé sur une instance de démonstration.",

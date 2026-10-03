@@ -145,7 +145,9 @@
   "error": "Se ha producido un error.",
   "host_seat": {
     "taken": "El puesto de anfitrión ya está ocupado.",
-    "manager_forbidden": "Un administrador no ocupa el asiento de anfitrión."
+    "manager_forbidden": "Un administrador no ocupa el asiento de anfitrión.",
+    "local_only": "Solo el modo local tiene un puesto de anfitrión.",
+    "already_host": "Ya eres anfitrión: no hay puesto que ocupar."
   },
   "store": {
     "demo_disabled": "El uso compartido está desactivado en una instancia de demostración.",

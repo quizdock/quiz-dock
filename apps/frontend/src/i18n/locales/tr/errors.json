@@ -145,7 +145,9 @@
   "error": "Bir hata oluştu.",
   "host_seat": {
     "taken": "Sunucu yetkisi zaten alınmış.",
-    "manager_forbidden": "Yönetici sunucu yetkisini alamaz."
+    "manager_forbidden": "Yönetici sunucu yetkisini alamaz.",
+    "local_only": "Sunucu yetkisi yalnızca yerel modda vardır.",
+    "already_host": "Zaten sunucusunuz: alınacak yetki yok."
   },
   "store": {
     "demo_disabled": "Demo örneğinde paylaşım kapalı.",
