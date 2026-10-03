@@ -1116,7 +1116,7 @@ export const DEPLOYMENT_VARIABLES: DeploymentVariable[] = [
     criticality: 'C1',
     defaultText: '`quizdock` from `init`; unset = the database superuser',
     description:
-      "QuizDock's own PostgreSQL role: it owns the application's database and nothing else, the superuser (`POSTGRES_USER`) kept for administering PostgreSQL. Set at install only: a database that already holds data stays its owner's (see the upgrade notes to move it).",
+      "QuizDock's own PostgreSQL role: it owns the application's database and nothing else, the superuser (`POSTGRES_USER`) kept for administering PostgreSQL. Set at install only: a database that already holds data stays its owner's (a coming release of the quizdock script will move it).",
   },
   {
     key: 'QUIZDOCK_DB_PASSWORD',

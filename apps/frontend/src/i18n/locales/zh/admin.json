@@ -757,7 +757,7 @@
     },
     "unset": "{{key}} 未设置。",
     "postgres_ok": "PostgreSQL 可访问",
-    "postgres_superuser": "QuizDock 以 PostgreSQL 超级用户身份连接：请为它创建专属角色（见升级说明）。",
+    "postgres_superuser": "QuizDock 以 PostgreSQL 超级用户身份连接。目前无需操作：quizdock 脚本的后续版本将为它创建专属角色。",
     "migrations_applied_one": "已应用 {{count}} 个迁移",
     "migrations_applied_other": "已应用 {{count}} 个迁移",
     "migrations_pending_one": "{{count}} 个迁移待应用：请运行迁移步骤。",

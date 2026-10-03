@@ -89,7 +89,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         SELECT rolsuper FROM pg_roles WHERE rolname = current_user`;
       if (role?.rolsuper && settings.get(SETTINGS.QUIZDOCK_FLAVOR) !== 'standalone')
         out.warn(
-          'QuizDock connects as a PostgreSQL superuser: a flaw in it would reach every database of the server. A new install gets a role of its own (QUIZDOCK_DB_USER); see the upgrade notes to move an existing one.',
+          'QuizDock connects as a PostgreSQL superuser: a flaw in it would reach every database of the server. A new install gets a role of its own (QUIZDOCK_DB_USER). Nothing to do for now: a coming release of the quizdock script will move an existing install to it.',
           { code: 'doctor.postgres_superuser' },
         );
       const status = await migrationStatus(deps.prisma, deps.migrationsDir);

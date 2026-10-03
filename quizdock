@@ -125,7 +125,7 @@ check_secrets() {
   done
   [ "$(mode)" = standalone ] && return 0 # its database is reached from inside the container only
   if [ "$(mode)" = full ] && [ -z "$(env_get KEYCLOAK_DB_USER)" ]; then
-    warn "Keycloak uses the database superuser (an install made before 0.13.2): see the upgrade notes to give it its own role."
+    warn "Keycloak uses the database superuser (an install made before 0.13.2): a coming release of this script will give it its own role; nothing to do for now."
   fi
   if [ -n "$weak" ]; then
     warn "default or missing passwords in $ENV_FILE:$weak — set secrets of your own."

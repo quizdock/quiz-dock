@@ -757,7 +757,7 @@
     },
     "unset": "{{key}} tanımlı değil.",
     "postgres_ok": "PostgreSQL erişilebilir",
-    "postgres_superuser": "QuizDock PostgreSQL'e süper kullanıcı olarak bağlanıyor: ona kendi rolünü verin (yükseltme notlarına bakın).",
+    "postgres_superuser": "QuizDock PostgreSQL'e süper kullanıcı olarak bağlanıyor. Şimdilik yapılacak bir şey yok: quizdock betiğinin gelecek bir sürümü ona kendi rolünü verecek.",
     "migrations_applied_one": "{{count}} geçiş uygulandı",
     "migrations_applied_other": "{{count}} geçiş uygulandı",
     "migrations_pending_one": "{{count}} geçiş bekliyor: geçiş adımını çalıştırın.",

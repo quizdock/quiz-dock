@@ -142,7 +142,7 @@ services:
         owner="$$(psql -d postgres -tAc "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname = '$$POSTGRES_DB'")"
         [ "$$owner" = "$$QUIZDOCK_DB_USER" ] && exit 0
         if [ "$$(psql -d "$$POSTGRES_DB" -tAc "SELECT count(*) FROM pg_tables WHERE schemaname = 'public'")" != 0 ]; then
-          echo "QUIZDOCK_DB_USER is set, but $$POSTGRES_DB already holds data owned by $$owner: see the upgrade notes to move it." >&2
+          echo "QUIZDOCK_DB_USER is set, but $$POSTGRES_DB already holds data owned by $$owner: moving it is not automated yet (a coming release of the quizdock script will); unset QUIZDOCK_DB_USER to start." >&2
           exit 1
         fi
         psql -d postgres -v ON_ERROR_STOP=1 -v db="$$POSTGRES_DB" -v name="$$QUIZDOCK_DB_USER" <<'SQL'

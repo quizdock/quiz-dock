@@ -463,7 +463,7 @@
       "key": "QUIZDOCK_DB_USER",
       "default": "`quizdock` from `init`; unset = the database superuser",
       "level": "C1",
-      "description": "QuizDock's own PostgreSQL role: it owns the application's database and nothing else, the superuser (`POSTGRES_USER`) kept for administering PostgreSQL. Set at install only: a database that already holds data stays its owner's (see the upgrade notes to move it)."
+      "description": "QuizDock's own PostgreSQL role: it owns the application's database and nothing else, the superuser (`POSTGRES_USER`) kept for administering PostgreSQL. Set at install only: a database that already holds data stays its owner's (a coming release of the quizdock script will move it)."
     },
     {
       "key": "QUIZDOCK_DB_PASSWORD",

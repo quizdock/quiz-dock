@@ -231,7 +231,7 @@ export const SETTING_RULES: SettingRule[] = [
     key: 'QUIZDOCK_KEYCLOAK_DB',
     check: (s) =>
       s.get(SETTINGS.QUIZDOCK_KEYCLOAK_DB) === 'shared'
-        ? "The bundled Keycloak uses the database superuser (an install made before 0.13.2): a flaw in either Keycloak or QuizDock reaches the other's data, Keycloak's signing keys included. A new install gives Keycloak its own role (KEYCLOAK_DB_USER); moving an existing one is a manual step, see the upgrade notes."
+        ? "The bundled Keycloak uses the database superuser (an install made before 0.13.2): a flaw in either Keycloak or QuizDock reaches the other's data, Keycloak's signing keys included. A new install gives Keycloak its own role (KEYCLOAK_DB_USER). Nothing to do for now: a coming release of the quizdock script will move an existing install to it."
         : null,
   },
   {
