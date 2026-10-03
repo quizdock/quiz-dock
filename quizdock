@@ -16,7 +16,9 @@
 set -eu
 
 IMAGE="${QUIZDOCK_IMAGE:-fchaussin/quizdock}"
-RAW="${QUIZDOCK_RAW:-https://raw.githubusercontent.com/quizdock/quiz-dock/main}"
+# Where the deployment files come from: the repository at the release installed
+# (QUIZDOCK_RAW, a full URL, overrides it — a mirror, a fork).
+RAW_BASE="https://raw.githubusercontent.com/quizdock/quiz-dock"
 COMPOSE_FILE="${QUIZDOCK_COMPOSE_FILE:-docker-compose.prod.yml}"
 ENV_FILE="${QUIZDOCK_ENV_FILE:-.env}"
 CONTAINER="${QUIZDOCK_CONTAINER:-quizdock}" # standalone container name
@@ -54,6 +56,70 @@ standalone_image() {
   esac
 }
 http_port() { env_get HTTP_PORT 18080; }
+
+# The latest release's tag (vX.Y.Z), or nothing when GitHub cannot be asked.
+latest_release() {
+  curl -fsSL https://api.github.com/repos/quizdock/quiz-dock/releases/latest 2>/dev/null |
+    sed -n 's/.*"tag_name": *"\(v[0-9][^"]*\)".*/\1/p' | head -n1
+}
+
+# The address of the deployment files for an image tag: the files of that release.
+files_url() { # files_url <image tag>
+  if [ -n "${QUIZDOCK_RAW:-}" ]; then printf '%s' "$QUIZDOCK_RAW"; return; fi
+  case "$1" in
+    latest | standalone) ref="$(latest_release)"; ref="${ref:-main}" ;;
+    standalone-*) ref="v${1#standalone-}" ;;
+    v*) ref="$1" ;;
+    *) ref="v$1" ;;
+  esac
+  printf '%s/%s' "$RAW_BASE" "$ref"
+}
+
+# The deployment files of a mode, as `<path in the repository>:<local path>` pairs.
+deployment_files() { # deployment_files <mode>
+  case "$1" in
+    compose) printf '%s\n' "docker-compose.prod.yml:$COMPOSE_FILE" ;;
+    full)
+      printf '%s\n' "docker-compose.prod.yml:$COMPOSE_FILE" "docker-compose.full.yml:docker-compose.full.yml" \
+        "keycloak/realm-export.json:keycloak/realm-export.json"
+      ;;
+  esac
+}
+
+# Fetches one deployment file of a release. A copy of what was fetched stays in
+# .quizdock/: a local file still equal to it was not edited, and is replaced; an
+# edited one (or one from before these copies) is kept, the release's version
+# written next to it as <file>.new, and the operator told. Never a silent rewrite.
+fetch_file() { # fetch_file <base url> <repository path> <local path>
+  url="$1/$2"; local_path="$3"; shipped=".quizdock/$2"
+  tmp="$(mktemp)"
+  if ! curl -fsSL "$url" -o "$tmp"; then rm -f "$tmp"; return 1; fi
+  mkdir -p "$(dirname "$shipped")" "$(dirname "$local_path")"
+  if [ ! -f "$local_path" ] || cmp -s "$local_path" "$tmp"; then
+    cp "$tmp" "$local_path"
+  elif [ -f "$shipped" ] && cmp -s "$local_path" "$shipped"; then
+    cp "$tmp" "$local_path"
+    info "updated $local_path"
+  else
+    cp "$tmp" "$local_path.new"
+    warn "$local_path differs from what QuizDock shipped: the release's version is $local_path.new."
+    warn "  compare: diff $local_path $local_path.new — then keep yours, or: mv $local_path.new $local_path"
+  fi
+  cp "$tmp" "$shipped"
+  rm -f "$tmp"
+}
+
+# Brings the deployment files of a mode to a release's. Offline (an air-gapped
+# host), the files in place are kept.
+refresh_files() { # refresh_files <mode> <image tag>
+  base="$(files_url "$2")"
+  for pair in $(deployment_files "$1"); do
+    fetch_file "$base" "${pair%%:*}" "${pair#*:}" || {
+      warn "could not download ${pair%%:*} from $base: the file in place is kept."
+      return 0
+    }
+  done
+}
 
 need_init() {
   [ -f "$ENV_FILE" ] || die "no $ENV_FILE here — run \`$0 init\` first (or cd to your QuizDock directory)."
@@ -205,18 +271,13 @@ cmd_init() {
   chmod 600 "$ENV_FILE"
   info "wrote $ENV_FILE"
 
-  if [ "$want_mode" != standalone ] && [ ! -f "$COMPOSE_FILE" ]; then
-    info "fetching $COMPOSE_FILE"
-    curl -fsSL "$RAW/docker-compose.prod.yml" -o "$COMPOSE_FILE" || die "could not download $COMPOSE_FILE"
-  fi
-  if [ "$want_mode" = full ] && [ ! -f docker-compose.full.yml ]; then
-    info "fetching docker-compose.full.yml"
-    curl -fsSL "$RAW/docker-compose.full.yml" -o docker-compose.full.yml || die "could not download the full preset overlay"
-  fi
-  if [ "$want_mode" = full ] && [ ! -f keycloak/realm-export.json ]; then
-    mkdir -p keycloak
-    info "fetching keycloak/realm-export.json"
-    curl -fsSL "$RAW/keycloak/realm-export.json" -o keycloak/realm-export.json || die "could not download the Keycloak realm"
+  # The files of the release installed (the latest), not of the repository's main branch.
+  if [ "$want_mode" != standalone ]; then
+    base="$(files_url latest)"
+    for pair in $(deployment_files "$want_mode"); do
+      info "fetching ${pair#*:}"
+      fetch_file "$base" "${pair%%:*}" "${pair#*:}" || die "could not download ${pair%%:*} from $base"
+    done
   fi
   say
   if [ -n "$admin_token" ]; then
@@ -385,6 +446,10 @@ cmd_upgrade() {
   fi
   case "$(mode)" in
     compose | full)
+      # The release's Compose files too: a new image may need what they set
+      # (a hardening, a variable, another Keycloak).
+      info "deployment files of $new_tag"
+      refresh_files "$(mode)" "$new_tag"
       info "pulling"
       compose pull
       info "restarting with migrations"
