@@ -293,11 +293,61 @@ Adjustments to existing events:
 - Routes: `/present/$pin/control`, `/present/$pin/screen`, the player screens per state.
 - A client state-machine hook (subscribes to `game:state` and the events, renders per §9).
 - Resuming: `localStorage live.session` (player); a "running games" panel (host).
-- Avatars (cosmetic, §11) in the lobby, the leaderboard and the podium.
+- Avatars (cosmetic, §12) in the lobby, the leaderboard and the podium.
 
 ---
 
-## 11. Out of scope for this spec / later
+## 11. Standings during the game (#198)
+
+The presenter always sees the standings; the audience sees them at set moments. Only
+points already awarded count: showing the standings never reveals a question's answer.
+
+### 11.1 The presenter's list
+
+The console's participant list becomes the live standings: one row per player, in
+**fixed columns** — rank, avatar and nickname, one column per indicator (ready, media
+loading, remote; always in the same place, empty when it does not apply), the score
+right-aligned. Sorted by score once a score exists; in arrival order before. The backend
+sends the host every player's score and rank after each reveal (today the console only
+gets the top five).
+
+### 11.2 The quiz's standings after each reveal
+
+`LEADERBOARD` becomes a step of its own again (it is merged into `REVEAL` today, †):
+reveal, then the current quiz's standings on the projection, then the next question.
+The projection's screen for it exists (`screen-page`, the top ten).
+
+### 11.3 The room's standings on the projection
+
+The room's standings (#89, `room:standings`: the quizzes played so far) appear on the
+projection at the podium, from the room's second quiz (as today), and **in the lobby of
+the next quiz**, which every quiz of a room goes through (today only the consoles and the
+players show them there). No button shows them on demand: the standings after each
+reveal (§11.2) keep the competition going, and in a room's first quiz the room's
+standings are the quiz's.
+
+### 11.4 The next quiz's lobby
+
+The lobby of a room's next quiz (not its first: players are still joining there) starts
+on its own.
+
+- **The way back**: a quiz ends at its podium, or the host stops it on the way with
+  **Stop the quiz…** (« Arrêter le quiz… »; today *End quiz…*), the only way to give one
+  up. Either way the room goes back to its lobby **with no quiz chosen**, and the next
+  quiz is picked **in the lobby** (today it is picked at the podium, or in the stop
+  dialog, before the lobby opens).
+- **A 30 s countdown** runs once the lobby has its quiz; at zero, the quiz starts. Only a
+  missing quiz holds it: *Ready!* never blocks (#104).
+- **Everyone ready**: when every player in the lobby has pressed *Ready!* and the quiz is
+  chosen, it starts at once, without waiting for zero.
+- **The host** still has **Start** (at once), and can stop the countdown to take the
+  floor; **Start** then launches it.
+- **The projection**, in two columns: on the left the lobby (PIN/QR, the next quiz's
+  title, the *Ready!* count, the countdown), on the right the room's standings (§11.3).
+
+---
+
+## 12. Out of scope for this spec / later
 
 - **Resuming after a backend restart** (re-arming the timers, the Redis adapter) → **P4**.
 - **Team mode**, asynchronous mode → the backlog (métier §13).
