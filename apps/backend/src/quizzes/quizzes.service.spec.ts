@@ -19,7 +19,6 @@ function makeQuiz(over: Partial<Quiz> = {}): Quiz {
     description: null,
     coverMediaId: null,
     status: QuizStatus.draft,
-    visibility: 'private',
     language: 'fr',
     questionCount: 0,
     createdAt: new Date(),

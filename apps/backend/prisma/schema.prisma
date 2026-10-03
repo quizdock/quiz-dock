@@ -34,13 +34,6 @@ enum QuizStatus {
   @@map("quiz_status")
 }
 
-enum QuizVisibility {
-  private
-  unlisted
-
-  @@map("quiz_visibility")
-}
-
 enum QuestionType {
   single_choice
   multiple_choice
@@ -208,7 +201,6 @@ model Quiz {
   description        String?
   coverMediaId       String?        @map("cover_media_id") @db.Char(26)
   status             QuizStatus     @default(draft)
-  visibility         QuizVisibility @default(private)
   /// Shared with the instance's other hosts: listed in their bank, read-only, to copy from
   /// ("Create from this"). Off by default: a private quiz is the owner's alone.
   shared             Boolean        @default(false)
