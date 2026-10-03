@@ -149,6 +149,9 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
   const [order, setOrder] = useState<string[]>([]);
   const [freeValue, setFreeValue] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  // What was sent, as sent: the reveal shows that, never what is still typed or
+  // ticked on the screen (an ordering left as it came, a text never sent).
+  const [sent, setSent] = useState<string | string[] | number | null>(null);
   // Graine d'avatar persistée localement (réinjectée d'une partie à l'autre).
   const [avatarSeed, setAvatarSeed] = useState(() => loadAvatarSeed() ?? '');
   // Whether this phone's media elements were claimed in a gesture (at the join when
@@ -229,6 +232,7 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
     setSelected([]);
     setFreeValue('');
     setSubmitted(false);
+    setSent(null);
   }, [view.questionIndex]);
   // Refused as too early (the answers were not open yet): the answer box comes back.
   useEffect(() => {
@@ -320,6 +324,7 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
 
   const submit = (answer: string | string[] | number) => {
     setSubmitted(true);
+    setSent(answer);
     session.submitAnswer(view.questionIndex, answer);
   };
 
@@ -770,6 +775,8 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
   }
 
   if (view.state === 'REVEAL' || view.state === 'LEADERBOARD') {
+    // A refused answer did not count: nothing of it is shown as the player's.
+    const yourAnswer = view.answerAccepted === false ? null : sent;
     const r = view.result;
     // Classement perso : `you` (du leaderboard) est toujours présent au reveal, même
     // si le joueur n'a pas répondu (pas de `result`). On l'affiche systématiquement.
@@ -811,24 +818,24 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
           question.options?.length && question.type !== 'ordering' ? (
             <OptionGrid
               options={question.options}
-              selectedIds={selected}
+              selectedIds={yourAnswer === null ? [] : [yourAnswer].flat().map(String)}
               correctIds={view.reveal.correctOptionIds}
               layout="list"
             />
           ) : (
             <div className="flex w-full flex-col items-center gap-[0.5em]">
-              {question.type === 'ordering' && order.length ? (
+              {question.type === 'ordering' && Array.isArray(yourAnswer) ? (
                 <p className="text-muted-foreground text-[0.95em]">
                   {t('reveal.yourAnswer')}{' '}
                   <strong>
-                    {order
+                    {yourAnswer
                       .map((id) => question.options?.find((o) => o.id === id)?.text ?? id)
                       .join(' → ')}
                   </strong>
                 </p>
-              ) : freeValue ? (
+              ) : yourAnswer !== null && !Array.isArray(yourAnswer) ? (
                 <p className="text-muted-foreground text-[0.95em]">
-                  {t('reveal.yourAnswer')} <strong>{freeValue}</strong>
+                  {t('reveal.yourAnswer')} <strong>{String(yourAnswer)}</strong>
                 </p>
               ) : null}
               <RevealAnswer question={question} reveal={view.reveal} />
