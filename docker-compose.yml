@@ -58,6 +58,8 @@ services:
       dockerfile: apps/backend/Dockerfile
       target: runtime
     environment:
+      # As the release's Compose files say it (see docker-compose.prod.yml).
+      QUIZDOCK_FILES: '2'
       NODE_ENV: production
       PORT: '3000'
       AUTH_MODE: ${AUTH_MODE:-none}

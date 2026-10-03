@@ -207,7 +207,24 @@ export interface SettingRule {
 const PROXY_BODY_LIMIT = 64 * 1024 * 1024;
 const MB = 1024 * 1024;
 
+/**
+ * The generation of deployment files this image expects (`QUIZDOCK_FILES` in its
+ * Compose files). 2: the files `quizdock upgrade` keeps in step with the release
+ * (Keycloak 26.7, the hardened migrations, /health/ready).
+ */
+export const DEPLOYMENT_FILES_EXPECTED = 2;
+
 export const SETTING_RULES: SettingRule[] = [
+  {
+    key: 'QUIZDOCK_FILES',
+    check: (s) => {
+      // The single image runs without Compose files; a plain `docker run` says nothing either.
+      if (s.get(SETTINGS.QUIZDOCK_FLAVOR) === 'standalone') return null;
+      const files = s.get(SETTINGS.QUIZDOCK_FILES);
+      if (files !== null && files >= DEPLOYMENT_FILES_EXPECTED) return null;
+      return "The Compose files are older than this release expects (QUIZDOCK_FILES): with the quizdock script, download its latest version, run `./quizdock upgrade`, then adopt any `<file>.new` it writes next to a file you edited. Started otherwise (your own Compose, `docker run`), compare with the release's docker-compose.prod.yml.";
+    },
+  },
   {
     key: 'ALLOW_ANONYMOUS_PARTICIPANTS',
     check: (s) =>

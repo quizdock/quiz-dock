@@ -1,5 +1,14 @@
 import { SETTINGS, SETTING_LIST } from '@quiz-dock/contracts';
-import { OverrideStore, SettingsService, recordSource, settingsFrom } from './settings.service';
+import {
+  DEPLOYMENT_FILES_EXPECTED,
+  OverrideStore,
+  SettingsService,
+  recordSource,
+  settingsFrom,
+} from './settings.service';
+
+/** What the release's Compose files set (QUIZDOCK_FILES): no notice about their age. */
+const CURRENT_FILES = { QUIZDOCK_FILES: String(DEPLOYMENT_FILES_EXPECTED) };
 
 describe('the settings registry', () => {
   it.each(SETTING_LIST.map((def) => [def.key, def]))(
@@ -92,7 +101,7 @@ describe('SettingsService', () => {
   });
 
   it('a deprecated variable is reported when set', () => {
-    expect(settingsFrom({ OIDC_SESSION_SCOPE: 'x' }).issues()).toMatchObject([
+    expect(settingsFrom({ ...CURRENT_FILES, OIDC_SESSION_SCOPE: 'x' }).issues()).toMatchObject([
       { key: 'OIDC_SESSION_SCOPE', code: 'deprecated' },
     ]);
   });
@@ -111,13 +120,23 @@ describe('SettingsService', () => {
 
   describe('rules between variables', () => {
     const rules = (env: Record<string, string>) =>
-      settingsFrom(env)
+      settingsFrom({ ...CURRENT_FILES, ...env })
         .issues()
         .filter((i) => i.code === 'rule')
         .map((i) => i.key);
 
-    it('nothing to say about an empty environment', () => {
-      expect(settingsFrom({}).issues()).toEqual([]);
+    it('nothing to say about an environment set by the current Compose files', () => {
+      expect(settingsFrom(CURRENT_FILES).issues()).toEqual([]);
+    });
+
+    it('Compose files older than the image are flagged, never for the single image', () => {
+      expect(rules({ QUIZDOCK_FILES: '1' })).toEqual(['QUIZDOCK_FILES']);
+      expect(
+        settingsFrom({})
+          .issues()
+          .map((i) => i.key),
+      ).toEqual(['QUIZDOCK_FILES']);
+      expect(settingsFrom({ QUIZDOCK_FLAVOR: 'standalone' }).issues()).toEqual([]);
     });
 
     it('anonymous participants need OIDC', () => {
@@ -173,7 +192,7 @@ describe('SettingsService', () => {
     });
 
     it('a candidate change is seen with the rules, without touching the settings', () => {
-      const s = settingsFrom({ AUTH_MODE: 'none' }, new OverrideStore());
+      const s = settingsFrom({ ...CURRENT_FILES, AUTH_MODE: 'none' }, new OverrideStore());
       const candidate = s.withOverrides({ ALLOW_ANONYMOUS_PARTICIPANTS: 'true' });
       expect(candidate.issues().map((i) => i.key)).toContain('ALLOW_ANONYMOUS_PARTICIPANTS');
       expect(s.issues()).toEqual([]);

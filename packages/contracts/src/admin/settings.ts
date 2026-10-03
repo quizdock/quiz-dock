@@ -896,6 +896,19 @@ export const SETTINGS = {
   }),
 
   // Internal
+  QUIZDOCK_FILES: define({
+    key: 'QUIZDOCK_FILES',
+    description:
+      'Set by the Compose files of a release: which generation of deployment files runs the image, so the backend can say when they are older than it expects.',
+    category: 'internal',
+    criticality: 'C4',
+    schema: number(),
+    accepts: 'a whole number',
+    default: null as number | null,
+    applies: 'restart',
+    overridable: false,
+    internal: true,
+  }),
   QUIZDOCK_FLAVOR: define({
     key: 'QUIZDOCK_FLAVOR',
     description: 'Set by the `:standalone` image, which announces itself through it.',
