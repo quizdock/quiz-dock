@@ -9,7 +9,7 @@ import { AppModule } from './app.module';
 import { ICONS } from './app-config/app-config.controller';
 import { isOidcMode } from './auth/auth-mode';
 import { sameOriginMiddleware } from './auth/oidc/same-origin.middleware';
-import { cspMiddleware } from './common/csp';
+import { baseHeadersMiddleware, cspMiddleware } from './common/csp';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { trustProxy } from './common/trust-proxy';
 import { buildSwaggerDocument } from './swagger';
@@ -34,6 +34,9 @@ async function bootstrap(): Promise<void> {
   configureTextQuizBodyParser(app);
   // The pages say where their scripts, styles, frames and requests may come from.
   app.use(cspMiddleware());
+  app.use(baseHeadersMiddleware());
+  // Nothing tells which server answers.
+  app.disable('x-powered-by');
   // The browser session is a cookie: what changes something comes from our own pages.
   if (isOidcMode()) app.use(sameOriginMiddleware());
   // Served at the root, where the page asks for them; the rest is the API.
