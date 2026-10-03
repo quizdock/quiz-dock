@@ -209,5 +209,8 @@
     "token_invalid": "Ce jeton de mise en service n’est pas valide (erroné, utilisé ou expiré) : `qd setup.token` en donne un nouveau.",
     "session_invalid": "La session de mise en service est terminée : donnez un nouveau jeton de mise en service.",
     "too_many_attempts": "Trop de jetons erronés : patientez un quart d’heure."
+  },
+  "request": {
+    "too_large": "Trop volumineux pour le serveur : il a refusé la requête (sa limite de taille)."
   }
 }

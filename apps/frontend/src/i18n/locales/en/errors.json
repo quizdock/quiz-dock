@@ -209,5 +209,8 @@
     "token_invalid": "This setup token is not valid (wrong, used or expired): `qd setup.token` gives a new one.",
     "session_invalid": "The setup session ended: give a new setup token.",
     "too_many_attempts": "Too many wrong tokens: wait a quarter of an hour."
+  },
+  "request": {
+    "too_large": "Too large for the server: it refused the request (its size limit)."
   }
 }

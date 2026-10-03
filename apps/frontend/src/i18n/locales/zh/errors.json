@@ -209,5 +209,8 @@
     "token_invalid": "此初始化令牌无效（错误、已使用或已过期）：运行 `qd setup.token` 获取新令牌。",
     "session_invalid": "初始化会话已结束：请提供新的初始化令牌。",
     "too_many_attempts": "错误令牌过多：请等待一刻钟。"
+  },
+  "request": {
+    "too_large": "对服务器来说太大：请求被拒绝（超出其大小限制）。"
   }
 }

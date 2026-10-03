@@ -209,5 +209,8 @@
     "token_invalid": "Este token de puesta en marcha no es válido (incorrecto, usado o caducado): `qd setup.token` da uno nuevo.",
     "session_invalid": "La sesión de puesta en marcha ha terminado: introduce un nuevo token de puesta en marcha.",
     "too_many_attempts": "Demasiados tokens incorrectos: espera un cuarto de hora."
+  },
+  "request": {
+    "too_large": "Demasiado grande para el servidor: rechazó la solicitud (su límite de tamaño)."
   }
 }
