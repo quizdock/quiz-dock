@@ -813,8 +813,4 @@ export class MediaService implements OnModuleInit {
   get maxUploadBytes(): number {
     return uploadCeiling();
   }
-
-  asset(id: string): Promise<MediaAsset | null> {
-    return this.prisma.mediaAsset.findUnique({ where: { id } });
-  }
 }

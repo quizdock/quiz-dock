@@ -2,7 +2,6 @@
 export {
   gradientSchema,
   slideBlockSchema,
-  type SlideBlockInput,
   slideContentSchema,
   type SlideContent,
   slideIssues,

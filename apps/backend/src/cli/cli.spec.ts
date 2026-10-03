@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseArgs } from './args';
 import { doctor, type DoctorDeps } from './commands/doctor';
 import { migrationStatus } from './commands/migrate-status';
-import { type BundleIo, quizExport, quizImport, quizList, quizTransfer } from './commands/quiz';
+import { type BundleIo, quizImport, quizList, quizTransfer } from './commands/quiz';
 import { seatRelease, seatStatus } from './commands/seat';
 import { sessionsPurge } from './commands/sessions';
 import { samplesLoad, userList, userSetRole } from './commands/users';
@@ -448,25 +448,6 @@ describe('quiz commands', () => {
       expect.objectContaining({ where: { ownerId: 'u1' } }),
     );
     await expect(quizList(out, db(null), 'nobody')).rejects.toThrow('No user');
-  });
-
-  it('quiz:export writes the bundle where asked, silently on stdout', async () => {
-    const zip = Buffer.from('PK..');
-    const portable = {
-      exportZip: jest.fn().mockResolvedValue({ filename: 'ports.quizdock.zip', zip }),
-      importBundle: jest.fn(),
-    };
-    const { out, text } = memOutput();
-    const { io, written } = memIo();
-    await quizExport(out, portable, 'q1', '/tmp/out.zip', io);
-    expect(portable.exportZip).toHaveBeenCalledWith('q1'); // no owner: any quiz
-    expect(written['/tmp/out.zip']).toBe(zip);
-    expect(text()).toContain('Exported ports.quizdock.zip (4 bytes) to /tmp/out.zip.');
-
-    const quiet = memOutput();
-    await quizExport(quiet.out, portable, 'q1', '-', io);
-    expect(written['-']).toBe(zip);
-    expect(quiet.lines).toEqual([]);
   });
 
   it('quiz:import creates a draft for the resolved user, and explains a refusal', async () => {

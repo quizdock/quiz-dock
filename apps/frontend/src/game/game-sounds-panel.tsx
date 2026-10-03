@@ -3,7 +3,6 @@ import { Play, SlidersHorizontal, Volume2, VolumeX } from 'lucide-react';
 import { Fragment, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
-import { Disclosure } from '@/components/ui/disclosure';
 import { Select } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
@@ -12,39 +11,6 @@ import { MediaUpload } from '../routes/media-upload';
 import { type RoomEffect, previewEffect } from './media/game-sounds';
 import { SimpleDialog } from './media/sound-button';
 import { formatPercent } from '@/lib/format';
-
-/**
- * The room's sound (#93, #150), in the console's lobby: the projection's master
- * mute, the MEDIA bus (the quiz's own sound), the background track and the effects
- * (synthesised, or a sound of the library), with their levels. The console does not
- * play them: the projection and remote participants do (SPECIFICATIONS-MEDIA §9).
- */
-export function GameSoundsPanel({
-  sounds,
-  onChange,
-}: {
-  sounds: RoomSoundsPayload | null;
-  onChange: (patch: RoomSoundsSettings) => void;
-}) {
-  const { t } = useTranslation('live');
-  if (!sounds) return null;
-  const summary = [
-    sounds.tick ? t('control.sounds.tick') : null,
-    sounds.ding ? t('control.sounds.ding') : null,
-    sounds.countdown ? t('control.sounds.countdown') : null,
-    sounds.gong ? t('control.sounds.gong') : null,
-    sounds.musicUrl ? t('control.sounds.music') : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  return (
-    <Disclosure title={t('control.sounds.title')} value={summary || t('control.sounds.off')}>
-      <div className="p-4 pt-2">
-        <GameSoundsControls sounds={sounds} onChange={onChange} />
-      </div>
-    </Disclosure>
-  );
-}
 
 /**
  * The room's mixer (#93): the same controls, from the console's control bar,

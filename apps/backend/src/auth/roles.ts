@@ -17,11 +17,6 @@ export function isManager(roles: RoleSet): boolean {
   return roles.includes(UserRole.admin);
 }
 
-/** Gestionnaire qui n'anime pas : la vue d'ensemble sans la banque. */
-export function isPureManager(roles: RoleSet): boolean {
-  return isManager(roles) && !isHost(roles);
-}
-
 /**
  * Rôles effectifs : l'**union** de ce qu'un opérateur a octroyé et de ce que le
  * contexte dérive — les claims du jeton sous OIDC, le siège d'hôte en mode local.
@@ -30,13 +25,6 @@ export function isPureManager(roles: RoleSet): boolean {
  */
 export function effectiveRoles(assigned: RoleSet, derived: RoleSet): UserRole[] {
   return canonical([...assigned, ...derived]);
-}
-
-/** Rôle principal, pour un affichage qui n'a qu'une place (badge, table CLI). */
-export function primaryRole(roles: RoleSet): UserRole {
-  if (isManager(roles)) return UserRole.admin;
-  if (isHost(roles)) return UserRole.host;
-  return UserRole.player;
 }
 
 /**

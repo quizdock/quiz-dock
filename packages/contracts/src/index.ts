@@ -103,90 +103,6 @@ export enum OptionShape {
   Cross = 'cross',
 }
 
-/** Noms des événements WebSocket (technique §9). */
-export const ClientEvents = {
-  HostCreate: 'host:create',
-  HostAttach: 'host:attach',
-  HostStart: 'host:start',
-  HostNext: 'host:next',
-  HostReview: 'host:review',
-  HostJoinUrl: 'host:join-url',
-  HostReveal: 'host:reveal',
-  HostKick: 'host:kick',
-  HostEnd: 'host:end',
-  /** The participant is ready, or not yet, in the lobby (#104). */
-  PlayerReady: 'player:ready',
-  /** The room's game sounds (#93). */
-  HostSounds: 'host:sounds',
-  /** Whether the live screens move between steps (UI system §1.8), at any time. */
-  HostMotion: 'host:motion',
-  /** Names the room (from its lobby); every screen shows it. */
-  HostRoomName: 'host:room-name',
-  /** Opens the next quiz in the room (from its lobby or its podium); the players stay. */
-  HostNextQuiz: 'host:next-quiz',
-  /** Bannit un joueur pour une durée donnée (exclusion immédiate, RG-12). */
-  HostBan: 'host:ban',
-  /** (Dé)active la capture intégrale depuis le lobby, avant le démarrage (RG-13). */
-  HostCapture: 'host:capture',
-  /** Closes (or reopens) the game to new participants; those already in stay. */
-  HostLock: 'host:lock',
-  /** Bascule manuel/auto en cours de partie (le présentateur reprend la main). */
-  HostMode: 'host:mode',
-  /** Suspend/reprend l'auto-progression (et gèle le chrono en ANSWERING). */
-  HostPause: 'host:pause',
-  /** Host control over the current question's media (restart it from the top). */
-  HostMedia: 'host:media',
-  /** Ajoute/retire du temps au chrono de la question courante (± secondes). */
-  HostAdjustTime: 'host:adjust-time',
-  SpectatorJoin: 'spectator:join',
-  /** What a player needs to know before joining (whether the quiz plays sound). */
-  PlayerPeek: 'player:peek',
-  PlayerJoin: 'player:join',
-  PlayerReconnect: 'player:reconnect',
-  /** Change la graine d'avatar avant le démarrage (cosmétique). */
-  PlayerAvatar: 'player:avatar',
-  PlayerSubmit: 'player:submit',
-  /** A device has loaded what it fetched ahead of a question. */
-  MediaReady: 'media:ready',
-  /** The projection's playback position (relayed to the room). */
-  MediaPosition: 'media:position',
-  /** Avis du joueur en fin de partie (note Likert 5 + commentaire facultatif). */
-  PlayerRate: 'player:rate',
-  Ping: 'ping',
-} as const;
-
-export const ServerEvents = {
-  GameCreated: 'game:created',
-  PlayerJoined: 'player:joined',
-  PlayerLeft: 'player:left',
-  GameRoster: 'game:roster',
-  GameState: 'game:state',
-  QuestionStart: 'question:start',
-  AnswerAck: 'answer:ack',
-  AnswerCount: 'answer:count',
-  QuestionReveal: 'question:reveal',
-  Leaderboard: 'leaderboard',
-  GamePodium: 'game:podium',
-  GameEnded: 'game:ended',
-  /** Mode/pause courants (diffusé à chaque changement + à l'attache). */
-  GameMode: 'game:mode',
-  /** Sommaire des questions — réservé aux fenêtres de **contrôle hôte**. */
-  GameOutline: 'game:outline',
-  /** Nouveau timing de la question courante (ajustement du chrono). */
-  QuestionTime: 'question:time',
-  /** Media of the next question, to fetch ahead (projection and console only). */
-  MediaPreload: 'media:preload',
-  /** Which devices have loaded the upcoming question's sound or video (screens only). */
-  MediaReadiness: 'media:readiness',
-  /** A host command on the current question's media, relayed to the screens. */
-  MediaControl: 'media:control',
-  /** What the quiz's media need from a screen (sent on attach, not to players). */
-  GameMedia: 'game:media',
-  Notice: 'notice',
-  Error: 'error',
-  Pong: 'pong',
-} as const;
-
 // ─── Payloads WebSocket (technique §9) ──────────────────────────────────────
 // Source de vérité du contrat temps réel, typée bout-en-bout (back + front).
 
@@ -648,7 +564,6 @@ export interface ClientToServerEvents {
   /** Base URL the invitations (QR, link) point at; lobby only. */
   'host:join-url': (p: { pin: string; baseUrl: string }) => void;
   'host:reveal': (p: { pin: string }) => void;
-  'host:kick': (p: { pin: string; playerId: string }) => void;
   /**
    * Bannit un joueur pour `minutes` minutes : exclusion immédiate (déconnecté +
    * retiré du classement) et re-join refusé tant que le ban court (RG-12).
