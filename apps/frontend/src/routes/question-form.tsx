@@ -95,6 +95,7 @@ import { ApiError, apiErrorText, apiFieldErrors } from '../api/http';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { BackgroundField, NO_BACKGROUND, type BackgroundValue } from './background-field';
 import { Waveform } from '../game/media/waveform';
+import { useContentT } from '../i18n/content-language';
 import { QuestionMediaField, useMediaDurationMs } from './question-media-field';
 import {
   useQuestionsControllerAdd,
@@ -243,6 +244,7 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
 
 export function QuestionForm({
   quizId,
+  quizLanguage,
   question,
   mediaTailS = MEDIA_TAIL_DEFAULT_S,
   quizStatus = 'draft',
@@ -254,6 +256,8 @@ export function QuestionForm({
   onDirtyChange,
 }: {
   quizId: string;
+  /** The quiz's language (BCP 47): the True and False it starts with are written in it. */
+  quizLanguage?: string;
   question?: QuizDetailDtoQuestionsItem;
   /** A published quiz only takes complete questions: an unfinished one sends it back to draft. */
   quizStatus?: string;
@@ -271,6 +275,7 @@ export function QuestionForm({
   onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { t } = useTranslation(['editor', 'common']);
+  const contentT = useContentT(quizLanguage, 'editor');
   const queryClient = useQueryClient();
   const add = useQuestionsControllerAdd();
   const update = useQuestionsControllerUpdate();
@@ -493,9 +498,10 @@ export function QuestionForm({
   };
 
   // True or false starts with "True" ticked: the most common answer is one click away.
+  // Both are written in the quiz's language, as any other answer: editable text.
   const trueFalse = () => [
-    newOption(0, t('questionForm.trueOption'), true),
-    newOption(1, t('questionForm.falseOption')),
+    newOption(0, contentT('questionForm.trueOption'), true),
+    newOption(1, contentT('questionForm.falseOption')),
   ];
   const onTypeChange = (next: QType) => {
     const wasImages = type === 'image_choice';
