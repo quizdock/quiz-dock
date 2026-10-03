@@ -61,6 +61,17 @@ describe('sameOriginMiddleware', () => {
     expect(
       run('POST', '/api/v1/auth/login', { 'sec-fetch-site': 'same-origin' }).next,
     ).toHaveBeenCalled();
-    expect(run('POST', '/somewhere', { 'sec-fetch-site': 'cross-site' }).next).toHaveBeenCalled();
+  });
+
+  it('checks every path, whatever its case', () => {
+    expect(
+      run('POST', '/API/v1/quizzes', { 'sec-fetch-site': 'same-site' }).next,
+    ).not.toHaveBeenCalled();
+    expect(
+      run('POST', '/Api/V1/auth/logout', { origin: 'https://evil.example' }).next,
+    ).not.toHaveBeenCalled();
+    expect(
+      run('POST', '/somewhere', { 'sec-fetch-site': 'cross-site' }).next,
+    ).not.toHaveBeenCalled();
   });
 });
