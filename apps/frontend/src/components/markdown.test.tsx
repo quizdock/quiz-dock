@@ -25,11 +25,15 @@ describe('Markdown — block profile', () => {
 
   it('renders images served by this app only (no third-party image)', () => {
     const { container } = render(
-      <Markdown>{'![a](/api/v1/media/abc)\n\n![b](https://x.test/i.png)'}</Markdown>,
+      <Markdown>
+        {
+          '![a](/api/v1/media/01ARZ3NDEKTSV4RRFFQ69G5FAV)\n\n![b](https://x.test/i.png)\n\n![c](/api/v1/media/../../x)'
+        }
+      </Markdown>,
     );
     const imgs = container.querySelectorAll('img');
     expect(imgs).toHaveLength(1);
-    expect(imgs[0].getAttribute('src')).toBe('/api/v1/media/abc');
+    expect(imgs[0].getAttribute('src')).toBe('/api/v1/media/01ARZ3NDEKTSV4RRFFQ69G5FAV');
   });
 
   it('drops raw HTML and never emits a link, even a javascript: one', () => {
