@@ -172,7 +172,8 @@ export function MediaUpload({
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
-          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent">
+          {/* The input is hidden from sight only (sr-only, not `hidden`): the keyboard reaches it, and its label shows where. */}
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:bg-accent focus-within:ring-2 focus-within:ring-ring">
             <Icon className="size-4" />
             {upload.isPending
               ? t('media.uploading')
@@ -183,7 +184,7 @@ export function MediaUpload({
               type="file"
               aria-label={t('media.fileInputLabel')}
               accept={ACCEPT[kind]}
-              hidden
+              className="sr-only"
               disabled={checking}
               onChange={(e) => {
                 void onFile(e.target.files?.[0]);
