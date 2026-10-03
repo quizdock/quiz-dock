@@ -137,6 +137,12 @@ describe('SettingsService', () => {
       expect(rules({ DATABASE_URL: 'postgresql://quizdock@127.0.0.1:5432/quizdock' })).toEqual([]);
     });
 
+    it('a bundled Keycloak sharing the database superuser is flagged', () => {
+      expect(rules({ QUIZDOCK_KEYCLOAK_DB: 'shared' })).toEqual(['QUIZDOCK_KEYCLOAK_DB']);
+      expect(rules({ QUIZDOCK_KEYCLOAK_DB: 'keycloak' })).toEqual([]);
+      expect(rules({})).toEqual([]); // no bundled Keycloak
+    });
+
     it('Compose files older than the image are flagged, never for the single image', () => {
       expect(rules({ QUIZDOCK_FILES: '1' })).toEqual(['QUIZDOCK_FILES']);
       expect(

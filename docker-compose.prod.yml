@@ -44,12 +44,24 @@ services:
       PGHOST: postgres
       PGUSER: ${POSTGRES_USER:-live}
       PGPASSWORD: ${POSTGRES_PASSWORD:-live}
+      # Keycloak's own role (an install made by `init --full` since 0.13.2): its
+      # database belongs to it, and it reaches nothing of QuizDock's. Unset (older
+      # installs), Keycloak keeps the database superuser, as before.
+      KEYCLOAK_DB_USER: ${KEYCLOAK_DB_USER:-}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-}
     entrypoint:
       - /bin/sh
       - -ec
       - |
+        if [ -n "$$KEYCLOAK_DB_USER" ] &&
+          ! psql -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname = '$$KEYCLOAK_DB_USER'" | grep -qx 1; then
+          # Read from stdin: psql substitutes :"name" and :'pass' there, quoted, not in -c.
+          psql -d postgres -v ON_ERROR_STOP=1 -v name="$$KEYCLOAK_DB_USER" -v pass="$$KEYCLOAK_DB_PASSWORD" <<'SQL'
+        CREATE ROLE :"name" LOGIN PASSWORD :'pass';
+        SQL
+        fi
         if ! psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'keycloak'" | grep -qx 1; then
-          createdb keycloak
+          createdb ${KEYCLOAK_DB_USER:+--owner="$$KEYCLOAK_DB_USER"} keycloak
         fi
     depends_on:
       postgres:
@@ -75,8 +87,8 @@ services:
       KC_HEALTH_ENABLED: 'true'
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
-      KC_DB_USERNAME: ${POSTGRES_USER:-live}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-live}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER:-${POSTGRES_USER:-live}}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-${POSTGRES_PASSWORD:-live}}
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me-admin}
       KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-18081}}

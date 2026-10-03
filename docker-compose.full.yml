@@ -7,6 +7,9 @@ services:
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}:${HTTP_PORT:-18080}}
       OIDC_ISSUER: ${OIDC_ISSUER:-${KEYCLOAK_PUBLIC_URL:-${PUBLIC_SCHEME:-http}://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-18081}}/realms/quiz-dock}
       OIDC_INTERNAL_URL: ${OIDC_INTERNAL_URL:-http://keycloak:8080}
+      # Whether the bundled Keycloak has a database role of its own (the backend
+      # says so in doctor and on Health when it shares the superuser).
+      QUIZDOCK_KEYCLOAK_DB: ${KEYCLOAK_DB_USER:-shared}
     depends_on:
       keycloak:
         condition: service_healthy
