@@ -1,0 +1,11 @@
+# The workflows' actions are pinned by commit: this keeps the pins current, one
+# grouped pull request a week.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
