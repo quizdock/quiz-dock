@@ -1,0 +1,14 @@
+# Every image is built from the repository's root: nothing of this machine goes
+# into the build — installed packages, builds, local data, secrets, history.
+.git
+.env
+.env.*
+**/node_modules
+**/dist
+**/coverage
+**/*.tsbuildinfo
+**/*.log
+.pnpm-store
+apps/backend/.media
+apps/backend/.store
+docs/screenshots

@@ -21,8 +21,8 @@ fixes are prioritized and disclosed once a patched release is available.
 - **Per-push / per-PR / weekly scans** — see [`docs/security/`](docs/security/) and the
   [`Security` workflow](.github/workflows/security.yml): `pnpm audit` gates app CVEs; Trivy
   scans the filesystem and the published image (SARIF → Security tab).
-- **Hardened runtime** — non-root, read-only root FS, dropped capabilities,
-  `no-new-privileges`.
+- **Hardened runtime** — non-root, code owned by root; with `docker-compose.prod.yml`,
+  read-only root FS, dropped capabilities, `no-new-privileges`.
 - **No token in the browser** under OIDC — the backend holds the session and the tokens;
   the browser only gets an `httpOnly`, `SameSite=Lax` cookie, and requests that change
   something must come from the application's own pages.

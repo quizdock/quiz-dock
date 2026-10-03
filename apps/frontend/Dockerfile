@@ -8,7 +8,7 @@ WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml .npmrc tsconfig.base.json ./
 COPY packages/contracts/package.json packages/contracts/
 COPY apps/frontend/package.json apps/frontend/
-RUN pnpm install --filter @quiz-dock/frontend... --no-frozen-lockfile
+RUN pnpm install --filter @quiz-dock/frontend... --frozen-lockfile
 
 COPY packages/contracts packages/contracts
 COPY apps/frontend apps/frontend

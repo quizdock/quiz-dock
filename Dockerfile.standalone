@@ -36,8 +36,9 @@ RUN useradd -u 65532 -m -d /home/quizdock quizdock \
  && mkdir -p /data/postgres /data/media \
  && chown -R quizdock:quizdock /data
 
-# App artifact (dist, node_modules, prisma schema/config, built SPA, prisma client).
-COPY --from=app --chown=quizdock:quizdock /app /app
+# App artifact (dist, node_modules, prisma schema/config, built SPA, prisma client),
+# owned by root: the app reads it, never rewrites it.
+COPY --from=app /app /app
 COPY --chown=quizdock:quizdock docker/standalone-entrypoint.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh \
  # Admin CLI as a plain command: `docker exec quizdock qd <cmd>`.

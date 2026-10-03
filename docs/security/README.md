@@ -20,8 +20,12 @@ How QuizDock is scanned, hardened and audited.
 
 ## Runtime hardening
 
-The image runs **non-root** (uid 65532), **read-only** root filesystem, all Linux
-capabilities dropped, `no-new-privileges`; media on a volume, `/tmp` on tmpfs. See
+The image runs **non-root** (uid 65532), and its code belongs to root: the
+application can read it, never rewrite it; only its data folders (`/data`) are its
+own. `docker-compose.prod.yml` adds the rest to the application and its migrations:
+**read-only** root filesystem, all Linux capabilities dropped, `no-new-privileges`;
+media on a volume, `/tmp` on tmpfs. A plain `docker run` gets none of these unless
+given the same flags. See
 [the environment reference](https://quizdock.github.io/docs/operator/configuration/).
 
 ## Content-Security-Policy

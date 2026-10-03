@@ -117,6 +117,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # The same hardening as the app's (below): it runs the same image.
+    security_opt: ['no-new-privileges:true']
+    cap_drop: ['ALL']
+    read_only: true
     tmpfs: ['/tmp']
     restart: 'no'
     networks: [internal]
