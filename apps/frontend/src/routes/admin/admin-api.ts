@@ -176,12 +176,18 @@ export function useReadOperation<T>(
   });
 }
 
+/**
+ * What this administrator may run. In local mode it depends on the token: sent
+ * with it, and read again once one is given or taken back.
+ */
 export function useCatalogue() {
+  const withToken = useAdminToken() !== '';
   return useQuery({
-    queryKey: ['admin-catalogue'],
+    queryKey: ['admin-catalogue', withToken],
     staleTime: 30_000,
     queryFn: async () =>
-      (await adminOperationsControllerCatalogue()).data.operations as OperationDescriptor[],
+      (await adminOperationsControllerCatalogue({ headers: tokenHeaders() })).data
+        .operations as OperationDescriptor[],
   });
 }
 
