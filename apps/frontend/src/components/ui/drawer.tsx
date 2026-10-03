@@ -36,10 +36,12 @@ export function Drawer({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        close.current();
-      }
+      // Not an Escape already handled (a menu), nor one meant for a dialog opened
+      // over the sheet (a confirmation): that one closes, the sheet stays.
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (e.target instanceof Element && e.target.closest('dialog[open]')) return;
+      e.preventDefault();
+      close.current();
     };
     document.addEventListener('keydown', onKey);
     const previous = document.body.style.overflow;
