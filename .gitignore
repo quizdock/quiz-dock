@@ -33,3 +33,5 @@ coverage/
 # Médias uploadés en dev (volume local)
 .media/
 apps/backend/.media/
+# The shared templates of a backend run without STORE_DIR (its default, `.store`)
+.store/
