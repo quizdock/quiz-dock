@@ -25,6 +25,14 @@ export function lobbyTests(ctx: GameContext): void {
     expect(typeof pong.t1).toBe('number');
   }, 15_000);
 
+  it('a refused request that waits for its answer gets the refusal as that answer', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    expect(await host.emitWithAck('host:attach', { pin: '999999' })).toMatchObject({
+      ok: false,
+      error: { code: 'session.not_found' },
+    });
+  });
+
   it('host:create → PIN à 6 chiffres + game:created ; player:join → lobby notifié', async () => {
     const host = connect({ localUser: 'Animateur' });
     const created = new Promise<{ pin: string }>((resolve) => host.on('game:created', resolve));

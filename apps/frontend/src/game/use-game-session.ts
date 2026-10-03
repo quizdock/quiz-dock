@@ -35,6 +35,8 @@ import {
   type GameSocket,
   clearPlayerSession,
   ensureGameSocket,
+  refusalError,
+  refusalOf,
   loadPlayerSession,
 } from './game-client';
 
@@ -241,6 +243,14 @@ const PER_QUIZ: Partial<GameView> = {
  * text, and a change of language must not subscribe the view again (audit F8).
  */
 const sessionNotFound = () => i18next.t('live:errors.sessionNotFound');
+
+/** Why the room turned this screen away: no such room, or its own reason (not the host…). */
+const refusedText = (res: unknown) => {
+  const refusal = refusalOf(res);
+  return refusal && refusal.code !== 'session.not_found'
+    ? refusalError(refusal).message
+    : sessionNotFound();
+};
 
 /**
  * S'abonne à la partie `pin` selon le rôle et expose une vue réactive. Garanties :
@@ -491,11 +501,11 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
         if (!active) return;
         if (role === 'host') {
           sock.emit('host:attach', { pin }, (res: { ok: boolean }) => {
-            if (active && !res.ok) patch({ status: 'error', error: sessionNotFound() });
+            if (active && !res.ok) patch({ status: 'error', error: refusedText(res) });
           });
         } else if (role === 'spectator') {
           sock.emit('spectator:join', { pin, follow }, (res: { ok: boolean }) => {
-            if (active && !res.ok) patch({ status: 'error', error: sessionNotFound() });
+            if (active && !res.ok) patch({ status: 'error', error: refusedText(res) });
           });
         } else {
           const session = loadPlayerSession();

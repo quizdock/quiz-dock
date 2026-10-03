@@ -125,9 +125,10 @@ export function connectPlayer(): GameSocket {
 }
 
 /**
- * Émet un event à accusé de réception, mais **rejette dès l'event `error`** typé
- * du serveur (sur échec, le backend émet `error` et n'appelle jamais l'ack → sans
- * cette course, l'appelant resterait bloqué indéfiniment).
+ * Emits and waits for the server's answer. A refusal comes back as that answer
+ * (`{ ok: false, error }`, see the backend's `WsExceptionFilter`) and rejects,
+ * with its text and its code; no answer in time rejects too (a lost answer would
+ * otherwise leave the caller waiting forever).
  */
 export function emitWithAckOrError<T>(
   s: GameSocket,
@@ -136,26 +137,33 @@ export function emitWithAckOrError<T>(
   timeoutMs = ACK_TIMEOUT_MS,
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const cleanup = () => {
-      clearTimeout(timer);
-      s.off('error', onError);
-    };
-    const onError = (e: { code: string; params?: Record<string, string | number> }) => {
-      cleanup();
-      // Its text for whoever shows it, its code for whoever decides on it.
-      reject(Object.assign(new Error(errorText(e.code, e.params)), { code: e.code }));
-    };
     const timer = setTimeout(() => {
-      cleanup();
       reject(new Error(i18next.t('live:errors.noResponse')));
     }, timeoutMs);
-
-    s.once('error', onError);
     (s.emit as (e: string, p: unknown, ack: (res: T) => void) => void)(event, payload, (res) => {
-      cleanup();
-      resolve(res);
+      clearTimeout(timer);
+      const refusal = refusalOf(res);
+      if (refusal) reject(refusalError(refusal));
+      else resolve(res);
     });
   });
+}
+
+/** A request's refusal, as the server answers it. */
+export interface WsRefusal {
+  ok: false;
+  error: { code: string; params?: Record<string, string | number> };
+}
+
+/** The refusal an answer carries, if it is one. */
+export function refusalOf(res: unknown): WsRefusal['error'] | null {
+  const r = res as Partial<WsRefusal> | null;
+  return r && typeof r === 'object' && r.ok === false && r.error ? r.error : null;
+}
+
+/** An error to show: its text for whoever shows it, its code for whoever decides on it. */
+export function refusalError(e: WsRefusal['error']): Error & { code: string } {
+  return Object.assign(new Error(errorText(e.code, e.params)), { code: e.code });
 }
 
 /** Options de session choisies au lancement (RG-15, RG-16). */
