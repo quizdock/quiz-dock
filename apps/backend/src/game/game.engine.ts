@@ -227,6 +227,18 @@ export class GameEngine {
           armed++;
         }
       }
+      // The host's absence, timed again: a dead process never saw their socket go. A
+      // room left without its host ends after its window; any other has its grace,
+      // which the host's console cancels as it reconnects (`host:attach`).
+      if (meta.state === GameState.HostDisconnected) {
+        const windowMs = settings.get(SETTINGS.GAME_HOST_WINDOW_MS);
+        this.timers.arm('hostWindow', pin, windowMs, () => this.endOrphaned(ref, meta.hostUserId));
+      } else if (meta.state !== GameState.Ended) {
+        const graceMs = settings.get(SETTINGS.GAME_HOST_GRACE_MS);
+        this.timers.arm('hostGrace', pin, graceMs, () =>
+          this.declareHostDisconnected(ref, meta.hostUserId),
+        );
+      }
     }
     if (armed > 0) this.log.log(`Recovered ${armed} live timer(s) after restart`);
   }

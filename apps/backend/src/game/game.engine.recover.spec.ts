@@ -103,4 +103,20 @@ describe('GameEngine.recoverTimers (bindServer)', () => {
     expect([ref.pin, step]).toEqual(['7', { questionIndex: 1 }]);
     expect(delay).toBeGreaterThan(2_500);
   });
+
+  it("times the host's absence again: a window for a room without its host, a grace for the others", async () => {
+    const { engine } = build({
+      '1': meta({ state: 'HOST_DISCONNECTED' }),
+      '2': meta({ state: 'LOBBY' }),
+      '3': meta({ state: 'ENDED' }),
+    });
+    const timers = (engine as unknown as { timers: { arm: (...a: unknown[]) => void } }).timers;
+    const arm = jest.spyOn(timers, 'arm').mockImplementation(() => undefined);
+    engine.bindServer({ to: () => ({ emit: () => undefined }) } as never);
+    await new Promise((r) => setTimeout(r, 10));
+    expect(arm.mock.calls.map(([kind, pin]) => [kind, pin])).toEqual([
+      ['hostWindow', '1'],
+      ['hostGrace', '2'],
+    ]);
+  });
 });
