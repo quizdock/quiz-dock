@@ -16,11 +16,15 @@ import { buildSwaggerDocument } from './swagger';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from './admin/settings/settings.service';
 import { SetupService } from './admin/setup/setup.service';
+import { MediaJanitor } from './media/media-janitor.service';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['log', 'error', 'warn'],
   });
+  // `docker stop` sends SIGTERM: close the sockets, Redis and the database, then exit,
+  // instead of being killed when the stop's grace period runs out.
+  app.enableShutdownHooks();
 
   // Which hops may speak for the client (`X-Forwarded-For`, `X-Forwarded-Proto`):
   // `req.ip` and `req.secure` follow `TRUST_PROXY`, like the sockets.
@@ -51,6 +55,9 @@ async function bootstrap(): Promise<void> {
   for (const issue of settings.issues()) Logger.warn(issue.message, 'Settings');
   // A fresh instance: the setup wizard's token, in the logs (§3.8).
   await app.get(SetupService).announce();
+
+  // The hourly media clean-up runs in the server, never in a `qd` command.
+  app.get(MediaJanitor).start();
 
   const port = settings.get(SETTINGS.PORT);
   await app.listen(port, '0.0.0.0');
