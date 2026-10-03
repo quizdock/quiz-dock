@@ -39,7 +39,8 @@ export class HostSeatService {
     return sub.startsWith(LOCAL_SUB_PREFIX);
   }
 
-  private static isLive(seat: HostSeat | null, now = new Date()): seat is HostSeat {
+  /** Held: a seat whose expiry is not past (an expired one is freed on its next use). */
+  static isLive(seat: HostSeat | null, now = new Date()): seat is HostSeat {
     return !!seat && (seat.expiresAt === null || seat.expiresAt > now);
   }
 

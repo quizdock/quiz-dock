@@ -87,6 +87,29 @@ describe('AdminModule (integration)', () => {
     expect((await search({ q: 'admin-db', role: 'host' })).total).toBe(0);
   });
 
+  it('users.search shows the host seat only while it is held, not once expired', async () => {
+    type Page = { result: { data: { localMode: boolean; seat: { holder: string } | null } } };
+    const seatOf = async () =>
+      ((await runner.run({ id: 'users.search', raw: {}, actor: cli })) as Page).result.data;
+    const user = await prisma.user.findUniqueOrThrow({ where: { oidcSubject: subject } });
+    const hold = (expiresAt: Date) =>
+      prisma.hostSeat.upsert({
+        where: { id: 1 },
+        create: { id: 1, userId: user.id, claimedAt: new Date(), expiresAt },
+        update: { userId: user.id, expiresAt },
+      });
+    try {
+      await hold(new Date(Date.now() + 60_000));
+      const held = await seatOf();
+      expect(held.localMode).toBe(true); // the seat is local mode's (the tests' default)
+      expect(held.seat?.holder).toBe(user.displayName);
+      await hold(new Date(Date.now() - 60_000));
+      expect((await seatOf()).seat).toBeNull();
+    } finally {
+      await prisma.hostSeat.deleteMany({ where: { userId: user.id } });
+    }
+  });
+
   it("a secret setting's value never reaches the audit, even refused", async () => {
     const outcome = await runner.run({
       id: 'settings.set',
