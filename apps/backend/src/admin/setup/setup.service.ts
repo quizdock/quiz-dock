@@ -11,11 +11,15 @@ export const SETUP_TOKEN_TTL_MS = 24 * 60 * 60_000;
 /** How long the wizard's session lasts once the token was given. */
 export const SETUP_SESSION_TTL_S = 2 * 60 * 60;
 /**
- * Wrong tokens tried, from every address together, before the wizard waits:
- * the token's 144 bits need no lock — this one only stops a flood. A new token
- * (`qd setup.token`) lifts it.
+ * Wrong tokens tried before the wizard waits: the token's 144 bits need no lock,
+ * this only stops a flood. Per address first, so a stranger cannot keep the
+ * operator out; from every address together far beyond. A new token (`qd
+ * setup.token`) lifts both.
  */
-export const SETUP_ATTEMPTS_MAX = 100;
+export const SETUP_ATTEMPTS_PER_ADDRESS = 20;
+export const SETUP_ATTEMPTS_MAX = 1000;
+/** Wrong tokens audited per address and window: enough to see, not to fill the disk. */
+const AUDITED_PER_ADDRESS = 5;
 export const SETUP_ATTEMPTS_WINDOW_S = 15 * 60;
 /** How long a phone test waits for the phone. */
 export const PHONE_TEST_TTL_S = 10 * 60;
@@ -60,7 +64,8 @@ export class SetupService {
     await this.overrides.setFlag('token', JSON.stringify({ hash: hash(token), until }), actor);
     // The setup has begun: a restart in the middle of it keeps it open (see announce).
     await this.overrides.setFlag('started', new Date().toISOString(), actor);
-    await this.redis.del(ATTEMPTS);
+    const counted = await this.redis.scanKeys(`${ATTEMPTS}*`);
+    if (counted.length) await this.redis.del(...counted);
     return token;
   }
 
@@ -95,7 +100,9 @@ export class SetupService {
    * request only, however many race for it. A wrong token is audited.
    */
   async open(token: string, address: string): Promise<string | null> {
-    if (Number((await this.redis.get(ATTEMPTS)) ?? 0) >= SETUP_ATTEMPTS_MAX) {
+    const fromHere = `${ATTEMPTS}:${hash(address)}`;
+    const [all, here] = await Promise.all([this.redis.get(ATTEMPTS), this.redis.get(fromHere)]);
+    if (Number(all ?? 0) >= SETUP_ATTEMPTS_MAX || Number(here ?? 0) >= SETUP_ATTEMPTS_PER_ADDRESS) {
       throw new SetupLockedError();
     }
     const stored = await this.overrides.flag('token');
@@ -110,11 +117,15 @@ export class SetupService {
       given.length === expected.length &&
       timingSafeEqual(given, Buffer.from(expected));
     if (!ok) {
-      await this.redis
+      const counts = await this.redis
         .multi()
         .set(ATTEMPTS, '0', 'EX', SETUP_ATTEMPTS_WINDOW_S, 'NX')
         .incr(ATTEMPTS)
+        .set(fromHere, '0', 'EX', SETUP_ATTEMPTS_WINDOW_S, 'NX')
+        .incr(fromHere)
         .exec();
+      const tried = Number(counts?.[3]?.[1] ?? 0);
+      if (tried > AUDITED_PER_ADDRESS) return null;
       await this.audit
         .append({
           via: 'api',
