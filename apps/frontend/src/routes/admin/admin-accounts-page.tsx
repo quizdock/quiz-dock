@@ -93,7 +93,11 @@ export function AccountsPage() {
           <p className="text-muted-foreground text-sm">
             {t('accounts.count', { count: data.total })}
           </p>
-          <DataTable columns={accountColumns(t, i18n.language)} data={data.items} />
+          <DataTable
+            columns={accountColumns(t, i18n.language)}
+            data={data.items}
+            rowId={(account) => account.subject}
+          />
         </>
       )}
       <Pagination page={page} pages={pages} onChange={setPage} />

@@ -37,9 +37,15 @@ export function DataTable<TData extends RowData>({
   className,
   footer,
   caption,
+  rowId,
 }: {
   columns: DataColumn<TData>[];
   data: TData[];
+  /**
+   * What a row is, whatever its place: a row that holds state (an open dialog)
+   * keeps it on the same item when the list is refetched in another order.
+   */
+  rowId?: (row: TData) => string;
   initialSort?: SortingState;
   onRowClick?: (row: TData) => void;
   className?: string;
@@ -51,6 +57,7 @@ export function DataTable<TData extends RowData>({
     features,
     columns,
     data,
+    ...(rowId ? { getRowId: (row: TData) => rowId(row) } : {}),
     initialState: { sorting: initialSort },
   });
   return (

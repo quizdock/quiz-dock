@@ -137,7 +137,11 @@ export function AdminQuizzesPage() {
           <p className="text-muted-foreground text-sm">
             {t('quizzes.count', { count: data.total })}
           </p>
-          <DataTable columns={quizColumns(t, i18n.language)} data={data.items} />
+          <DataTable
+            columns={quizColumns(t, i18n.language)}
+            data={data.items}
+            rowId={(quiz) => quiz.id}
+          />
         </>
       )}
       <Pagination page={page} pages={pages} onChange={setPage} />
