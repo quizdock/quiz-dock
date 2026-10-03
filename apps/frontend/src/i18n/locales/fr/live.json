@@ -338,6 +338,7 @@
     "waitingQuestion": "En attente de la question…",
     "readQuestion": "📖 Lis bien la question…",
     "answerSaved": "Réponse enregistrée ✓",
+    "answerPending": "Connexion perdue : votre réponse partira dès son retour",
     "answerRefused": {
       "early": "Trop tôt : les réponses n’étaient pas encore ouvertes. Réponds à nouveau.",
       "closed": "Ta réponse est arrivée après la fin de la question : elle n’est pas comptée.",

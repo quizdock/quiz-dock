@@ -43,7 +43,14 @@ const peekSession = vi.fn(() =>
 );
 
 vi.mock('../game/use-game-session', () => ({
-  useGameSession: () => ({ view: hookState.value, socket: fakeSocket, markJoined, markReady }),
+  useGameSession: (pin: string) => ({
+    view: hookState.value,
+    socket: fakeSocket,
+    markJoined,
+    markReady,
+    submitAnswer: (questionIndex: number, answer: unknown) =>
+      fakeSocket.emit('player:submit', { pin, questionIndex, answer }),
+  }),
 }));
 vi.mock('../game/game-client', () => ({
   joinSession: (...a: unknown[]) => joinSession(...a),
@@ -75,6 +82,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   answerAccepted: null,
   answerRefusal: null,
   answerAckAt: null,
+  answerPending: false,
   lobbyCount: null,
   fullCapture: false,
   personalTracking: true,

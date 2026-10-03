@@ -338,6 +338,7 @@
     "waitingQuestion": "Soru bekleniyor…",
     "readQuestion": "📖 Soruyu dikkatlice okuyun…",
     "answerSaved": "Yanıt kaydedildi ✓",
+    "answerPending": "Bağlantı koptu: yanıtınız bağlantı gelir gelmez gönderilecek",
     "answerRefused": {
       "early": "Çok erken: Yanıtlar henüz açılmadı. Tekrar deneyin.",
       "closed": "Cevabınız soru kapatıldıktan sonra geldi: sayılmaz.",

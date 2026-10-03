@@ -338,6 +338,7 @@
     "waitingQuestion": "Esperando la pregunta…",
     "readQuestion": "📖 Lee bien la pregunta…",
     "answerSaved": "Respuesta guardada ✓",
+    "answerPending": "Conexión perdida: tu respuesta se enviará en cuanto vuelva",
     "answerRefused": {
       "early": "Demasiado pronto: las respuestas aún no estaban abiertas. Responde de nuevo.",
       "closed": "Tu respuesta llegó después del cierre de la pregunta: no cuenta.",

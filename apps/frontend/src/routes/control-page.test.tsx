@@ -36,6 +36,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   answerAccepted: null,
   answerRefusal: null,
   answerAckAt: null,
+  answerPending: false,
   lobbyCount: null,
   fullCapture: false,
   personalTracking: true,

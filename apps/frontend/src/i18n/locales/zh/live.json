@@ -338,6 +338,7 @@
     "waitingQuestion": "等待题目…",
     "readQuestion": "📖 仔细阅读题目…",
     "answerSaved": "回答已保存 ✓",
+    "answerPending": "连接已断开：连接恢复后将立即发送你的回答",
     "answerRefused": {
       "early": "太早了：答题尚未开放，请重新作答。",
       "closed": "你的回答在题目结束后才到达，不计分。",

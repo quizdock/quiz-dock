@@ -338,6 +338,7 @@
     "waitingQuestion": "Waiting for the question…",
     "readQuestion": "📖 Read the question carefully…",
     "answerSaved": "Answer saved ✓",
+    "answerPending": "Connection lost: your answer goes as soon as it is back",
     "answerRefused": {
       "early": "Too early: the answers were not open yet. Answer again.",
       "closed": "Your answer arrived after the question closed: it is not counted.",

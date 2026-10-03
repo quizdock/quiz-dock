@@ -320,7 +320,7 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
 
   const submit = (answer: string | string[] | number) => {
     setSubmitted(true);
-    socket?.emit('player:submit', { pin, questionIndex: view.questionIndex, answer });
+    session.submitAnswer(view.questionIndex, answer);
   };
 
   // QCM unique / V-F / sondage : le tap soumet ; multi-réponses : le tap (dé)sélectionne,
@@ -941,6 +941,10 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
           ) : lost ? (
             <p role="alert" className="text-destructive text-[1.1em] font-semibold">
               {t(`player.answerRefused.${refusal}`)}
+            </p>
+          ) : done && view.answerPending ? (
+            <p role="status" className="text-[1.1em] font-semibold">
+              {t('player.answerPending')}
             </p>
           ) : done ? (
             <p className="text-[1.25em] font-semibold">{t('player.answerSaved')}</p>

@@ -1,6 +1,7 @@
 import type {
   AnswerAck,
   AnswerRefusal,
+  AnswerValue,
   AudioTarget,
   GameMode,
   GameModePayload,
@@ -81,6 +82,8 @@ export interface GameView {
   answerRefusal: AnswerRefusal | null;
   /** Server time of the last acknowledgement: a new one, even with the same verdict. */
   answerAckAt: number | null;
+  /** An answer given while the connection was down: sent once the player is back in the room. */
+  answerPending: boolean;
   fullCapture: boolean;
   /** Suivi individuel (RG-16) : faux = seuls les résultats du groupe sont archivés. */
   personalTracking: boolean;
@@ -176,6 +179,7 @@ export const INITIAL_VIEW: GameView = {
   answerAccepted: null,
   answerRefusal: null,
   answerAckAt: null,
+  answerPending: false,
   fullCapture: false,
   personalTracking: true,
   pickOwnName: true,
@@ -266,6 +270,9 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
   const follow = opts.follow === true;
   const [view, setView] = useState<GameView>(INITIAL_VIEW);
   const socketRef = useRef<GameSocket | null>(null);
+  // A player's socket is in the room once joined or reconnected, until the connection drops.
+  const attachedRef = useRef(false);
+  const pendingRef = useRef<{ questionIndex: number; answer: AnswerValue } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -274,7 +281,27 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
 
     const patch = (p: Partial<GameView>) => setView((prev) => ({ ...prev, ...p }));
 
-    const onState = (p: GameStatePayload) =>
+    let questionIndex = -1;
+    let state: GameState | null = null;
+    // The answer kept while the connection was down: sent if its question still takes
+    // answers, dropped otherwise (its time is over).
+    const flush = () => {
+      const pending = pendingRef.current;
+      pendingRef.current = null;
+      if (!pending) return;
+      if (s && pending.questionIndex === questionIndex && state === 'ANSWERING') {
+        s.emit('player:submit', { pin, ...pending });
+      }
+      patch({ answerPending: false });
+    };
+
+    const onState = (p: GameStatePayload) => {
+      if (p.questionIndex !== questionIndex && pendingRef.current) {
+        pendingRef.current = null;
+        patch({ answerPending: false });
+      }
+      questionIndex = p.questionIndex;
+      state = p.state;
       patch({
         status: 'ready',
         state: p.state,
@@ -295,6 +322,7 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
         // Back to a lobby (the room's next quiz): nothing of the last one shows.
         ...(p.state === 'LOBBY' ? { ...PER_QUIZ, nav: p.nav ?? null } : {}),
       });
+    };
     const onRoster = (p: { players: RosterPlayer[] }) => patch({ players: p.players });
     const onJoined = (p: RosterPlayer) =>
       setView((prev) =>
@@ -447,6 +475,7 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
     // The connection itself (socket.io's own events, outside the contract): down until it is back.
     // Letting go of it on purpose (leaving the game) is not a loss.
     const onDisconnect = (reason: string) => {
+      attachedRef.current = false;
       if (reason !== 'io client disconnect') patch({ connectionLost: true });
     };
     const onConnect = () => patch({ connectionLost: false });
@@ -518,7 +547,10 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
                 if (!res.ok) {
                   clearPlayerSession();
                   patch({ status: 'no-session' });
+                  return;
                 }
+                attachedRef.current = true;
+                flush();
               },
             );
           } else {
@@ -543,9 +575,26 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
   }, [pin, role, follow]);
 
   /** Joueur : à appeler après un `player:join` réussi pour quitter `no-session`. */
-  const markJoined = () => setView((prev) => ({ ...prev, status: 'ready' }));
+  const markJoined = () => {
+    attachedRef.current = true;
+    setView((prev) => ({ ...prev, status: 'ready' }));
+  };
+  /**
+   * A player's answer. While the connection is down it is kept, not sent: socket.io
+   * would send it on reconnection before the player is back in the room, and the
+   * server would refuse it unseen. It goes once the player is back.
+   */
+  const submitAnswer = (questionIndex: number, answer: AnswerValue) => {
+    const s = socketRef.current;
+    if (s && attachedRef.current) {
+      s.emit('player:submit', { pin, questionIndex, answer });
+      return;
+    }
+    pendingRef.current = { questionIndex, answer };
+    setView((prev) => ({ ...prev, answerPending: true }));
+  };
   /** The participant said (or took back) that they are ready (#104), once the server took it. */
   const markReady = (ready: boolean) => setView((prev) => ({ ...prev, youReady: ready }));
 
-  return { view, socket: socketRef.current, markJoined, markReady };
+  return { view, socket: socketRef.current, markJoined, markReady, submitAnswer };
 }
