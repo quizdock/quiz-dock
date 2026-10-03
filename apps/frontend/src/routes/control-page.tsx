@@ -1622,6 +1622,8 @@ function ViewSwitch({ tab, onTab }: { tab: HostTab; onTab: (t: HostTab) => void 
           type="button"
           role="tab"
           aria-selected={tab === x.id}
+          // Its name, also when the label is hidden on a small screen (icon only).
+          aria-label={x.label}
           onClick={() => onTab(x.id)}
           className={cn(
             'flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors',
