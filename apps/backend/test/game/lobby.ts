@@ -33,13 +33,11 @@ export function lobbyTests(ctx: GameContext): void {
     });
   });
 
-  it('host:create → PIN à 6 chiffres + game:created ; player:join → lobby notifié', async () => {
+  it('host:create → PIN à 6 chiffres en accusé ; player:join → lobby notifié', async () => {
     const host = connect({ localUser: 'Animateur' });
-    const created = new Promise<{ pin: string }>((resolve) => host.on('game:created', resolve));
 
     const createAck = await host.emitWithAck('host:create', { quizId });
     expect(createAck.pin).toMatch(/^\d{6}$/);
-    expect((await created).pin).toBe(createAck.pin);
 
     const pin = createAck.pin;
     const player = connect();

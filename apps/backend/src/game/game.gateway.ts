@@ -112,7 +112,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   /**
    * Hôte authentifié : crée une partie pour un de ses quiz `ready`. Le snapshot
    * est figé côté service ; le socket rejoint la room du PIN et reçoit le PIN
-   * en accusé de réception (+ `game:created`, et `notice` si capture intégrale).
+   * en accusé de réception (+ `notice` si capture intégrale).
    */
   @SubscribeMessage('host:create')
   async hostCreate(
@@ -130,7 +130,6 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     socket.data.pin = pin;
     socket.data.isHostControl = true;
     await socket.join(pin);
-    socket.emit('game:created', { pin });
     const meta = await this.game.getMeta(pin);
     if (meta) socket.emit('notice', noticeOf(meta));
     return { pin };

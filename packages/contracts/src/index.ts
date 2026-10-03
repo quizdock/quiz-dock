@@ -729,7 +729,6 @@ export interface AnswerAck {
 }
 
 export interface ServerToClientEvents {
-  'game:created': (p: { pin: string }) => void;
   /**
    * Avis de transparence (§2.10, RG-16) : ce que la session enregistre. Les deux
    * drapeaux décident du texte affiché aux participants.

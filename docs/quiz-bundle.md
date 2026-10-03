@@ -56,6 +56,10 @@ Contributors changing the bundle schema or a content schema run
   ([import a quiz](https://quizdock.github.io/docs/host/import-a-quiz/)); an assistant
   connected through the MCP server checks and imports it itself (`validate_quiz`,
   `import_quiz`).
+- **Check without importing** — `POST /api/v1/quizzes/validate` (`{"json": "<the
+  quiz.json text>"}`) answers what an import would say of it, schema and per-type
+  rules, without creating anything: the check behind the MCP server's
+  `validate_quiz` and `qd quiz:validate`, for a tool that writes `quiz.json` files.
 
 ## `quiz.json`
 
