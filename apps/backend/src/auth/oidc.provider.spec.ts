@@ -231,7 +231,10 @@ describe('OidcProvider', () => {
       // Second call: discovery document is cached.
       await discovered.authenticate(bearer(await makeToken()));
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith(`${ISSUER}/.well-known/openid-configuration`);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${ISSUER}/.well-known/openid-configuration`,
+        expect.anything(),
+      );
       expect(createRemoteJWKSet).toHaveBeenLastCalledWith(
         new URL(`${ISSUER}/protocol/openid-connect/certs`),
       );

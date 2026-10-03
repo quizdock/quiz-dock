@@ -12,6 +12,7 @@ import {
 import { migrationStatus } from './migrate-status';
 import { SETTING_LIST, SETTINGS } from '@quiz-dock/contracts';
 import type { SettingsService } from '../../admin/settings/settings.service';
+import { IDP_TIMEOUT_MS } from '../../auth/oidc/oidc-client';
 
 export interface DoctorDeps {
   prisma: Pick<PrismaService, '$queryRaw'>;
@@ -169,7 +170,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         });
       let jwksUri = oidc.jwksUri ?? undefined;
       try {
-        const res = await deps.fetch(url);
+        const res = await deps.fetch(url, { signal: AbortSignal.timeout(IDP_TIMEOUT_MS) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const doc = (await res.json()) as Record<string, unknown>;
         for (const key of ['authorization_endpoint', 'token_endpoint', 'jwks_uri']) {
@@ -191,7 +192,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
       }
       if (jwksUri) {
         try {
-          const res = await deps.fetch(jwksUri);
+          const res = await deps.fetch(jwksUri, { signal: AbortSignal.timeout(IDP_TIMEOUT_MS) });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const jwks = (await res.json()) as { keys?: unknown[] };
           if (!Array.isArray(jwks.keys) || jwks.keys.length === 0) throw new Error('no keys');

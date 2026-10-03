@@ -166,7 +166,10 @@ describe('doctor', () => {
     expect(text()).toContain('client_id quiz-dock-frontend (public, PKCE)');
     expect(text()).toContain('discovery ok → token endpoint https://idp/x/token');
     expect(text()).toContain('JWKS reachable (2 key(s))');
-    expect(fetchMock).toHaveBeenCalledWith('https://idp/x/.well-known/openid-configuration');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://idp/x/.well-known/openid-configuration',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
     // OIDC_ISSUER has a slash the provider's issuer lacks: tokens would be refused (#99).
     expect(text()).toMatch(
       /WARN discovery issuer "https:\/\/idp\/x" differs .* by a trailing slash only/,

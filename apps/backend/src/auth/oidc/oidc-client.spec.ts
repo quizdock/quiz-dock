@@ -114,8 +114,10 @@ describe('OidcClient', () => {
         codeVerifier: 'verifier-verifier-verifier-verifier-verifier-00',
       }),
     );
+    // Within a deadline: a provider that hangs must not hold a sign-in for minutes.
     expect(fetchMock).toHaveBeenCalledWith(
       `${INTERNAL}/realms/quiz-dock/.well-known/openid-configuration`,
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(`${url.origin}${url.pathname}`).toBe(discovery.authorization_endpoint);
     expect(Object.fromEntries(url.searchParams)).toEqual({
