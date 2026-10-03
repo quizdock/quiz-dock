@@ -47,7 +47,7 @@ services:
       KEYCLOAK_HOST_PASSWORD: animateur
       KEYCLOAK_PLAYER_PASSWORD: participant
     ports:
-      - '${KEYCLOAK_PORT:-18080}:8080'
+      - '127.0.0.1:${KEYCLOAK_PORT:-18080}:8080' # this computer only (admin/admin)
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     networks: [internal, public]
