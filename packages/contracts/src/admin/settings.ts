@@ -1065,11 +1065,20 @@ export const DEPLOYMENT_VARIABLES: DeploymentVariable[] = [
     description: "Keycloak's published HTTP port.",
   },
   {
+    key: 'KEYCLOAK_BIND',
+    readBy: 'keycloak',
+    criticality: 'C1',
+    defaultText: '`127.0.0.1` (dev)',
+    description:
+      "Dev: the address Keycloak's port is published on, this computer only by default (its admin is admin/admin). To sign in from another device, an address it reaches (a Tailscale one rather than the whole LAN), with KEYCLOAK_PUBLIC_URL, OIDC_ISSUER and KEYCLOAK_DEV_URL on it.",
+  },
+  {
     key: 'KEYCLOAK_PUBLIC_URL',
     readBy: 'keycloak',
     criticality: 'C1',
     defaultText: 'Scheme, host and Keycloak port',
-    description: 'Full preset: override the browser-facing Keycloak URL, including a proxy path.',
+    description:
+      'Override the browser-facing Keycloak URL (full preset: including a proxy path; dev: the address another device reaches it on).',
   },
   {
     key: 'KEYCLOAK_APP_URL',
