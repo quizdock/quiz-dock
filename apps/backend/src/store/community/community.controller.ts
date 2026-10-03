@@ -3,6 +3,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import type { Response } from 'express';
+import { mediaHeaders } from '../../media/media-response';
 import { QuizDto } from '../../quizzes/dto/quiz.dto';
 import { CommunityService } from './community.service';
 import { CommunityCatalogueDto, CommunityPreviewDto, CommunityTakeDto } from './community.dto';
@@ -28,11 +29,7 @@ export class CommunityController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     const { bytes, mime } = await this.store.readMedia(key, name);
-    res.set({
-      'Content-Type': mime,
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'private, max-age=300',
-    });
+    res.set({ ...mediaHeaders(mime), 'Cache-Control': 'private, max-age=300' });
     return new StreamableFile(bytes);
   }
   @Post('take')

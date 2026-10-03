@@ -203,6 +203,13 @@ describe('MediaService', () => {
     await expect(service.openStream('x')).rejects.toThrow(NotFoundException);
   });
 
+  it('sizeOf: a value that is no media id is unknown, without a query', async () => {
+    for (const id of ['\u0000', '../x', '01hzzzzzzzzzzzzzzzzzzzzzzz']) {
+      await expect(service.sizeOf(id)).rejects.toThrow(NotFoundException);
+    }
+    expect(prisma.mediaAsset.findUnique).not.toHaveBeenCalled();
+  });
+
   it("remove : 404 si non possédé (isolation), ni pour un média de l'instance, pas de delete", async () => {
     prisma.mediaAsset.findFirst.mockResolvedValue(null);
     await expect(service.remove('o1', 'm1')).rejects.toThrow(NotFoundException);

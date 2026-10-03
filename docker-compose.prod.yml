@@ -58,7 +58,7 @@ services:
     networks: [internal]
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.8
+    image: quay.io/keycloak/keycloak:26.7.5
     profiles: ['keycloak']
     # Render the shared dev realm for full mode without an additional template or JSON-tool dependency.
     # Keycloak skips importing an existing realm, so restarts never reset accounts.

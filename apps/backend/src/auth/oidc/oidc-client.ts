@@ -288,12 +288,17 @@ export class OidcClient {
     };
   }
 
-  /** Validates an access token: signature against the JWKS, `iss`, `exp`, and `aud` when configured. */
+  /**
+   * Validates an access token: signature against the JWKS, `iss`, `exp`, and `aud`
+   * when configured. An ID token is refused: it is not meant to call an API, and
+   * ours travels in the browser (the logout's `id_token_hint`).
+   */
   async verifyAccessToken(token: string): Promise<JWTPayload> {
     const { payload } = await jwtVerify(token, await this.keys(), {
       issuer: this.settings.issuer,
       ...(this.settings.audience ? { audience: this.settings.audience } : {}),
     });
+    if (isIdToken(payload)) throw new Error('An ID token is not an access token.');
     return payload;
   }
 
@@ -306,4 +311,18 @@ export class OidcClient {
     if (payload.nonce !== nonce) throw new Error('ID token nonce mismatch.');
     return payload;
   }
+}
+
+/**
+ * An ID token, told from an access token by the claims only an ID token has
+ * (OIDC Core §2, §3.1.3.6, §3.3.2.11): `nonce`, `at_hash`, `c_hash` (a renewed ID
+ * token may lack the nonce, not the hash), or Keycloak's `typ: ID`.
+ */
+function isIdToken(payload: JWTPayload): boolean {
+  return (
+    payload.typ === 'ID' ||
+    payload.nonce !== undefined ||
+    payload.at_hash !== undefined ||
+    payload.c_hash !== undefined
+  );
 }

@@ -33,7 +33,7 @@ import type {
   ServerToClientEvents,
 } from '@quiz-dock/contracts';
 import type { Server } from 'socket.io';
-import { GameService } from './game.service';
+import { GameService, oneLine } from './game.service';
 import {
   ANSWER_COUNT_EVERY_MS,
   CHRONO_FLOOR_MS,
@@ -1554,10 +1554,7 @@ export class GameEngine {
   async setRoomName(pin: string, hostUserId: string, raw: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) throw new BadRequestException('session.already_started');
-    const name = String(raw ?? '')
-      .trim()
-      .replace(/\s+/g, ' ')
-      .slice(0, ROOM_NAME_MAX);
+    const name = oneLine(raw).slice(0, ROOM_NAME_MAX);
     await this.redis.hset(gameKeys.room(pin), roomHash({ name }));
     this.server.to(pin).emit('room:info', { name: name || null, hostName: meta.hostName });
   }
@@ -2069,6 +2066,10 @@ export class GameEngine {
       return reject('unknown'); // gone, not in this game, or the game is gone
     }
     const question = snapshot.questions[questionIndex];
+    // Already answered: refused before grading (the script below stays the guard).
+    if (await this.redis.hexists(gameKeys.answers(meta.id, questionIndex), playerId)) {
+      return reject('duplicate');
+    }
 
     // Temps serveur compensé de la latence (§6) ; latencyMs = RTT/2 (0 tant que non câblé).
     const tMs = Math.max(0, receivedAt - meta.questionStartedAt - player.latencyMs);

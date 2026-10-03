@@ -36,6 +36,7 @@ interface TokenOpts {
   email?: string;
   roles?: string[];
   nickname?: string;
+  claims?: Record<string, unknown>;
 }
 
 async function makeToken(opts: TokenOpts = {}): Promise<string> {
@@ -48,6 +49,7 @@ async function makeToken(opts: TokenOpts = {}): Promise<string> {
     // Flat `roles` claim (default OIDC_ROLES_CLAIM); nested paths are tested separately.
     roles: opts.roles ?? ['host'],
     realm_access: { roles: ['nested-host'] },
+    ...opts.claims,
   })
     .setProtectedHeader({ alg: 'RS256', kid: KID })
     .setIssuer(opts.issuer ?? ISSUER)
@@ -173,6 +175,18 @@ describe('OidcProvider', () => {
     const token = await makeToken();
     const tampered = `${token.slice(0, -3)}abc`;
     expect(await provider.authenticate(bearer(tampered))).toBeNull();
+  });
+
+  it('refuses an ID token as a Bearer: it travels in the browser', async () => {
+    const provider = await buildProvider();
+    const signIn = { nonce: 'n-123' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: signIn })))).toBeNull();
+    const renewed = { at_hash: 'h-456' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: renewed })))).toBeNull();
+    const keycloak = { typ: 'ID' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: keycloak })))).toBeNull();
+    const access = { typ: 'Bearer' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: access })))).not.toBeNull();
   });
 
   it('vérifie l’audience quand elle est configurée', async () => {

@@ -87,8 +87,10 @@ export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 const BLOB_FILE = /^[0-9a-f]{64}$/;
 /** A write that did not finish (renamed to its blob name once complete), one per upload. */
 const PARTIAL_FILE = /^[0-9a-f]{64}\.[0-9a-f-]{36}\.part$/;
-/** A file from before files were shared, named after its media id (a ULID). */
-const LEGACY_FILE = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+/** A media id: a ULID. */
+const MEDIA_ID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+/** A file from before files were shared, named after its media id. */
+const LEGACY_FILE = MEDIA_ID;
 
 const sha256Of = (buffer: Buffer) => createHash('sha256').update(buffer).digest('hex');
 
@@ -252,6 +254,8 @@ export class MediaService implements OnModuleInit {
 
   /** Size of a stored media on disk — the truth a byte range is cut from. */
   async sizeOf(id: string): Promise<number> {
+    // Not an id at all (a NUL, a path): unknown, without asking the database.
+    if (!MEDIA_ID.test(id)) throw new NotFoundException('media.not_found');
     const asset = await this.prisma.mediaAsset.findUnique({
       where: { id },
       select: { id: true, blobSha256: true },

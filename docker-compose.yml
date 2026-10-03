@@ -31,7 +31,7 @@ services:
   # IdP OIDC d'exemple (dev) : démarré uniquement avec --profile keycloak (AUTH_MODE=oidc).
   # N'importe quel fournisseur OpenID Connect peut le remplacer via les variables OIDC_*.
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0.8
+    image: quay.io/keycloak/keycloak:26.7.5
     profiles: ['keycloak']
     command: ['start-dev', '--import-realm']
     environment:
