@@ -406,10 +406,22 @@ export class GameEngine {
     const slide = Number.isInteger(slideIndex) && slideIndex! >= 0 ? slideIndex : undefined;
     const meta = await this.game.getMeta(pin);
     if (!meta) return;
+    // A step of this game only: any other index would leave a set behind for hours.
+    if (
+      slide === undefined
+        ? questionIndex >= meta.totalQuestions
+        : slide >= (await this.slideCount(meta))
+    ) {
+      return;
+    }
     const device = socket.data.playerId ?? `screen:${socket.id}`;
     const key = gameKeys.ready(meta.id, mediaStepKey({ questionIndex, slideIndex: slide }));
     await this.redis.multi().sadd(key, device).expire(key, GAME_TTL_S).exec();
     await this.broadcastReadiness(pin);
+  }
+
+  private async slideCount(meta: GameMeta): Promise<number> {
+    return (await this.game.getSnapshot(meta.id))?.slides.length ?? 0;
   }
 
   /**

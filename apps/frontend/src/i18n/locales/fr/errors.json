@@ -29,6 +29,7 @@
     "ended": "Le salon est fermé.",
     "banned": "Vous avez été exclu de ce salon par l’animateur.",
     "join_required": "Rejoignez le salon avant de répondre.",
+    "already_joined": "Vous êtes déjà dans ce salon.",
     "already_started": "Le quiz a déjà commencé.",
     "reveal_required": "Action possible seulement après le reveal.",
     "timer_not_adjustable": "Le chrono ne peut être ajusté que pendant une question.",

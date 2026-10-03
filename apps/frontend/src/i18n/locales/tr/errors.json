@@ -25,10 +25,11 @@
     "incomplete_other": "{{count}} adım tamamlanmamış: quizi yayımlamak için tamamlayın."
   },
   "session": {
-    "not_found": "Oda bulunamadı veya kapatılmadı.",
+    "not_found": "Oda bulunamadı veya kapatıldı.",
     "ended": "Oda kapalı.",
     "banned": "Sunucu tarafından bu odadan çıkarıldınız.",
     "join_required": "Cevap vermeden önce odaya katılın.",
+    "already_joined": "Zaten bu odadasınız.",
     "already_started": "Quiz çoktan başladı.",
     "reveal_required": "Bu işlem ancak yanıtlar gösterildikten sonra yapılabilir.",
     "timer_not_adjustable": "Zamanlayıcı yalnızca bir soru sırasında ayarlanabilir.",

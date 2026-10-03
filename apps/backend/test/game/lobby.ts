@@ -57,6 +57,17 @@ export function lobbyTests(ctx: GameContext): void {
     expect(evt.playerCount).toBe(1);
   }, 15_000);
 
+  it('one player per socket: joining the same room again is refused', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Uno' });
+    expect(await player.emitWithAck('player:join', { pin, nickname: 'Dos' })).toMatchObject({
+      ok: false,
+      error: { code: 'session.already_joined' },
+    });
+  });
+
   it('player:join refuse un pseudo dupliqué (même partie)', async () => {
     const host = connect({ localUser: 'Animateur' });
     const { pin } = await host.emitWithAck('host:create', { quizId });

@@ -29,6 +29,7 @@
     "ended": "房间已关闭。",
     "banned": "你已被主持人移出此房间。",
     "join_required": "请先加入房间再作答。",
+    "already_joined": "你已经在这个房间里了。",
     "already_started": "测验已经开始。",
     "reveal_required": "仅在揭晓答案后才能执行该操作。",
     "timer_not_adjustable": "仅在答题进行中才能调整计时器。",

@@ -29,6 +29,7 @@
     "ended": "The room is closed.",
     "banned": "You have been removed from this room by the host.",
     "join_required": "Join the room before answering.",
+    "already_joined": "You are already in this room.",
     "already_started": "The quiz has already started.",
     "reveal_required": "Action only possible after the reveal.",
     "timer_not_adjustable": "The timer can only be adjusted during a question.",

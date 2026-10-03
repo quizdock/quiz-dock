@@ -85,6 +85,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
    */
   afterInit(server: GameServer): void {
     this.engine.bindServer(server);
+    // Each message of a socket, within a budget: far above what a page sends,
+    // short of a script flooding the room (each message may reach every device).
+    server.on('connection', (socket) => socket.use(messageBudget()));
     server.use((socket, next) => {
       const auth = socket.handshake.auth ?? {};
       if (!auth.token && !auth.localUser && !sessionCookieOf(socket as GameSocket)) {
@@ -160,6 +163,13 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     payload: { pin: string; nickname: string; avatar?: string; presence?: PlayerPresence },
   ): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
     const user = socket.data.user ?? null;
+    // One player per socket: joining again would leave the first one connected
+    // for good (a ghost in the counts).
+    if (socket.data.playerId && socket.data.pin === payload.pin) {
+      if (await this.game.getPlayer(payload.pin, socket.data.playerId)) {
+        throw new WsException('session.already_joined');
+      }
+    }
     const res = await this.pins.guard(ipOf(socket), () =>
       this.game.joinSession(payload.pin, payload.nickname, user, payload.avatar, payload.presence),
     );
@@ -640,6 +650,33 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
  * The player a socket is, in the room it names — its own room only: a PIN sent
  * by the client is never trusted over the one the socket joined. Null otherwise.
  */
+/** Messages a socket may send at once, and per second after that. */
+export const MESSAGE_BURST = 60;
+export const MESSAGES_PER_S = 20;
+
+/**
+ * A token bucket per socket: a message over the budget is dropped (a request
+ * waiting for its answer then times out on its side). Logged once per socket.
+ */
+export function messageBudget(now: () => number = Date.now) {
+  let tokens = MESSAGE_BURST;
+  let at = now();
+  let told = false;
+  return (_packet: unknown[], next: (err?: Error) => void): void => {
+    const t = now();
+    tokens = Math.min(MESSAGE_BURST, tokens + ((t - at) / 1000) * MESSAGES_PER_S);
+    at = t;
+    if (tokens < 1) {
+      if (!told)
+        Logger.warn('A socket sends faster than its budget: messages dropped', 'GameGateway');
+      told = true;
+      return;
+    }
+    tokens -= 1;
+    next();
+  };
+}
+
 function playerOf(socket: GameSocket, pin: string): { pin: string; playerId: string } | null {
   const { pin: joined, playerId } = socket.data;
   return joined && joined === pin && playerId ? { pin: joined, playerId } : null;

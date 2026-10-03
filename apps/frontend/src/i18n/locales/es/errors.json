@@ -29,6 +29,7 @@
     "ended": "La sala está cerrada.",
     "banned": "El anfitrión te ha expulsado de esta sala.",
     "join_required": "Únete a la sala antes de responder.",
+    "already_joined": "Ya estás en esta sala.",
     "already_started": "El quiz ya ha empezado.",
     "reveal_required": "Acción solo posible tras la revelación.",
     "timer_not_adjustable": "El temporizador solo se puede ajustar durante una pregunta.",
