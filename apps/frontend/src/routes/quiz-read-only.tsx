@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { apiErrorText } from '../api/http';
-import { CopyPlus, ExternalLink, Eye, History, LayoutTemplate } from 'lucide-react';
+import { CopyPlus, ExternalLink, Eye, History, LayoutTemplate, ListOrdered } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
@@ -14,6 +14,7 @@ import { useCopyQuiz } from './use-copy-quiz';
 import { StepStage } from './quiz-stage-preview';
 import { QuestionProperties, SlideProperties } from './step-properties';
 import { PageTitle } from '@/components/ui/page-title';
+import { EmptyState } from '@/components/ui/empty-state';
 
 /**
  * A quiz the caller may read but not change: one another host shares with the
@@ -140,8 +141,8 @@ export function QuizReadOnly({ quiz }: { quiz: QuizDetailDto }) {
               );
             })}
             {items.length === 0 ? (
-              <li className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
-                {t('readOnly.empty')}
+              <li>
+                <EmptyState icon={ListOrdered}>{t('readOnly.empty')}</EmptyState>
               </li>
             ) : null}
           </ul>

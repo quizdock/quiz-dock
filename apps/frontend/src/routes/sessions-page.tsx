@@ -20,6 +20,7 @@ import type { SessionDetailDtoRoom, SessionListDtoSessionsItem } from '../api/ge
 import { sessionDetailRoute, sessionPlayerRoute, sessionsRoute } from '../router';
 import { ListSkeleton, LoadFailed, PageLoading } from '@/components/ui/loading';
 import { PageTitle } from '@/components/ui/page-title';
+import { EmptyState } from '@/components/ui/empty-state';
 import { formatPercent } from '@/lib/format';
 
 function statusLabel(t: TFunction, status: string): string {
@@ -179,29 +180,40 @@ function NoSessionYet({ quizId }: { quizId: string }) {
   const { launch, isLaunching, error, dialog } = useLaunchSession();
   const status = data?.data.status;
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed p-10 text-center">
-      <span className="bg-muted flex size-12 items-center justify-center rounded-full">
-        <History className="text-muted-foreground size-6" aria-hidden />
-      </span>
-      <p className="text-muted-foreground text-sm">{t('list.empty')}</p>
-      {status === 'ready' ? (
-        <Button variant="main-action" disabled={isLaunching} onClick={() => void launch(quizId)}>
-          <Play className="size-4" />
-          {t('list.presentIt')}
-        </Button>
-      ) : status === 'draft' ? (
-        <Button
-          onClick={() =>
-            void navigate({ to: '/quizzes/$quizId', params: { quizId }, search: { publish: true } })
-          }
-        >
-          <Send className="size-4" />
-          {t('dashboard:publishToPresent')}
-        </Button>
-      ) : null}
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
-      {dialog}
-    </div>
+    <EmptyState
+      icon={History}
+      action={
+        <>
+          {status === 'ready' ? (
+            <Button
+              variant="main-action"
+              disabled={isLaunching}
+              onClick={() => void launch(quizId)}
+            >
+              <Play className="size-4" />
+              {t('list.presentIt')}
+            </Button>
+          ) : status === 'draft' ? (
+            <Button
+              onClick={() =>
+                void navigate({
+                  to: '/quizzes/$quizId',
+                  params: { quizId },
+                  search: { publish: true },
+                })
+              }
+            >
+              <Send className="size-4" />
+              {t('dashboard:publishToPresent')}
+            </Button>
+          ) : null}
+          {error ? <p className="text-destructive text-sm">{error}</p> : null}
+          {dialog}
+        </>
+      }
+    >
+      {t('list.empty')}
+    </EmptyState>
   );
 }
 

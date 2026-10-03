@@ -14,6 +14,7 @@ import {
   Play,
   Plus,
   Search,
+  SearchX,
   Send,
   Sparkles,
   Trash2,
@@ -56,6 +57,7 @@ import { ApiError, apiErrorText } from '../api/http';
 import { ListSkeleton } from '@/components/ui/loading';
 import { mediaUrl } from '@/lib/media-url';
 import { PageTitle } from '@/components/ui/page-title';
+import { EmptyState } from '@/components/ui/empty-state';
 
 /** Rows per page: enough to scan, short enough to stay on one screen. */
 const PAGE_SIZE = 20;
@@ -279,24 +281,30 @@ export function DashboardPage() {
       {launchDialog}
 
       {!isLoading && !error && quizzes.length === 0 && !managerOnly && (
-        <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-6">
-          <p className="text-muted-foreground">{t('empty')}</p>
-          {/* Les deux façons de commencer, côte à côte : partir de rien, ou partir
-              d'un modèle — les exemples ne sont plus versés d'office (#39). */}
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={onCreate} disabled={creating}>
-              <Plus className="size-4" />
-              {t('newQuiz')}
-            </Button>
-            <Link to="/templates">
-              <Button type="button" variant="outline">
-                <Sparkles className="size-4" />
-                {t('browseTemplates')}
-              </Button>
-            </Link>
-          </div>
-          <small className="text-muted-foreground">{t('browseTemplatesHint')}</small>
-        </div>
+        <EmptyState
+          icon={ListChecks}
+          size="large"
+          title={t('empty')}
+          action={
+            <>
+              {/* Les deux façons de commencer, côte à côte : partir de rien, ou partir
+                  d'un modèle — les exemples ne sont plus versés d'office (#39). */}
+              <div className="flex flex-wrap justify-center gap-2">
+                <Button type="button" onClick={onCreate} disabled={creating}>
+                  <Plus className="size-4" />
+                  {t('newQuiz')}
+                </Button>
+                <Link to="/templates">
+                  <Button type="button" variant="outline">
+                    <Sparkles className="size-4" />
+                    {t('browseTemplates')}
+                  </Button>
+                </Link>
+              </div>
+              <small className="text-muted-foreground">{t('browseTemplatesHint')}</small>
+            </>
+          }
+        />
       )}
 
       {!isLoading && !error && quizzes.length > 0 ? (
@@ -398,7 +406,7 @@ export function DashboardPage() {
       ) : null}
 
       {!isLoading && !error && quizzes.length > 0 && shown.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-6">{t('noMatch')}</p>
+        <EmptyState icon={SearchX}>{t('noMatch')}</EmptyState>
       ) : null}
 
       <ul

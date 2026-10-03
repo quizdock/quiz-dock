@@ -20,18 +20,19 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   AlertTriangle,
   Archive,
-  Check,
-  EllipsisVertical,
-  PackageCheck,
   ArrowDown,
   ArrowUp,
+  Check,
   Download,
+  EllipsisVertical,
   ExternalLink,
   GripVertical,
   History,
   LayoutTemplate,
+  ListOrdered,
   MonitorPlay,
   MousePointerClick,
+  PackageCheck,
   PanelLeftClose,
   PanelLeftOpen,
   Play,
@@ -114,6 +115,7 @@ import { LoadFailed, PageLoading } from '@/components/ui/loading';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { clearDraft, formDraftKey } from '@/lib/draft-store';
 import { StaleNotice } from '@/components/ui/stale-notice';
+import { EmptyState } from '@/components/ui/empty-state';
 
 /**
  * The page has two columns, and they are the same from top to bottom: the
@@ -950,8 +952,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     </SortableRow>
                   ))}
                   {items.length === 0 && editing === null && (
-                    <li className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
-                      {t('questions.empty')}
+                    <li>
+                      <EmptyState icon={ListOrdered}>{t('questions.empty')}</EmptyState>
                     </li>
                   )}
                 </ul>
@@ -1527,31 +1529,28 @@ function EmptyPane({
   const { t } = useTranslation('editor');
   const Icon = variant === 'empty' ? Sparkles : MousePointerClick;
   return (
-    <div className="flex h-full min-h-[24rem] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed px-6 text-center">
-      <span className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-        <Icon className="size-8" />
-      </span>
-      <div className="flex flex-col gap-1">
-        <p className="font-semibold">
-          {variant === 'empty' ? t('emptyPane.emptyTitle') : t('emptyPane.selectTitle')}
-        </p>
-        <p className="text-muted-foreground max-w-sm text-sm">
-          {variant === 'empty' ? t('emptyPane.emptyHint') : t('emptyPane.selectHint')}
-        </p>
-      </div>
-      {variant === 'empty' ? (
-        <div className="flex gap-2">
-          <Button type="button" onClick={onAddQuestion}>
-            <Plus className="size-4" />
-            {t('questions.add')}
-          </Button>
-          <Button type="button" variant="outline" onClick={onAddSlide}>
-            <LayoutTemplate className="size-4" />
-            {t('slides.add')}
-          </Button>
-        </div>
-      ) : null}
-    </div>
+    <EmptyState
+      icon={Icon}
+      size="large"
+      title={variant === 'empty' ? t('emptyPane.emptyTitle') : t('emptyPane.selectTitle')}
+      className="h-full min-h-[24rem]"
+      action={
+        variant === 'empty' ? (
+          <div className="flex gap-2">
+            <Button type="button" onClick={onAddQuestion}>
+              <Plus className="size-4" />
+              {t('questions.add')}
+            </Button>
+            <Button type="button" variant="outline" onClick={onAddSlide}>
+              <LayoutTemplate className="size-4" />
+              {t('slides.add')}
+            </Button>
+          </div>
+        ) : null
+      }
+    >
+      {variant === 'empty' ? t('emptyPane.emptyHint') : t('emptyPane.selectHint')}
+    </EmptyState>
   );
 }
 

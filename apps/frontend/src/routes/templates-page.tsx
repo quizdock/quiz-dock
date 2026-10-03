@@ -8,6 +8,7 @@ import {
   List as ListIcon,
   ListChecks,
   Search,
+  SearchX,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +32,7 @@ import { useRole } from '../auth/use-role';
 import { SlideStage } from '../game/slide-stage';
 import { ListSkeleton, LoadFailed } from '@/components/ui/loading';
 import { PageTitle } from '@/components/ui/page-title';
+import { EmptyState } from '@/components/ui/empty-state';
 
 const PAGE_SIZE = 20;
 
@@ -185,7 +187,7 @@ export function TemplatesPage() {
       ) : null}
 
       {entries.length > 0 && shown.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-6">{t('noMatch')}</p>
+        <EmptyState icon={SearchX}>{t('noMatch')}</EmptyState>
       ) : null}
 
       {/* Une galerie : on choisit un modèle sur ce qu'il montre, pas sur une ligne
@@ -342,18 +344,19 @@ export function TemplateSlide({ slide, className }: { slide: ServedSlide; classN
 function EmptyCatalogue() {
   const { t } = useTranslation(['store', 'auth']);
   return (
-    <div className="flex min-h-[20rem] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed px-6 py-10 text-center">
-      <span className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-        <LibraryBig className="size-8" />
-      </span>
-      <div className="flex flex-col gap-1">
-        <p className="font-semibold">{t('emptyTitle')}</p>
-        <p className="text-muted-foreground max-w-sm text-sm">{t('empty')}</p>
-      </div>
-      <Link to="/quizzes" className={buttonVariants({ variant: 'outline' })}>
-        <ListChecks className="size-4" />
-        {t('auth:nav.myQuizzes')}
-      </Link>
-    </div>
+    <EmptyState
+      icon={LibraryBig}
+      size="large"
+      title={t('emptyTitle')}
+      className="min-h-[20rem]"
+      action={
+        <Link to="/quizzes" className={buttonVariants({ variant: 'outline' })}>
+          <ListChecks className="size-4" />
+          {t('auth:nav.myQuizzes')}
+        </Link>
+      }
+    >
+      {t('empty')}
+    </EmptyState>
   );
 }

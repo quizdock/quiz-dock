@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft, MessageSquareText, SearchX, Star } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { buttonVariants } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { feedbackRoute } from '../router';
 import { ListSkeleton } from '@/components/ui/loading';
 import { PageTitle } from '@/components/ui/page-title';
 import { Pagination } from '@/components/ui/pagination';
+import { EmptyState } from '@/components/ui/empty-state';
 import { formatDate } from '@/lib/format';
 
 const PAGE_SIZE = 20;
@@ -143,9 +144,7 @@ export function FeedbackPage() {
             }}
           />
           {summary.count === 0 ? (
-            <p className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
-              {t('feedback.empty')}
-            </p>
+            <EmptyState icon={MessageSquareText}>{t('feedback.empty')}</EmptyState>
           ) : (
             <ul className="divide-border flex flex-col divide-y">
               {summary.items.map((f) => (
@@ -161,8 +160,8 @@ export function FeedbackPage() {
                 </li>
               ))}
               {summary.items.length === 0 ? (
-                <li className="text-muted-foreground py-6 text-center text-sm">
-                  {t('feedback.noneForFilter')}
+                <li className="py-3">
+                  <EmptyState icon={SearchX}>{t('feedback.noneForFilter')}</EmptyState>
                 </li>
               ) : null}
             </ul>
