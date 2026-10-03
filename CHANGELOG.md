@@ -4,6 +4,117 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [0.13.2] - 2026-10-03
+
+### ⚠️ Breaking changes
+
+> [!WARNING]
+> Read before upgrading.
+> - **Download the latest quizdock script before upgrading (curl -fsSLO https://raw.githubusercontent.com/quizdock/quiz-dock/main/quizdock): the copy you have does not fetch the Compose files. On a first upgrade with it, an existing install gets the release's files as <file>.new; compare and adopt them (mv), or Keycloak and the hardening of this release stay out.**
+
+### Bug Fixes
+
+- The dev backend gets the instance's name, language, logo and feedback link *(dev)*
+- The player's screen says what happens, and which answer was right *(a11y)*
+- The console's view tabs have a name on a small screen *(a11y)*
+- What was fetched ahead for a step that never came is let go *(live)*
+- One move of the sequence at a time *(editor)*
+- The join address the host chose stays when the PIN panel opens again *(console)*
+- Sharing over plain http shows the link to copy *(console)*
+- Blocked site data no longer breaks the podium or local sign-in *(web)*
+- The reveal's "your answer" is what was sent *(live)*
+- Numbers, dates and plurals as the instance's language says them *(i18n)*
+- Validation messages for zod 4's codes *(i18n)*
+- A field's error is announced as it appears *(a11y)*
+- The media file picker is reached by the keyboard *(a11y)*
+- The ⋯ menus work with the keyboard; Escape closes only what it is meant for *(a11y)*
+- An answer that is not JSON keeps its status *(web)*
+- A reading again that fails keeps the open editor *(editor)*
+- A double click adds one slide, creates one quiz *(editor)*
+- Discarded changes stay discarded *(editor)*
+- Images from the lockfile as committed, their code read-only to the app *(docker)*
+- Every response says nosniff and keeps its address to itself *(app)*
+- An image is shown only for a media id *(markdown)*
+- A host's media added to the instance's leaves its declared original behind *(media)*
+- A bundle's description is bounded as the editor's is *(import)*
+- A picture of more than 40 megapixels is refused *(media)*
+- The form beside a file is bounded *(upload)*
+- An MP4 is read box by box, up to a bound *(media)*
+- A stranger can no longer keep the setup wizard locked *(admin)*
+- The host seat is local mode's only *(auth)*
+- Refusals of rights are audited a few per account and window *(admin)*
+- A socket sends within a budget, joins once, and readies only real steps *(game)*
+- Wrong PINs are counted per IPv6 /64, not per address *(game)*
+- An e-mail is kept only as the provider vouches for it, and never locks an account out *(auth)*
+- An expired host seat shows as free on the accounts page *(admin)*
+- After a restart, a room whose host is gone still ends *(game)*
+- Calls to the provider give up after 5 s, and a renewal frees only its own lock *(auth)*
+- Migrations make no request to Prisma's telemetry *(docker)*
+- A stop closes the server cleanly; qd commands leave the media clean-up alone *(app)*
+- An upload limit above 64 MB can be changed again *(admin)*
+- The single image serves its icon and manifest at the root (#189) *(app)*
+- A large room's results are kept *(game)*
+- Local mode, the actions open once the token is given *(admin)*
+- An answer given while the connection is down is not lost *(live)*
+- A refused request gets its refusal as its answer *(live)*
+- Another room's page gets a socket of its own *(live)*
+- A row's dialog stays on its quiz or account when the list is reordered *(admin)*
+- A poll turned into another type is worth points again *(editor)*
+- A played quiz or question can be deleted *(quizzes)*
+- 26.7.5, and a stricter example realm *(keycloak)*
+- A media is served only as a type the upload recognises *(media)*
+- An ID token is not taken as an access token *(auth)*
+- Names and comments typed by a client lose their control characters *(game)*
+- An answer is checked before it is graded *(game)*
+- The same-origin check covers every path, whatever its case *(auth)*
+
+### Build
+
+- Pnpm 11.28.3, pinned by its hash
+
+### Documentation
+
+- The notices say a coming quizdock release will move an existing install's roles *(db)*
+- Comments that described what the code no longer does *(code)*
+- The OpenAPI document declares its bearer scheme, and says 201 where a route creates *(api)*
+- What Redis holds, how often the update check asks, when a demo resets *(settings)*
+- The developer docs say what the code does now
+- An operation note's text is what the web shows *(contracts)*
+- One way to report a vulnerability, the one that works *(security)*
+
+### Features
+
+- Every empty zone says so with EmptyState, its icon and its text *(ui)*
+- The Tab key cycles the views only once the host turns it on *(console)*
+- Save a question without closing it, Cmd/Ctrl+S, save before switching (#195) *(editor)*
+- Open a quiz by clicking its title (#196) *(admin)*
+- Over HTTPS the session cookies are bound to the host; Health says what weakens sign-in *(auth)*
+- A new install's QuizDock owns its database, not the PostgreSQL server *(db)*
+- A new full install gives Keycloak its own database role *(keycloak)*
+- Passwords left to their default are said, never refused *(doctor)*
+- An install whose Compose files are older than its image is told so *(admin)*
+- Upgrade brings the release's Compose files too, never over an edited one *(quizdock)*
+- /health/ready says whether the database and Redis answer *(health)*
+
+### Performance
+
+- The editor, the history, the catalogue and the administration load when opened *(web)*
+- Media go into the bundle as they are *(export)*
+
+### Refactor
+
+- Every keyboard shortcut goes through react-hotkeys-hook *(ui)*
+- Drop game:created, which nothing listens to; the validate route is documented *(game)*
+- One list of the routes served at the root, for the server and its OpenAPI document *(app)*
+- Quiz.visibility, never read nor written, dropped *(data)*
+- Code nothing calls any more, removed
+
+### Contributors
+
+- Francois Chaussin
+- lutfullahkabalak
+- drpalmer68
+
 ## [0.13.1] - 2026-10-02
 
 ### Bug Fixes
@@ -109,7 +220,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - François CHAUSSIN
 - lutfullahkabalak
 
-## [0.10.0] - 2026-09-28
+## [0.12.0] - 2026-10-01
 
 ### Bug Fixes
 
@@ -117,6 +228,33 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - The filter bars fit a phone — one shared filter field (#168) *(ui)*
 - Form controls inherit the base size, no focus zoom on phones (#164) *(ui)*
 - The sample-media container runs as node, with no healthcheck *(tools)*
+
+### Documentation
+
+- The connector is experimental (#166) *(mcp)*
+- The sample quizzes, the Kahoot import and Turkish *(readme)*
+- Every screen shot again on the reworked UI, and a new demo GIF *(screenshots)*
+
+### Features
+
+- Picture placement on the projection, room played quizzes, quiz filters, English Türkiye (#171)
+- A motion layer under the live screens (#169) *(live)*
+- A full preset with a bundled Keycloak (#149) *(self-hosting)*
+- A local connector to validate and import quizzes (experimental) (#153) *(mcp)*
+- A demo stack, and the screenshots and demo GIF taken on it *(tools)*
+- The shared account starts with the sample quizzes in its bank *(demo)*
+- Three sample quizzes with media and every question type *(samples)*
+
+### Contributors
+
+- François CHAUSSIN
+- lutfullahkabalak
+- Francois Chaussin
+
+## [0.11.0] - 2026-09-30
+
+### Bug Fixes
+
 - Engine.io 6.6.11 — GHSA-2gc4-cqfq-p2gv (protocol revision mismatch DoS) *(deps)*
 - Refresh Turkish translations for dev UI *(i18n)*
 - Avoid Turkish suffixes on host names *(i18n)*
@@ -131,26 +269,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Documentation
 
-- The connector is experimental (#166) *(mcp)*
-- The sample quizzes, the Kahoot import and Turkish *(readme)*
-- Every screen shot again on the reworked UI, and a new demo GIF *(screenshots)*
 - A CONTRIBUTING guide and a PR template — pull requests go to dev
 - The UI system — rules and the three-lot rework settled in review *(specifications)*
-- The thanks name Anthropic's GitHub account and Claude Code *(readme)*
-- The release is 0.10.0, not 0.9.1
-- The rooms table only, and the results directory introduced *(readme)*
-- The benchmarks in the changelog, a performance summary in the README
-- Ready for 0.9.1 — its changelog, version examples, upgrade note, thanks
 
 ### Features
 
-- Picture placement on the projection, room played quizzes, quiz filters, English Türkiye (#171)
-- A motion layer under the live screens (#169) *(live)*
-- A full preset with a bundled Keycloak (#149) *(self-hosting)*
-- A local connector to validate and import quizzes (experimental) (#153) *(mcp)*
-- A demo stack, and the screenshots and demo GIF taken on it *(tools)*
-- The shared account starts with the sample quizzes in its bank *(demo)*
-- Three sample quizzes with media and every question type *(samples)*
 - Add Turkish locale *(i18n)*
 - A question may last up to 240 s, as in Kahoot *(questions)*
 - A Kahoot sheet opens as a draft to finish, its report in the editor *(import)*
@@ -180,18 +303,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Contributors
 
-- François CHAUSSIN
-- lutfullahkabalak
 - Francois Chaussin
-- Claude
+- lutfullahkabalak
 
-## [0.9.0] - 2026-09-27
-
-### ⚠️ Breaking changes
-
-> [!WARNING]
-> Read before upgrading.
-> - **An OIDC_ISSUER ending in `/` while the provider's issuer does not (or the reverse) no longer signs in: set it to the provider's issuer, as the backend log and `quizdock doctor` point out.**
+## [0.10.0] - 2026-09-28
 
 ### Benchmarks
 
@@ -231,6 +346,74 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - Answer database errors with their meaning, and stop pg's overlap warning *(api)*
 - Check every place an author puts a media in, in one way *(media)*
 - Keep the room's players and answers right under concurrency *(game)*
+
+### Documentation
+
+- The thanks name Anthropic's GitHub account and Claude Code *(readme)*
+- The release is 0.10.0, not 0.9.1
+- The rooms table only, and the results directory introduced *(readme)*
+- The benchmarks in the changelog, a performance summary in the README
+- Ready for 0.9.1 — its changelog, version examples, upgrade note, thanks
+- The answer count coalesced, the sounds off in a new room, the measures to redo cold
+- The benchmark after the lots, and a sizing page for operators
+- What each lot fixed, the profile of the engine, and the unreleased changes
+- Record the decisions taken on the audit's open points *(audit)*
+- Code audit of backend and frontend, to decide lot 4 *(audit)*
+
+### Features
+
+- A new room's game sounds are off, the host turns on the ones they want *(game)*
+- Hooks on the live screens for an instance's override.css *(branding)*
+- Tokens for the answers' colours, warning, podium and typeface *(theme)*
+- The live pages say when their connection is lost *(live)*
+
+### Performance
+
+- The room's answer count sent at most every 100 ms, not on every answer *(game)*
+- The instance's language alone downloaded, not all five *(frontend)*
+- A game's snapshot parsed once, not on every answer *(game)*
+- A joining device's preload reads its own record only *(game)*
+- The join page's peek reads the game once *(game)*
+- One definition of where a media is used, the library 100 times faster *(media)*
+- The auth guard writes the user only when something changed *(auth)*
+- Walk keys with SCAN, never KEYS *(redis)*
+
+### Refactor
+
+- The console's repeated blocks written once *(console)*
+- One hook for a room device's media, projection and phone alike *(live)*
+- One PIN form for the home page and the join page *(join)*
+- Where the device follows from, worked out once *(player)*
+- One draft hook and one action bar for the question and slide forms *(editor)*
+- The editor's five small pickers on Segmented *(editor)*
+- One Modal for the four native dialogs *(frontend)*
+- One checkbox field, label and hint, for six places *(frontend)*
+- The slide being edited previewed by slideShowOf *(editor)*
+- One helper for a library media's address *(frontend)*
+- The session's 29 events, taken on and off from one table *(live)*
+- One encoding for the room and game hashes, field names checked *(game)*
+- One reader of the live players, answers and snapshot *(game)*
+- The questions-only reorder and the samples route marked deprecated *(api)*
+- One host guard, and a player's own room only *(game)*
+- Small duplicates and misplaced comments from the audit *(backend)*
+- One check that a quiz is within reach, one "readable by" *(quizzes)*
+- One way to write a question's and a slide's content *(quizzes)*
+- Split timers, results and steps out of the engine *(game)*
+
+### Contributors
+
+- Claude
+
+## [0.9.0] - 2026-09-27
+
+### ⚠️ Breaking changes
+
+> [!WARNING]
+> Read before upgrading.
+> - **An OIDC_ISSUER ending in `/` while the provider's issuer does not (or the reverse) no longer signs in: set it to the provider's issuer, as the backend log and `quizdock doctor` point out.**
+
+### Bug Fixes
+
 - An image choice keeps the projection's usual layout *(live)*
 - A picture's description arriving late overwrites nothing *(editor)*
 - No image added from the Markdown editor *(editor)*
@@ -275,11 +458,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - Ready for 0.9.0 — upgrade between two games, version examples, unreleased
 - Every screen shot again, the new ones and each question type *(screenshots)*
 - The 0.7 and 0.8 notes out of the top *(readme)*
-- The answer count coalesced, the sounds off in a new room, the measures to redo cold
-- The benchmark after the lots, and a sizing page for operators
-- What each lot fixed, the profile of the engine, and the unreleased changes
-- Record the decisions taken on the audit's open points *(audit)*
-- Code audit of backend and frontend, to decide lot 4 *(audit)*
 - Image choice in the feature list and unreleased
 - The 2026-09-27 batch listed, video and sound no longer experimental
 - Media on slides, as arbitrated — blocks, a video background, one sound at a time *(spec)*
@@ -330,10 +508,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 
 ### Features
 
-- A new room's game sounds are off, the host turns on the ones they want *(game)*
-- Hooks on the live screens for an instance's override.css *(branding)*
-- Tokens for the answers' colours, warning, podium and typeface *(theme)*
-- The live pages say when their connection is lost *(live)*
 - The pictures on the phone in the room too *(player)*
 - Name a picture answer by its alt, in the history, the CSV and the templates *(history)*
 - Answer an image choice — the pictures at a distance, the shapes in the room *(player)*
@@ -394,45 +568,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 - Publish the manifest as a JSON Schema, one file per version *(bundle)*
 - Set the licence and the tags of a quiz *(editor)*
 
-### Performance
-
-- The room's answer count sent at most every 100 ms, not on every answer *(game)*
-- The instance's language alone downloaded, not all five *(frontend)*
-- A game's snapshot parsed once, not on every answer *(game)*
-- A joining device's preload reads its own record only *(game)*
-- The join page's peek reads the game once *(game)*
-- One definition of where a media is used, the library 100 times faster *(media)*
-- The auth guard writes the user only when something changed *(auth)*
-- Walk keys with SCAN, never KEYS *(redis)*
-
 ### Refactor
 
-- The console's repeated blocks written once *(console)*
-- One hook for a room device's media, projection and phone alike *(live)*
-- One PIN form for the home page and the join page *(join)*
-- Where the device follows from, worked out once *(player)*
-- One draft hook and one action bar for the question and slide forms *(editor)*
-- The editor's five small pickers on Segmented *(editor)*
-- One Modal for the four native dialogs *(frontend)*
-- One checkbox field, label and hint, for six places *(frontend)*
-- The slide being edited previewed by slideShowOf *(editor)*
-- One helper for a library media's address *(frontend)*
-- The session's 29 events, taken on and off from one table *(live)*
-- One encoding for the room and game hashes, field names checked *(game)*
-- One reader of the live players, answers and snapshot *(game)*
-- The questions-only reorder and the samples route marked deprecated *(api)*
-- One host guard, and a player's own room only *(game)*
-- Small duplicates and misplaced comments from the audit *(backend)*
-- One check that a quiz is within reach, one "readable by" *(quizzes)*
-- One way to write a question's and a slide's content *(quizzes)*
-- Split timers, results and steps out of the engine *(game)*
 - One step preview for every page, its content centred *(quiz)*
 - The room under its PIN, each game under its own id *(game)*
 
 ### Contributors
 
 - fchaussin
-- Claude
 
 ## [0.8.0] - 2026-09-25
 
