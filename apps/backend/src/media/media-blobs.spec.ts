@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { MediaService } from './media.service';
+import { PNG_1X1 } from './testing/png';
 
 // Real files; `link` can be made to fail like on a volume without hard links.
 jest.mock('node:fs/promises', () => {
@@ -22,11 +23,7 @@ describe('MediaService — shared files (integration)', () => {
   const redis = { scanKeys: jest.fn(async () => [] as string[]) } as unknown as RedisService;
 
   /** A PNG signature and a tag: enough for the content check, different bytes per tag. */
-  const png = (tag: string) =>
-    Buffer.concat([
-      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-      Buffer.from(tag),
-    ]);
+  const png = (tag: string) => Buffer.concat([PNG_1X1, Buffer.from(tag)]);
   const upload = (buffer: Buffer) =>
     service.upload(ownerId, { buffer, mimetype: 'image/png', size: buffer.length });
   const sha = (buffer: Buffer) => createHash('sha256').update(buffer).digest('hex');

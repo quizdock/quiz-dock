@@ -60,6 +60,7 @@
     "unsupported_type": "不支持的格式：图片、MP4 视频（H.264）或声音（MP3、M4A）。编辑器会转换此浏览器能读取的其他文件；不接受 SVG。",
     "file_missing": "缺少文件（“file”字段）。",
     "file_too_large": "文件过大（此类媒体最大 {{maxMb}} MB）。",
+    "image_too_large": "这张图片太大（最多 {{maxMp}} 百万像素）。",
     "not_found": "未找到媒体。",
     "demo_disabled": "演示实例已禁用媒体上传。",
     "video_with_audio": "视频自带声音：请移除音轨或视频。",

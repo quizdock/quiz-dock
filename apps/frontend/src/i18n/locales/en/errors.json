@@ -60,6 +60,7 @@
     "unsupported_type": "Unsupported format: an image, an MP4 video (H.264) or a sound (MP3, M4A). The editor converts the other files this browser can read; SVG is not accepted.",
     "file_missing": "Missing file (“file” field).",
     "file_too_large": "File too large (at most {{maxMb}} MB for this kind of media).",
+    "image_too_large": "This picture is too large (at most {{maxMp}} megapixels).",
     "not_found": "Media not found.",
     "demo_disabled": "Media uploads are disabled on the demo instance.",
     "video_with_audio": "A video already carries its own sound: remove the audio track or the video.",

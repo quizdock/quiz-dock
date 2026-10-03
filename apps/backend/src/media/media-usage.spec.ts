@@ -11,6 +11,7 @@ import { MediaLibraryService } from './media-library.service';
 import { MEDIA_SLOTS } from './media-usage.sql';
 import { mediaUrl } from './media.config';
 import { MediaService } from './media.service';
+import { PNG_1X1 } from './testing/png';
 
 /** Every place a quiz can use a media, and the one where an archived session shows it. */
 const IN_QUIZ = [
@@ -71,7 +72,7 @@ describe('Where a media is used (integration)', () => {
 
     for (const place of [...IN_QUIZ, 'archive', 'unused'] as Place[]) {
       const buffer = Buffer.concat([
-        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+        PNG_1X1,
         Buffer.from(`${place}-${Date.now()}-${Math.random()}`),
       ]);
       const { mediaId } = await media.upload(ownerId, {

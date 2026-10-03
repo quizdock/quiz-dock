@@ -60,6 +60,7 @@
     "unsupported_type": "Desteklenmeyen format: bir görüntü, bir MP4 video (H.264) veya bir ses (MP3, M4A). Düzenleyici, bu tarayıcının okuyabileceği diğer dosyaları dönüştürür; SVG kabul edilmez.",
     "file_missing": "Eksik dosya (“dosya” alanı).",
     "file_too_large": "Dosya çok büyük (bu tür medya için en fazla {{maxMb}} MB).",
+    "image_too_large": "Bu görsel çok büyük (en fazla {{maxMp}} megapiksel).",
     "not_found": "Medya bulunamadı.",
     "demo_disabled": "Demo örneğinde medya yüklemeleri devre dışı bırakıldı.",
     "video_with_audio": "Bir video zaten kendi sesini taşır: ses parçasını veya videoyu kaldırın.",

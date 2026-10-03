@@ -87,6 +87,12 @@ export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 const BLOB_FILE = /^[0-9a-f]{64}$/;
 /** A write that did not finish (renamed to its blob name once complete), one per upload. */
 const PARTIAL_FILE = /^[0-9a-f]{64}\.[0-9a-f-]{36}\.part$/;
+/**
+ * Largest picture taken, in pixels: far beyond what the editor makes (1920 on the
+ * longest side), short of what makes a phone's tab run out of memory.
+ */
+export const IMAGE_MAX_PIXELS = 40_000_000;
+
 /** A media id: a ULID. */
 const MEDIA_ID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 /** A file from before files were shared, named after its media id. */
@@ -182,6 +188,15 @@ export class MediaService implements OnModuleInit {
         params: { max, maxMb: Math.floor(max / (1024 * 1024)) },
       });
     }
+    // Read from the header, nothing decoded: a few megabytes can declare a picture
+    // that no phone could open (a "decompression bomb").
+    const dimensions = mediaDimensions(file.buffer, sniffed.mime);
+    if (dimensions && dimensions.width * dimensions.height > IMAGE_MAX_PIXELS) {
+      throw new BadRequestException({
+        code: 'media.image_too_large',
+        params: { maxMp: IMAGE_MAX_PIXELS / 1_000_000 },
+      });
+    }
     const meta = parseUploadMeta(sniffed.kind, fields);
     // The same bytes uploaded twice — a re-used jingle, an imported copy — share one file.
     const sha256 = sha256Of(file.buffer);
@@ -201,7 +216,7 @@ export class MediaService implements OnModuleInit {
           kind: sniffed.kind,
           blobSha256: sha256,
           name: uploadName(file.originalname),
-          ...(mediaDimensions(file.buffer, sniffed.mime) ?? {}),
+          ...(dimensions ?? {}),
           instance: options.instance ?? false,
           sourceSha256: sourceSha256Of(fields),
           ...meta,

@@ -60,6 +60,7 @@
     "unsupported_type": "Format non pris en charge : une image, une vidéo MP4 (H.264) ou un son (MP3, M4A). L’éditeur convertit les autres fichiers que ce navigateur sait lire ; le SVG n’est pas accepté.",
     "file_missing": "Fichier manquant (champ « file »).",
     "file_too_large": "Fichier trop volumineux (maximum {{maxMb}} Mo pour ce type de média).",
+    "image_too_large": "Cette image est trop grande (au plus {{maxMp}} mégapixels).",
     "not_found": "Média introuvable.",
     "demo_disabled": "L'envoi de médias est désactivé sur l'instance de démo.",
     "video_with_audio": "Une vidéo a déjà son propre son : retirez la piste audio ou la vidéo.",

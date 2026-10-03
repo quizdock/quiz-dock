@@ -7,6 +7,7 @@ import type { RedisService } from '../redis/redis.service';
 import { MediaAdminService } from './media-admin.service';
 import type { MediaJanitor } from './media-janitor.service';
 import { MediaService } from './media.service';
+import { PNG_1X1 } from './testing/png';
 
 /**
  * The instance's media administration on the test database. Other suites add
@@ -24,10 +25,7 @@ describe('MediaAdminService (integration)', () => {
   const janitor = { last: jest.fn(async () => null), run: jest.fn(async () => null) };
 
   const png = (tag: string) =>
-    Buffer.concat([
-      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-      Buffer.from(`${tag}-${Date.now()}-${Math.random()}`),
-    ]);
+    Buffer.concat([PNG_1X1, Buffer.from(`${tag}-${Date.now()}-${Math.random()}`)]);
   const upload = (ownerId: string, name: string, buffer = png(name)) =>
     media.upload(ownerId, {
       buffer,
