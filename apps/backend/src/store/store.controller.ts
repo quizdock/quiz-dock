@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Res, StreamableFile } from 
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import type { Response } from 'express';
+import { mediaHeaders } from '../media/media-response';
 import { AllowAnyRole } from '../auth/allow-any-role.decorator';
 import { AllowManager } from '../auth/allow-manager.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
@@ -22,6 +23,7 @@ const MEDIA_TYPES: Record<string, string> = {
   avif: 'image/avif',
   mp4: 'video/mp4',
   mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
 };
 
 /**
@@ -71,11 +73,8 @@ export class StoreController {
   ): Promise<StreamableFile> {
     const bytes = await this.store.readMedia(id, name);
     res.set({
+      ...mediaHeaders(MEDIA_TYPES[name.slice(name.lastIndexOf('.') + 1).toLowerCase()]),
       'Cache-Control': 'private, max-age=300',
-      'Content-Type':
-        MEDIA_TYPES[name.slice(name.lastIndexOf('.') + 1).toLowerCase()] ??
-        'application/octet-stream',
-      'X-Content-Type-Options': 'nosniff',
     });
     return new StreamableFile(bytes);
   }
