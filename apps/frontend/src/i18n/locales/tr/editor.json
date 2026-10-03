@@ -210,10 +210,14 @@
       "description": "Bu quiz yayımlandığı için her an sunulabilir: slaytta bir içerik olmalıdır. Bu slaytı olduğu gibi kaydetmek için quizi taslağa döndürün veya düzenlemeye devam edin."
     }
   },
+  "formSaved": "Kaydedildi",
   "discardConfirm": {
     "title": "Değişiklikler silinsin mi?",
     "description": "Kaydedilmemiş değişiklikler kaybolacaktır.",
-    "confirmLabel": "Vazgeç"
+    "confirmLabel": "Vazgeç",
+    "discardAndContinue": "Vazgeç ve devam et",
+    "saveAndContinue": "Kaydet ve devam et",
+    "saveAndClose": "Kaydet ve kapat"
   },
   "emptyPane": {
     "emptyTitle": "Bu quiz boş",

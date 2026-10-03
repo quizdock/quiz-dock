@@ -210,10 +210,14 @@
       "description": "此測驗已發布，隨時可以演示，投影片必須顯示內容。改回草稿即可照原樣儲存，或繼續編輯。"
     }
   },
+  "formSaved": "已儲存",
   "discardConfirm": {
     "title": "放棄修改？",
     "description": "未儲存的修改將會遺失。",
-    "confirmLabel": "放棄"
+    "confirmLabel": "放棄",
+    "discardAndContinue": "捨棄並繼續",
+    "saveAndContinue": "儲存並繼續",
+    "saveAndClose": "儲存並關閉"
   },
   "emptyPane": {
     "emptyTitle": "這個測驗還是空的",

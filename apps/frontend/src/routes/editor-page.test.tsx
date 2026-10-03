@@ -794,10 +794,44 @@ describe('EditorPage', () => {
     });
     expect(openDialog.textContent).toContain('Abandonner les modifications ?');
     expect(localStorage.getItem('draft:quiz:q1:question:a')).not.toBeNull();
-    fireEvent.click(within(openDialog).getByRole('button', { name: 'Abandonner' }));
+    fireEvent.click(within(openDialog).getByRole('button', { name: 'Abandonner et continuer' }));
     await waitFor(() => expect(screen.getByLabelText('Énoncé').textContent).toContain('Seconde'));
     // Discarded for good: no draft brings the changes back when it is opened again.
     expect(localStorage.getItem('draft:quiz:q1:question:a')).toBeNull();
+  });
+
+  it('saves on the way to another item when asked, and goes on once saved (#195)', async () => {
+    const fetchMock = mockApi([
+      {
+        method: 'GET',
+        path: '/quizzes/q1',
+        body: detail({
+          questionCount: 2,
+          questions: [q('a', 'Première', 0), q('b', 'Seconde', 1)],
+        }),
+      },
+      { method: 'PUT', path: '/questions/a', body: {} },
+    ]);
+    renderApp('/quizzes/q1');
+
+    await screen.findAllByRole('button', { name: /Première/ });
+    fireEvent.click(stepRow(/Première/));
+    await screen.findAllByRole('button', { name: 'Enregistrer' });
+    setMarkdownField('Énoncé', 'Première (modifiée)');
+    fireEvent.click(stepRow(/Seconde/));
+    const openDialog = await waitFor(() => {
+      const d = [...document.querySelectorAll('dialog[open]')]
+        .filter((x) => x.textContent?.includes('Abandonner les modifications ?'))
+        .at(-1);
+      if (!d) throw new Error('no open confirm dialog');
+      return d as HTMLElement;
+    });
+    fireEvent.click(within(openDialog).getByRole('button', { name: 'Enregistrer et continuer' }));
+    await waitFor(() => expect(screen.getByLabelText('Énoncé').textContent).toContain('Seconde'));
+    const put = fetchMock.mock.calls.find(
+      ([url, opts]) => String(url).includes('/questions/a') && opts?.method === 'PUT',
+    );
+    expect(JSON.parse(String((put![1] as RequestInit).body)).prompt).toContain('modifiée');
   });
 
   it('a reading again that fails keeps the open editor, and says so', async () => {

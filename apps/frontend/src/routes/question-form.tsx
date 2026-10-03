@@ -49,7 +49,7 @@ import {
 } from '@quiz-dock/contracts';
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MediaEditsContext, useMediaEdits } from '@/lib/media-edits';
 import {
@@ -248,6 +248,8 @@ export function QuestionForm({
   position,
   onMoveToDraft,
   onClose,
+  onCreated,
+  saveRef,
   onDirtyChange,
 }: {
   quizId: string;
@@ -260,6 +262,10 @@ export function QuestionForm({
   /** The quiz's pause after a media: a longer media stretches the question's time. */
   mediaTailS?: number;
   onClose: () => void;
+  /** A new question saved: the parent opens it (without it, the form closes). */
+  onCreated?: (questionId: string) => void;
+  /** Where the parent finds this form's save, to save before switching (#195): true once saved. */
+  saveRef?: RefObject<(() => Promise<boolean>) | null>;
   /** Reports unsaved edits so the parent can guard against losing them. */
   onDirtyChange?: (dirty: boolean) => void;
 }) {
@@ -279,7 +285,12 @@ export function QuestionForm({
   // A type change took the right answers away: the author is told once.
   const [ticksCleared, setTicksCleared] = useState(false);
   // Computed once: option keys are generated, so a fresh copy per render would reset the form.
-  const [initial] = useState(() => initialValues(question));
+  // A save makes what was saved the new baseline: the editor stays open, clean (#195).
+  const [initial, setInitial] = useState(() => initialValues(question));
+  // "Saved" shows after a save, until the next change.
+  const [saved, setSaved] = useState(false);
+  // Whether the last submit got saved (a refusal, or the ready-to-draft question, did not).
+  const savedOk = useRef(false);
   // Draft kept in localStorage until saved or discarded (survives reload / closed tab).
   const draftKey = formDraftKey(quizId, 'question', question?.id ?? null);
   // A draft saved before the media slots existed has no `media`: it is not restored.
@@ -291,6 +302,7 @@ export function QuestionForm({
   const form = useForm({
     defaultValues: restored ?? initial,
     onSubmit: async ({ value }) => {
+      savedOk.current = false;
       setError(null);
       setErrors([]);
       setChecked(true);
@@ -307,23 +319,31 @@ export function QuestionForm({
         setAskDraft(true);
         return;
       }
-      await save(data);
+      await save(data, value);
     },
   });
-  const save = async (data: ReturnType<typeof buildPayload>) => {
+  const save = async (data: ReturnType<typeof buildPayload>, value: FormValues) => {
     try {
       // The media's alt and credit, edited here, are saved with the question.
       await mediaEdits.flush();
+      let createdId: string | null = null;
       if (question) {
         await update.mutateAsync({ qid: question.id, data });
       } else {
-        await add.mutateAsync({ id: quizId, data });
+        createdId = (await add.mutateAsync({ id: quizId, data })).data.id;
       }
       await queryClient.invalidateQueries({
         queryKey: getQuizzesControllerGetQueryKey(quizId),
       });
       clearDraft(draftKey);
-      onClose();
+      savedOk.current = true;
+      if (createdId === null) {
+        // What was typed meanwhile stays a change.
+        setInitial(value);
+        setRestored(null);
+        setSaved(true);
+      } else if (onCreated) onCreated(createdId);
+      else onClose();
     } catch (err) {
       if (
         err instanceof ApiError &&
@@ -348,7 +368,8 @@ export function QuestionForm({
       setError(apiErrorText(err));
       return;
     }
-    await save(buildPayload(form.state.values));
+    const value = form.state.values;
+    await save(buildPayload(value), value);
   };
   const values = useStore(form.store, (s) => s.values);
   // Dirty = values differ from what was loaded (a fresh question is dirty as soon as typed in).
@@ -359,6 +380,39 @@ export function QuestionForm({
   useEffect(() => {
     if (mediaEdits.dirty) onDirtyChange?.(true);
   }, [mediaEdits.dirty, onDirtyChange]);
+  useEffect(() => {
+    if (dirty) setSaved(false);
+  }, [dirty]);
+  // Cmd+S (macOS) or Ctrl+S saves the question, from any of its fields, instead of the
+  // browser saving the page; not under a dialog, and once at a time.
+  const formRef = useRef<HTMLFormElement>(null);
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 's' || !(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey)
+        return;
+      // A dialog over the form (its own confirms, another one) keeps the keys; the sheet
+      // the form sits in on a phone is a dialog too, and does not.
+      const formEl = formRef.current;
+      const dialogs = [...document.querySelectorAll('dialog[open]')];
+      if (!formEl || dialogs.some((d) => !d.contains(formEl))) return;
+      e.preventDefault();
+      if (dirtyRef.current && !form.state.isSubmitting) void form.handleSubmit();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [form]);
+  useEffect(() => {
+    if (!saveRef) return;
+    saveRef.current = async () => {
+      await form.handleSubmit();
+      return savedOk.current;
+    };
+    return () => {
+      saveRef.current = null;
+    };
+  }, [saveRef, form]);
   // Back to what was loaded: the draft goes with the changes.
   const discardDraft = () => {
     setRestored(null);
@@ -478,6 +532,7 @@ export function QuestionForm({
   return (
     <MediaEditsContext.Provider value={mediaEdits.edits}>
       <form
+        ref={formRef}
         className="flex flex-col gap-5"
         onSubmit={(e) => {
           e.preventDefault();
@@ -490,6 +545,7 @@ export function QuestionForm({
         <FormActionBar
           title={question ? t('questionForm.titleEdit') : t('questionForm.titleAdd')}
           dirty={dirty}
+          saved={saved && !dirty}
           busy={add.isPending || update.isPending}
           submitLabel={question ? t('questionForm.submitUpdate') : t('questionForm.submitAdd')}
           issues={issues}

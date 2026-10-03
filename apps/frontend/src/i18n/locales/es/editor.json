@@ -210,10 +210,14 @@
       "description": "Este quiz está publicado: puede presentarse en cualquier momento y una diapositiva debe mostrar algo. Vuelve a pasarlo a borrador para guardar esta tal cual, o sigue editándola."
     }
   },
+  "formSaved": "Guardado",
   "discardConfirm": {
     "title": "¿Descartar los cambios?",
     "description": "Los cambios no guardados se perderán.",
-    "confirmLabel": "Descartar"
+    "confirmLabel": "Descartar",
+    "discardAndContinue": "Descartar y continuar",
+    "saveAndContinue": "Guardar y continuar",
+    "saveAndClose": "Guardar y cerrar"
   },
   "emptyPane": {
     "emptyTitle": "Este quiz está vacío",

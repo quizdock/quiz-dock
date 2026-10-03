@@ -537,7 +537,9 @@ describe('QuestionForm — image choice', () => {
     expect(methodCalls('PUT', '/credit')).toHaveLength(0);
     // The change alone makes the form savable.
     fireEvent.click(screen.getByText('Enregistrer'));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Saved, the editor stays open (#195).
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
     expect(methodCalls('PUT', '/credit')).toHaveLength(1);
     expect(methodCalls('PUT', '/questions/qi')).toHaveLength(1);
   });
@@ -577,8 +579,36 @@ describe('QuestionForm — image choice', () => {
     fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'single_choice' } });
     fireEvent.click(screen.getAllByRole('radio')[0]);
     fireEvent.click(screen.getByText('Enregistrer'));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Saved, the editor stays open (#195).
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
     expect(lastPut(fetchMock)).toMatchObject({ type: 'single_choice', pointsMode: 'standard' });
+  });
+
+  it('Cmd/Ctrl+S saves from a field; the saved values become the clean baseline (#195)', async () => {
+    const fetchMock = mockApi([{ method: 'PUT', path: '/questions/qi', body: {} }]);
+    const onClose = renderEdit(pictureQuestion());
+    const save = screen.getByRole('button', { name: 'Enregistrer' });
+    const alt = screen.getByLabelText('Texte alternatif de l’image 2');
+    fireEvent.change(alt, { target: { value: 'A grey cat' } });
+    expect(save).toBeEnabled();
+    // From the field being typed in, not the browser's Save Page.
+    const key = new KeyboardEvent('keydown', {
+      key: 's',
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    alt.dispatchEvent(key);
+    expect(key.defaultPrevented).toBe(true);
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(lastPut(fetchMock)).not.toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    // Nothing left to save; a new change takes « Saved » away.
+    expect(save).toBeDisabled();
+    fireEvent.change(alt, { target: { value: 'A grey cat, asleep' } });
+    expect(save).toBeEnabled();
+    expect(screen.queryByText('Enregistré')).toBeNull();
   });
 
   it('says which picture misses its alt; a draft saves it anyway (UI system §1.5)', async () => {
@@ -594,7 +624,9 @@ describe('QuestionForm — image choice', () => {
       target: { value: 'A black cat' },
     });
     fireEvent.click(screen.getByText('Enregistrer'));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Saved, the editor stays open (#195).
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
     expect(lastPut(fetchMock)).toMatchObject({ options: [{ alt: 'A black cat' }, { alt: '' }] });
   });
 
@@ -622,7 +654,9 @@ describe('QuestionForm — image choice', () => {
     fireEvent.click(screen.getAllByRole('checkbox', { name: 'Correcte' })[1]);
     fireEvent.change(screen.getByLabelText('Barème'), { target: { value: 'partial' } });
     fireEvent.click(screen.getByText('Enregistrer'));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Saved, the editor stays open (#195).
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
     const payload = lastPut(fetchMock);
     expect(payload).toMatchObject({
       type: 'image_choice',
@@ -647,7 +681,9 @@ describe('QuestionForm — image choice', () => {
     const onClose = renderEdit(q);
     fireEvent.click(screen.getByLabelText('Plusieurs bonnes réponses'));
     fireEvent.click(screen.getByText('Enregistrer'));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Saved, the editor stays open (#195).
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
     const payload = lastPut(fetchMock);
     expect(payload.options.map((o: { isCorrect: boolean }) => o.isCorrect)).toEqual([true, false]);
     expect(payload.multiSelect).toBe(false);
@@ -662,7 +698,9 @@ describe('QuestionForm — image choice', () => {
     const onClose = renderEdit(q);
     fireEvent.change(screen.getByLabelText('Temps (s)'), { target: { value: '30' } });
     fireEvent.click(screen.getByText('Enregistrer'));
-    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // Saved, the editor stays open (#195).
+    expect(await screen.findByText('Enregistré')).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
     expect(lastPut(fetchMock).options.map((o: { mediaId?: string }) => o.mediaId)).toEqual([
       CAT,
       DOG,

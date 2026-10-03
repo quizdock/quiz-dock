@@ -210,10 +210,14 @@
       "description": "This quiz is published, so it can be presented at any time: a slide must show something. Move the quiz back to draft to save this one as it is, or keep editing."
     }
   },
+  "formSaved": "Saved",
   "discardConfirm": {
     "title": "Discard changes?",
     "description": "Unsaved changes will be lost.",
-    "confirmLabel": "Discard"
+    "confirmLabel": "Discard",
+    "discardAndContinue": "Discard and continue",
+    "saveAndContinue": "Save and continue",
+    "saveAndClose": "Save and close"
   },
   "emptyPane": {
     "emptyTitle": "This quiz is empty",

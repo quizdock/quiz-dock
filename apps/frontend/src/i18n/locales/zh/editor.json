@@ -210,10 +210,14 @@
       "description": "此测验已发布，随时可以演示，幻灯片必须显示内容。改回草稿即可按原样保存，或继续编辑。"
     }
   },
+  "formSaved": "已保存",
   "discardConfirm": {
     "title": "放弃修改？",
     "description": "未保存的修改将丢失。",
-    "confirmLabel": "放弃"
+    "confirmLabel": "放弃",
+    "discardAndContinue": "放弃并继续",
+    "saveAndContinue": "保存并继续",
+    "saveAndClose": "保存并关闭"
   },
   "emptyPane": {
     "emptyTitle": "这个测验还是空的",

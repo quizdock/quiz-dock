@@ -172,6 +172,14 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const [formDirty, setFormDirty] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Editing | undefined>(undefined);
   const onFormDirty = useCallback((d: boolean) => setFormDirty(d), []);
+  // The open question form's save, to save before switching (#195); a slide form has none.
+  const saveFormRef = useRef<(() => Promise<boolean>) | null>(null);
+  const [savingFirst, setSavingFirst] = useState(false);
+  // A new question saved: it stays open, as the question it now is.
+  const openCreated = useCallback((id: string) => {
+    setFormDirty(false);
+    setEditing(id);
+  }, []);
   const closeForm = useCallback(() => {
     setFormDirty(false);
     setEditing(null);
@@ -425,6 +433,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         position={{ index: quiz.questionCount, total: quiz.questionCount + 1 }}
         onMoveToDraft={moveToDraft}
         onClose={closeForm}
+        onCreated={openCreated}
+        saveRef={saveFormRef}
         onDirtyChange={onFormDirty}
       />
     ) : editing === 'new-slide' ? (
@@ -448,6 +458,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         position={{ index: editingItem.question.orderIndex, total: quiz.questionCount }}
         onMoveToDraft={moveToDraft}
         onClose={closeForm}
+        saveRef={saveFormRef}
         onDirtyChange={onFormDirty}
       />
     ) : editingItem?.kind === 'slide' ? (
@@ -1022,7 +1033,31 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         destructive
         title={t('discardConfirm.title')}
         description={t('discardConfirm.description')}
-        confirmLabel={t('discardConfirm.confirmLabel')}
+        confirmLabel={
+          pendingEdit ? t('discardConfirm.discardAndContinue') : t('discardConfirm.confirmLabel')
+        }
+        // A question's changes can be saved on the way (#195): only once saved does it go on.
+        alternative={
+          editing === 'new' || editingItem?.kind === 'question'
+            ? {
+                label: pendingEdit
+                  ? t('discardConfirm.saveAndContinue')
+                  : t('discardConfirm.saveAndClose'),
+                busy: savingFirst,
+                onClick: () => {
+                  const next = pendingEdit ?? null;
+                  setSavingFirst(true);
+                  void (saveFormRef.current?.() ?? Promise.resolve(false)).then((ok) => {
+                    setSavingFirst(false);
+                    setPendingEdit(undefined);
+                    if (!ok) return; // the form says why, its edits kept
+                    setFormDirty(false);
+                    setEditing(next);
+                  });
+                },
+              }
+            : undefined
+        }
         onCancel={() => setPendingEdit(undefined)}
         onConfirm={() => {
           const next = pendingEdit ?? null;

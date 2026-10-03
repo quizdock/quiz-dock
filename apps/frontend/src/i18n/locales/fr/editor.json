@@ -210,10 +210,14 @@
       "description": "Ce quiz est publié : il peut être présenté à tout moment, et une diapositive doit montrer quelque chose. Repassez le quiz en brouillon pour enregistrer celle-ci telle quelle, ou continuez à la modifier."
     }
   },
+  "formSaved": "Enregistré",
   "discardConfirm": {
     "title": "Abandonner les modifications ?",
     "description": "Les modifications non enregistrées seront perdues.",
-    "confirmLabel": "Abandonner"
+    "confirmLabel": "Abandonner",
+    "discardAndContinue": "Abandonner et continuer",
+    "saveAndContinue": "Enregistrer et continuer",
+    "saveAndClose": "Enregistrer et fermer"
   },
   "emptyPane": {
     "emptyTitle": "Ce quiz est vide",

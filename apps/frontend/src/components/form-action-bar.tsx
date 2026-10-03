@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Check } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -12,12 +12,13 @@ import { cn } from '@/lib/utils';
  * reach): what is being edited, a refusal next to the button that caused it,
  * what the form still says under its fields (a count that opens their list, each
  * leading to its field), Cancel and Save. Cancel asks first when there are changes,
- * then `onCancel`.
+ * then `onCancel`. "Saved" stands after a save, until the next change.
  */
 export function FormActionBar({
   title,
   error,
   dirty,
+  saved,
   busy,
   submitLabel,
   issues = [],
@@ -28,6 +29,8 @@ export function FormActionBar({
   /** Shown in the bar when given (a form that says its errors elsewhere leaves it out). */
   error?: string | null;
   dirty: boolean;
+  /** Just saved, nothing changed since. */
+  saved?: boolean;
   busy: boolean;
   submitLabel: string;
   /** What the fields say: errors block the save, the rest is left to finish. */
@@ -54,6 +57,14 @@ export function FormActionBar({
           <p className="text-destructive mr-auto min-w-0 flex-1 truncate text-xs">{error}</p>
         ) : null}
         {issues.length > 0 ? <IssueSummary issues={issues} onIssue={onIssue} /> : null}
+        <span role="status" className="text-muted-foreground flex items-center gap-1 text-xs">
+          {saved ? (
+            <>
+              <Check aria-hidden className="size-3.5" />
+              {t('formSaved')}
+            </>
+          ) : null}
+        </span>
         <Button
           type="button"
           variant="ghost"
