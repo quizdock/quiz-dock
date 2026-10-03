@@ -219,7 +219,9 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     waveformSize: (q.waveformSize as WaveformSize | undefined) ?? WAVEFORM_SIZE_DEFAULT,
     mediaPosition: (q.mediaPosition as MediaPosition | undefined) ?? MEDIA_POSITION_DEFAULT,
     timerAfterMedia: q.timerAfterMedia ?? false,
-    pointsMode: q.pointsMode as FormValues['pointsMode'],
+    // A poll is stored as 'none', which the menu does not offer: the poll's own
+    // setting stays out of the form, so a change of type starts from 'standard'.
+    pointsMode: (q.pointsMode === 'none' ? 'standard' : q.pointsMode) as FormValues['pointsMode'],
     scoring: (q.scoring ?? 'standard') as Scoring,
     numericValue: q.numericValue == null ? null : Number(q.numericValue),
     numericTolerance: q.numericTolerance == null ? null : Number(q.numericTolerance),
@@ -1231,7 +1233,13 @@ function buildPayload(v: FormValues) {
     mediaPosition: v.mediaPosition,
     // Only with a media to wait for; the server also falls back when its length is unknown.
     timerAfterMedia: mediaHasSound(v.media) && v.timerAfterMedia,
-    pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
+    // 'none' is a poll's: a restored draft may still carry it after a change of type.
+    pointsMode:
+      v.type === 'poll'
+        ? ('none' as const)
+        : v.pointsMode === 'none'
+          ? ('standard' as const)
+          : v.pointsMode,
     scoring: scoringsFor(v.type, v.multiSelect).includes(v.scoring)
       ? v.scoring
       : ('standard' as const),

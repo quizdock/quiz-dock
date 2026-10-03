@@ -542,6 +542,45 @@ describe('QuestionForm — image choice', () => {
     expect(methodCalls('PUT', '/questions/qi')).toHaveLength(1);
   });
 
+  it('a poll turned into a single choice is worth points again', async () => {
+    const fetchMock = mockApi([{ method: 'PUT', path: '/questions/qi', body: {} }]);
+    const onClose = renderEdit(
+      pictureQuestion({
+        type: 'poll',
+        pointsMode: 'none',
+        options: [
+          {
+            id: 'o1',
+            orderIndex: 0,
+            text: 'Oui',
+            mediaId: null,
+            alt: null,
+            color: 'red',
+            shape: 'triangle',
+            isCorrect: false,
+            correctOrderIndex: null,
+          },
+          {
+            id: 'o2',
+            orderIndex: 1,
+            text: 'Non',
+            mediaId: null,
+            alt: null,
+            color: 'blue',
+            shape: 'diamond',
+            isCorrect: false,
+            correctOrderIndex: null,
+          },
+        ],
+      } as never),
+    );
+    fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'single_choice' } });
+    fireEvent.click(screen.getAllByRole('radio')[0]);
+    fireEvent.click(screen.getByText('Enregistrer'));
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(lastPut(fetchMock)).toMatchObject({ type: 'single_choice', pointsMode: 'standard' });
+  });
+
   it('says which picture misses its alt; a draft saves it anyway (UI system §1.5)', async () => {
     const fetchMock = mockApi([{ method: 'PUT', path: '/questions/qi', body: {} }]);
     const onClose = renderEdit(pictureQuestion());
