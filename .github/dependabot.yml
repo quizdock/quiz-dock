@@ -4,6 +4,8 @@ version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    # Changes land on dev, then reach main with a release.
+    target-branch: dev
     schedule:
       interval: weekly
     groups:
