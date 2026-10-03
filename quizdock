@@ -109,6 +109,26 @@ fetch_file() { # fetch_file <base url> <repository path> <local path>
   rm -f "$tmp"
 }
 
+# What `doctor` checks on this host, where the container cannot see: passwords of
+# .env left to a default (or unset, so the Compose default applies). A warning,
+# never a refusal: a first try may keep them; an instance in use should not.
+check_secrets() {
+  weak=""
+  for key in POSTGRES_PASSWORD $([ "$(mode)" = full ] && printf '%s' 'KEYCLOAK_ADMIN_PASSWORD KEYCLOAK_HOST_PASSWORD KEYCLOAK_PLAYER_PASSWORD'); do
+    case "$(env_get "$key")" in
+      "" | live | change-me | change-me-*) weak="$weak $key" ;;
+    esac
+  done
+  [ "$(mode)" = standalone ] && return 0 # its database is reached from inside the container only
+  if [ -n "$weak" ]; then
+    warn "default or missing passwords in $ENV_FILE:$weak — set secrets of your own."
+    [ "$(mode)" = full ] && warn "  the Keycloak admin console is reachable from the network."
+    return 0
+  else
+    info "passwords in $ENV_FILE: none left to a default"
+  fi
+}
+
 # Brings the deployment files of a mode to a release's. Offline (an air-gapped
 # host), the files in place are kept.
 refresh_files() { # refresh_files <mode> <image tag>
@@ -522,7 +542,9 @@ case "$cmd" in
   backup) cmd_backup "$@" ;;
   restore) cmd_restore "$@" ;;
   upgrade) cmd_upgrade "$@" ;;
-  doctor | version | seat:status | seat:release | user:list | user:set-role | samples:load | sessions:purge | migrate:status | quiz:list | quiz:transfer)
+  doctor)
+    need_docker; need_init; check_secrets; admin doctor "$@" ;;
+  version | seat:status | seat:release | user:list | user:set-role | samples:load | sessions:purge | migrate:status | quiz:list | quiz:transfer)
     need_docker; need_init; admin "$cmd" "$@" ;;
   quiz:export)
     [ $# -eq 2 ] || die "usage: $0 quiz:export <id> <file.zip>"

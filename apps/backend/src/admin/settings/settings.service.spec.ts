@@ -129,6 +129,14 @@ describe('SettingsService', () => {
       expect(settingsFrom(CURRENT_FILES).issues()).toEqual([]);
     });
 
+    it('a default database password is flagged; a secret of its own, or none, is not', () => {
+      const url = (password: string) => `postgres://quizdock:${password}@postgres:5432/quizdock`;
+      expect(rules({ DATABASE_URL: url('live') })).toEqual(['DATABASE_URL']);
+      expect(rules({ DATABASE_URL: url('change-me-database') })).toEqual(['DATABASE_URL']);
+      expect(rules({ DATABASE_URL: url('xK9-random') })).toEqual([]);
+      expect(rules({ DATABASE_URL: 'postgresql://quizdock@127.0.0.1:5432/quizdock' })).toEqual([]);
+    });
+
     it('Compose files older than the image are flagged, never for the single image', () => {
       expect(rules({ QUIZDOCK_FILES: '1' })).toEqual(['QUIZDOCK_FILES']);
       expect(

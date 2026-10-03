@@ -214,7 +214,28 @@ const MB = 1024 * 1024;
  */
 export const DEPLOYMENT_FILES_EXPECTED = 2;
 
+/** Passwords the Compose files and the env examples ship with: fine to try, not to keep. */
+export const DEFAULT_PASSWORDS = ['live', 'change-me', 'change-me-database'];
+
+/** The password of a connection string, if it carries one. */
+function urlPassword(url: string): string | null {
+  try {
+    return decodeURIComponent(new URL(url).password) || null;
+  } catch {
+    return null;
+  }
+}
+
 export const SETTING_RULES: SettingRule[] = [
+  {
+    key: 'DATABASE_URL',
+    check: (s) => {
+      const password = urlPassword(s.get(SETTINGS.DATABASE_URL));
+      return password && DEFAULT_PASSWORDS.includes(password)
+        ? `The database password is a default one ("${password}"): set POSTGRES_PASSWORD in .env to a secret of your own. PostgreSQL is on the internal network only, but anything that reaches it with that password reads every quiz and result.`
+        : null;
+    },
+  },
   {
     key: 'QUIZDOCK_FILES',
     check: (s) => {
