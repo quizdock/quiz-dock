@@ -278,6 +278,10 @@ describe('the admin API', () => {
     });
     const big = await send(20).expect(413);
     expect(big.body).toMatchObject({ code: 'import.file_too_large', params: { max: 10 } });
+    // Beside the file, a few small fields: not thousands of them.
+    const flood = call('admin', 'post', '/admin/operations/thing.upload/file');
+    for (let i = 0; i < 40; i++) flood.field(`f${i}`, 'x');
+    await flood.attach('file', Buffer.alloc(5), 'quiz.zip').expect(400);
     // An operation that takes no file accepts none.
     await call('admin', 'post', '/admin/operations/thing.read/file')
       .attach('file', Buffer.alloc(1), 'x')

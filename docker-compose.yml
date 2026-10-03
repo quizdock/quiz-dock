@@ -126,7 +126,7 @@ services:
     security_opt: ['no-new-privileges:true']
     cap_drop: ['ALL'] # node écoute sur 3000 (>1024) : aucune capability requise
     read_only: true # FS racine en lecture seule…
-    tmpfs: ['/tmp'] # …sauf /tmp (uploads temporaires) ; les médias vont sur le volume
+    tmpfs: ['/tmp'] # …sauf /tmp ; les envois restent en mémoire, les médias vont sur le volume
     networks: [internal, public]
 
   frontend:
