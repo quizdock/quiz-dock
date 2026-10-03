@@ -157,7 +157,7 @@ export const getHealthControllerReadyUrl = () => {
 
 
 
-  return `/api/v1/health/ready`
+  return `/health/ready`
 }
 
 export const healthControllerReady = async ( options?: RequestInit): Promise<healthControllerReadyResponse> => {
@@ -177,7 +177,7 @@ export const healthControllerReady = async ( options?: RequestInit): Promise<hea
 
 export const getHealthControllerReadyQueryKey = () => {
     return [
-    `/api/v1/health/ready`
+    `/health/ready`
     ] as const;
     }
 

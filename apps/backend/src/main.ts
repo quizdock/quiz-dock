@@ -6,7 +6,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { Logger } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
-import { ICONS } from './app-config/app-config.controller';
+import { UNPREFIXED_ROUTES } from './common/unprefixed';
 import { isOidcMode } from './auth/auth-mode';
 import { sameOriginMiddleware } from './auth/oidc/same-origin.middleware';
 import { baseHeadersMiddleware, cspMiddleware } from './common/csp';
@@ -39,17 +39,8 @@ async function bootstrap(): Promise<void> {
   app.disable('x-powered-by');
   // The browser session is a cookie: what changes something comes from our own pages.
   if (isOidcMode()) app.use(sameOriginMiddleware());
-  // Served at the root, where the page asks for them; the rest is the API.
-  app.setGlobalPrefix('api/v1', {
-    exclude: [
-      'health',
-      'health/ready',
-      'config.js',
-      'branding/override.css',
-      'manifest.webmanifest',
-      ...ICONS,
-    ],
-  });
+  // Served at the root, where they are asked for; the rest is the API.
+  app.setGlobalPrefix('api/v1', { exclude: UNPREFIXED_ROUTES });
   // Validation runtime des DTO Zod (createZodDto) sur toutes les routes.
   app.useGlobalPipes(new ZodValidationPipe());
   // Sérialise les erreurs en corps tokenisé { code, params? } (ADR 0001).

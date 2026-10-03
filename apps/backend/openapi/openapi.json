@@ -15,7 +15,7 @@
         ]
       }
     },
-    "/api/v1/health/ready": {
+    "/health/ready": {
       "get": {
         "operationId": "HealthController_ready",
         "parameters": [],

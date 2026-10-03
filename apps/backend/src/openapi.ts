@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { buildSwaggerDocument } from './swagger';
+import { UNPREFIXED_ROUTES } from './common/unprefixed';
 
 /**
  * Génère le document OpenAPI dans `openapi/openapi.json` SANS démarrer de serveur.
@@ -18,7 +19,7 @@ async function generate(): Promise<void> {
   /* eslint-enable no-restricted-properties */
 
   const app = await NestFactory.create(AppModule, { logger: false });
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  app.setGlobalPrefix('api/v1', { exclude: UNPREFIXED_ROUTES });
   const document = buildSwaggerDocument(app);
   mkdirSync('openapi', { recursive: true });
   writeFileSync('openapi/openapi.json', `${JSON.stringify(document, null, 2)}\n`);
