@@ -299,6 +299,8 @@ export class OperationRunner {
             // Two callers on the same row: what the global filter answers outside the runner.
             if (err.code === 'P2025') return refused('not_found', 'It no longer exists.');
             if (err.code === 'P2002') return refused('conflict', 'It already exists.');
+            if (err.code === 'P2003')
+              return refused('conflict', 'Something it refers to is gone, or still refers to it.');
             // A serializable transaction lost to a concurrent one: try again.
             if (err.code === 'P2034') return refused('conflict', 'Changed meanwhile: try again.');
           }

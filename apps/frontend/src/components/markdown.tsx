@@ -39,10 +39,15 @@ function MediaImage({ id, alt, ...rest }: ComponentProps<'img'> & { id: string }
   );
 }
 
+const MEDIA_ID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+
 const COMPONENTS: Components = {
   // Only media served by this app: no third-party images (tracking pixels, hotlinking).
+  // The rest must be a media id (a ULID): `../` would reach other routes, cookies sent.
   img: (p) =>
-    typeof p.src === 'string' && p.src.startsWith(MEDIA_PATH) ? (
+    typeof p.src === 'string' &&
+    MEDIA_ID.test(p.src.slice(MEDIA_PATH.length)) &&
+    p.src.startsWith(MEDIA_PATH) ? (
       <MediaImage {...dom(p)} id={p.src.slice(MEDIA_PATH.length)} />
     ) : null,
   ul: (p) => <ul {...dom(p)} className="list-disc pl-6 text-left" />,

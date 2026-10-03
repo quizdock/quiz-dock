@@ -13,7 +13,7 @@ COPY apps/backend/package.json apps/backend/
 # lance `prisma generate` (génère le client typé consommé par le code).
 COPY apps/backend/prisma apps/backend/prisma
 COPY apps/backend/prisma.config.ts apps/backend/
-RUN pnpm install --filter @quiz-dock/backend... --no-frozen-lockfile
+RUN pnpm install --filter @quiz-dock/backend... --frozen-lockfile
 
 # Sources + build + déploiement prod auto-suffisant
 COPY packages/contracts packages/contracts

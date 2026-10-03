@@ -333,7 +333,6 @@
     "write": "运行",
     "preview": "预览",
     "confirm": "确认",
-    "again": "重新读取",
     "confirmTitle": "确认此更改？"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "移交“{{title}}”",
       "help": "移交给另一个账号：仅此测验使用的媒体及其历史会随之转移；其余内容仍归 {{owner}} 所有。",
-      "search": "名称、主体标识或邮箱",
-      "player": "参与者"
+      "search": "名称、主体标识或邮箱"
     },
     "actionsFor": "{{title}} 的操作"
   },
@@ -759,10 +757,13 @@
     },
     "unset": "{{key}} 未设置。",
     "postgres_ok": "PostgreSQL 可访问",
+    "postgres_superuser": "QuizDock 以 PostgreSQL 超级用户身份连接。目前无需操作：quizdock 脚本的后续版本将为它创建专属角色。",
     "migrations_applied_one": "已应用 {{count}} 个迁移",
     "migrations_applied_other": "已应用 {{count}} 个迁移",
-    "migrations_pending": "{{count}} 个迁移待应用：请运行迁移步骤。",
-    "migrations_failed": "{{count}} 个迁移失败：参见 prisma migrate resolve。",
+    "migrations_pending_one": "{{count}} 个迁移待应用：请运行迁移步骤。",
+    "migrations_pending_other": "{{count}} 个迁移待应用：请运行迁移步骤。",
+    "migrations_failed_one": "{{count}} 个迁移失败：参见 prisma migrate resolve。",
+    "migrations_failed_other": "{{count}} 个迁移失败：参见 prisma migrate resolve。",
     "postgres_failed": "PostgreSQL 无法访问：{{error}}",
     "redis_ok": "Redis 可访问",
     "redis_failed": "Redis 无法访问：{{error}}",

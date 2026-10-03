@@ -18,8 +18,8 @@ export function localSlug(name: string): string {
  * Mode `AUTH_MODE=none` : pas de JWT. L'hôte s'identifie par un simple nom local
  * via l'en-tête `X-Local-User` (SPECIFICATIONS §1) ; deux requêtes avec le même
  * nom → même `sub` ; sans en-tête → non authentifié (401). Le rôle n'est PAS porté par le principal : il est attribué au
- * provisionnement par le **siège d'hôte** (`HostSeatService`) — premier arrivé
- * dans l'espace hôte = `host`, les autres = `player`.
+ * provisionnement par le **siège d'hôte** (`HostSeatService`) — qui l'a pris
+ * (« Prendre le siège », `POST /auth/host-seat/claim`) = `host`, les autres = `player`.
  *
  * Sur une démo publique (`DEMO_MODE`), tout nom devient `DEMO_USER` : un seul
  * compte hôte, partagé par tous les visiteurs.

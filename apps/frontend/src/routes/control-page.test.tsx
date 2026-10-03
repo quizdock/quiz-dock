@@ -36,6 +36,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   answerAccepted: null,
   answerRefusal: null,
   answerAckAt: null,
+  answerPending: false,
   lobbyCount: null,
   fullCapture: false,
   personalTracking: true,
@@ -467,7 +468,19 @@ describe('ControlPage (console hôte)', () => {
     expect(fakeSocket.emit).not.toHaveBeenCalledWith('host:pause', expect.anything());
   });
 
+  it('Tab moves through the page until the host lets it cycle the views (a11y)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({ state: GameState.Answering, questionIndex: 0, totalQuestions: 3 });
+    renderApp('/session/482913/console');
+    const toggle = await screen.findByRole('switch', { name: 'Changer de vue avec Tab' });
+    expect(toggle).not.toBeChecked();
+    expect(fireEvent.keyDown(document.body, { key: 'Tab', code: 'Tab' })).toBe(true);
+    fireEvent.click(toggle);
+    expect(localStorage.getItem('console.tabViews')).toBe('on');
+  });
+
   it('Tab moves the focus between controls; it cycles the views only from the page (audit F3)', async () => {
+    localStorage.setItem('console.tabViews', 'on');
     localStorage.setItem('live.localUser', 'Animateur');
     hookState.value = view({
       state: GameState.Answering,
@@ -479,11 +492,11 @@ describe('ControlPage (console hôte)', () => {
     await screen.findByText('Capitale ?');
     // On a control, the browser keeps Tab: the keyboard can reach every button.
     const reveal = screen.getByRole('button', { name: /Révéler/ });
-    expect(fireEvent.keyDown(reveal, { key: 'Tab' })).toBe(true);
+    expect(fireEvent.keyDown(reveal, { key: 'Tab', code: 'Tab' })).toBe(true);
     // From the page itself, Tab still switches the view.
     const selected = () => screen.getAllByRole('tab').find((t) => t.ariaSelected === 'true');
     const before = selected();
-    expect(fireEvent.keyDown(document.body, { key: 'Tab' })).toBe(false);
+    expect(fireEvent.keyDown(document.body, { key: 'Tab', code: 'Tab' })).toBe(false);
     expect(selected()).not.toBe(before);
   });
 
@@ -504,6 +517,21 @@ describe('ControlPage (console hôte)', () => {
     // The link, never an image of the QR code; the PIN rides in the text.
     expect(share.mock.calls[0][0]).not.toHaveProperty('files');
     expect(share.mock.calls[0][0].text).toContain('482913');
+    vi.unstubAllGlobals();
+  });
+
+  it('« Partager » over plain http (no share sheet, no clipboard) shows the link to copy', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({});
+    vi.stubGlobal('navigator', { ...navigator, share: undefined, clipboard: undefined });
+    renderApp('/session/482913/console');
+    const btn = await screen.findByRole('button', { name: /Partager/ });
+    await act(async () => {
+      btn.click();
+    });
+    expect(
+      await screen.findByText(/Copiez cette adresse et envoyez-la : .*\/join\/482913/),
+    ).toBeInTheDocument();
     vi.unstubAllGlobals();
   });
 

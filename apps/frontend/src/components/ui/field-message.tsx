@@ -14,6 +14,9 @@ export function FieldMessage({ issues, className }: { issues: FieldIssue[]; clas
       {lines.map((i) => (
         <p
           key={i.text}
+          // An error is said as it appears (a refused save): a screen reader announces
+          // only the field it lands on otherwise. What is left to finish stays quiet.
+          role={i.tone === 'error' ? 'alert' : undefined}
           className={cn('text-xs', i.tone === 'error' ? 'text-destructive' : 'text-warning-text')}
         >
           {i.text}

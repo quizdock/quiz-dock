@@ -1,4 +1,4 @@
-import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
 import { RedisService } from '../redis/redis.service';
 import { MediaService } from './media.service';
 
@@ -33,23 +33,32 @@ export interface LastSweep extends SweepResult {
  * replaced right away (`MediaService.releaseUnused`); this job catches the rest.
  */
 @Injectable()
-export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
+export class MediaJanitor implements OnModuleDestroy {
   private readonly log = new Logger(MediaJanitor.name);
   private timer: NodeJS.Timeout | null = null;
+  private current: Promise<unknown> | null = null;
 
   constructor(
     private readonly media: MediaService,
     private readonly redis: RedisService,
   ) {}
 
-  onModuleInit(): void {
+  /**
+   * Started by the server only (`main.ts`): a `qd` command, which loads this
+   * module too, must not take the hour's pass and then cut it short.
+   */
+  start(): void {
     void this.run();
     this.timer = setInterval(() => void this.run(), MEDIA_SWEEP_INTERVAL_MS);
     this.timer.unref();
   }
 
-  onModuleDestroy(): void {
+  /** At shutdown, a pass under way is given a few seconds to end and free its lock. */
+  async onModuleDestroy(): Promise<void> {
     if (this.timer) clearInterval(this.timer);
+    if (this.current) {
+      await Promise.race([this.current, new Promise((r) => setTimeout(r, 5_000).unref())]);
+    }
   }
 
   /** Moving older files is a step of its own: it never keeps the sweeps from running. */
@@ -70,6 +79,16 @@ export class MediaJanitor implements OnModuleInit, OnModuleDestroy {
    * for no other pass to run. Never throws.
    */
   async run(now = false): Promise<SweepResult | null> {
+    const pass = this.pass(now);
+    this.current = pass;
+    try {
+      return await pass;
+    } finally {
+      if (this.current === pass) this.current = null;
+    }
+  }
+
+  private async pass(now: boolean): Promise<SweepResult | null> {
     let running = false;
     try {
       if (!now) {

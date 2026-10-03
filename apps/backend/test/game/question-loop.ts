@@ -77,10 +77,10 @@ export function questionLoopTests(ctx: GameContext): void {
     }>(player, 'question:start');
 
     // answer:ack est un event (pas un ack Socket.IO) → on les met en file.
-    const acks: Array<{ accepted: boolean }> = [];
+    const acks: Array<{ accepted: boolean; reason?: string }> = [];
     let nextAck: (() => void) | null = null;
     player.on('answer:ack', (a) => {
-      acks.push(a as { accepted: boolean });
+      acks.push(a as { accepted: boolean; reason?: string });
       nextAck?.();
     });
     const waitAck = (n: number) =>
@@ -98,14 +98,23 @@ export function questionLoopTests(ctx: GameContext): void {
     // Attendre l'ouverture des réponses (startedAt) avant de soumettre.
     await new Promise((r) => setTimeout(r, Math.max(0, q.startedAt - Date.now()) + 50));
 
+    // Answers the scoring cannot take are refused before anything else, and do not
+    // count as the player's answer.
+    player.emit('player:submit', { pin, questionIndex: 0, answer: 'x'.repeat(5000) });
+    player.emit('player:submit', { pin, questionIndex: 0, answer: { id: parisId } });
+    player.emit('player:submit', { pin, questionIndex: 0.5, answer: parisId });
+    player.emit('player:submit', { pin: '000000', questionIndex: 0, answer: parisId });
+    await waitAck(4);
+    expect(acks.map((a) => [a.accepted, a.reason])).toEqual(Array(4).fill([false, 'unknown']));
+
     player.emit('player:submit', { pin, questionIndex: 0, answer: parisId });
-    await waitAck(1);
-    expect(acks[0].accepted).toBe(true);
+    await waitAck(5);
+    expect(acks[4].accepted).toBe(true);
 
     // 2e réponse du même joueur : rejetée (unicité RG-06).
     player.emit('player:submit', { pin, questionIndex: 0, answer: parisId });
-    await waitAck(2);
-    expect(acks[1].accepted).toBe(false);
+    await waitAck(6);
+    expect(acks[5]).toMatchObject({ accepted: false, reason: 'duplicate' });
 
     // 1 joueur sur 1 a répondu → REVEAL anticipé ('all'). Puis le timer s'écoulera :
     // le verrou NX doit l'absorber → toujours UN seul REVEAL.

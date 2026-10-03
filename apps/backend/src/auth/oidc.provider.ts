@@ -4,7 +4,7 @@ import type { JWTPayload } from 'jose';
 import type { AuthPrincipal, AuthProvider } from './auth-provider';
 import type { OidcClient } from './oidc/oidc-client';
 import type { OidcSessions } from './oidc/oidc-sessions';
-import { readCookie, SESSION_COOKIE } from './oidc/session-cookie';
+import { readOurCookie, SESSION_COOKIE } from './oidc/session-cookie';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from '../admin/settings/settings.service';
 
@@ -56,7 +56,7 @@ export class OidcProvider implements AuthProvider {
     if (header?.startsWith('Bearer ')) {
       token = header.slice('Bearer '.length).trim();
     } else {
-      const sid = readCookie(req.headers.cookie, SESSION_COOKIE);
+      const sid = readOurCookie(req.headers.cookie, SESSION_COOKIE);
       if (sid) token = await this.sessions.accessToken(sid);
     }
     if (!token) return null;
@@ -92,7 +92,9 @@ export class OidcProvider implements AuthProvider {
         (typeof name === 'string' && name) ||
         (typeof email === 'string' && email) ||
         sub,
-      email: typeof email === 'string' ? email : null,
+      // An address the provider says is not verified could be anyone's: not kept,
+      // since accounts are found by it (`qd users.set-role user=<e-mail>`).
+      email: typeof email === 'string' && payload['email_verified'] !== false ? email : null,
       roles: Array.isArray(rolesRaw)
         ? rolesRaw.filter((r): r is string => typeof r === 'string')
         : [],

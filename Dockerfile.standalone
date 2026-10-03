@@ -1,6 +1,6 @@
 #
 # QuizDock ALL-IN-ONE (:standalone) — PostgreSQL + Redis + app in a single
-# container, for one-command demo / beginner use on Docker Desktop:
+# container, for a one-command first try / beginner use on Docker Desktop:
 #
 #   docker run -p 18080:3000 -v quizdock:/data fchaussin/quizdock:standalone
 #
@@ -36,8 +36,9 @@ RUN useradd -u 65532 -m -d /home/quizdock quizdock \
  && mkdir -p /data/postgres /data/media \
  && chown -R quizdock:quizdock /data
 
-# App artifact (dist, node_modules, prisma schema/config, built SPA, prisma client).
-COPY --from=app --chown=quizdock:quizdock /app /app
+# App artifact (dist, node_modules, prisma schema/config, built SPA, prisma client),
+# owned by root: the app reads it, never rewrites it.
+COPY --from=app /app /app
 COPY --chown=quizdock:quizdock docker/standalone-entrypoint.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh \
  # Admin CLI as a plain command: `docker exec quizdock qd <cmd>`.
@@ -46,7 +47,10 @@ RUN chmod +x /usr/local/bin/start.sh \
 
 # Tells the app it is the all-in-one image, so it can say so where it matters
 # (the limitations shown on a demo instance's home page).
+# CHECKPOINT_DISABLE: `prisma migrate deploy` at start would otherwise report to
+# checkpoint.prisma.io; the server makes no outgoing request of its own accord.
 ENV QUIZDOCK_FLAVOR=standalone \
+    CHECKPOINT_DISABLE=1 \
     NODE_ENV=production \
     PORT=3000 \
     CLIENT_DIR=/app/client \
@@ -71,6 +75,6 @@ VOLUME ["/data"]
 # node is on PATH here (not distroless) → node-based healthcheck. Generous
 # start-period: first boot runs initdb + migrations.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=8 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/start.sh"]

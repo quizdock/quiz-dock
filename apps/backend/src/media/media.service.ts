@@ -87,8 +87,16 @@ export const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
 const BLOB_FILE = /^[0-9a-f]{64}$/;
 /** A write that did not finish (renamed to its blob name once complete), one per upload. */
 const PARTIAL_FILE = /^[0-9a-f]{64}\.[0-9a-f-]{36}\.part$/;
-/** A file from before files were shared, named after its media id (a ULID). */
-const LEGACY_FILE = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+/**
+ * Largest picture taken, in pixels: far beyond what the editor makes (1920 on the
+ * longest side), short of what makes a phone's tab run out of memory.
+ */
+export const IMAGE_MAX_PIXELS = 40_000_000;
+
+/** A media id: a ULID. */
+const MEDIA_ID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+/** A file from before files were shared, named after its media id. */
+const LEGACY_FILE = MEDIA_ID;
 
 const sha256Of = (buffer: Buffer) => createHash('sha256').update(buffer).digest('hex');
 
@@ -143,7 +151,7 @@ export class MediaService implements OnModuleInit {
    *
    * What the file *is* comes from its bytes (`sniffMedia`), never from its name
    * or the type the browser declared: a raster image, an MP4 with H.264 video
-   * and AAC or no audio, or an MP3. The type served later is the one found here.
+   * and AAC or no audio, an MP3 or an M4A (AAC). The type served later is the one found here.
    * A sound comes with what the editor measured while decoding it (duration,
    * waveform, loudness), which the players use without decoding it again.
    */
@@ -180,6 +188,15 @@ export class MediaService implements OnModuleInit {
         params: { max, maxMb: Math.floor(max / (1024 * 1024)) },
       });
     }
+    // Read from the header, nothing decoded: a few megabytes can declare a picture
+    // that no phone could open (a "decompression bomb").
+    const dimensions = mediaDimensions(file.buffer, sniffed.mime);
+    if (dimensions && dimensions.width * dimensions.height > IMAGE_MAX_PIXELS) {
+      throw new BadRequestException({
+        code: 'media.image_too_large',
+        params: { maxMp: IMAGE_MAX_PIXELS / 1_000_000 },
+      });
+    }
     const meta = parseUploadMeta(sniffed.kind, fields);
     // The same bytes uploaded twice — a re-used jingle, an imported copy — share one file.
     const sha256 = sha256Of(file.buffer);
@@ -199,7 +216,7 @@ export class MediaService implements OnModuleInit {
           kind: sniffed.kind,
           blobSha256: sha256,
           name: uploadName(file.originalname),
-          ...(mediaDimensions(file.buffer, sniffed.mime) ?? {}),
+          ...(dimensions ?? {}),
           instance: options.instance ?? false,
           sourceSha256: sourceSha256Of(fields),
           ...meta,
@@ -252,6 +269,8 @@ export class MediaService implements OnModuleInit {
 
   /** Size of a stored media on disk — the truth a byte range is cut from. */
   async sizeOf(id: string): Promise<number> {
+    // Not an id at all (a NUL, a path): unknown, without asking the database.
+    if (!MEDIA_ID.test(id)) throw new NotFoundException('media.not_found');
     const asset = await this.prisma.mediaAsset.findUnique({
       where: { id },
       select: { id: true, blobSha256: true },
@@ -408,7 +427,9 @@ export class MediaService implements OnModuleInit {
         peakDbfs: source.peakDbfs,
         width: source.width,
         height: source.height,
-        sourceSha256: source.sourceSha256,
+        // The browser's word for the file it started from, unchecked: never carried
+        // into the instance's media, where it would match that file for every host.
+        sourceSha256: instance ? null : source.sourceSha256,
       },
     });
     const url = mediaUrl(created.id);
@@ -791,9 +812,5 @@ export class MediaService implements OnModuleInit {
   /** Largest file any kind may be (bundle import caps each entry with it). */
   get maxUploadBytes(): number {
     return uploadCeiling();
-  }
-
-  asset(id: string): Promise<MediaAsset | null> {
-    return this.prisma.mediaAsset.findUnique({ where: { id } });
   }
 }

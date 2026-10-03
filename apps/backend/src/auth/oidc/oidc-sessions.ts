@@ -27,6 +27,11 @@ const RENEW_BEFORE_MS = 30_000;
 /** How long a refresh may hold the lock, and how long another request waits for it. */
 const REFRESH_LOCK_MS = 10_000;
 const REFRESH_WAIT_MS = 5_000;
+/** Deletes a lock if it still holds the value its taker set. */
+const RELEASE_SCRIPT = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end
+return 0
+`;
 
 /**
  * Only a hash of the session id is stored: the cookie is the one copy of the id,
@@ -118,7 +123,8 @@ export class OidcSessions {
       await this.destroy(sid);
       return null;
     }
-    const locked = await this.redis.set(lockKey(sid), '1', 'PX', REFRESH_LOCK_MS, 'NX');
+    const owner = randomToken();
+    const locked = await this.redis.set(lockKey(sid), owner, 'PX', REFRESH_LOCK_MS, 'NX');
     if (!locked) {
       const deadline = Date.now() + REFRESH_WAIT_MS;
       while (Date.now() < deadline) {
@@ -148,7 +154,8 @@ export class OidcSessions {
       this.logger.warn(`Token renewal failed: ${(err as Error).message}`);
       return stillValid(session);
     } finally {
-      await this.redis.del(lockKey(sid));
+      // Only our own lock: one taken over after ours ran out belongs to another renewal.
+      await this.redis.eval(RELEASE_SCRIPT, 1, lockKey(sid), owner);
     }
   }
 }

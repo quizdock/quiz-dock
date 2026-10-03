@@ -221,7 +221,6 @@ export const questionContentSchema = z
   });
 
 export type QuestionContent = z.infer<typeof questionContentSchema>;
-export type QuestionContentInput = z.input<typeof questionContentSchema>;
 
 /** A rule of completeness a question misses, and where. */
 export interface QuestionIssue {

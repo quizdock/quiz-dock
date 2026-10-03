@@ -7,6 +7,19 @@ export const LOGIN_COOKIE = 'qd_login';
 /** The login cookie only travels to the auth endpoints. */
 export const LOGIN_COOKIE_PATH = '/api/v1/auth';
 
+/**
+ * Over HTTPS, the cookies carry the `__Host-` prefix: the browser then takes them
+ * only from this very host (Secure, Path=/, no Domain), never set by a sibling
+ * subdomain. Plain HTTP (a local network) cannot have it: the bare name stays.
+ */
+export const HOST_PREFIX = '__Host-';
+export const cookieName = (name: string, secure: boolean) => (secure ? HOST_PREFIX + name : name);
+
+/** One of our cookies, under either name: the prefixed one first, else the bare one (set before). */
+export function readOurCookie(header: string | undefined, name: string): string | null {
+  return readCookie(header, HOST_PREFIX + name) ?? readCookie(header, name);
+}
+
 /** One cookie of a `Cookie` header, or null. */
 export function readCookie(header: string | undefined, name: string): string | null {
   if (!header) return null;

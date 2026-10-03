@@ -35,7 +35,7 @@ export interface Actor {
 
 export interface OperationNote {
   level: 'info' | 'warn';
-  /** Stable, translated by the web (`admin.notes.<code>`). */
+  /** Stable, for a client that decides on it; the web shows `text` (composed by the backend, in English). */
   code: string;
   /** Plain English, for the CLI and the logs. */
   text: string;

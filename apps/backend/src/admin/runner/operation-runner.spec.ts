@@ -1,4 +1,4 @@
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 import { z } from 'zod';
 import { MemoryAuditRepository } from '../audit/audit.repository';
@@ -79,11 +79,17 @@ const ops: AdminOperation[] = [
     category: 'health',
     effect: 'read',
     summary: 'Fails.',
-    params: z.object({ how: z.enum(['op', 'http', 'crash', 'slow']) }),
+    params: z.object({ how: z.enum(['op', 'http', 'crash', 'slow', 'reference']) }),
     timeoutMs: 20,
     run: async (_ctx, { how }) => {
       if (how === 'op') throw new OperationError('conflict', 'Busy.');
       if (how === 'http') throw new NotFoundException('gone');
+      if (how === 'reference') {
+        throw new Prisma.PrismaClientKnownRequestError('Foreign key constraint violated', {
+          code: 'P2003',
+          clientVersion: 'test',
+        });
+      }
       if (how === 'slow') await new Promise((r) => setTimeout(r, 200));
       throw new Error('boom');
     },
@@ -297,6 +303,7 @@ describe('OperationRunner', () => {
       ['op', 'conflict'],
       ['http', 'not_found'],
       ['crash', 'failed'],
+      ['reference', 'conflict'],
       ['slow', 'timeout'],
     ])('a %s failure becomes %s', async (how, code) => {
       expect(await setup().run({ id: 'thing.fail', raw: { how } })).toMatchObject({

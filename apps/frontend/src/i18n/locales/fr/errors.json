@@ -29,6 +29,7 @@
     "ended": "Le salon est fermé.",
     "banned": "Vous avez été exclu de ce salon par l’animateur.",
     "join_required": "Rejoignez le salon avant de répondre.",
+    "already_joined": "Vous êtes déjà dans ce salon.",
     "already_started": "Le quiz a déjà commencé.",
     "reveal_required": "Action possible seulement après le reveal.",
     "timer_not_adjustable": "Le chrono ne peut être ajusté que pendant une question.",
@@ -59,6 +60,7 @@
     "unsupported_type": "Format non pris en charge : une image, une vidéo MP4 (H.264) ou un son (MP3, M4A). L’éditeur convertit les autres fichiers que ce navigateur sait lire ; le SVG n’est pas accepté.",
     "file_missing": "Fichier manquant (champ « file »).",
     "file_too_large": "Fichier trop volumineux (maximum {{maxMb}} Mo pour ce type de média).",
+    "image_too_large": "Cette image est trop grande (au plus {{maxMp}} mégapixels).",
     "not_found": "Média introuvable.",
     "demo_disabled": "L'envoi de médias est désactivé sur l'instance de démo.",
     "video_with_audio": "Une vidéo a déjà son propre son : retirez la piste audio ou la vidéo.",
@@ -144,7 +146,9 @@
   "error": "Une erreur est survenue.",
   "host_seat": {
     "taken": "Le siège d’animateur est déjà pris.",
-    "manager_forbidden": "Un administrateur ne prend pas le siège d’animateur."
+    "manager_forbidden": "Un administrateur ne prend pas le siège d’animateur.",
+    "local_only": "Seul le mode local a un siège d’animateur.",
+    "already_host": "Vous êtes déjà animateur : aucun siège à prendre."
   },
   "store": {
     "demo_disabled": "Le partage est désactivé sur une instance de démonstration.",
@@ -205,5 +209,8 @@
     "token_invalid": "Ce jeton de mise en service n’est pas valide (erroné, utilisé ou expiré) : `qd setup.token` en donne un nouveau.",
     "session_invalid": "La session de mise en service est terminée : donnez un nouveau jeton de mise en service.",
     "too_many_attempts": "Trop de jetons erronés : patientez un quart d’heure."
+  },
+  "request": {
+    "too_large": "Trop volumineux pour le serveur : il a refusé la requête (sa limite de taille)."
   }
 }

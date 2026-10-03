@@ -13,6 +13,7 @@ import {
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { formatPercent } from '@/lib/format';
 
 /** What every table of the app can do: sort by a column (UI system §1.7). */
 const features = tableFeatures({
@@ -37,9 +38,15 @@ export function DataTable<TData extends RowData>({
   className,
   footer,
   caption,
+  rowId,
 }: {
   columns: DataColumn<TData>[];
   data: TData[];
+  /**
+   * What a row is, whatever its place: a row that holds state (an open dialog)
+   * keeps it on the same item when the list is refetched in another order.
+   */
+  rowId?: (row: TData) => string;
   initialSort?: SortingState;
   onRowClick?: (row: TData) => void;
   className?: string;
@@ -51,6 +58,7 @@ export function DataTable<TData extends RowData>({
     features,
     columns,
     data,
+    ...(rowId ? { getRowId: (row: TData) => rowId(row) } : {}),
     initialState: { sorting: initialSort },
   });
   return (
@@ -152,7 +160,7 @@ export function ShareBar({ value }: { value: number | null }) {
       <span className="bg-muted inline-block h-1.5 w-16 overflow-hidden rounded-full" aria-hidden>
         <span className="bg-success block h-full rounded-full" style={{ width: `${pct}%` }} />
       </span>
-      <span className="w-10 text-right tabular-nums">{pct} %</span>
+      <span className="w-10 text-right tabular-nums">{formatPercent(value)}</span>
     </span>
   );
 }

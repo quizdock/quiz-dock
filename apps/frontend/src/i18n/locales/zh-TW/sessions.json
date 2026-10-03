@@ -56,7 +56,6 @@
       "filenameFallback": "session"
     },
     "room": {
-      "title": "房間",
       "intro_one": "本次會話在一個房間中進行：保留了 {{count}} 個測驗，依序進行，參與者只需加入一次。",
       "intro_other": "本次會話在一個房間中進行：保留了 {{count}} 個測驗，依序進行，參與者只需加入一次。",
       "thisSession": "本次會話",

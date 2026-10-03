@@ -15,6 +15,10 @@ function fakeRedis() {
     }),
     del: jest.fn(async (key: string) => (store.delete(key) ? 1 : 0)),
     expire: jest.fn(async () => 1),
+    // The lock's release: delete the key only while it holds the given value.
+    eval: jest.fn(async (_script: string, _n: number, key: string, owner: string) =>
+      store.get(key) === owner ? (store.delete(key), 1) : 0,
+    ),
     multi: jest.fn(() => {
       const ops: (() => unknown)[] = [];
       const pipe = {
@@ -96,6 +100,22 @@ describe('OidcSessions', () => {
     release();
     expect(await Promise.all([first, second])).toEqual(['at-2', 'at-2']);
     expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("a renewal that outlived its lock leaves the next renewal's lock alone", async () => {
+    const holder = { redis: null as ReturnType<typeof fakeRedis> | null };
+    const refresh = jest.fn(async () => {
+      // Our lock ran out meanwhile, and another renewal took the key.
+      const store = holder.redis!.store;
+      const key = [...store.keys()].find((k) => k.startsWith('auth:refresh:'))!;
+      store.set(key, 'another-renewal');
+      return tokens({ accessToken: 'at-2' });
+    });
+    const { sessions, redis } = setup(refresh);
+    holder.redis = redis;
+    const sid = await sessions.create('sub-1', tokens({ expiresAt: Date.now() + 5_000 }));
+    expect(await sessions.accessToken(sid)).toBe('at-2');
+    expect([...redis.store.values()]).toContain('another-renewal');
   });
 
   it('ends the session when the provider refuses to renew', async () => {

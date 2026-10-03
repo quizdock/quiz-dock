@@ -56,7 +56,6 @@
       "filenameFallback": "oturum"
     },
     "room": {
-      "title": "Oda",
       "intro_one": "Bu oturum bir odada oynandı. Katılımcılar bir kez katıldı ve aynı odada {{count}} quiz oynandı.",
       "intro_other": "Bu oturum bir odada oynandı. Katılımcılar bir kez katıldı ve aynı odada {{count}} quiz oynandı.",
       "thisSession": "bu oturum",

@@ -412,11 +412,16 @@ describe('QuizPortableService', () => {
         expect.objectContaining({ where: { id: 'q' }, data: { slug: 'ete-a-paris' } }),
       );
       expect(filename).toBe('ete-a-paris.quizdock.zip');
-      const files = unzipSync(new Uint8Array(zip));
+      const method: Record<string, number> = {};
+      const files = unzipSync(new Uint8Array(zip), {
+        filter: (f) => ((method[f.name] = f.compression), true),
+      });
       expect(Object.keys(files).sort()).toEqual([
         'media/01ARZ3NDEKTSV4RRFFQ69G5FAV.jpg',
         'quiz.json',
       ]);
+      // Media stored as they are (compressed already), the quiz deflated.
+      expect(method).toEqual({ 'media/01ARZ3NDEKTSV4RRFFQ69G5FAV.jpg': 0, 'quiz.json': 8 });
       const json = JSON.parse(Buffer.from(files['quiz.json']).toString());
       expect(json.version).toBe(3);
       expect(json.quiz).toMatchObject({

@@ -33,7 +33,7 @@ import type {
   ServerToClientEvents,
 } from '@quiz-dock/contracts';
 import type { Server } from 'socket.io';
-import { GameService } from './game.service';
+import { GameService, oneLine } from './game.service';
 import {
   ANSWER_COUNT_EVERY_MS,
   CHRONO_FLOOR_MS,
@@ -227,6 +227,18 @@ export class GameEngine {
           armed++;
         }
       }
+      // The host's absence, timed again: a dead process never saw their socket go. A
+      // room left without its host ends after its window; any other has its grace,
+      // which the host's console cancels as it reconnects (`host:attach`).
+      if (meta.state === GameState.HostDisconnected) {
+        const windowMs = settings.get(SETTINGS.GAME_HOST_WINDOW_MS);
+        this.timers.arm('hostWindow', pin, windowMs, () => this.endOrphaned(ref, meta.hostUserId));
+      } else if (meta.state !== GameState.Ended) {
+        const graceMs = settings.get(SETTINGS.GAME_HOST_GRACE_MS);
+        this.timers.arm('hostGrace', pin, graceMs, () =>
+          this.declareHostDisconnected(ref, meta.hostUserId),
+        );
+      }
     }
     if (armed > 0) this.log.log(`Recovered ${armed} live timer(s) after restart`);
   }
@@ -394,10 +406,22 @@ export class GameEngine {
     const slide = Number.isInteger(slideIndex) && slideIndex! >= 0 ? slideIndex : undefined;
     const meta = await this.game.getMeta(pin);
     if (!meta) return;
+    // A step of this game only: any other index would leave a set behind for hours.
+    if (
+      slide === undefined
+        ? questionIndex >= meta.totalQuestions
+        : slide >= (await this.slideCount(meta))
+    ) {
+      return;
+    }
     const device = socket.data.playerId ?? `screen:${socket.id}`;
     const key = gameKeys.ready(meta.id, mediaStepKey({ questionIndex, slideIndex: slide }));
     await this.redis.multi().sadd(key, device).expire(key, GAME_TTL_S).exec();
     await this.broadcastReadiness(pin);
+  }
+
+  private async slideCount(meta: GameMeta): Promise<number> {
+    return (await this.game.getSnapshot(meta.id))?.slides.length ?? 0;
   }
 
   /**
@@ -1554,10 +1578,7 @@ export class GameEngine {
   async setRoomName(pin: string, hostUserId: string, raw: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) throw new BadRequestException('session.already_started');
-    const name = String(raw ?? '')
-      .trim()
-      .replace(/\s+/g, ' ')
-      .slice(0, ROOM_NAME_MAX);
+    const name = oneLine(raw).slice(0, ROOM_NAME_MAX);
     await this.redis.hset(gameKeys.room(pin), roomHash({ name }));
     this.server.to(pin).emit('room:info', { name: name || null, hostName: meta.hostName });
   }
@@ -2069,6 +2090,10 @@ export class GameEngine {
       return reject('unknown'); // gone, not in this game, or the game is gone
     }
     const question = snapshot.questions[questionIndex];
+    // Already answered: refused before grading (the script below stays the guard).
+    if (await this.redis.hexists(gameKeys.answers(meta.id, questionIndex), playerId)) {
+      return reject('duplicate');
+    }
 
     // Temps serveur compensé de la latence (§6) ; latencyMs = RTT/2 (0 tant que non câblé).
     const tMs = Math.max(0, receivedAt - meta.questionStartedAt - player.latencyMs);

@@ -29,6 +29,7 @@
     "ended": "房间已关闭。",
     "banned": "你已被主持人移出此房间。",
     "join_required": "请先加入房间再作答。",
+    "already_joined": "你已经在这个房间里了。",
     "already_started": "测验已经开始。",
     "reveal_required": "仅在揭晓答案后才能执行该操作。",
     "timer_not_adjustable": "仅在答题进行中才能调整计时器。",
@@ -59,6 +60,7 @@
     "unsupported_type": "不支持的格式：图片、MP4 视频（H.264）或声音（MP3、M4A）。编辑器会转换此浏览器能读取的其他文件；不接受 SVG。",
     "file_missing": "缺少文件（“file”字段）。",
     "file_too_large": "文件过大（此类媒体最大 {{maxMb}} MB）。",
+    "image_too_large": "这张图片太大（最多 {{maxMp}} 百万像素）。",
     "not_found": "未找到媒体。",
     "demo_disabled": "演示实例已禁用媒体上传。",
     "video_with_audio": "视频自带声音：请移除音轨或视频。",
@@ -144,7 +146,9 @@
   "error": "发生了错误。",
   "host_seat": {
     "taken": "主持人席位已被占用。",
-    "manager_forbidden": "管理员不会占用主持席位。"
+    "manager_forbidden": "管理员不会占用主持席位。",
+    "local_only": "只有本地模式才有主持人席位。",
+    "already_host": "你已经是主持人：无需占用席位。"
   },
   "store": {
     "demo_disabled": "演示实例已关闭共享功能。",
@@ -205,5 +209,8 @@
     "token_invalid": "此初始化令牌无效（错误、已使用或已过期）：运行 `qd setup.token` 获取新令牌。",
     "session_invalid": "初始化会话已结束：请提供新的初始化令牌。",
     "too_many_attempts": "错误令牌过多：请等待一刻钟。"
+  },
+  "request": {
+    "too_large": "对服务器来说太大：请求被拒绝（超出其大小限制）。"
   }
 }

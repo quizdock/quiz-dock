@@ -137,7 +137,11 @@ export function AdminQuizzesPage() {
           <p className="text-muted-foreground text-sm">
             {t('quizzes.count', { count: data.total })}
           </p>
-          <DataTable columns={quizColumns(t, i18n.language)} data={data.items} />
+          <DataTable
+            columns={quizColumns(t, i18n.language)}
+            data={data.items}
+            rowId={(quiz) => quiz.id}
+          />
         </>
       )}
       <Pagination page={page} pages={pages} onChange={setPage} />
@@ -157,7 +161,13 @@ function quizColumns(t: T, locale: string): DataColumn<QuizItem>[] {
       cell: ({ row: { original: quiz } }) => (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{quiz.title}</span>
+            <Link
+              to="/quizzes/$quizId"
+              params={{ quizId: quiz.id }}
+              className="font-medium hover:underline"
+            >
+              {quiz.title}
+            </Link>
             <QuizStatusBadge status={quiz.status} />
             {quiz.livePin ? (
               <Badge variant="warning" className="gap-1">

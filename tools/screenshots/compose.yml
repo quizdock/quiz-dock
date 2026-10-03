@@ -24,4 +24,4 @@ services:
     image: quiz-dock-frontend:latest
     pull_policy: never
     ports: !override
-      - '${DEMO_PORT:-15183}:5173'
+      - '127.0.0.1:${DEMO_PORT:-15183}:5173'

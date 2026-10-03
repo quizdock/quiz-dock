@@ -1,4 +1,4 @@
-import type { User } from '@prisma/client';
+import { Prisma, type User } from '@prisma/client';
 import type { PrismaService } from '../prisma/prisma.service';
 import { saveUser } from './save-user';
 
@@ -33,5 +33,20 @@ describe('saveUser', () => {
       await saveUser(db, p, [...roles], existing);
       expect(db.user.upsert).toHaveBeenCalledTimes(1);
     }
+  });
+
+  it("an address that is another account's: saved without it, not refused", async () => {
+    const db = prisma();
+    db.user.upsert.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+        meta: { target: ['email'] },
+      }),
+    );
+    await expect(saveUser(db, principal, ['host'], null)).resolves.toBe(row);
+    expect(db.user.upsert).toHaveBeenLastCalledWith(
+      expect.objectContaining({ create: expect.objectContaining({ email: null }) }),
+    );
   });
 });

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useGameControllerMine } from '../api/generated/games/games';
+import { useEscape } from '@/lib/shortcuts';
 
 /** How often the indicator re-checks: a session someone else ended must fade out. */
 const POLL_MS = 15_000;
@@ -31,14 +32,10 @@ export function LiveSessions() {
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
+  useEscape(() => setOpen(false), open);
 
   const sessions = data?.data ?? [];
   if (sessions.length === 0) return null;

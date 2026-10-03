@@ -36,14 +36,6 @@ const AUDIO_CODECS = new Set(['mp4a']);
 /** Containers on the way from `moov` down to a track's sample descriptions. */
 const PATH_TO_STSD = ['mdia', 'minf', 'stbl', 'stsd'];
 
-interface Box {
-  type: string;
-  /** Offset of the payload (after the header). */
-  start: number;
-  /** Offset just past the box. */
-  end: number;
-}
-
 function fourcc(b: Uint8Array, at: number): string {
   return String.fromCharCode(b[at], b[at + 1], b[at + 2], b[at + 3]);
 }
@@ -52,35 +44,53 @@ function u32(b: Uint8Array, at: number): number {
   return ((b[at] << 24) >>> 0) + (b[at + 1] << 16) + (b[at + 2] << 8) + b[at + 3];
 }
 
-/** The boxes laid end to end in `[from, to)`; stops at the first one that does not fit. */
-function boxes(b: Uint8Array, from: number, to: number): Box[] {
-  const out: Box[] = [];
+/** An MP4 box: its type and where its payload lies. */
+export interface Mp4Box {
+  type: string;
+  /** Offset of the payload (after the header). */
+  start: number;
+  /** Offset just past the box. */
+  end: number;
+}
+
+/** Boxes read in one level at most: no real file comes near, a crafted one stops there. */
+const MAX_BOXES = 100_000;
+
+/**
+ * The boxes laid end to end in `[from, to)`, one at a time (a caller looking for
+ * one stops there); stops at the first one that does not fit.
+ */
+export function* mp4Boxes(b: Uint8Array, from: number, to: number): Generator<Mp4Box> {
   let at = from;
-  while (at + 8 <= to) {
+  for (let n = 0; n < MAX_BOXES && at + 8 <= to; n++) {
     let size = u32(b, at);
     const type = fourcc(b, at + 4);
     let header = 8;
     if (size === 1) {
-      if (at + 16 > to) break;
+      if (at + 16 > to) return;
       // 64-bit size: files under 2^53 bytes are all this reads.
       size = u32(b, at + 8) * 2 ** 32 + u32(b, at + 12);
       header = 16;
     } else if (size === 0) {
       size = to - at;
     }
-    if (size < header || at + size > to) break;
-    out.push({ type, start: at + header, end: at + size });
+    if (size < header || at + size > to) return;
+    yield { type, start: at + header, end: at + size };
     at += size;
   }
-  return out;
 }
 
-function child(b: Uint8Array, parent: Box, type: string): Box | undefined {
-  return boxes(b, parent.start, parent.end).find((x) => x.type === type);
+/** The first box of `type` in `[from, to)`. */
+export function firstMp4Box(b: Uint8Array, from: number, to: number, type: string) {
+  for (const box of mp4Boxes(b, from, to)) if (box.type === type) return box;
+  return undefined;
 }
+
+const child = (b: Uint8Array, parent: Mp4Box, type: string) =>
+  firstMp4Box(b, parent.start, parent.end, type);
 
 /** `hdlr` handler of a track (`vide`, `soun`, …), or null. */
-function handlerOf(b: Uint8Array, trak: Box): string | null {
+function handlerOf(b: Uint8Array, trak: Mp4Box): string | null {
   const mdia = child(b, trak, 'mdia');
   const hdlr = mdia && child(b, mdia, 'hdlr');
   // full box: version+flags (4), pre_defined (4), handler_type (4)
@@ -88,26 +98,34 @@ function handlerOf(b: Uint8Array, trak: Box): string | null {
 }
 
 /** Sample entry types of a track (`avc1`, `hvc1`, `mp4a`, …). */
-function sampleEntriesOf(b: Uint8Array, trak: Box): string[] {
-  let box: Box | undefined = trak;
+function sampleEntriesOf(b: Uint8Array, trak: Mp4Box): string[] {
+  let box: Mp4Box | undefined = trak;
   for (const type of PATH_TO_STSD) {
     box = box && child(b, box, type);
   }
   if (!box || box.start + 8 > box.end) return [];
   // full box: version+flags (4), entry_count (4), then one box per entry
-  return boxes(b, box.start + 8, box.end).map((x) => x.type);
+  return [...mp4Boxes(b, box.start + 8, box.end)].map((x) => x.type);
 }
 
 /** Reads an MP4 container; `null` when the bytes are not one at all. */
 function sniffMp4(b: Uint8Array): SniffResult | null {
-  const top = boxes(b, 0, b.length);
-  if (top[0]?.type !== 'ftyp' || top[0].end - top[0].start < 4) return null;
-  if (fourcc(b, top[0].start) === 'qt  ') return { ok: false, reason: 'quicktime' };
-  const moov = top.find((x) => x.type === 'moov');
+  const top = mp4Boxes(b, 0, b.length);
+  const ftyp = top.next().value;
+  if (!ftyp || ftyp.type !== 'ftyp' || ftyp.end - ftyp.start < 4) return null;
+  if (fourcc(b, ftyp.start) === 'qt  ') return { ok: false, reason: 'quicktime' };
+  let moov: Mp4Box | undefined;
+  for (const box of top) {
+    if (box.type === 'moov') {
+      moov = box;
+      break;
+    }
+  }
   if (!moov) return { ok: false, reason: 'unsupported_type' };
   let video = false;
   let audio = false;
-  for (const trak of boxes(b, moov.start, moov.end).filter((x) => x.type === 'trak')) {
+  for (const trak of mp4Boxes(b, moov.start, moov.end)) {
+    if (trak.type !== 'trak') continue;
     const handler = handlerOf(b, trak);
     // Timecode, subtitles, metadata (an iPhone adds some): not what a screen plays.
     if (handler !== 'vide' && handler !== 'soun') continue;

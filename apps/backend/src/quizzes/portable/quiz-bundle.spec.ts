@@ -28,7 +28,6 @@ function makeQuiz(): ExportableQuiz {
     description: `Intro ![map](/api/v1/media/${INLINE})`,
     coverMediaId: IMG,
     status: 'ready',
-    visibility: 'private',
     language: 'fr',
     questionCount: 2,
     feedbackEnabled: false,

@@ -34,6 +34,7 @@ const serveStatic = clientDir
           '/api/{*splat}',
           '/api',
           '/health',
+          '/health/ready',
           '/config.js',
           '/branding/override.css',
           ...ICONS.map((icon) => `/${icon}`),

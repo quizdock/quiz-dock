@@ -65,19 +65,6 @@ export async function quizList(out: Output, prisma: Db, who?: string): Promise<v
   );
 }
 
-/** `quiz:export <id> <file.zip|->`: the same bundle as the API export, whoever owns the quiz. */
-export async function quizExport(
-  out: Output,
-  portable: Portable,
-  id: string,
-  target: string,
-  io: BundleIo,
-): Promise<void> {
-  const { filename, zip } = await portable.exportZip(id);
-  await io.write(target, zip);
-  if (target !== '-') out.line(`Exported ${filename} (${zip.length} bytes) to ${target}.`);
-}
-
 /** `quiz:import <file|-> <sub|email>`: a new draft in that user's bank, as the API import does. */
 export async function quizImport(
   out: Output,

@@ -4,6 +4,12 @@ import type { ServerToClientEvents } from '@quiz-dock/contracts';
 import type { Socket } from 'socket.io';
 import { toErrorResponse } from '../common/error-response';
 
+/** The answer of a refused request that asked for one (`emitWithAck`). */
+export interface WsRefusal {
+  ok: false;
+  error: { code: string; params?: Record<string, string | number> };
+}
+
 /**
  * Convertit toute exception levée dans un handler WS en event **`error` typé**
  * (`{ code, params? }`, conforme à `@quiz-dock/contracts`) plutôt que l'event
@@ -18,6 +24,11 @@ export class WsExceptionFilter extends BaseWsExceptionFilter {
     const socket = host.switchToWs().getClient<Socket<never, ServerToClientEvents>>();
     const { status, body } = toErrorResponse(exception);
     if (status >= 500) this.log.error(`WS ${status} (${body.code})`, exception as Error);
-    socket.emit('error', { code: body.code, params: body.params });
+    const error = { code: body.code, params: body.params };
+    socket.emit('error', error);
+    // A request that waits for its answer gets the refusal as that answer: the
+    // `error` event says nothing of which request it refuses.
+    const ack: unknown = host.getArgByIndex(2);
+    if (typeof ack === 'function') (ack as (res: WsRefusal) => void)({ ok: false, error });
   }
 }

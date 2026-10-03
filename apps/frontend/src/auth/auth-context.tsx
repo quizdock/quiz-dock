@@ -10,6 +10,7 @@ import {
 import { meControllerMe } from '../api/generated/me/me';
 import { setAuthHeaders, setSessionAuthed, setUnauthorizedHandler } from '../api/http';
 import { getDemo } from '../config';
+import { forgetItem, storeItem } from '@/lib/storage';
 
 const STORAGE_KEY = 'live.localUser';
 const AFTER_LOGIN_KEY = 'live.afterLogin';
@@ -77,8 +78,10 @@ export function bindOidcSession(): void {
  * what the move to a server-side session keeps away from scripts.
  */
 export function forgetStoredTokens(): void {
-  for (const store of [window.localStorage, window.sessionStorage]) {
+  for (const name of ['localStorage', 'sessionStorage'] as const) {
     try {
+      // Reading the property itself throws when site data is blocked.
+      const store = window[name];
       for (const key of Object.keys(store)) {
         if (key.startsWith('oidc.')) store.removeItem(key);
       }
@@ -100,7 +103,7 @@ export function getLocalUser(): string | null {
   // would only show the wrong one in the menu.
   const demo = getDemo();
   if (stored && demo && stored !== demo.user) {
-    localStorage.setItem(STORAGE_KEY, demo.user);
+    storeItem(STORAGE_KEY, demo.user);
     return demo.user;
   }
   return stored;
@@ -154,8 +157,8 @@ function applyLocalUser(name: string | null): void {
 
 /**
  * Rôles côté backend de l'identité courante (`GET /me`), ou `null` si injoignable.
- * En mode local c'est ici que le **siège d'hôte** se décide : le premier arrivé
- * devient `host`, les autres restent participants. L'ensemble peut porter les
+ * En mode local, le **siège d'hôte** en décide : qui l'a pris (explicitement, depuis
+ * la page de connexion) est `host`, les autres restent participants. L'ensemble peut porter les
  * deux rôles (RG-14) ; la page de connexion ne regarde que « puis-je animer ? ».
  */
 export async function fetchRole(): Promise<UserRole | null> {
@@ -215,7 +218,7 @@ export function AuthProvider({
   const loginLocal = useCallback(
     async (name: string) => {
       const trimmed = name.trim();
-      localStorage.setItem(STORAGE_KEY, trimmed);
+      storeItem(STORAGE_KEY, trimmed);
       applyLocalUser(trimmed);
       setUser(trimmed);
       forgetReads();
@@ -235,7 +238,7 @@ export function AuthProvider({
   const dropLocal = useCallback(() => {
     // Pas d'identité conservée : sinon la garde de route et la nav la
     // traiteraient comme un hôte connecté.
-    localStorage.removeItem(STORAGE_KEY);
+    forgetItem(STORAGE_KEY);
     applyLocalUser(null);
     setUser(null);
     forgetReads();
@@ -278,7 +281,7 @@ export function AuthProvider({
     } else {
       // Rend le siège d'hôte (no-op si on ne le tenait pas) avant d'oublier l'identité.
       await hostSeatControllerRelease().catch(() => undefined);
-      localStorage.removeItem(STORAGE_KEY);
+      forgetItem(STORAGE_KEY);
     }
     applyLocalUser(null);
     setUser(null);

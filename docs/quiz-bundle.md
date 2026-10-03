@@ -26,9 +26,9 @@ Contributors changing the bundle schema or a content schema run
 `pnpm generate:schema` and commit the result.
 
 > **Videos and sounds (version 3).** A question's visual may be an MP4 video
-> (H.264, AAC or no audio) and its audio slot an MP3. The formats of the audio
-> suspended in [#42](https://github.com/quizdock/quiz-dock/issues/42) (ogg, wav,
-> m4a) are still refused.
+> (H.264, AAC or no audio) and its audio slot an MP3 or an M4A (AAC, what the
+> editor converts every sound to). Other audio formats (ogg, wav) are refused:
+> the editor converts them before upload, an import does not.
 
 - **Export** — editor header → *Export*, `GET /api/v1/quizzes/:id/export`, or
   `qd quiz:export <id> <file.zip>` from the operator CLI
@@ -50,9 +50,16 @@ Contributors changing the bundle schema or a content schema run
   `qd quiz:import <file> <sub|email>`. The result is a **new draft** owned by
   the importer, with its own copies of the media. Nothing is merged or
   overwritten.
-- **From another tool** — no converter yet: a chatbot prompt writes the
-  `quiz.json` from a PDF, screenshots or a spreadsheet
-  ([import a quiz](https://quizdock.github.io/docs/host/import-a-quiz/)).
+- **From another tool** — a Kahoot spreadsheet (`.xlsx`) imports as is, through the
+  same *Import*. Anything else: a chatbot prompt writes the `quiz.json` from a PDF,
+  screenshots or a spreadsheet
+  ([import a quiz](https://quizdock.github.io/docs/host/import-a-quiz/)); an assistant
+  connected through the MCP server checks and imports it itself (`validate_quiz`,
+  `import_quiz`).
+- **Check without importing** — `POST /api/v1/quizzes/validate` (`{"json": "<the
+  quiz.json text>"}`) answers what an import would say of it, schema and per-type
+  rules, without creating anything: the check behind the MCP server's
+  `validate_quiz` and `qd quiz:validate`, for a tool that writes `quiz.json` files.
 
 ## `quiz.json`
 
@@ -116,7 +123,7 @@ Contributors changing the bundle schema or a content schema run
   the next question, or at the end.
 - Media are referenced by relative path under `media/` (flat, no
   sub-folders), including inline Markdown images. Accepted types: png, jpg,
-  gif, webp, avif, mp4, mp3 — checked by content like any upload, each within
+  gif, webp, avif, mp4, mp3, m4a — checked by content like any upload, each within
   its kind's limit (`MEDIA_MAX_BYTES`, `MEDIA_MAX_VIDEO_MB`,
   `MEDIA_MAX_AUDIO_MB`), the whole zip within `IMPORT_MAX_BYTES` (raise it for
   quizzes carrying videos). Nothing the archive declares is trusted: sizes are
@@ -134,7 +141,7 @@ Contributors changing the bundle schema or a content schema run
   own `audioTarget`; omitted, it follows the quiz (or the host's choice for a
   session).
 - A question's `media` is its visual (an image or an MP4), `audio` its sound
-  (an MP3). Never both a video and a sound: the video carries its own.
+  (an MP3 or an M4A). Never both a video and a sound: the video carries its own.
 - `waveformSize` (version 3): how thick its sound's waveform is drawn — `S`,
   `M` (default) or `L`; `hidden` (version 4): not drawn on the projection nor
   the phones, only on the host's console (the sound still plays).
@@ -160,7 +167,9 @@ Contributors changing the bundle schema or a content schema run
   ordering `partial` (credit per right element), text_input `lenient`
   (typos tolerated). `pointsMode` accepts `standard`, `double`, `none`, `fixed`
   (full points, no speed weighting).
-- An invalid bundle is refused as a whole, with the offending item and field.
+- An invalid bundle is refused as a whole. An item whose content breaks its schema is
+  named, with its field (`import.invalid_item`); a bundle whose structure is wrong is
+  refused as one (`import.invalid_bundle`).
 - An imported quiz is a **draft**: a step may still miss what it needs to be played
   (a question's right answer, target number, picture or alt text; a slide that shows
   nothing). The editor marks it *Unfinished*, and publishing the quiz waits until every
@@ -176,7 +185,7 @@ at `null`. An imported bundle keeps whatever it carried, except its identity
 
 | Field | Type | Meaning |
 |---|---|---|
-| `version` (top level) | integer | Manifest schema version, up to `6`. An export stamps the **lowest version it needs** — `3`, `4` once a waveform is `hidden`, `5` once a slide carries a video or a sound, `6` once a question is an image choice — so an instance whose importer stops at an older version still takes a quiz that uses nothing newer. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
+| `version` (top level) | integer | Manifest schema version, up to `7`. An export stamps the **lowest version it needs** — `3`, `4` once a waveform is `hidden`, `5` once a slide carries a video or a sound, `6` once a question is an image choice, `7` once a question's picture or video sits above or beside its text (`mediaPosition`) — so an instance whose importer stops at an older version still takes a quiz that uses nothing newer. Absent in the earliest bundles: read as `0`, same layout. A bundle from a newer schema is refused. |
 | `media` (top level) | object | What each media file carries beyond its bytes, keyed by the same path the items reference: an `alt`, the description read aloud by screen readers (version 2); for a sound or a video, what the editor measured (version 3) — `durationMs`, `peaks` (200 values in 0–1, the waveform the screens draw), `origin` (`upload` or `recording`), `loudnessLufs` and `peakDbfs` (the playback gain). A sound needs `durationMs` and `peaks`. Absent in a version 1 bundle, and an image with no alternative text simply has no entry. |
 | `slug` | `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤ 60 | The identity that travels — never an internal id. Fixed by the owner's first export (derived from the title); the zip is named after it. Ignored on import: a copy carries nothing of its origin and gets its own slug at its first export. |
 | `namespace` | string or `null` | Reserved for a Store submission (`<username>/<slug>`); `null` on a local export. Ignored on import. |

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { GameSocket } from './game-client';
 import { BACKDROP_EDGE } from './surface';
+import { storeItem, storedItem } from '@/lib/storage';
 
 /**
  * Avis de fin de partie (§2.11) : note Likert 5 étoiles + commentaire facultatif.
@@ -42,9 +43,7 @@ export function RatingPanel({
   }, [comment, draftKey]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(
-    () => typeof localStorage !== 'undefined' && localStorage.getItem(storageKey) === '1',
-  );
+  const [done, setDone] = useState(() => storedItem(storageKey) === '1');
 
   if (done) {
     return hideWhenDone ? null : (
@@ -64,7 +63,7 @@ export function RatingPanel({
       settled = true;
       setSubmitting(false);
       if (ok) {
-        localStorage.setItem(storageKey, '1');
+        storeItem(storageKey, '1');
         clearDraft(draftKey);
         setDone(true);
       } else {

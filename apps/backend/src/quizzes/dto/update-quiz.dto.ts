@@ -9,11 +9,12 @@ import {
   TAG_RE,
 } from '@quiz-dock/contracts';
 import { z } from 'zod';
+import { QUIZ_DESCRIPTION_MAX } from './create-quiz.dto';
 
 /** Mise à jour partielle d'un quiz. `null` sur description/cover = effacement. */
 export const updateQuizSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
-  description: z.string().trim().max(2000).nullable().optional(),
+  description: z.string().trim().max(QUIZ_DESCRIPTION_MAX).nullable().optional(),
   /** BCP 47 ("en", "zh-TW"). */
   language: z.string().trim().regex(LANGUAGE_RE).max(10).optional(),
   feedbackEnabled: z.boolean().optional(),

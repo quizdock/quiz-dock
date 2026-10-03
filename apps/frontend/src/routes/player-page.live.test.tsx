@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { disconnectGame } from '../game/game-client';
 import { renderApp } from '../test/harness';
 
 /**
@@ -18,6 +19,9 @@ interface FakeSocket {
   emit: (e: string, payload: unknown, ack?: (r: unknown) => void) => void;
   disconnect: () => void;
   connected: boolean;
+  /** The manager's events (`reconnect`). */
+  io: { on: (e: string, cb: () => void) => void; off: () => void };
+  ioHandlers: Map<string, () => void>;
 }
 
 const { sockets } = vi.hoisted(() => ({ sockets: [] as unknown[] }));
@@ -25,9 +29,12 @@ const { sockets } = vi.hoisted(() => ({ sockets: [] as unknown[] }));
 const makeSocket = (): FakeSocket => {
   const handlers = new Map<string, (p: unknown) => void>();
   const emitted: Array<{ event: string; payload: unknown }> = [];
+  const ioHandlers = new Map<string, () => void>();
   return {
     emitted,
     handlers,
+    ioHandlers,
+    io: { on: (e, cb) => ioHandlers.set(e, cb), off: () => {} },
     connected: true,
     on: (e, cb) => handlers.set(e, cb),
     once: () => {},
@@ -52,6 +59,7 @@ vi.mock('socket.io-client', () => ({
 
 describe('PlayerPage (intégration socket réel)', () => {
   afterEach(() => {
+    disconnectGame(); // the client keeps its socket between pages: not between tests
     sockets.length = 0;
     localStorage.clear();
     vi.clearAllMocks();
@@ -93,6 +101,43 @@ describe('PlayerPage (intégration socket réel)', () => {
     // join ET submit sur le même socket (sinon le serveur rejette le submit).
     expect(sock.emitted.some((e) => e.event === 'player:join')).toBe(true);
     expect(sock.emitted.some((e) => e.event === 'player:submit')).toBe(true);
+    expect(await screen.findByText(/Réponse enregistrée/)).toBeInTheDocument();
+  });
+
+  it('an answer given while the connection is down goes once the player is back', async () => {
+    renderApp('/join/771122');
+    fireEvent.change(await screen.findByPlaceholderText('Votre pseudo'), {
+      target: { value: 'Alice' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Rejoindre le salon/ }));
+    await waitFor(() => expect(sockets).toHaveLength(1));
+    const sock = sockets[0] as FakeSocket;
+    await waitFor(() => expect(sock.emitted.some((e) => e.event === 'player:join')).toBe(true));
+    sock.handlers.get('game:state')?.({ state: 'ANSWERING', questionIndex: 0, totalQuestions: 1 });
+    sock.handlers.get('question:start')?.({
+      questionIndex: 0,
+      type: 'single_choice',
+      prompt: 'Capitale ?',
+      options: [{ id: 'opt-paris', text: 'Paris', color: 'red', shape: 'triangle' }],
+      timeLimitS: 5,
+      basePoints: 1000,
+      startedAt: Date.now(),
+      endsAt: Date.now() + 5000,
+    });
+
+    sock.handlers.get('disconnect')?.('transport close');
+    fireEvent.click(await screen.findByRole('button', { name: /Paris/ }));
+    expect(await screen.findByText(/votre réponse partira dès son retour/)).toBeInTheDocument();
+    expect(sock.emitted.some((e) => e.event === 'player:submit')).toBe(false);
+
+    // Back: the player rejoins the room first, then the answer goes.
+    sock.ioHandlers.get('reconnect')?.();
+    await waitFor(() =>
+      expect(sock.emitted.map((e) => e.event).slice(-2)).toEqual([
+        'player:reconnect',
+        'player:submit',
+      ]),
+    );
     expect(await screen.findByText(/Réponse enregistrée/)).toBeInTheDocument();
   });
 });

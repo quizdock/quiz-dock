@@ -6,6 +6,13 @@ import { settings, type SettingsService } from '../../admin/settings/settings.se
 
 type Jwks = ReturnType<typeof createRemoteJWKSet>;
 
+/**
+ * How long the provider may take to answer (discovery, token exchange and
+ * renewal): a provider that hangs must not hold a sign-in for minutes, nor a
+ * renewal past its lock (`oidc-sessions.ts`).
+ */
+export const IDP_TIMEOUT_MS = 5_000;
+
 /** The provider's endpoints the backend uses, each on the side it is reached from. */
 interface Endpoints {
   /** Front channel (the browser goes there). */
@@ -162,7 +169,7 @@ export class OidcClient {
 
   private async fetchDiscovery(): Promise<Endpoints> {
     const url = this.toInternal(discoveryUrl(this.settings.issuer));
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(IDP_TIMEOUT_MS) });
     if (!res.ok) throw new Error(`OIDC discovery failed: ${url} → HTTP ${res.status}`);
     const doc = (await res.json()) as Record<string, unknown>;
     const str = (key: string): string | null => (typeof doc[key] === 'string' ? doc[key] : null);
@@ -267,7 +274,12 @@ export class OidcClient {
     } else {
       body.set('client_id', clientId);
     }
-    const res = await fetch((await this.discover()).token, { method: 'POST', headers, body });
+    const res = await fetch((await this.discover()).token, {
+      method: 'POST',
+      headers,
+      body,
+      signal: AbortSignal.timeout(IDP_TIMEOUT_MS),
+    });
     const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
     if (!res.ok) {
       // 400 invalid_grant & co: the grant is dead. Anything else is the provider's trouble.
@@ -288,12 +300,17 @@ export class OidcClient {
     };
   }
 
-  /** Validates an access token: signature against the JWKS, `iss`, `exp`, and `aud` when configured. */
+  /**
+   * Validates an access token: signature against the JWKS, `iss`, `exp`, and `aud`
+   * when configured. An ID token is refused: it is not meant to call an API, and
+   * ours travels in the browser (the logout's `id_token_hint`).
+   */
   async verifyAccessToken(token: string): Promise<JWTPayload> {
     const { payload } = await jwtVerify(token, await this.keys(), {
       issuer: this.settings.issuer,
       ...(this.settings.audience ? { audience: this.settings.audience } : {}),
     });
+    if (isIdToken(payload)) throw new Error('An ID token is not an access token.');
     return payload;
   }
 
@@ -306,4 +323,18 @@ export class OidcClient {
     if (payload.nonce !== nonce) throw new Error('ID token nonce mismatch.');
     return payload;
   }
+}
+
+/**
+ * An ID token, told from an access token by the claims only an ID token has
+ * (OIDC Core §2, §3.1.3.6, §3.3.2.11): `nonce`, `at_hash`, `c_hash` (a renewed ID
+ * token may lack the nonce, not the hash), or Keycloak's `typ: ID`.
+ */
+function isIdToken(payload: JWTPayload): boolean {
+  return (
+    payload.typ === 'ID' ||
+    payload.nonce !== undefined ||
+    payload.at_hash !== undefined ||
+    payload.c_hash !== undefined
+  );
 }

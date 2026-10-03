@@ -43,7 +43,14 @@ const peekSession = vi.fn(() =>
 );
 
 vi.mock('../game/use-game-session', () => ({
-  useGameSession: () => ({ view: hookState.value, socket: fakeSocket, markJoined, markReady }),
+  useGameSession: (pin: string) => ({
+    view: hookState.value,
+    socket: fakeSocket,
+    markJoined,
+    markReady,
+    submitAnswer: (questionIndex: number, answer: unknown) =>
+      fakeSocket.emit('player:submit', { pin, questionIndex, answer }),
+  }),
 }));
 vi.mock('../game/game-client', () => ({
   joinSession: (...a: unknown[]) => joinSession(...a),
@@ -75,6 +82,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   answerAccepted: null,
   answerRefusal: null,
   answerAckAt: null,
+  answerPending: false,
   lobbyCount: null,
   fullCapture: false,
   personalTracking: true,
@@ -398,6 +406,36 @@ describe('PlayerPage (client participant)', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Descendre' })[0]);
     const text = () => document.body.textContent ?? '';
     await waitFor(() => expect(text().indexOf('Beta')).toBeLessThan(text().indexOf('Alpha')));
+  });
+
+  it('at the reveal, an ordering never sent is not shown as the answer', async () => {
+    loadPlayerSession.mockReturnValue({
+      pin: '771122',
+      nickname: 'Bob',
+      sessionToken: 't',
+      playerId: 'p1',
+    });
+    const question = {
+      questionIndex: 0,
+      type: 'ordering',
+      prompt: 'Dans l’ordre ?',
+      options: ['Alpha', 'Beta', 'Gamma'].map((text) => ({ id: text, text })),
+      startedAt: Date.now() - 1_000,
+      endsAt: Date.now() + 20_000,
+      timeLimitS: 20,
+    } as never;
+    hookState.value = view({ state: GameState.Answering, questionIndex: 0, question });
+    renderApp('/join/771122');
+    await screen.findByText('Dans l’ordre ?');
+    hookState.value = view({
+      state: GameState.Reveal,
+      questionIndex: 0,
+      question,
+      reveal: { distribution: {}, correctOrder: ['Gamma', 'Beta', 'Alpha'] } as never,
+    });
+    renderApp('/join/771122');
+    expect(await screen.findAllByText('Dans l’ordre ?')).not.toHaveLength(0);
+    expect(screen.queryByText('Ta réponse :')).toBeNull();
   });
 
   describe('“Ready!” in the lobby (#104)', () => {
@@ -820,8 +858,10 @@ describe('PlayerPage (client participant)', () => {
     });
     renderApp('/join/771122');
 
-    expect(await screen.findByText(/Juste/)).toBeInTheDocument();
-    expect(screen.getByText(/\+850 points/)).toBeInTheDocument();
+    expect(await screen.findByText('Juste !')).toBeInTheDocument();
+    expect(screen.getByText('+850 points')).toBeInTheDocument();
+    // Said too, in the region a screen reader follows.
+    expect(screen.getByText('Juste ! +850 points')).toHaveAttribute('aria-live', 'polite');
     expect(screen.getByText(/Rang : 3/)).toBeInTheDocument();
   });
 

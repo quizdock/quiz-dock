@@ -23,7 +23,6 @@
   "running_other": "{{count}} salons ouverts",
   "seatTaken": "Le siège d’animateur est occupé par quelqu’un d’autre : vous ne pouvez rejoindre des salons qu’en tant que participant.",
   "loadSamples": "Charger les quiz d’exemple",
-  "loadSamplesHint": "Deux quiz prêts à jouer en anglais (France, Taïwan) pour essayer l’application tout de suite.",
   "seatBackToLogin": "Retour à la connexion",
   "allSessions": "Tous les salons de l’instance",
   "hostedBy": "animée par {{name}}",
@@ -65,8 +64,6 @@
   "browseTemplates": "Parcourir les modèles",
   "browseTemplatesHint": "Des quiz tout faits pour créer le vôtre — rien n’arrive dans votre banque sans que vous le demandiez.",
   "mediaAdmin": {
-    "title": "Médias de l’instance",
-    "adminOnly": "Cette page est réservée aux administrateurs.",
     "loading": "Chargement…",
     "kind": {
       "image": "Images",
@@ -154,7 +151,6 @@
       "empty": "Aucun média global pour l’instant : ajoutez-en avec les boutons ci-dessus, ou depuis la vue Tous.",
       "credit": "Crédit (auteur, licence, source)",
       "remove": "Retirer",
-      "removeNamed": "Retirer {{name}}",
       "removeTitle": "Retirer ce média global ?",
       "removeDescription": "Les hôtes ne le trouvent plus dans leur bibliothèque. Les quiz qui l’utilisent gardent leur copie.",
       "removeFailed": "Le média n’a pas pu être retiré.",

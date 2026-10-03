@@ -207,7 +207,66 @@ export interface SettingRule {
 const PROXY_BODY_LIMIT = 64 * 1024 * 1024;
 const MB = 1024 * 1024;
 
+/**
+ * The generation of deployment files this image expects (`QUIZDOCK_FILES` in its
+ * Compose files). 2: the files `quizdock upgrade` keeps in step with the release
+ * (Keycloak 26.7, the hardened migrations, /health/ready).
+ */
+export const DEPLOYMENT_FILES_EXPECTED = 2;
+
+/** Passwords the Compose files and the env examples ship with: fine to try, not to keep. */
+export const DEFAULT_PASSWORDS = ['live', 'change-me', 'change-me-database'];
+
+/** The password of a connection string, if it carries one. */
+function urlPassword(url: string): string | null {
+  try {
+    return decodeURIComponent(new URL(url).password) || null;
+  } catch {
+    return null;
+  }
+}
+
 export const SETTING_RULES: SettingRule[] = [
+  {
+    key: 'QUIZDOCK_KEYCLOAK_DB',
+    check: (s) =>
+      s.get(SETTINGS.QUIZDOCK_KEYCLOAK_DB) === 'shared'
+        ? "The bundled Keycloak uses the database superuser (an install made before 0.13.2): a flaw in either Keycloak or QuizDock reaches the other's data, Keycloak's signing keys included. A new install gives Keycloak its own role (KEYCLOAK_DB_USER). Nothing to do for now: a coming release of the quizdock script will move an existing install to it."
+        : null,
+  },
+  {
+    key: 'DATABASE_URL',
+    check: (s) => {
+      const password = urlPassword(s.get(SETTINGS.DATABASE_URL));
+      return password && DEFAULT_PASSWORDS.includes(password)
+        ? `The database password is a default one ("${password}"): set POSTGRES_PASSWORD in .env to a secret of your own. PostgreSQL is on the internal network only, but anything that reaches it with that password reads every quiz and result.`
+        : null;
+    },
+  },
+  {
+    key: 'QUIZDOCK_FILES',
+    check: (s) => {
+      // The single image runs without Compose files; a plain `docker run` says nothing either.
+      if (s.get(SETTINGS.QUIZDOCK_FLAVOR) === 'standalone') return null;
+      const files = s.get(SETTINGS.QUIZDOCK_FILES);
+      if (files !== null && files >= DEPLOYMENT_FILES_EXPECTED) return null;
+      return "The Compose files are older than this release expects (QUIZDOCK_FILES): with the quizdock script, download its latest version, run `./quizdock upgrade`, then adopt any `<file>.new` it writes next to a file you edited. Started otherwise (your own Compose, `docker run`), compare with the release's docker-compose.prod.yml.";
+    },
+  },
+  {
+    key: 'APP_PUBLIC_URL',
+    check: (s) =>
+      s.get(SETTINGS.AUTH_MODE) === 'oidc' && !s.get(SETTINGS.APP_PUBLIC_URL)
+        ? "APP_PUBLIC_URL is not set: the sign-in's return address is taken from each request. Set it to the address people use, and register exactly <APP_PUBLIC_URL>/auth/callback with your identity provider."
+        : null,
+  },
+  {
+    key: 'TRUST_PROXY',
+    check: (s) =>
+      seen.plainSignInBehindHttps && s.get(SETTINGS.APP_PUBLIC_URL).startsWith('https://')
+        ? 'A sign-in arrived over plain HTTP while APP_PUBLIC_URL is https: the reverse proxy in front is not trusted, so the session cookie is neither Secure nor bound to this host. Set TRUST_PROXY to its address (or the hop count).'
+        : null,
+  },
   {
     key: 'ALLOW_ANONYMOUS_PARTICIPANTS',
     check: (s) =>
@@ -230,6 +289,9 @@ export const SETTING_RULES: SettingRule[] = [
     },
   },
 ];
+
+/** What the backend saw at run time, that a rule reads (it lasts until the next start). */
+export const seen = { plainSignInBehindHttps: false };
 
 /** The values changed from the administration, as the backend holds them. */
 export const overrides = new OverrideStore();

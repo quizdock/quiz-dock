@@ -28,6 +28,7 @@ import {
 } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import type { Response } from 'express';
+import { mediaHeaders } from './media-response';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { AllowManager } from '../auth/allow-manager.decorator';
 import { Public } from '../auth/public.decorator';
@@ -220,7 +221,6 @@ export class MediaController {
     res.set({
       'Accept-Ranges': 'bytes',
       'Cache-Control': 'public, max-age=31536000, immutable',
-      'X-Content-Type-Options': 'nosniff',
     });
     const range = parseRange(rangeHeader, size);
     if (range === 'unsatisfiable') {
@@ -236,7 +236,7 @@ export class MediaController {
     } else {
       res.set('Content-Length', String(size));
     }
-    res.set('Content-Type', mime);
+    res.set(mediaHeaders(mime));
     return new StreamableFile(stream);
   }
 

@@ -19,16 +19,17 @@
     "requires_question": "Un quiz debe tener al menos una pregunta para pasar a «listo» (RG-02).",
     "transition_forbidden": "Transición de estado no permitida: {{from}} → {{target}}.",
     "in_use": "Este quiz se está jugando en una sala: cierra primero la sala.",
-    "item_not_in_quiz": "Este elemento ya no pertenece a este cuestionario: recarga la página.",
+    "item_not_in_quiz": "Este elemento ya no pertenece a este quiz: recarga la página.",
     "reorder_incomplete": "Al orden enviado le faltan elementos: recarga la página e inténtalo de nuevo.",
-    "incomplete_one": "1 paso está sin terminar: complétalo para publicar el cuestionario.",
-    "incomplete_other": "{{count}} pasos están sin terminar: complétalos para publicar el cuestionario."
+    "incomplete_one": "1 paso está sin terminar: complétalo para publicar el quiz.",
+    "incomplete_other": "{{count}} pasos están sin terminar: complétalos para publicar el quiz."
   },
   "session": {
     "not_found": "Sala no encontrada o cerrada.",
     "ended": "La sala está cerrada.",
     "banned": "El anfitrión te ha expulsado de esta sala.",
     "join_required": "Únete a la sala antes de responder.",
+    "already_joined": "Ya estás en esta sala.",
     "already_started": "El quiz ya ha empezado.",
     "reveal_required": "Acción solo posible tras la revelación.",
     "timer_not_adjustable": "El temporizador solo se puede ajustar durante una pregunta.",
@@ -40,7 +41,7 @@
     "locked": "Esta sala ya no acepta nuevos participantes.",
     "open_access_forbidden": "El acceso libre no está permitido en este servidor.",
     "open_access_guests_only": "En acceso libre los participantes no tienen cuenta: ni seguimiento individual ni nombre tomado de una cuenta.",
-    "next_quiz_unavailable": "Este cuestionario no se puede jugar a continuación en esta sala.",
+    "next_quiz_unavailable": "Este quiz no se puede jugar a continuación en esta sala.",
     "review_unavailable": "Solo se puede volver a un paso entre dos preguntas.",
     "step_not_played": "Este paso aún no se ha jugado."
   },
@@ -59,6 +60,7 @@
     "unsupported_type": "Formato no admitido: una imagen, un vídeo MP4 (H.264) o un sonido (MP3, M4A). El editor convierte los demás archivos que este navegador puede leer; no se admite SVG.",
     "file_missing": "Falta el archivo (campo «file»).",
     "file_too_large": "Archivo demasiado grande (máximo {{maxMb}} MB para este tipo de medio).",
+    "image_too_large": "Esta imagen es demasiado grande (como máximo {{maxMp}} megapíxeles).",
     "not_found": "Medio no encontrado.",
     "demo_disabled": "La subida de medios está desactivada en la instancia de demo.",
     "video_with_audio": "Un vídeo ya tiene su propio sonido: quita la pista de audio o el vídeo.",
@@ -108,7 +110,7 @@
       "no_visual": "Una elección de imágenes no tiene imagen ni vídeo propios: sus respuestas son las imágenes.",
       "picture_required": "Elige una imagen para esta respuesta."
     },
-    "incomplete_in_ready_quiz": "Este cuestionario está publicado: vuelve a pasarlo a borrador para guardar una pregunta sin terminar.",
+    "incomplete_in_ready_quiz": "Este quiz está publicado: vuelve a pasarlo a borrador para guardar una pregunta sin terminar.",
     "multi_select": {
       "not_allowed": "Varias imágenes correctas solo se aplican a una elección de imágenes."
     },
@@ -144,11 +146,13 @@
   "error": "Se ha producido un error.",
   "host_seat": {
     "taken": "El puesto de anfitrión ya está ocupado.",
-    "manager_forbidden": "Un administrador no ocupa el asiento de anfitrión."
+    "manager_forbidden": "Un administrador no ocupa el asiento de anfitrión.",
+    "local_only": "Solo el modo local tiene un puesto de anfitrión.",
+    "already_host": "Ya eres anfitrión: no hay puesto que ocupar."
   },
   "store": {
     "demo_disabled": "El uso compartido está desactivado en una instancia de demostración.",
-    "not_ready": "Solo se puede compartir un cuestionario «listo».",
+    "not_ready": "Solo se puede compartir un quiz «listo».",
     "license_required": "Elige una licencia antes de compartir: una plantilla está hecha para reutilizarse y sus condiciones viajan con ella.",
     "entry_not_found": "Esta plantilla ya no está en el catálogo.",
     "not_yours": "Solo su autor, o un administrador, puede retirar una plantilla.",
@@ -157,18 +161,18 @@
   },
   "publication": {
     "slug_invalid": "El nombre corto solo admite minúsculas, cifras y guiones.",
-    "not_ready": "Solo un cuestionario listo se puede exportar para publicar.",
+    "not_ready": "Solo un quiz listo se puede exportar para publicar.",
     "license": "Elige una licencia (CC0, CC BY o CC BY-SA) antes de exportar para publicar.",
-    "language": "El idioma del cuestionario no es válido.",
+    "language": "El idioma del quiz no es válido.",
     "tags": "Añade al menos una etiqueta antes de exportar para publicar.",
-    "too_large": "El cuestionario es demasiado grande para el catálogo comunitario."
+    "too_large": "El quiz es demasiado grande para el catálogo comunitario."
   },
   "slide": {
     "two_sounds": "Una diapositiva reproduce un solo sonido a la vez: silencia su vídeo o quita su sonido.",
     "background_conflict": "Un fondo es una imagen o un degradado, no ambos.",
     "empty": "La diapositiva no muestra nada: añade un título, un texto, una imagen, un fondo o un vídeo.",
     "not_found": "Esta diapositiva ya no existe: se eliminó mientras tanto.",
-    "incomplete_in_ready_quiz": "Este cuestionario está publicado: vuelve a pasarlo a borrador para guardar una diapositiva que no muestra nada."
+    "incomplete_in_ready_quiz": "Este quiz está publicado: vuelve a pasarlo a borrador para guardar una diapositiva que no muestra nada."
   },
   "record": {
     "not_found": "Este elemento ya no existe: se eliminó mientras tanto.",
@@ -177,7 +181,7 @@
   },
   "mcp": {
     "busy": "Ya hay una importación en curso. Espera a que termine.",
-    "import_failed": "No se pudo importar el cuestionario. Consulta los registros del servidor.",
+    "import_failed": "No se pudo importar el quiz. Consulta los registros del servidor.",
     "rate_limit": "Demasiadas solicitudes del conector. Inténtalo de nuevo en un minuto."
   },
   "community": {
@@ -205,5 +209,8 @@
     "token_invalid": "Este token de puesta en marcha no es válido (incorrecto, usado o caducado): `qd setup.token` da uno nuevo.",
     "session_invalid": "La sesión de puesta en marcha ha terminado: introduce un nuevo token de puesta en marcha.",
     "too_many_attempts": "Demasiados tokens incorrectos: espera un cuarto de hora."
+  },
+  "request": {
+    "too_large": "Demasiado grande para el servidor: rechazó la solicitud (su límite de tamaño)."
   }
 }

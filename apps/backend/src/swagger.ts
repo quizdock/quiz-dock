@@ -15,6 +15,9 @@ export function buildSwaggerDocument(app: INestApplication): OpenAPIObject {
     .setTitle('QuizDock API')
     .setDescription('API REST du builder de quiz et des restitutions')
     .setVersion('0.1.0')
+    // What `@ApiBearerAuth()` names: an access token of the provider (AUTH_MODE=oidc).
+    // A browser sends its session cookie instead; local mode, `X-Local-User`.
+    .addBearerAuth()
     .build();
   return cleanupOpenApiDoc(SwaggerModule.createDocument(app, config));
 }

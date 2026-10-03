@@ -29,6 +29,10 @@ export function Popover({
   const root = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState<{ top: number; left?: number; right?: number } | null>(null);
+  const focusTrigger = () =>
+    root.current
+      ?.querySelector<HTMLElement>('button, [href], [tabindex]:not([tabindex="-1"])')
+      ?.focus();
 
   useEffect(() => {
     if (!open) return;
@@ -38,18 +42,33 @@ export function Popover({
     const onDown = (e: MouseEvent) => {
       if (!inside(e.target)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    // Escape is the menu's first (capture): it closes the menu only, not the drawer or
+    // the dialog under it, and gives the focus back to what opened it.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+      focusTrigger();
+    };
+    // The focus left the menu (Tab past its last item): it closes.
+    const onFocusOut = (e: FocusEvent) => {
+      if (!inside(e.relatedTarget)) setOpen(false);
+    };
     // Fixed to the window: a scroll or a resize would leave it behind its trigger.
     const onMove = (e: Event) => {
       if (!inside(e.target)) setOpen(false);
     };
     document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
+    document.addEventListener('keydown', onKey, true);
+    const box = panel.current;
+    box?.addEventListener('focusout', onFocusOut);
     window.addEventListener('scroll', onMove, true);
     window.addEventListener('resize', onMove);
     return () => {
       document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('keydown', onKey, true);
+      box?.removeEventListener('focusout', onFocusOut);
       window.removeEventListener('scroll', onMove, true);
       window.removeEventListener('resize', onMove);
     };
@@ -74,6 +93,18 @@ export function Popover({
         : { top, left: Math.max(MARGIN, at.left) },
     );
   }, [open, align]);
+
+  // Open: the focus goes into the menu, at the end of the page (a portal) where Tab
+  // would never reach it in time.
+  const placed = place !== null;
+  useEffect(() => {
+    if (!open || !placed) return;
+    panel.current
+      ?.querySelector<HTMLElement>(
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      ?.focus();
+  }, [open, placed]);
 
   return (
     <div ref={root} className="relative inline-flex">

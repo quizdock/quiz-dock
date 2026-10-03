@@ -36,6 +36,7 @@ interface TokenOpts {
   email?: string;
   roles?: string[];
   nickname?: string;
+  claims?: Record<string, unknown>;
 }
 
 async function makeToken(opts: TokenOpts = {}): Promise<string> {
@@ -48,6 +49,7 @@ async function makeToken(opts: TokenOpts = {}): Promise<string> {
     // Flat `roles` claim (default OIDC_ROLES_CLAIM); nested paths are tested separately.
     roles: opts.roles ?? ['host'],
     realm_access: { roles: ['nested-host'] },
+    ...opts.claims,
   })
     .setProtectedHeader({ alg: 'RS256', kid: KID })
     .setIssuer(opts.issuer ?? ISSUER)
@@ -175,6 +177,30 @@ describe('OidcProvider', () => {
     expect(await provider.authenticate(bearer(tampered))).toBeNull();
   });
 
+  it('keeps the e-mail unless the provider says it is not verified', async () => {
+    const provider = await buildProvider();
+    const verified = await provider.authenticate(
+      bearer(await makeToken({ email: 'ana@x.org', claims: { email_verified: true } })),
+    );
+    expect(verified?.email).toBe('ana@x.org');
+    const unverified = await provider.authenticate(
+      bearer(await makeToken({ email: 'boss@corp', claims: { email_verified: false } })),
+    );
+    expect(unverified?.email).toBeNull();
+  });
+
+  it('refuses an ID token as a Bearer: it travels in the browser', async () => {
+    const provider = await buildProvider();
+    const signIn = { nonce: 'n-123' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: signIn })))).toBeNull();
+    const renewed = { at_hash: 'h-456' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: renewed })))).toBeNull();
+    const keycloak = { typ: 'ID' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: keycloak })))).toBeNull();
+    const access = { typ: 'Bearer' };
+    expect(await provider.authenticate(bearer(await makeToken({ claims: access })))).not.toBeNull();
+  });
+
   it('vérifie l’audience quand elle est configurée', async () => {
     const provider = await buildProvider('quiz-dock-api');
     const ok = await provider.authenticate(bearer(await makeToken({ audience: 'quiz-dock-api' })));
@@ -217,7 +243,10 @@ describe('OidcProvider', () => {
       // Second call: discovery document is cached.
       await discovered.authenticate(bearer(await makeToken()));
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith(`${ISSUER}/.well-known/openid-configuration`);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${ISSUER}/.well-known/openid-configuration`,
+        expect.anything(),
+      );
       expect(createRemoteJWKSet).toHaveBeenLastCalledWith(
         new URL(`${ISSUER}/protocol/openid-connect/certs`),
       );

@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+
 const UNITS = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'] as const;
 
 /** A size for people: `2.4 MB`, `870 kB`, in the interface's language. */
@@ -30,4 +32,19 @@ export function formatAgo(iso: string, locale: string, now = Date.now()): string
     if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
   }
   return format.format(seconds, 'second');
+}
+
+/** A share (0..1) as a whole percentage, as the language writes it (`45 %`, `45%`, `%45`). */
+export function formatPercent(share: number, locale: string = i18next.language): string {
+  return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(
+    share,
+  );
+}
+
+/** A date, or a time, in the instance's language rather than the browser's. */
+export function formatDate(at: string | number | Date, locale: string = i18next.language): string {
+  return new Date(at).toLocaleDateString(locale);
+}
+export function formatTime(at: string | number | Date, locale: string = i18next.language): string {
+  return new Date(at).toLocaleTimeString(locale);
 }

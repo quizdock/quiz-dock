@@ -1,30 +1,15 @@
-import {
-  CircleAlert,
-  CircleCheck,
-  Download,
-  Eye,
-  Info,
-  Play,
-  RefreshCw,
-  TriangleAlert,
-} from 'lucide-react';
+import { CircleAlert, CircleCheck, Download, Eye, Info, Play, TriangleAlert } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StaleNotice } from '@/components/ui/stale-notice';
 import { saveBase64 } from '../../api/download';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LoadFailed, Spinner } from '@/components/ui/loading';
+import { Spinner } from '@/components/ui/loading';
 import { Select } from '@/components/ui/select';
-import {
-  type OperationDescriptor,
-  type OperationResult,
-  type OutputEntry,
-  useReadOperation,
-} from './admin-api';
+import { type OperationDescriptor, type OperationResult, type OutputEntry } from './admin-api';
 import { useOperationAction } from './use-operation-action';
 
 interface PropertySchema {
@@ -387,46 +372,5 @@ export function ResultView({
         </button>
       ) : null}
     </div>
-  );
-}
-
-/** A reading operation shown as soon as the page opens, refreshed on demand. */
-export function ReadPanel({
-  id,
-  title,
-  params,
-}: {
-  id: string;
-  title: string;
-  params?: Record<string, unknown>;
-}) {
-  const { t } = useTranslation('admin');
-  const read = useReadOperation(id, params);
-  return (
-    <Card className="flex flex-col gap-3 p-4">
-      <div className="flex items-center gap-2">
-        <h3 className="font-semibold">{title}</h3>
-        <Button
-          type="button"
-          size="sm"
-          variant="ghost"
-          className="ml-auto"
-          onClick={() => void read.refetch()}
-          disabled={read.isFetching}
-          aria-label={t('run.again')}
-          title={t('run.again')}
-        >
-          <RefreshCw aria-hidden className={read.isFetching ? 'size-4 animate-spin' : 'size-4'} />
-        </Button>
-      </div>
-      {read.isError && read.data ? <StaleNotice onRetry={() => void read.refetch()} /> : null}
-      {read.isError && !read.data ? (
-        <LoadFailed error={read.error} />
-      ) : !read.data ? (
-        <Spinner label={t('loading')} showLabel className="text-sm" />
-      ) : (
-        <ResultView result={read.data} />
-      )}
-    </Card>
   );
 }

@@ -333,7 +333,6 @@
     "write": "Run",
     "preview": "Preview",
     "confirm": "Confirm",
-    "again": "Read again",
     "confirmTitle": "Confirm this change?"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "Hand “{{title}}” over",
       "help": "To another account: the media only this quiz uses and its history follow it; {{owner}} keeps the rest.",
-      "search": "Name, subject or e-mail",
-      "player": "participant"
+      "search": "Name, subject or e-mail"
     },
     "actionsFor": "Actions for {{title}}"
   },
@@ -759,10 +757,13 @@
     },
     "unset": "{{key}} is not set.",
     "postgres_ok": "PostgreSQL reachable",
+    "postgres_superuser": "QuizDock connects as a PostgreSQL superuser. Nothing to do for now: a coming release of the quizdock script will give it a role of its own.",
     "migrations_applied_one": "{{count}} migration applied",
     "migrations_applied_other": "{{count}} migrations applied",
-    "migrations_pending": "{{count}} migration(s) pending: run the migrate step.",
-    "migrations_failed": "{{count}} migration(s) failed: see prisma migrate resolve.",
+    "migrations_pending_one": "{{count}} migration pending: run the migrate step.",
+    "migrations_pending_other": "{{count}} migrations pending: run the migrate step.",
+    "migrations_failed_one": "{{count}} migration failed: see prisma migrate resolve.",
+    "migrations_failed_other": "{{count}} migrations failed: see prisma migrate resolve.",
     "postgres_failed": "PostgreSQL unreachable: {{error}}",
     "redis_ok": "Redis reachable",
     "redis_failed": "Redis unreachable: {{error}}",

@@ -12,7 +12,6 @@
     "image_choice": "Resim seçimi"
   },
   "header": {
-    "title": "Quiz editörü",
     "history": "Geçmiş",
     "deleteQuiz": "Quizi sil",
     "preview": "Önizleme",
@@ -71,7 +70,6 @@
     "saved": "Kaydedildi"
   },
   "broadcast": {
-    "title": "Yayın",
     "fullCaptureHelp": "Her katılımcının cevap ayrıntılarını tutar (bireysel izleme). Sunumdan önce etkinleştirin.",
     "publish": "Yayınla (hazır)",
     "presenting": "Başlıyor…",
@@ -79,8 +77,6 @@
     "backToDraft": "Taslağa geri dön",
     "archive": "Arşiv",
     "restore": "Geri yükle",
-    "archiveTitle": "Arşivleme",
-    "archiveHelp": "Arşivlenmiş bir quiz ana listeden çıkar; geri yüklenebilir.",
     "fullCaptureNext": "Bir sonraki oynatılışında tam yanıt yakalama"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "Ekle",
     "moveUp": "Yukarı taşı",
     "moveDown": "Aşağı taşı",
-    "edit": "Düzenle",
     "deleteQuestion": "Soruyu sil",
     "dragHandle": "Yeniden sıralamak için sürükleyin",
     "itemsCount_one": "{{count}} öğe",
@@ -215,10 +210,14 @@
       "description": "Bu quiz yayımlandığı için her an sunulabilir: slaytta bir içerik olmalıdır. Bu slaytı olduğu gibi kaydetmek için quizi taslağa döndürün veya düzenlemeye devam edin."
     }
   },
+  "formSaved": "Kaydedildi",
   "discardConfirm": {
     "title": "Değişiklikler silinsin mi?",
     "description": "Kaydedilmemiş değişiklikler kaybolacaktır.",
-    "confirmLabel": "Vazgeç"
+    "confirmLabel": "Vazgeç",
+    "discardAndContinue": "Vazgeç ve devam et",
+    "saveAndContinue": "Kaydet ve devam et",
+    "saveAndClose": "Kaydet ve kapat"
   },
   "emptyPane": {
     "emptyTitle": "Bu quiz boş",
@@ -227,11 +226,9 @@
     "selectHint": "Düzenlemek için listeden bir öğe seçin."
   },
   "deleteConfirm": {
-    "hint": "Bu quizi ve tüm geçmişini silin.",
     "title": "Bu quiz silinsin mi?",
     "description": "“{{title}}” ve soruları kalıcı olarak silinecek. Bu eylem geri alınamaz.",
-    "confirmLabel": "Sil",
-    "zoneTitle": "Tehlike bölgesi"
+    "confirmLabel": "Sil"
   },
   "questionForm": {
     "typeLabel": "Tür",
@@ -269,8 +266,6 @@
     "optionAriaLabel": "seçenek {{index}}",
     "dragOption": "Seçeneği yeniden sıralamak için sürükleyin",
     "optionPlaceholder": "Seçenek {{index}}",
-    "colorAriaLabel": "renk {{index}}",
-    "shapeAriaLabel": "şekil {{index}}",
     "orderAriaLabel": "{{index}}. yanıtın doğru sıralamadaki yeri",
     "correct": "Doğru",
     "removeOption": "{{index}} seçeneğini kaldır",
@@ -283,7 +278,6 @@
     "numericToleranceLabel": "Tolerans ±",
     "submitUpdate": "Kaydet",
     "submitAdd": "Ekle",
-    "cancel": "İptal",
     "invalidError": "Geçersiz soru.",
     "scoringLabel": "Puanlama",
     "scoring": {

@@ -133,3 +133,116 @@ export function useHealthControllerCheck<TData = Awaited<ReturnType<typeof healt
 
 
 
+export type healthControllerReadyResponse200 = {
+  data: void
+  status: 200
+}
+
+export type healthControllerReadyResponse503 = {
+  data: void
+  status: 503
+}
+
+export type healthControllerReadyResponseSuccess = (healthControllerReadyResponse200) & {
+  headers: Headers;
+};
+export type healthControllerReadyResponseError = (healthControllerReadyResponse503) & {
+  headers: Headers;
+};
+
+export type healthControllerReadyResponse = (healthControllerReadyResponseSuccess | healthControllerReadyResponseError)
+
+export const getHealthControllerReadyUrl = () => {
+
+
+
+
+  return `/health/ready`
+}
+
+export const healthControllerReady = async ( options?: RequestInit): Promise<healthControllerReadyResponse> => {
+
+  return customFetch<healthControllerReadyResponse>(getHealthControllerReadyUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getHealthControllerReadyQueryKey = () => {
+    return [
+    `/health/ready`
+    ] as const;
+    }
+
+
+export const getHealthControllerReadyQueryOptions = <TData = Awaited<ReturnType<typeof healthControllerReady>>, TError = void>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthControllerReady>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHealthControllerReadyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthControllerReady>>> = ({ signal }) => healthControllerReady({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthControllerReady>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type HealthControllerReadyQueryResult = NonNullable<Awaited<ReturnType<typeof healthControllerReady>>>
+export type HealthControllerReadyQueryError = void
+
+
+export function useHealthControllerReady<TData = Awaited<ReturnType<typeof healthControllerReady>>, TError = void>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthControllerReady>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof healthControllerReady>>,
+          TError,
+          Awaited<ReturnType<typeof healthControllerReady>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealthControllerReady<TData = Awaited<ReturnType<typeof healthControllerReady>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthControllerReady>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof healthControllerReady>>,
+          TError,
+          Awaited<ReturnType<typeof healthControllerReady>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useHealthControllerReady<TData = Awaited<ReturnType<typeof healthControllerReady>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthControllerReady>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useHealthControllerReady<TData = Awaited<ReturnType<typeof healthControllerReady>>, TError = void>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthControllerReady>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getHealthControllerReadyQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+

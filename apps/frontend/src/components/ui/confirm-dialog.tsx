@@ -16,6 +16,7 @@ export function ConfirmDialog({
   cancelLabel,
   destructive,
   confirmDisabled,
+  alternative,
   wide,
   children,
   onConfirm,
@@ -29,6 +30,8 @@ export function ConfirmDialog({
   destructive?: boolean;
   /** The confirm button waits until what the dialog asks for is right. */
   confirmDisabled?: boolean;
+  /** A third way, after the confirm one (save rather than discard): the dialog's default. */
+  alternative?: { label: string; busy?: boolean; onClick: () => void };
   /** Room for more than a sentence (a list to pick from). */
   wide?: boolean;
   /** Contenu additionnel (ex. case à cocher) inséré entre le texte et les actions. */
@@ -53,18 +56,24 @@ export function ConfirmDialog({
         </h2>
         {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
         {children}
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
             {cancelLabel ?? t('cancel')}
           </Button>
           <Button
             type="button"
-            variant={destructive ? 'destructive' : 'default'}
-            disabled={confirmDisabled}
+            variant={alternative ? 'outline' : destructive ? 'destructive' : 'default'}
+            className={alternative && destructive ? 'text-destructive' : undefined}
+            disabled={confirmDisabled || alternative?.busy}
             onClick={onConfirm}
           >
             {confirmLabel ?? t('confirm')}
           </Button>
+          {alternative ? (
+            <Button type="button" disabled={alternative.busy} onClick={alternative.onClick}>
+              {alternative.label}
+            </Button>
+          ) : null}
         </div>
       </div>
     </Modal>

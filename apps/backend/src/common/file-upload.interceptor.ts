@@ -33,6 +33,12 @@ export function FileUpload(
 }
 
 /**
+ * The form beside the file: a few small fields (a media's alt text and sound
+ * description, an operation's parameters), never thousands of them held in memory.
+ */
+const FIELD_LIMITS = { fields: 30, fieldSize: 256 * 1024, parts: 32 };
+
+/**
  * One file of `field`, at most `fileSize` bytes, read before the handler runs.
  * Past the limit, `tooLarge` (`import.file_too_large`) answers with the limit;
  * without one, the media's own answer applies (the HTTP filter's).
@@ -44,9 +50,9 @@ export function uploadOne(
   next: CallHandler,
   tooLarge?: string,
 ): Observable<unknown> {
-  const Interceptor = FileInterceptor(field, { limits: { fileSize, files: 1 } }) as new (
-    options?: object,
-  ) => NestInterceptor;
+  const Interceptor = FileInterceptor(field, {
+    limits: { fileSize, files: 1, ...FIELD_LIMITS },
+  }) as new (options?: object) => NestInterceptor;
   const reading = new Interceptor().intercept(ctx, next);
   return from(Promise.resolve(reading)).pipe(
     mergeMap((stream) => stream),

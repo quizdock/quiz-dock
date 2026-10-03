@@ -333,7 +333,6 @@
     "write": "Çalıştır",
     "preview": "Önizle",
     "confirm": "Onayla",
-    "again": "Yeniden oku",
     "confirmTitle": "Bu değişiklik onaylansın mı?"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "“{{title}}” quizini devret",
       "help": "Başka bir hesaba: yalnızca bu quizin kullandığı medya ve geçmişi onunla gider; geri kalanı {{owner}} hesabında kalır.",
-      "search": "Ad, subject değeri veya e-posta",
-      "player": "katılımcı"
+      "search": "Ad, subject değeri veya e-posta"
     },
     "actionsFor": "{{title}} için işlemler"
   },
@@ -759,10 +757,13 @@
     },
     "unset": "{{key}} tanımlı değil.",
     "postgres_ok": "PostgreSQL erişilebilir",
+    "postgres_superuser": "QuizDock PostgreSQL'e süper kullanıcı olarak bağlanıyor. Şimdilik yapılacak bir şey yok: quizdock betiğinin gelecek bir sürümü ona kendi rolünü verecek.",
     "migrations_applied_one": "{{count}} geçiş uygulandı",
     "migrations_applied_other": "{{count}} geçiş uygulandı",
-    "migrations_pending": "{{count}} geçiş bekliyor: geçiş adımını çalıştırın.",
-    "migrations_failed": "{{count}} geçiş başarısız: prisma migrate resolve bakın.",
+    "migrations_pending_one": "{{count}} geçiş bekliyor: geçiş adımını çalıştırın.",
+    "migrations_pending_other": "{{count}} geçiş bekliyor: geçiş adımını çalıştırın.",
+    "migrations_failed_one": "{{count}} geçiş başarısız: prisma migrate resolve bakın.",
+    "migrations_failed_other": "{{count}} geçiş başarısız: prisma migrate resolve bakın.",
     "postgres_failed": "PostgreSQL erişilemiyor: {{error}}",
     "redis_ok": "Redis erişilebilir",
     "redis_failed": "Redis erişilemiyor: {{error}}",

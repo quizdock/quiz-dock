@@ -29,6 +29,7 @@
     "ended": "房間已關閉。",
     "banned": "你已被主持人移出此房間。",
     "join_required": "請先加入房間再作答。",
+    "already_joined": "你已經在這個房間裡了。",
     "already_started": "測驗已經開始。",
     "reveal_required": "僅在揭曉答案後才能執行該操作。",
     "timer_not_adjustable": "僅在答題進行中才能調整計時器。",
@@ -59,6 +60,7 @@
     "unsupported_type": "不支援的格式：圖片、MP4 影片（H.264）或聲音（MP3、M4A）。編輯器會轉換此瀏覽器能讀取的其他檔案；不接受 SVG。",
     "file_missing": "缺少文件（「file」欄位）。",
     "file_too_large": "檔案過大（此類媒體上限 {{maxMb}} MB）。",
+    "image_too_large": "這張圖片太大（最多 {{maxMp}} 百萬像素）。",
     "not_found": "未找到媒體。",
     "demo_disabled": "示範實例已停用媒體上傳。",
     "video_with_audio": "影片本身已有聲音：請移除音軌或影片。",
@@ -144,7 +146,9 @@
   "error": "發生了錯誤。",
   "host_seat": {
     "taken": "主持人席位已被佔用。",
-    "manager_forbidden": "管理員不會占用主持席位。"
+    "manager_forbidden": "管理員不會占用主持席位。",
+    "local_only": "只有本機模式才有主持人席位。",
+    "already_host": "你已經是主持人：無需佔用席位。"
   },
   "store": {
     "demo_disabled": "示範執行個體已關閉分享功能。",
@@ -205,5 +209,8 @@
     "token_invalid": "此初始設定權杖無效（錯誤、已使用或已逾期）：執行 `qd setup.token` 取得新權杖。",
     "session_invalid": "初始設定工作階段已結束：請提供新的初始設定權杖。",
     "too_many_attempts": "錯誤權杖過多：請等待十五分鐘。"
+  },
+  "request": {
+    "too_large": "對伺服器來說太大：請求被拒絕（超出其大小限制）。"
   }
 }

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { parseArgs } from './args';
 import { doctor, type DoctorDeps } from './commands/doctor';
 import { migrationStatus } from './commands/migrate-status';
-import { type BundleIo, quizExport, quizImport, quizList, quizTransfer } from './commands/quiz';
+import { type BundleIo, quizImport, quizList, quizTransfer } from './commands/quiz';
 import { seatRelease, seatStatus } from './commands/seat';
 import { sessionsPurge } from './commands/sessions';
 import { samplesLoad, userList, userSetRole } from './commands/users';
@@ -110,6 +110,24 @@ describe('doctor', () => {
     expect(healthy).toBe(true);
   });
 
+  it('warns when the application connects as a PostgreSQL superuser, not for the single image', async () => {
+    const superuser = () => ({
+      $queryRaw: jest
+        .fn()
+        .mockResolvedValueOnce([{ '?column?': 1 }])
+        .mockResolvedValueOnce([{ rolsuper: true }])
+        .mockResolvedValue([
+          { migration_name: '20260101_init', finished_at: new Date(), rolled_back_at: null },
+        ]),
+    });
+    const compose = memOutput();
+    await doctor(compose.out, deps({ prisma: superuser() }));
+    expect(compose.text()).toContain('connects as a PostgreSQL superuser');
+    const single = memOutput();
+    await doctor(single.out, deps({ prisma: superuser() }, { QUIZDOCK_FLAVOR: 'standalone' }));
+    expect(single.text()).not.toContain('superuser');
+  });
+
   it('reports failures: missing REDIS_URL, unwritable media dir, DB down', async () => {
     const { out, text } = memOutput();
     const d = deps(
@@ -166,7 +184,10 @@ describe('doctor', () => {
     expect(text()).toContain('client_id quiz-dock-frontend (public, PKCE)');
     expect(text()).toContain('discovery ok → token endpoint https://idp/x/token');
     expect(text()).toContain('JWKS reachable (2 key(s))');
-    expect(fetchMock).toHaveBeenCalledWith('https://idp/x/.well-known/openid-configuration');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://idp/x/.well-known/openid-configuration',
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
     // OIDC_ISSUER has a slash the provider's issuer lacks: tokens would be refused (#99).
     expect(text()).toMatch(
       /WARN discovery issuer "https:\/\/idp\/x" differs .* by a trailing slash only/,
@@ -445,25 +466,6 @@ describe('quiz commands', () => {
       expect.objectContaining({ where: { ownerId: 'u1' } }),
     );
     await expect(quizList(out, db(null), 'nobody')).rejects.toThrow('No user');
-  });
-
-  it('quiz:export writes the bundle where asked, silently on stdout', async () => {
-    const zip = Buffer.from('PK..');
-    const portable = {
-      exportZip: jest.fn().mockResolvedValue({ filename: 'ports.quizdock.zip', zip }),
-      importBundle: jest.fn(),
-    };
-    const { out, text } = memOutput();
-    const { io, written } = memIo();
-    await quizExport(out, portable, 'q1', '/tmp/out.zip', io);
-    expect(portable.exportZip).toHaveBeenCalledWith('q1'); // no owner: any quiz
-    expect(written['/tmp/out.zip']).toBe(zip);
-    expect(text()).toContain('Exported ports.quizdock.zip (4 bytes) to /tmp/out.zip.');
-
-    const quiet = memOutput();
-    await quizExport(quiet.out, portable, 'q1', '-', io);
-    expect(written['-']).toBe(zip);
-    expect(quiet.lines).toEqual([]);
   });
 
   it('quiz:import creates a draft for the resolved user, and explains a refusal', async () => {

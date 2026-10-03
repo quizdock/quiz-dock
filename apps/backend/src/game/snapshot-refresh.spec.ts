@@ -59,7 +59,6 @@ function quiz(over: Partial<QuizWithContent> = {}): QuizWithContent {
     description: null,
     coverMediaId: null,
     status: 'ready',
-    visibility: 'private',
     language: 'en',
     questionCount: 2,
     feedbackEnabled: true,

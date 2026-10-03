@@ -49,7 +49,7 @@ import {
 } from '@quiz-dock/contracts';
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MediaEditsContext, useMediaEdits } from '@/lib/media-edits';
 import {
@@ -72,7 +72,7 @@ import { Button } from '@/components/ui/button';
 import { Disclosure } from '@/components/ui/disclosure';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useFormDraft } from '@/lib/use-form-draft';
-import { clearDraft, loadDraft } from '@/lib/draft-store';
+import { clearDraft, formDraftKey, loadDraft } from '@/lib/draft-store';
 import { FormActionBar } from '@/components/form-action-bar';
 import { DraftNotice } from '@/components/draft-notice';
 import { MarkdownEditor } from '@/components/markdown-editor';
@@ -113,6 +113,7 @@ import { Switch } from '@/components/ui/switch';
 import { useMediaUrl } from '@/lib/media-url';
 import { RoomScreen } from './quiz-steps-preview';
 import { stepView } from './step-view';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 type QType = QuestionTypeName;
 const TYPES = QUESTION_TYPES;
@@ -219,7 +220,9 @@ function initialValues(q?: QuizDetailDtoQuestionsItem): FormValues {
     waveformSize: (q.waveformSize as WaveformSize | undefined) ?? WAVEFORM_SIZE_DEFAULT,
     mediaPosition: (q.mediaPosition as MediaPosition | undefined) ?? MEDIA_POSITION_DEFAULT,
     timerAfterMedia: q.timerAfterMedia ?? false,
-    pointsMode: q.pointsMode as FormValues['pointsMode'],
+    // A poll is stored as 'none', which the menu does not offer: the poll's own
+    // setting stays out of the form, so a change of type starts from 'standard'.
+    pointsMode: (q.pointsMode === 'none' ? 'standard' : q.pointsMode) as FormValues['pointsMode'],
     scoring: (q.scoring ?? 'standard') as Scoring,
     numericValue: q.numericValue == null ? null : Number(q.numericValue),
     numericTolerance: q.numericTolerance == null ? null : Number(q.numericTolerance),
@@ -246,6 +249,8 @@ export function QuestionForm({
   position,
   onMoveToDraft,
   onClose,
+  onCreated,
+  saveRef,
   onDirtyChange,
 }: {
   quizId: string;
@@ -258,6 +263,10 @@ export function QuestionForm({
   /** The quiz's pause after a media: a longer media stretches the question's time. */
   mediaTailS?: number;
   onClose: () => void;
+  /** A new question saved: the parent opens it (without it, the form closes). */
+  onCreated?: (questionId: string) => void;
+  /** Where the parent finds this form's save, to save before switching (#195): true once saved. */
+  saveRef?: RefObject<(() => Promise<boolean>) | null>;
   /** Reports unsaved edits so the parent can guard against losing them. */
   onDirtyChange?: (dirty: boolean) => void;
 }) {
@@ -277,9 +286,14 @@ export function QuestionForm({
   // A type change took the right answers away: the author is told once.
   const [ticksCleared, setTicksCleared] = useState(false);
   // Computed once: option keys are generated, so a fresh copy per render would reset the form.
-  const [initial] = useState(() => initialValues(question));
+  // A save makes what was saved the new baseline: the editor stays open, clean (#195).
+  const [initial, setInitial] = useState(() => initialValues(question));
+  // "Saved" shows after a save, until the next change.
+  const [saved, setSaved] = useState(false);
+  // Whether the last submit got saved (a refusal, or the ready-to-draft question, did not).
+  const savedOk = useRef(false);
   // Draft kept in localStorage until saved or discarded (survives reload / closed tab).
-  const draftKey = `quiz:${quizId}:question:${question?.id ?? 'new'}`;
+  const draftKey = formDraftKey(quizId, 'question', question?.id ?? null);
   // A draft saved before the media slots existed has no `media`: it is not restored.
   const [restored, setRestored] = useState(() => {
     const draft = loadDraft<FormValues>(draftKey);
@@ -289,6 +303,7 @@ export function QuestionForm({
   const form = useForm({
     defaultValues: restored ?? initial,
     onSubmit: async ({ value }) => {
+      savedOk.current = false;
       setError(null);
       setErrors([]);
       setChecked(true);
@@ -305,23 +320,31 @@ export function QuestionForm({
         setAskDraft(true);
         return;
       }
-      await save(data);
+      await save(data, value);
     },
   });
-  const save = async (data: ReturnType<typeof buildPayload>) => {
+  const save = async (data: ReturnType<typeof buildPayload>, value: FormValues) => {
     try {
       // The media's alt and credit, edited here, are saved with the question.
       await mediaEdits.flush();
+      let createdId: string | null = null;
       if (question) {
         await update.mutateAsync({ qid: question.id, data });
       } else {
-        await add.mutateAsync({ id: quizId, data });
+        createdId = (await add.mutateAsync({ id: quizId, data })).data.id;
       }
       await queryClient.invalidateQueries({
         queryKey: getQuizzesControllerGetQueryKey(quizId),
       });
       clearDraft(draftKey);
-      onClose();
+      savedOk.current = true;
+      if (createdId === null) {
+        // What was typed meanwhile stays a change.
+        setInitial(value);
+        setRestored(null);
+        setSaved(true);
+      } else if (onCreated) onCreated(createdId);
+      else onClose();
     } catch (err) {
       if (
         err instanceof ApiError &&
@@ -346,7 +369,8 @@ export function QuestionForm({
       setError(apiErrorText(err));
       return;
     }
-    await save(buildPayload(form.state.values));
+    const value = form.state.values;
+    await save(buildPayload(value), value);
   };
   const values = useStore(form.store, (s) => s.values);
   // Dirty = values differ from what was loaded (a fresh question is dirty as soon as typed in).
@@ -357,6 +381,44 @@ export function QuestionForm({
   useEffect(() => {
     if (mediaEdits.dirty) onDirtyChange?.(true);
   }, [mediaEdits.dirty, onDirtyChange]);
+  useEffect(() => {
+    if (dirty) setSaved(false);
+  }, [dirty]);
+  // Cmd+S (macOS) or Ctrl+S saves the question, from any of its fields, instead of the
+  // browser saving the page; not under a dialog, and once at a time.
+  const formRef = useRef<HTMLFormElement>(null);
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useHotkeys(
+    'mod+s',
+    () => {
+      if (dirtyRef.current && !form.state.isSubmitting) void form.handleSubmit();
+    },
+    {
+      enableOnFormTags: true,
+      enableOnContentEditable: true,
+      preventDefault: true,
+      // A dialog over the form (its own confirms, another one) keeps the keys; the
+      // sheet the form sits in on a phone is a dialog too, and does not.
+      ignoreEventWhen: () => {
+        const formEl = formRef.current;
+        return (
+          !formEl || [...document.querySelectorAll('dialog[open]')].some((d) => !d.contains(formEl))
+        );
+      },
+    },
+    [form],
+  );
+  useEffect(() => {
+    if (!saveRef) return;
+    saveRef.current = async () => {
+      await form.handleSubmit();
+      return savedOk.current;
+    };
+    return () => {
+      saveRef.current = null;
+    };
+  }, [saveRef, form]);
   // Back to what was loaded: the draft goes with the changes.
   const discardDraft = () => {
     setRestored(null);
@@ -372,7 +434,8 @@ export function QuestionForm({
   const timeLimitS = useStore(form.store, (s) => s.values.timeLimitS);
   const revealDelayS = useStore(form.store, (s) => s.values.revealDelayS);
   const mediaMs = useMediaDurationMs(media);
-  // What the session will really give this question (the server computes the same).
+  // What the session will give this question, estimated with the default read delay
+  // (the server uses the instance's GAME_READ_DELAY_MS).
   const listenFirst = useStore(form.store, (s) => s.values.timerAfterMedia);
   // Read on the folded lines (playback, points).
   const audioTarget = useStore(form.store, (s) => s.values.audioTarget);
@@ -475,6 +538,7 @@ export function QuestionForm({
   return (
     <MediaEditsContext.Provider value={mediaEdits.edits}>
       <form
+        ref={formRef}
         className="flex flex-col gap-5"
         onSubmit={(e) => {
           e.preventDefault();
@@ -487,6 +551,7 @@ export function QuestionForm({
         <FormActionBar
           title={question ? t('questionForm.titleEdit') : t('questionForm.titleAdd')}
           dirty={dirty}
+          saved={saved && !dirty}
           busy={add.isPending || update.isPending}
           submitLabel={question ? t('questionForm.submitUpdate') : t('questionForm.submitAdd')}
           issues={issues}
@@ -1231,7 +1296,13 @@ function buildPayload(v: FormValues) {
     mediaPosition: v.mediaPosition,
     // Only with a media to wait for; the server also falls back when its length is unknown.
     timerAfterMedia: mediaHasSound(v.media) && v.timerAfterMedia,
-    pointsMode: v.type === 'poll' ? ('none' as const) : v.pointsMode,
+    // 'none' is a poll's: a restored draft may still carry it after a change of type.
+    pointsMode:
+      v.type === 'poll'
+        ? ('none' as const)
+        : v.pointsMode === 'none'
+          ? ('standard' as const)
+          : v.pointsMode,
     scoring: scoringsFor(v.type, v.multiSelect).includes(v.scoring)
       ? v.scoring
       : ('standard' as const),

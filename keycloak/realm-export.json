@@ -2,6 +2,7 @@
   "realm": "quiz-dock",
   "enabled": true,
   "displayName": "QuizDock",
+  "bruteForceProtected": true,
   "roles": {
     "realm": [
       {
@@ -25,11 +26,15 @@
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "redirectUris": [
-        "${KEYCLOAK_APP_URL:http://localhost:18081}/*",
-        "${KEYCLOAK_DEV_URL:http://localhost:15173}/*"
+        "${KEYCLOAK_APP_URL:http://localhost:18081}/auth/callback",
+        "${KEYCLOAK_DEV_URL:http://localhost:15173}/auth/callback"
       ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${KEYCLOAK_APP_URL:http://localhost:18081}##${KEYCLOAK_DEV_URL:http://localhost:15173}"
+      },
       "webOrigins": [
         "${KEYCLOAK_APP_URL:http://localhost:18081}",
         "${KEYCLOAK_DEV_URL:http://localhost:15173}"

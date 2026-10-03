@@ -13,7 +13,7 @@ Thanks for helping! A few things make a pull request easy to take in.
 
 ## Before you push
 
-- Setting up: [README › Development](README.md#️-development).
+- Setting up: [README › Development](README.md#development).
 - `pnpm lint`, `pnpm typecheck` and `pnpm test` pass.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`feat(import): …`, `fix(game): …`); a git hook checks them.
