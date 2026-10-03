@@ -5,6 +5,7 @@ import {
   creditFor,
   editDistance,
   gradeAnswer,
+  isAnswerValue,
   isDeferred,
   lenientMatch,
   rankClosest,
@@ -329,6 +330,8 @@ describe('scoring variants', () => {
     expect(lenientMatch('marseile', 'marseille')).toBe(true);
     expect(lenientMatch('marsaile', 'marseille')).toBe(true);
     expect(lenientMatch('marsal', 'marseille')).toBe(false);
+    // Too long or too short to be within the tolerance: no distance computed.
+    expect(lenientMatch('a'.repeat(100_000), 'paris')).toBe(false);
     const lenient = question({
       type: QuestionType.TextInput,
       scoring: 'lenient',
@@ -437,5 +440,27 @@ describe('image choice', () => {
     const multiple = question({ type: QuestionType.ImageChoice, options, multiSelect: true });
     expect(creditFor(single, [options[0].id])).toBe(0);
     expect(creditFor(multiple, options[0].id)).toBe(0);
+  });
+});
+
+describe('isAnswerValue', () => {
+  it('takes text, option ids and finite numbers', () => {
+    expect(isAnswerValue('Paris')).toBe(true);
+    expect(isAnswerValue(['a', 'b'])).toBe(true);
+    expect(isAnswerValue([])).toBe(true);
+    expect(isAnswerValue(42.5)).toBe(true);
+  });
+
+  it('refuses what is unbounded, of another shape, or holds a NUL', () => {
+    expect(isAnswerValue('x'.repeat(1001))).toBe(false);
+    expect(isAnswerValue('a\u0000b')).toBe(false);
+    expect(isAnswerValue(Array(9).fill('a'))).toBe(false);
+    expect(isAnswerValue(['x'.repeat(65)])).toBe(false);
+    expect(isAnswerValue([1, 2])).toBe(false);
+    expect(isAnswerValue(Number.NaN)).toBe(false);
+    expect(isAnswerValue(Infinity)).toBe(false);
+    expect(isAnswerValue({ id: 'a' })).toBe(false);
+    expect(isAnswerValue(null)).toBe(false);
+    expect(isAnswerValue(undefined)).toBe(false);
   });
 });

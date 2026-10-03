@@ -36,6 +36,7 @@ import { clientIp } from '../common/trust-proxy';
 import { PinAttempts } from './pin-attempts';
 import { WsExceptionFilter } from './ws-exception.filter';
 import { slideTitle } from './snapshot';
+import { isAnswerValue } from './scoring';
 
 /** Données attachées à chaque socket de jeu. */
 export interface GameSocketData {
@@ -320,13 +321,15 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (!playerId) {
       throw new WsException('session.join_required');
     }
-    const ack = await this.engine.submit(
-      payload.pin,
-      playerId,
-      payload.questionIndex,
-      payload.answer,
-      receivedAt,
-    );
+    // Only the game this socket joined, and an answer the scoring can take: refused
+    // before anything is read, graded, logged or stored.
+    const me = playerOf(socket, payload?.pin);
+    const { questionIndex, answer } = payload ?? {};
+    if (!me || !Number.isInteger(questionIndex) || questionIndex < 0 || !isAnswerValue(answer)) {
+      socket.emit('answer:ack', { accepted: false, receivedAt, reason: 'unknown' });
+      return;
+    }
+    const ack = await this.engine.submit(me.pin, playerId, questionIndex, answer, receivedAt);
     socket.emit('answer:ack', ack);
   }
 

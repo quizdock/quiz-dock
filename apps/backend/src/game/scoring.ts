@@ -1,4 +1,9 @@
-import { PointsMode, QuestionType, basePointsFor as basePointsOf } from '@quiz-dock/contracts';
+import {
+  OPTIONS_MAX,
+  PointsMode,
+  QuestionType,
+  basePointsFor as basePointsOf,
+} from '@quiz-dock/contracts';
 import { normalizeAnswer } from '../questions/dto/question-content.schema';
 import type { AnswerValue, ScoreResult, SnapshotQuestion } from './game.types';
 
@@ -42,7 +47,30 @@ export function editDistance(a: string, b: string): number {
 }
 export function lenientMatch(normalizedAnswer: string, accepted: string): boolean {
   const tolerance = accepted.length <= 5 ? 1 : 2;
+  // The distance is at least the gap in length: no need to compute it then.
+  if (Math.abs(normalizedAnswer.length - accepted.length) > tolerance) return false;
   return editDistance(normalizedAnswer, accepted) <= tolerance;
+}
+
+/** Longest text answer taken in: far beyond any accepted answer (200), short of abuse. */
+export const ANSWER_TEXT_MAX = 1000;
+/** An option id (a ULID), with room to spare. */
+const OPTION_ID_MAX = 64;
+
+const isAnswerText = (v: unknown, max: number): v is string =>
+  typeof v === 'string' && v.length <= max && !v.includes('\u0000');
+
+/**
+ * Whether a client's answer has a shape the scoring can take: text, a list of
+ * option ids, or a finite number, all bounded. Anything else is refused before
+ * it is graded or stored.
+ */
+export function isAnswerValue(v: unknown): v is AnswerValue {
+  if (typeof v === 'number') return Number.isFinite(v);
+  if (Array.isArray(v)) {
+    return v.length <= OPTIONS_MAX && v.every((id) => isAnswerText(id, OPTION_ID_MAX));
+  }
+  return isAnswerText(v, ANSWER_TEXT_MAX);
 }
 
 /**
