@@ -176,6 +176,13 @@ describe('Instance media and dimensions (integration)', () => {
       (await prisma.mediaAsset.findUniqueOrThrow({ where: { id: copy.mediaId } })).sourceSha256,
     ).toBe(source);
 
+    // A host's media added to the instance's leaves its declared original behind:
+    // an unchecked hash, matched for every host from then on.
+    const added = await media.addToInstance(adminId, mine.mediaId);
+    expect(
+      (await prisma.mediaAsset.findUniqueOrThrow({ where: { id: added.mediaId } })).sourceSha256,
+    ).toBeNull();
+
     // The instance's media are everyone's to recognise.
     const other = 'b'.repeat(64);
     const buffer = png(32, 32, 'global');

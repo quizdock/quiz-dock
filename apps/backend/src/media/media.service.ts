@@ -427,7 +427,9 @@ export class MediaService implements OnModuleInit {
         peakDbfs: source.peakDbfs,
         width: source.width,
         height: source.height,
-        sourceSha256: source.sourceSha256,
+        // The browser's word for the file it started from, unchecked: never carried
+        // into the instance's media, where it would match that file for every host.
+        sourceSha256: instance ? null : source.sourceSha256,
       },
     });
     const url = mediaUrl(created.id);
