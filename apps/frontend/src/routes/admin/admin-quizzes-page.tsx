@@ -161,7 +161,13 @@ function quizColumns(t: T, locale: string): DataColumn<QuizItem>[] {
       cell: ({ row: { original: quiz } }) => (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{quiz.title}</span>
+            <Link
+              to="/quizzes/$quizId"
+              params={{ quizId: quiz.id }}
+              className="font-medium hover:underline"
+            >
+              {quiz.title}
+            </Link>
             <QuizStatusBadge status={quiz.status} />
             {quiz.livePin ? (
               <Badge variant="warning" className="gap-1">

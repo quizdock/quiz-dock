@@ -6,7 +6,9 @@ import { AdminQuizzesPage } from './admin-quizzes-page';
 
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
-  Link: ({ children }: { children: React.ReactNode }) => <a href="#">{children}</a>,
+  Link: ({ children, params }: { children: React.ReactNode; params?: { quizId?: string } }) => (
+    <a href={params?.quizId ? `/quizzes/${params.quizId}` : '#'}>{children}</a>
+  ),
 }));
 
 const result = (data: unknown) => ({
@@ -72,6 +74,12 @@ describe('AdminQuizzesPage', () => {
     const other = screen.getByText('Fleuves').closest('tr')!;
     expect(within(other).getByText('local:marc')).toBeInTheDocument();
     expect(other.textContent).not.toContain('123456');
+  });
+
+  it('opens a quiz from its title, a plain link (#196)', async () => {
+    renderPage();
+    const link = await screen.findByRole('link', { name: 'Capitales' });
+    expect(link.getAttribute('href')).toBe('/quizzes/q1');
   });
 
   it('searches and filters on the server, back to the first page', async () => {
