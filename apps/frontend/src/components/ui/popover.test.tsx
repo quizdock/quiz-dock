@@ -26,7 +26,7 @@ describe('Popover, with the keyboard', () => {
     fireEvent.click(trigger);
     await act(async () => {});
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Archive' }));
-    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape', code: 'Escape' });
     expect(screen.queryByRole('button', { name: 'Archive' })).toBeNull();
     expect(document.activeElement).toBe(trigger);
   });
@@ -55,10 +55,13 @@ describe('Popover, with the keyboard', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'More' }));
     await act(async () => {});
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Archive' }), { key: 'Escape' });
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Archive' }), {
+      key: 'Escape',
+      code: 'Escape',
+    });
     expect(onClose).not.toHaveBeenCalled();
     // The next Escape is the drawer's.
-    fireEvent.keyDown(document.body, { key: 'Escape' });
+    fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

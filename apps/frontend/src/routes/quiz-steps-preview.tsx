@@ -7,7 +7,7 @@ import {
   Monitor,
   Smartphone,
 } from 'lucide-react';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import type { StepQuiz } from './quiz-stage-preview';
 import { ScreenSurface } from './screen-page';
 import { stepView } from './step-view';
 import type { GameView } from '../game/use-game-session';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 /** What the preview walks: a quiz, or a template read as the quiz a copy would make. */
 export type PreviewQuiz = StepQuiz & {
@@ -58,22 +59,8 @@ export function QuizStepsPreview({
   const { ref, isFullscreen, toggle, supported } = useFullscreen<HTMLDivElement>();
 
   // ← → walk the steps, unless typing somewhere.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target;
-      if (
-        target instanceof Element &&
-        target.closest('input, textarea, select, [contenteditable="true"]')
-      ) {
-        return;
-      }
-      if (e.key === 'ArrowLeft') step(-1);
-      else if (e.key === 'ArrowRight') step(1);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [total]);
+  useHotkeys('left', () => step(-1), [total]);
+  useHotkeys('right', () => step(1), [total]);
 
   const item = items[index];
   // One view per step: the live screens key their media and clocks on it.

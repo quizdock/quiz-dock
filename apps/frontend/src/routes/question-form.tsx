@@ -113,6 +113,7 @@ import { Switch } from '@/components/ui/switch';
 import { useMediaUrl } from '@/lib/media-url';
 import { RoomScreen } from './quiz-steps-preview';
 import { stepView } from './step-view';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 type QType = QuestionTypeName;
 const TYPES = QUESTION_TYPES;
@@ -388,21 +389,26 @@ export function QuestionForm({
   const formRef = useRef<HTMLFormElement>(null);
   const dirtyRef = useRef(dirty);
   dirtyRef.current = dirty;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() !== 's' || !(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey)
-        return;
-      // A dialog over the form (its own confirms, another one) keeps the keys; the sheet
-      // the form sits in on a phone is a dialog too, and does not.
-      const formEl = formRef.current;
-      const dialogs = [...document.querySelectorAll('dialog[open]')];
-      if (!formEl || dialogs.some((d) => !d.contains(formEl))) return;
-      e.preventDefault();
+  useHotkeys(
+    'mod+s',
+    () => {
       if (dirtyRef.current && !form.state.isSubmitting) void form.handleSubmit();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [form]);
+    },
+    {
+      enableOnFormTags: true,
+      enableOnContentEditable: true,
+      preventDefault: true,
+      // A dialog over the form (its own confirms, another one) keeps the keys; the
+      // sheet the form sits in on a phone is a dialog too, and does not.
+      ignoreEventWhen: () => {
+        const formEl = formRef.current;
+        return (
+          !formEl || [...document.querySelectorAll('dialog[open]')].some((d) => !d.contains(formEl))
+        );
+      },
+    },
+    [form],
+  );
   useEffect(() => {
     if (!saveRef) return;
     saveRef.current = async () => {

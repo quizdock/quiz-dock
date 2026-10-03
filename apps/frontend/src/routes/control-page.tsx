@@ -83,6 +83,7 @@ import { type GameView, type RosterPlayer, useGameSession } from '../game/use-ga
 import { ScreenSurface } from './screen-page';
 import { PageLoading } from '@/components/ui/loading';
 import { CheckboxField } from '@/components/ui/checkbox-field';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 /** Boutons d'ajustement du chrono (§8) : retire/ajoute des secondes en direct. */
 const CHRONO_STEPS = [-5, -1, 1, 5] as const;
@@ -138,20 +139,15 @@ function HostConsole({
   const liveStep = useRef<number | null>(null);
   // The Tab key cycles the three views (Shift+Tab backwards) from the page itself;
   // on a control, Tab keeps moving the focus, so the keyboard reaches every button.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || e.ctrlKey || e.metaKey || e.altKey) return;
-      const el = e.target as HTMLElement | null;
-      if (el?.closest(INTERACTIVE)) return;
-      e.preventDefault();
+  useHotkeys(
+    ['tab', 'shift+tab'],
+    (e) =>
       setTab((current) => {
         const i = HOST_TABS.indexOf(current);
         return HOST_TABS[(i + (e.shiftKey ? -1 : 1) + HOST_TABS.length) % HOST_TABS.length];
-      });
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+      }),
+    { preventDefault: true, ignoreEventWhen: onControl },
+  );
   // Looking back over played steps (no replay): the server tells what is reachable.
   const review = (step: GameStep) => socket?.emit('host:review', { pin, ...step });
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
@@ -177,18 +173,11 @@ function HostConsole({
     view.state && !['LOBBY', 'PODIUM', 'ENDED'].includes(view.state)
       ? () => setPaused(!view.paused)
       : null;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      const el = e.target as HTMLElement | null;
-      if (el?.closest(INTERACTIVE)) return;
-      if (!pauseToggle.current) return;
-      e.preventDefault();
-      pauseToggle.current();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  useHotkeys('space', () => pauseToggle.current?.(), {
+    enabled: () => !!pauseToggle.current,
+    preventDefault: true,
+    ignoreEventWhen: (e) => e.repeat || onControl(e),
+  });
   // The question's sound or video, steered from here while it runs.
   const steerable =
     view.state === 'ANSWERING' &&
@@ -1596,6 +1585,9 @@ const HOST_TABS: HostTab[] = ['control', 'screen', 'player'];
 /** Where a key belongs to the element that has the focus, not to the console's shortcuts. */
 const INTERACTIVE =
   'input, textarea, select, button, a, [role="tab"], [role="slider"], [role="switch"], [contenteditable="true"], dialog';
+/** A key pressed on a control is the control's (Tab moves the focus, Space presses it). */
+const onControl = (e: KeyboardEvent) =>
+  e.target instanceof Element && !!e.target.closest(INTERACTIVE);
 
 /** The three views of the session, a switch of the first row (the Tab key cycles them). */
 function ViewSwitch({ tab, onTab }: { tab: HostTab; onTab: (t: HostTab) => void }) {

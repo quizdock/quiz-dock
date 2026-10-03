@@ -595,6 +595,7 @@ describe('QuestionForm — image choice', () => {
     // From the field being typed in, not the browser's Save Page.
     const key = new KeyboardEvent('keydown', {
       key: 's',
+      code: 'KeyS',
       ctrlKey: true,
       bubbles: true,
       cancelable: true,

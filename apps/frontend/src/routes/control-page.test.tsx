@@ -480,11 +480,11 @@ describe('ControlPage (console hôte)', () => {
     await screen.findByText('Capitale ?');
     // On a control, the browser keeps Tab: the keyboard can reach every button.
     const reveal = screen.getByRole('button', { name: /Révéler/ });
-    expect(fireEvent.keyDown(reveal, { key: 'Tab' })).toBe(true);
+    expect(fireEvent.keyDown(reveal, { key: 'Tab', code: 'Tab' })).toBe(true);
     // From the page itself, Tab still switches the view.
     const selected = () => screen.getAllByRole('tab').find((t) => t.ariaSelected === 'true');
     const before = selected();
-    expect(fireEvent.keyDown(document.body, { key: 'Tab' })).toBe(false);
+    expect(fireEvent.keyDown(document.body, { key: 'Tab', code: 'Tab' })).toBe(false);
     expect(selected()).not.toBe(before);
   });
 

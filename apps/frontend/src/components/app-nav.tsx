@@ -8,6 +8,7 @@ import { UserMenu } from '@/components/user-menu';
 import { cn } from '@/lib/utils';
 import type { AuthMode } from '../auth/auth-context';
 import { useRole } from '../auth/use-role';
+import { useEscape } from '@/lib/shortcuts';
 
 interface NavProps {
   user: string;
@@ -124,14 +125,10 @@ function BurgerMenu({
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
     document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
+  useEscape(() => setOpen(false), open);
 
   return (
     <div ref={ref} className="relative md:hidden">

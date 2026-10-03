@@ -28,6 +28,7 @@ import { optionLabel } from './image-choice';
 import { mediaUrl } from '@/lib/media-url';
 import type { QuestionClock } from './use-countdown';
 import { formatPercent } from '@/lib/format';
+import { useEscape } from '@/lib/shortcuts';
 
 /**
  * Typography of the live screens is set **once per surface** and everything
@@ -568,10 +569,8 @@ export function ZoomableImage({
   useEffect(() => {
     if (!open) return;
     overlay.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
   }, [open]);
+  useEscape(() => setOpen(false), open);
   return (
     <>
       <button

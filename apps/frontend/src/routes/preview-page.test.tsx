@@ -128,7 +128,7 @@ describe('PreviewPage', () => {
     fireEvent.click(screen.getByText('Suivant'));
     expect(onStage('Question deux')).toBeInTheDocument();
     // The keyboard walks too, and the list picks any step.
-    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    fireEvent.keyDown(document.body, { key: 'ArrowLeft', code: 'ArrowLeft' });
     expect(onStage('Question une')).toBeInTheDocument();
     fireEvent.click(
       within(screen.getByRole('list', { name: 'Étapes' })).getByText('Question deux'),
