@@ -805,7 +805,9 @@ export class GameService {
     if (!player) {
       return { ok: false };
     }
-    const cleanComment = comment?.trim() ? comment.trim().slice(0, 2000) : null;
+    // Lines kept; other control characters (NUL included, which the database refuses) dropped.
+    const text = typeof comment === 'string' ? comment.replace(/(?!\n)\p{Cc}/gu, '').trim() : '';
+    const cleanComment = text ? text.slice(0, 2000) : null;
     await this.prisma.quizFeedback.upsert({
       where: { pin_playerId_quizId: { pin, playerId, quizId: rated.quizId } },
       create: {
@@ -940,9 +942,22 @@ export class GameService {
   }
 }
 
+/**
+ * A name typed by a client, on one line: control characters (NUL included, which
+ * the database refuses) become spaces, spaces are collapsed. Not a string: empty.
+ */
+export function oneLine(raw: unknown): string {
+  return typeof raw === 'string'
+    ? raw
+        .replace(/\p{Cc}/gu, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+    : '';
+}
+
 /** Valide et nettoie un pseudo (longueur, espaces) — anti-abus §7. */
 export function sanitizeNickname(raw: string): string {
-  const nickname = (raw ?? '').trim().replace(/\s+/g, ' ');
+  const nickname = oneLine(raw);
   if (nickname.length < NICKNAME_MIN || nickname.length > NICKNAME_MAX) {
     throw new BadRequestException({
       code: 'nickname.invalid_length',
@@ -958,7 +973,7 @@ export function sanitizeNickname(raw: string): string {
  * retombe alors sur le pseudo saisi.
  */
 export function accountNickname(displayName: string): string | null {
-  const name = (displayName ?? '').trim().replace(/\s+/g, ' ').slice(0, NICKNAME_MAX);
+  const name = oneLine(displayName).slice(0, NICKNAME_MAX);
   return name.length >= NICKNAME_MIN ? name : null;
 }
 

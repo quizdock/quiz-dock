@@ -2,7 +2,7 @@ import { ConflictException, ForbiddenException, UnauthorizedException } from '@n
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { type GameId, gameKeys } from './game.keys';
-import { GameService } from './game.service';
+import { GameService, oneLine, sanitizeNickname } from './game.service';
 
 /**
  * RG-15 — le nom affiché d'un participant : celui de son compte tant que l'hôte
@@ -139,5 +139,18 @@ describe('GameService.joinSession (nom affiché)', () => {
         ),
       ).rejects.toThrow(ForbiddenException);
     });
+  });
+});
+
+describe('names typed by a client', () => {
+  it('keeps one line: control characters (NUL included) become spaces', () => {
+    expect(oneLine('  Ana\u0000\n  Bel\u007f ')).toBe('Ana Bel');
+    expect(sanitizeNickname('ab\u0000')).toBe('ab');
+  });
+
+  it('takes nothing else than text', () => {
+    expect(oneLine(42)).toBe('');
+    expect(oneLine({ name: 'x' })).toBe('');
+    expect(() => sanitizeNickname(42 as unknown as string)).toThrow();
   });
 });
