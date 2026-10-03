@@ -20,7 +20,8 @@ import { isHost, isManager } from './roles';
 /**
  * Garde global : authentifie via l'`AuthProvider` actif, provisionne
  * l'utilisateur et l'attache à `req.user`. Les routes `@Public()` passent.
- * Toute autre route exige le rôle `host` (ou `admin`), sauf `@AllowAnyRole()`.
+ * Toute autre route exige le rôle `host` : un administrateur sans `host` n'y passe que
+ * si elle porte `@AllowManager()`, et tout compte si elle porte `@AllowAnyRole()`.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {

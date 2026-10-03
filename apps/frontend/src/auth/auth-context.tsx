@@ -157,8 +157,8 @@ function applyLocalUser(name: string | null): void {
 
 /**
  * Rôles côté backend de l'identité courante (`GET /me`), ou `null` si injoignable.
- * En mode local c'est ici que le **siège d'hôte** se décide : le premier arrivé
- * devient `host`, les autres restent participants. L'ensemble peut porter les
+ * En mode local, le **siège d'hôte** en décide : qui l'a pris (explicitement, depuis
+ * la page de connexion) est `host`, les autres restent participants. L'ensemble peut porter les
  * deux rôles (RG-14) ; la page de connexion ne regarde que « puis-je animer ? ».
  */
 export async function fetchRole(): Promise<UserRole | null> {

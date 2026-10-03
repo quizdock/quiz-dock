@@ -629,7 +629,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     if (pin) await this.engine.broadcastReadiness(pin).catch(() => undefined);
   }
 
-  /** Exige un socket authentifié avec le rôle hôte (`host`/`admin`). */
+  /** Exige un socket authentifié avec le rôle `host` (un administrateur sans lui est refusé). */
   private requireHost(socket: GameSocket): User {
     const host = socket.data.user;
     if (!host) {

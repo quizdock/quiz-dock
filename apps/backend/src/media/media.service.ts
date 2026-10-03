@@ -151,7 +151,7 @@ export class MediaService implements OnModuleInit {
    *
    * What the file *is* comes from its bytes (`sniffMedia`), never from its name
    * or the type the browser declared: a raster image, an MP4 with H.264 video
-   * and AAC or no audio, or an MP3. The type served later is the one found here.
+   * and AAC or no audio, an MP3 or an M4A (AAC). The type served later is the one found here.
    * A sound comes with what the editor measured while decoding it (duration,
    * waveform, loudness), which the players use without decoding it again.
    */

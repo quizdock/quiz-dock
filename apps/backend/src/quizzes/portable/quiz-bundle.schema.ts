@@ -132,7 +132,7 @@ export const questionBundleSchema = z.object({
   prompt: z.string(),
   /** The visual slot: an image, or an MP4 video (version 3). */
   media: mediaPathSchema.optional(),
-  /** The audio slot: an MP3, never alongside a video (version 3). */
+  /** The audio slot: an MP3 or an M4A, never alongside a video (version 3). */
   audio: mediaPathSchema.optional(),
   answerExplanation: z.string().nullable().optional(),
   ...backgroundBundleFields,

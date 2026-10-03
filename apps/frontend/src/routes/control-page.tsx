@@ -1266,11 +1266,6 @@ function RecapHeader({ view, onRename }: { view: GameView; onRename?: (name: str
   );
 }
 
-/**
- * Fin de partie (§7) : action **destructive** — gardée par une infobulle d'avertissement
- * et une modale de confirmation. À la confirmation, la partie est détruite (PIN invalidé,
- * joueurs déconnectés). Les résultats ne sont pas conservés (archivage à venir, cf. §2.x).
- */
 /** Liste des participants avec action de bannissement (lobby + console en jeu). */
 /**
  * How far the devices waited for have loaded the next question's sound or

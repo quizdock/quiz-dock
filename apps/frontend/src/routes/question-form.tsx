@@ -374,7 +374,8 @@ export function QuestionForm({
   const timeLimitS = useStore(form.store, (s) => s.values.timeLimitS);
   const revealDelayS = useStore(form.store, (s) => s.values.revealDelayS);
   const mediaMs = useMediaDurationMs(media);
-  // What the session will really give this question (the server computes the same).
+  // What the session will give this question, estimated with the default read delay
+  // (the server uses the instance's GAME_READ_DELAY_MS).
   const listenFirst = useStore(form.store, (s) => s.values.timerAfterMedia);
   // Read on the folded lines (playback, points).
   const audioTarget = useStore(form.store, (s) => s.values.audioTarget);
