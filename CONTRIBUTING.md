@@ -17,6 +17,7 @@ Thanks for helping! A few things make a pull request easy to take in.
 - `pnpm lint`, `pnpm typecheck` and `pnpm test` pass.
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`feat(import): …`, `fix(game): …`); a git hook checks them.
-- A changed API: regenerate the client with `pnpm generate:api` and commit it.
+- A changed API: regenerate the client with `pnpm generate:api` and commit it
+  (`tools/generate-api/run.sh` does it in a container when the host cannot).
 - Code, comments, commits and documentation are in English; user-facing text
   goes through the translations, in every language of `apps/frontend/src/i18n/locales`.

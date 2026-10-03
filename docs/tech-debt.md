@@ -46,7 +46,7 @@ entry in the PR that pays it back.
 - **Way out**: either switch it on (`prefers-color-scheme`, a toggle), which is a feature to
   design and check screen by screen, or delete the tokens and the `dark:` classes.
 
-## Orval, a heavy generator run by hand
+## Orval, a heavy generator
 
 - **Where**: `apps/frontend/orval.config.ts`, `pnpm generate:api`, the drift check in
   `.github/workflows/ci.yml`.
@@ -54,12 +54,11 @@ entry in the PR that pays it back.
   one version to the next, so every bump rewrites the whole client (about 300 files at
   8.16 → 8.39) and fails the drift check until someone regenerates. Its dependency tree
   is large (an MCP SDK, typedoc, effect) and carried 12 of the critical advisories of
-  2026-10. Regenerating needs the backend built and the Linux dependencies: it does not
-  run against a macOS host's `node_modules`.
+  2026-10. Regenerating needs the backend built and the Linux dependencies, which a macOS
+  host lacks: `tools/generate-api/run.sh` does it in a container.
 - **Why it is acceptable**: a development tool only, absent from the images; the client is
   correct and the CI catches any drift.
-- **Cost**: a Dependabot pull request for orval is never mergeable as is; each
-  regeneration is a manual container session.
-- **Way out**: a versioned wrapper that builds the backend and runs `generate:api` in a
-  container; then weigh a lighter generator (types from the OpenAPI plus a thin fetch
+- **Cost**: a Dependabot pull request for orval is never mergeable as is: it has to be
+  regenerated on its branch.
+- **Way out**: weigh a lighter generator (types from the OpenAPI plus a thin fetch
   client) against what the TanStack Query hooks save.
