@@ -40,14 +40,14 @@ services:
       KC_HEALTH_ENABLED: 'true'
       # One public name for the browser and the tokens' issuer, whatever address
       # asks; the backend reaches the token endpoint over the internal network.
-      KC_HOSTNAME: http://localhost:${KEYCLOAK_PORT:-18080}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:-http://localhost:${KEYCLOAK_PORT:-18080}}
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: 'true'
       KEYCLOAK_APP_URL: ${KEYCLOAK_APP_URL:-http://localhost:18081}
       KEYCLOAK_DEV_URL: ${KEYCLOAK_DEV_URL:-http://localhost:15173}
       KEYCLOAK_HOST_PASSWORD: animateur
       KEYCLOAK_PLAYER_PASSWORD: participant
     ports:
-      - '127.0.0.1:${KEYCLOAK_PORT:-18080}:8080' # this computer only (admin/admin)
+      - '${KEYCLOAK_BIND:-127.0.0.1}:${KEYCLOAK_PORT:-18080}:8080' # this computer only by default (admin/admin)
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     networks: [internal, public]
