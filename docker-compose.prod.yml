@@ -115,6 +115,45 @@ services:
     restart: unless-stopped
     networks: [internal, public]
 
+  # QuizDock's own database role (an install made by `quizdock init` since 0.13.2):
+  # the database belongs to it, the superuser is kept for administering PostgreSQL.
+  # Unset (older installs), the app keeps the superuser, as before. A role set on a
+  # database that already holds data stops here: moving it is a manual step.
+  quizdock-db:
+    image: postgres:16-alpine
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-live}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-live}
+      POSTGRES_DB: ${POSTGRES_DB:-quizdock}
+      QUIZDOCK_DB_USER: ${QUIZDOCK_DB_USER:-}
+      QUIZDOCK_DB_PASSWORD: ${QUIZDOCK_DB_PASSWORD:-}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        [ -n "$$QUIZDOCK_DB_USER" ] || exit 0
+        if ! psql -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname = '$$QUIZDOCK_DB_USER'" | grep -qx 1; then
+          # Read from stdin: psql substitutes :"name" and :'pass' there, quoted, not in -c.
+          psql -d postgres -v ON_ERROR_STOP=1 -v name="$$QUIZDOCK_DB_USER" -v pass="$$QUIZDOCK_DB_PASSWORD" <<'SQL'
+        CREATE ROLE :"name" LOGIN PASSWORD :'pass';
+        SQL
+        fi
+        owner="$$(psql -d postgres -tAc "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname = '$$POSTGRES_DB'")"
+        [ "$$owner" = "$$QUIZDOCK_DB_USER" ] && exit 0
+        if [ "$$(psql -d "$$POSTGRES_DB" -tAc "SELECT count(*) FROM pg_tables WHERE schemaname = 'public'")" != 0 ]; then
+          echo "QUIZDOCK_DB_USER is set, but $$POSTGRES_DB already holds data owned by $$owner: see the upgrade notes to move it." >&2
+          exit 1
+        fi
+        psql -d postgres -v ON_ERROR_STOP=1 -v db="$$POSTGRES_DB" -v name="$$QUIZDOCK_DB_USER" <<'SQL'
+        ALTER DATABASE :"db" OWNER TO :"name";
+        SQL
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    networks: [internal]
+
   # Migrations idempotentes (Prisma). One-shot : applique puis sort. L'app attend
   # sa complétion. Même image que `quizdock`, commande surchargée (l'ENTRYPOINT
   # distroless est déjà `node`, donc on passe le chemin du CLI Prisma).
@@ -125,10 +164,12 @@ services:
     image: fchaussin/quizdock:${QUIZDOCK_TAG:-latest}
     command: ['node_modules/prisma/build/index.js', 'migrate', 'deploy']
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
+      DATABASE_URL: postgres://${QUIZDOCK_DB_USER:-${POSTGRES_USER:-live}}:${QUIZDOCK_DB_PASSWORD:-${POSTGRES_PASSWORD:-live}}@postgres:5432/${POSTGRES_DB:-quizdock}
     depends_on:
       postgres:
         condition: service_healthy
+      quizdock-db:
+        condition: service_completed_successfully
     # The same hardening as the app's (below): it runs the same image.
     security_opt: ['no-new-privileges:true']
     cap_drop: ['ALL']
@@ -152,7 +193,7 @@ services:
       AUTH_MODE: ${AUTH_MODE:-none}
       # Démo publique (garde-fous, indépendant de AUTH_MODE) — cf. https://quizdock.github.io/docs/operator/configuration/
       DEMO_MODE: ${DEMO_MODE:-false}
-      DATABASE_URL: postgres://${POSTGRES_USER:-live}:${POSTGRES_PASSWORD:-live}@postgres:5432/${POSTGRES_DB:-quizdock}
+      DATABASE_URL: postgres://${QUIZDOCK_DB_USER:-${POSTGRES_USER:-live}}:${QUIZDOCK_DB_PASSWORD:-${POSTGRES_PASSWORD:-live}}@postgres:5432/${POSTGRES_DB:-quizdock}
       REDIS_URL: redis://redis:6379
       MEDIA_DIR: /data/media
       STORE_DIR: /data/store

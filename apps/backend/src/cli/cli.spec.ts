@@ -110,6 +110,24 @@ describe('doctor', () => {
     expect(healthy).toBe(true);
   });
 
+  it('warns when the application connects as a PostgreSQL superuser, not for the single image', async () => {
+    const superuser = () => ({
+      $queryRaw: jest
+        .fn()
+        .mockResolvedValueOnce([{ '?column?': 1 }])
+        .mockResolvedValueOnce([{ rolsuper: true }])
+        .mockResolvedValue([
+          { migration_name: '20260101_init', finished_at: new Date(), rolled_back_at: null },
+        ]),
+    });
+    const compose = memOutput();
+    await doctor(compose.out, deps({ prisma: superuser() }));
+    expect(compose.text()).toContain('connects as a PostgreSQL superuser');
+    const single = memOutput();
+    await doctor(single.out, deps({ prisma: superuser() }, { QUIZDOCK_FLAVOR: 'standalone' }));
+    expect(single.text()).not.toContain('superuser');
+  });
+
   it('reports failures: missing REDIS_URL, unwritable media dir, DB down', async () => {
     const { out, text } = memOutput();
     const d = deps(

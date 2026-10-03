@@ -114,7 +114,11 @@ fetch_file() { # fetch_file <base url> <repository path> <local path>
 # never a refusal: a first try may keep them; an instance in use should not.
 check_secrets() {
   weak=""
-  for key in POSTGRES_PASSWORD $([ "$(mode)" = full ] && printf '%s' 'KEYCLOAK_ADMIN_PASSWORD KEYCLOAK_HOST_PASSWORD KEYCLOAK_PLAYER_PASSWORD KEYCLOAK_DB_PASSWORD'); do
+  keys="POSTGRES_PASSWORD"
+  [ -n "$(env_get QUIZDOCK_DB_USER)" ] && keys="$keys QUIZDOCK_DB_PASSWORD"
+  [ "$(mode)" = full ] && keys="$keys KEYCLOAK_ADMIN_PASSWORD KEYCLOAK_HOST_PASSWORD KEYCLOAK_PLAYER_PASSWORD"
+  [ "$(mode)" = full ] && [ -n "$(env_get KEYCLOAK_DB_USER)" ] && keys="$keys KEYCLOAK_DB_PASSWORD"
+  for key in $keys; do
     case "$(env_get "$key")" in
       "" | live | change-me | change-me-*) weak="$weak $key" ;;
     esac
@@ -288,10 +292,13 @@ cmd_init() {
       say "ADMIN_TOKEN=$admin_token"
     fi
     if [ "$want_mode" != standalone ]; then
-      say "# Bundled PostgreSQL (compose mode)."
-      say "POSTGRES_USER=quizdock"
+      say "# Bundled PostgreSQL (compose mode): its superuser administers it (backups),"
+      say "# QuizDock connects with a role of its own that owns its database only."
+      say "POSTGRES_USER=postgres"
       say "POSTGRES_PASSWORD=$(random_secret)"
       say "POSTGRES_DB=quizdock"
+      say "QUIZDOCK_DB_USER=quizdock"
+      say "QUIZDOCK_DB_PASSWORD=$(random_secret)"
     fi
   } >"$ENV_FILE"
   chmod 600 "$ENV_FILE"
