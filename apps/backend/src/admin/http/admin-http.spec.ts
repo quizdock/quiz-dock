@@ -9,6 +9,7 @@ import type { AuthProvider } from '../../auth/auth-provider';
 import { HttpExceptionFilter } from '../../common/http-exception.filter';
 import { MediaAdminController } from '../../media/media-admin.controller';
 import { MediaAdminService } from '../../media/media-admin.service';
+import { RedisService } from '../../redis/redis.service';
 import type { UsersService } from '../../users/users.service';
 import { AUDIT_REPOSITORY } from '../admin.tokens';
 import { MemoryAuditRepository } from '../audit/audit.repository';
@@ -17,6 +18,7 @@ import { MemoryConfirmationStore } from '../runner/confirmations';
 import { OperationRunner } from '../runner/operation-runner';
 import { settingsFrom } from '../settings/settings.service';
 import { AdminOperationsController } from './admin-operations.controller';
+import { REFUSALS_AUDITED } from './refusal-audit.filter';
 import { OperationFileInterceptor } from './operation-file.interceptor';
 import {
   ADMIN_TOKEN_FAILURES_GLOBAL_MAX,
@@ -137,6 +139,7 @@ async function app(
       { provide: AdminRateLimit, useValue: new AdminRateLimit(fakeRedis() as never) },
       { provide: MediaAdminService, useValue: {} },
       { provide: AUDIT_REPOSITORY, useValue: audit },
+      { provide: RedisService, useValue: fakeRedis() },
       OperationFileInterceptor,
     ],
   }).compile();
@@ -196,6 +199,22 @@ describe('the admin API', () => {
       outcome: 'refused',
       code: 'forbidden',
     });
+  });
+
+  it('keeps a few refusals per account and window, not one row per request', async () => {
+    const { app: fresh, audit: kept } = await app(OIDC_WRITE);
+    try {
+      for (let i = 0; i < REFUSALS_AUDITED + 5; i++) {
+        await request(fresh.getHttpServer())
+          .get('/admin/operations')
+          .set('X-Test-Role', 'player')
+          .expect(403);
+      }
+      await new Promise((r) => setTimeout(r, 20)); // the audit is written after the answer
+      expect(kept.entries.filter((e) => e.actor === 'player')).toHaveLength(REFUSALS_AUDITED);
+    } finally {
+      await fresh.close();
+    }
   });
 
   it('lists the catalogue, with each operation reachable or not', async () => {
