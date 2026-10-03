@@ -329,6 +329,7 @@ function HostConsole({
       <JoinAddressPicker
         current={joinBase(view)}
         onChange={(baseUrl) => socket?.emit('host:join-url', { pin, baseUrl })}
+        room={pin}
       />
     </div>
   );
