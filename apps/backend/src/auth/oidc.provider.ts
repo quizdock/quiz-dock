@@ -92,7 +92,9 @@ export class OidcProvider implements AuthProvider {
         (typeof name === 'string' && name) ||
         (typeof email === 'string' && email) ||
         sub,
-      email: typeof email === 'string' ? email : null,
+      // An address the provider says is not verified could be anyone's: not kept,
+      // since accounts are found by it (`qd users.set-role user=<e-mail>`).
+      email: typeof email === 'string' && payload['email_verified'] !== false ? email : null,
       roles: Array.isArray(rolesRaw)
         ? rolesRaw.filter((r): r is string => typeof r === 'string')
         : [],
