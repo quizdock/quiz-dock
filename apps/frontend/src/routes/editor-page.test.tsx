@@ -693,6 +693,7 @@ describe('EditorPage', () => {
 
     const down = await screen.findAllByLabelText('Descendre');
     fireEvent.click(down[0]); // descend la 1re question
+    fireEvent.click(down[0]); // a second move before the list is read again: held
     await waitFor(() => {
       const call = fetchMock.mock.calls.find(
         ([url, opts]) => String(url).includes('/items/reorder') && opts?.method === 'PATCH',
@@ -704,6 +705,11 @@ describe('EditorPage', () => {
         { kind: 'question', id: 'a' },
       ]);
     });
+    expect(
+      fetchMock.mock.calls.filter(
+        ([url, opts]) => String(url).includes('/items/reorder') && opts?.method === 'PATCH',
+      ),
+    ).toHaveLength(1);
   });
 
   it('lists slides in the sequence before their anchor question and moves them with it (#7)', async () => {

@@ -54,7 +54,7 @@ import {
   isQuizLicense,
   toTag,
 } from '@quiz-dock/contracts';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import { Textarea } from '@/components/ui/textarea';
@@ -366,14 +366,27 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishOnArrival]);
 
-  const persistOrder = (next: QuizItem[]) =>
-    guarded(async () => {
-      await reorder.mutateAsync({
-        id: quiz.id,
-        data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+  // One move at a time, until the list is read again: a move made meanwhile would
+  // start from the old order and undo the one before it.
+  const [reordering, setReordering] = useState(false);
+  const reorderingRef = useRef(false);
+  const persistOrder = async (next: QuizItem[]) => {
+    if (reorderingRef.current) return;
+    reorderingRef.current = true;
+    setReordering(true);
+    try {
+      await guarded(async () => {
+        await reorder.mutateAsync({
+          id: quiz.id,
+          data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+        });
+        await invalidate();
       });
-      await invalidate();
-    });
+    } finally {
+      reorderingRef.current = false;
+      setReordering(false);
+    }
+  };
   const move = (index: number, direction: -1 | 1) => {
     const next = moveItem(items, index, direction);
     if (next !== items) void persistOrder(next);
@@ -848,8 +861,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     ? t('slides.deleteSlide')
                     : t('questions.deleteQuestion')
                 }
-                canMoveUp={editingIndex > 0 && !reorder.isPending}
-                canMoveDown={editingIndex < items.length - 1 && !reorder.isPending}
+                canMoveUp={editingIndex > 0 && !reordering}
+                canMoveDown={editingIndex < items.length - 1 && !reordering}
                 onMove={(d) => move(editingIndex, d)}
                 onDelete={() => setPendingDelete(editingItem)}
               />
@@ -916,8 +929,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                           active={editing === item.id}
                           number={questionNumber(items, i)}
                           handle={handle}
-                          canMoveUp={i > 0 && !reorder.isPending}
-                          canMoveDown={i < items.length - 1 && !reorder.isPending}
+                          canMoveUp={i > 0 && !reordering}
+                          canMoveDown={i < items.length - 1 && !reordering}
                           onMove={(d) => move(i, d)}
                           onEdit={() => requestEditing(item.id)}
                           onDelete={() => setPendingDelete(item)}
