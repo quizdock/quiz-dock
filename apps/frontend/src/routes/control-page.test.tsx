@@ -508,6 +508,21 @@ describe('ControlPage (console hôte)', () => {
     vi.unstubAllGlobals();
   });
 
+  it('« Partager » over plain http (no share sheet, no clipboard) shows the link to copy', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({});
+    vi.stubGlobal('navigator', { ...navigator, share: undefined, clipboard: undefined });
+    renderApp('/session/482913/console');
+    const btn = await screen.findByRole('button', { name: /Partager/ });
+    await act(async () => {
+      btn.click();
+    });
+    expect(
+      await screen.findByText(/Copiez cette adresse et envoyez-la : .*\/join\/482913/),
+    ).toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
   it('LOBBY: closes the game to newcomers from the console (#57)', async () => {
     localStorage.setItem('live.localUser', 'Animateur');
     hookState.value = view({});

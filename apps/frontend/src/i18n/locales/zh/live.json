@@ -10,6 +10,7 @@
     "qrLabel": "加入用二维码",
     "pinLabel": "PIN 码",
     "shareCopied": "邀请（PIN + 链接）已复制到剪贴板。",
+    "shareByHand": "复制此地址并发送：{{url}}",
     "shareText": "加入 {{appName}} 房间 🎮",
     "sharePin": "PIN：{{pin}}",
     "shareLink": "直接链接：{{url}}",

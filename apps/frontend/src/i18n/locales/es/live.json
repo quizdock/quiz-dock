@@ -10,6 +10,7 @@
     "qrLabel": "Código QR para unirse",
     "pinLabel": "Código PIN",
     "shareCopied": "Invitación copiada (PIN + enlace) en el portapapeles.",
+    "shareByHand": "Copia esta dirección y envíala: {{url}}",
     "shareText": "Únete a la sala de {{appName}} 🎮",
     "sharePin": "PIN: {{pin}}",
     "shareLink": "Enlace directo: {{url}}",

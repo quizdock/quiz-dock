@@ -230,9 +230,13 @@ function HostConsole({
           text: invitation.join('\n'),
           url: joinUrl,
         });
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(text);
         setShareNote(t('control.shareCopied'));
+      } else {
+        // Plain http on a local network: neither the share sheet nor the clipboard
+        // exists there. The address is shown to be copied by hand.
+        setShareNote(t('control.shareByHand', { url: joinUrl }));
       }
     } catch {
       /* partage annulé / non supporté */

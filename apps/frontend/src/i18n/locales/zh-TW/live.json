@@ -10,6 +10,7 @@
     "qrLabel": "使用 QRCode 加入",
     "pinLabel": "PIN 碼",
     "shareCopied": "邀請資訊（PIN + 連結）已複製到剪貼簿。",
+    "shareByHand": "複製此地址並傳送：{{url}}",
     "shareText": "加入 {{appName}} 房間 🎮",
     "sharePin": "PIN：{{pin}}",
     "shareLink": "直接連結：{{url}}",

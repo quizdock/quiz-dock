@@ -10,6 +10,7 @@
     "qrLabel": "QR code to join",
     "pinLabel": "PIN code",
     "shareCopied": "Invitation copied (PIN + link) to the clipboard.",
+    "shareByHand": "Copy this address and send it: {{url}}",
     "shareText": "Join the {{appName}} room 🎮",
     "sharePin": "PIN: {{pin}}",
     "shareLink": "Direct link: {{url}}",

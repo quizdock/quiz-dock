@@ -10,6 +10,7 @@
     "qrLabel": "QR code pour rejoindre",
     "pinLabel": "Code PIN",
     "shareCopied": "Invitation copiée (PIN + lien) dans le presse-papier.",
+    "shareByHand": "Copiez cette adresse et envoyez-la : {{url}}",
     "shareText": "Rejoignez le salon {{appName}} 🎮",
     "sharePin": "PIN : {{pin}}",
     "shareLink": "Lien direct : {{url}}",

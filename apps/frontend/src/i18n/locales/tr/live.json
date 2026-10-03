@@ -10,6 +10,7 @@
     "qrLabel": "Katılmak için QR kodu",
     "pinLabel": "PIN kodu",
     "shareCopied": "Davetiye (PIN + bağlantı) panoya kopyalandı.",
+    "shareByHand": "Bu adresi kopyalayıp gönderin: {{url}}",
     "shareText": "{{appName}} odasına katılın 🎮",
     "sharePin": "PIN: {{pin}}",
     "shareLink": "Doğrudan bağlantı: {{url}}",
