@@ -794,6 +794,16 @@ describe('EditorPage', () => {
     expect(localStorage.getItem('draft:quiz:q1:question:a')).toBeNull();
   });
 
+  it('a reading again that fails keeps the open editor, and says so', async () => {
+    mockApi([{ method: 'GET', path: '/quizzes/q1', body: detail() }]);
+    renderApp('/quizzes/q1');
+    expect(await screen.findByDisplayValue('Mon quiz')).toBeInTheDocument();
+    mockApi([{ method: 'GET', path: '/quizzes/q1', status: 500, body: {} }]);
+    window.dispatchEvent(new Event('visibilitychange')); // back to the tab: read again
+    expect(await screen.findByRole('button', { name: /Réessayer/ })).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Mon quiz')).toBeInTheDocument();
+  });
+
   it('says the quiz is not found only when the server says so (audit E5)', async () => {
     mockApi([{ method: 'GET', path: '/quizzes/q1', status: 500, body: {} }]);
     const { unmount } = renderApp('/quizzes/q1');

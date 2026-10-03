@@ -113,6 +113,7 @@ import { editorRoute } from '../router';
 import { LoadFailed, PageLoading } from '@/components/ui/loading';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 import { clearDraft, formDraftKey } from '@/lib/draft-store';
+import { StaleNotice } from '@/components/ui/stale-notice';
 
 /**
  * The page has two columns, and they are the same from top to bottom: the
@@ -125,13 +126,28 @@ const PAGE_COLUMNS = 'lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[24rem_min
 export function EditorPage() {
   const { t } = useTranslation(['editor', 'common']);
   const { quizId } = editorRoute.useParams();
-  const { data, isLoading, error } = useQuizzesControllerGet(quizId);
+  const { data, isLoading, error, refetch } = useQuizzesControllerGet(quizId);
 
   if (isLoading) return <PageLoading />;
-  if (error || !data) return <LoadFailed error={error} notFound={t('notFound')} />;
+  // Only when there is nothing to show: a reading again that fails (on focus, after
+  // a save) keeps the open editor, and what is typed in it.
+  if (!data) return <LoadFailed error={error} notFound={t('notFound')} />;
+  const stale = error ? <StaleNotice onRetry={() => void refetch()} /> : null;
   // Another host's quiz, opened by a manager: read, never changed (#82).
-  if (!data.data.editable) return <QuizReadOnly quiz={data.data} />;
-  return <QuizEditor quiz={data.data} />;
+  if (!data.data.editable) {
+    return (
+      <>
+        {stale}
+        <QuizReadOnly quiz={data.data} />
+      </>
+    );
+  }
+  return (
+    <>
+      {stale}
+      <QuizEditor quiz={data.data} />
+    </>
+  );
 }
 
 function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
