@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post, Res, StreamableFile } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import type { Response } from 'express';
 import { mediaHeaders } from '../media/media-response';
@@ -45,7 +45,7 @@ export class StoreController {
 
   /** Shares one of the caller's `ready` quizzes as a template. */
   @Post()
-  @ApiOkResponse({ type: StoreEntryDto })
+  @ApiCreatedResponse({ type: StoreEntryDto })
   share(@CurrentUser() user: User, @Body() body: ShareTemplateDto): Promise<StoreEntryDto> {
     return this.store.share(user, body.quizId);
   }
@@ -81,7 +81,7 @@ export class StoreController {
 
   /** Takes a copy: a new draft in the caller's own bank. */
   @Post(':id/take')
-  @ApiOkResponse({ type: QuizDto })
+  @ApiCreatedResponse({ type: QuizDto })
   take(@CurrentUser() user: User, @Param('id') id: string) {
     return this.store.take(user.id, id);
   }

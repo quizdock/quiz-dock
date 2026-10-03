@@ -144,12 +144,12 @@ export function useStoreControllerList<TData = Awaited<ReturnType<typeof storeCo
 
 
 
-export type storeControllerShareResponse200 = {
+export type storeControllerShareResponse201 = {
   data: StoreEntryDto
-  status: 200
+  status: 201
 }
 
-export type storeControllerShareResponseSuccess = (storeControllerShareResponse200) & {
+export type storeControllerShareResponseSuccess = (storeControllerShareResponse201) & {
   headers: Headers;
 };
 ;
@@ -514,12 +514,12 @@ export function useStoreControllerMedia<TData = Awaited<ReturnType<typeof storeC
 
 
 
-export type storeControllerTakeResponse200 = {
+export type storeControllerTakeResponse201 = {
   data: QuizDto
-  status: 200
+  status: 201
 }
 
-export type storeControllerTakeResponseSuccess = (storeControllerTakeResponse200) & {
+export type storeControllerTakeResponseSuccess = (storeControllerTakeResponse201) & {
   headers: Headers;
 };
 ;

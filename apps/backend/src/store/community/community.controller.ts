@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Res, StreamableFile } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import { CurrentUser } from '../../auth/current-user.decorator';
 import type { Response } from 'express';
@@ -33,7 +33,7 @@ export class CommunityController {
     return new StreamableFile(bytes);
   }
   @Post('take')
-  @ApiOkResponse({ type: QuizDto })
+  @ApiCreatedResponse({ type: QuizDto })
   take(@CurrentUser() user: User, @Body() body: CommunityTakeDto) {
     return this.store.take(user.id, body.key);
   }

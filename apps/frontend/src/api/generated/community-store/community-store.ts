@@ -364,12 +364,12 @@ export function useCommunityControllerMedia<TData = Awaited<ReturnType<typeof co
 
 
 
-export type communityControllerTakeResponse200 = {
+export type communityControllerTakeResponse201 = {
   data: QuizDto
-  status: 200
+  status: 201
 }
 
-export type communityControllerTakeResponseSuccess = (communityControllerTakeResponse200) & {
+export type communityControllerTakeResponseSuccess = (communityControllerTakeResponse201) & {
   headers: Headers;
 };
 ;
