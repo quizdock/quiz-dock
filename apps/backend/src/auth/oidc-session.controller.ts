@@ -12,7 +12,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { SETTINGS } from '@quiz-dock/contracts';
 import type { Request, Response } from 'express';
+import { seen, settings } from '../admin/settings/settings.service';
 import { UsersService } from '../users/users.service';
 import { AuthRedirectDto, OidcCallbackDto, OidcSignedInDto } from './dto/oidc-session.dto';
 import { OidcProvider } from './oidc.provider';
@@ -21,7 +23,8 @@ import { OidcSessions } from './oidc/oidc-sessions';
 import {
   LOGIN_COOKIE,
   LOGIN_COOKIE_PATH,
-  readCookie,
+  cookieName,
+  readOurCookie,
   SESSION_COOKIE,
   serializeCookie,
 } from './oidc/session-cookie';
@@ -29,6 +32,9 @@ import { LOGIN_TTL_S } from './oidc/oidc-sessions';
 import { Public } from './public.decorator';
 
 /** The address the browser uses for this application (the page that called us). */
+/** `__Host-` needs Path=/: the login cookie keeps to the auth endpoints only without it. */
+const loginCookiePath = (secure: boolean) => (secure ? '/' : LOGIN_COOKIE_PATH);
+
 function appOrigin(req: Request): string {
   const origin = req.headers.origin;
   if (typeof origin === 'string' && origin !== 'null') return origin;
@@ -77,12 +83,15 @@ export class OidcSessionController {
       nonce: randomToken(),
       redirectUri: `${appOrigin(req)}/auth/callback`,
     };
+    // Over plain HTTP behind an https address: the proxy is not trusted (Health says so).
+    if (!req.secure && settings.get(SETTINGS.APP_PUBLIC_URL).startsWith('https://'))
+      seen.plainSignInBehindHttps = true;
     await sessions.savePendingLogin(state, login);
     res.append(
       'Set-Cookie',
-      serializeCookie(LOGIN_COOKIE, state, {
+      serializeCookie(cookieName(LOGIN_COOKIE, req.secure), state, {
         secure: req.secure,
-        path: LOGIN_COOKIE_PATH,
+        path: loginCookiePath(req.secure),
         maxAgeS: LOGIN_TTL_S,
       }),
     );
@@ -107,13 +116,13 @@ export class OidcSessionController {
     const { client, sessions, provider } = this.oidc();
     res.append(
       'Set-Cookie',
-      serializeCookie(LOGIN_COOKIE, '', {
+      serializeCookie(cookieName(LOGIN_COOKIE, req.secure), '', {
         secure: req.secure,
-        path: LOGIN_COOKIE_PATH,
+        path: loginCookiePath(req.secure),
         maxAgeS: 0,
       }),
     );
-    if (readCookie(req.headers.cookie, LOGIN_COOKIE) !== dto.state) {
+    if (readOurCookie(req.headers.cookie, LOGIN_COOKIE) !== dto.state) {
       throw new UnauthorizedException('auth.login_failed');
     }
     const login = await sessions.takePendingLogin(dto.state);
@@ -128,10 +137,13 @@ export class OidcSessionController {
       if (!principal) throw new Error('No subject in the access token.');
       await this.users.upsertFromPrincipal(principal);
       // A new session on every sign-in, whatever the browser held before.
-      const previous = readCookie(req.headers.cookie, SESSION_COOKIE);
+      const previous = readOurCookie(req.headers.cookie, SESSION_COOKIE);
       if (previous) await sessions.destroy(previous);
       const sid = await sessions.create(principal.sub, tokens);
-      res.append('Set-Cookie', serializeCookie(SESSION_COOKIE, sid, { secure: req.secure }));
+      res.append(
+        'Set-Cookie',
+        serializeCookie(cookieName(SESSION_COOKIE, req.secure), sid, { secure: req.secure }),
+      );
       return { name: principal.displayName };
     } catch (err) {
       // The reason stays in the log: the browser only learns that it failed.
@@ -150,12 +162,12 @@ export class OidcSessionController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthRedirectDto> {
     const { client, sessions } = this.oidc();
-    const sid = readCookie(req.headers.cookie, SESSION_COOKIE);
+    const sid = readOurCookie(req.headers.cookie, SESSION_COOKIE);
     const ended = sid ? await sessions.destroy(sid) : null;
-    res.append(
-      'Set-Cookie',
-      serializeCookie(SESSION_COOKIE, '', { secure: req.secure, maxAgeS: 0 }),
-    );
+    // Both names go: the prefixed one, and a bare one set before the prefix.
+    for (const name of new Set([cookieName(SESSION_COOKIE, req.secure), SESSION_COOKIE])) {
+      res.append('Set-Cookie', serializeCookie(name, '', { secure: req.secure, maxAgeS: 0 }));
+    }
     const url = await client
       .endSessionUrl(ended?.idToken ?? null, appOrigin(req))
       .catch(() => null);

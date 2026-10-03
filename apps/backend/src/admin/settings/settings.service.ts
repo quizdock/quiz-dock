@@ -254,6 +254,20 @@ export const SETTING_RULES: SettingRule[] = [
     },
   },
   {
+    key: 'APP_PUBLIC_URL',
+    check: (s) =>
+      s.get(SETTINGS.AUTH_MODE) === 'oidc' && !s.get(SETTINGS.APP_PUBLIC_URL)
+        ? "APP_PUBLIC_URL is not set: the sign-in's return address is taken from each request. Set it to the address people use, and register exactly <APP_PUBLIC_URL>/auth/callback with your identity provider."
+        : null,
+  },
+  {
+    key: 'TRUST_PROXY',
+    check: (s) =>
+      seen.plainSignInBehindHttps && s.get(SETTINGS.APP_PUBLIC_URL).startsWith('https://')
+        ? 'A sign-in arrived over plain HTTP while APP_PUBLIC_URL is https: the reverse proxy in front is not trusted, so the session cookie is neither Secure nor bound to this host. Set TRUST_PROXY to its address (or the hop count).'
+        : null,
+  },
+  {
     key: 'ALLOW_ANONYMOUS_PARTICIPANTS',
     check: (s) =>
       s.get(SETTINGS.ALLOW_ANONYMOUS_PARTICIPANTS) && s.get(SETTINGS.AUTH_MODE) !== 'oidc'
@@ -275,6 +289,9 @@ export const SETTING_RULES: SettingRule[] = [
     },
   },
 ];
+
+/** What the backend saw at run time, that a rule reads (it lasts until the next start). */
+export const seen = { plainSignInBehindHttps: false };
 
 /** The values changed from the administration, as the backend holds them. */
 export const overrides = new OverrideStore();

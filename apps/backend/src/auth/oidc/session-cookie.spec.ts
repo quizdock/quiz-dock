@@ -1,8 +1,21 @@
 import type { NextFunction, Request, Response } from 'express';
 import { sameOriginMiddleware } from './same-origin.middleware';
-import { isCrossOrigin, readCookie, serializeCookie } from './session-cookie';
+import {
+  cookieName,
+  isCrossOrigin,
+  readCookie,
+  readOurCookie,
+  serializeCookie,
+} from './session-cookie';
 
 describe('cookies', () => {
+  it('carries the __Host- prefix over HTTPS only, and reads either name', () => {
+    expect(cookieName('qd_session', true)).toBe('__Host-qd_session');
+    expect(cookieName('qd_session', false)).toBe('qd_session');
+    expect(readOurCookie('qd_session=old; __Host-qd_session=new', 'qd_session')).toBe('new');
+    expect(readOurCookie('qd_session=old', 'qd_session')).toBe('old');
+  });
+
   it('reads one cookie among others', () => {
     expect(readCookie('a=1; qd_session=abc%2Fd; b=2', 'qd_session')).toBe('abc/d');
     expect(readCookie('xqd_session=1', 'qd_session')).toBeNull();

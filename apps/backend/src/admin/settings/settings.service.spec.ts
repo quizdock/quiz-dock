@@ -4,6 +4,7 @@ import {
   OverrideStore,
   SettingsService,
   recordSource,
+  seen,
   settingsFrom,
 } from './settings.service';
 
@@ -153,6 +154,25 @@ describe('SettingsService', () => {
       expect(settingsFrom({ QUIZDOCK_FLAVOR: 'standalone' }).issues()).toEqual([]);
     });
 
+    it('OIDC without APP_PUBLIC_URL is flagged: the return address follows each request', () => {
+      const oidc = { AUTH_MODE: 'oidc', OIDC_ISSUER: 'https://id.example.org' };
+      expect(rules(oidc)).toEqual(['APP_PUBLIC_URL']);
+      expect(rules({ ...oidc, APP_PUBLIC_URL: 'https://quiz.example.org' })).toEqual([]);
+      expect(rules({})).toEqual([]); // local mode: no sign-in
+    });
+
+    it('a sign-in over plain HTTP behind an https address flags the proxy', () => {
+      const https = { APP_PUBLIC_URL: 'https://quiz.example.org' };
+      expect(rules(https)).toEqual([]);
+      seen.plainSignInBehindHttps = true;
+      try {
+        expect(rules(https)).toEqual(['TRUST_PROXY']);
+        expect(rules({ APP_PUBLIC_URL: 'http://192.168.1.10:18080' })).toEqual([]);
+      } finally {
+        seen.plainSignInBehindHttps = false;
+      }
+    });
+
     it('anonymous participants need OIDC', () => {
       expect(rules({ ALLOW_ANONYMOUS_PARTICIPANTS: 'true' })).toEqual([
         'ALLOW_ANONYMOUS_PARTICIPANTS',
@@ -162,6 +182,7 @@ describe('SettingsService', () => {
           ALLOW_ANONYMOUS_PARTICIPANTS: 'true',
           AUTH_MODE: 'oidc',
           OIDC_ISSUER: 'https://id.example.org',
+          APP_PUBLIC_URL: 'https://quiz.example.org',
         }),
       ).toEqual([]);
     });

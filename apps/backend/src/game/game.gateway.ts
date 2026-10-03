@@ -31,7 +31,7 @@ import { UsersService } from '../users/users.service';
 import { GameEngine } from './game.engine';
 import { GameService } from './game.service';
 import { noticeOf } from './game.types';
-import { isCrossOrigin, readCookie, SESSION_COOKIE } from '../auth/oidc/session-cookie';
+import { isCrossOrigin, readOurCookie, SESSION_COOKIE } from '../auth/oidc/session-cookie';
 import { clientIp } from '../common/trust-proxy';
 import { PinAttempts } from './pin-attempts';
 import { WsExceptionFilter } from './ws-exception.filter';
@@ -721,7 +721,7 @@ function handshakeAsRequest(socket: GameSocket): Request {
  */
 function sessionCookieOf(socket: GameSocket): string | undefined {
   const { headers } = socket.handshake;
-  if (!readCookie(headers.cookie, SESSION_COOKIE)) return undefined;
+  if (!readOurCookie(headers.cookie, SESSION_COOKIE)) return undefined;
   return isCrossOrigin(headers, headers.host) ? undefined : headers.cookie;
 }
 
