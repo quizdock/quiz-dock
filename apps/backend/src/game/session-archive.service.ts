@@ -26,6 +26,12 @@ const SESSION_RETENTION_DAYS = 365;
  * de partie (l'appelant poursuit la destruction de l'état). No-op si rien n'a été
  * joué (lobby vide / aucune réponse).
  */
+
+/** Answer rows per insert: well under Postgres' 65 535 bound parameters (10 per row). */
+const ANSWER_BATCH = 3000;
+/** Time an archive may take, and wait for a connection. */
+const ARCHIVE_TRANSACTION = { timeout: 60_000, maxWait: 10_000 };
+
 @Injectable()
 export class SessionArchiveService {
   private readonly log = new Logger(SessionArchiveService.name);
@@ -99,11 +105,15 @@ export class SessionArchiveService {
             snapshot,
             answersByIndex,
           );
-          if (answerRows.length > 0) {
-            await tx.answerLog.createMany({ data: answerRows });
+          // In batches, one after the other: one large insert is split by Prisma into
+          // queries sent at once on the transaction's single connection.
+          for (let i = 0; i < answerRows.length; i += ANSWER_BATCH) {
+            await tx.answerLog.createMany({ data: answerRows.slice(i, i + ANSWER_BATCH) });
           }
         }
-      });
+        // A large room with every answer kept takes seconds: past Prisma's default 5 s,
+        // the results were lost.
+      }, ARCHIVE_TRANSACTION);
 
       this.log.debug(`Session archivée ${pin} (${status}, ${ranked.length} joueurs)`);
     } catch (err) {
