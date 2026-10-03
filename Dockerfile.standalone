@@ -74,6 +74,6 @@ VOLUME ["/data"]
 # node is on PATH here (not distroless) → node-based healthcheck. Generous
 # start-period: first boot runs initdb + migrations.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=8 \
-  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/start.sh"]

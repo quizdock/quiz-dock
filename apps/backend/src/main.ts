@@ -38,7 +38,14 @@ async function bootstrap(): Promise<void> {
   if (isOidcMode()) app.use(sameOriginMiddleware());
   // Served at the root, where the page asks for them; the rest is the API.
   app.setGlobalPrefix('api/v1', {
-    exclude: ['health', 'config.js', 'branding/override.css', 'manifest.webmanifest', ...ICONS],
+    exclude: [
+      'health',
+      'health/ready',
+      'config.js',
+      'branding/override.css',
+      'manifest.webmanifest',
+      ...ICONS,
+    ],
   });
   // Validation runtime des DTO Zod (createZodDto) sur toutes les routes.
   app.useGlobalPipes(new ZodValidationPipe());

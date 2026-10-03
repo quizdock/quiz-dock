@@ -177,7 +177,7 @@ describe('Access & authentication', () => {
   });
 
   it('the health probe reports the mode the backend runs in', () => {
-    const health = () => new HealthController().check().authMode;
+    const health = () => new HealthController({} as never, {} as never).check().authMode;
     expect(health()).toBe('none');
     setEnv({ AUTH_MODE: 'oidc' });
     expect(health()).toBe('oidc');

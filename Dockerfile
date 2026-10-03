@@ -77,6 +77,6 @@ EXPOSE 3000
 # Pas de shell dans l'image → sonde via node (fetch global). Le compose prod porte
 # la même sonde avec son propre rythme ; `docker run` seul bénéficie de celle-ci.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
-  CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+  CMD ["/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
 # ENTRYPOINT de l'image distroless nodejs = `node` → CMD = arguments.
 CMD ["dist/main.js"]
