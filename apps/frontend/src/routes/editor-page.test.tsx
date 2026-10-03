@@ -787,8 +787,11 @@ describe('EditorPage', () => {
       return d as HTMLElement;
     });
     expect(openDialog.textContent).toContain('Abandonner les modifications ?');
+    expect(localStorage.getItem('draft:quiz:q1:question:a')).not.toBeNull();
     fireEvent.click(within(openDialog).getByRole('button', { name: 'Abandonner' }));
     await waitFor(() => expect(screen.getByLabelText('Énoncé').textContent).toContain('Seconde'));
+    // Discarded for good: no draft brings the changes back when it is opened again.
+    expect(localStorage.getItem('draft:quiz:q1:question:a')).toBeNull();
   });
 
   it('says the quiz is not found only when the server says so (audit E5)', async () => {

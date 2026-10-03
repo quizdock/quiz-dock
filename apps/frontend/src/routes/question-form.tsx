@@ -72,7 +72,7 @@ import { Button } from '@/components/ui/button';
 import { Disclosure } from '@/components/ui/disclosure';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useFormDraft } from '@/lib/use-form-draft';
-import { clearDraft, loadDraft } from '@/lib/draft-store';
+import { clearDraft, formDraftKey, loadDraft } from '@/lib/draft-store';
 import { FormActionBar } from '@/components/form-action-bar';
 import { DraftNotice } from '@/components/draft-notice';
 import { MarkdownEditor } from '@/components/markdown-editor';
@@ -281,7 +281,7 @@ export function QuestionForm({
   // Computed once: option keys are generated, so a fresh copy per render would reset the form.
   const [initial] = useState(() => initialValues(question));
   // Draft kept in localStorage until saved or discarded (survives reload / closed tab).
-  const draftKey = `quiz:${quizId}:question:${question?.id ?? 'new'}`;
+  const draftKey = formDraftKey(quizId, 'question', question?.id ?? null);
   // A draft saved before the media slots existed has no `media`: it is not restored.
   const [restored, setRestored] = useState(() => {
     const draft = loadDraft<FormValues>(draftKey);

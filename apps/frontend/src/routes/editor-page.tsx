@@ -112,6 +112,7 @@ import { getDemo } from '../config';
 import { editorRoute } from '../router';
 import { LoadFailed, PageLoading } from '@/components/ui/loading';
 import { CheckboxField } from '@/components/ui/checkbox-field';
+import { clearDraft, formDraftKey } from '@/lib/draft-store';
 
 /**
  * The page has two columns, and they are the same from top to bottom: the
@@ -996,6 +997,12 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         onCancel={() => setPendingEdit(undefined)}
         onConfirm={() => {
           const next = pendingEdit ?? null;
+          // Discarded: its draft goes too, or reopening it would bring the changes back.
+          if (editing === 'new' || editing === 'new-slide') {
+            clearDraft(formDraftKey(quiz.id, editing === 'new' ? 'question' : 'slide', null));
+          } else if (editingItem) {
+            clearDraft(formDraftKey(quiz.id, editingItem.kind, editingItem.id));
+          }
           setPendingEdit(undefined);
           setFormDirty(false);
           setEditing(next);

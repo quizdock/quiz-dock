@@ -29,3 +29,7 @@ export function clearDraft(key: string): void {
     /* nothing to clear */
   }
 }
+
+/** Where an editor form keeps its draft: a question's or a slide's, `new` before it exists. */
+export const formDraftKey = (quizId: string, kind: 'question' | 'slide', id: string | null) =>
+  `quiz:${quizId}:${kind}:${id ?? 'new'}`;

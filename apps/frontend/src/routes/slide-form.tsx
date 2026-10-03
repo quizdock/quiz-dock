@@ -60,7 +60,7 @@ import { MarkdownEditor } from '@/components/markdown-editor';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useFormDraft } from '@/lib/use-form-draft';
-import { clearDraft, loadDraft } from '@/lib/draft-store';
+import { clearDraft, formDraftKey, loadDraft } from '@/lib/draft-store';
 import { FormActionBar } from '@/components/form-action-bar';
 import { DraftNotice } from '@/components/draft-notice';
 import { ApiError, apiErrorText, apiFieldErrors } from '../api/http';
@@ -202,7 +202,7 @@ export function SlideForm({
   };
   const [initial] = useState(() => initialValues(slide));
   // Draft kept in localStorage until saved or discarded (survives reload / closed tab).
-  const draftKey = `quiz:${quizId}:slide:${slide?.id ?? 'new'}`;
+  const draftKey = formDraftKey(quizId, 'slide', slide?.id ?? null);
   const [restored, setRestored] = useState(() => loadDraft<FormValues>(draftKey));
   const [values, setValues] = useState<FormValues>(restored ?? initial);
   const formDirty = useFormDraft(draftKey, initial, values, onDirtyChange);
