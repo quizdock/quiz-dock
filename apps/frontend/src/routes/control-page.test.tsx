@@ -468,7 +468,19 @@ describe('ControlPage (console hôte)', () => {
     expect(fakeSocket.emit).not.toHaveBeenCalledWith('host:pause', expect.anything());
   });
 
+  it('Tab moves through the page until the host lets it cycle the views (a11y)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({ state: GameState.Answering, questionIndex: 0, totalQuestions: 3 });
+    renderApp('/session/482913/console');
+    const toggle = await screen.findByRole('switch', { name: 'Changer de vue avec Tab' });
+    expect(toggle).not.toBeChecked();
+    expect(fireEvent.keyDown(document.body, { key: 'Tab', code: 'Tab' })).toBe(true);
+    fireEvent.click(toggle);
+    expect(localStorage.getItem('console.tabViews')).toBe('on');
+  });
+
   it('Tab moves the focus between controls; it cycles the views only from the page (audit F3)', async () => {
+    localStorage.setItem('console.tabViews', 'on');
     localStorage.setItem('live.localUser', 'Animateur');
     hookState.value = view({
       state: GameState.Answering,

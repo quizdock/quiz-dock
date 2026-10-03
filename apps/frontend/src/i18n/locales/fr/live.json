@@ -216,6 +216,10 @@
       "players": "Joueurs"
     },
     "viewSwitch": "Vue",
+    "tabViews": "Tab",
+    "tabViewsLabel": "Changer de vue avec Tab",
+    "tabViewsOnTooltip": "Tab change de vue depuis la page (Maj+Tab en arrière) ; sur un contrôle, il déplace toujours le focus. Cliquer pour rendre Tab au parcours de la page.",
+    "tabViewsOffTooltip": "Tab parcourt la page. Cliquer pour que, depuis la page elle-même, il change aussi de vue.",
     "lookBackPrev": "Revoir l’étape précédente",
     "lookBackNext": "Voir l’étape jouée suivante",
     "playedHint": "Une étape jouée se rouvre pour tous, en lecture seule : rien n’est rejoué.",

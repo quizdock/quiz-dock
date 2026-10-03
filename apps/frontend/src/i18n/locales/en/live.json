@@ -216,6 +216,10 @@
       "players": "Players"
     },
     "viewSwitch": "View",
+    "tabViews": "Tab",
+    "tabViewsLabel": "Switch views with Tab",
+    "tabViewsOnTooltip": "Tab switches views from the page (Shift+Tab backwards); on a control it still moves the focus. Click to give Tab back to moving through the page.",
+    "tabViewsOffTooltip": "Tab moves through the page. Click so that, from the page itself, it also switches views.",
     "lookBackPrev": "Look back at the previous step",
     "lookBackNext": "Look at the next played step",
     "playedHint": "A played step opens again for everyone, read-only: nothing is replayed.",

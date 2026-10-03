@@ -216,6 +216,10 @@
       "players": "玩家"
     },
     "viewSwitch": "檢視",
+    "tabViews": "Tab",
+    "tabViewsLabel": "用 Tab 切換檢視",
+    "tabViewsOnTooltip": "在頁面上按 Tab 切換檢視（Shift+Tab 反向）；在控制項上仍移動焦點。點擊讓 Tab 恢復在頁面中移動。",
+    "tabViewsOffTooltip": "Tab 在頁面中移動焦點。點擊讓它在頁面本身上也能切換檢視。",
     "lookBackPrev": "回看上一步",
     "lookBackNext": "查看下一個已進行的步驟",
     "playedHint": "已進行的步驟會對所有人重新顯示，僅供檢視：不會重玩。",
