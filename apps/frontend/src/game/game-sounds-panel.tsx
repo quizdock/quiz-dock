@@ -11,6 +11,7 @@ import { useMediaControllerInstance, useMediaControllerList } from '../api/gener
 import { MediaUpload } from '../routes/media-upload';
 import { type RoomEffect, previewEffect } from './media/game-sounds';
 import { SimpleDialog } from './media/sound-button';
+import { formatPercent } from '@/lib/format';
 
 /**
  * The room's sound (#93, #150), in the console's lobby: the projection's master
@@ -221,7 +222,7 @@ export function GameSoundsControls({
         )}
       />
       <span className="w-11 shrink-0 text-right text-xs whitespace-nowrap tabular-nums">
-        {Math.round(value * 100)} %
+        {formatPercent(value)}
       </span>
     </span>
   );

@@ -12,6 +12,7 @@ import {
   useDeviceSound,
 } from './audio-mixer';
 import { Modal } from '@/components/ui/modal';
+import { formatPercent } from '@/lib/format';
 
 /** Whether this screen hovers (a mouse); a phone taps instead. */
 const canHover = () =>
@@ -157,7 +158,7 @@ export function SoundButton({
               className="accent-primary flex-1"
             />
             <span className="w-10 text-right text-xs tabular-nums">
-              {Math.round(sound.trims[bus] * 100)} %
+              {formatPercent(sound.trims[bus])}
             </span>
           </label>
         ))}

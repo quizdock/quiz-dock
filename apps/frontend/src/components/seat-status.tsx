@@ -14,6 +14,7 @@ import {
 } from '../api/generated/auth/auth';
 import { SEAT_EXPIRY_OPTIONS } from '../auth/seat-options';
 import { getDemo } from '../config';
+import { formatTime } from '@/lib/format';
 
 /** Re-read the seat this often; the server is the truth (operator release, takeover…). */
 const REFRESH_MS = 60_000;
@@ -136,7 +137,7 @@ export function SeatCountdown({ user }: { user: string }) {
     <Badge
       variant={seat.variant}
       className="gap-1"
-      title={t('seat.expiresTitle', { time: new Date(seat.expiresAt).toLocaleTimeString() })}
+      title={t('seat.expiresTitle', { time: formatTime(seat.expiresAt) })}
     >
       <Armchair className="size-3" />
       <span className="tabular-nums">{seat.label}</span>

@@ -17,12 +17,12 @@ import { formatDimensions } from '@/lib/dimensions';
 import { Waveform } from '../game/media/waveform';
 import { Spinner } from '@/components/ui/loading';
 import { Modal } from '@/components/ui/modal';
+import { formatDate } from '@/lib/format';
 
 const SEARCH_DELAY_MS = 250;
 
 /** How an entry is named: its file name, else (a media from before names were kept) its date. */
-const labelOf = (item: MediaLibraryItemDto) =>
-  item.name ?? new Date(item.createdAt).toLocaleDateString();
+const labelOf = (item: MediaLibraryItemDto) => item.name ?? formatDate(item.createdAt);
 
 const duration = (ms: number | null) => {
   if (!ms) return null;

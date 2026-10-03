@@ -27,6 +27,7 @@ import { ShapeIcon } from '@/components/shape-icon';
 import { optionLabel } from './image-choice';
 import { mediaUrl } from '@/lib/media-url';
 import type { QuestionClock } from './use-countdown';
+import { formatPercent } from '@/lib/format';
 
 /**
  * Typography of the live screens is set **once per surface** and everything
@@ -153,7 +154,9 @@ export function OptionGrid({
             {gauges ? (
               <span className="ml-auto shrink-0 text-right leading-none tabular-nums">
                 {n}
-                <span className="ml-[0.4em] text-[0.65em] font-medium opacity-85">{pct} %</span>
+                <span className="ml-[0.4em] text-[0.65em] font-medium opacity-85">
+                  {formatPercent(pct / 100)}
+                </span>
               </span>
             ) : null}
           </Tag>

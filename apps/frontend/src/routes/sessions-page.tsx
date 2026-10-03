@@ -20,6 +20,7 @@ import type { SessionDetailDtoRoom, SessionListDtoSessionsItem } from '../api/ge
 import { sessionDetailRoute, sessionPlayerRoute, sessionsRoute } from '../router';
 import { ListSkeleton, LoadFailed, PageLoading } from '@/components/ui/loading';
 import { PageTitle } from '@/components/ui/page-title';
+import { formatPercent } from '@/lib/format';
 
 function statusLabel(t: TFunction, status: string): string {
   return t(`status.${status}`, { defaultValue: status });
@@ -54,7 +55,7 @@ function fmtDuration(t: TFunction, startISO: string, endISO: string): string {
     : t('duration.seconds', { seconds: s });
 }
 
-const pct = (rate: number | null) => (rate === null ? '—' : `${Math.round(rate * 100)} %`);
+const pct = (rate: number | null) => (rate === null ? '—' : formatPercent(rate));
 const seconds = (ms: number | null) => (ms === null ? '—' : `${(ms / 1000).toFixed(1)} s`);
 
 // ── Liste de l'historique ────────────────────────────────────────────────────

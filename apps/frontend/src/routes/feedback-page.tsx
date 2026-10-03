@@ -10,6 +10,7 @@ import { feedbackRoute } from '../router';
 import { ListSkeleton } from '@/components/ui/loading';
 import { PageTitle } from '@/components/ui/page-title';
 import { Pagination } from '@/components/ui/pagination';
+import { formatDate } from '@/lib/format';
 
 const PAGE_SIZE = 20;
 
@@ -153,7 +154,7 @@ export function FeedbackPage() {
                     <StarRow value={f.rating} size="size-3.5" />
                     <span className="font-medium">{f.nickname}</span>
                     <time className="text-muted-foreground ml-auto text-xs" dateTime={f.createdAt}>
-                      {new Date(f.createdAt).toLocaleDateString()}
+                      {formatDate(f.createdAt)}
                     </time>
                   </div>
                   {f.comment ? <p className="text-sm">{f.comment}</p> : null}
