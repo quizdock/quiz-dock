@@ -59,7 +59,7 @@
           "key": "DEMO_MODE",
           "default": "`false`",
           "level": "C1",
-          "description": "`true` = public demo guards: every visitor shares one host account (`demo_user`), which holds the host seat without expiry; media uploads are refused, and everything is wiped every hour.",
+          "description": "`true` = public demo guards: every visitor shares one host account (`demo_user`), which holds the host seat without expiry; media uploads are refused, and everything is wiped every hour — a reset waits, at most 3 hours, while a game is played.",
           "accepts": "`true` · `false`",
           "applies": "restart",
           "administration": false
@@ -103,7 +103,7 @@
         },
         {
           "key": "OIDC_INTERNAL_URL",
-          "default": "_(host of `OIDC_JWKS_URI`)_",
+          "default": "(host of `OIDC_JWKS_URI`)",
           "level": "C1",
           "description": "Where the backend reaches the provider when the browser's address is not reachable from its network (Docker): discovery, tokens and keys go through it. Defaults to the host of `OIDC_JWKS_URI` when that one points elsewhere than the issuer.",
           "accepts": "an `http(s)://` URL",
@@ -210,7 +210,7 @@
           "key": "UPDATE_CHECK",
           "default": "`true`",
           "level": "C4",
-          "description": "The administration and `quizdock status` say when a newer stable release of QuizDock is out: the server asks GitHub (`api.github.com`) at most once a day. Nothing is installed: the update stays `./quizdock upgrade`. GitHub sees the server's IP; nothing else is sent.",
+          "description": "The administration and `quizdock status` say when a newer stable release of QuizDock is out: the server asks GitHub (`api.github.com`) once a day, an hour later after a failure. Nothing is installed: the update stays `./quizdock upgrade`. GitHub sees the server's IP and, in the request's User-Agent, its version; nothing else is sent.",
           "accepts": "`true` · `false`",
           "applies": "live",
           "administration": true,
@@ -235,7 +235,7 @@
           "key": "REDIS_URL",
           "default": "— (provided by Compose)",
           "level": "C1",
-          "description": "Redis connection string, e.g. `redis://host:6379`. Live-game state only.",
+          "description": "Redis connection string, e.g. `redis://host:6379`. It holds the live games, and also the browser sessions under OIDC, the setup wizard's, the confirmations and the rate limits: a Redis that loses its data ends the games in progress and signs everyone out.",
           "accepts": "a Redis URL",
           "applies": "restart",
           "administration": false

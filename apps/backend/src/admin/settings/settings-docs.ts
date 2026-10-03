@@ -136,14 +136,7 @@ const DEV_VALUES: Record<string, string> = {
 };
 
 /** Set by the development Compose file itself: not for the `.env`. */
-const SET_BY_DEV_STACK = [
-  'DATABASE_URL',
-  'REDIS_URL',
-  'MEDIA_DIR',
-  'STORE_DIR',
-  'SAMPLES_DIR',
-  'PORT',
-];
+const SET_BY_DEV_STACK = ['DATABASE_URL', 'REDIS_URL', 'MEDIA_DIR', 'STORE_DIR', 'PORT'];
 
 /** Markdown to plain text, wrapped as `# ` comment lines. */
 function comment(markdown: string, width = 78): string[] {
