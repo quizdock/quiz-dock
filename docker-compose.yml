@@ -85,6 +85,12 @@ services:
       GAME_READ_DELAY_MS: ${GAME_READ_DELAY_MS:-3000}
       GAME_ALL_ANSWERED_DELAY_MS: ${GAME_ALL_ANSWERED_DELAY_MS:-1000}
       GAME_MEDIA_WAIT_S: ${GAME_MEDIA_WAIT_S:-10}
+      # The instance's name, language, logo and feedback link: the backend serves them
+      # in /config.js (the nginx frontend only names the installed app's manifest).
+      APP_NAME: ${APP_NAME:-QuizDock}
+      APP_LANG: ${APP_LANG:-en}
+      APP_LOGO_URL: ${APP_LOGO_URL:-}
+      APP_FEEDBACK_URL: ${APP_FEEDBACK_URL:-}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}
       HOST_LAN_IPS: ${HOST_LAN_IPS:-}
