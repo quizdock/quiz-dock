@@ -258,7 +258,9 @@ describe('DashboardPage', () => {
       { method: 'POST', path: '/quizzes', status: 201, body: quiz({ id: 'fresh' }) },
     ]);
     renderApp('/quizzes');
-    fireEvent.click(await screen.findByText('Nouveau quiz'));
+    const create = await screen.findByText('Nouveau quiz');
+    fireEvent.click(create);
+    fireEvent.click(create); // a double click makes one quiz
     const bodyOf = (suffix: string) => {
       const call = fetchMock.mock.calls.find(
         ([url, opts]) =>
@@ -283,6 +285,11 @@ describe('DashboardPage', () => {
     const reorder = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith('/quizzes/fresh/items/reorder'),
     );
+    expect(
+      fetchMock.mock.calls.filter(
+        ([url, opts]) => String(url).endsWith('/quizzes') && opts?.method === 'POST',
+      ),
+    ).toHaveLength(1);
     expect(JSON.parse(String(reorder?.[1]?.body)).items).toEqual([
       { kind: 'slide', id: 'intro' },
       { kind: 'question', id: 'first' },
