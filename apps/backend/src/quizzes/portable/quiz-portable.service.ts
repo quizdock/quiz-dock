@@ -5,7 +5,7 @@ import {
   PayloadTooLargeException,
 } from '@nestjs/common';
 import { type Quiz, QuizStatus } from '@prisma/client';
-import { strFromU8, strToU8, zipSync } from 'fflate';
+import { strFromU8, strToU8, type Zippable, zipSync } from 'fflate';
 import { MediaService } from '../../media/media.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { questionCreateData, questionMediaIds } from '../../questions/question-data';
@@ -84,7 +84,9 @@ export class QuizPortableService {
     });
     const quiz = { ...found, ...stamped };
 
-    const files: Record<string, Uint8Array> = {};
+    // Media go in stored, not deflated: they are compressed already (WebP, MP4, MP3…),
+    // and deflating them ran for seconds on the event loop, every live room waiting.
+    const files: Zippable = {};
     const pathById = new Map<string, string>();
     const metaByPath: Record<string, BundleMediaMeta> = {};
     for (const mediaId of collectMediaIds(quiz)) {
@@ -92,7 +94,7 @@ export class QuizPortableService {
       if (!asset) continue; // dangling reference: the export simply drops it
       const path = `media/${mediaId}.${EXT_BY_MIME[asset.mime] ?? 'bin'}`;
       pathById.set(mediaId, path);
-      files[path] = new Uint8Array(asset.buffer);
+      files[path] = [new Uint8Array(asset.buffer), { level: 0 }];
       const row = asset.asset;
       metaByPath[path] = {
         alt: row.alt,

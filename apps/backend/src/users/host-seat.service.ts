@@ -39,7 +39,8 @@ export class HostSeatService {
     return sub.startsWith(LOCAL_SUB_PREFIX);
   }
 
-  private static isLive(seat: HostSeat | null, now = new Date()): seat is HostSeat {
+  /** Held: a seat whose expiry is not past (an expired one is freed on its next use). */
+  static isLive(seat: HostSeat | null, now = new Date()): seat is HostSeat {
     return !!seat && (seat.expiresAt === null || seat.expiresAt > now);
   }
 
@@ -77,6 +78,11 @@ export class HostSeatService {
    * the shared account holds the seat without expiry.
    */
   async claim(user: User, requestedMinutes: number | null): Promise<HostSeatState> {
+    // The seat is local mode's: an account signed in through the provider has the
+    // roles its provider gives (or the CLI grants), never this one.
+    if (!HostSeatService.isLocal(user.oidcSubject)) {
+      throw new ForbiddenException('host_seat.local_only');
+    }
     // Un gestionnaire n'anime pas (RG-14) : le siège reste l'affaire des hôtes. Il
     // garde `seat:release` pour débloquer un siège abandonné, sans l'occuper ; s'il
     // porte aussi `host`, il n'en a pas besoin — son octroi lui suffit.

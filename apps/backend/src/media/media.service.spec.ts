@@ -142,6 +142,22 @@ describe('MediaService', () => {
       });
     });
 
+    it('refuses a picture whose header declares more pixels than a phone can open', async () => {
+      // A PNG's IHDR: length, type, then width and height (bytes 16 to 24).
+      const header = Buffer.alloc(33);
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(header);
+      header.write('IHDR', 12);
+      header.writeUInt32BE(30_000, 16);
+      header.writeUInt32BE(30_000, 20);
+      const bomb = { buffer: header, mimetype: 'image/png', size: header.length };
+      const err = await service.upload('o1', bomb).catch((e: BadRequestException) => e);
+      expect((err as BadRequestException).getResponse()).toEqual({
+        code: 'media.image_too_large',
+        params: { maxMp: 40 },
+      });
+      expect(prisma.mediaAsset.create).not.toHaveBeenCalled();
+    });
+
     it('takes an H.264 video and stores the type found, not the one declared', async () => {
       await service.upload('o1', fixture('h264-aac.mp4'), { durationMs: '500' });
       expect(prisma.mediaAsset.create).toHaveBeenCalledWith({

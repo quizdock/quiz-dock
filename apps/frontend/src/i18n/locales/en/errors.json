@@ -29,6 +29,7 @@
     "ended": "The room is closed.",
     "banned": "You have been removed from this room by the host.",
     "join_required": "Join the room before answering.",
+    "already_joined": "You are already in this room.",
     "already_started": "The quiz has already started.",
     "reveal_required": "Action only possible after the reveal.",
     "timer_not_adjustable": "The timer can only be adjusted during a question.",
@@ -59,6 +60,7 @@
     "unsupported_type": "Unsupported format: an image, an MP4 video (H.264) or a sound (MP3, M4A). The editor converts the other files this browser can read; SVG is not accepted.",
     "file_missing": "Missing file (“file” field).",
     "file_too_large": "File too large (at most {{maxMb}} MB for this kind of media).",
+    "image_too_large": "This picture is too large (at most {{maxMp}} megapixels).",
     "not_found": "Media not found.",
     "demo_disabled": "Media uploads are disabled on the demo instance.",
     "video_with_audio": "A video already carries its own sound: remove the audio track or the video.",
@@ -144,7 +146,9 @@
   "error": "An error occurred.",
   "host_seat": {
     "taken": "The host seat is already taken.",
-    "manager_forbidden": "An administrator does not take the host seat."
+    "manager_forbidden": "An administrator does not take the host seat.",
+    "local_only": "Only local mode has a host seat.",
+    "already_host": "You are a host already: no seat to take."
   },
   "store": {
     "demo_disabled": "Sharing is off on a demo instance.",
@@ -205,5 +209,8 @@
     "token_invalid": "This setup token is not valid (wrong, used or expired): `qd setup.token` gives a new one.",
     "session_invalid": "The setup session ended: give a new setup token.",
     "too_many_attempts": "Too many wrong tokens: wait a quarter of an hour."
+  },
+  "request": {
+    "too_large": "Too large for the server: it refused the request (its size limit)."
   }
 }

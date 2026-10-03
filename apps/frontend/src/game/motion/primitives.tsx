@@ -3,45 +3,6 @@ import { useMotionLevel } from './level';
 import { type RefObject, useEffect, useLayoutEffect, useRef } from 'react';
 import { EASE_OUT, MOTION } from './tokens';
 
-/**
- * A number that counts up to its new value (a score), or is simply shown when
- * it does not change or motion is reduced.
- */
-export function CountUp({
-  value,
-  from,
-  className,
-}: {
-  value: number;
-  from?: number;
-  className?: string;
-}) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const last = useRef(from ?? value);
-  const level = useMotionLevel();
-  const reduced = level !== 'full';
-  useEffect(() => {
-    const start = last.current;
-    last.current = value;
-    const el = ref.current;
-    if (!el || start === value || reduced) {
-      if (el) el.textContent = String(value);
-      return;
-    }
-    const run = animate(start, value, {
-      duration: MOTION.count,
-      ease: 'easeOut',
-      onUpdate: (v) => (el.textContent = String(Math.round(v))),
-    });
-    return () => run.stop();
-  }, [value, reduced]);
-  return (
-    <span ref={ref} className={className}>
-      {from ?? value}
-    </span>
-  );
-}
-
 /** A count that beats when it changes (answers coming in). */
 export function Pulse({ value, className }: { value: number | string; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);

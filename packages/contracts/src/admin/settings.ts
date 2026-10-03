@@ -313,7 +313,7 @@ export const SETTINGS = {
   DEMO_MODE: define({
     key: 'DEMO_MODE',
     description:
-      '`true` = public demo guards: every visitor shares one host account (`demo_user`), which holds the host seat without expiry; media uploads are refused, and everything is wiped every hour.',
+      '`true` = public demo guards: every visitor shares one host account (`demo_user`), which holds the host seat without expiry; media uploads are refused, and everything is wiped every hour — a reset waits, at most 3 hours, while a game is played.',
     category: 'access',
     criticality: 'C1',
     schema: flag(),
@@ -387,7 +387,7 @@ export const SETTINGS = {
     bounds: z.string().refine((v) => isUrl(v), 'not an http(s) URL'),
     accepts: 'an `http(s)://` URL',
     default: '',
-    defaultText: '_(host of `OIDC_JWKS_URI`)_',
+    defaultText: '(host of `OIDC_JWKS_URI`)',
     applies: 'restart',
     overridable: false,
     example: 'http://keycloak:8080',
@@ -545,7 +545,7 @@ export const SETTINGS = {
   UPDATE_CHECK: define({
     key: 'UPDATE_CHECK',
     description:
-      "The administration and `quizdock status` say when a newer stable release of QuizDock is out: the server asks GitHub (`api.github.com`) at most once a day. Nothing is installed: the update stays `./quizdock upgrade`. GitHub sees the server's IP; nothing else is sent.",
+      "The administration and `quizdock status` say when a newer stable release of QuizDock is out: the server asks GitHub (`api.github.com`) once a day, an hour later after a failure. Nothing is installed: the update stays `./quizdock upgrade`. GitHub sees the server's IP and, in the request's User-Agent, its version; nothing else is sent.",
     category: 'network',
     criticality: 'C4',
     schema: flag(),
@@ -573,7 +573,8 @@ export const SETTINGS = {
   }),
   REDIS_URL: define({
     key: 'REDIS_URL',
-    description: 'Redis connection string, e.g. `redis://host:6379`. Live-game state only.',
+    description:
+      "Redis connection string, e.g. `redis://host:6379`. It holds the live games, and also the browser sessions under OIDC, the setup wizard's, the confirmations and the rate limits: a Redis that loses its data ends the games in progress and signs everyone out.",
     category: 'storage',
     criticality: 'C1',
     schema: text(),
@@ -895,6 +896,32 @@ export const SETTINGS = {
   }),
 
   // Internal
+  QUIZDOCK_FILES: define({
+    key: 'QUIZDOCK_FILES',
+    description:
+      'Set by the Compose files of a release: which generation of deployment files runs the image, so the backend can say when they are older than it expects.',
+    category: 'internal',
+    criticality: 'C4',
+    schema: number(),
+    accepts: 'a whole number',
+    default: null as number | null,
+    applies: 'restart',
+    overridable: false,
+    internal: true,
+  }),
+  QUIZDOCK_KEYCLOAK_DB: define({
+    key: 'QUIZDOCK_KEYCLOAK_DB',
+    description:
+      'Set by the full preset: the PostgreSQL role of the bundled Keycloak, `shared` when it uses the database superuser.',
+    category: 'internal',
+    criticality: 'C4',
+    schema: text(),
+    accepts: 'a role name, or `shared`',
+    default: '',
+    applies: 'restart',
+    overridable: false,
+    internal: true,
+  }),
   QUIZDOCK_FLAVOR: define({
     key: 'QUIZDOCK_FLAVOR',
     description: 'Set by the `:standalone` image, which announces itself through it.',
@@ -1038,11 +1065,20 @@ export const DEPLOYMENT_VARIABLES: DeploymentVariable[] = [
     description: "Keycloak's published HTTP port.",
   },
   {
+    key: 'KEYCLOAK_BIND',
+    readBy: 'keycloak',
+    criticality: 'C1',
+    defaultText: '`127.0.0.1` (dev)',
+    description:
+      "Dev: the address Keycloak's port is published on, this computer only by default (its admin is admin/admin). To sign in from another device, an address it reaches (a Tailscale one rather than the whole LAN), with KEYCLOAK_PUBLIC_URL, OIDC_ISSUER and KEYCLOAK_DEV_URL on it.",
+  },
+  {
     key: 'KEYCLOAK_PUBLIC_URL',
     readBy: 'keycloak',
     criticality: 'C1',
     defaultText: 'Scheme, host and Keycloak port',
-    description: 'Full preset: override the browser-facing Keycloak URL, including a proxy path.',
+    description:
+      'Override the browser-facing Keycloak URL (full preset: including a proxy path; dev: the address another device reaches it on).',
   },
   {
     key: 'KEYCLOAK_APP_URL',
@@ -1084,6 +1120,38 @@ export const DEPLOYMENT_VARIABLES: DeploymentVariable[] = [
     secret: true,
   },
   {
+    key: 'QUIZDOCK_DB_USER',
+    readBy: 'compose',
+    criticality: 'C1',
+    defaultText: '`quizdock` from `init`; unset = the database superuser',
+    description:
+      "QuizDock's own PostgreSQL role: it owns the application's database and nothing else, the superuser (`POSTGRES_USER`) kept for administering PostgreSQL. Set at install only: a database that already holds data stays its owner's (a coming release of the quizdock script will move it).",
+  },
+  {
+    key: 'QUIZDOCK_DB_PASSWORD',
+    readBy: 'compose',
+    criticality: 'C1',
+    defaultText: 'Generated by `init`',
+    description: 'Password of `QUIZDOCK_DB_USER`.',
+    secret: true,
+  },
+  {
+    key: 'KEYCLOAK_DB_USER',
+    readBy: 'compose',
+    criticality: 'C1',
+    defaultText: '`keycloak` from `init --full`; unset = the database superuser',
+    description:
+      "The bundled Keycloak's own PostgreSQL role: its database belongs to it, and it reaches nothing of QuizDock's. Set at install only: an existing Keycloak database stays the superuser's.",
+  },
+  {
+    key: 'KEYCLOAK_DB_PASSWORD',
+    readBy: 'compose',
+    criticality: 'C1',
+    defaultText: 'Generated by `init --full`',
+    description: 'Password of `KEYCLOAK_DB_USER`.',
+    secret: true,
+  },
+  {
     key: 'KEYCLOAK_PLAYER_PASSWORD',
     readBy: 'keycloak',
     criticality: 'C1',
@@ -1097,7 +1165,8 @@ export const DEPLOYMENT_VARIABLES: DeploymentVariable[] = [
     readBy: 'script',
     criticality: 'C1',
     defaultText: '`fchaussin/quizdock`',
-    description: 'Image the `quizdock` script pulls.',
+    description:
+      "Image of the standalone setup the `quizdock` script pulls (the Compose files name their own). Read from the shell's environment, not from `.env`.",
   },
   {
     key: 'QUIZDOCK_COMPOSE_FILE',

@@ -1,36 +1,27 @@
-import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+  redirect,
+} from '@tanstack/react-router';
 import { getAuthMode, isAuthenticated, rememberAfterLogin } from './auth/auth-context';
 import { allowsAnonymousParticipants, hasCommunityStore } from './config';
 import { CallbackPage } from './routes/callback-page';
 import { ControlPage } from './routes/control-page';
 import { DashboardPage } from './routes/dashboard-page';
-import { EditorPage } from './routes/editor-page';
 import { JoinPage } from './routes/join-page';
 import { LandingPage } from './routes/landing-page';
 import { LoginPage } from './routes/login-page';
 import { PlayerPage } from './routes/player-page';
-import { PreviewPage } from './routes/preview-page';
 import { FollowScreenPage, ScreenPage } from './routes/screen-page';
-import { SessionDetailPage, SessionPlayerPage, SessionsPage } from './routes/sessions-page';
 import { LivePage } from './routes/live-page';
-import { ProfilePage } from './routes/profile-page';
-import { TemplatePage } from './routes/template-page';
-import { CommunityPreviewPage } from './routes/community-preview-page';
-import { CommunityPage } from './routes/community-page';
-import { TemplatesPage } from './routes/templates-page';
-import { FeedbackPage } from './routes/feedback-page';
 import { RootLayout } from './routes/root-layout';
 import { ErrorPage, NotFoundPage } from './routes/fallback-pages';
-import { AdminMediaPage } from './routes/admin-media-page';
-import { AdminLayout } from './routes/admin/admin-layout';
-import { AccountsPage } from './routes/admin/admin-accounts-page';
-import { AuditPage } from './routes/admin/admin-audit-page';
-import { HealthPage } from './routes/admin/admin-health-page';
-import { AdminQuizzesPage } from './routes/admin/admin-quizzes-page';
-import { AdminStatsPage } from './routes/admin/admin-stats-page';
-import { AdminSettingsPage } from './routes/admin/admin-settings-page';
-import { SetupPage } from './routes/setup/setup-page';
 import type { QuizImportDtoImportReport } from './api/generated/model';
+
+// Loaded when first opened: the editor, the history, the catalogue and the
+// administration stay out of what a participant's phone downloads to join.
 
 const requireAuth = () => {
   if (!isAuthenticated()) {
@@ -92,7 +83,7 @@ export const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
   beforeLoad: requireAuth,
-  component: ProfilePage,
+  component: lazyRouteComponent(() => import('./routes/profile-page'), 'ProfilePage'),
 });
 
 /** Les sessions en cours, en pleine page : le menu de la barre n'en montre que les premières. */
@@ -108,7 +99,7 @@ export const templateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/templates/$templateId',
   beforeLoad: requireAuth,
-  component: TemplatePage,
+  component: lazyRouteComponent(() => import('./routes/template-page'), 'TemplatePage'),
 });
 
 /** The catalogue of templates shared on this instance (#39). */
@@ -116,7 +107,7 @@ export const templatesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/templates',
   beforeLoad: requireAuth,
-  component: TemplatesPage,
+  component: lazyRouteComponent(() => import('./routes/templates-page'), 'TemplatesPage'),
 });
 
 export const communityRoute = createRoute({
@@ -126,7 +117,7 @@ export const communityRoute = createRoute({
     requireAuth();
     if (!hasCommunityStore()) throw redirect({ to: '/templates' });
   },
-  component: CommunityPage,
+  component: lazyRouteComponent(() => import('./routes/community-page'), 'CommunityPage'),
 });
 
 export const communityPreviewRoute = createRoute({
@@ -136,7 +127,10 @@ export const communityPreviewRoute = createRoute({
     requireAuth();
     if (!hasCommunityStore()) throw redirect({ to: '/templates' });
   },
-  component: CommunityPreviewPage,
+  component: lazyRouteComponent(
+    () => import('./routes/community-preview-page'),
+    'CommunityPreviewPage',
+  ),
 });
 
 export const editorRoute = createRoute({
@@ -146,14 +140,14 @@ export const editorRoute = createRoute({
   // `publish`: arrived from « Publish to present » — publish, or list what is missing.
   validateSearch: (search: Record<string, unknown>): { publish?: boolean } =>
     search.publish === true || search.publish === 'true' ? { publish: true } : {},
-  component: EditorPage,
+  component: lazyRouteComponent(() => import('./routes/editor-page'), 'EditorPage'),
 });
 
 export const previewRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quizzes/$quizId/preview',
   beforeLoad: requireAuth,
-  component: PreviewPage,
+  component: lazyRouteComponent(() => import('./routes/preview-page'), 'PreviewPage'),
 });
 
 // Player reviews of a quiz (§2.11), paginated — owner only.
@@ -161,7 +155,7 @@ export const feedbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quizzes/$quizId/reviews',
   beforeLoad: requireAuth,
-  component: FeedbackPage,
+  component: lazyRouteComponent(() => import('./routes/feedback-page'), 'FeedbackPage'),
 });
 
 // Historique des parties archivées d'un quiz (§2.7) — propriétaire uniquement.
@@ -169,14 +163,14 @@ export const sessionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quizzes/$quizId/history',
   beforeLoad: requireAuth,
-  component: SessionsPage,
+  component: lazyRouteComponent(() => import('./routes/sessions-page'), 'SessionsPage'),
 });
 
 export const sessionDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quizzes/$quizId/history/$sessionId',
   beforeLoad: requireAuth,
-  component: SessionDetailPage,
+  component: lazyRouteComponent(() => import('./routes/sessions-page'), 'SessionDetailPage'),
 });
 
 // « Le quiz vu par un participant » (§2.10) : réponses question par question.
@@ -184,7 +178,7 @@ export const sessionPlayerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/quizzes/$quizId/history/$sessionId/players/$playerResultId',
   beforeLoad: requireAuth,
-  component: SessionPlayerPage,
+  component: lazyRouteComponent(() => import('./routes/sessions-page'), 'SessionPlayerPage'),
 });
 
 // Console d'animation (hôte, §3). Auth requise (propriétaire).
@@ -193,6 +187,8 @@ export const controlRoute = createRoute({
   path: '/session/$pin/console',
   beforeLoad: requireAuth,
   component: ControlPage,
+  // Another PIN is another room: its page starts afresh.
+  remountDeps: ({ params }) => params.pin,
 });
 
 // Écran de jeu projeté (grand écran, §4). Spectateur en lecture seule, aucune auth.
@@ -200,6 +196,8 @@ export const screenRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/session/$pin/projection',
   component: ScreenPage,
+  // Another PIN is another room: its page starts afresh.
+  remountDeps: ({ params }) => params.pin,
 });
 
 export const sessionRedirectRoute = createRoute({
@@ -276,6 +274,8 @@ export const joinWithPinRoute = createRoute({
   path: '/join/$pin',
   beforeLoad: requireAuthWhenOidc,
   component: PlayerPage,
+  // Another PIN is another room: its page starts afresh.
+  remountDeps: ({ params }) => params.pin,
 });
 
 /**
@@ -293,7 +293,7 @@ export const joinScreenRoute = createRoute({
 export const setupRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/setup',
-  component: SetupPage,
+  component: lazyRouteComponent(() => import('./routes/setup/setup-page'), 'SetupPage'),
 });
 
 /** The administration (SPECIFICATIONS-ADMIN): its sections by domain, for administrators. */
@@ -301,7 +301,7 @@ export const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin',
   beforeLoad: requireAuth,
-  component: AdminLayout,
+  component: lazyRouteComponent(() => import('./routes/admin/admin-layout'), 'AdminLayout'),
 });
 
 const adminIndexRoute = createRoute({
@@ -316,38 +316,44 @@ const adminIndexRoute = createRoute({
 export const adminStatsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'statistics',
-  component: AdminStatsPage,
+  component: lazyRouteComponent(() => import('./routes/admin/admin-stats-page'), 'AdminStatsPage'),
 });
 export const adminSettingsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'settings',
-  component: AdminSettingsPage,
+  component: lazyRouteComponent(
+    () => import('./routes/admin/admin-settings-page'),
+    'AdminSettingsPage',
+  ),
 });
 export const adminHealthRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'health',
-  component: HealthPage,
+  component: lazyRouteComponent(() => import('./routes/admin/admin-health-page'), 'HealthPage'),
 });
 export const adminAccountsRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'accounts',
-  component: AccountsPage,
+  component: lazyRouteComponent(() => import('./routes/admin/admin-accounts-page'), 'AccountsPage'),
 });
 export const adminAuditRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'audit',
-  component: AuditPage,
+  component: lazyRouteComponent(() => import('./routes/admin/admin-audit-page'), 'AuditPage'),
 });
 export const adminQuizzesRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'quizzes',
-  component: AdminQuizzesPage,
+  component: lazyRouteComponent(
+    () => import('./routes/admin/admin-quizzes-page'),
+    'AdminQuizzesPage',
+  ),
 });
 /** The instance's media (#54). */
 export const adminMediaRoute = createRoute({
   getParentRoute: () => adminRoute,
   path: 'media',
-  component: AdminMediaPage,
+  component: lazyRouteComponent(() => import('./routes/admin-media-page'), 'AdminMediaPage'),
 });
 
 export const routeTree = rootRoute.addChildren([

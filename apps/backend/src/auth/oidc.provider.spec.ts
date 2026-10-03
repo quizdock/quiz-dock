@@ -177,6 +177,18 @@ describe('OidcProvider', () => {
     expect(await provider.authenticate(bearer(tampered))).toBeNull();
   });
 
+  it('keeps the e-mail unless the provider says it is not verified', async () => {
+    const provider = await buildProvider();
+    const verified = await provider.authenticate(
+      bearer(await makeToken({ email: 'ana@x.org', claims: { email_verified: true } })),
+    );
+    expect(verified?.email).toBe('ana@x.org');
+    const unverified = await provider.authenticate(
+      bearer(await makeToken({ email: 'boss@corp', claims: { email_verified: false } })),
+    );
+    expect(unverified?.email).toBeNull();
+  });
+
   it('refuses an ID token as a Bearer: it travels in the browser', async () => {
     const provider = await buildProvider();
     const signIn = { nonce: 'n-123' };
@@ -231,7 +243,10 @@ describe('OidcProvider', () => {
       // Second call: discovery document is cached.
       await discovered.authenticate(bearer(await makeToken()));
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      expect(fetchMock).toHaveBeenCalledWith(`${ISSUER}/.well-known/openid-configuration`);
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${ISSUER}/.well-known/openid-configuration`,
+        expect.anything(),
+      );
       expect(createRemoteJWKSet).toHaveBeenLastCalledWith(
         new URL(`${ISSUER}/protocol/openid-connect/certs`),
       );

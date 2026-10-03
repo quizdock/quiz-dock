@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { MonitorPlay, Play, Search, Square } from 'lucide-react';
+import { MonitorPlay, Play, Search, SearchX, Square } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,7 @@ import {
 } from '../api/generated/games/games';
 import { ListSkeleton, LoadFailed } from '@/components/ui/loading';
 import { PageTitle } from '@/components/ui/page-title';
+import { EmptyState } from '@/components/ui/empty-state';
 
 /** Same page size as the quiz bank: enough to scan, short enough to stay on screen. */
 const PAGE_SIZE = 20;
@@ -101,9 +102,9 @@ export function LivePage() {
       ) : null}
 
       {!isPending && !error && sessions.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-6">
+        <EmptyState icon={MonitorPlay} size="large">
           {t('noLiveSession')}
-        </p>
+        </EmptyState>
       ) : null}
 
       {sessions.length > 0 ? (
@@ -147,9 +148,7 @@ export function LivePage() {
       ) : null}
 
       {sessions.length > 0 && shown.length === 0 ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-6">
-          {t('noSessionMatch')}
-        </p>
+        <EmptyState icon={SearchX}>{t('noSessionMatch')}</EmptyState>
       ) : null}
 
       <ul className="flex flex-col gap-2">

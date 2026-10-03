@@ -5,6 +5,7 @@ import { MemoryAuditRepository } from '../audit/audit.repository';
 import { fakeRedis, memoryFlags } from '../testing/fake-redis';
 import {
   SETUP_ATTEMPTS_MAX,
+  SETUP_ATTEMPTS_PER_ADDRESS,
   SETUP_TOKEN_TTL_MS,
   SetupLockedError,
   SetupService,
@@ -58,12 +59,23 @@ describe('SetupService (§3.8)', () => {
     for (let i = 0; i < SETUP_ATTEMPTS_MAX; i++)
       expect(await service.open('wrong', `10.0.0.${i % 250}`)).toBeNull();
     await expect(service.open(token, '10.0.0.250')).rejects.toBeInstanceOf(SetupLockedError);
-    // Every wrong token is in the audit.
-    expect(await audit.list({ operation: 'setup.session', limit: 200 })).toHaveLength(
-      SETUP_ATTEMPTS_MAX,
-    );
+    // The wrong tokens are in the audit (a few per address: here, every one).
+    const page = await audit.list({ operation: 'setup.session', limit: 200 });
+    expect(page).toHaveLength(200);
+    expect(page[0]).toMatchObject({ outcome: 'refused', address: '10.0.0.249' });
     const fresh = await service.newToken(actor);
     expect(await service.open(fresh, '10.0.0.250')).not.toBeNull();
+  });
+
+  it('an address that tries too many keeps only itself out; a few of its tries are audited', async () => {
+    const { service, audit } = setup();
+    const token = await service.newToken(actor);
+    for (let i = 0; i < SETUP_ATTEMPTS_PER_ADDRESS; i++) {
+      expect(await service.open('wrong', '203.0.113.9')).toBeNull();
+    }
+    await expect(service.open(token, '203.0.113.9')).rejects.toBeInstanceOf(SetupLockedError);
+    expect(await audit.list({ operation: 'setup.session', limit: 200 })).toHaveLength(5);
+    expect(await service.open(token, '10.0.0.1')).not.toBeNull();
   });
 
   it('a token raced for opens one session only', async () => {

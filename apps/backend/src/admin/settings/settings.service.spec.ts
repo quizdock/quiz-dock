@@ -1,5 +1,15 @@
 import { SETTINGS, SETTING_LIST } from '@quiz-dock/contracts';
-import { OverrideStore, SettingsService, recordSource, settingsFrom } from './settings.service';
+import {
+  DEPLOYMENT_FILES_EXPECTED,
+  OverrideStore,
+  SettingsService,
+  recordSource,
+  seen,
+  settingsFrom,
+} from './settings.service';
+
+/** What the release's Compose files set (QUIZDOCK_FILES): no notice about their age. */
+const CURRENT_FILES = { QUIZDOCK_FILES: String(DEPLOYMENT_FILES_EXPECTED) };
 
 describe('the settings registry', () => {
   it.each(SETTING_LIST.map((def) => [def.key, def]))(
@@ -92,7 +102,7 @@ describe('SettingsService', () => {
   });
 
   it('a deprecated variable is reported when set', () => {
-    expect(settingsFrom({ OIDC_SESSION_SCOPE: 'x' }).issues()).toMatchObject([
+    expect(settingsFrom({ ...CURRENT_FILES, OIDC_SESSION_SCOPE: 'x' }).issues()).toMatchObject([
       { key: 'OIDC_SESSION_SCOPE', code: 'deprecated' },
     ]);
   });
@@ -111,13 +121,56 @@ describe('SettingsService', () => {
 
   describe('rules between variables', () => {
     const rules = (env: Record<string, string>) =>
-      settingsFrom(env)
+      settingsFrom({ ...CURRENT_FILES, ...env })
         .issues()
         .filter((i) => i.code === 'rule')
         .map((i) => i.key);
 
-    it('nothing to say about an empty environment', () => {
-      expect(settingsFrom({}).issues()).toEqual([]);
+    it('nothing to say about an environment set by the current Compose files', () => {
+      expect(settingsFrom(CURRENT_FILES).issues()).toEqual([]);
+    });
+
+    it('a default database password is flagged; a secret of its own, or none, is not', () => {
+      const url = (password: string) => `postgres://quizdock:${password}@postgres:5432/quizdock`;
+      expect(rules({ DATABASE_URL: url('live') })).toEqual(['DATABASE_URL']);
+      expect(rules({ DATABASE_URL: url('change-me-database') })).toEqual(['DATABASE_URL']);
+      expect(rules({ DATABASE_URL: url('xK9-random') })).toEqual([]);
+      expect(rules({ DATABASE_URL: 'postgresql://quizdock@127.0.0.1:5432/quizdock' })).toEqual([]);
+    });
+
+    it('a bundled Keycloak sharing the database superuser is flagged', () => {
+      expect(rules({ QUIZDOCK_KEYCLOAK_DB: 'shared' })).toEqual(['QUIZDOCK_KEYCLOAK_DB']);
+      expect(rules({ QUIZDOCK_KEYCLOAK_DB: 'keycloak' })).toEqual([]);
+      expect(rules({})).toEqual([]); // no bundled Keycloak
+    });
+
+    it('Compose files older than the image are flagged, never for the single image', () => {
+      expect(rules({ QUIZDOCK_FILES: '1' })).toEqual(['QUIZDOCK_FILES']);
+      expect(
+        settingsFrom({})
+          .issues()
+          .map((i) => i.key),
+      ).toEqual(['QUIZDOCK_FILES']);
+      expect(settingsFrom({ QUIZDOCK_FLAVOR: 'standalone' }).issues()).toEqual([]);
+    });
+
+    it('OIDC without APP_PUBLIC_URL is flagged: the return address follows each request', () => {
+      const oidc = { AUTH_MODE: 'oidc', OIDC_ISSUER: 'https://id.example.org' };
+      expect(rules(oidc)).toEqual(['APP_PUBLIC_URL']);
+      expect(rules({ ...oidc, APP_PUBLIC_URL: 'https://quiz.example.org' })).toEqual([]);
+      expect(rules({})).toEqual([]); // local mode: no sign-in
+    });
+
+    it('a sign-in over plain HTTP behind an https address flags the proxy', () => {
+      const https = { APP_PUBLIC_URL: 'https://quiz.example.org' };
+      expect(rules(https)).toEqual([]);
+      seen.plainSignInBehindHttps = true;
+      try {
+        expect(rules(https)).toEqual(['TRUST_PROXY']);
+        expect(rules({ APP_PUBLIC_URL: 'http://192.168.1.10:18080' })).toEqual([]);
+      } finally {
+        seen.plainSignInBehindHttps = false;
+      }
     });
 
     it('anonymous participants need OIDC', () => {
@@ -129,6 +182,7 @@ describe('SettingsService', () => {
           ALLOW_ANONYMOUS_PARTICIPANTS: 'true',
           AUTH_MODE: 'oidc',
           OIDC_ISSUER: 'https://id.example.org',
+          APP_PUBLIC_URL: 'https://quiz.example.org',
         }),
       ).toEqual([]);
     });
@@ -173,7 +227,7 @@ describe('SettingsService', () => {
     });
 
     it('a candidate change is seen with the rules, without touching the settings', () => {
-      const s = settingsFrom({ AUTH_MODE: 'none' }, new OverrideStore());
+      const s = settingsFrom({ ...CURRENT_FILES, AUTH_MODE: 'none' }, new OverrideStore());
       const candidate = s.withOverrides({ ALLOW_ANONYMOUS_PARTICIPANTS: 'true' });
       expect(candidate.issues().map((i) => i.key)).toContain('ALLOW_ANONYMOUS_PARTICIPANTS');
       expect(s.issues()).toEqual([]);

@@ -4,8 +4,8 @@ import { z } from 'zod';
 /**
  * Config d'auth exposée à la SPA (publique) : elle en déduit le mode (en OIDC, le
  * backend porte toute la connexion — la SPA n'a rien à savoir du fournisseur) ; `demo` porte ce que la SPA doit montrer d'une
- * instance `DEMO_MODE` (le serveur impose le reste). Source de vérité = variables
- * d'env du backend.
+ * instance `DEMO_MODE` (le serveur impose le reste). Source de vérité = les réglages
+ * du backend (son environnement, ce que l'administration y change).
  */
 export const authConfigSchema = z.object({
   communityStore: z.boolean(),

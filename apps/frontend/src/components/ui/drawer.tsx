@@ -3,6 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
+import { useEscape } from '@/lib/shortcuts';
 
 /**
  * Sheet rendered in a portal on `<body>` with its own backdrop and a fixed
@@ -33,15 +34,19 @@ export function Drawer({
   const close = useRef(onClose);
   close.current = onClose;
 
+  // Not an Escape already handled (a menu), nor one meant for a dialog opened over
+  // the sheet (a confirmation): that one closes, the sheet stays.
+  useEscape(
+    (e) => {
+      e.preventDefault();
+      close.current();
+    },
+    open,
+    (e) =>
+      e.defaultPrevented || (e.target instanceof Element && !!e.target.closest('dialog[open]')),
+  );
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        close.current();
-      }
-    };
-    document.addEventListener('keydown', onKey);
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     // Focus lands inside the sheet so keyboard users are not left on the page behind.
@@ -50,7 +55,6 @@ export function Drawer({
     );
     focusable?.focus();
     return () => {
-      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = previous;
     };
   }, [open]);

@@ -171,8 +171,6 @@ export const MEDIA_POSITION_DEFAULT: MediaPosition = 'bottom';
 export const AUDIO_TARGETS = ['projection', 'projection_remote', 'everyone'] as const;
 export type AudioTarget = (typeof AUDIO_TARGETS)[number];
 export const AUDIO_TARGET_DEFAULT: AudioTarget = 'projection_remote';
-export const audioTargetSchema = z.enum(AUDIO_TARGETS);
-
 /** The target a question plays with: its own, else the game's, else the quiz's. */
 export function resolveAudioTarget(
   question: AudioTarget | null | undefined,

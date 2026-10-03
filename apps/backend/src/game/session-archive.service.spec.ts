@@ -224,6 +224,38 @@ describe('SessionArchiveService', () => {
     expect(answerCreateMany.mock.calls[0][0].data).toHaveLength(2);
   });
 
+  it('a large room: answers in batches, in a transaction given the time it needs', async () => {
+    const players: Record<string, string> = {};
+    const answers: Record<string, string> = {};
+    for (let i = 0; i < 3500; i++) {
+      players[`p${i}`] = JSON.stringify({
+        nickname: `P${i}`,
+        userId: null,
+        score: 0,
+        streak: 0,
+        connected: true,
+        joinedAt: i,
+        latencyMs: 0,
+      });
+      answers[`p${i}`] = JSON.stringify({
+        answer: 'optB',
+        isCorrect: false,
+        pointsAwarded: 0,
+        tMs: 1000,
+        receivedAt: 1000,
+      });
+    }
+    const { prisma, answerCreateMany } = buildPrisma();
+    await archiveWith(prisma, buildRedis(players, answers)).archive(PIN, meta, {
+      interrupted: false,
+    });
+    expect(answerCreateMany.mock.calls.map(([a]) => a.data.length)).toEqual([3000, 500]);
+    expect(prisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({ timeout: 60_000 }),
+    );
+  });
+
   it("n'écrit pas les réponses individuelles hors capture intégrale", async () => {
     const players = {
       p1: JSON.stringify({

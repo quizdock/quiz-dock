@@ -40,14 +40,14 @@ services:
       KC_HEALTH_ENABLED: 'true'
       # One public name for the browser and the tokens' issuer, whatever address
       # asks; the backend reaches the token endpoint over the internal network.
-      KC_HOSTNAME: http://localhost:${KEYCLOAK_PORT:-18080}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL:-http://localhost:${KEYCLOAK_PORT:-18080}}
       KC_HOSTNAME_BACKCHANNEL_DYNAMIC: 'true'
       KEYCLOAK_APP_URL: ${KEYCLOAK_APP_URL:-http://localhost:18081}
       KEYCLOAK_DEV_URL: ${KEYCLOAK_DEV_URL:-http://localhost:15173}
       KEYCLOAK_HOST_PASSWORD: animateur
       KEYCLOAK_PLAYER_PASSWORD: participant
     ports:
-      - '${KEYCLOAK_PORT:-18080}:8080'
+      - '${KEYCLOAK_BIND:-127.0.0.1}:${KEYCLOAK_PORT:-18080}:8080' # this computer only by default (admin/admin)
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     networks: [internal, public]
@@ -58,6 +58,8 @@ services:
       dockerfile: apps/backend/Dockerfile
       target: runtime
     environment:
+      # As the release's Compose files say it (see docker-compose.prod.yml).
+      QUIZDOCK_FILES: '2'
       NODE_ENV: production
       PORT: '3000'
       AUTH_MODE: ${AUTH_MODE:-none}
@@ -85,6 +87,12 @@ services:
       GAME_READ_DELAY_MS: ${GAME_READ_DELAY_MS:-3000}
       GAME_ALL_ANSWERED_DELAY_MS: ${GAME_ALL_ANSWERED_DELAY_MS:-1000}
       GAME_MEDIA_WAIT_S: ${GAME_MEDIA_WAIT_S:-10}
+      # The instance's name, language, logo and feedback link: the backend serves them
+      # in /config.js (the nginx frontend only names the installed app's manifest).
+      APP_NAME: ${APP_NAME:-QuizDock}
+      APP_LANG: ${APP_LANG:-en}
+      APP_LOGO_URL: ${APP_LOGO_URL:-}
+      APP_FEEDBACK_URL: ${APP_FEEDBACK_URL:-}
       # Adresse des invitations (QR, lien) proposée à l'animateur ; IP LAN si le conteneur ne voit pas l'hôte.
       APP_PUBLIC_URL: ${APP_PUBLIC_URL:-}
       HOST_LAN_IPS: ${HOST_LAN_IPS:-}
@@ -126,7 +134,7 @@ services:
     security_opt: ['no-new-privileges:true']
     cap_drop: ['ALL'] # node écoute sur 3000 (>1024) : aucune capability requise
     read_only: true # FS racine en lecture seule…
-    tmpfs: ['/tmp'] # …sauf /tmp (uploads temporaires) ; les médias vont sur le volume
+    tmpfs: ['/tmp'] # …sauf /tmp ; les envois restent en mémoire, les médias vont sur le volume
     networks: [internal, public]
 
   frontend:

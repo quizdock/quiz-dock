@@ -4,14 +4,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockApi } from '../test/harness';
 import { JoinAddressPicker } from './join-address-picker';
 
-const renderPicker = (current: string, onChange = vi.fn()) => {
+const renderPicker = (current: string, onChange = vi.fn(), room?: string) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
+  const view = render(
     <QueryClientProvider client={qc}>
-      <JoinAddressPicker current={current} onChange={onChange} />
+      <JoinAddressPicker current={current} onChange={onChange} room={room} />
     </QueryClientProvider>,
   );
-  return onChange;
+  return Object.assign(onChange, { unmount: view.unmount });
 };
 
 describe('JoinAddressPicker', () => {
@@ -91,5 +91,23 @@ describe('JoinAddressPicker', () => {
     await waitFor(() =>
       expect(localStorage.getItem('live.joinBaseUrl')).toBe('http://quiz.example.org'),
     );
+  });
+
+  it("reopened, it keeps the host's choice for the room: the address is settled once", async () => {
+    mockApi([
+      {
+        method: 'GET',
+        path: '/games/join-addresses',
+        body: { publicUrl: 'https://quiz.example.org', lanIps: [], lanSource: 'detected' },
+      },
+    ]);
+    const first = renderPicker(window.location.origin, vi.fn(), '424242');
+    await waitFor(() => expect(first).toHaveBeenCalledWith('https://quiz.example.org'));
+    first.unmount();
+    // The host chose this page's address meanwhile; the picker opens again.
+    const again = renderPicker(window.location.origin, vi.fn(), '424242');
+    await screen.findByLabelText('Adresse pour rejoindre');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(again).not.toHaveBeenCalled();
   });
 });

@@ -25,13 +25,19 @@ export function lobbyTests(ctx: GameContext): void {
     expect(typeof pong.t1).toBe('number');
   }, 15_000);
 
-  it('host:create → PIN à 6 chiffres + game:created ; player:join → lobby notifié', async () => {
+  it('a refused request that waits for its answer gets the refusal as that answer', async () => {
     const host = connect({ localUser: 'Animateur' });
-    const created = new Promise<{ pin: string }>((resolve) => host.on('game:created', resolve));
+    expect(await host.emitWithAck('host:attach', { pin: '999999' })).toMatchObject({
+      ok: false,
+      error: { code: 'session.not_found' },
+    });
+  });
+
+  it('host:create → PIN à 6 chiffres en accusé ; player:join → lobby notifié', async () => {
+    const host = connect({ localUser: 'Animateur' });
 
     const createAck = await host.emitWithAck('host:create', { quizId });
     expect(createAck.pin).toMatch(/^\d{6}$/);
-    expect((await created).pin).toBe(createAck.pin);
 
     const pin = createAck.pin;
     const player = connect();
@@ -48,6 +54,17 @@ export function lobbyTests(ctx: GameContext): void {
     expect(evt.playerId).toBe(joinAck.playerId);
     expect(evt.playerCount).toBe(1);
   }, 15_000);
+
+  it('one player per socket: joining the same room again is refused', async () => {
+    const host = connect({ localUser: 'Animateur' });
+    const { pin } = await host.emitWithAck('host:create', { quizId });
+    const player = connect();
+    await player.emitWithAck('player:join', { pin, nickname: 'Uno' });
+    expect(await player.emitWithAck('player:join', { pin, nickname: 'Dos' })).toMatchObject({
+      ok: false,
+      error: { code: 'session.already_joined' },
+    });
+  });
 
   it('player:join refuse un pseudo dupliqué (même partie)', async () => {
     const host = connect({ localUser: 'Animateur' });

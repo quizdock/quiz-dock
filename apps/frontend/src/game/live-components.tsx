@@ -27,6 +27,8 @@ import { ShapeIcon } from '@/components/shape-icon';
 import { optionLabel } from './image-choice';
 import { mediaUrl } from '@/lib/media-url';
 import type { QuestionClock } from './use-countdown';
+import { formatPercent } from '@/lib/format';
+import { useEscape } from '@/lib/shortcuts';
 
 /**
  * Typography of the live screens is set **once per surface** and everything
@@ -153,7 +155,9 @@ export function OptionGrid({
             {gauges ? (
               <span className="ml-auto shrink-0 text-right leading-none tabular-nums">
                 {n}
-                <span className="ml-[0.4em] text-[0.65em] font-medium opacity-85">{pct} %</span>
+                <span className="ml-[0.4em] text-[0.65em] font-medium opacity-85">
+                  {formatPercent(pct / 100)}
+                </span>
               </span>
             ) : null}
           </Tag>
@@ -307,15 +311,17 @@ export function OptionTiles({
 
 /** The right answer's mark: a filled tick with a two-tone edge, readable on a tile or a background. */
 function CorrectMark({ className }: { className?: string }) {
+  const { t } = useTranslation('live');
   return (
     <span
-      aria-hidden
       className={cn(
         'bg-success text-success-foreground inline-flex size-[1.3em] shrink-0 items-center justify-center rounded-full text-[0.85em] font-bold ring-1 ring-black/70 ring-offset-1 ring-offset-white/70 [text-shadow:none]',
         className,
       )}
     >
-      ✓
+      <span aria-hidden>✓</span>
+      {/* Said, not only seen: the right answer is otherwise shown by colour alone. */}
+      <span className="sr-only">{t('reveal.correctOption')}</span>
     </span>
   );
 }
@@ -563,10 +569,8 @@ export function ZoomableImage({
   useEffect(() => {
     if (!open) return;
     overlay.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
   }, [open]);
+  useEscape(() => setOpen(false), open);
   return (
     <>
       <button

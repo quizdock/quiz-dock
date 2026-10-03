@@ -55,6 +55,28 @@ describe('media pool on a phone', () => {
     expect(done).toBe(true);
   });
 
+  it('a step fetched ahead that never came is dropped at the next preload (a projection)', async () => {
+    const { preloadMedia } = await import('./media-pool');
+    const made: HTMLElement[] = [];
+    const create = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = create(tag);
+      made.push(el);
+      return el;
+    });
+    const film = (url: string) => ({
+      visual: { kind: 'video' as const, source: 'upload' as const, url, gainDb: 0 },
+      audio: null,
+    });
+    void preloadMedia(film('/api/v1/media/next-film'));
+    const [first] = made;
+    expect(first.getAttribute('src')).toBe('/api/v1/media/next-film');
+    // The host ended the quiz: the next preload names another step.
+    void preloadMedia(film('/api/v1/media/other-film'));
+    // The first one stops downloading, and leaves the pool.
+    expect(first.getAttribute('src')).toBeNull();
+  });
+
   it('without the click (a projection), each media gets its own element', async () => {
     const { releaseMedia, takeMedia } = await import('./media-pool');
     const a = takeMedia('video', '/api/v1/media/v');

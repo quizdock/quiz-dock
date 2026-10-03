@@ -26,10 +26,6 @@ export interface ImageOptionValue {
   isCorrect: boolean;
 }
 
-/** Whether an answer is ready to save: a picture and its alternative text. */
-export const imageOptionComplete = (o: Pick<ImageOptionValue, 'mediaId' | 'alt'>) =>
-  !!o.mediaId && o.alt.trim().length > 0;
-
 /**
  * The answers of an image choice: 2 or 4 pictures in the grid the room will see,
  * each tile cropped as the projection crops it. Per answer: a picture from the

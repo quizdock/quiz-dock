@@ -56,7 +56,6 @@
       "filenameFallback": "session"
     },
     "room": {
-      "title": "Room",
       "intro_one": "This session was played in a room: {{count}} quiz kept, one after another, the participants joining once.",
       "intro_other": "This session was played in a room: {{count}} quizzes kept, one after another, the participants joining once.",
       "thisSession": "this session",

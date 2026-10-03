@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import '../i18n';
 import { mockApi } from '../test/harness';
-import { GameSoundsPanel, RoomSoundsButton } from './game-sounds-panel';
+import { GameSoundsControls, RoomSoundsButton } from './game-sounds-panel';
 
 const item = (id: string, name: string) => ({
   id,
@@ -41,7 +41,7 @@ const SOUNDS = {
   muted: false,
 };
 
-describe('GameSoundsPanel (#93)', () => {
+describe("the room's sound controls (#93)", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('offers the built-in sound or one of the library, with the editor’s picker', async () => {
@@ -52,13 +52,9 @@ describe('GameSoundsPanel (#93)', () => {
     const onChange = vi.fn();
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <GameSoundsPanel sounds={SOUNDS} onChange={onChange} />
+        <GameSoundsControls sounds={SOUNDS} onChange={onChange} />
       </QueryClientProvider>,
     );
-    // Folded, the line says what is on.
-    expect(
-      screen.getByText('Réponse reçue · Début de question · Compte à rebours · Fin du temps'),
-    ).toBeInTheDocument();
     const track = screen.getByRole('combobox', { name: 'Musique de fond pendant les réponses' });
     // Only the built-in choice and the way to the library: no list of every file.
     expect(screen.queryByRole('option', { name: 'My jingle' })).toBeNull();
@@ -92,7 +88,10 @@ describe('GameSoundsPanel (#93)', () => {
     const onChange = vi.fn();
     render(
       <QueryClientProvider client={new QueryClient()}>
-        <GameSoundsPanel sounds={{ ...SOUNDS, musicUrl: '/api/v1/media/m1' }} onChange={onChange} />
+        <GameSoundsControls
+          sounds={{ ...SOUNDS, musicUrl: '/api/v1/media/m1' }}
+          onChange={onChange}
+        />
       </QueryClientProvider>,
     );
     const track = screen.getByRole('combobox', { name: 'Musique de fond pendant les réponses' });

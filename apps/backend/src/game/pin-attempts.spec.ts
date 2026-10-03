@@ -1,6 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import type { RedisService } from '../redis/redis.service';
-import { PIN_ATTEMPTS_MAX, PIN_ATTEMPTS_WINDOW_S, PinAttempts } from './pin-attempts';
+import {
+  PIN_ATTEMPTS_MAX,
+  PIN_ATTEMPTS_WINDOW_S,
+  PinAttempts,
+  clientNetwork,
+} from './pin-attempts';
 
 describe('PinAttempts', () => {
   function makeLimiter(failures = 0) {
@@ -67,5 +72,19 @@ describe('PinAttempts', () => {
     const attempt = jest.fn();
     await expect(limiter.guard('1.2.3.4', attempt)).rejects.toThrow('pin.too_many_attempts');
     expect(attempt).not.toHaveBeenCalled();
+  });
+});
+
+describe('clientNetwork', () => {
+  it('an IPv4 address on its own, mapped or not', () => {
+    expect(clientNetwork('1.2.3.4')).toBe('1.2.3.4');
+    expect(clientNetwork('::ffff:1.2.3.4')).toBe('1.2.3.4');
+  });
+
+  it('an IPv6 address by its /64: every address of the block counts as one', () => {
+    expect(clientNetwork('2001:db8:1:2:aaaa::1')).toBe('2001:db8:1:2::/64');
+    expect(clientNetwork('2001:0db8:0001:0002:ffff:ffff:ffff:ffff')).toBe('2001:db8:1:2::/64');
+    expect(clientNetwork('2001:db8::1')).toBe('2001:db8:0:0::/64');
+    expect(clientNetwork('::1')).toBe('0:0:0:0::/64');
   });
 });

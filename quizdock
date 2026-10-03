@@ -8,7 +8,7 @@
 # Deployment modes, chosen at `init` and remembered in `.env` (QUIZDOCK_MODE):
 #   compose     docker-compose.prod.yml — app + PostgreSQL + Redis (production)
 #   full        compose + bundled Keycloak (separate database)
-#   standalone  one container (fchaussin/quizdock:standalone) — demo / first try
+#   standalone  one container (fchaussin/quizdock:standalone) — a first try, one machine
 #
 # Admin commands (doctor, seat:*, user:*, quiz:*, samples:load, sessions:purge)
 # are relayed to the `qd` CLI shipped inside the image (/usr/local/bin/qd);
@@ -16,7 +16,9 @@
 set -eu
 
 IMAGE="${QUIZDOCK_IMAGE:-fchaussin/quizdock}"
-RAW="${QUIZDOCK_RAW:-https://raw.githubusercontent.com/quizdock/quiz-dock/main}"
+# Where the deployment files come from: the repository at the release installed
+# (QUIZDOCK_RAW, a full URL, overrides it — a mirror, a fork).
+RAW_BASE="https://raw.githubusercontent.com/quizdock/quiz-dock"
 COMPOSE_FILE="${QUIZDOCK_COMPOSE_FILE:-docker-compose.prod.yml}"
 ENV_FILE="${QUIZDOCK_ENV_FILE:-.env}"
 CONTAINER="${QUIZDOCK_CONTAINER:-quizdock}" # standalone container name
@@ -54,6 +56,97 @@ standalone_image() {
   esac
 }
 http_port() { env_get HTTP_PORT 18080; }
+
+# The latest release's tag (vX.Y.Z), or nothing when GitHub cannot be asked.
+latest_release() {
+  curl -fsSL https://api.github.com/repos/quizdock/quiz-dock/releases/latest 2>/dev/null |
+    sed -n 's/.*"tag_name": *"\(v[0-9][^"]*\)".*/\1/p' | head -n1
+}
+
+# The address of the deployment files for an image tag: the files of that release.
+files_url() { # files_url <image tag>
+  if [ -n "${QUIZDOCK_RAW:-}" ]; then printf '%s' "$QUIZDOCK_RAW"; return; fi
+  case "$1" in
+    latest | standalone) ref="$(latest_release)"; ref="${ref:-main}" ;;
+    standalone-*) ref="v${1#standalone-}" ;;
+    v*) ref="$1" ;;
+    *) ref="v$1" ;;
+  esac
+  printf '%s/%s' "$RAW_BASE" "$ref"
+}
+
+# The deployment files of a mode, as `<path in the repository>:<local path>` pairs.
+deployment_files() { # deployment_files <mode>
+  case "$1" in
+    compose) printf '%s\n' "docker-compose.prod.yml:$COMPOSE_FILE" ;;
+    full)
+      printf '%s\n' "docker-compose.prod.yml:$COMPOSE_FILE" "docker-compose.full.yml:docker-compose.full.yml" \
+        "keycloak/realm-export.json:keycloak/realm-export.json"
+      ;;
+  esac
+}
+
+# Fetches one deployment file of a release. A copy of what was fetched stays in
+# .quizdock/: a local file still equal to it was not edited, and is replaced; an
+# edited one (or one from before these copies) is kept, the release's version
+# written next to it as <file>.new, and the operator told. Never a silent rewrite.
+fetch_file() { # fetch_file <base url> <repository path> <local path>
+  url="$1/$2"; local_path="$3"; shipped=".quizdock/$2"
+  tmp="$(mktemp)"
+  if ! curl -fsSL "$url" -o "$tmp"; then rm -f "$tmp"; return 1; fi
+  mkdir -p "$(dirname "$shipped")" "$(dirname "$local_path")"
+  if [ ! -f "$local_path" ] || cmp -s "$local_path" "$tmp"; then
+    cp "$tmp" "$local_path"
+  elif [ -f "$shipped" ] && cmp -s "$local_path" "$shipped"; then
+    cp "$tmp" "$local_path"
+    info "updated $local_path"
+  else
+    cp "$tmp" "$local_path.new"
+    warn "$local_path differs from what QuizDock shipped: the release's version is $local_path.new."
+    warn "  compare: diff $local_path $local_path.new — then keep yours, or: mv $local_path.new $local_path"
+  fi
+  cp "$tmp" "$shipped"
+  rm -f "$tmp"
+}
+
+# What `doctor` checks on this host, where the container cannot see: passwords of
+# .env left to a default (or unset, so the Compose default applies). A warning,
+# never a refusal: a first try may keep them; an instance in use should not.
+check_secrets() {
+  weak=""
+  keys="POSTGRES_PASSWORD"
+  [ -n "$(env_get QUIZDOCK_DB_USER)" ] && keys="$keys QUIZDOCK_DB_PASSWORD"
+  [ "$(mode)" = full ] && keys="$keys KEYCLOAK_ADMIN_PASSWORD KEYCLOAK_HOST_PASSWORD KEYCLOAK_PLAYER_PASSWORD"
+  [ "$(mode)" = full ] && [ -n "$(env_get KEYCLOAK_DB_USER)" ] && keys="$keys KEYCLOAK_DB_PASSWORD"
+  for key in $keys; do
+    case "$(env_get "$key")" in
+      "" | live | change-me | change-me-*) weak="$weak $key" ;;
+    esac
+  done
+  [ "$(mode)" = standalone ] && return 0 # its database is reached from inside the container only
+  if [ "$(mode)" = full ] && [ -z "$(env_get KEYCLOAK_DB_USER)" ]; then
+    warn "Keycloak uses the database superuser (an install made before 0.13.2): a coming release of this script will give it its own role; nothing to do for now."
+  fi
+  if [ -n "$weak" ]; then
+    warn "default or missing passwords in $ENV_FILE:$weak — set secrets of your own."
+    [ "$(mode)" = full ] && warn "  the Keycloak admin console is reachable from the network."
+    return 0
+  else
+    info "passwords in $ENV_FILE: none left to a default"
+  fi
+}
+
+# Brings the deployment files of a mode to a release's. Offline (an air-gapped
+# host), the files in place are kept.
+refresh_files() { # refresh_files <mode> <image tag>
+  base="$(files_url "$2")"
+  for pair in $(deployment_files "$1"); do
+    fetch_file "$base" "${pair%%:*}" "${pair#*:}" || {
+      warn "could not download ${pair%%:*} from $base: the file in place is kept."
+      return 0
+    }
+  done
+}
 
 need_init() {
   [ -f "$ENV_FILE" ] || die "no $ENV_FILE here — run \`$0 init\` first (or cd to your QuizDock directory)."
@@ -170,6 +263,9 @@ cmd_init() {
       say "KEYCLOAK_ADMIN_PASSWORD=$(random_secret)"
       say "KEYCLOAK_HOST_PASSWORD=$(random_secret)"
       say "KEYCLOAK_PLAYER_PASSWORD=$(random_secret)"
+      say "# Keycloak's own PostgreSQL role: it reaches its database only."
+      say "KEYCLOAK_DB_USER=keycloak"
+      say "KEYCLOAK_DB_PASSWORD=$(random_secret)"
     fi
     say "# OIDC (used when AUTH_MODE=oidc). Any OpenID Connect provider."
     say "OIDC_ISSUER=$issuer"
@@ -196,27 +292,25 @@ cmd_init() {
       say "ADMIN_TOKEN=$admin_token"
     fi
     if [ "$want_mode" != standalone ]; then
-      say "# Bundled PostgreSQL (compose mode)."
-      say "POSTGRES_USER=quizdock"
+      say "# Bundled PostgreSQL (compose mode): its superuser administers it (backups),"
+      say "# QuizDock connects with a role of its own that owns its database only."
+      say "POSTGRES_USER=postgres"
       say "POSTGRES_PASSWORD=$(random_secret)"
       say "POSTGRES_DB=quizdock"
+      say "QUIZDOCK_DB_USER=quizdock"
+      say "QUIZDOCK_DB_PASSWORD=$(random_secret)"
     fi
   } >"$ENV_FILE"
   chmod 600 "$ENV_FILE"
   info "wrote $ENV_FILE"
 
-  if [ "$want_mode" != standalone ] && [ ! -f "$COMPOSE_FILE" ]; then
-    info "fetching $COMPOSE_FILE"
-    curl -fsSL "$RAW/docker-compose.prod.yml" -o "$COMPOSE_FILE" || die "could not download $COMPOSE_FILE"
-  fi
-  if [ "$want_mode" = full ] && [ ! -f docker-compose.full.yml ]; then
-    info "fetching docker-compose.full.yml"
-    curl -fsSL "$RAW/docker-compose.full.yml" -o docker-compose.full.yml || die "could not download the full preset overlay"
-  fi
-  if [ "$want_mode" = full ] && [ ! -f keycloak/realm-export.json ]; then
-    mkdir -p keycloak
-    info "fetching keycloak/realm-export.json"
-    curl -fsSL "$RAW/keycloak/realm-export.json" -o keycloak/realm-export.json || die "could not download the Keycloak realm"
+  # The files of the release installed (the latest), not of the repository's main branch.
+  if [ "$want_mode" != standalone ]; then
+    base="$(files_url latest)"
+    for pair in $(deployment_files "$want_mode"); do
+      info "fetching ${pair#*:}"
+      fetch_file "$base" "${pair%%:*}" "${pair#*:}" || die "could not download ${pair%%:*} from $base"
+    done
   fi
   say
   if [ -n "$admin_token" ]; then
@@ -385,6 +479,10 @@ cmd_upgrade() {
   fi
   case "$(mode)" in
     compose | full)
+      # The release's Compose files too: a new image may need what they set
+      # (a hardening, a variable, another Keycloak).
+      info "deployment files of $new_tag"
+      refresh_files "$(mode)" "$new_tag"
       info "pulling"
       compose pull
       info "restarting with migrations"
@@ -457,7 +555,9 @@ case "$cmd" in
   backup) cmd_backup "$@" ;;
   restore) cmd_restore "$@" ;;
   upgrade) cmd_upgrade "$@" ;;
-  doctor | version | seat:status | seat:release | user:list | user:set-role | samples:load | sessions:purge | migrate:status | quiz:list | quiz:transfer)
+  doctor)
+    need_docker; need_init; check_secrets; admin doctor "$@" ;;
+  version | seat:status | seat:release | user:list | user:set-role | samples:load | sessions:purge | migrate:status | quiz:list | quiz:transfer)
     need_docker; need_init; admin "$cmd" "$@" ;;
   quiz:export)
     [ $# -eq 2 ] || die "usage: $0 quiz:export <id> <file.zip>"

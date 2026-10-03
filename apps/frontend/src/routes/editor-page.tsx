@@ -20,18 +20,19 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router';
 import {
   AlertTriangle,
   Archive,
-  Check,
-  EllipsisVertical,
-  PackageCheck,
   ArrowDown,
   ArrowUp,
+  Check,
   Download,
+  EllipsisVertical,
   ExternalLink,
   GripVertical,
   History,
   LayoutTemplate,
+  ListOrdered,
   MonitorPlay,
   MousePointerClick,
+  PackageCheck,
   PanelLeftClose,
   PanelLeftOpen,
   Play,
@@ -54,7 +55,7 @@ import {
   isQuizLicense,
   toTag,
 } from '@quiz-dock/contracts';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Markdown } from '@/components/markdown';
 import { Textarea } from '@/components/ui/textarea';
@@ -112,6 +113,9 @@ import { getDemo } from '../config';
 import { editorRoute } from '../router';
 import { LoadFailed, PageLoading } from '@/components/ui/loading';
 import { CheckboxField } from '@/components/ui/checkbox-field';
+import { clearDraft, formDraftKey } from '@/lib/draft-store';
+import { StaleNotice } from '@/components/ui/stale-notice';
+import { EmptyState } from '@/components/ui/empty-state';
 
 /**
  * The page has two columns, and they are the same from top to bottom: the
@@ -124,13 +128,28 @@ const PAGE_COLUMNS = 'lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[24rem_min
 export function EditorPage() {
   const { t } = useTranslation(['editor', 'common']);
   const { quizId } = editorRoute.useParams();
-  const { data, isLoading, error } = useQuizzesControllerGet(quizId);
+  const { data, isLoading, error, refetch } = useQuizzesControllerGet(quizId);
 
   if (isLoading) return <PageLoading />;
-  if (error || !data) return <LoadFailed error={error} notFound={t('notFound')} />;
+  // Only when there is nothing to show: a reading again that fails (on focus, after
+  // a save) keeps the open editor, and what is typed in it.
+  if (!data) return <LoadFailed error={error} notFound={t('notFound')} />;
+  const stale = error ? <StaleNotice onRetry={() => void refetch()} /> : null;
   // Another host's quiz, opened by a manager: read, never changed (#82).
-  if (!data.data.editable) return <QuizReadOnly quiz={data.data} />;
-  return <QuizEditor quiz={data.data} />;
+  if (!data.data.editable) {
+    return (
+      <>
+        {stale}
+        <QuizReadOnly quiz={data.data} />
+      </>
+    );
+  }
+  return (
+    <>
+      {stale}
+      <QuizEditor quiz={data.data} />
+    </>
+  );
 }
 
 function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
@@ -155,6 +174,14 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
   const [formDirty, setFormDirty] = useState(false);
   const [pendingEdit, setPendingEdit] = useState<Editing | undefined>(undefined);
   const onFormDirty = useCallback((d: boolean) => setFormDirty(d), []);
+  // The open question form's save, to save before switching (#195); a slide form has none.
+  const saveFormRef = useRef<(() => Promise<boolean>) | null>(null);
+  const [savingFirst, setSavingFirst] = useState(false);
+  // A new question saved: it stays open, as the question it now is.
+  const openCreated = useCallback((id: string) => {
+    setFormDirty(false);
+    setEditing(id);
+  }, []);
   const closeForm = useCallback(() => {
     setFormDirty(false);
     setEditing(null);
@@ -349,14 +376,27 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishOnArrival]);
 
-  const persistOrder = (next: QuizItem[]) =>
-    guarded(async () => {
-      await reorder.mutateAsync({
-        id: quiz.id,
-        data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+  // One move at a time, until the list is read again: a move made meanwhile would
+  // start from the old order and undo the one before it.
+  const [reordering, setReordering] = useState(false);
+  const reorderingRef = useRef(false);
+  const persistOrder = async (next: QuizItem[]) => {
+    if (reorderingRef.current) return;
+    reorderingRef.current = true;
+    setReordering(true);
+    try {
+      await guarded(async () => {
+        await reorder.mutateAsync({
+          id: quiz.id,
+          data: { items: next.map((it) => ({ kind: it.kind, id: it.id })) },
+        });
+        await invalidate();
       });
-      await invalidate();
-    });
+    } finally {
+      reorderingRef.current = false;
+      setReordering(false);
+    }
+  };
   const move = (index: number, direction: -1 | 1) => {
     const next = moveItem(items, index, direction);
     if (next !== items) void persistOrder(next);
@@ -395,6 +435,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         position={{ index: quiz.questionCount, total: quiz.questionCount + 1 }}
         onMoveToDraft={moveToDraft}
         onClose={closeForm}
+        onCreated={openCreated}
+        saveRef={saveFormRef}
         onDirtyChange={onFormDirty}
       />
     ) : editing === 'new-slide' ? (
@@ -418,6 +460,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         position={{ index: editingItem.question.orderIndex, total: quiz.questionCount }}
         onMoveToDraft={moveToDraft}
         onClose={closeForm}
+        saveRef={saveFormRef}
         onDirtyChange={onFormDirty}
       />
     ) : editingItem?.kind === 'slide' ? (
@@ -831,8 +874,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     ? t('slides.deleteSlide')
                     : t('questions.deleteQuestion')
                 }
-                canMoveUp={editingIndex > 0 && !reorder.isPending}
-                canMoveDown={editingIndex < items.length - 1 && !reorder.isPending}
+                canMoveUp={editingIndex > 0 && !reordering}
+                canMoveDown={editingIndex < items.length - 1 && !reordering}
                 onMove={(d) => move(editingIndex, d)}
                 onDelete={() => setPendingDelete(editingItem)}
               />
@@ -899,8 +942,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                           active={editing === item.id}
                           number={questionNumber(items, i)}
                           handle={handle}
-                          canMoveUp={i > 0 && !reorder.isPending}
-                          canMoveDown={i < items.length - 1 && !reorder.isPending}
+                          canMoveUp={i > 0 && !reordering}
+                          canMoveDown={i < items.length - 1 && !reordering}
                           onMove={(d) => move(i, d)}
                           onEdit={() => requestEditing(item.id)}
                           onDelete={() => setPendingDelete(item)}
@@ -909,8 +952,8 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
                     </SortableRow>
                   ))}
                   {items.length === 0 && editing === null && (
-                    <li className="text-muted-foreground rounded-xl border border-dashed py-10 text-center text-sm">
-                      {t('questions.empty')}
+                    <li>
+                      <EmptyState icon={ListOrdered}>{t('questions.empty')}</EmptyState>
                     </li>
                   )}
                 </ul>
@@ -992,10 +1035,40 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
         destructive
         title={t('discardConfirm.title')}
         description={t('discardConfirm.description')}
-        confirmLabel={t('discardConfirm.confirmLabel')}
+        confirmLabel={
+          pendingEdit ? t('discardConfirm.discardAndContinue') : t('discardConfirm.confirmLabel')
+        }
+        // A question's changes can be saved on the way (#195): only once saved does it go on.
+        alternative={
+          editing === 'new' || editingItem?.kind === 'question'
+            ? {
+                label: pendingEdit
+                  ? t('discardConfirm.saveAndContinue')
+                  : t('discardConfirm.saveAndClose'),
+                busy: savingFirst,
+                onClick: () => {
+                  const next = pendingEdit ?? null;
+                  setSavingFirst(true);
+                  void (saveFormRef.current?.() ?? Promise.resolve(false)).then((ok) => {
+                    setSavingFirst(false);
+                    setPendingEdit(undefined);
+                    if (!ok) return; // the form says why, its edits kept
+                    setFormDirty(false);
+                    setEditing(next);
+                  });
+                },
+              }
+            : undefined
+        }
         onCancel={() => setPendingEdit(undefined)}
         onConfirm={() => {
           const next = pendingEdit ?? null;
+          // Discarded: its draft goes too, or reopening it would bring the changes back.
+          if (editing === 'new' || editing === 'new-slide') {
+            clearDraft(formDraftKey(quiz.id, editing === 'new' ? 'question' : 'slide', null));
+          } else if (editingItem) {
+            clearDraft(formDraftKey(quiz.id, editingItem.kind, editingItem.id));
+          }
           setPendingEdit(undefined);
           setFormDirty(false);
           setEditing(next);
@@ -1456,31 +1529,28 @@ function EmptyPane({
   const { t } = useTranslation('editor');
   const Icon = variant === 'empty' ? Sparkles : MousePointerClick;
   return (
-    <div className="flex h-full min-h-[24rem] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed px-6 text-center">
-      <span className="bg-muted text-muted-foreground flex size-16 items-center justify-center rounded-full">
-        <Icon className="size-8" />
-      </span>
-      <div className="flex flex-col gap-1">
-        <p className="font-semibold">
-          {variant === 'empty' ? t('emptyPane.emptyTitle') : t('emptyPane.selectTitle')}
-        </p>
-        <p className="text-muted-foreground max-w-sm text-sm">
-          {variant === 'empty' ? t('emptyPane.emptyHint') : t('emptyPane.selectHint')}
-        </p>
-      </div>
-      {variant === 'empty' ? (
-        <div className="flex gap-2">
-          <Button type="button" onClick={onAddQuestion}>
-            <Plus className="size-4" />
-            {t('questions.add')}
-          </Button>
-          <Button type="button" variant="outline" onClick={onAddSlide}>
-            <LayoutTemplate className="size-4" />
-            {t('slides.add')}
-          </Button>
-        </div>
-      ) : null}
-    </div>
+    <EmptyState
+      icon={Icon}
+      size="large"
+      title={variant === 'empty' ? t('emptyPane.emptyTitle') : t('emptyPane.selectTitle')}
+      className="h-full min-h-[24rem]"
+      action={
+        variant === 'empty' ? (
+          <div className="flex gap-2">
+            <Button type="button" onClick={onAddQuestion}>
+              <Plus className="size-4" />
+              {t('questions.add')}
+            </Button>
+            <Button type="button" variant="outline" onClick={onAddSlide}>
+              <LayoutTemplate className="size-4" />
+              {t('slides.add')}
+            </Button>
+          </div>
+        ) : null
+      }
+    >
+      {variant === 'empty' ? t('emptyPane.emptyHint') : t('emptyPane.selectHint')}
+    </EmptyState>
   );
 }
 

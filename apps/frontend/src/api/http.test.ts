@@ -43,6 +43,20 @@ describe('customFetch', () => {
     expect(apiErrorText(err)).toBe('Quiz introuvable.');
   });
 
+  it("keeps the status of an answer that is not JSON (a proxy's page)", async () => {
+    const html = (status: number) =>
+      vi.fn().mockResolvedValue(new Response('<html>nginx</html>', { status }));
+    vi.stubGlobal('fetch', html(413));
+    const tooLarge = await customFetch('/x', { method: 'POST' }).catch((e) => e);
+    expect(tooLarge).toBeInstanceOf(ApiError);
+    expect((tooLarge as ApiError).status).toBe(413);
+    expect(apiErrorText(tooLarge)).toMatch(/Trop volumineux pour le serveur/);
+    vi.stubGlobal('fetch', html(502));
+    const down = await customFetch('/x', { method: 'GET' }).catch((e) => e);
+    expect(down).toBeInstanceOf(ApiError);
+    expect((down as ApiError).status).toBe(502);
+  });
+
   it('traduit chaque code de validation par champ (envelope { code, errors })', async () => {
     vi.stubGlobal(
       'fetch',
@@ -52,7 +66,7 @@ describe('customFetch', () => {
             code: 'validation',
             errors: [
               { field: 'title', code: 'too_small' },
-              { field: 'language', code: 'invalid_enum_value' },
+              { field: 'language', code: 'invalid_value' }, // zod 4: an enum's value not allowed
             ],
           }),
           { status: 400 },

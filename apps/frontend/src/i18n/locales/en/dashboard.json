@@ -23,7 +23,6 @@
   "running_other": "{{count}} rooms open",
   "seatTaken": "The host seat is held by someone else: you can only join rooms as a participant.",
   "loadSamples": "Load the sample quizzes",
-  "loadSamplesHint": "Two ready-to-play quizzes in English (France, Taiwan) to try the app right away.",
   "seatBackToLogin": "Back to sign-in",
   "allSessions": "All rooms on this instance",
   "hostedBy": "hosted by {{name}}",
@@ -65,8 +64,6 @@
   "browseTemplates": "Browse the templates",
   "browseTemplatesHint": "Ready-made quizzes to create yours from — nothing is added to your bank until you ask.",
   "mediaAdmin": {
-    "title": "Instance media",
-    "adminOnly": "This page is for administrators.",
     "loading": "Loading…",
     "kind": {
       "image": "Images",
@@ -154,7 +151,6 @@
       "empty": "No global media yet: add some with the buttons above, or from the All view.",
       "credit": "Credit (author, licence, source)",
       "remove": "Withdraw",
-      "removeNamed": "Withdraw {{name}}",
       "removeTitle": "Withdraw this global media?",
       "removeDescription": "Hosts no longer find it in their library. The quizzes that use it keep their copy.",
       "removeFailed": "The media could not be withdrawn.",

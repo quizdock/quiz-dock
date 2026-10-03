@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { MediaLibraryService } from './media-library.service';
 import { MediaService } from './media.service';
+import { PNG_1X1 } from './testing/png';
 
 /** The author's library on the test database: grouping, usages, credits, guarded delete. */
 describe('MediaLibraryService (integration)', () => {
@@ -18,10 +19,7 @@ describe('MediaLibraryService (integration)', () => {
   const redis = { scanKeys: jest.fn(async () => [] as string[]) } as unknown as RedisService;
 
   const png = (tag: string) =>
-    Buffer.concat([
-      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-      Buffer.from(`${tag}-${Date.now()}-${Math.random()}`),
-    ]);
+    Buffer.concat([PNG_1X1, Buffer.from(`${tag}-${Date.now()}-${Math.random()}`)]);
   const upload = (name: string, buffer = png(name)) =>
     media.upload(ownerId, {
       buffer,

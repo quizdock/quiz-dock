@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { contentSecurityPolicy, cspMiddleware } from './csp';
+import { baseHeadersMiddleware, contentSecurityPolicy, cspMiddleware } from './csp';
 import { settingsFrom } from '../admin/settings/settings.service';
 
 const directive = (policy: string, name: string) =>
@@ -65,5 +65,19 @@ describe('cspMiddleware', () => {
     for (const path of ['/api/v1/me', '/api/docs', '/socket.io/', '/health']) {
       expect(run(path)).not.toHaveBeenCalled();
     }
+  });
+});
+
+describe('baseHeadersMiddleware', () => {
+  it('sends nosniff and a same-origin referrer policy with every response', () => {
+    const headers: Record<string, string> = {};
+    const res = { setHeader: (k: string, v: string) => (headers[k] = v) };
+    const next = jest.fn();
+    baseHeadersMiddleware()({} as never, res as never, next);
+    expect(headers).toEqual({
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'same-origin',
+    });
+    expect(next).toHaveBeenCalled();
   });
 });

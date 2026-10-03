@@ -56,3 +56,15 @@ export function cspMiddleware(from: SettingsService = settings) {
     next();
   };
 }
+
+/**
+ * Headers every response carries: the type sent is the type meant (no sniffing),
+ * and no address of this instance leaves in a Referer for another site.
+ */
+export function baseHeadersMiddleware() {
+  return (_req: Request, res: Response, next: NextFunction): void => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'same-origin');
+    next();
+  };
+}

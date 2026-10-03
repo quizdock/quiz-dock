@@ -76,6 +76,22 @@ export function apiFieldErrors(err: unknown): FieldError[] {
     : [];
 }
 
+/**
+ * The answer's JSON. Not JSON (a proxy's HTML page: a 413 past its upload limit, a
+ * 502 while the app restarts): the status is kept, as an error with its own text
+ * when there is one, never a parsing error that would hide it.
+ */
+function parseBody(body: string | null, status: number): unknown {
+  if (!body) return {};
+  try {
+    return JSON.parse(body);
+  } catch {
+    if (status === 413) return { code: 'request.too_large' };
+    if (status >= 200 && status < 300) throw new ApiError(status, null);
+    return null;
+  }
+}
+
 export const customFetch = async <T>(url: string, options: RequestInit): Promise<T> => {
   const res = await fetch(url, {
     ...options,
@@ -86,7 +102,7 @@ export const customFetch = async <T>(url: string, options: RequestInit): Promise
   });
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
-  const data = body ? JSON.parse(body) : {};
+  const data = parseBody(body, res.status);
   // Non-2xx → on lève, pour que react-query expose l'erreur (et son corps).
   if (!res.ok) {
     if (res.status === 401 && (sessionAuthed || Object.keys(authHeaders).length > 0)) {

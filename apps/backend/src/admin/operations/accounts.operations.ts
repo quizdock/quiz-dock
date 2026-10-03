@@ -64,7 +64,10 @@ export class AccountsOperations {
               take: limit,
               include: { _count: { select: { quizzes: true, hostedSessions: true } } },
             }),
-            localMode ? this.seat.details() : Promise.resolve(null),
+            // An expired seat is free, though its row stays until the next claim.
+            localMode
+              ? this.seat.details().then((d) => (HostSeatService.isLive(d) ? d : null))
+              : Promise.resolve(null),
           ]);
           return done<AccountsPage>({
             total,

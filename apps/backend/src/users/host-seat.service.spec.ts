@@ -109,6 +109,13 @@ describe('HostSeatService.provision', () => {
 });
 
 describe('HostSeatService.claim', () => {
+  it("is local mode's: an account of the provider cannot take it", async () => {
+    const { service, tx } = makeService(null);
+    const fromProvider = { ...alice, oidcSubject: 'kc-sub-123' } as typeof alice;
+    await expect(service.claim(fromProvider, 60)).rejects.toThrow(ForbiddenException);
+    expect(tx.hostSeat.upsert).not.toHaveBeenCalled();
+  });
+
   it('takes a free seat under the advisory lock, with expiry,', async () => {
     const { service, tx } = makeService(null);
     const state = await service.claim(alice, 60);

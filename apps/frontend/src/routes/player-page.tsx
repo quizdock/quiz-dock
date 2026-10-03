@@ -116,11 +116,39 @@ export function PlayerPage() {
   return (
     <>
       <ConnectionLost lost={session.view.connectionLost} />
+      <PlayerAnnouncer view={session.view} />
       {/* A hook for override.css, with the game's state (no box: the layout is the page's). */}
       <div className="qd-player contents" data-state={session.view.state ?? 'none'}>
         <PlayerView pin={pin} session={session} />
       </div>
     </>
+  );
+}
+
+/**
+ * One region a screen reader follows for the whole game, kept on the page (a
+ * region that appears with its text is often not read): the new question, the
+ * answer taken or waiting, the verdict. The screen changes; this says how.
+ */
+function PlayerAnnouncer({ view }: { view: ReturnType<typeof useGameSession>['view'] }) {
+  const { t } = useTranslation('live');
+  const question = view.question;
+  let said = '';
+  if (view.state === 'ANSWERING' && question) {
+    said = view.answerPending
+      ? t('player.announce.pending')
+      : view.answerAccepted
+        ? t('player.announce.saved')
+        : t('player.announce.question', { prompt: question.prompt });
+  } else if ((view.state === 'REVEAL' || view.state === 'LEADERBOARD') && view.result) {
+    said = `${view.result.correct ? t('player.correct') : t('player.wrong')} ${t('player.points', {
+      points: view.result.points,
+    })}`;
+  }
+  return (
+    <p className="sr-only" aria-live="polite" role="status">
+      {said}
+    </p>
   );
 }
 
@@ -149,6 +177,9 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
   const [order, setOrder] = useState<string[]>([]);
   const [freeValue, setFreeValue] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  // What was sent, as sent: the reveal shows that, never what is still typed or
+  // ticked on the screen (an ordering left as it came, a text never sent).
+  const [sent, setSent] = useState<string | string[] | number | null>(null);
   // Graine d'avatar persistée localement (réinjectée d'une partie à l'autre).
   const [avatarSeed, setAvatarSeed] = useState(() => loadAvatarSeed() ?? '');
   // Whether this phone's media elements were claimed in a gesture (at the join when
@@ -229,6 +260,7 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
     setSelected([]);
     setFreeValue('');
     setSubmitted(false);
+    setSent(null);
   }, [view.questionIndex]);
   // Refused as too early (the answers were not open yet): the answer box comes back.
   useEffect(() => {
@@ -320,7 +352,8 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
 
   const submit = (answer: string | string[] | number) => {
     setSubmitted(true);
-    socket?.emit('player:submit', { pin, questionIndex: view.questionIndex, answer });
+    setSent(answer);
+    session.submitAnswer(view.questionIndex, answer);
   };
 
   // QCM unique / V-F / sondage : le tap soumet ; multi-réponses : le tap (dé)sélectionne,
@@ -770,6 +803,8 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
   }
 
   if (view.state === 'REVEAL' || view.state === 'LEADERBOARD') {
+    // A refused answer did not count: nothing of it is shown as the player's.
+    const yourAnswer = view.answerAccepted === false ? null : sent;
     const r = view.result;
     // Classement perso : `you` (du leaderboard) est toujours présent au reveal, même
     // si le joueur n'a pas répondu (pas de `result`). On l'affiche systématiquement.
@@ -811,24 +846,24 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
           question.options?.length && question.type !== 'ordering' ? (
             <OptionGrid
               options={question.options}
-              selectedIds={selected}
+              selectedIds={yourAnswer === null ? [] : [yourAnswer].flat().map(String)}
               correctIds={view.reveal.correctOptionIds}
               layout="list"
             />
           ) : (
             <div className="flex w-full flex-col items-center gap-[0.5em]">
-              {question.type === 'ordering' && order.length ? (
+              {question.type === 'ordering' && Array.isArray(yourAnswer) ? (
                 <p className="text-muted-foreground text-[0.95em]">
                   {t('reveal.yourAnswer')}{' '}
                   <strong>
-                    {order
+                    {yourAnswer
                       .map((id) => question.options?.find((o) => o.id === id)?.text ?? id)
                       .join(' → ')}
                   </strong>
                 </p>
-              ) : freeValue ? (
+              ) : yourAnswer !== null && !Array.isArray(yourAnswer) ? (
                 <p className="text-muted-foreground text-[0.95em]">
-                  {t('reveal.yourAnswer')} <strong>{freeValue}</strong>
+                  {t('reveal.yourAnswer')} <strong>{String(yourAnswer)}</strong>
                 </p>
               ) : null}
               <RevealAnswer question={question} reveal={view.reveal} />
@@ -941,6 +976,10 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
           ) : lost ? (
             <p role="alert" className="text-destructive text-[1.1em] font-semibold">
               {t(`player.answerRefused.${refusal}`)}
+            </p>
+          ) : done && view.answerPending ? (
+            <p role="status" className="text-[1.1em] font-semibold">
+              {t('player.answerPending')}
             </p>
           ) : done ? (
             <p className="text-[1.25em] font-semibold">{t('player.answerSaved')}</p>

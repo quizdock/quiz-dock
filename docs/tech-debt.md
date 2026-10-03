@@ -21,8 +21,12 @@ entry in the PR that pays it back.
 
 - **Where**: `apps/backend/src/common/csp.ts`.
 - **What**: `style-src 'unsafe-inline'` (style attributes and the style tags libraries
-  insert) and `img-src https:` (an author's Markdown may show an image from the web).
-- **Way out**: nonces for styles; a proxy or an allow-list for images.
+  insert) and `img-src https:`. The rendered Markdown shows only the application's own
+  media; only the editor (TipTap) can still display an image from the web while it is
+  typed, and the logo's origin (`APP_LOGO_URL`) is read once, at start, though the
+  setting changes live.
+- **Way out**: nonces for styles; for images, the editor's image node limited to the
+  application's media, then `https:` dropped and the logo's origin read per request.
 
 ## `user.locale`, a column nobody reads
 

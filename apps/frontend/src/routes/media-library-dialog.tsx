@@ -1,4 +1,4 @@
-import { ExternalLink, Search, Trash2, X } from 'lucide-react';
+import { ExternalLink, Images, Search, SearchX, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,13 @@ import { formatDimensions } from '@/lib/dimensions';
 import { Waveform } from '../game/media/waveform';
 import { Spinner } from '@/components/ui/loading';
 import { Modal } from '@/components/ui/modal';
+import { EmptyState } from '@/components/ui/empty-state';
+import { formatDate } from '@/lib/format';
 
 const SEARCH_DELAY_MS = 250;
 
 /** How an entry is named: its file name, else (a media from before names were kept) its date. */
-const labelOf = (item: MediaLibraryItemDto) =>
-  item.name ?? new Date(item.createdAt).toLocaleDateString();
+const labelOf = (item: MediaLibraryItemDto) => item.name ?? formatDate(item.createdAt);
 
 const duration = (ms: number | null) => {
   if (!ms) return null;
@@ -141,13 +142,13 @@ export function MediaLibraryDialog({
           {list.isLoading ? (
             <Spinner label={t('media.library.loading')} showLabel className="text-sm" />
           ) : items.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
+            <EmptyState icon={q ? SearchX : Images}>
               {q
                 ? t('media.library.noMatch')
                 : source === 'instance'
                   ? t('media.library.instanceEmpty')
                   : t('media.library.empty')}
-            </p>
+            </EmptyState>
           ) : (
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {items.map((item) => (

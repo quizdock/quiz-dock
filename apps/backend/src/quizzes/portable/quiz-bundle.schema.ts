@@ -14,6 +14,7 @@ import {
 import { z } from 'zod';
 import { gradientSchema } from '../../common/background.schema';
 import { QUESTION_TYPES } from '../../questions/dto/question-content.schema';
+import { QUIZ_DESCRIPTION_MAX } from '../dto/create-quiz.dto';
 
 /**
  * Portable quiz bundle (#19): `quiz.json` next to a `media/` folder, shipped as
@@ -131,7 +132,7 @@ export const questionBundleSchema = z.object({
   prompt: z.string(),
   /** The visual slot: an image, or an MP4 video (version 3). */
   media: mediaPathSchema.optional(),
-  /** The audio slot: an MP3, never alongside a video (version 3). */
+  /** The audio slot: an MP3 or an M4A, never alongside a video (version 3). */
   audio: mediaPathSchema.optional(),
   answerExplanation: z.string().nullable().optional(),
   ...backgroundBundleFields,
@@ -181,7 +182,7 @@ export const quizBundleSchema = z.object({
   quiz: z.object({
     // Not blank: written as a pattern so the published JSON Schema says it too.
     title: z.string().trim().regex(/\S/).max(200),
-    description: z.string().nullable().optional(),
+    description: z.string().max(QUIZ_DESCRIPTION_MAX).nullable().optional(),
     /** BCP 47 tag — a dedicated field, never a tag. */
     language: z.string().min(2).max(10).optional(),
     feedbackEnabled: z.boolean().optional(),

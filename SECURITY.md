@@ -3,15 +3,14 @@
 ## Supported versions
 
 QuizDock is `0.x`. Security fixes target the **latest** release only; please run a recent
-tag of `fchaussin/quizdock` (and rebuild `:standalone` on a fresh base periodically).
+tag of `fchaussin/quizdock` (`:standalone` included: it is rebuilt with each release).
 
 ## Reporting a vulnerability
 
 Please **do not** open a public issue for security problems.
 
-- Preferred: open a [private security advisory](https://github.com/quizdock/quiz-dock/security/advisories/new)
-  (GitHub → *Security* → *Report a vulnerability*).
-- Alternatively, email the maintainer (see the commit author address).
+- Open a [private security advisory](https://github.com/quizdock/quiz-dock/security/advisories/new)
+  (GitHub → *Security* → *Report a vulnerability*): only the maintainers see it.
 
 Include a description, affected version/tag, reproduction steps and impact. We aim to
 acknowledge within a few days. As a small open-source project there is no bounty, but
@@ -22,8 +21,8 @@ fixes are prioritized and disclosed once a patched release is available.
 - **Per-push / per-PR / weekly scans** — see [`docs/security/`](docs/security/) and the
   [`Security` workflow](.github/workflows/security.yml): `pnpm audit` gates app CVEs; Trivy
   scans the filesystem and the published image (SARIF → Security tab).
-- **Hardened runtime** — non-root, read-only root FS, dropped capabilities,
-  `no-new-privileges`.
+- **Hardened runtime** — non-root, code owned by root; with `docker-compose.prod.yml`,
+  read-only root FS, dropped capabilities, `no-new-privileges`.
 - **No token in the browser** under OIDC — the backend holds the session and the tokens;
   the browser only gets an `httpOnly`, `SameSite=Lax` cookie, and requests that change
   something must come from the application's own pages.

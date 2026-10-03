@@ -25,10 +25,11 @@
     "incomplete_other": "{{count}} adım tamamlanmamış: quizi yayımlamak için tamamlayın."
   },
   "session": {
-    "not_found": "Oda bulunamadı veya kapatılmadı.",
+    "not_found": "Oda bulunamadı veya kapatıldı.",
     "ended": "Oda kapalı.",
     "banned": "Sunucu tarafından bu odadan çıkarıldınız.",
     "join_required": "Cevap vermeden önce odaya katılın.",
+    "already_joined": "Zaten bu odadasınız.",
     "already_started": "Quiz çoktan başladı.",
     "reveal_required": "Bu işlem ancak yanıtlar gösterildikten sonra yapılabilir.",
     "timer_not_adjustable": "Zamanlayıcı yalnızca bir soru sırasında ayarlanabilir.",
@@ -59,6 +60,7 @@
     "unsupported_type": "Desteklenmeyen format: bir görüntü, bir MP4 video (H.264) veya bir ses (MP3, M4A). Düzenleyici, bu tarayıcının okuyabileceği diğer dosyaları dönüştürür; SVG kabul edilmez.",
     "file_missing": "Eksik dosya (“dosya” alanı).",
     "file_too_large": "Dosya çok büyük (bu tür medya için en fazla {{maxMb}} MB).",
+    "image_too_large": "Bu görsel çok büyük (en fazla {{maxMp}} megapiksel).",
     "not_found": "Medya bulunamadı.",
     "demo_disabled": "Demo örneğinde medya yüklemeleri devre dışı bırakıldı.",
     "video_with_audio": "Bir video zaten kendi sesini taşır: ses parçasını veya videoyu kaldırın.",
@@ -144,7 +146,9 @@
   "error": "Bir hata oluştu.",
   "host_seat": {
     "taken": "Sunucu yetkisi zaten alınmış.",
-    "manager_forbidden": "Yönetici sunucu yetkisini alamaz."
+    "manager_forbidden": "Yönetici sunucu yetkisini alamaz.",
+    "local_only": "Sunucu yetkisi yalnızca yerel modda vardır.",
+    "already_host": "Zaten sunucusunuz: alınacak yetki yok."
   },
   "store": {
     "demo_disabled": "Demo örneğinde paylaşım kapalı.",
@@ -205,5 +209,8 @@
     "token_invalid": "Bu kurulum belirteci geçerli değil (yanlış, kullanılmış veya süresi dolmuş): `qd setup.token` yenisini verir.",
     "session_invalid": "Kurulum oturumu sona erdi: yeni bir kurulum belirteci girin.",
     "too_many_attempts": "Çok fazla yanlış belirteç: on beş dakika bekleyin."
+  },
+  "request": {
+    "too_large": "Sunucu için çok büyük: isteği reddetti (boyut sınırı)."
   }
 }

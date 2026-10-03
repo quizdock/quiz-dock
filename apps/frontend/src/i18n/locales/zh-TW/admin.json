@@ -333,7 +333,6 @@
     "write": "執行",
     "preview": "預覽",
     "confirm": "確認",
-    "again": "重新讀取",
     "confirmTitle": "確認此變更？"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "移交「{{title}}」",
       "help": "移交給另一個帳號：僅此測驗使用的媒體及其歷史會隨之轉移；其餘內容仍歸 {{owner}} 所有。",
-      "search": "名稱、主體識別碼或電子郵件",
-      "player": "參與者"
+      "search": "名稱、主體識別碼或電子郵件"
     },
     "actionsFor": "{{title}} 的操作"
   },
@@ -759,10 +757,13 @@
     },
     "unset": "{{key}} 未設定。",
     "postgres_ok": "PostgreSQL 可連線",
+    "postgres_superuser": "QuizDock 以 PostgreSQL 超級使用者身分連線。目前無需操作：quizdock 腳本的後續版本將為它建立專屬角色。",
     "migrations_applied_one": "已套用 {{count}} 個遷移",
     "migrations_applied_other": "已套用 {{count}} 個遷移",
-    "migrations_pending": "{{count}} 個遷移待套用：請執行遷移步驟。",
-    "migrations_failed": "{{count}} 個遷移失敗：參見 prisma migrate resolve。",
+    "migrations_pending_one": "{{count}} 個遷移待套用：請執行遷移步驟。",
+    "migrations_pending_other": "{{count}} 個遷移待套用：請執行遷移步驟。",
+    "migrations_failed_one": "{{count}} 個遷移失敗：參見 prisma migrate resolve。",
+    "migrations_failed_other": "{{count}} 個遷移失敗：參見 prisma migrate resolve。",
     "postgres_failed": "PostgreSQL 無法連線：{{error}}",
     "redis_ok": "Redis 可連線",
     "redis_failed": "Redis 無法連線：{{error}}",

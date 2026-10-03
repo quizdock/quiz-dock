@@ -49,7 +49,7 @@ import {
   Text,
   X,
 } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MediaEditsContext, useMediaEdits } from '@/lib/media-edits';
 import { Button } from '@/components/ui/button';
@@ -60,7 +60,7 @@ import { MarkdownEditor } from '@/components/markdown-editor';
 import { Select } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useFormDraft } from '@/lib/use-form-draft';
-import { clearDraft, loadDraft } from '@/lib/draft-store';
+import { clearDraft, formDraftKey, loadDraft } from '@/lib/draft-store';
 import { FormActionBar } from '@/components/form-action-bar';
 import { DraftNotice } from '@/components/draft-notice';
 import { ApiError, apiErrorText, apiFieldErrors } from '../api/http';
@@ -202,7 +202,7 @@ export function SlideForm({
   };
   const [initial] = useState(() => initialValues(slide));
   // Draft kept in localStorage until saved or discarded (survives reload / closed tab).
-  const draftKey = `quiz:${quizId}:slide:${slide?.id ?? 'new'}`;
+  const draftKey = formDraftKey(quizId, 'slide', slide?.id ?? null);
   const [restored, setRestored] = useState(() => loadDraft<FormValues>(draftKey));
   const [values, setValues] = useState<FormValues>(restored ?? initial);
   const formDirty = useFormDraft(draftKey, initial, values, onDirtyChange);
@@ -260,7 +260,15 @@ export function SlideForm({
     }
     await save(data);
   };
+  // Held from the click until the form closes (the list is refetched in between):
+  // a second click would add the slide twice.
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const save = async (data: ReturnType<typeof payload>) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    let closed = false;
     try {
       // The media's alt and credit, edited here, are saved with the slide.
       await mediaEdits.flush();
@@ -268,6 +276,7 @@ export function SlideForm({
       else await add.mutateAsync({ id: quizId, data });
       await queryClient.invalidateQueries({ queryKey: getQuizzesControllerGetQueryKey(quizId) });
       clearDraft(draftKey);
+      closed = true;
       onClose();
     } catch (err) {
       if (
@@ -283,6 +292,11 @@ export function SlideForm({
       setErrors(found);
       setError(apiErrorText(err, t('slideForm.invalidError')));
       if (found[0]) focusField(found[0].field);
+    } finally {
+      if (!closed) {
+        savingRef.current = false;
+        setSaving(false);
+      }
     }
   };
   const moveToDraftAndSave = async () => {
@@ -353,7 +367,7 @@ export function SlideForm({
           issues={issues}
           onIssue={focusField}
           dirty={dirty}
-          busy={add.isPending || update.isPending}
+          busy={saving}
           submitLabel={slide ? t('slideForm.submitUpdate') : t('slideForm.submitAdd')}
           onCancel={cancel}
         />

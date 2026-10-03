@@ -68,16 +68,18 @@ function brokenRules(
   settings: SettingsService,
   changes: Record<string, string | undefined>,
 ): string[] {
+  // Told apart by their key: a message may carry a value (the largest upload's size)
+  // that the change moves without breaking anything new.
   const now = new Set(
     settings
       .issues()
       .filter((i) => i.code === 'rule')
-      .map((i) => i.message),
+      .map((i) => i.key),
   );
   return settings
     .withOverrides(changes)
     .issues()
-    .filter((i) => i.code === 'rule' && !now.has(i.message))
+    .filter((i) => i.code === 'rule' && !now.has(i.key))
     .map((i) => i.message);
 }
 

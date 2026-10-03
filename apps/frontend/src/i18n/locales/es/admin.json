@@ -333,7 +333,6 @@
     "write": "Ejecutar",
     "preview": "Vista previa",
     "confirm": "Confirmar",
-    "again": "Volver a leer",
     "confirmTitle": "¿Confirmar este cambio?"
   },
   "form": {
@@ -402,8 +401,7 @@
     "transfer": {
       "title": "Traspasar «{{title}}»",
       "help": "A otra cuenta: los medios que solo usa este quiz y su historial lo acompañan; {{owner}} conserva el resto.",
-      "search": "Nombre, sujeto o correo electrónico",
-      "player": "participante"
+      "search": "Nombre, sujeto o correo electrónico"
     },
     "actionsFor": "Acciones para {{title}}"
   },
@@ -759,10 +757,13 @@
     },
     "unset": "{{key}} no está definido.",
     "postgres_ok": "PostgreSQL accesible",
+    "postgres_superuser": "QuizDock se conecta como superusuario de PostgreSQL. Nada que hacer por ahora: una próxima versión del script quizdock le dará un rol propio.",
     "migrations_applied_one": "{{count}} migración aplicada",
     "migrations_applied_other": "{{count}} migraciones aplicadas",
-    "migrations_pending": "{{count}} migración(es) pendiente(s): ejecute el paso de migración.",
-    "migrations_failed": "{{count}} migración(es) fallida(s): vea prisma migrate resolve.",
+    "migrations_pending_one": "{{count}} migración pendiente: ejecute el paso de migración.",
+    "migrations_pending_other": "{{count}} migraciones pendientes: ejecute el paso de migración.",
+    "migrations_failed_one": "{{count}} migración fallida: vea prisma migrate resolve.",
+    "migrations_failed_other": "{{count}} migraciones fallidas: vea prisma migrate resolve.",
     "postgres_failed": "PostgreSQL inaccesible: {{error}}",
     "redis_ok": "Redis accesible",
     "redis_failed": "Redis inaccesible: {{error}}",

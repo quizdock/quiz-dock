@@ -11,7 +11,27 @@ import { RedisService } from '../redis/redis.service';
 export const PIN_ATTEMPTS_MAX = 30;
 export const PIN_ATTEMPTS_WINDOW_S = 60;
 
-const key = (ip: string) => `pin-attempts:${ip}`;
+const key = (ip: string) => `pin-attempts:${clientNetwork(ip)}`;
+
+/**
+ * Who is counted: an IPv4 address, or an IPv6 /64 — the block one site or one
+ * device holds whole, with as many addresses as it wants in it.
+ */
+export function clientNetwork(ip: string): string {
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
+  if (mapped) return mapped[1];
+  if (!ip.includes(':')) return ip;
+  const [head, tail = ''] = ip.split('::');
+  const left = head ? head.split(':') : [];
+  const right = tail ? tail.split(':') : [];
+  const groups = ip.includes('::')
+    ? [...left, ...Array(8 - left.length - right.length).fill('0'), ...right]
+    : left;
+  return `${groups
+    .slice(0, 4)
+    .map((g) => g.toLowerCase().replace(/^0+(?=.)/, ''))
+    .join(':')}::/64`;
+}
 
 /**
  * Limits the wrong PINs an address may try (#57): every event that takes a PIN

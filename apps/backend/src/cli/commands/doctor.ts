@@ -12,6 +12,7 @@ import {
 import { migrationStatus } from './migrate-status';
 import { SETTING_LIST, SETTINGS } from '@quiz-dock/contracts';
 import type { SettingsService } from '../../admin/settings/settings.service';
+import { IDP_TIMEOUT_MS } from '../../auth/oidc/oidc-client';
 
 export interface DoctorDeps {
   prisma: Pick<PrismaService, '$queryRaw'>;
@@ -82,6 +83,15 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
     try {
       await deps.prisma.$queryRaw`SELECT 1`;
       out.ok('PostgreSQL reachable', { code: 'doctor.postgres_ok' });
+      // The application needs to own its database, not the whole server. The single
+      // image is left out: its PostgreSQL answers from inside the container only.
+      const [role] = await deps.prisma.$queryRaw<{ rolsuper: boolean }[]>`
+        SELECT rolsuper FROM pg_roles WHERE rolname = current_user`;
+      if (role?.rolsuper && settings.get(SETTINGS.QUIZDOCK_FLAVOR) !== 'standalone')
+        out.warn(
+          'QuizDock connects as a PostgreSQL superuser: a flaw in it would reach every database of the server. A new install gets a role of its own (QUIZDOCK_DB_USER). Nothing to do for now: a coming release of the quizdock script will move an existing install to it.',
+          { code: 'doctor.postgres_superuser' },
+        );
       const status = await migrationStatus(deps.prisma, deps.migrationsDir);
       out.ok(`${status.applied.length} migration(s) applied`, {
         code: 'doctor.migrations_applied',
@@ -169,7 +179,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
         });
       let jwksUri = oidc.jwksUri ?? undefined;
       try {
-        const res = await deps.fetch(url);
+        const res = await deps.fetch(url, { signal: AbortSignal.timeout(IDP_TIMEOUT_MS) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const doc = (await res.json()) as Record<string, unknown>;
         for (const key of ['authorization_endpoint', 'token_endpoint', 'jwks_uri']) {
@@ -191,7 +201,7 @@ export async function doctor(out: Output, deps: DoctorDeps): Promise<boolean> {
       }
       if (jwksUri) {
         try {
-          const res = await deps.fetch(jwksUri);
+          const res = await deps.fetch(jwksUri, { signal: AbortSignal.timeout(IDP_TIMEOUT_MS) });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const jwks = (await res.json()) as { keys?: unknown[] };
           if (!Array.isArray(jwks.keys) || jwks.keys.length === 0) throw new Error('no keys');

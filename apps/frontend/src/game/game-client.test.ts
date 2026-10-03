@@ -25,7 +25,13 @@ vi.mock('socket.io-client', () => ({
   },
 }));
 
-import { connectHost, connectPlayer, disconnectGame } from './game-client';
+import {
+  connectHost,
+  connectPlayer,
+  disconnectGame,
+  emitWithAckOrError,
+  ensureGameSocket,
+} from './game-client';
 
 describe('game client connections (audit F2)', () => {
   afterEach(() => {
@@ -50,5 +56,55 @@ describe('game client connections (audit F2)', () => {
     socket.connected = true; // were it still pinging, the ping would go out
     vi.advanceTimersByTime(120_000);
     expect(socket.emit).not.toHaveBeenCalled();
+  });
+});
+
+describe('one socket, one room', () => {
+  afterEach(() => {
+    disconnectGame();
+    made.length = 0;
+  });
+
+  it("another room's page gets a socket of its own; the same room keeps it", async () => {
+    const a = await ensureGameSocket('guest', '111111');
+    expect(await ensureGameSocket('guest', '111111')).toBe(a);
+    expect(await ensureGameSocket('guest')).toBe(a); // a peek binds nothing
+    const b = await ensureGameSocket('guest', '222222');
+    expect(b).not.toBe(a);
+    expect(made.map((s) => s.connected)).toEqual([false, true]);
+  });
+
+  it('a socket opened before its PIN is known takes the first room that asks', async () => {
+    const created = await connectHost(); // host:create answers the PIN afterwards
+    expect(await ensureGameSocket('host', '333333')).toBe(created);
+    expect(await ensureGameSocket('host', '444444')).not.toBe(created);
+  });
+});
+
+describe('emitWithAckOrError', () => {
+  afterEach(() => {
+    disconnectGame();
+    made.length = 0;
+  });
+  type Ack = (res: unknown) => void;
+
+  it('rejects with the refusal the server gives as its answer', async () => {
+    const s = connectPlayer();
+    made[0].emit.mockImplementation((_e: string, _p: unknown, ack: Ack) =>
+      ack({ ok: false, error: { code: 'session.not_found' } }),
+    );
+    await expect(emitWithAckOrError(s, 'player:peek', { pin: '1' })).rejects.toMatchObject({
+      code: 'session.not_found',
+    });
+  });
+
+  it("another request's refusal does not fail this one", async () => {
+    const s = connectPlayer();
+    const [fake] = made;
+    fake.emit.mockImplementation((_e: string, _p: unknown, ack: Ack) => {
+      for (const h of fake.handlers.get('error') ?? []) h({ code: 'auth.host_required' });
+      ack({ pin: '123456' });
+    });
+    await expect(emitWithAckOrError(s, 'host:next-quiz', {})).resolves.toEqual({ pin: '123456' });
   });
 });

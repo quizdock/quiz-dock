@@ -12,7 +12,6 @@
     "image_choice": "Elección con imágenes"
   },
   "header": {
-    "title": "Editor de quiz",
     "history": "Historial",
     "deleteQuiz": "Eliminar quiz",
     "preview": "Vista previa",
@@ -71,7 +70,6 @@
     "saved": "Guardado"
   },
   "broadcast": {
-    "title": "Difusión",
     "fullCaptureHelp": "Conserva el detalle de las respuestas de cada jugador (seguimiento individual). Actívalo antes de presentar.",
     "publish": "Publicar (listo)",
     "presenting": "Iniciando…",
@@ -79,8 +77,6 @@
     "backToDraft": "Volver a borrador",
     "archive": "Archivar",
     "restore": "Restaurar",
-    "archiveTitle": "Archivo",
-    "archiveHelp": "Un cuestionario archivado sale de la lista principal; se puede restaurar.",
     "fullCaptureNext": "Captura completa de respuestas la próxima vez que se juegue"
   },
   "feedback": {
@@ -102,7 +98,6 @@
     "add": "Añadir",
     "moveUp": "Subir",
     "moveDown": "Bajar",
-    "edit": "Editar",
     "deleteQuestion": "Eliminar la pregunta",
     "dragHandle": "Arrastrar para reordenar",
     "itemsCount_one": "{{count}} elemento",
@@ -212,26 +207,28 @@
     "emptySkipped": "Vacío — se omite al guardar.",
     "moveToDraft": {
       "title": "¿Guardar esta diapositiva vacía?",
-      "description": "Este cuestionario está publicado: puede presentarse en cualquier momento y una diapositiva debe mostrar algo. Vuelve a pasarlo a borrador para guardar esta tal cual, o sigue editándola."
+      "description": "Este quiz está publicado: puede presentarse en cualquier momento y una diapositiva debe mostrar algo. Vuelve a pasarlo a borrador para guardar esta tal cual, o sigue editándola."
     }
   },
+  "formSaved": "Guardado",
   "discardConfirm": {
     "title": "¿Descartar los cambios?",
     "description": "Los cambios no guardados se perderán.",
-    "confirmLabel": "Descartar"
+    "confirmLabel": "Descartar",
+    "discardAndContinue": "Descartar y continuar",
+    "saveAndContinue": "Guardar y continuar",
+    "saveAndClose": "Guardar y cerrar"
   },
   "emptyPane": {
-    "emptyTitle": "Este cuestionario está vacío",
+    "emptyTitle": "Este quiz está vacío",
     "emptyHint": "Empieza con una pregunta o con una diapositiva de introducción.",
     "selectTitle": "Nada seleccionado",
     "selectHint": "Elige un elemento de la lista para editarlo."
   },
   "deleteConfirm": {
-    "hint": "Eliminar este cuestionario y todo su historial.",
     "title": "¿Eliminar este quiz?",
     "description": "«{{title}}» y sus preguntas se eliminarán definitivamente. Esta acción es irreversible.",
-    "confirmLabel": "Eliminar",
-    "zoneTitle": "Zona peligrosa"
+    "confirmLabel": "Eliminar"
   },
   "questionForm": {
     "typeLabel": "Tipo",
@@ -269,8 +266,6 @@
     "optionAriaLabel": "opción {{index}}",
     "dragOption": "Arrastrar para reordenar la opción",
     "optionPlaceholder": "Opción {{index}}",
-    "colorAriaLabel": "color {{index}}",
-    "shapeAriaLabel": "forma {{index}}",
     "orderAriaLabel": "Lugar de la respuesta {{index}} en el orden correcto",
     "correct": "Correcta",
     "removeOption": "Quitar la opción {{index}}",
@@ -283,7 +278,6 @@
     "numericToleranceLabel": "Tolerancia ±",
     "submitUpdate": "Guardar",
     "submitAdd": "Añadir",
-    "cancel": "Cancelar",
     "invalidError": "Pregunta no válida.",
     "scoringLabel": "Puntuación",
     "scoring": {
@@ -367,7 +361,7 @@
     "addAnswerMax": "{{max}} respuestas máx.",
     "moveToDraft": {
       "title": "¿Guardar esta pregunta sin terminar?",
-      "description": "Este cuestionario está publicado: puede presentarse en cualquier momento y solo admite preguntas completas. Vuelve a pasarlo a borrador para guardar esta tal cual, o sigue editándola.",
+      "description": "Este quiz está publicado: puede presentarse en cualquier momento y solo admite preguntas completas. Vuelve a pasarlo a borrador para guardar esta tal cual, o sigue editándola.",
       "confirmLabel": "Pasar a borrador y guardar",
       "cancelLabel": "Seguir editando"
     },
@@ -532,8 +526,8 @@
     "checking": "Comprobando el quiz…",
     "failed": "No se pudo preparar la exportación.",
     "check": {
-      "ready": "El cuestionario está listo",
-      "notReady": "El cuestionario no está listo",
+      "ready": "El quiz está listo",
+      "notReady": "El quiz no está listo",
       "language": "Idioma: {{language}}",
       "license": "Licencia: {{license}}",
       "noLicense": "Sin licencia",
@@ -556,11 +550,11 @@
       "audio": "Sonido"
     },
     "slugLabel": "Nombre corto",
-    "slugHelp": "Cómo reconoce el catálogo este cuestionario en tu repositorio. Archivo: {{file}}",
-    "slugChanged": "Cambiarlo (antes «{{previous}}») crea un cuestionario nuevo para el catálogo: borra el archivo antiguo de tu repositorio."
+    "slugHelp": "Cómo reconoce el catálogo este quiz en tu repositorio. Archivo: {{file}}",
+    "slugChanged": "Cambiarlo (antes «{{previous}}») crea un quiz nuevo para el catálogo: borra el archivo antiguo de tu repositorio."
   },
   "readOnly": {
-    "notice": "Cuestionario de {{owner}}: puedes consultarlo, no modificarlo.",
+    "notice": "Quiz de {{owner}}: puedes consultarlo, no modificarlo.",
     "createFrom": "Crear un quiz a partir de esto",
     "props": {
       "orderShown": "Listadas en el orden correcto.",
@@ -573,7 +567,7 @@
   "publishChecklist": {
     "title_one": "1 paso por terminar antes de publicar",
     "title_other": "{{count}} pasos por terminar antes de publicar",
-    "description": "Un cuestionario publicado puede presentarse en cualquier momento, así que cada pregunta debe estar completa. Un borrador guarda todo lo que guardes.",
+    "description": "Un quiz publicado puede presentarse en cualquier momento, así que cada pregunta debe estar completa. Un borrador guarda todo lo que guardes.",
     "untitled": "Pregunta sin texto",
     "open": "Abrir"
   },

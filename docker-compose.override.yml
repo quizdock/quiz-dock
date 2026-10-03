@@ -8,7 +8,7 @@ services:
   # tourne depuis la machine. La stack interne continue d'utiliser `postgres:5432`.
   postgres:
     ports:
-      - '${POSTGRES_PORT:-15432}:5432'
+      - '127.0.0.1:${POSTGRES_PORT:-15432}:5432' # this computer only (live/live)
 
   # The sample IdP always runs in dev, so OIDC is one variable away:
   # `AUTH_MODE=oidc docker compose up -d backend` (and back without it). The base
@@ -19,7 +19,7 @@ services:
   # Exposé en dev pour les tests d'intégration WS/Redis depuis l'hôte.
   redis:
     ports:
-      - '${REDIS_PORT:-16379}:6379'
+      - '127.0.0.1:${REDIS_PORT:-16379}:6379' # this computer only (no password)
 
   backend:
     build:

@@ -1,5 +1,9 @@
 # Brand & hosting — QuizDock
 
+> **A dated record, not the current state.** Written 2026-06-24, before the first release:
+> since then the images are `fchaussin/quizdock` on Docker Hub, and the site is an Astro
+> + Starlight site carrying the Documentation (see [`../README.md`](../README.md)).
+>
 > State as of 2026-06-24. The brand comes from the `live-quizz` → `QuizDock` rename (see
 > [ADR 0003](adr/0003-rename-quizdock.md)). Positioning: **real-time live quizzes,
 > open-source and self-hostable** ("dock" ⇒ container deployment).

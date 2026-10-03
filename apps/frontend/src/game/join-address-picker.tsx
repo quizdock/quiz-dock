@@ -19,12 +19,18 @@ const CUSTOM = '__custom__';
  * choice is sent to the session (every screen follows) and remembered on this
  * browser for the next session.
  */
+/** Rooms whose address was settled in this tab: reopening the picker keeps the host's choice. */
+const settled = new Set<string>();
+
 export function JoinAddressPicker({
   current,
   onChange,
+  room,
 }: {
   current: string;
   onChange: (baseUrl: string) => void;
+  /** The room's PIN: its address is settled once, not at each opening of the picker. */
+  room?: string;
 }) {
   const { t } = useTranslation('live');
   const { data } = useGameControllerJoinAddresses();
@@ -50,10 +56,11 @@ export function JoinAddressPicker({
 
   // First time on this session: apply the remembered choice, else the best candidate
   // (public URL, then a LAN address when the console runs on localhost).
-  const [initialised, setInitialised] = useState(false);
+  const [initialised, setInitialised] = useState(() => (room ? settled.has(room) : false));
   useEffect(() => {
     if (initialised || !data) return;
     setInitialised(true);
+    if (room) settled.add(room);
     let remembered: string | null = null;
     try {
       remembered = localStorage.getItem(STORAGE_KEY);
@@ -65,7 +72,7 @@ export function JoinAddressPicker({
     // and the LAN candidates only step in on localhost, where the origin is useless.
     const preferred = data.data.publicUrl ?? (onLocalhost ? (remembered ?? lan[0] ?? null) : null);
     if (preferred && preferred !== current) onChange(preferred);
-  }, [data, initialised, current, onLocalhost, lan, onChange]);
+  }, [data, initialised, current, onLocalhost, lan, onChange, room]);
 
   const choose = (baseUrl: string) => onChange(baseUrl);
   // Remember what the session settled on (normalised by the server) for the next one.

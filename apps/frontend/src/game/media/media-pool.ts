@@ -41,6 +41,12 @@ export function preloadMedia(
   mutedVideos: string[] = [],
 ): Promise<boolean> {
   const { visual, audio } = media;
+  forgetAllBut([
+    ...slideImages,
+    ...mutedVideos,
+    ...(visual && 'url' in visual && visual.url ? [visual.url] : []),
+    ...(audio ? [audio.url] : []),
+  ]);
   slideImages.forEach(preloadImage);
   if (visual?.kind === 'image') preloadImage(visual.url);
   const loading: (HTMLMediaElement | null)[] = [];
@@ -50,6 +56,23 @@ export function preloadMedia(
   if (loading.includes(null)) return Promise.resolve(false);
   // Ready once each can play to its end without stalling; an image is not waited for.
   return Promise.all((loading as HTMLMediaElement[]).map(playable)).then(() => true);
+}
+
+/**
+ * Drops what was fetched ahead for a step that never came (the host ended the
+ * quiz, jumped ahead): each preload names the next step, the rest goes, its
+ * download stopped, rather than stay in memory for the room's lifetime.
+ */
+function forgetAllBut(urls: string[]): void {
+  const keep = new Set(urls);
+  for (const [url, el] of pool) {
+    if (keep.has(url)) continue;
+    el.pause();
+    el.removeAttribute('src');
+    el.load();
+    pool.delete(url);
+  }
+  for (const url of images.keys()) if (!keep.has(url)) images.delete(url);
 }
 
 /** Whether a step holds a sound or a video — what the room waits for (an image is not). */

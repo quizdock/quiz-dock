@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CopyPlus, LayoutGrid, List as ListIcon } from 'lucide-react';
+import { ArrowLeft, CopyPlus, Globe, LayoutGrid, List as ListIcon, SearchX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Segmented } from '@/components/ui/segmented';
 import { Select } from '@/components/ui/select';
 import { TagFilter, tagsOf } from '@/components/tag-filter';
 import { ListSkeleton, LoadFailed } from '@/components/ui/loading';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useStoredView } from '@/lib/use-stored-view';
 import {
   useCommunityControllerList,
@@ -91,9 +92,9 @@ export function CommunityPage() {
         </p>
       ) : null}
       {list.isSuccess && !entries.length ? (
-        <p className="text-muted-foreground rounded-lg border border-dashed p-6">
+        <EmptyState icon={Globe} size="large">
           {t('community.empty')}
-        </p>
+        </EmptyState>
       ) : null}
       {entries.length ? (
         <>
@@ -162,11 +163,7 @@ export function CommunityPage() {
           <p className="text-muted-foreground text-sm" role="status">
             {t('templateCount', { count: filtered.length })}
           </p>
-          {!filtered.length ? (
-            <p className="text-muted-foreground rounded-lg border border-dashed p-6">
-              {t('noMatch')}
-            </p>
-          ) : null}
+          {!filtered.length ? <EmptyState icon={SearchX}>{t('noMatch')}</EmptyState> : null}
           <ul
             className={
               view === 'grid' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-col gap-2'

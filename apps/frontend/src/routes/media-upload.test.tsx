@@ -34,6 +34,15 @@ function renderUpload(value: string | null, onChange = vi.fn()) {
 describe('MediaUpload', () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it('the file picker is reached by the keyboard (hidden from sight only)', () => {
+    mockApi([LIMITS]);
+    renderUpload(null);
+    const input = screen.getByLabelText('Fichier média');
+    expect(input).not.toHaveAttribute('hidden');
+    input.focus();
+    expect(document.activeElement).toBe(input);
+  });
+
   it('uploade un fichier et renvoie le mediaId', async () => {
     mockApi([
       LIMITS,
