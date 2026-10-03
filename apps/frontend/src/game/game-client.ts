@@ -19,6 +19,8 @@ const ACK_TIMEOUT_MS = 8_000;
 // Singleton : le socket survit aux navigations entre lobby et
 // écrans de jeu, et n'est jamais recréé par un effet de montage.
 let socket: GameSocket | null = null;
+/** The room the socket serves, once a live page took it: one socket, one room. */
+let socketPin: string | null = null;
 // Connexion en vol : dédoublonne les appels concurrents (double-montage StrictMode)
 // pour ne jamais créer deux sockets `forceNew` dont le premier fuirait.
 let connecting: Promise<GameSocket> | null = null;
@@ -27,6 +29,7 @@ let connecting: Promise<GameSocket> | null = null;
 export function disconnectGame(): void {
   socket?.disconnect();
   socket = null;
+  socketPin = null;
 }
 
 /**
@@ -35,11 +38,18 @@ export function disconnectGame(): void {
  * (`host` = authentifié ; `guest` = spectateur/joueur). Les appels concurrents
  * partagent la même promesse → un seul socket.
  */
-export function ensureGameSocket(role: 'host' | 'guest'): Promise<GameSocket> {
-  if (socket) return Promise.resolve(socket);
+export function ensureGameSocket(role: 'host' | 'guest', pin?: string): Promise<GameSocket> {
+  // Another room's page: the socket of the previous one goes, or it would keep
+  // receiving that room's events (the server leaves it there).
+  if (socket && pin && socketPin && socketPin !== pin) disconnectGame();
+  if (socket) {
+    if (pin) socketPin = pin;
+    return Promise.resolve(socket);
+  }
   if (connecting) return connecting;
   connecting = (role === 'host' ? connectHost() : Promise.resolve(connectPlayer())).then((s) => {
     connecting = null;
+    if (pin) socketPin = pin;
     return s;
   });
   return connecting;
@@ -178,7 +188,7 @@ export async function joinSession(
   avatar?: string,
   presence?: PlayerPresence,
 ): Promise<{ sessionToken: string; playerId: string; nickname: string }> {
-  const s = await ensureGameSocket('guest');
+  const s = await ensureGameSocket('guest', pin);
   const res = await emitWithAckOrError<{
     sessionToken: string;
     playerId: string;

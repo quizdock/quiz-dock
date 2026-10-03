@@ -475,7 +475,7 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
     } satisfies Partial<ServerToClientEvents>;
     const events = Object.entries(handlers) as [keyof ServerToClientEvents, never][];
 
-    void ensureGameSocket(role === 'host' ? 'host' : 'guest').then((sock) => {
+    void ensureGameSocket(role === 'host' ? 'host' : 'guest', pin).then((sock) => {
       if (!active) return;
       s = sock;
       socketRef.current = sock;

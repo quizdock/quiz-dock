@@ -25,7 +25,7 @@ vi.mock('socket.io-client', () => ({
   },
 }));
 
-import { connectHost, connectPlayer, disconnectGame } from './game-client';
+import { connectHost, connectPlayer, disconnectGame, ensureGameSocket } from './game-client';
 
 describe('game client connections (audit F2)', () => {
   afterEach(() => {
@@ -50,5 +50,27 @@ describe('game client connections (audit F2)', () => {
     socket.connected = true; // were it still pinging, the ping would go out
     vi.advanceTimersByTime(120_000);
     expect(socket.emit).not.toHaveBeenCalled();
+  });
+});
+
+describe('one socket, one room', () => {
+  afterEach(() => {
+    disconnectGame();
+    made.length = 0;
+  });
+
+  it("another room's page gets a socket of its own; the same room keeps it", async () => {
+    const a = await ensureGameSocket('guest', '111111');
+    expect(await ensureGameSocket('guest', '111111')).toBe(a);
+    expect(await ensureGameSocket('guest')).toBe(a); // a peek binds nothing
+    const b = await ensureGameSocket('guest', '222222');
+    expect(b).not.toBe(a);
+    expect(made.map((s) => s.connected)).toEqual([false, true]);
+  });
+
+  it('a socket opened before its PIN is known takes the first room that asks', async () => {
+    const created = await connectHost(); // host:create answers the PIN afterwards
+    expect(await ensureGameSocket('host', '333333')).toBe(created);
+    expect(await ensureGameSocket('host', '444444')).not.toBe(created);
   });
 });

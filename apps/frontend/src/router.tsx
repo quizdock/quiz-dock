@@ -193,6 +193,8 @@ export const controlRoute = createRoute({
   path: '/session/$pin/console',
   beforeLoad: requireAuth,
   component: ControlPage,
+  // Another PIN is another room: its page starts afresh.
+  remountDeps: ({ params }) => params.pin,
 });
 
 // Écran de jeu projeté (grand écran, §4). Spectateur en lecture seule, aucune auth.
@@ -200,6 +202,8 @@ export const screenRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/session/$pin/projection',
   component: ScreenPage,
+  // Another PIN is another room: its page starts afresh.
+  remountDeps: ({ params }) => params.pin,
 });
 
 export const sessionRedirectRoute = createRoute({
@@ -276,6 +280,8 @@ export const joinWithPinRoute = createRoute({
   path: '/join/$pin',
   beforeLoad: requireAuthWhenOidc,
   component: PlayerPage,
+  // Another PIN is another room: its page starts afresh.
+  remountDeps: ({ params }) => params.pin,
 });
 
 /**
