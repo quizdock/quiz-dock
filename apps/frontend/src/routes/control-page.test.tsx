@@ -23,7 +23,7 @@ const view = (partial: Partial<GameView>): GameView => ({
   error: null,
   state: GameState.Lobby,
   questionIndex: -1,
-  totalQuestions: 0,
+  totalQuestions: 3, // a quiz picked: a lobby with none has 0
   question: null,
   slide: null,
   answerCount: null,
@@ -198,7 +198,40 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
     vi.unstubAllGlobals();
   });
 
-  it('at the podium, opens the host’s next playable quiz, results kept', async () => {
+  it('at the podium, the room goes back to its lobby, results kept', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      state: GameState.Podium,
+      quizId: 'q1',
+      podium: { podium: [{ nickname: 'Ada', score: 900, rank: 1 }] },
+    });
+    renderApp('/session/482913/console');
+    fireEvent.click(await screen.findByRole('button', { name: /Retour au lobby/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Retour au lobby' }));
+    expect(fakeSocket.emit).toHaveBeenCalledWith(
+      'host:back-to-lobby',
+      { pin: '482913', archive: true },
+      expect.any(Function),
+    );
+  });
+
+  it('a quiz in progress is stopped from its menu, its scores kept or not', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({ state: GameState.Answering, quizId: 'q1' });
+    renderApp('/session/482913/console');
+    fireEvent.click(await screen.findByRole('button', { name: /Arrêter le quiz/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('checkbox'));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Arrêter le quiz' }));
+    expect(fakeSocket.emit).toHaveBeenCalledWith(
+      'host:back-to-lobby',
+      { pin: '482913', archive: false },
+      expect.any(Function),
+    );
+  });
+
+  it('in a lobby with no quiz, picks the host’s next playable quiz', async () => {
     localStorage.setItem('live.localUser', 'Animateur');
     mockApi([
       {
@@ -225,9 +258,9 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
       },
     ]);
     hookState.value = view({
-      state: GameState.Podium,
-      quizId: 'q1',
-      podium: { podium: [{ nickname: 'Ada', score: 900, rank: 1 }] },
+      state: GameState.Lobby,
+      quizId: '',
+      totalQuestions: 0,
       standings: {
         quizzesPlayed: 2,
         playedQuizIds: ['q1', 'q6'],
@@ -236,9 +269,10 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
     });
     renderApp('/session/482913/console');
 
-    // The quiz's podium, then the room's.
+    // Nothing to start: the room's standings, and the quiz to choose.
     expect(await screen.findByText(/Classement du salon/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Quiz suivant/ }));
+    expect(screen.queryByRole('button', { name: /Démarrer/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Choisir le quiz/ }));
     const picker = await screen.findByRole('combobox', { name: 'Quiz' });
     fireEvent.focus(picker);
     await waitFor(() =>
@@ -266,7 +300,7 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ouvrir ce quiz/ }));
     expect(fakeSocket.emit).toHaveBeenCalledWith(
       'host:next-quiz',
-      { pin: '482913', quizId: 'q2', archive: true },
+      { pin: '482913', quizId: 'q2' },
       expect.any(Function),
     );
   });

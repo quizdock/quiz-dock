@@ -4,7 +4,8 @@ import { appConfig } from '../config';
 import { ImageChoiceGrid, optionLabel } from '../game/image-choice';
 import {
   LobbyCountdown,
-  NextQuizButton,
+  BackToLobbyButton,
+  QuizPickButton,
   RoomStandingsPanel,
   roomLabel,
 } from '../game/room-components';
@@ -86,6 +87,7 @@ import { type QuestionClock, useQuestionClock } from '../game/use-countdown';
 import { ChromiumNotice } from '@/components/chromium-notice';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { ParticipantPreview } from '../game/participant-preview';
+import { ScaledStage } from '../game/slide-stage';
 import { joinBase, joinHostLabel, joinUrlFor } from '../game/join-url';
 import { JoinAddressPicker } from '../game/join-address-picker';
 import { type GameView, type RosterPlayer, useGameSession } from '../game/use-game-session';
@@ -140,7 +142,16 @@ function HostConsole({
 
   const joinUrl = joinUrlFor(view, pin);
   const screenUrl = `${window.location.origin}/session/${pin}/projection`;
-  const emit = (event: 'host:start' | 'host:reveal' | 'host:next') => socket?.emit(event, { pin });
+  // A double click on Next moves one step: the second, within a moment, is dropped (the
+  // reveal's Next would otherwise skip the quiz's standings that follow it).
+  const lastNext = useRef(0);
+  const emit = (event: 'host:start' | 'host:reveal' | 'host:next') => {
+    if (event === 'host:next') {
+      if (Date.now() - lastNext.current < NEXT_DEBOUNCE_MS) return;
+      lastNext.current = Date.now();
+    }
+    socket?.emit(event, { pin });
+  };
   const [tab, setTab] = useState<HostTab>('control');
   // The right column's tab; null = the phase's default (players in the lobby, the outline after).
   const [side, setSide] = useState<SideTab | null>(null);
@@ -276,6 +287,8 @@ function HostConsole({
   // ── The frame (UI system §2.1): the same in every phase ─────────────────────
   const state = view.state;
   const inLobby = state === 'LOBBY' || state === null;
+  // A lobby the room went back to after a quiz: the next is picked here first.
+  const noQuiz = state === 'LOBBY' && view.totalQuestions === 0;
   const reviewing = !!view.nav?.review;
   const steps = outlineSteps(view.outline, view.outlineSlides);
   const here = stepPosition(steps, view);
@@ -398,18 +411,6 @@ function HostConsole({
   // Row 2 — what I set and how I stop.
   const rowTwo = (
     <div className="flex flex-wrap items-center gap-2">
-      <Tooltip label={t('control.modeAutoTooltip')}>
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <Switch
-            checked={view.mode === 'auto'}
-            onCheckedChange={(auto) => setMode(auto ? 'auto' : 'manual')}
-            aria-label={t('control.modeAuto')}
-          />
-          {t('control.modeAuto')}
-        </label>
-      </Tooltip>
-      <PauseButton paused={view.paused} disabled={!pausable} onToggle={setPaused} />
-      <span aria-hidden className="bg-border mx-1 h-6 w-px" />
       <LockButton locked={view.joinLocked} onToggle={setJoinLocked} />
       <RoomSoundsButton
         sounds={view.sounds}
@@ -420,36 +421,51 @@ function HostConsole({
         onToggle={(on) => socket?.emit('host:motion', { pin, on })}
       />
       {screenButton}
-      <span className="flex-1" />
-      <span aria-hidden className="bg-border mx-1 h-6 w-px" />
-      {inLobby ? (
-        <NextQuizButton
-          pin={pin}
-          socket={socket}
-          mode="lobby"
-          currentQuizId={view.quizId}
-          playedQuizIds={view.standings?.playedQuizIds}
+    </div>
+  );
+
+  // The transport, above the outline: the pace (auto or not, play / pause), then what
+  // changes or stops the quiz, and what closes the room.
+  const transport = (
+    <div className="bg-card flex flex-col gap-3 rounded-xl border p-3">
+      <div className="flex items-center justify-between gap-2">
+        <Tooltip label={t('control.modeAutoTooltip')}>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <Switch
+              checked={view.mode === 'auto'}
+              onCheckedChange={(auto) => setMode(auto ? 'auto' : 'manual')}
+              aria-label={t('control.modeAuto')}
+            />
+            {t('control.modeAuto')}
+          </label>
+        </Tooltip>
+        <PauseButton paused={view.paused} disabled={!pausable} onToggle={setPaused} />
+      </div>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {inLobby ? (
+          noQuiz ? null : (
+            <QuizPickButton
+              pin={pin}
+              socket={socket}
+              currentQuizId={view.quizId}
+              playedQuizIds={view.standings?.playedQuizIds}
+            />
+          )
+        ) : phase === 'podium' ? null : (
+          <BackToLobbyButton pin={pin} socket={socket} mode="stop" />
+        )}
+        <EndGameButton
+          label={inLobby ? t('control.stopSession') : t('control.endSession')}
+          offerArchive={!inLobby}
+          onConfirm={endGame}
         />
-      ) : phase === 'podium' ? null : (
-        <NextQuizButton
-          pin={pin}
-          socket={socket}
-          mode="close"
-          currentQuizId={view.quizId}
-          playedQuizIds={view.standings?.playedQuizIds}
-        />
-      )}
-      <EndGameButton
-        label={inLobby ? t('control.stopSession') : t('control.endSession')}
-        offerArchive={!inLobby}
-        onConfirm={endGame}
-      />
+      </div>
     </div>
   );
 
   // The right column: the whole quiz, or the players.
   const sideColumn = (
-    <aside className="bg-card flex min-h-0 flex-col gap-2 rounded-xl border p-3 lg:max-h-[calc(100dvh-16rem)]">
+    <aside className="bg-card flex min-h-0 flex-col gap-2 rounded-xl border p-3 lg:max-h-[calc(100dvh-24rem)]">
       <div className="flex items-center gap-2">
         <div role="tablist" className="bg-muted flex rounded-md p-0.5 text-sm">
           {(['outline', 'players'] as const).map((id) => (
@@ -548,7 +564,25 @@ function HostConsole({
   let status: React.ReactNode;
   let primary: React.ReactNode;
 
-  if (phase === 'lobby') {
+  if (phase === 'lobby' && noQuiz) {
+    // Back from a quiz: the room waits in its lobby for the host to pick the next.
+    centre = (
+      <>
+        {invite}
+        {view.standings ? <RoomStandingsPanel standings={view.standings} max={5} /> : null}
+        <p className="text-muted-foreground text-sm">{t('control.noQuizYetHint')}</p>
+      </>
+    );
+    status = <ReadinessLine readiness={view.readiness} fallbackCount={view.players.length} />;
+    primary = (
+      <QuizPickButton
+        pin={pin}
+        socket={socket}
+        currentQuizId={null}
+        playedQuizIds={view.standings?.playedQuizIds}
+      />
+    );
+  } else if (phase === 'lobby') {
     centre = (
       <>
         {invite}
@@ -707,8 +741,8 @@ function HostConsole({
     centre = (
       <>
         {reviewing ? <ReviewBanner step={t('control.stepSlide')} /> : null}
-        {/* Reduced base: the slide is a preview in a card, not the projection. */}
-        <div className="flex rounded-xl border p-5 text-[0.8rem] sm:p-6">
+        {/* The slide as the projection draws it: its 16:9 canvas, scaled to the card. */}
+        <ScaledStage className="rounded-xl border">
           <SlidePlaybackContext.Provider
             value={{
               mode: 'still',
@@ -723,7 +757,7 @@ function HostConsole({
               <SlideView key={slide.slideIndex} slide={slide} />
             </RoomVariables>
           </SlidePlaybackContext.Provider>
-        </div>
+        </ScaledStage>
         {soundMedia ? (
           <ConsoleTransport
             key={`s${slide.slideIndex}`}
@@ -765,15 +799,7 @@ function HostConsole({
       </div>
     );
     status = t('control.statusQuizOver');
-    primary = (
-      <NextQuizButton
-        pin={pin}
-        socket={socket}
-        mode="podium"
-        currentQuizId={view.quizId}
-        playedQuizIds={view.standings?.playedQuizIds}
-      />
-    );
+    primary = <BackToLobbyButton pin={pin} socket={socket} mode="podium" />;
   } else if (state === 'LEADERBOARD' && !reviewing) {
     // The quiz's standings after a reveal (#198): what the projection shows.
     centre = (
@@ -843,6 +869,7 @@ function HostConsole({
     const standingsNext =
       state === 'REVEAL' &&
       question.type !== 'poll' &&
+      question.basePoints > 0 &&
       question.questionIndex + 1 < view.totalQuestions;
     primary = reviewing ? (
       backToLive
@@ -964,21 +991,25 @@ function HostConsole({
         {rowTwo}
         <ChromiumNotice />
       </header>
-      {tab !== 'control' ? (
-        tab === 'screen' ? (
-          <div className="overflow-hidden rounded-xl border">
-            {/* The console's own session: a second one would re-join the room on the host's socket. */}
-            <ScreenSurface pin={pin} view={view} socket={socket} role="preview" />
-          </div>
-        ) : (
-          <ParticipantPreview view={view} pin={pin} />
-        )
-      ) : (
-        <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="flex min-w-0 flex-col gap-5">{centre}</div>
-          {sideColumn}
+      {/* Whatever the view, the participants and the quiz's outline stay beside it. */}
+      <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
+        {/* First on a narrow screen; on a wide one, at the top of the right column. */}
+        <div className="lg:col-start-2 lg:row-start-1">{transport}</div>
+        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          {tab === 'screen' ? (
+            // The projection's 16:9, scaled to the column. The console's own session: a
+            // second one would re-join the room on the host's socket.
+            <ScaledStage className="rounded-xl border">
+              <ScreenSurface pin={pin} view={view} socket={socket} role="preview" fit="box" />
+            </ScaledStage>
+          ) : tab === 'player' ? (
+            <ParticipantPreview view={view} pin={pin} />
+          ) : (
+            <div className="flex min-w-0 flex-col gap-5">{centre}</div>
+          )}
         </div>
-      )}
+        <div className="lg:col-start-2 lg:row-start-2">{sideColumn}</div>
+      </div>
       <ActionBar status={status} primary={primary} />
     </section>
   );
@@ -1414,8 +1445,20 @@ function ParticipantsList({
     return <p className="text-muted-foreground text-sm">{t('control.noParticipants')}</p>;
   }
   const byId = new Map(scores?.map((row) => [row.playerId, row]));
-  const scored = scores?.some((row) => row.quizScore > 0 || row.roomScore > 0) ?? false;
-  const order = sort ?? (scored ? { key: 'rank', desc: false } : null);
+  const quizScored = scores?.some((row) => row.quizScore > 0) ?? false;
+  const roomScored = scores?.some((row) => row.roomScore > 0) ?? false;
+  // Ranked by the quiz once it scored, else by the room (a lobby after a quiz), else arrival.
+  const order: StandingsSort | null =
+    sort ??
+    (quizScored
+      ? { key: 'rank', desc: false }
+      : roomScored
+        ? { key: 'roomScore', desc: true }
+        : null);
+  // The rank shown is the room's when the list follows it, else the quiz's.
+  const byRoom = order?.key === 'roomScore' || (!quizScored && roomScored);
+  const rankOf = (row: HostScoreRow | undefined) =>
+    !row ? '' : byRoom ? (roomScored ? row.roomRank : '') : quizScored ? row.quizRank : '';
   const rows = players.map((player, arrival) => ({
     player,
     arrival,
@@ -1426,16 +1469,23 @@ function ParticipantsList({
       order.key === 'nickname'
         ? row.player.nickname.toLocaleLowerCase()
         : order.key === 'rank'
-          ? (row.score?.quizRank ?? players.length + row.arrival)
+          ? ((byRoom ? row.score?.roomRank : row.score?.quizRank) ?? players.length + row.arrival)
           : (row.score?.[order.key] ?? 0);
     rows.sort((a, b) => {
       const [x, y] = [value(a), value(b)];
       const cmp = typeof x === 'string' ? x.localeCompare(String(y)) : x - (y as number);
-      return (order.desc ? -cmp : cmp) || a.arrival - b.arrival;
+      // Equal scores: the server's own order (its rank), then arrival.
+      const tie =
+        order.key === 'roomScore'
+          ? (a.score?.roomRank ?? 0) - (b.score?.roomRank ?? 0)
+          : order.key === 'quizScore'
+            ? (a.score?.quizRank ?? 0) - (b.score?.quizRank ?? 0)
+            : 0;
+      return (order.desc ? -cmp : cmp) || tie || a.arrival - b.arrival;
     });
   }
   /** A header that sorts: ascending first for the rank and the name, descending for a score. */
-  const header = (key: StandingsSort['key'], label: string, className: string) => {
+  const header = (key: StandingsSort['key'], label: string, className: string, name?: string) => {
     const active = order?.key === key;
     const descFirst = key === 'quizScore' || key === 'roomScore';
     return (
@@ -1446,6 +1496,7 @@ function ParticipantsList({
       >
         <button
           type="button"
+          aria-label={name}
           onClick={() => setSort(active ? { key, desc: !order.desc } : { key, desc: descFirst })}
           className={cn(
             'hover:text-foreground inline-flex items-center gap-0.5',
@@ -1468,7 +1519,7 @@ function ParticipantsList({
     <table className="w-full table-fixed border-collapse text-sm">
       <thead className="text-muted-foreground text-xs">
         <tr>
-          {header('rank', '#', 'w-7 text-left')}
+          {header('rank', '#', 'w-7 text-left', t('control.columnRank'))}
           {header('nickname', t('control.columnParticipant'), 'text-left')}
           <th scope="col" className="w-9">
             <span className="sr-only">{t('control.columnStatus')}</span>
@@ -1483,9 +1534,7 @@ function ParticipantsList({
       <tbody>
         {rows.map(({ player: p, score }) => (
           <tr key={p.playerId} className="hover:bg-accent/50">
-            <td className="text-muted-foreground px-1 py-1 tabular-nums">
-              {score && scored ? score.quizRank : ''}
-            </td>
+            <td className="text-muted-foreground px-1 py-1 tabular-nums">{rankOf(score)}</td>
             <td className="px-1 py-1">
               <span className="flex min-w-0 items-center gap-1.5">
                 <Avatar name={p.avatar || p.nickname} size={24} />
@@ -1750,6 +1799,9 @@ function ChronoControls({
     </div>
   );
 }
+
+/** How long a second Next is taken for the same click (ms). */
+const NEXT_DEBOUNCE_MS = 800;
 
 type HostTab = 'control' | 'screen' | 'player';
 const HOST_TABS: HostTab[] = ['control', 'screen', 'player'];

@@ -335,8 +335,9 @@ on its own.
 - **The way back**: a quiz ends at its podium, or the host stops it on the way with
   **Stop the quiz…** (« Arrêter le quiz… »), the only way to give one up. Either way the
   room goes back to its lobby **with no quiz chosen**, and the next quiz is picked **in
-  the lobby** (today it is picked at the podium, or in the stop dialog, before the lobby
-  opens).
+  the lobby** (`host:back-to-lobby`, then `host:next-quiz` there); the stop dialog asks
+  whether to keep what was played (archived as interrupted, counted in the room's
+  standings), the podium's whether to keep the results.
 - **A 30 s countdown** runs once the lobby has its quiz; at zero, the quiz starts. Only a
   missing quiz holds it: *Ready!* never blocks (#104).
 - **Everyone ready**: when every player in the lobby has pressed *Ready!* and the quiz is

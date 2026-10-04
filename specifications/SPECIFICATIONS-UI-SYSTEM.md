@@ -68,7 +68,8 @@ The live screens (projection, phones) move between steps; the rest of the app do
 
 ### 2.1 Console
 - **Top, row 1** — where I am, in what state, what I look at: room and quiz, PIN (opens the invitation: QR, address, share, invitation address) at any moment, participants (opens the *Players* tab), phase; the **Console · Projection · Participant** views, in every phase (Tab key).
-- **Top, row 2** — what I set and how I stop: *Auto* switch, *Pause* (always there, greyed when there is nothing to pause, Space key shown) │ *Open/Closed to newcomers*, *Sounds* (the room mixer), *Projection window* │ *Change quiz* (lobby) or *Stop the quiz…*, *Close room…* (red outline).
+- **Top, row 2** — what I set: *Open/Closed to newcomers*, *Sounds* (the room mixer), *Animations*, *Projection window*.
+- **Transport** (2026-10-04) — at the top of the right column, above the outline and the players (first on a narrow screen): *Auto* switch and *Pause* (always there, greyed when there is nothing to pause, Space key shown), then *Change quiz* / *Choose the quiz* (lobby) or *Stop the quiz…*, and *Close room…* (red outline).
 - **Centre** — the current step, same place in every phase; at the reveal the same tiles receive their counts (they are the gauge); the answer key is stated in words for the host only.
 - **Right** — two tabs: **Outline** (every step with type and duration, a slide icon; played steps clickable to look back read-only; ◀ ▶ in its head) and **Players** (ready, media loaded, remote, remove for N minutes). *Players* by default in the lobby and while media load.
 - **Bottom** — the information that decides when to move on ("12 of 14 answered · 14 s left", auto countdown) and the single primary action.

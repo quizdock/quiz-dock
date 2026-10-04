@@ -132,15 +132,12 @@
     "mediaLoadingTitle": "正在加载本题的媒体",
     "mediaLate": "仍在加载：{{names}}",
     "startAnyway": "仍然开始",
-    "nextQuiz": "下一个测验",
     "changeQuiz": "更换测验",
-    "nextQuizTooltip": "在此房间中进行另一个测验：参与者留在房间内",
     "changeQuizTooltip": "在开始前替换所选测验",
-    "nextQuizDescription": "参与者留在房间中，在下一个测验的大厅重新相聚，无需再次输入 PIN。",
     "changeQuizDescription": "还没有人玩过这个测验：参与者留在房间中，大厅将显示新的测验。",
     "closeQuiz": "停止测验…",
-    "closeQuizTooltip": "在此停止本测验并选择另一个：参与者留在房间内",
-    "closeQuizDescription": "本测验到此结束。参与者留在房间内，在下一个测验的大厅重新会合，无需再次输入 PIN。",
+    "closeQuizTooltip": "在此停止本测验：参与者留在房间内并返回大厅",
+    "closeQuizDescription": "本测验到此停止。参与者留在房间内，在大厅重新会合，您在那里选择下一个测验；无需再次输入 PIN。",
     "archiveSoFarLabel": "保留已进行的部分",
     "archiveSoFarHint": "以“中断”状态存入历史记录，并计入房间排名。",
     "openQuiz": "打开此测验",
@@ -260,7 +257,15 @@
     "columnActions": "操作",
     "audienceLanguageLabel": "屏幕语言",
     "audienceLanguageQuiz": "每个测验的语言",
-    "audienceLanguageHint": "投影和参与者的界面，适用于整个房间：语言课可以用英语测验，而界面使用自己的语言。"
+    "audienceLanguageHint": "投影和参与者的界面，适用于整个房间：语言课可以用英语测验，而界面使用自己的语言。",
+    "chooseQuiz": "选择测验",
+    "chooseQuizTooltip": "选择房间接下来进行的测验：参与者留在房间内",
+    "chooseQuizDescription": "参与者留在房间内；所有人准备就绪后测验自动开始，或在 30 秒后开始。",
+    "backToLobby": "返回大厅",
+    "backToLobbyTooltip": "房间返回大厅，您在那里选择下一个测验",
+    "backToLobbyDescription": "参与者留在房间内，在大厅重新会合，您在那里选择下一个测验；无需再次输入 PIN。",
+    "noQuizYetHint": "房间已返回大厅：请选择接下来进行的测验。",
+    "columnRank": "排名"
   },
   "screen": {
     "sessionUnavailable": "房间不可用。",
@@ -484,7 +489,9 @@
     "fallbackName": "房间",
     "startsIn_one": "{{count}} 秒后开始",
     "startsIn_other": "{{count}} 秒后开始",
-    "stopCountdown": "停止倒计时：测验等待“开始”"
+    "stopCountdown": "停止倒计时：测验等待“开始”",
+    "noQuizYet": "大厅——正在选择下一个测验",
+    "pickingNextQuiz": "正在选择下一个测验"
   },
   "sound": {
     "mute": "静音",

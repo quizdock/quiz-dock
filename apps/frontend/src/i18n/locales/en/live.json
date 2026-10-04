@@ -132,15 +132,12 @@
     "mediaLoadingTitle": "Loading the question’s media",
     "mediaLate": "Still loading: {{names}}",
     "startAnyway": "Start anyway",
-    "nextQuiz": "Next quiz",
     "changeQuiz": "Change quiz",
-    "nextQuizTooltip": "Play another quiz in this room: the participants stay in",
     "changeQuizTooltip": "Replace the quiz picked, before it starts",
-    "nextQuizDescription": "The participants stay in the room and meet again in the next quiz’s lobby. Nobody types the PIN again.",
     "changeQuizDescription": "Nobody has played this quiz yet: the participants stay in the room and the lobby shows the new one.",
     "closeQuiz": "Stop the quiz…",
-    "closeQuizTooltip": "Stop this quiz here and pick another: the participants stay in the room",
-    "closeQuizDescription": "This quiz stops here. The participants stay in the room and meet again in the next quiz’s lobby; nobody types the PIN again.",
+    "closeQuizTooltip": "Stop this quiz here: the participants stay in the room and go back to its lobby",
+    "closeQuizDescription": "This quiz stops here. The participants stay in the room and meet again in its lobby, where you pick the next quiz; nobody types the PIN again.",
     "archiveSoFarLabel": "Keep what was played so far",
     "archiveSoFarHint": "Archived as interrupted in History, and counted in the room’s standings.",
     "openQuiz": "Open this quiz",
@@ -260,7 +257,15 @@
     "columnActions": "Actions",
     "audienceLanguageLabel": "Language of the screens",
     "audienceLanguageQuiz": "Each quiz's language",
-    "audienceLanguageHint": "The projection and the participants' screens, for the whole room: a language class plays an English quiz with the interface in its own."
+    "audienceLanguageHint": "The projection and the participants' screens, for the whole room: a language class plays an English quiz with the interface in its own.",
+    "chooseQuiz": "Choose the quiz",
+    "chooseQuizTooltip": "Pick the quiz the room plays next: the participants stay",
+    "chooseQuizDescription": "The participants stay in the room; the quiz starts on its own once everyone is ready, or after 30 s.",
+    "backToLobby": "Back to the lobby",
+    "backToLobbyTooltip": "The room goes back to its lobby, where you pick the next quiz",
+    "backToLobbyDescription": "The participants stay in the room and meet again in its lobby, where you pick the next quiz; nobody types the PIN again.",
+    "noQuizYetHint": "The room is back in its lobby: choose the quiz it plays next.",
+    "columnRank": "Rank"
   },
   "screen": {
     "sessionUnavailable": "Room unavailable.",
@@ -484,7 +489,9 @@
     "fallbackName": "Room",
     "startsIn_one": "Starts in {{count}} s",
     "startsIn_other": "Starts in {{count}} s",
-    "stopCountdown": "Stop the countdown: the quiz waits for Start"
+    "stopCountdown": "Stop the countdown: the quiz waits for Start",
+    "noQuizYet": "Lobby — the next quiz is being picked",
+    "pickingNextQuiz": "The next quiz is being picked"
   },
   "sound": {
     "mute": "Mute",

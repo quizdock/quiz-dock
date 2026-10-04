@@ -31,6 +31,7 @@
     "join_required": "請先加入房間再作答。",
     "already_joined": "你已經在這個房間裡了。",
     "already_started": "測驗已經開始。",
+    "quiz_required": "請先選擇測驗。",
     "reveal_required": "僅在揭曉答案後才能執行該操作。",
     "timer_not_adjustable": "僅在答題進行中才能調整計時器。",
     "snapshot_not_found": "未找到會話快照。",
@@ -42,6 +43,7 @@
     "open_access_forbidden": "此伺服器不允許開放存取。",
     "open_access_guests_only": "開放存取時參與者沒有帳號：沒有個人追蹤，也不使用帳號名稱。",
     "next_quiz_unavailable": "此測驗不能作為本房間的下一個測驗。",
+    "next_quiz_from_lobby": "下一個測驗在房間大廳中選擇。",
     "review_unavailable": "只能在兩道題之間回看已進行的步驟。",
     "step_not_played": "此步驟尚未進行。"
   },

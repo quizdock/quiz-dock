@@ -59,8 +59,8 @@ The split, keyed by the PIN for the room and by the game id (`meta.id`, already 
 
 ## 4. Lifecycle
 
-- **Ending a quiz** leads to its podium; from there the host opens the next quiz (`host:next-quiz`), whose lobby is
-  the room's, or closes the room (`host:end`: the PIN is freed, the phones are told). The intermission screens (that
+- **Ending a quiz** leads to its podium; from there the host goes back to the room's lobby (`host:back-to-lobby`,
+  2026-10-04: the next quiz is always picked in the lobby, LIVE §11.4) and picks the next there, or closes the room (`host:end`: the PIN is freed, the phones are told). The intermission screens (that
   quiz's podium, then the cumulative one) come with steps 3 and 5.
 - **Lifetime**: the room lives while it is used. Each question and each quiz opened refresh its TTL, so an evening of
   quizzes outlives the current ~4 h. An idle room expires after the TTL; the host can close it explicitly.

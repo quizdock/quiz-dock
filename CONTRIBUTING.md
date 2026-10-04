@@ -19,5 +19,7 @@ Thanks for helping! A few things make a pull request easy to take in.
   (`feat(import): …`, `fix(game): …`); a git hook checks them.
 - A changed API: regenerate the client with `pnpm generate:api` and commit it
   (`tools/generate-api/run.sh` does it in a container when the host cannot).
+- A changed live screen: `tools/live-check/run.sh` plays a room for real on the demo
+  stack (console, projection, a phone), checks it and keeps the pictures.
 - Code, comments, commits and documentation are in English; user-facing text
   goes through the translations, in every language of `apps/frontend/src/i18n/locales`.

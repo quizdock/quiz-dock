@@ -42,8 +42,11 @@ export function roomTests(ctx: GameContext): void {
     return podium;
   }
 
-  const nextQuiz = (host: Socket, pin: string, quizId: string, archive = false) =>
-    host.emitWithAck('host:next-quiz', { pin, quizId, archive });
+  /** The room's next quiz: back to its lobby (the last quiz kept or not), then picked there. */
+  const nextQuiz = async (host: Socket, pin: string, quizId: string, archive = false) => {
+    await host.emitWithAck('host:back-to-lobby', { pin, archive });
+    return host.emitWithAck('host:next-quiz', { pin, quizId });
+  };
 
   it('plays quizzes in a row: from the podium to the next lobby, each scored and archived on its own', async () => {
     const host = connect({ localUser: 'Animateur' });
@@ -57,12 +60,23 @@ export function roomTests(ctx: GameContext): void {
     await toPodium(host, pin, player);
     expect((await player.emitWithAck('player:rate', { pin, rating: 2 })).ok).toBe(true);
 
-    // Quiz 2: the phone is sent the new lobby, the console its outline, nobody types the PIN.
+    // Back to the lobby, no quiz yet: the console's outline is emptied.
     const second = await ctx.h.seedQuiz({ title: 'Second quiz' });
     const lobby = stateEvent(player, 'LOBBY');
-    const outline = nextEvent<{ quizId: string }>(host, 'game:outline');
-    expect(await nextQuiz(host, pin, second.id, true)).toEqual({ ok: true });
+    const emptied = nextEvent<{ quizId: string }>(host, 'game:outline');
+    expect(await host.emitWithAck('host:back-to-lobby', { pin, archive: true })).toEqual({
+      ok: true,
+    });
     await lobby;
+    expect((await emptied).quizId).toBe('');
+    const refused = nextEvent<{ code: string }>(host, 'error');
+    host.emit('host:start', { pin }); // no quiz: nothing starts
+    expect((await refused).code).toBe('session.quiz_required');
+    // Quiz 2 picked there: the console its outline, nobody types the PIN.
+    const outline = nextEvent<{ quizId: string }>(host, 'game:outline');
+    expect(await host.emitWithAck('host:next-quiz', { pin, quizId: second.id })).toEqual({
+      ok: true,
+    });
     expect((await outline).quizId).toBe(second.id);
     // Being played now, it cannot be deleted (the room's current game is read).
     await expect(
@@ -124,9 +138,12 @@ export function roomTests(ctx: GameContext): void {
     expect(points).toBeGreaterThan(0);
     const firstGame = (await game.getMeta(pin))!.id;
     const lobby = stateEvent(player, 'LOBBY');
-    // Two clicks: one archive, one new game.
-    host.emit('host:next-quiz', { pin, quizId: second.id, archive: true });
-    await nextQuiz(host, pin, second.id, true);
+    // Two clicks: one archive, one new lobby.
+    await Promise.all([
+      host.emitWithAck('host:back-to-lobby', { pin, archive: true }),
+      host.emitWithAck('host:back-to-lobby', { pin, archive: true }),
+    ]);
+    await host.emitWithAck('host:next-quiz', { pin, quizId: second.id });
     await lobby;
     await settle(200);
     const meta = (await game.getMeta(pin))!;

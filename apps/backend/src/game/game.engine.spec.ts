@@ -855,32 +855,42 @@ describe('GameEngine (characterization)', () => {
   describe('next quiz in the room', () => {
     const nextQuiz = () => snapshotOf([question({ prompt: 'Next ?' })]);
 
-    it('mid-quiz without archive: the quiz is closed, the players start the next at 0', async () => {
+    it('stopped mid-quiz without archive: back to a lobby with no quiz, the players at 0', async () => {
       const t0 = await startedAt(snapshotOf([question()]), { p1: player('Ann') });
       await engine.submit(pin, 'p1', 0, await rightOption(), t0 + 1);
-      jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
       const previous = gameId;
 
-      await engine.nextQuiz(pin, HOST, 'quiz-2');
+      await engine.backToLobby(pin, HOST);
       const m = await meta();
-      expect(m.id).not.toBe(previous);
-      expect(m.state).toBe('LOBBY');
-      expect(await game.getScore(m.id, 'p1')).toEqual({ score: 0, streak: 0 });
-      expect(archive.archive).not.toHaveBeenCalled();
       gameId = m.id; // cleaned up with the rest
       await redis.del(...(await redis.keys(`*${previous}*`)));
+      expect(m.id).not.toBe(previous);
+      expect([m.state, m.quizId, m.totalQuestions]).toEqual(['LOBBY', '', 0]);
+      expect(await game.getScore(m.id, 'p1')).toEqual({ score: 0, streak: 0 });
+      expect(archive.archive).not.toHaveBeenCalled();
+      expect((await game.standings(pin)).quizzesPlayed).toBe(0); // nothing of it kept
+      // Nothing to start until a quiz is picked; the next quiz is picked there only.
+      await expect(engine.start(pin, HOST)).rejects.toThrow('session.quiz_required');
+    });
+
+    it('picks the next quiz in the lobby only', async () => {
+      await startedAt(snapshotOf([question()]), { p1: player('Ann') });
+      jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
+      await expect(engine.nextQuiz(pin, HOST, 'quiz-2')).rejects.toThrow(
+        'session.next_quiz_from_lobby',
+      );
     });
 
     it('keeps the quiz as it was when archiving it fails', async () => {
       await startedAt(snapshotOf([question()]), { p1: player('Ann') });
       jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
       archive.archive.mockRejectedValueOnce(new Error('db down'));
-      await expect(engine.nextQuiz(pin, HOST, 'quiz-2', true)).rejects.toThrow('db down');
+      await expect(engine.backToLobby(pin, HOST, true)).rejects.toThrow('db down');
       const m = await meta();
       expect([m.id, m.state]).toEqual([gameId, 'ANSWERING']);
     });
 
-    it('from a podium, the next lobby starts on its own; everyone ready starts it (#198)', async () => {
+    it('from a podium, the quiz picked in the lobby starts on its own; everyone ready starts it (#198)', async () => {
       const ann = join('p1');
       await seed(
         snapshotOf([question()]),
@@ -891,10 +901,13 @@ describe('GameEngine (characterization)', () => {
       );
       jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
       const previous = gameId;
+      await engine.backToLobby(pin, HOST);
+      const empty = (await meta()).id;
+      expect((await meta()).lobbyStartAt).toBe(0); // no quiz yet: no countdown
       await engine.nextQuiz(pin, HOST, 'quiz-2');
       const m = await meta();
       gameId = m.id;
-      await redis.del(...(await redis.keys(`*${previous}*`)));
+      await redis.del(...(await redis.keys(`*${previous}*`)), ...(await redis.keys(`*${empty}*`)));
       expect(m.lobbyStartAt).toBeGreaterThan(Date.now());
       expect(ann.of<{ startAt: number | null }>('lobby:countdown').at(-1)!.startAt).toBe(
         m.lobbyStartAt,

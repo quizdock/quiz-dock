@@ -132,15 +132,12 @@
     "mediaLoadingTitle": "Sorunun medyası yükleniyor",
     "mediaLate": "Hala yükleniyor: {{names}}",
     "startAnyway": "Yine de başla",
-    "nextQuiz": "Sonraki quiz",
     "changeQuiz": "Quizi değiştir",
-    "nextQuizTooltip": "Bu odada başka bir quiz yapın: katılımcılar odada kalır",
     "changeQuizTooltip": "Seçilen quizi başlamadan önce değiştirin",
-    "nextQuizDescription": "Katılımcılar odada kalır ve bir sonraki quizin lobisinde tekrar buluşur. Kimse PIN'i bir daha yazmaz.",
     "changeQuizDescription": "Bu quizi henüz kimse oynamadı: katılımcılar odada kalır ve lobide yeni quiz gösterilir.",
     "closeQuiz": "Quizi durdur…",
-    "closeQuizTooltip": "Bu quizi burada durdurun ve başka bir quiz seçin: katılımcılar odada kalır",
-    "closeQuizDescription": "Bu quiz burada bitiyor. Katılımcılar odada kalır ve bir sonraki quizin lobisinde tekrar buluşur; kimse PIN'i bir daha yazmaz.",
+    "closeQuizTooltip": "Bu quizi burada durdurun: katılımcılar odada kalır ve lobisine döner",
+    "closeQuizDescription": "Bu quiz burada durur. Katılımcılar odada kalır ve lobisinde tekrar buluşur; sıradaki quizi orada seçersiniz, kimse PIN'i yeniden yazmaz.",
     "archiveSoFarLabel": "Şu ana kadar oynananları sakla",
     "archiveSoFarHint": "Tarihte kesintiye uğramış olarak arşivlendi ve odanın sıralamasında sayıldı.",
     "openQuiz": "Bu quizi aç",
@@ -260,7 +257,15 @@
     "columnActions": "İşlemler",
     "audienceLanguageLabel": "Ekranların dili",
     "audienceLanguageQuiz": "Her quizin kendi dili",
-    "audienceLanguageHint": "Yansıtma ekranı ve katılımcı ekranları, tüm oda için: bir dil dersi İngilizce bir quizi kendi dilindeki arayüzle oynar."
+    "audienceLanguageHint": "Yansıtma ekranı ve katılımcı ekranları, tüm oda için: bir dil dersi İngilizce bir quizi kendi dilindeki arayüzle oynar.",
+    "chooseQuiz": "Quizi seç",
+    "chooseQuizTooltip": "Odanın sıradaki quizini seçin: katılımcılar kalır",
+    "chooseQuizDescription": "Katılımcılar odada kalır; quiz herkes hazır olduğunda ya da 30 sn sonra kendiliğinden başlar.",
+    "backToLobby": "Lobiye dön",
+    "backToLobbyTooltip": "Oda lobisine döner; sıradaki quizi orada seçersiniz",
+    "backToLobbyDescription": "Katılımcılar odada kalır ve lobisinde tekrar buluşur; sıradaki quizi orada seçersiniz, kimse PIN'i yeniden yazmaz.",
+    "noQuizYetHint": "Oda lobisine döndü: sıradaki quizi seçin.",
+    "columnRank": "Sıra"
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",
@@ -484,7 +489,9 @@
     "fallbackName": "Oda",
     "startsIn_one": "{{count}} sn sonra başlıyor",
     "startsIn_other": "{{count}} sn sonra başlıyor",
-    "stopCountdown": "Geri sayımı durdur: quiz Başlat'ı bekler"
+    "stopCountdown": "Geri sayımı durdur: quiz Başlat'ı bekler",
+    "noQuizYet": "Lobi — sıradaki quiz seçiliyor",
+    "pickingNextQuiz": "Sıradaki quiz seçiliyor"
   },
   "sound": {
     "mute": "Sessiz",

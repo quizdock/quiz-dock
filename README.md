@@ -149,9 +149,9 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
 - **Scoring that rewards speed** — time-weighted points, streak bonuses, the standings
   after each question, final podium; per-question rules (*closest answer wins*, partial
   credit, typo-tolerant text, double or fixed points).
-- **Several quizzes in one room** — players join once and stay: the host picks the
-  next quiz at the podium, everyone meets again in its lobby, which starts on its own
-  after 30 s or once everyone is ready, and the room keeps its own standings across the
+- **Several quizzes in one room** — players join once and stay: after a quiz, everyone
+  meets again in the room's lobby, where the host picks the next one, which starts on its
+  own after 30 s or once everyone is ready, and the room keeps its own standings across the
   quizzes, shown live and kept in *History* with the results.
 - **Self-hosted and private** — one Docker image (`amd64` / `arm64`), no SaaS, no
   telemetry, no ads; interface in English, French, Spanish, Simplified and Traditional
@@ -188,7 +188,7 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
 - **CSV export** — overall results and per-player answer sheets.
 - **Licence, tags and language of a quiz** — set in the quiz settings and carried with it, so whoever receives a copy knows what they may do with it and what it is about.
 - **Quiz import / export** — a quiz travels as a [portable bundle](https://github.com/quizdock/quiz-dock/blob/main/docs/quiz-bundle.md) (`quiz.json` + `media/`, zipped): back it up, move it between instances, share it — from the app or the operator CLI. Coming from Kahoot? Its spreadsheet template imports as a draft, the rows to finish flagged. From another tool, a [chatbot prompt](https://quizdock.github.io/docs/host/import-a-quiz/) turns a PDF, screenshots or a spreadsheet into a quiz to import, and a local [MCP connector](https://quizdock.github.io/docs/operator/cli/) _(experimental)_ lets a chatbot client check the quiz and import it itself.
-- **Multilingual** — one language per instance; a [glossary](https://github.com/quizdock/quiz-dock/blob/main/apps/frontend/src/i18n/GLOSSARY.md) keeps the wording consistent across the six.
+- **Multilingual** — the instance's language by default, each host's own for their screens, the quiz's or the room's on the big screen and the phones; a [glossary](https://github.com/quizdock/quiz-dock/blob/main/apps/frontend/src/i18n/GLOSSARY.md) keeps the wording consistent across the six.
 - **White-label** — name, logo and CSS via env + a mounted folder, no rebuild.
 - **On the home screen** — an icon and a manifest: it can be added to a phone's or a tablet's home screen, and the screen stays on during a game.
 - **Feedback** — under the version on the home page, links to report a bug, suggest a feature, fix a translation or ask a question, pre-filled with the version and the browser, and an invitation to star QuizDock on GitHub; pointed at your own repository or hidden with `APP_FEEDBACK_URL`.
