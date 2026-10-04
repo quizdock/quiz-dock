@@ -708,7 +708,15 @@ export function ScreenSurface({
     );
     // A room's next quiz (#198): the lobby on the left, the room's standings on the right.
     stage = nextInRoom ? (
-      <div className="grid w-full grid-cols-[minmax(0,3fr)_minmax(0,2fr)] items-start gap-[3em]">
+      <div
+        className={cn(
+          'grid w-full items-start gap-[3em]',
+          // A preview draws on a 1280-wide stage; a real projection splits when it is wide.
+          boxed
+            ? 'grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
+            : 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]',
+        )}
+      >
         {lobby}
         <RoomStandingsPanel standings={nextInRoom} max={10} className="text-[1.1em]" />
       </div>
