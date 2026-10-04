@@ -253,7 +253,11 @@ export class GameService {
   }
 
   /** `openGame` with the snapshot already frozen. */
-  async openGameWith(pin: string, snapshot: QuizSnapshot): Promise<GameId> {
+  /**
+   * The room's next game, its players at 0: on `snapshot`, or with no quiz yet when
+   * null — the lobby a room goes back to after a quiz, where the host picks the next.
+   */
+  async openGameWith(pin: string, snapshot: QuizSnapshot | null): Promise<GameId> {
     const previous = await this.getMeta(pin);
     if (!previous) throw new NotFoundException('session.not_found');
     const gameId = newGameId();
@@ -276,7 +280,8 @@ export class GameService {
       ZERO_SCORE,
       GAME_TTL_S,
       GameState.Ended,
-      previous.id,
+      // The game a late rating goes to: the last one with a quiz, not a lobby without one.
+      previous.quizId ? previous.id : ((await this.getRoom(pin))?.previousGameId ?? previous.id),
     );
     await this.touchRoom(pin);
     return gameId;
@@ -336,16 +341,17 @@ export class GameService {
   private writeGame(
     pipe: ReturnType<RedisService['multi']>,
     gameId: GameId,
-    snapshot: QuizSnapshot,
+    snapshot: QuizSnapshot | null,
     carried: Pick<GameFields, 'mode' | 'audioTarget'> = { mode: 'manual', audioTarget: '' },
   ): void {
     const game: GameFields = {
-      quizId: snapshot.quizId,
+      // No quiz yet: '' (the host picks one in the lobby).
+      quizId: snapshot?.quizId ?? '',
       state: GameState.Lobby,
       currentIndex: -1,
-      totalQuestions: snapshot.questions.length,
-      title: snapshot.title,
-      language: snapshot.language,
+      totalQuestions: snapshot?.questions.length ?? 0,
+      title: snapshot?.title ?? '',
+      language: snapshot?.language ?? '',
       createdAt: Date.now(),
       questionStartedAt: 0,
       questionEndsAt: 0,
@@ -363,9 +369,11 @@ export class GameService {
       slidePausedAt: 0,
     };
     pipe.hset(gameKeys.game(gameId), gameHash(game));
-    pipe.set(gameKeys.snapshot(gameId), JSON.stringify(snapshot));
     pipe.expire(gameKeys.game(gameId), GAME_TTL_S);
-    pipe.expire(gameKeys.snapshot(gameId), GAME_TTL_S);
+    if (snapshot) {
+      pipe.set(gameKeys.snapshot(gameId), JSON.stringify(snapshot));
+      pipe.expire(gameKeys.snapshot(gameId), GAME_TTL_S);
+    }
   }
 
   /**

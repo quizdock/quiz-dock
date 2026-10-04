@@ -603,8 +603,17 @@ export interface ClientToServerEvents {
   'player:ready': (p: { pin: string; ready: boolean }, ack: (res: { ok: boolean }) => void) => void;
   /** The room's own name (≤ 60 characters), from its lobby; blank = the default. */
   'host:room-name': (p: { pin: string; name: string }) => void;
+  /** Picks the quiz of the room's lobby, or replaces it (nothing of it was played). */
   'host:next-quiz': (
-    p: { pin: string; quizId: string; archive?: boolean },
+    p: { pin: string; quizId: string },
+    ack: (res: { ok: boolean }) => void,
+  ) => void;
+  /**
+   * Back to the room's lobby, with no quiz chosen: from the podium, or stopping the quiz
+   * in progress. `archive` keeps what was played (archived, counted in the room's standings).
+   */
+  'host:back-to-lobby': (
+    p: { pin: string; archive?: boolean },
     ack: (res: { ok: boolean }) => void,
   ) => void;
   /**

@@ -132,15 +132,12 @@
     "mediaLoadingTitle": "Chargement des médias de la question",
     "mediaLate": "Encore en chargement : {{names}}",
     "startAnyway": "Lancer quand même",
-    "nextQuiz": "Quiz suivant",
     "changeQuiz": "Changer de quiz",
-    "nextQuizTooltip": "Jouer un autre quiz dans ce salon : les participants restent",
     "changeQuizTooltip": "Remplacer le quiz choisi, avant qu’il démarre",
-    "nextQuizDescription": "Les participants restent dans le salon et se retrouvent au lobby du quiz suivant. Personne ne ressaisit le PIN.",
     "changeQuizDescription": "Personne n’a encore joué ce quiz : les participants restent dans le salon et le lobby affiche le nouveau.",
     "closeQuiz": "Arrêter le quiz…",
-    "closeQuizTooltip": "Arrêter ce quiz ici et en choisir un autre : les participants restent dans le salon",
-    "closeQuizDescription": "Ce quiz s’arrête ici. Les participants restent dans le salon et se retrouvent au lobby du quiz suivant ; personne ne ressaisit le PIN.",
+    "closeQuizTooltip": "Arrêter ce quiz ici : les participants restent dans le salon et reviennent à son lobby",
+    "closeQuizDescription": "Ce quiz s’arrête ici. Les participants restent dans le salon et se retrouvent dans son lobby, où vous choisissez le quiz suivant ; personne ne ressaisit le PIN.",
     "archiveSoFarLabel": "Garder ce qui a été joué",
     "archiveSoFarHint": "Archivé comme interrompu dans l’Historique, et compté au classement du salon.",
     "openQuiz": "Ouvrir ce quiz",
@@ -260,7 +257,14 @@
     "columnActions": "Actions",
     "audienceLanguageLabel": "Langue des écrans",
     "audienceLanguageQuiz": "La langue de chaque quiz",
-    "audienceLanguageHint": "La projection et les écrans des participants, pour tout le salon : un cours de langue joue un quiz en anglais avec l’interface dans la sienne."
+    "audienceLanguageHint": "La projection et les écrans des participants, pour tout le salon : un cours de langue joue un quiz en anglais avec l’interface dans la sienne.",
+    "chooseQuiz": "Choisir le quiz",
+    "chooseQuizTooltip": "Choisir le quiz que le salon joue ensuite : les participants restent",
+    "chooseQuizDescription": "Les participants restent dans le salon ; le quiz démarre de lui-même quand tout le monde est prêt, ou au bout de 30 s.",
+    "backToLobby": "Retour au lobby",
+    "backToLobbyTooltip": "Le salon revient à son lobby, où vous choisissez le quiz suivant",
+    "backToLobbyDescription": "Les participants restent dans le salon et se retrouvent dans son lobby, où vous choisissez le quiz suivant ; personne ne ressaisit le PIN.",
+    "noQuizYetHint": "Le salon est revenu à son lobby : choisissez le quiz qu’il joue ensuite."
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",
@@ -484,7 +488,8 @@
     "fallbackName": "Salon",
     "startsIn_one": "Départ dans {{count}} s",
     "startsIn_other": "Départ dans {{count}} s",
-    "stopCountdown": "Arrêter le compte à rebours : le quiz attend « Démarrer »"
+    "stopCountdown": "Arrêter le compte à rebours : le quiz attend « Démarrer »",
+    "noQuizYet": "Lobby — le quiz suivant est en cours de choix"
   },
   "sound": {
     "mute": "Couper le son",

@@ -233,7 +233,7 @@ function liveColumns(t: T, locale: string): DataColumn<LiveGame>[] {
       header: t('stats.columns.quiz'),
       cell: ({ row }) => (
         <>
-          <div className="font-medium">{row.original.title}</div>
+          <div className="font-medium">{row.original.title || t('live:room.noQuizYet')}</div>
           <div className="text-muted-foreground text-xs tabular-nums">
             {t('stats.pin', { pin: row.original.pin })}
           </div>

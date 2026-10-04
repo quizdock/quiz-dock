@@ -4,7 +4,8 @@ import { appConfig } from '../config';
 import { ImageChoiceGrid, optionLabel } from '../game/image-choice';
 import {
   LobbyCountdown,
-  NextQuizButton,
+  BackToLobbyButton,
+  QuizPickButton,
   RoomStandingsPanel,
   roomLabel,
 } from '../game/room-components';
@@ -276,6 +277,8 @@ function HostConsole({
   // ── The frame (UI system §2.1): the same in every phase ─────────────────────
   const state = view.state;
   const inLobby = state === 'LOBBY' || state === null;
+  // A lobby the room went back to after a quiz: the next is picked here first.
+  const noQuiz = state === 'LOBBY' && view.totalQuestions === 0;
   const reviewing = !!view.nav?.review;
   const steps = outlineSteps(view.outline, view.outlineSlides);
   const here = stepPosition(steps, view);
@@ -423,21 +426,16 @@ function HostConsole({
       <span className="flex-1" />
       <span aria-hidden className="bg-border mx-1 h-6 w-px" />
       {inLobby ? (
-        <NextQuizButton
-          pin={pin}
-          socket={socket}
-          mode="lobby"
-          currentQuizId={view.quizId}
-          playedQuizIds={view.standings?.playedQuizIds}
-        />
+        noQuiz ? null : (
+          <QuizPickButton
+            pin={pin}
+            socket={socket}
+            currentQuizId={view.quizId}
+            playedQuizIds={view.standings?.playedQuizIds}
+          />
+        )
       ) : phase === 'podium' ? null : (
-        <NextQuizButton
-          pin={pin}
-          socket={socket}
-          mode="close"
-          currentQuizId={view.quizId}
-          playedQuizIds={view.standings?.playedQuizIds}
-        />
+        <BackToLobbyButton pin={pin} socket={socket} mode="stop" />
       )}
       <EndGameButton
         label={inLobby ? t('control.stopSession') : t('control.endSession')}
@@ -548,7 +546,25 @@ function HostConsole({
   let status: React.ReactNode;
   let primary: React.ReactNode;
 
-  if (phase === 'lobby') {
+  if (phase === 'lobby' && noQuiz) {
+    // Back from a quiz: the room waits in its lobby for the host to pick the next.
+    centre = (
+      <>
+        {invite}
+        {view.standings ? <RoomStandingsPanel standings={view.standings} max={5} /> : null}
+        <p className="text-muted-foreground text-sm">{t('control.noQuizYetHint')}</p>
+      </>
+    );
+    status = <ReadinessLine readiness={view.readiness} fallbackCount={view.players.length} />;
+    primary = (
+      <QuizPickButton
+        pin={pin}
+        socket={socket}
+        currentQuizId={null}
+        playedQuizIds={view.standings?.playedQuizIds}
+      />
+    );
+  } else if (phase === 'lobby') {
     centre = (
       <>
         {invite}
@@ -765,15 +781,7 @@ function HostConsole({
       </div>
     );
     status = t('control.statusQuizOver');
-    primary = (
-      <NextQuizButton
-        pin={pin}
-        socket={socket}
-        mode="podium"
-        currentQuizId={view.quizId}
-        playedQuizIds={view.standings?.playedQuizIds}
-      />
-    );
+    primary = <BackToLobbyButton pin={pin} socket={socket} mode="podium" />;
   } else if (state === 'LEADERBOARD' && !reviewing) {
     // The quiz's standings after a reveal (#198): what the projection shows.
     centre = (

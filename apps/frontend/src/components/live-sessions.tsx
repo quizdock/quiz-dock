@@ -52,7 +52,9 @@ export function LiveSessions() {
             onClick={() => setOpen(false)}
             className="hover:bg-accent flex items-baseline gap-2 rounded-md px-2 py-1.5"
           >
-            <span className="min-w-0 flex-1 truncate text-sm">{session.title}</span>
+            <span className="min-w-0 flex-1 truncate text-sm">
+              {session.title || t('live:room.noQuizYet')}
+            </span>
             <span className="text-muted-foreground text-xs whitespace-nowrap">
               {t('playerCount', { count: session.playerCount })}
             </span>

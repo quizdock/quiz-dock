@@ -8,6 +8,7 @@ import {
 import {
   AUDIO_TARGETS,
   LANGUAGE_RE,
+  resolveAudioTarget,
   type AnswerAck,
   type AnswerRefusal,
   GameState,
@@ -260,6 +261,8 @@ export class GameEngine {
     if (meta.state !== GameState.Lobby) {
       throw new BadRequestException('session.already_started');
     }
+    // A lobby a quiz went back to: the host picks the next first.
+    if (!meta.quizId) throw new BadRequestException('session.quiz_required');
     await this.startQuiz(refOf(pin, meta), Boolean(meta.lobbyStartAt));
   }
 
@@ -386,7 +389,7 @@ export class GameEngine {
       this.game.getSnapshot(ref.id),
       this.game.getMeta(ref.pin),
     ]);
-    if (!snapshot || !meta) return;
+    if (!meta) return;
     this.server
       .to(ref.pin)
       .emit('game:media', await this.mediaPayload(ref.pin, snapshot, meta.audioTarget ?? ''));
@@ -395,16 +398,19 @@ export class GameEngine {
   /** What every device is told of the quiz it plays: its media, sound, and language. */
   private async mediaPayload(
     pin: string,
-    snapshot: QuizSnapshot,
+    snapshot: QuizSnapshot | null,
     audioTarget: AudioTarget | '',
   ): Promise<Parameters<ServerToClientEvents['game:media']>[0]> {
     const roomLanguage = (await this.game.getRoom(pin))?.audienceLanguage ?? '';
+    // A lobby with no quiz yet: nothing to play, the room's language if it has one.
     return {
-      title: snapshot.title,
-      hasSound: snapshotHasSound(snapshot),
-      hasMedia: snapshotHasMedia(snapshot),
-      audioTarget: gameAudioTarget(snapshot, audioTarget),
-      language: roomLanguage || snapshot.language,
+      title: snapshot?.title ?? '',
+      hasSound: !!snapshot && snapshotHasSound(snapshot),
+      hasMedia: !!snapshot && snapshotHasMedia(snapshot),
+      audioTarget: snapshot
+        ? gameAudioTarget(snapshot, audioTarget)
+        : resolveAudioTarget(null, audioTarget || null, null),
+      language: roomLanguage || snapshot?.language || '',
       roomLanguage,
     };
   }
@@ -1288,11 +1294,10 @@ export class GameEngine {
     if (room) socket.emit('room:sounds', soundsPayload(room.sounds));
     if (room) socket.emit('room:motion', { on: room.motion });
     const snapshot = await this.game.getSnapshot(meta.id);
-    if (snapshot) {
-      // Every device asks for sound at once when the quiz will need it (a phone too:
-      // the next quiz of a room may play sound where the first did not).
-      socket.emit('game:media', await this.mediaPayload(pin, snapshot, meta.audioTarget ?? ''));
-    }
+    // Every device asks for sound at once when the quiz will need it (a phone too: the
+    // next quiz of a room may play sound where the first did not). Sent with no quiz
+    // too: a lobby the room went back to clears the last one's.
+    socket.emit('game:media', await this.mediaPayload(pin, snapshot, meta.audioTarget ?? ''));
     // A participant back in a lobby: whether they already said they are ready (#104),
     // sent after the state (a new lobby clears the last quiz's on the phone).
     const saidReady =
@@ -1640,7 +1645,8 @@ export class GameEngine {
   async end(pin: string, hostUserId: string, archive = false): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state === GameState.Ended) return; // déjà terminée (ré-entrée / double-clic) → pas de double archive
-    if (archive) await this.archiveAsked(pin, meta);
+    // A lobby with no quiz has nothing to archive.
+    if (archive && meta.quizId) await this.archiveAsked(pin, meta);
     this.timers.cancelAll(pin);
     this.answerCounts.delete(pin);
     await this.redis.hset(gameKeys.game(meta.id), gameHash({ state: GameState.Ended }));
@@ -1656,39 +1662,29 @@ export class GameEngine {
   }
 
   /**
-   * `host:next-quiz`: the room plays `quizId` next, from its lobby. In the lobby
-   * the quiz picked is replaced (nothing was played); at the podium `archive`
-   * keeps the results of the quiz just played, as `host:end` does. During a quiz
-   * the host closes it: `archive` keeps what was played so far (archived as
-   * interrupted, counted in the room's standings), otherwise nothing of it stays.
-   * The players stay in, at 0; every screen is sent the new lobby.
+   * `host:next-quiz`: the quiz the room's lobby plays — picked, or replacing the one
+   * picked (nothing of it was played). Only from the lobby: a quiz over or in progress
+   * goes back to the lobby first (`host:back-to-lobby`). The players stay in, at 0;
+   * every screen is sent the lobby. A quiz picked after another starts on its own (#198).
    */
-  async nextQuiz(pin: string, hostUserId: string, quizId: string, archive = false): Promise<void> {
+  async nextQuiz(pin: string, hostUserId: string, quizId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
-    if (meta.state === GameState.Ended) {
-      throw new BadRequestException('session.next_quiz_unavailable');
+    if (meta.state !== GameState.Lobby) {
+      throw new BadRequestException(
+        meta.state === GameState.Ended
+          ? 'session.next_quiz_unavailable'
+          : 'session.next_quiz_from_lobby',
+      );
     }
-    const midQuiz = meta.state !== GameState.Lobby && meta.state !== GameState.Podium;
-    // Checked before anything is archived: a quiz that cannot be played changes nothing.
     const snapshot = await this.game.snapshotFor(pin, quizId);
     const lock = gameKeys.advanceLock(meta.id, 'next-quiz');
     if (!(await this.firstThrough(lock))) return; // double click
     try {
-      if (archive && meta.state === GameState.Podium) await this.archiveAsked(pin, meta);
-      if (midQuiz) {
-        // Closed before its end. Archived first: a failed write throws with nothing moved
-        // (the quiz goes on, the host can retry); then no answer is scored any more.
-        if (archive) await this.archiveAsked(pin, meta, true);
-        this.timers.cancelAll(pin);
-        this.answerCounts.delete(pin);
-        await this.redis.hset(gameKeys.game(meta.id), gameHash({ state: GameState.Ended }));
-        if (archive) await this.foldGame(refOf(pin, meta), meta);
-      }
       this.timers.cancelAll(pin);
       this.answerCounts.delete(pin);
       await this.game.openGameWith(pin, snapshot);
-      // A quiz that follows another starts on its own (#198); so does one replacing it.
-      const follows = meta.state !== GameState.Lobby || Boolean(meta.lobbyStartAt);
+      // A lobby with no quiz is one a quiz went back to; so is one already counting.
+      const follows = !meta.quizId || Boolean(meta.lobbyStartAt);
       const opened = await this.game.getMeta(pin);
       if (follows && opened) {
         await this.armLobbyCountdown(refOf(pin, opened), Date.now() + NEXT_QUIZ_COUNTDOWN_MS);
@@ -1697,6 +1693,48 @@ export class GameEngine {
       await this.redis.del(lock); // nothing moved: the host can try again
       throw err;
     }
+    await this.sendLobby(pin);
+  }
+
+  /**
+   * `host:back-to-lobby`: the room goes back to its lobby with no quiz chosen, where the
+   * host picks the next. From the podium `archive` keeps the results, as `host:end`
+   * does; during a quiz the host stops it, and `archive` keeps what was played so far
+   * (archived as interrupted, counted in the room's standings) — otherwise nothing of
+   * it stays.
+   */
+  async backToLobby(pin: string, hostUserId: string, archive = false): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state === GameState.Ended) {
+      throw new BadRequestException('session.next_quiz_unavailable');
+    }
+    if (meta.state === GameState.Lobby) return; // there already
+    const lock = gameKeys.advanceLock(meta.id, 'back-to-lobby');
+    if (!(await this.firstThrough(lock))) return; // double click
+    try {
+      if (meta.state === GameState.Podium) {
+        if (archive) await this.archiveAsked(pin, meta);
+      } else {
+        // Stopped before its end. Archived first: a failed write throws with nothing
+        // moved (the quiz goes on, the host can retry); then no answer is scored any more.
+        if (archive) await this.archiveAsked(pin, meta, true);
+        this.timers.cancelAll(pin);
+        this.answerCounts.delete(pin);
+        await this.redis.hset(gameKeys.game(meta.id), gameHash({ state: GameState.Ended }));
+        if (archive) await this.foldGame(refOf(pin, meta), meta);
+      }
+      this.timers.cancelAll(pin);
+      this.answerCounts.delete(pin);
+      await this.game.openGameWith(pin, null);
+    } catch (err) {
+      await this.redis.del(lock);
+      throw err;
+    }
+    await this.sendLobby(pin);
+  }
+
+  /** The room's new lobby, to every screen. */
+  private async sendLobby(pin: string): Promise<void> {
     for (const socket of await this.server.in(pin).fetchSockets()) {
       await this.sendStateTo(socket, pin);
     }

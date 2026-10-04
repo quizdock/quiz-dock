@@ -31,6 +31,7 @@
     "join_required": "请先加入房间再作答。",
     "already_joined": "你已经在这个房间里了。",
     "already_started": "测验已经开始。",
+    "quiz_required": "请先选择测验。",
     "reveal_required": "仅在揭晓答案后才能执行该操作。",
     "timer_not_adjustable": "仅在答题进行中才能调整计时器。",
     "snapshot_not_found": "未找到会话快照。",
@@ -42,6 +43,7 @@
     "open_access_forbidden": "此服务器不允许开放访问。",
     "open_access_guests_only": "开放访问时参与者没有账号：没有个人跟踪，也不使用账号名称。",
     "next_quiz_unavailable": "此测验不能作为本房间的下一个测验。",
+    "next_quiz_from_lobby": "下一个测验在房间大厅中选择。",
     "review_unavailable": "只能在两道题之间回看已进行的步骤。",
     "step_not_played": "此步骤尚未进行。"
   },

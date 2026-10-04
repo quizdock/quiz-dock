@@ -215,7 +215,17 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   /** Émet le sommaire des questions (sans secret) à une fenêtre de contrôle hôte. */
   private async emitOutline(socket: Pick<GameSocket, 'emit'>, pin: string): Promise<void> {
     const snapshot = await this.game.currentSnapshot(pin);
-    if (!snapshot) return;
+    if (!snapshot) {
+      // A lobby with no quiz yet: the last quiz's outline goes.
+      socket.emit('game:outline', {
+        quizId: '',
+        title: '',
+        description: null,
+        questions: [],
+        slides: [],
+      });
+      return;
+    }
     socket.emit('game:outline', {
       quizId: snapshot.quizId,
       title: snapshot.title,
@@ -447,19 +457,30 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
   @SubscribeMessage('host:next-quiz')
   async hostNextQuiz(
     @ConnectedSocket() socket: GameSocket,
-    @MessageBody() payload: { pin: string; quizId: string; archive?: boolean },
+    @MessageBody() payload: { pin: string; quizId: string },
   ): Promise<{ ok: boolean }> {
     const { pin } = payload;
-    await this.engine.nextQuiz(
-      pin,
-      this.requireHostId(socket),
-      String(payload.quizId ?? ''),
-      payload.archive === true,
-    );
+    await this.engine.nextQuiz(pin, this.requireHostId(socket), String(payload.quizId ?? ''));
+    await this.outlineToConsoles(pin);
+    return { ok: true };
+  }
+
+  /** `host:back-to-lobby`: the quiz over or stopped, the room picks the next in its lobby. */
+  @SubscribeMessage('host:back-to-lobby')
+  async hostBackToLobby(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string; archive?: boolean },
+  ): Promise<{ ok: boolean }> {
+    const { pin } = payload;
+    await this.engine.backToLobby(pin, this.requireHostId(socket), payload.archive === true);
+    await this.outlineToConsoles(pin);
+    return { ok: true };
+  }
+
+  private async outlineToConsoles(pin: string): Promise<void> {
     for (const control of await this.server.in(pin).fetchSockets()) {
       if (control.data.isHostControl) await this.emitOutline(control, pin);
     }
-    return { ok: true };
   }
 
   /** `host:lock` : ferme la partie aux nouveaux participants (ou la rouvre), jusqu'à la fin. */

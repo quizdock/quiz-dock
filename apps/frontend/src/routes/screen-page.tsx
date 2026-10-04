@@ -659,6 +659,9 @@ export function ScreenSurface({
           </span>{' '}
           <b>{view.quizTitle}</b>
         </span>
+      ) : view.state === 'LOBBY' && view.totalQuestions === 0 ? (
+        // Back from a quiz: the host picks the next.
+        <span className="text-muted-foreground text-[1.2em]">{t('live:room.noQuizYet')}</span>
       ) : null,
       null,
     );
