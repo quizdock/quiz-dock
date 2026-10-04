@@ -110,7 +110,12 @@ const CHRONO_STEPS = [-5, -1, 1, 5] as const;
  * padding (2 × 1.5rem): its action bar (`mt-auto`, sticky) then sits at the
  * bottom of the screen whatever the height of the slide or question on screen.
  */
-const CONSOLE_SECTION = 'flex min-h-[calc(100dvh-7rem)] flex-col py-6';
+// On a wide screen the console holds in the window: the header, the stage and the side
+// column (each scrolling on its own), the action bar; nothing slides under the bar.
+// The header (3.75rem) and the page's top margin (1.5rem) above it; below, the action
+// bar sits on the window's edge (the page's bottom margin taken back).
+const CONSOLE_SECTION =
+  'flex min-h-[calc(100dvh-7rem)] flex-col py-6 lg:-mb-6 lg:h-[calc(100dvh-5.25rem)] lg:min-h-0 lg:pb-0';
 
 export function ControlPage() {
   const { pin } = useParams({ from: '/session/$pin/console' });
@@ -427,16 +432,16 @@ function HostConsole({
   // The transport, above the outline: the pace (auto or not, play / pause), then what
   // changes or stops the quiz, and what closes the room.
   const transport = (
-    <div className="bg-card flex flex-col gap-3 rounded-xl border p-3">
-      <div className="flex items-center justify-between gap-2">
+    <div className="bg-card flex flex-col gap-2 rounded-xl border p-2.5">
+      <div className="flex items-center justify-end gap-3">
         <Tooltip label={t('control.modeAutoTooltip')}>
           <label className="flex items-center gap-2 text-sm font-medium">
+            {t('control.modeAuto')}
             <Switch
               checked={view.mode === 'auto'}
               onCheckedChange={(auto) => setMode(auto ? 'auto' : 'manual')}
               aria-label={t('control.modeAuto')}
             />
-            {t('control.modeAuto')}
           </label>
         </Tooltip>
         <PauseButton paused={view.paused} disabled={!pausable} onToggle={setPaused} />
@@ -465,7 +470,7 @@ function HostConsole({
 
   // The right column: the whole quiz, or the players.
   const sideColumn = (
-    <aside className="bg-card flex min-h-0 flex-col gap-2 rounded-xl border p-3 lg:max-h-[calc(100dvh-24rem)]">
+    <aside className="bg-card flex min-h-0 flex-col gap-2 rounded-xl border p-3">
       <div className="flex items-center gap-2">
         <div role="tablist" className="bg-muted flex rounded-md p-0.5 text-sm">
           {(['outline', 'players'] as const).map((id) => (
@@ -986,16 +991,20 @@ function HostConsole({
 
   return (
     <section className={cn(CONSOLE_SECTION, 'gap-4')}>
-      <header className="flex flex-col gap-3 border-b pb-3">
-        {rowOne}
-        {rowTwo}
-        <ChromiumNotice />
+      <header className="flex flex-wrap items-start gap-x-5 gap-y-3 border-b pb-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          {rowOne}
+          {rowTwo}
+        </div>
+        {/* The transport, in the header's right corner, above the outline. */}
+        <div className="w-full lg:w-[20rem]">{transport}</div>
+        <div className="w-full empty:hidden">
+          <ChromiumNotice />
+        </div>
       </header>
       {/* Whatever the view, the participants and the quiz's outline stay beside it. */}
-      <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
-        {/* First on a narrow screen; on a wide one, at the top of the right column. */}
-        <div className="lg:col-start-2 lg:row-start-1">{transport}</div>
-        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+      <div className="grid flex-1 items-start gap-5 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-stretch">
+        <div className="min-w-0 lg:min-h-0 lg:overflow-y-auto">
           {tab === 'screen' ? (
             // The projection's 16:9, scaled to the column. The console's own session: a
             // second one would re-join the room on the host's socket.
@@ -1008,7 +1017,7 @@ function HostConsole({
             <div className="flex min-w-0 flex-col gap-5">{centre}</div>
           )}
         </div>
-        <div className="lg:col-start-2 lg:row-start-2">{sideColumn}</div>
+        {sideColumn}
       </div>
       <ActionBar status={status} primary={primary} />
     </section>
