@@ -264,7 +264,8 @@
     "backToLobby": "返回大廳",
     "backToLobbyTooltip": "房間返回大廳，您在那裡選擇下一個測驗",
     "backToLobbyDescription": "參與者留在房間內，在大廳重新會合，您在那裡選擇下一個測驗；無需再次輸入 PIN。",
-    "noQuizYetHint": "房間已返回大廳：請選擇接下來進行的測驗。"
+    "noQuizYetHint": "房間已返回大廳：請選擇接下來進行的測驗。",
+    "columnRank": "排名"
   },
   "screen": {
     "sessionUnavailable": "房間無法使用。",

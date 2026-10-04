@@ -264,7 +264,8 @@
     "backToLobby": "Retour au lobby",
     "backToLobbyTooltip": "Le salon revient à son lobby, où vous choisissez le quiz suivant",
     "backToLobbyDescription": "Les participants restent dans le salon et se retrouvent dans son lobby, où vous choisissez le quiz suivant ; personne ne ressaisit le PIN.",
-    "noQuizYetHint": "Le salon est revenu à son lobby : choisissez le quiz qu’il joue ensuite."
+    "noQuizYetHint": "Le salon est revenu à son lobby : choisissez le quiz qu’il joue ensuite.",
+    "columnRank": "Rang"
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",

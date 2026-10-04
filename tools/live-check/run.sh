@@ -8,6 +8,7 @@ set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
 out=${LIVE_CHECK_OUT:-$(mktemp -d)}
+mkdir -p "$out" && out=$(cd "$out" && pwd) # absolute: docker takes a bare name for a volume
 "$root/tools/screenshots/run.sh" --up
 docker run --rm --network container:quizdock-demo-frontend-1 --ipc host \
   -v "$here:/check:ro" -v quizdock-demo-playwright:/work -v "$out:/out" \

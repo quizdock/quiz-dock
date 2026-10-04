@@ -264,7 +264,8 @@
     "backToLobby": "Back to the lobby",
     "backToLobbyTooltip": "The room goes back to its lobby, where you pick the next quiz",
     "backToLobbyDescription": "The participants stay in the room and meet again in its lobby, where you pick the next quiz; nobody types the PIN again.",
-    "noQuizYetHint": "The room is back in its lobby: choose the quiz it plays next."
+    "noQuizYetHint": "The room is back in its lobby: choose the quiz it plays next.",
+    "columnRank": "Rank"
   },
   "screen": {
     "sessionUnavailable": "Room unavailable.",

@@ -322,12 +322,22 @@ async function main() {
   log(problems.length ? `PROBLEMS:\n- ${problems.join('\n- ')}` : 'ALL CHECKS PASSED');
 }
 
+/** The stack as found: the seat let go, the host's language back to the instance's. */
+async function cleanUp() {
+  await api('PATCH', '/me/preferences', { language: null }).catch(() => undefined);
+  await api('POST', '/auth/host-seat/release').catch(() => undefined);
+}
+
 main()
-  .then(() => process.exit(problems.length ? 1 : 0))
+  .then(async () => {
+    await cleanUp();
+    process.exit(problems.length ? 1 : 0);
+  })
   .catch(async (err) => {
     console.error('ERROR', err.message);
     for (const [name, page] of Object.entries(pages)) {
       await page.screenshot({ path: `${OUT}/zz-failure-${name}.png` }).catch(() => undefined);
     }
+    await cleanUp();
     process.exit(1);
   });

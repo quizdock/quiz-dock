@@ -13,13 +13,14 @@ import { useMeControllerMe } from '../api/generated/me/me';
 import type { QuizDto } from '../api/generated/model';
 import { useQuizzesControllerList } from '../api/generated/quizzes/quizzes';
 import { type GameSocket, emitWithAckOrError } from './game-client';
+import { serverNow } from './clock';
 import { LeaderboardList } from './live-components';
 import { mediaUrl } from '@/lib/media-url';
 import { CheckboxField } from '@/components/ui/checkbox-field';
 
-/** Whole seconds left until `at` (ms epoch), ticking; 0 once it has passed. */
+/** Whole seconds left until `at` (server ms epoch), ticking; 0 once it has passed. */
 function useSecondsLeft(at: number): number {
-  const left = () => Math.max(0, Math.ceil((at - Date.now()) / 1000));
+  const left = () => Math.max(0, Math.ceil((at - serverNow()) / 1000));
   const [seconds, setSeconds] = useState(left);
   useEffect(() => {
     setSeconds(left());
@@ -46,8 +47,10 @@ export function LobbyCountdown({
   const { t } = useTranslation('live');
   const seconds = useSecondsLeft(startAt);
   return (
-    <span className={cn('inline-flex items-center gap-2', className)} role="timer">
-      <span className="tabular-nums">{t('room.startsIn', { count: seconds })}</span>
+    <span className={cn('inline-flex items-center gap-2', className)}>
+      <span role="timer" className="tabular-nums">
+        {t('room.startsIn', { count: seconds })}
+      </span>
       {onStop ? (
         <Tooltip label={t('room.stopCountdown')}>
           <Button

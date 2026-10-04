@@ -23,7 +23,7 @@ export async function loadNamespace(lang: AppLang, ns: Namespace): Promise<void>
 
 /**
  * `t` in a quiz's language (#83), for the text the app writes into a quiz (the True and
- * False of a true or false question). The instance's language while that one loads, or
+ * False of a true or false question). The interface's language while that one loads, or
  * when the app does not speak it.
  */
 export function useContentT(language: string | undefined, ns: Namespace) {

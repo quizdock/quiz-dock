@@ -75,7 +75,7 @@ The variables most instances set:
 | Variable | Default | What it does |
 |---|---|---|
 | `APP_NAME` | `QuizDock` | The name in the header, the tab title and share texts. |
-| `APP_LANG` | `en` | The interface language: `en`, `fr`, `es`, `zh`, `zh-TW`, `tr`. |
+| `APP_LANG` | `en` | The instance's interface language, by default (a host may pick theirs; the big screen and the phones speak the quiz's or the room's): `en`, `fr`, `es`, `zh`, `zh-TW`, `tr`. |
 | `AUTH_MODE` | `none` | `none`: local mode, no identity provider, one host seat. `oidc`: sign-in with your provider. |
 | `APP_PUBLIC_URL` | — | The public address, offered first as the invitation address (QR code, join link). |
 | `ALLOW_ANONYMOUS_PARTICIPANTS` | `false` | OIDC mode only: lets hosts open a game to a PIN and a nickname. |

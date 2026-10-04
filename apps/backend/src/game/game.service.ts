@@ -280,8 +280,11 @@ export class GameService {
       ZERO_SCORE,
       GAME_TTL_S,
       GameState.Ended,
-      // The game a late rating goes to: the last one with a quiz, not a lobby without one.
-      previous.quizId ? previous.id : ((await this.getRoom(pin))?.previousGameId ?? previous.id),
+      // The game a late rating goes to: the last one played.
+      // A game never started (a lobby, with a quiz or without) keeps the one before it.
+      previous.currentIndex >= 0
+        ? previous.id
+        : ((await this.getRoom(pin))?.previousGameId ?? previous.id),
     );
     await this.touchRoom(pin);
     return gameId;

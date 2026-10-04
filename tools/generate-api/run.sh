@@ -11,7 +11,9 @@ set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
 node=$(cat "$root/.nvmrc")
+# The files written back are made the host user's (a Linux host would get root's).
 docker run --rm -v "$root:/src" -v quizdock-generate-api:/store -e CI=true -e COREPACK_ENABLE_DOWNLOAD_PROMPT=0 \
+  -e OWNER="$(id -u):$(id -g)" \
   "node:$node" sh -euc '
     mkdir /work && cd /src
     tar -cf - --exclude=node_modules --exclude=dist \
@@ -27,5 +29,6 @@ docker run --rm -v "$root:/src" -v quizdock-generate-api:/store -e CI=true -e CO
     cp apps/backend/openapi/openapi.json /src/apps/backend/openapi/
     rm -rf /src/apps/frontend/src/api/generated
     cp -R apps/frontend/src/api/generated /src/apps/frontend/src/api/
+    chown -R "$OWNER" /src/apps/backend/openapi/openapi.json /src/apps/frontend/src/api/generated
   '
 git -C "$root" status --short -- apps/backend/openapi apps/frontend/src/api/generated

@@ -708,7 +708,7 @@ export function ScreenSurface({
     );
     // A room's next quiz (#198): the lobby on the left, the room's standings on the right.
     stage = nextInRoom ? (
-      <div className="grid w-full items-start gap-[3em] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid w-full grid-cols-[minmax(0,3fr)_minmax(0,2fr)] items-start gap-[3em]">
         {lobby}
         <RoomStandingsPanel standings={nextInRoom} max={10} className="text-[1.1em]" />
       </div>

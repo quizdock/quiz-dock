@@ -142,7 +142,16 @@ function HostConsole({
 
   const joinUrl = joinUrlFor(view, pin);
   const screenUrl = `${window.location.origin}/session/${pin}/projection`;
-  const emit = (event: 'host:start' | 'host:reveal' | 'host:next') => socket?.emit(event, { pin });
+  // A double click on Next moves one step: the second, within a moment, is dropped (the
+  // reveal's Next would otherwise skip the quiz's standings that follow it).
+  const lastNext = useRef(0);
+  const emit = (event: 'host:start' | 'host:reveal' | 'host:next') => {
+    if (event === 'host:next') {
+      if (Date.now() - lastNext.current < NEXT_DEBOUNCE_MS) return;
+      lastNext.current = Date.now();
+    }
+    socket?.emit(event, { pin });
+  };
   const [tab, setTab] = useState<HostTab>('control');
   // The right column's tab; null = the phase's default (players in the lobby, the outline after).
   const [side, setSide] = useState<SideTab | null>(null);
@@ -402,18 +411,6 @@ function HostConsole({
   // Row 2 — what I set and how I stop.
   const rowTwo = (
     <div className="flex flex-wrap items-center gap-2">
-      <Tooltip label={t('control.modeAutoTooltip')}>
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <Switch
-            checked={view.mode === 'auto'}
-            onCheckedChange={(auto) => setMode(auto ? 'auto' : 'manual')}
-            aria-label={t('control.modeAuto')}
-          />
-          {t('control.modeAuto')}
-        </label>
-      </Tooltip>
-      <PauseButton paused={view.paused} disabled={!pausable} onToggle={setPaused} />
-      <span aria-hidden className="bg-border mx-1 h-6 w-px" />
       <LockButton locked={view.joinLocked} onToggle={setJoinLocked} />
       <RoomSoundsButton
         sounds={view.sounds}
@@ -424,31 +421,51 @@ function HostConsole({
         onToggle={(on) => socket?.emit('host:motion', { pin, on })}
       />
       {screenButton}
-      <span className="flex-1" />
-      <span aria-hidden className="bg-border mx-1 h-6 w-px" />
-      {inLobby ? (
-        noQuiz ? null : (
-          <QuizPickButton
-            pin={pin}
-            socket={socket}
-            currentQuizId={view.quizId}
-            playedQuizIds={view.standings?.playedQuizIds}
-          />
-        )
-      ) : phase === 'podium' ? null : (
-        <BackToLobbyButton pin={pin} socket={socket} mode="stop" />
-      )}
-      <EndGameButton
-        label={inLobby ? t('control.stopSession') : t('control.endSession')}
-        offerArchive={!inLobby}
-        onConfirm={endGame}
-      />
+    </div>
+  );
+
+  // The transport, above the outline: the pace (auto or not, play / pause), then what
+  // changes or stops the quiz, and what closes the room.
+  const transport = (
+    <div className="bg-card flex flex-col gap-3 rounded-xl border p-3">
+      <div className="flex items-center justify-between gap-2">
+        <Tooltip label={t('control.modeAutoTooltip')}>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <Switch
+              checked={view.mode === 'auto'}
+              onCheckedChange={(auto) => setMode(auto ? 'auto' : 'manual')}
+              aria-label={t('control.modeAuto')}
+            />
+            {t('control.modeAuto')}
+          </label>
+        </Tooltip>
+        <PauseButton paused={view.paused} disabled={!pausable} onToggle={setPaused} />
+      </div>
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {inLobby ? (
+          noQuiz ? null : (
+            <QuizPickButton
+              pin={pin}
+              socket={socket}
+              currentQuizId={view.quizId}
+              playedQuizIds={view.standings?.playedQuizIds}
+            />
+          )
+        ) : phase === 'podium' ? null : (
+          <BackToLobbyButton pin={pin} socket={socket} mode="stop" />
+        )}
+        <EndGameButton
+          label={inLobby ? t('control.stopSession') : t('control.endSession')}
+          offerArchive={!inLobby}
+          onConfirm={endGame}
+        />
+      </div>
     </div>
   );
 
   // The right column: the whole quiz, or the players.
   const sideColumn = (
-    <aside className="bg-card flex min-h-0 flex-col gap-2 rounded-xl border p-3 lg:max-h-[calc(100dvh-16rem)]">
+    <aside className="bg-card flex min-h-0 flex-col gap-2 rounded-xl border p-3 lg:max-h-[calc(100dvh-24rem)]">
       <div className="flex items-center gap-2">
         <div role="tablist" className="bg-muted flex rounded-md p-0.5 text-sm">
           {(['outline', 'players'] as const).map((id) => (
@@ -852,6 +869,7 @@ function HostConsole({
     const standingsNext =
       state === 'REVEAL' &&
       question.type !== 'poll' &&
+      question.basePoints > 0 &&
       question.questionIndex + 1 < view.totalQuestions;
     primary = reviewing ? (
       backToLive
@@ -974,19 +992,23 @@ function HostConsole({
         <ChromiumNotice />
       </header>
       {/* Whatever the view, the participants and the quiz's outline stay beside it. */}
-      <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        {tab === 'screen' ? (
-          // The projection's 16:9, scaled to the column. The console's own session: a
-          // second one would re-join the room on the host's socket.
-          <ScaledStage className="rounded-xl border">
-            <ScreenSurface pin={pin} view={view} socket={socket} role="preview" fit="box" />
-          </ScaledStage>
-        ) : tab === 'player' ? (
-          <ParticipantPreview view={view} pin={pin} />
-        ) : (
-          <div className="flex min-w-0 flex-col gap-5">{centre}</div>
-        )}
-        {sideColumn}
+      <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[auto_1fr]">
+        {/* First on a narrow screen; on a wide one, at the top of the right column. */}
+        <div className="lg:col-start-2 lg:row-start-1">{transport}</div>
+        <div className="min-w-0 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          {tab === 'screen' ? (
+            // The projection's 16:9, scaled to the column. The console's own session: a
+            // second one would re-join the room on the host's socket.
+            <ScaledStage className="rounded-xl border">
+              <ScreenSurface pin={pin} view={view} socket={socket} role="preview" fit="box" />
+            </ScaledStage>
+          ) : tab === 'player' ? (
+            <ParticipantPreview view={view} pin={pin} />
+          ) : (
+            <div className="flex min-w-0 flex-col gap-5">{centre}</div>
+          )}
+        </div>
+        <div className="lg:col-start-2 lg:row-start-2">{sideColumn}</div>
       </div>
       <ActionBar status={status} primary={primary} />
     </section>
@@ -1447,7 +1469,7 @@ function ParticipantsList({
       order.key === 'nickname'
         ? row.player.nickname.toLocaleLowerCase()
         : order.key === 'rank'
-          ? (row.score?.quizRank ?? players.length + row.arrival)
+          ? ((byRoom ? row.score?.roomRank : row.score?.quizRank) ?? players.length + row.arrival)
           : (row.score?.[order.key] ?? 0);
     rows.sort((a, b) => {
       const [x, y] = [value(a), value(b)];
@@ -1463,7 +1485,7 @@ function ParticipantsList({
     });
   }
   /** A header that sorts: ascending first for the rank and the name, descending for a score. */
-  const header = (key: StandingsSort['key'], label: string, className: string) => {
+  const header = (key: StandingsSort['key'], label: string, className: string, name?: string) => {
     const active = order?.key === key;
     const descFirst = key === 'quizScore' || key === 'roomScore';
     return (
@@ -1474,6 +1496,7 @@ function ParticipantsList({
       >
         <button
           type="button"
+          aria-label={name}
           onClick={() => setSort(active ? { key, desc: !order.desc } : { key, desc: descFirst })}
           className={cn(
             'hover:text-foreground inline-flex items-center gap-0.5',
@@ -1496,7 +1519,7 @@ function ParticipantsList({
     <table className="w-full table-fixed border-collapse text-sm">
       <thead className="text-muted-foreground text-xs">
         <tr>
-          {header('rank', '#', 'w-7 text-left')}
+          {header('rank', '#', 'w-7 text-left', t('control.columnRank'))}
           {header('nickname', t('control.columnParticipant'), 'text-left')}
           <th scope="col" className="w-9">
             <span className="sr-only">{t('control.columnStatus')}</span>
@@ -1776,6 +1799,9 @@ function ChronoControls({
     </div>
   );
 }
+
+/** How long a second Next is taken for the same click (ms). */
+const NEXT_DEBOUNCE_MS = 800;
 
 type HostTab = 'control' | 'screen' | 'player';
 const HOST_TABS: HostTab[] = ['control', 'screen', 'player'];

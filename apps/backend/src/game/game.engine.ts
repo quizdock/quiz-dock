@@ -271,10 +271,19 @@ export class GameEngine {
    * everyone being ready may all come at the same moment (#198).
    */
   private async startQuiz(ref: GameRef, counting: boolean): Promise<void> {
-    if (!(await this.firstThrough(gameKeys.advanceLock(ref.id, 'start')))) return;
-    if (counting) await this.clearLobbyCountdown(ref);
-    const snapshot = await this.requireSnapshot(ref.id, true);
-    await this.enterStep(ref, snapshot, 0);
+    const lock = gameKeys.advanceLock(ref.id, 'start');
+    if (!(await this.firstThrough(lock))) return;
+    try {
+      // Still this game's lobby: the host may have replaced the quiz meanwhile.
+      const meta = await this.currentMeta(ref);
+      if (!meta || meta.state !== GameState.Lobby) return;
+      if (counting) await this.clearLobbyCountdown(ref);
+      const snapshot = await this.requireSnapshot(ref.id, true);
+      await this.enterStep(ref, snapshot, 0);
+    } catch (err) {
+      await this.redis.del(lock); // nothing started: Start can be tried again
+      throw err;
+    }
   }
 
   /** The next quiz's lobby starts on its own (#198), in `NEXT_QUIZ_COUNTDOWN_MS`. */
@@ -383,6 +392,7 @@ export class GameEngine {
    * '' for each quiz's own. Every screen is told; a tag that is not one is ignored.
    */
   private async setAudienceLanguage(ref: GameRef, language: string): Promise<void> {
+    if (typeof language !== 'string') return;
     if (language !== '' && !(LANGUAGE_RE.test(language) && language.length <= 10)) return;
     await this.redis.hset(gameKeys.room(ref.pin), roomHash({ audienceLanguage: language }));
     const [snapshot, meta] = await Promise.all([
@@ -1599,7 +1609,12 @@ export class GameEngine {
       totalQuestions: meta.totalQuestions,
     });
 
-    if (prev === GameState.MediaLoading) {
+    if (prev === GameState.Lobby && meta.lobbyStartAt) {
+      // Back in a lobby that was counting (#198): the countdown starts over, for everyone.
+      const startAt = Date.now() + NEXT_QUIZ_COUNTDOWN_MS;
+      await this.armLobbyCountdown(ref, startAt);
+      this.server.to(pin).emit('lobby:countdown', { startAt });
+    } else if (prev === GameState.MediaLoading) {
       // Back after a wait for media: no more waiting, the step starts.
       await this.endMediaWait(ref, waitedStep(meta));
     } else if (prev === GameState.Answering) {

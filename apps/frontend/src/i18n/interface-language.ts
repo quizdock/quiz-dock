@@ -10,11 +10,17 @@ import { namespaces, resolveLang } from './languages';
  * A language the app does not speak falls back to the instance's.
  */
 
-/** Switches the interface to `tag` (BCP 47) when the app speaks it, else to the instance's. */
+let latest = 0;
+
+/**
+ * Switches the interface to `tag` (BCP 47) when the app speaks it, else to the instance's.
+ * The last call wins: one still loading its language is dropped when another came after.
+ */
 export async function setInterfaceLanguage(tag: string | null): Promise<void> {
+  const call = ++latest;
   const lang = (tag && contentLang(tag)) || resolveLang();
-  if (i18next.language === lang) return;
   await Promise.all(namespaces.map((ns) => loadNamespace(lang, ns)));
+  if (call !== latest || i18next.language === lang) return;
   await i18next.changeLanguage(lang);
   document.documentElement.lang = lang;
 }
@@ -42,6 +48,7 @@ export function useAudienceLanguage(tag: string | null | undefined): void {
 export function useInterfaceLanguage(hostLanguage: string | null): void {
   const wanted = useSyncExternalStore(subscribe, () => audience) ?? hostLanguage;
   useEffect(() => {
-    void setInterfaceLanguage(wanted);
+    // A language that does not load leaves the one shown: nothing else to do.
+    setInterfaceLanguage(wanted).catch(() => undefined);
   }, [wanted]);
 }
