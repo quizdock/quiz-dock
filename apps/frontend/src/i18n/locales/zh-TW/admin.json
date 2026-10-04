@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "初始設定此執行個體",
-    "invite": "此執行個體尚未完成初始設定。",
+    "invite": "此執行個體尚未完成全部設定。",
     "inviteLink": "開始設定",
     "closed": "此執行個體已完成初始設定：精靈已關閉（在 shell 中執行 `qd setup.reopen` 可重新開啟）。",
     "home": "首頁",

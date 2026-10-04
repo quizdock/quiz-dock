@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "Puesta en marcha de esta instancia",
-    "invite": "Esta instancia aún no está configurada.",
+    "invite": "Esta instancia aún no está configurada del todo.",
     "inviteLink": "Configurarla",
     "closed": "Esta instancia ya está configurada: el asistente está cerrado (`qd setup.reopen` lo vuelve a abrir, desde una shell).",
     "home": "Inicio",
