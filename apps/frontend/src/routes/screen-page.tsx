@@ -224,21 +224,33 @@ export function ScreenSurface({
   const total = view.totalQuestions || view.outline.length;
   const qNumber = (view.question?.questionIndex ?? view.questionIndex) + 1;
   const reviewing = !!view.nav?.review;
-  const where = (step: string) => (
+  const where = (step: string, withQuiz = true) => (
     <div className="flex min-w-0 flex-col text-left leading-tight">
-      <span className="font-semibold">{step}</span>
+      <span className="truncate font-semibold">{step}</span>
       {/* The room is the page's title: the heading a screen reader lands on. */}
       <div className="text-muted-foreground truncate text-[0.7em]">
         <h1 className="inline">{roomLabel(t, view.roomName, view.hostName)}</h1>
-        {view.quizTitle ? ` · ${view.quizTitle}` : null}
+        {withQuiz && view.quizTitle ? ` · ${view.quizTitle}` : null}
       </div>
+    </div>
+  );
+  /**
+   * The centre of a band, the same on every screen: a title on one line (cut with an
+   * ellipsis when it does not fit), a small label above it when there is one.
+   */
+  const bandTitle = (title: React.ReactNode, label?: React.ReactNode, muted?: boolean) => (
+    <div className="flex min-w-0 flex-col leading-tight">
+      {label ? <span className="text-muted-foreground truncate text-[0.7em]">{label}</span> : null}
+      <span className={cn('truncate font-semibold', muted && 'text-muted-foreground font-normal')}>
+        {title}
+      </span>
     </div>
   );
   // The way in for latecomers, while the room takes newcomers (the lobby shows it in full).
   const joinChip = view.joinLocked ? null : (
-    <div className="qd-join flex items-center justify-end gap-[0.6em]">
-      <div className="text-right leading-tight">
-        <span className="text-muted-foreground block text-[0.7em]">
+    <div className="qd-join flex min-w-0 items-center justify-end gap-[0.6em]">
+      <div className="min-w-0 text-right leading-tight">
+        <span className="text-muted-foreground block truncate text-[0.7em]">
           {t('screen.joinAt')} {joinHost}
         </span>
         <span className="qd-join-pin font-mono text-[1.3em] font-bold tracking-[0.15em]">
@@ -270,6 +282,8 @@ export function ScreenSurface({
               // third, the right one to its own size, the centre in the rest, cut if long.
               'grid-cols-[fit-content(35%)_minmax(0,1fr)_auto] gap-[1em] lg:grid-cols-[1fr_minmax(0,1.5fr)_1fr]',
         side === 'top' ? 'border-b' : 'border-t',
+        // On a narrow screen the top band is secondary: smaller, the stage keeps the room.
+        side === 'top' && !boxed && 'max-lg:text-[0.8em]',
         tone === 'warning'
           ? 'bg-warning/25'
           : 'bg-background/85 on-backdrop:bg-card backdrop-blur [text-shadow:none]',
@@ -277,10 +291,18 @@ export function ScreenSurface({
       data-band={side}
     >
       <div className="min-w-0">{left}</div>
-      <div className={cn('min-w-0 text-center', !stretch && !boxed && 'max-lg:truncate')}>
+      {/* With nothing on its right, the centre takes that side too: a long title stays on
+          one line as long as it can, two at most, then an ellipsis. */}
+      <div
+        className={cn(
+          'min-w-0 text-center',
+          !stretch && 'line-clamp-2',
+          !stretch && right == null && 'col-span-2',
+        )}
+      >
         {centre}
       </div>
-      <div className="min-w-0">{right}</div>
+      {!stretch && right == null ? null : <div className="min-w-0">{right}</div>}
     </div>
   );
   const bigStatus = (text: React.ReactNode, small?: React.ReactNode, warn?: boolean) => (
@@ -426,7 +448,7 @@ export function ScreenSurface({
     top = band(
       'top',
       where(t('screen.stepAfter', { n: qNumber, total })),
-      <span className="text-[1.3em] font-bold">{t('screen.leaderboard')}</span>,
+      bandTitle(t('screen.leaderboard')),
       joinChip,
     );
     stage = (
@@ -450,11 +472,9 @@ export function ScreenSurface({
     top = band(
       'top',
       where(t('screen.stepQuestion', { n: qNumber, total })),
-      reviewing ? (
-        <span className="text-[1.2em] font-bold">{t('screen.lookingBackAt', { n: qNumber })}</span>
-      ) : (
-        <span className="text-muted-foreground">{t('screen.answerLabel')}</span>
-      ),
+      reviewing
+        ? bandTitle(t('screen.lookingBackAt', { n: qNumber }))
+        : bandTitle(t('screen.answerLabel'), undefined, true),
       joinChip,
       reviewing ? 'warning' : undefined,
     );
@@ -661,18 +681,16 @@ export function ScreenSurface({
     const nextInRoom = view.standings ? view.standings : null;
     top = band(
       'top',
-      where(t('screen.phaseLobby')),
-      view.quizTitle ? (
-        <span className="text-[1.2em]">
-          <span className="text-muted-foreground">
-            {nextInRoom ? t('screen.nextQuiz') : t('screen.quizLabel')}
-          </span>{' '}
-          <b>{view.quizTitle}</b>
-        </span>
-      ) : view.state === 'LOBBY' && view.totalQuestions === 0 ? (
-        // Back from a quiz: the host picks the next.
-        <span className="text-muted-foreground text-[1.2em]">{t('live:room.pickingNextQuiz')}</span>
-      ) : null,
+      where(t('screen.phaseLobby'), false),
+      view.quizTitle
+        ? bandTitle(
+            view.quizTitle,
+            (nextInRoom ? t('screen.nextQuiz') : t('screen.quizLabel')).replace(/\s*[:：]\s*$/, ''),
+          )
+        : view.state === 'LOBBY' && view.totalQuestions === 0
+          ? // Back from a quiz: the host picks the next.
+            bandTitle(t('live:room.pickingNextQuiz'), undefined, true)
+          : null,
       null,
     );
     // Beside the room's standings, the invitation keeps its QR code and PIN side by side.
@@ -691,9 +709,21 @@ export function ScreenSurface({
               aria-label={t('screen.qrLabel')}
             />
           </div>
-          <div className="flex flex-col items-start gap-[0.3em] text-left">
+          <div className="flex min-w-0 flex-col items-start gap-[0.3em] text-left">
             <span className="text-[1.4em]">{t('screen.joinAt')}</span>
-            <span className="text-[2em] font-bold">{joinHost}</span>
+            {/* A long address gets smaller rather than spill: it stays on one or two lines. */}
+            <span
+              className={cn(
+                'max-w-full font-bold [overflow-wrap:anywhere]',
+                joinHost.length <= 24
+                  ? 'text-[2em]'
+                  : joinHost.length <= 36
+                    ? 'text-[1.5em]'
+                    : 'text-[1.1em]',
+              )}
+            >
+              {joinHost}
+            </span>
             <span className="qd-join-pin font-mono text-[4.5em] leading-none font-bold tracking-[0.12em]">
               {pin}
             </span>
@@ -710,10 +740,10 @@ export function ScreenSurface({
             {view.players.slice(0, ROSTER_MAX).map((p) => (
               <li
                 key={p.playerId}
-                className="flex items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
+                className="flex max-w-[14em] items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
               >
                 <Avatar name={p.avatar || p.nickname} size="2em" />
-                {p.nickname}
+                <span className="truncate">{p.nickname}</span>
               </li>
             ))}
             {view.players.length > ROSTER_MAX ? (
