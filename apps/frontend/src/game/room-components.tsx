@@ -1,6 +1,6 @@
 import type { RoomStandingsPayload } from '@quiz-dock/contracts';
-import { CircleCheck, ListChecks, ListPlus } from 'lucide-react';
-import { useState } from 'react';
+import { CircleCheck, ListChecks, ListPlus, Square } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TagFilter, tagsOf } from '@/components/tag-filter';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,55 @@ import { type GameSocket, emitWithAckOrError } from './game-client';
 import { LeaderboardList } from './live-components';
 import { mediaUrl } from '@/lib/media-url';
 import { CheckboxField } from '@/components/ui/checkbox-field';
+
+/** Whole seconds left until `at` (ms epoch), ticking; 0 once it has passed. */
+function useSecondsLeft(at: number): number {
+  const left = () => Math.max(0, Math.ceil((at - Date.now()) / 1000));
+  const [seconds, setSeconds] = useState(left);
+  useEffect(() => {
+    setSeconds(left());
+    const id = setInterval(() => setSeconds(left()), 250);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `left` reads `at` only
+  }, [at]);
+  return seconds;
+}
+
+/**
+ * The next quiz starts on its own (#198): the seconds left, and for the host a stop —
+ * the quiz then waits for **Start**.
+ */
+export function LobbyCountdown({
+  startAt,
+  onStop,
+  className,
+}: {
+  startAt: number;
+  onStop?: () => void;
+  className?: string;
+}) {
+  const { t } = useTranslation('live');
+  const seconds = useSecondsLeft(startAt);
+  return (
+    <span className={cn('inline-flex items-center gap-2', className)} role="timer">
+      <span className="tabular-nums">{t('room.startsIn', { count: seconds })}</span>
+      {onStop ? (
+        <Tooltip label={t('room.stopCountdown')}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label={t('room.stopCountdown')}
+            onClick={onStop}
+            className="size-8"
+          >
+            <Square className="size-3.5" />
+          </Button>
+        </Tooltip>
+      ) : null}
+    </span>
+  );
+}
 
 /** The room's name as the screens show it: its own, else "<host>'s room". */
 export function roomLabel(

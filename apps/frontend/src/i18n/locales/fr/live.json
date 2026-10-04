@@ -251,7 +251,13 @@
     "pickerPlayedAll": "Tous les quiz",
     "pickerPlayedFresh": "Pas encore joués",
     "pickerPlayedDone": "Déjà joués",
-    "pickerPlayedMark": "déjà joué"
+    "pickerPlayedMark": "déjà joué",
+    "showStandings": "Afficher le classement",
+    "columnParticipant": "Participant",
+    "columnStatus": "État",
+    "columnQuiz": "Quiz",
+    "columnTotal": "Total",
+    "columnActions": "Actions"
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",
@@ -472,7 +478,10 @@
     "afterQuizzes_one": "après {{count}} quiz",
     "afterQuizzes_other": "après {{count}} quiz",
     "defaultName": "Salon de {{host}}",
-    "fallbackName": "Salon"
+    "fallbackName": "Salon",
+    "startsIn_one": "Départ dans {{count}} s",
+    "startsIn_other": "Départ dans {{count}} s",
+    "stopCountdown": "Arrêter le compte à rebours : le quiz attend « Démarrer »"
   },
   "sound": {
     "mute": "Couper le son",

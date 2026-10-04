@@ -251,7 +251,13 @@
     "pickerPlayedAll": "全部测验",
     "pickerPlayedFresh": "尚未玩过",
     "pickerPlayedDone": "已玩过",
-    "pickerPlayedMark": "已玩过"
+    "pickerPlayedMark": "已玩过",
+    "showStandings": "显示排行榜",
+    "columnParticipant": "参与者",
+    "columnStatus": "状态",
+    "columnQuiz": "测验",
+    "columnTotal": "总分",
+    "columnActions": "操作"
   },
   "screen": {
     "sessionUnavailable": "房间不可用。",
@@ -472,7 +478,10 @@
     "afterQuizzes_one": "共 {{count}} 个测验后",
     "afterQuizzes_other": "共 {{count}} 个测验后",
     "defaultName": "{{host}} 的房间",
-    "fallbackName": "房间"
+    "fallbackName": "房间",
+    "startsIn_one": "{{count}} 秒后开始",
+    "startsIn_other": "{{count}} 秒后开始",
+    "stopCountdown": "停止倒计时：测验等待“开始”"
   },
   "sound": {
     "mute": "静音",

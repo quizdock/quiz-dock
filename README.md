@@ -146,12 +146,13 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
   uploaded; **global media** are what the instance provides to every host; each media
   carries its **credit** (author, licence, source), shown with the quiz and under the
   podium. Links to free libraries (Openverse, Wikimedia Commons, Freesound…).
-- **Scoring that rewards speed** — time-weighted points, streak bonuses, leaderboard
-  between questions, final podium; per-question rules (*closest answer wins*, partial
+- **Scoring that rewards speed** — time-weighted points, streak bonuses, the standings
+  after each question, final podium; per-question rules (*closest answer wins*, partial
   credit, typo-tolerant text, double or fixed points).
 - **Several quizzes in one room** — players join once and stay: the host picks the
-  next quiz at the podium, everyone meets again in its lobby, and the room keeps its
-  own standings across the quizzes, shown live and kept in *History* with the results.
+  next quiz at the podium, everyone meets again in its lobby, which starts on its own
+  after 30 s or once everyone is ready, and the room keeps its own standings across the
+  quizzes, shown live and kept in *History* with the results.
 - **Self-hosted and private** — one Docker image (`amd64` / `arm64`), no SaaS, no
   telemetry, no ads; interface in English, French, Spanish, Simplified and Traditional
   Chinese, and Turkish; rebrand name, logo and CSS without a rebuild.
@@ -175,7 +176,7 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
 - **Your bank at a glance** — My quizzes and the templates as a list or a grid (each quiz showing its first slide), filtered by status, owner, language and tags, each quiz with its size, language, date, licence and tags; archived quizzes kept out of the way.
 - **Remote participants** _(experimental)_ — a participant following from home says so when joining and gets the whole question on their device, sound and video included; the console shows who is remote and whose media are loaded.
 - **The projection on your own device** — a participant shares the big screen to a tablet or a computer (a link or a QR code, never their seat): it follows the projection, muted in the room, with sound for someone following from home. On the same phone, one tap switches between the answers and the big screen.
-- **Ready!** — participants say they are ready in the lobby; the host sees one count, including whose media are still loading, and still starts when they choose.
+- **Ready!** — participants say they are ready in the lobby; the host sees one count, including whose media are still loading, and still starts when they choose. The lobby of a room's next quiz starts on its own once everyone is ready, or after 30 s unless the host stops the countdown.
 - **Game sounds** — a tick at each answer, a gong at the reveal, a background track from your library while players answer (never over a question's own sound); set for the room from the lobby, kept from one quiz to the next. A sound button on every screen that plays something, a mixer for the room on the console, and one per device; *Without sound* for whoever prefers silence.
 - **Players without an account** — where everyone signs in, a host can still open a game to the PIN and a nickname alone, for visitors or trainees who have no account; chosen at each launch, or once and for all in *My account*.
 - **Keep the room to itself** — close the game to newcomers once everyone is in (or during play), remove a player, and guessing PINs is slowed down.

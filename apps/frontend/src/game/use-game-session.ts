@@ -25,6 +25,7 @@ import type {
   QuestionTimePayload,
   RoomSoundsPayload,
   RoomStandingsPayload,
+  HostScoreRow,
   ServerToClientEvents,
   SessionNotice,
   SlideShowPayload,
@@ -152,6 +153,10 @@ export interface GameView {
   hostName: string | null;
   /** The room's standings over its quizzes so far (#89); null before the first is over. */
   standings: RoomStandingsPayload | null;
+  /** Every player's quiz and room scores (#198), host console only; null until told. */
+  scores: HostScoreRow[] | null;
+  /** When the next quiz's lobby starts on its own (ms epoch, #198); null = no countdown. */
+  lobbyStartAt: number | null;
   /**
    * The quiz this participant can still rate: the last one they played, kept into
    * the next lobby (the host may move on while they rate). Null when they did not
@@ -215,6 +220,8 @@ export const INITIAL_VIEW: GameView = {
   roomName: null,
   hostName: null,
   standings: null,
+  scores: null,
+  lobbyStartAt: null,
   rateable: null,
 };
 
@@ -420,6 +427,8 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
         ...(p.title !== undefined ? { quizTitle: p.title } : {}),
       });
     const onStandings = (p: RoomStandingsPayload) => patch({ standings: p });
+    const onScores = (p: { rows: HostScoreRow[] }) => patch({ scores: p.rows });
+    const onCountdown = (p: { startAt: number | null }) => patch({ lobbyStartAt: p.startAt });
     const onLobbyYou = (p: { ready: boolean }) => patch({ youReady: p.ready });
     const onLobbyCount = (p: { ready: number; total: number }) => patch({ lobbyCount: p });
     const onSounds = (p: RoomSoundsPayload) => patch({ sounds: p });
@@ -503,6 +512,8 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
       'game:media': onGameMedia,
       'game:podium': onPodium,
       'room:standings': onStandings,
+      'game:scores': onScores,
+      'lobby:countdown': onCountdown,
       'room:info': onRoomInfo,
       'lobby:you': onLobbyYou,
       'lobby:count': onLobbyCount,

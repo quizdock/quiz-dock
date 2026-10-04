@@ -1,4 +1,4 @@
-import { RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { LobbyCountdown, RoomStandingsPanel, roomLabel } from '../game/room-components';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { LiveMotion } from '../game/motion/level';
 import { Pulse } from '../game/motion/primitives';
@@ -659,7 +659,7 @@ export function ScreenSurface({
       ) : null,
       null,
     );
-    stage = (
+    const lobby = (
       <div className="qd-lobby flex w-full flex-col items-center gap-[1.5em]">
         <div className="flex flex-wrap items-center justify-center gap-[3em]">
           <div className="qd-join-qr rounded-xl bg-white p-4 shadow">
@@ -688,14 +688,16 @@ export function ScreenSurface({
             </li>
           ))}
         </ul>
-        {nextInRoom ? (
-          <RoomStandingsPanel
-            standings={nextInRoom}
-            max={5}
-            className="max-w-[28em] text-[1.1em]"
-          />
-        ) : null}
       </div>
+    );
+    // A room's next quiz (#198): the lobby on the left, the room's standings on the right.
+    stage = nextInRoom ? (
+      <div className="grid w-full items-start gap-[3em] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        {lobby}
+        <RoomStandingsPanel standings={nextInRoom} max={10} className="text-[1.1em]" />
+      </div>
+    ) : (
+      lobby
     );
     bottom = band(
       'bottom',
@@ -708,7 +710,9 @@ export function ScreenSurface({
         </>,
         view.readiness?.lobby ? t('screen.readyOf', { ready: view.readiness.ready }) : null,
       ),
-      null,
+      view.lobbyStartAt ? (
+        <LobbyCountdown startAt={view.lobbyStartAt} className="text-[1.3em] font-semibold" />
+      ) : null,
     );
   }
 

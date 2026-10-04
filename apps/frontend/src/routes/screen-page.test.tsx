@@ -67,6 +67,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   roomName: null,
   hostName: null,
   standings: null,
+  scores: null,
+  lobbyStartAt: null,
   rateable: null,
   ...partial,
 });
