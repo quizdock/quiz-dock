@@ -291,18 +291,22 @@ export function ScreenSurface({
       data-band={side}
     >
       <div className="min-w-0">{left}</div>
-      {/* With nothing on its right, the centre takes that side too: a long title stays on
-          one line as long as it can, two at most, then an ellipsis. */}
+      {/* With nothing on its right, the top band's centre takes that side too: a long title
+          stays on one line as long as it can, two at most, then an ellipsis. The bottom
+          band's centre stays in the middle of the screen. */}
       <div
         className={cn(
           'min-w-0 text-center',
           !stretch && 'line-clamp-2',
-          !stretch && right == null && 'col-span-2',
+          !stretch && right == null && side === 'top' && 'col-span-2',
         )}
       >
         {centre}
       </div>
-      {!stretch && right == null ? null : <div className="min-w-0">{right}</div>}
+      {!stretch && right == null && side === 'top' ? null : (
+        // At the band's end: the right side reads from the screen's edge.
+        <div className="flex min-w-0 justify-end text-right">{right}</div>
+      )}
     </div>
   );
   const bigStatus = (text: React.ReactNode, small?: React.ReactNode, warn?: boolean) => (
@@ -682,6 +686,12 @@ export function ScreenSurface({
     // LOBBY (et état initial) : invitation à rejoindre + liste des joueurs (§4.1).
     // The room's next quiz (#89): what comes, and where the room stands.
     const nextInRoom = view.standings ? view.standings : null;
+    // Who said they are ready and has loaded what they play (the lobby's count, #104).
+    const readyIds = new Set(
+      view.readiness?.lobby
+        ? view.readiness.players.filter((p) => p.ready).map((p) => p.playerId)
+        : [],
+    );
     top = band(
       'top',
       where(t('screen.phaseLobby'), false),
@@ -745,8 +755,16 @@ export function ScreenSurface({
                 key={p.playerId}
                 className="flex max-w-[14em] items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
               >
-                <Avatar name={p.avatar || p.nickname} size="2em" />
-                <span className="truncate">{p.nickname}</span>
+                {/* Ready, ringed green; from elsewhere, a badge. */}
+                <Avatar
+                  name={p.avatar || p.nickname}
+                  size="2em"
+                  ready={readyIds.has(p.playerId)}
+                  remote={p.presence === 'remote' ? t('control.remote') : undefined}
+                />
+                <span className="truncate" title={p.nickname}>
+                  {p.nickname}
+                </span>
               </li>
             ))}
             {view.players.length > ROSTER_MAX ? (

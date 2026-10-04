@@ -43,7 +43,7 @@
     "open_access_forbidden": "L’accès libre n’est pas autorisé sur ce serveur.",
     "open_access_guests_only": "En accès libre, les participants n’ont pas de compte : ni suivi individuel, ni nom tiré d’un compte.",
     "next_quiz_unavailable": "Ce quiz ne peut pas être joué ensuite dans cette salle.",
-    "next_quiz_from_lobby": "Le quiz suivant se choisit dans le lobby du salon.",
+    "next_quiz_from_lobby": "Le quiz suivant se choisit dans la salle d’attente du salon.",
     "review_unavailable": "On ne peut revenir sur une étape qu’entre deux questions.",
     "step_not_played": "Cette étape n’a pas encore été jouée."
   },
