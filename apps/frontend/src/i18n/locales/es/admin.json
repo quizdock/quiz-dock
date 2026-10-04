@@ -54,7 +54,7 @@
     "none": "Ningún ajuste coincide.",
     "list": "Ajustes",
     "problem": "Un problema",
-    "rules": "Ajustes que se contradicen:",
+    "rules": "Ajustes que revisar:",
     "envValue": "sustituye a .env:",
     "access": {
       "read": "La web muestra todos los ajustes y no cambia ninguno (ADMIN_WEB_SCOPE=read).",
