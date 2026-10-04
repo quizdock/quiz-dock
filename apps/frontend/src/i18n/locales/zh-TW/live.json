@@ -414,6 +414,7 @@
     "sendFailed": "發送失敗。請檢查網路後重試。",
     "rejected": "回饋被拒絕：測驗可能尚未結束。",
     "title": "你對這個測驗的回饋",
+    "titlePrevious": "你對上一個測驗的回饋",
     "starLabel_one": "{{count}} 星",
     "starLabel_other": "{{count}} 星",
     "commentPlaceholder": "想說點什麼？（可選）",

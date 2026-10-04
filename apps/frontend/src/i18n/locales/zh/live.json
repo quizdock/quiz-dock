@@ -414,6 +414,7 @@
     "sendFailed": "发送失败。请检查网络后重试。",
     "rejected": "评价被拒绝：测验可能尚未结束。",
     "title": "你对这个测验的评价",
+    "titlePrevious": "你对上一个测验的评价",
     "starLabel_one": "{{count}} 星",
     "starLabel_other": "{{count}} 星",
     "commentPlaceholder": "想说点什么？（可选）",

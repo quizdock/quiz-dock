@@ -414,6 +414,7 @@
     "sendFailed": "No se pudo enviar. Comprueba tu conexión e inténtalo de nuevo.",
     "rejected": "Opinión rechazada: puede que el quiz aún no haya terminado.",
     "title": "Tu opinión sobre este quiz",
+    "titlePrevious": "Tu opinión sobre el quiz anterior",
     "starLabel_one": "{{count}} estrella",
     "starLabel_other": "{{count}} estrellas",
     "commentPlaceholder": "¿Un comentario? (opcional)",

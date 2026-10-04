@@ -414,6 +414,7 @@
     "sendFailed": "Gönderilemedi. Bağlantınızı kontrol edip tekrar deneyin.",
     "rejected": "Geri bildirim reddedildi: quiz henüz bitmemiş olabilir.",
     "title": "Bu quiz hakkındaki değerlendirmeniz",
+    "titlePrevious": "Önceki quiz hakkındaki değerlendirmeniz",
     "starLabel_one": "{{count}} yıldız",
     "starLabel_other": "{{count}} yıldız",
     "commentPlaceholder": "Bir yorum mu? (isteğe bağlı)",

@@ -414,6 +414,7 @@
     "sendFailed": "Envoi impossible. Vérifie ta connexion et réessaie.",
     "rejected": "Avis refusé : le quiz n’est peut-être pas terminé.",
     "title": "Ton avis sur ce quiz",
+    "titlePrevious": "Ton avis sur le quiz précédent",
     "starLabel_one": "{{count}} étoile",
     "starLabel_other": "{{count}} étoiles",
     "commentPlaceholder": "Un commentaire ? (facultatif)",

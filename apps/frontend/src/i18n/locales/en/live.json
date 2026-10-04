@@ -414,6 +414,7 @@
     "sendFailed": "Could not send. Check your connection and try again.",
     "rejected": "Feedback rejected: the quiz may not be over yet.",
     "title": "Your feedback on this quiz",
+    "titlePrevious": "Your feedback on the previous quiz",
     "starLabel_one": "{{count}} star",
     "starLabel_other": "{{count}} stars",
     "commentPlaceholder": "A comment? (optional)",
