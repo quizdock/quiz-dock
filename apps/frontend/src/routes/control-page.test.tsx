@@ -74,6 +74,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   standings: null,
   scores: null,
   lobbyStartAt: null,
+  language: null,
+  roomLanguage: '',
   rateable: null,
   ...partial,
 });
@@ -314,6 +316,19 @@ describe('ControlPage (console hôte)', () => {
     expect(names()).toEqual(['Alice', 'Bob']); // the room's, highest first
     act(() => screen.getByRole('button', { name: 'Total' }).click());
     expect(names()).toEqual(['Bob', 'Alice']); // again: reversed
+  });
+
+  it("LOBBY: the language of the audience's screens, for the whole room (#209)", async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({ players: [{ playerId: 'p1', nickname: 'Alice' }] });
+    renderApp('/session/482913/console');
+    fireEvent.change(await screen.findByLabelText('Langue des écrans'), {
+      target: { value: 'tr' },
+    });
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:options', {
+      pin: '482913',
+      audienceLanguage: 'tr',
+    });
   });
 
   it("LOBBY: the next quiz's countdown, and the host's stop (#198)", async () => {

@@ -257,7 +257,10 @@
     "columnStatus": "Estado",
     "columnQuiz": "Quiz",
     "columnTotal": "Total",
-    "columnActions": "Acciones"
+    "columnActions": "Acciones",
+    "audienceLanguageLabel": "Idioma de las pantallas",
+    "audienceLanguageQuiz": "El idioma de cada quiz",
+    "audienceLanguageHint": "La proyección y las pantallas de los participantes, para toda la sala: una clase de idiomas juega un quiz en inglés con la interfaz en el suyo."
   },
   "screen": {
     "sessionUnavailable": "Sala no disponible.",

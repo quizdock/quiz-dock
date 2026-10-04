@@ -918,6 +918,22 @@ describe('GameEngine (characterization)', () => {
       expect(await state()).toBe('LOBBY');
     });
 
+    it("the room's language for the audience's screens, else the quiz's (#209)", async () => {
+      const screen = join();
+      await seed(snapshotOf([question()]));
+      await engine.sendStateTo(screen, pin);
+      expect(screen.of<{ language: string }>('game:media').at(-1)!.language).toBe('en');
+      await engine.setOptions(pin, HOST, { audienceLanguage: 'tr' });
+      expect(roomOf<{ language: string; roomLanguage: string }>('game:media').at(-1)).toMatchObject(
+        {
+          language: 'tr',
+          roomLanguage: 'tr',
+        },
+      );
+      await engine.setOptions(pin, HOST, { audienceLanguage: 'not a tag!' }); // ignored
+      expect((await game.getRoom(pin))!.audienceLanguage).toBe('tr');
+    });
+
     it('is refused once the room has ended', async () => {
       await seed(snapshotOf([question()]), { state: 'ENDED' });
       await expect(engine.nextQuiz(pin, HOST, 'quiz-2')).rejects.toThrow(

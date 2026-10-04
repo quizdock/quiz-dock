@@ -157,6 +157,10 @@ export interface GameView {
   scores: HostScoreRow[] | null;
   /** When the next quiz's lobby starts on its own (ms epoch, #198); null = no countdown. */
   lobbyStartAt: number | null;
+  /** The language of the audience's screens (#209): the room's choice, else the quiz's. */
+  language: string | null;
+  /** The host's choice of that language for the room (#209); '' = each quiz's. */
+  roomLanguage: string;
   /**
    * The quiz this participant can still rate: the last one they played, kept into
    * the next lobby (the host may move on while they rate). Null when they did not
@@ -222,6 +226,8 @@ export const INITIAL_VIEW: GameView = {
   standings: null,
   scores: null,
   lobbyStartAt: null,
+  language: null,
+  roomLanguage: '',
   rateable: null,
 };
 
@@ -419,11 +425,15 @@ export function useGameSession(pin: string, role: LiveRole, opts: { follow?: boo
       hasSound: boolean;
       hasMedia: boolean;
       audioTarget: AudioTarget;
+      language: string;
+      roomLanguage: string;
     }) =>
       patch({
         quizHasSound: p.hasSound,
         quizHasMedia: p.hasMedia,
         gameAudioTarget: p.audioTarget,
+        language: p.language,
+        roomLanguage: p.roomLanguage,
         ...(p.title !== undefined ? { quizTitle: p.title } : {}),
       });
     const onStandings = (p: RoomStandingsPayload) => patch({ standings: p });

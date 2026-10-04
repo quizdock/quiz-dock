@@ -1,4 +1,5 @@
 import { LobbyCountdown, RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { useAudienceLanguage } from '../i18n/interface-language';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { LiveMotion } from '../game/motion/level';
 import { Pulse } from '../game/motion/primitives';
@@ -99,6 +100,8 @@ export function ScreenView({
   follow?: { sound: boolean };
 }) {
   const session = useGameSession(pin, 'spectator', { follow: !!follow });
+  // The audience's language (#209): the room's choice, else the quiz's.
+  useAudienceLanguage(session.view.language);
   // A projector, or a participant's copy of it, never dims during the session.
   useWakeLock(session.view.status === 'ready' && session.view.state !== 'ENDED');
   return (

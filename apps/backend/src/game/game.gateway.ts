@@ -497,6 +497,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
       personalTracking?: boolean;
       pickOwnName?: boolean;
       audioTarget?: AudioTarget;
+      audienceLanguage?: string;
     },
   ): Promise<void> {
     await this.engine.setOptions(payload.pin, this.requireHostId(socket), payload);

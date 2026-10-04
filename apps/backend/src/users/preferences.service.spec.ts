@@ -24,7 +24,7 @@ describe('PreferencesService (integration)', () => {
   });
 
   beforeEach(async () => {
-    await prisma.user.update({ where: { id: userId }, data: { preferences: {} } });
+    await prisma.user.update({ where: { id: userId }, data: { preferences: {}, locale: null } });
   });
 
   afterAll(async () => {
@@ -55,6 +55,17 @@ describe('PreferencesService (integration)', () => {
     const row = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
     // Only the reset key goes: one this version does not know is left alone.
     expect(row.preferences).toEqual({ other: 'kept' });
+  });
+
+  it("keeps the host's language in its own column, null for the instance's (#209)", async () => {
+    await expect(
+      preferences.update(userId, { language: 'tr', participantAccess: 'open' }),
+    ).resolves.toEqual({ participantAccess: 'open', language: 'tr' });
+    const row = await prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    expect([row.locale, row.preferences]).toEqual(['tr', { participantAccess: 'open' }]);
+
+    await preferences.update(userId, { language: null });
+    await expect(preferences.get(userId)).resolves.toEqual({ participantAccess: 'open' });
   });
 
   it('reads a value that no longer validates as the default', async () => {

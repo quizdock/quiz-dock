@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LANGUAGE_RE } from './quiz-terms';
 
 /**
  * How participants get into a live game (#57): with an account of the identity
@@ -19,6 +20,11 @@ export const userPreferencesSchema = z.object({
    * "remember" box or the profile page; absent = ask at each launch.
    */
   participantAccess: z.enum(PARTICIPANT_ACCESS).optional(),
+  /**
+   * The interface language of the host's own screens (#209), a BCP 47 tag; absent =
+   * the instance's. Kept in `user.locale`, not with the other keys.
+   */
+  language: z.string().regex(LANGUAGE_RE).max(10).optional(),
 });
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 

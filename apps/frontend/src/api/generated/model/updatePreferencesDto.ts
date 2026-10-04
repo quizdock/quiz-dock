@@ -10,4 +10,10 @@ import type { UpdatePreferencesDtoParticipantAccess } from './updatePreferencesD
 export interface UpdatePreferencesDto {
   /** @nullable */
   participantAccess?: UpdatePreferencesDtoParticipantAccess;
+  /**
+     * @maxLength 10
+     * @nullable
+     * @pattern ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$
+     */
+  language?: string | null;
 }

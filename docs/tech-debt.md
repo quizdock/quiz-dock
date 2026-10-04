@@ -28,13 +28,6 @@ entry in the PR that pays it back.
 - **Way out**: nonces for styles; for images, the editor's image node limited to the
   application's media, then `https:` dropped and the logo's origin read per request.
 
-## `user.locale`, a column nobody reads
-
-- **Where**: `prisma/schema.prisma` (`User.locale`, default `fr`).
-- **What**: the interface language is the instance's (`APP_LANG`), by decision; quizzes are
-  monolingual. The column is a leftover, and its default is wrong on an English instance.
-- **Way out**: drop it in a migration when one is due anyway.
-
 ## A dark theme nothing turns on
 
 - **Where**: `apps/frontend/src/index.css` (`.dark` and its `@custom-variant`), and a few
