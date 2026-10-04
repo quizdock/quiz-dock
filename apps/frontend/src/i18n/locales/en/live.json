@@ -138,7 +138,7 @@
     "changeQuizTooltip": "Replace the quiz picked, before it starts",
     "nextQuizDescription": "The participants stay in the room and meet again in the next quiz’s lobby. Nobody types the PIN again.",
     "changeQuizDescription": "Nobody has played this quiz yet: the participants stay in the room and the lobby shows the new one.",
-    "closeQuiz": "End quiz…",
+    "closeQuiz": "Stop the quiz…",
     "closeQuizTooltip": "Stop this quiz here and pick another: the participants stay in the room",
     "closeQuizDescription": "This quiz stops here. The participants stay in the room and meet again in the next quiz’s lobby; nobody types the PIN again.",
     "archiveSoFarLabel": "Keep what was played so far",

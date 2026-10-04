@@ -138,7 +138,7 @@
     "changeQuizTooltip": "Remplacer le quiz choisi, avant qu’il démarre",
     "nextQuizDescription": "Les participants restent dans le salon et se retrouvent au lobby du quiz suivant. Personne ne ressaisit le PIN.",
     "changeQuizDescription": "Personne n’a encore joué ce quiz : les participants restent dans le salon et le lobby affiche le nouveau.",
-    "closeQuiz": "Terminer le quiz…",
+    "closeQuiz": "Arrêter le quiz…",
     "closeQuizTooltip": "Arrêter ce quiz ici et en choisir un autre : les participants restent dans le salon",
     "closeQuizDescription": "Ce quiz s’arrête ici. Les participants restent dans le salon et se retrouvent au lobby du quiz suivant ; personne ne ressaisit le PIN.",
     "archiveSoFarLabel": "Garder ce qui a été joué",
