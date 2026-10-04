@@ -53,6 +53,8 @@ reference, the others follow its sense, not its words.
 | leaderboard         | Leaderboard         | Classement                     | Clasificación                  | 排行榜       | 排行榜       |
 | podium              | Podium              | Podium                         | Podio                          | 领奖台       | 領獎台       |
 | leave               | Leave               | Quitter                        | Salir                          | 退出         | 離開         |
+| stop (a quiz)       | Stop the quiz       | Arrêter le quiz                | Detener el quiz                | 停止测验     | 停止測驗     |
+| close (the room)    | Close the room      | Fermer le salon                | Cerrar la sala                 | 关闭房间     | 關閉房間     |
 | looking back        | Looking back        | Retour en arrière              | Mirando atrás                  | 回顾         | 回顧         |
 | back to live        | Back to live        | Revenir au direct              | Volver al directo              | 回到当前     | 回到目前     |
 | full answer capture | Full answer capture | Capture intégrale des réponses | Captura completa de respuestas | 完整记录回答 | 完整記錄回答 |
@@ -91,6 +93,7 @@ reference, the others follow its sense, not its words.
 | history | geçmiş | Archived sessions and results. |
 | question / slide / option | soru / slayt / seçenek | Quiz content. |
 | scoring / partial credit | puanlama / kısmi puan | How points are awarded. |
+| leave / stop / close | ayrıl / durdur / kapat | A participant leaves the room; the host stops a quiz, closes the room. |
 
 Turkish strings use natural sentence order around `{{placeholders}}`, retain PIN
 and established product names, and use Turkish plural forms only where the UI
@@ -109,6 +112,15 @@ needs distinct forms. The locale checker enforces key and placeholder parity.
 
   Never _partie_ / _game_ in the interface; `session` stays in code
   identifiers and routes.
+
+- **leave, stop, close**: one verb per thing ended, never swapped.
+  - **leave** (fr _quitter_): a participant going out of the room (_Leave the
+    room?_); never said of the host or of a quiz;
+  - **stop** (fr _arrêter_): the host giving up the quiz in progress, the room
+    staying open (_Stop the quiz…_); never _end_ / _terminer_, which reads like
+    the normal end at the podium;
+  - **close** (fr _fermer_): the room — ending it (_Close the room_) or shutting
+    it to newcomers (_Close the room to new participants_).
 
 - **host / animateur**: the person presenting. fr uses _animateur_
   (presenter/facilitator) — _hôte_ is kept only in _siège hôte_, where the

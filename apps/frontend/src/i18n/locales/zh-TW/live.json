@@ -138,7 +138,7 @@
     "changeQuizTooltip": "在開始前替換所選測驗",
     "nextQuizDescription": "參與者留在房間中，在下一個測驗的大廳重新相聚，無需再次輸入 PIN。",
     "changeQuizDescription": "還沒有人玩過這個測驗：參與者留在房間中，大廳將顯示新的測驗。",
-    "closeQuiz": "結束測驗…",
+    "closeQuiz": "停止測驗…",
     "closeQuizTooltip": "在此停止本測驗並選擇另一個：參與者留在房間內",
     "closeQuizDescription": "本測驗到此結束。參與者留在房間內，在下一個測驗的大廳重新會合，無需再次輸入 PIN。",
     "archiveSoFarLabel": "保留已進行的部分",

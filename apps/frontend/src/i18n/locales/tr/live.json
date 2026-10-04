@@ -138,7 +138,7 @@
     "changeQuizTooltip": "Seçilen quizi başlamadan önce değiştirin",
     "nextQuizDescription": "Katılımcılar odada kalır ve bir sonraki quizin lobisinde tekrar buluşur. Kimse PIN'i bir daha yazmaz.",
     "changeQuizDescription": "Bu quizi henüz kimse oynamadı: katılımcılar odada kalır ve lobide yeni quiz gösterilir.",
-    "closeQuiz": "Quizi bitir…",
+    "closeQuiz": "Quizi durdur…",
     "closeQuizTooltip": "Bu quizi burada durdurun ve başka bir quiz seçin: katılımcılar odada kalır",
     "closeQuizDescription": "Bu quiz burada bitiyor. Katılımcılar odada kalır ve bir sonraki quizin lobisinde tekrar buluşur; kimse PIN'i bir daha yazmaz.",
     "archiveSoFarLabel": "Şu ana kadar oynananları sakla",
