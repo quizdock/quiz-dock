@@ -276,7 +276,11 @@ export class GameEngine {
     try {
       // Still this game's lobby: the host may have replaced the quiz meanwhile.
       const meta = await this.currentMeta(ref);
-      if (!meta || meta.state !== GameState.Lobby) return;
+      if (!meta || meta.state !== GameState.Lobby) {
+        // The host gone meanwhile: the lobby comes back with them, and must start then.
+        if (meta?.state === GameState.HostDisconnected) await this.redis.del(lock);
+        return;
+      }
       if (counting) await this.clearLobbyCountdown(ref);
       const snapshot = await this.requireSnapshot(ref.id, true);
       await this.enterStep(ref, snapshot, 0);

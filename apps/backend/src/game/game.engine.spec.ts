@@ -917,6 +917,19 @@ describe('GameEngine (characterization)', () => {
       expect((await meta()).lobbyStartAt).toBe(0);
     });
 
+    it('a start that finds the host gone leaves Start free for their return', async () => {
+      await seed(snapshotOf([question()]), { state: 'HOST_DISCONNECTED', prevState: 'LOBBY' });
+      // What the countdown or the last Ready! runs, the host lost meanwhile.
+      const internal = engine as unknown as {
+        startQuiz(ref: { pin: string; id: GameId }, counting: boolean): Promise<void>;
+      };
+      await internal.startQuiz({ pin, id: gameId }, true);
+      expect(await redis.exists(gameKeys.advanceLock(gameId, 'start'))).toBe(0);
+      await engine.onHostAttached(pin);
+      await engine.start(pin, HOST);
+      expect(await state()).toBe('ANSWERING');
+    });
+
     it('the host can stop the countdown; the quiz then waits for Start (#198)', async () => {
       await seed(
         snapshotOf([question()]),

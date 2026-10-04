@@ -25,6 +25,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const problems = [];
 const pages = {};
+/** Whether this run took the host seat: only then is it let go at the end. */
+let seatTaken = false;
 const check = (ok, what) => {
   log(ok ? 'OK  ' : 'FAIL', what);
   if (!ok) problems.push(what);
@@ -97,9 +99,11 @@ async function state(page) {
 async function main() {
   mkdirSync(OUT, { recursive: true });
   // The host's seat and a fresh bank: the shipped samples.
-  await api('POST', '/auth/host-seat/claim', { expiresInMinutes: null }).catch((err) => {
-    if (!String(err).includes('already_host')) throw err;
-  });
+  await api('POST', '/auth/host-seat/claim', { expiresInMinutes: null })
+    .then(() => (seatTaken = true))
+    .catch((err) => {
+      if (!String(err).includes('already_host')) throw err;
+    });
   for (const game of await api('GET', '/games/mine')) {
     await api('POST', `/games/${game.pin}/end`).catch(() => undefined);
   }
@@ -281,6 +285,15 @@ async function main() {
   const phoneLang = await phone.evaluate(() => document.documentElement.lang);
   check(phoneLang === 'tr', `phone speaks the quiz's language (tr) → html lang ${phoneLang}`);
   await shot(phone, 'phone-lobby-next-quiz');
+  // A projection on a portrait screen: the lobby and the standings one under the other.
+  const portraitCtx = await browser.newContext({ viewport: { width: 768, height: 1024 } });
+  await portraitCtx.addInitScript((u) => localStorage.setItem('live.localUser', u), HOST);
+  const portrait = await portraitCtx.newPage();
+  await portrait.goto(`${URL}/session/${pin}/projection`);
+  await settle(portrait);
+  await portrait.mouse.click(384, 512); // the room's one click for sound
+  await shot(portrait, 'projection-portrait-lobby');
+  await portraitCtx.close();
 
   // The host stops the countdown; everyone ready no longer starts it.
   await consolePage.getByRole('button', { name: /Stop the countdown/ }).click();
@@ -322,10 +335,10 @@ async function main() {
   log(problems.length ? `PROBLEMS:\n- ${problems.join('\n- ')}` : 'ALL CHECKS PASSED');
 }
 
-/** The stack as found: the seat let go, the host's language back to the instance's. */
+/** The stack as found: the seat let go if this run took it, the host's language reset. */
 async function cleanUp() {
   await api('PATCH', '/me/preferences', { language: null }).catch(() => undefined);
-  await api('POST', '/auth/host-seat/release').catch(() => undefined);
+  if (seatTaken) await api('POST', '/auth/host-seat/release').catch(() => undefined);
 }
 
 main()
