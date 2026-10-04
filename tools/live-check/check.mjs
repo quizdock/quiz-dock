@@ -19,8 +19,15 @@ const OUT = process.env.OUT ?? '/out';
 const HOST = 'Mei';
 /** The simulated players: LIVE_CHECK_PLAYERS of them (4 by default), named in turn. */
 const NAMES = ['Ana', 'Ben', 'Chloé', 'Dev', 'Emre', 'Farah', 'Gus', 'Hana', 'Ivo', 'Jade'];
+/** EXTREMES=1: the longest room name, nicknames and invitation address the app takes. */
+const EXTREMES = process.env.EXTREMES === '1';
+const LONG_NAMES = ['WWWWWWWWWWWWWWWWWWWW', 'Ünïcödé Ñàmé Löööng'];
 const BOTS = Array.from({ length: Number(process.env.PLAYERS ?? 4) }, (_, i) =>
-  i < NAMES.length ? NAMES[i] : `${NAMES[i % NAMES.length]} ${Math.floor(i / NAMES.length) + 1}`,
+  EXTREMES && i < LONG_NAMES.length
+    ? LONG_NAMES[i]
+    : i < NAMES.length
+      ? NAMES[i]
+      : `${NAMES[i % NAMES.length]} ${Math.floor(i / NAMES.length) + 1}`,
 );
 const DESKTOP = { width: 1400, height: 900 };
 const SCREEN = { width: 1400, height: 788 };
@@ -121,7 +128,14 @@ async function main() {
     const quiz = await api('POST', `/store/${e.id}/take`);
     // The Türkiye quiz in Turkish: the audience's screens should follow it (#209).
     if (e.title.includes('Türkiye')) {
-      Object.assign(quiz, await api('PUT', `/quizzes/${quiz.id}`, { language: 'tr' }));
+      // A long title too: the bands must hold it.
+      Object.assign(
+        quiz,
+        await api('PUT', `/quizzes/${quiz.id}`, {
+          language: 'tr',
+          title: 'Discover Türkiye — from Istanbul’s bazaars to the fairy chimneys of Cappadocia',
+        }),
+      );
     }
     await api('PATCH', `/quizzes/${quiz.id}/status`, { status: 'ready' });
     quizzes[
@@ -184,6 +198,22 @@ async function main() {
     .catch(() => undefined);
 
   const players = await bots(pin);
+  if (EXTREMES) {
+    // The host's own socket: the longest room name (60), a long invitation address.
+    const host = socket({ localUser: HOST });
+    await new Promise((r) => host.on('connect', r));
+    await host.emitWithAck('host:attach', { pin });
+    host.emit('host:room-name', {
+      pin,
+      name: 'The very long name of a room for a whole school year, room B',
+    });
+    host.emit('host:join-url', {
+      pin,
+      baseUrl: 'https://quiz.a-really-long-organisation-name-for-testing.example.org',
+    });
+    await sleep(500);
+    host.disconnect();
+  }
   await sleep(1500);
 
   // ── 1. First lobby: the participants table, the audience language option.
