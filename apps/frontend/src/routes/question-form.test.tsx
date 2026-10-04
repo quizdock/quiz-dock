@@ -4,8 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mockApi, setMarkdownField } from '../test/harness';
 import type { QuizDetailDtoQuestionsItem } from '../api/generated/model';
 import { QuestionForm } from './question-form';
+import i18next from 'i18next';
+import { contentLang } from '../i18n/content-language';
 
-function renderForm(onClose = vi.fn()) {
+function renderForm(onClose = vi.fn(), quizLanguage?: string) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -13,7 +15,7 @@ function renderForm(onClose = vi.fn()) {
     onClose,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <QuestionForm quizId="q1" onClose={onClose} />
+        <QuestionForm quizId="q1" quizLanguage={quizLanguage} onClose={onClose} />
       </QueryClientProvider>,
     ),
   };
@@ -80,6 +82,27 @@ describe('QuestionForm', () => {
       expect(box).not.toBeChecked();
     }
   });
+
+  it.each([
+    ['tr', 'Doğru', 'Yanlış'],
+    ['en-GB', 'True', 'False'],
+  ])(
+    "true or false is written in the quiz's language (%s), not the instance's (#197)",
+    async (language, yes, no) => {
+      const fetchMock = mockApi([
+        { method: 'POST', path: '/quizzes/q1/questions', status: 201, body: {} },
+      ]);
+      const { onClose } = renderForm(vi.fn(), language);
+      await waitFor(() =>
+        expect(i18next.hasResourceBundle(contentLang(language)!, 'editor')).toBe(true),
+      );
+      setMarkdownField('Énoncé', 'La Terre est ronde ?');
+      fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'true_false' } });
+      fireEvent.click(screen.getByText('Ajouter'));
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      expect(lastPost(fetchMock).options.map((o: { text: string }) => o.text)).toEqual([yes, no]);
+    },
+  );
 
   it('a time out of bounds becomes the nearest bound, with a note', () => {
     mockApi([]);

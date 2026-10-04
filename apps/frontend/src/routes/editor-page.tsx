@@ -430,6 +430,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <QuestionForm
         key="new"
         quizId={quiz.id}
+        quizLanguage={quiz.language}
         mediaTailS={quiz.mediaTailS}
         quizStatus={quiz.status}
         position={{ index: quiz.questionCount, total: quiz.questionCount + 1 }}
@@ -454,6 +455,7 @@ function QuizEditor({ quiz }: { quiz: QuizDetailDto }) {
       <QuestionForm
         key={editingItem.id}
         quizId={quiz.id}
+        quizLanguage={quiz.language}
         question={editingItem.question}
         mediaTailS={quiz.mediaTailS}
         quizStatus={quiz.status}
