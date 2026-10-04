@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Notice } from '@/components/ui/notice';
 import { PageTitle } from '@/components/ui/page-title';
-import { cn } from '@/lib/utils';
 import { useRole } from '../../auth/use-role';
 import { setAdminToken, useAdminToken, useReadOperation } from './admin-api';
 import { UpdateNotice } from './update-notice';
@@ -41,20 +40,22 @@ export function AdminLayout() {
   return (
     <div className="content-lg flex flex-col gap-6">
       <PageTitle>{t('title')}</PageTitle>
-      <nav aria-label={t('title')} className="flex flex-wrap gap-x-6 gap-y-2 border-b pb-2">
+      {/* Tabs on the page's rule, evenly spaced: the open one underlined. */}
+      <nav aria-label={t('title')} className="flex flex-wrap border-b">
         {SECTIONS.map((section) => (
-          <div key={section.domain ?? 'home'} className="flex flex-wrap items-center gap-1">
-            {section.domain ? (
-              <span className="text-muted-foreground mr-1 text-xs font-medium uppercase">
-                {t(`domains.${section.domain}`)}
-              </span>
-            ) : null}
+          <div key={section.domain ?? 'home'} className="contents">
             {section.links.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={cn('hover:bg-accent rounded-md px-2.5 py-1 text-sm')}
-                activeProps={{ className: 'bg-accent font-medium', 'aria-current': 'page' }}
+                className="-mb-px border-b-2 px-3 py-2 text-sm"
+                activeProps={{
+                  className: 'border-primary text-foreground font-medium',
+                  'aria-current': 'page',
+                }}
+                inactiveProps={{
+                  className: 'text-muted-foreground hover:text-foreground border-transparent',
+                }}
               >
                 {t(`sections.${link.key}`)}
               </Link>

@@ -91,14 +91,17 @@ export function matches(
   return true;
 }
 
-/** The categories, in the dictionary's order (§1.1–1.7). */
+/**
+ * The categories as the page lists them: the quiz's pace first, the one most often
+ * tuned; then the dictionary's order (§1.1–1.7).
+ */
 export const CATEGORIES: SettingDefinition['category'][] = [
+  'pace',
   'identity',
   'access',
   'network',
   'storage',
   'limits',
-  'pace',
   'admin',
   'internal',
 ];
