@@ -213,10 +213,6 @@
       "players": "Katılımcılar"
     },
     "viewSwitch": "Görünüm",
-    "tabViews": "Tab",
-    "tabViewsLabel": "Tab ile görünüm değiştir",
-    "tabViewsOnTooltip": "Tab sayfadan görünüm değiştirir (geri için Shift+Tab); bir denetimdeyken odağı taşımaya devam eder. Tab'ı sayfada gezinmeye geri vermek için tıklayın.",
-    "tabViewsOffTooltip": "Tab sayfada gezinir. Sayfanın kendisinden görünüm de değiştirmesi için tıklayın.",
     "lookBackPrev": "Önceki adımı yeniden göster",
     "lookBackNext": "Oynanmış sonraki adımı göster",
     "playedHint": "Oynanmış bir adım herkes için salt okunur olarak yeniden açılır: hiçbir şey yeniden oynatılmaz.",
