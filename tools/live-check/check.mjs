@@ -8,7 +8,12 @@
  * What it walks through: the first lobby, a reveal and the quiz's standings, the
  * participants' table, stopping a quiz (scores kept), the lobby with no quiz, picking
  * the next there (its countdown, the room's standings beside it, the quiz's language),
- * stopping the countdown, the room's language, the host's own language.
+ * stopping the countdown, the room's language, the host's own language, auto mode, the
+ * host lost during a countdown, everyone ready, a question's sound.
+ *
+ * AUTH=local (the demo stack: a name, the host seat, a bank emptied first) or AUTH=oidc
+ * (a stack whose host signs in at its identity provider: nothing of the account's bank is
+ * touched, only the quizzes this run adds go at the end).
  */
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
@@ -16,7 +21,14 @@ import { io } from 'socket.io-client';
 
 const URL = process.env.URL ?? 'http://localhost:5173';
 const OUT = process.env.OUT ?? '/out';
+const OIDC = process.env.AUTH === 'oidc';
+/** Local mode: the host's name. OIDC: the account signed in at the provider. */
 const HOST = 'Mei';
+const OIDC_USER = process.env.OIDC_USER ?? 'host';
+const OIDC_PASSWORD = process.env.OIDC_PASSWORD ?? 'animateur';
+/** OIDC: the signed-in browser's requests (its session cookie), and the cookie itself. */
+let session = null;
+let cookie = '';
 /** The simulated players: LIVE_CHECK_PLAYERS of them (4 by default), named in turn. */
 const NAMES = ['Ana', 'Ben', 'Chloé', 'Dev', 'Emre', 'Farah', 'Gus', 'Hana', 'Ivo', 'Jade'];
 /** EXTREMES=1: the longest room name, nicknames and invitation address the app takes. */
@@ -38,12 +50,28 @@ const problems = [];
 const pages = {};
 /** Whether this run took the host seat: only then is it let go at the end. */
 let seatTaken = false;
+/** The quizzes this run added (OIDC: the only ones it removes). */
+const created = [];
+/** OIDC: the account's participant access before the run, put back after it. */
+let previousAccess = null;
+/** The room this run opened (OIDC: the only one it ends). */
+let lastPin = '';
 const check = (ok, what) => {
   log(ok ? 'OK  ' : 'FAIL', what);
   if (!ok) problems.push(what);
 };
 
 async function api(method, path, body) {
+  if (OIDC) {
+    const res = await session.fetch(`${URL}/api/v1${path}`, {
+      method,
+      headers: { 'content-type': 'application/json' },
+      data: body === undefined ? undefined : JSON.stringify(body),
+    });
+    if (!res.ok()) throw new Error(`${method} ${path}: ${res.status()} ${await res.text()}`);
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
   const res = await fetch(`${URL}/api/v1${path}`, {
     method,
     headers: { 'content-type': 'application/json', 'x-local-user': HOST },
@@ -52,6 +80,23 @@ async function api(method, path, body) {
   if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${await res.text()}`);
   const text = await res.text();
   return text ? JSON.parse(text) : null;
+}
+
+/** OIDC: the host signs in at the provider, as a person would. */
+async function signIn(page) {
+  await page.goto(`${URL}/login`);
+  await page.getByRole('button', { name: 'Sign in' }).first().click();
+  await page.waitForURL(/\/realms\//, { timeout: 30_000 });
+  await page.fill('#username', OIDC_USER);
+  await page.fill('#password', OIDC_PASSWORD);
+  await page.click('#kc-login');
+  await page.waitForURL(
+    (u) => u.origin === new globalThis.URL(URL).origin && !u.pathname.startsWith('/auth/'),
+    {
+      timeout: 30_000,
+    },
+  );
+  log('signed in as', OIDC_USER);
 }
 
 async function settle(page, ms = 700) {
@@ -68,6 +113,13 @@ async function shot(page, name) {
 
 function socket(auth) {
   return io(`${URL}/game`, { transports: ['websocket'], auth, forceNew: true });
+}
+
+/** A socket of the host's own: its name (local mode) or its session cookie (OIDC). */
+function hostSocket() {
+  return OIDC
+    ? io(`${URL}/game`, { transports: ['websocket'], extraHeaders: { cookie }, forceNew: true })
+    : socket({ localUser: HOST });
 }
 
 /** Simulated players: join, then answer each question (they press Ready only when told). */
@@ -109,23 +161,43 @@ async function state(page) {
 
 async function main() {
   mkdirSync(OUT, { recursive: true });
-  // The host's seat and a fresh bank: the shipped samples.
-  await api('POST', '/auth/host-seat/claim', { expiresInMinutes: null })
-    .then(() => (seatTaken = true))
-    .catch((err) => {
-      if (!String(err).includes('already_host')) throw err;
-    });
-  for (const game of await api('GET', '/games/mine')) {
-    await api('POST', `/games/${game.pin}/end`).catch(() => undefined);
+  const browser = await chromium.launch();
+  const desk = await browser.newContext({ viewport: DESKTOP, locale: 'en-US' });
+  await desk.addInitScript((u) => localStorage.setItem('live.localUser', u), HOST);
+  const consolePage = await desk.newPage();
+  pages.console = consolePage;
+  consolePage.on('pageerror', (e) => problems.push(`console page error: ${e.message}`));
+  if (OIDC) {
+    await signIn(consolePage);
+    session = desk.request;
+    cookie = (await desk.cookies()).map((c) => `${c.name}=${c.value}`).join('; ');
+    // Participants without an account: the bots join so. Put back at the end.
+    previousAccess = (await api('GET', '/me/preferences')).participantAccess ?? null;
+    await api('PATCH', '/me/preferences', { participantAccess: 'open' });
+  } else {
+    // The host's seat and a fresh bank.
+    await api('POST', '/auth/host-seat/claim', { expiresInMinutes: null })
+      .then(() => (seatTaken = true))
+      .catch((err) => {
+        if (!String(err).includes('already_host')) throw err;
+      });
+    for (const game of await api('GET', '/games/mine')) {
+      await api('POST', `/games/${game.pin}/end`).catch(() => undefined);
+    }
+    for (const quiz of await api('GET', '/quizzes')) {
+      if (quiz.status === 'ready')
+        await api('PATCH', `/quizzes/${quiz.id}/status`, { status: 'draft' }).catch(
+          () => undefined,
+        );
+      await api('DELETE', `/quizzes/${quiz.id}`);
+    }
   }
-  for (const quiz of await api('GET', '/quizzes')) {
-    if (quiz.status === 'ready')
-      await api('PATCH', `/quizzes/${quiz.id}/status`, { status: 'draft' }).catch(() => undefined);
-    await api('DELETE', `/quizzes/${quiz.id}`);
-  }
+  // The shipped samples, from the template catalogue.
   const quizzes = {};
   for (const e of await api('GET', '/store')) {
+    if (!/France|Türkiye|Taiwan/.test(e.title)) continue;
     const quiz = await api('POST', `/store/${e.id}/take`);
+    created.push(quiz.id);
     // The Türkiye quiz in Turkish: the audience's screens should follow it (#209).
     if (e.title.includes('Türkiye')) {
       // A long title too: the bands must hold it.
@@ -145,13 +217,6 @@ async function main() {
   log('quizzes', JSON.stringify(quizzes));
   await api('PATCH', '/me/preferences', { language: null });
 
-  const browser = await chromium.launch();
-  const desk = await browser.newContext({ viewport: DESKTOP, locale: 'en-US' });
-  await desk.addInitScript((u) => localStorage.setItem('live.localUser', u), HOST);
-  const consolePage = await desk.newPage();
-  pages.console = consolePage;
-  consolePage.on('pageerror', (e) => problems.push(`console page error: ${e.message}`));
-
   await consolePage.goto(`${URL}/quizzes/${quizzes.france.id}`);
   await consolePage.getByRole('button', { name: 'Present' }).first().click();
   const open = consolePage.getByRole('radio', { name: /Open access/ });
@@ -161,9 +226,14 @@ async function main() {
   }
   await consolePage.waitForURL(/\/session\/\d{6}\/console/);
   const pin = consolePage.url().match(/session\/(\d{6})/)[1];
+  lastPin = pin;
   log('room', pin);
 
-  const screenCtx = await browser.newContext({ viewport: SCREEN, locale: 'en-US' });
+  const screenCtx = await browser.newContext({
+    viewport: SCREEN,
+    locale: 'en-US',
+    ...(OIDC ? { storageState: await desk.storageState() } : {}),
+  });
   await screenCtx.addInitScript((u) => localStorage.setItem('live.localUser', u), HOST);
   // The screen's media are kept out of the page: every one it plays is noted here.
   await screenCtx.addInitScript(() => {
@@ -209,7 +279,7 @@ async function main() {
   const players = await bots(pin);
   if (EXTREMES) {
     // The host's own socket: the longest room name (60), a long invitation address.
-    const host = socket({ localUser: HOST });
+    const host = hostSocket();
     await new Promise((r) => host.on('connect', r));
     await host.emitWithAck('host:attach', { pin });
     host.emit('host:room-name', {
@@ -332,7 +402,10 @@ async function main() {
   check(phoneLang === 'tr', `phone speaks the quiz's language (tr) → html lang ${phoneLang}`);
   await shot(phone, 'phone-lobby-next-quiz');
   // A projection on a portrait screen: the lobby and the standings one under the other.
-  const portraitCtx = await browser.newContext({ viewport: { width: 768, height: 1024 } });
+  const portraitCtx = await browser.newContext({
+    viewport: { width: 768, height: 1024 },
+    ...(OIDC ? { storageState: await desk.storageState() } : {}),
+  });
   await portraitCtx.addInitScript((u) => localStorage.setItem('live.localUser', u), HOST);
   const portrait = await portraitCtx.newPage();
   await portrait.goto(`${URL}/session/${pin}/projection`);
@@ -444,7 +517,7 @@ async function main() {
     { timeout: 15_000 },
   );
   check(true, 'everyone ready: the next quiz starts before its countdown');
-  const drive = socket({ localUser: HOST });
+  const drive = hostSocket();
   await new Promise((r) => drive.on('connect', r));
   await drive.emitWithAck('host:attach', { pin });
   let played = false;
@@ -479,6 +552,7 @@ async function main() {
 
   players.close();
   await api('POST', `/games/${pin}/end`).catch(() => undefined);
+  await cleanUp(); // while the signed-in browser is still there
   await browser.close();
   log(problems.length ? `PROBLEMS:\n- ${problems.join('\n- ')}` : 'ALL CHECKS PASSED');
 }
@@ -487,6 +561,18 @@ async function main() {
 async function cleanUp() {
   await api('PATCH', '/me/preferences', { language: null }).catch(() => undefined);
   if (seatTaken) await api('POST', '/auth/host-seat/release').catch(() => undefined);
+  if (OIDC && session) {
+    for (const game of await api('GET', '/games/mine').catch(() => [])) {
+      if (game.pin === lastPin) await api('POST', `/games/${game.pin}/end`).catch(() => undefined);
+    }
+    for (const id of created) {
+      await api('PATCH', `/quizzes/${id}/status`, { status: 'draft' }).catch(() => undefined);
+      await api('DELETE', `/quizzes/${id}`).catch(() => undefined);
+    }
+    await api('PATCH', '/me/preferences', { participantAccess: previousAccess }).catch(
+      () => undefined,
+    );
+  }
 }
 
 main()

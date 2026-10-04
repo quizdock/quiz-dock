@@ -20,6 +20,8 @@ Thanks for helping! A few things make a pull request easy to take in.
 - A changed API: regenerate the client with `pnpm generate:api` and commit it
   (`tools/generate-api/run.sh` does it in a container when the host cannot).
 - A changed live screen: `tools/live-check/run.sh` plays a room for real on the demo
-  stack (console, projection, a phone), checks it and keeps the pictures.
+  stack (console, projection, a phone), checks it and keeps the pictures;
+  `LIVE_CHECK_STACK=dev` runs it on the dev stack, through its identity provider when it
+  is in OIDC.
 - Code, comments, commits and documentation are in English; user-facing text
   goes through the translations, in every language of `apps/frontend/src/i18n/locales`.
