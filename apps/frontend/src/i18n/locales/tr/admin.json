@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "Bu kurulumun ilk ayarları",
-    "invite": "Bu kurulumun ilk ayarları henüz yapılmadı.",
+    "invite": "Bu kurulumun ayarları henüz tamamlanmadı.",
     "inviteLink": "Ayarları yap",
     "closed": "Bu kurulumun ilk ayarları yapıldı: sihirbaz kapalı (bir kabukta `qd setup.reopen` onu yeniden açar).",
     "home": "Ana sayfa",

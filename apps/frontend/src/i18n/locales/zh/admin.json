@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "初始化此实例",
-    "invite": "此实例尚未完成初始化。",
+    "invite": "此实例尚未完成全部设置。",
     "inviteLink": "开始初始化",
     "closed": "此实例已完成初始化：向导已关闭（在 shell 中运行 `qd setup.reopen` 可重新打开）。",
     "home": "首页",
