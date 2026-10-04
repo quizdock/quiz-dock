@@ -346,23 +346,30 @@ function HostConsole({
         view={view}
         onRename={inLobby ? (name) => socket?.emit('host:room-name', { pin, name }) : undefined}
       />
-      <Popover
-        trigger={({ toggle, open }) => (
-          <button
-            type="button"
-            onClick={toggle}
-            aria-expanded={open}
-            aria-label={t('control.invite')}
-            className="bg-muted hover:bg-accent flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm"
-          >
-            <span className="font-mono font-semibold tracking-widest">{pin}</span>
-            <ChevronDown className="size-3.5" />
-          </button>
-        )}
-        className="w-80"
-      >
-        {invite}
-      </Popover>
+      {/* In the lobby the invitation fills the centre: the PIN alone; later, it opens it. */}
+      {phase === 'lobby' ? (
+        <span className="bg-muted rounded-full px-2.5 py-1 font-mono text-sm font-semibold tracking-widest">
+          {pin}
+        </span>
+      ) : (
+        <Popover
+          trigger={({ toggle, open }) => (
+            <button
+              type="button"
+              onClick={toggle}
+              aria-expanded={open}
+              aria-label={t('control.invite')}
+              className="bg-muted hover:bg-accent flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm"
+            >
+              <span className="font-mono font-semibold tracking-widest">{pin}</span>
+              <ChevronDown className="size-3.5" />
+            </button>
+          )}
+          className="w-80"
+        >
+          {invite}
+        </Popover>
+      )}
       <button
         type="button"
         onClick={() => setSide('players')}
@@ -864,7 +871,10 @@ function HostConsole({
     // window as it is now (the host may have lengthened it).
     const timePct =
       clock && clock.totalS > 0 ? Math.min(1, clock.remaining / clock.totalS) * 100 : 0;
-    const tone = timeTone(timePct / 100, view.paused);
+    // Before the answers open, as on the screens: stripes that run, red.
+    const tone = clock?.reading
+      ? 'qd-reading bg-destructive'
+      : timeTone(timePct / 100, view.paused);
     const answeredPct = totalPlayers > 0 ? (answered / totalPlayers) * 100 : 0;
     // The answer key, for the host only (the outline carries it; never sent to players).
     const correctIds = view.outline.find((q) => q.index === view.questionIndex)?.correctOptionIds;
@@ -1292,7 +1302,9 @@ function RecapHeader({ view, onRename }: { view: GameView; onRename?: (name: str
   };
   const steps = view.outline.length;
   return (
-    <div className="flex min-w-0 flex-col">
+    // It takes the room the row leaves and no more: a long name or title is cut, the row's
+    // chips and views stay on its line.
+    <div className="flex min-w-0 flex-1 basis-48 flex-col">
       {editing ? (
         <form
           onSubmit={(e) => {
@@ -1336,9 +1348,13 @@ function RecapHeader({ view, onRename }: { view: GameView; onRename?: (name: str
         </div>
       )}
       {view.quizTitle ? (
-        <span className="text-muted-foreground truncate text-sm">
-          {view.quizTitle}
-          {steps > 0 ? ` · ${t('control.outlineQuestionCount', { count: steps })}` : null}
+        <span className="text-muted-foreground flex min-w-0 gap-1 text-sm" title={view.quizTitle}>
+          <span className="truncate">{view.quizTitle}</span>
+          {steps > 0 ? (
+            <span className="shrink-0">
+              · {t('control.outlineQuestionCount', { count: steps })}
+            </span>
+          ) : null}
         </span>
       ) : null}
     </div>
@@ -1767,6 +1783,7 @@ function ChronoControls({
         className={cn(
           'min-w-14 text-center text-2xl font-bold tabular-nums',
           clock?.paused && 'opacity-60',
+          clock?.reading && 'text-destructive',
         )}
         aria-label={clock?.listening ? t('screen.listening') : t('control.timeRemaining')}
       >
