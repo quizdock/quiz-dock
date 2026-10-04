@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* global document -- in page.evaluate, the page's own */
+/* global document, window, HTMLMediaElement -- in page.evaluate, the page's own */
 /**
  * A live room played for real on the demo stack (tools/screenshots), checked and
  * photographed screen by screen: the console, the projection, a phone. Run by run.sh;
@@ -165,6 +165,15 @@ async function main() {
 
   const screenCtx = await browser.newContext({ viewport: SCREEN, locale: 'en-US' });
   await screenCtx.addInitScript((u) => localStorage.setItem('live.localUser', u), HOST);
+  // The screen's media are kept out of the page: every one it plays is noted here.
+  await screenCtx.addInitScript(() => {
+    const play = HTMLMediaElement.prototype.play;
+    window.__media = new Set();
+    HTMLMediaElement.prototype.play = function (...args) {
+      window.__media.add(this);
+      return play.apply(this, args);
+    };
+  });
   const screen = await screenCtx.newPage();
   pages.screen = screen;
   screen.on('pageerror', (e) => problems.push(`projection page error: ${e.message}`));
@@ -365,6 +374,108 @@ async function main() {
   await shot(dash, 'profile-language');
   check(await dash.getByText('Langue de l’interface').isVisible(), 'profile: the language choice');
   await api('PATCH', '/me/preferences', { language: null });
+  await dash.close();
+
+  // ── 7. Auto mode: the reveal, the quiz's standings, the next question, no click.
+  await consolePage.bringToFront();
+  await consolePage.getByRole('switch', { name: 'Autoplay' }).click();
+  await consolePage.getByRole('button', { name: /Start the quiz/ }).click();
+  const states = [];
+  const deadline = Date.now() + 120_000;
+  const reached = () => {
+    const at = states.indexOf('LEADERBOARD');
+    return (
+      states.includes('REVEAL') &&
+      at >= 0 &&
+      states.slice(at + 1).some((s) => s === 'ANSWERING' || s === 'QUESTION_SHOW')
+    );
+  };
+  while (Date.now() < deadline && !reached()) {
+    const now = await state(screen);
+    if (now && states.at(-1) !== now) states.push(now);
+    if (now === 'LEADERBOARD' && !states.includes('shot')) {
+      await shot(screen, 'projection-auto-standings');
+      states.push('shot');
+    }
+    await sleep(400);
+  }
+  check(reached(), `auto mode: reveal, standings, next question alone (${states.join(' → ')})`);
+  await consolePage.getByRole('switch', { name: 'Autoplay' }).click();
+
+  // ── 8. The host lost during the next quiz's countdown: told, then counting again.
+  await consolePage.getByRole('button', { name: /Stop the quiz/ }).click();
+  await consolePage.getByRole('dialog').getByRole('button', { name: 'Stop the quiz' }).click();
+  await consolePage.getByRole('button', { name: 'Choose the quiz' }).click();
+  const picker2 = consolePage.getByRole('combobox', { name: 'Quiz' });
+  await picker2.waitFor();
+  await picker2.fill('France');
+  await consolePage
+    .getByRole('option', { name: /France/ })
+    .first()
+    .click();
+  await consolePage.getByRole('button', { name: 'Open this quiz' }).click();
+  await consolePage.getByRole('timer').waitFor({ timeout: 15_000 });
+  await consolePage.close(); // the host's console gone
+  await sleep(7_000); // past the host's grace (GAME_HOST_GRACE_MS, 5 s on the demo stack)
+  check((await state(screen)) === 'HOST_DISCONNECTED', 'projection: the host is said gone');
+  check(
+    !(await screen.locator('[data-band=top]').innerText()).includes('0 /'),
+    'projection: gone in a lobby, no "question 0" in the band',
+  );
+  await shot(screen, 'projection-host-gone');
+  const back = await desk.newPage();
+  await back.goto(`${URL}/session/${pin}/console`);
+  await back.getByRole('timer').waitFor({ timeout: 15_000 });
+  await sleep(1_000);
+  const left = Number((await screen.getByRole('timer').first().textContent())?.match(/\d+/)?.[0]);
+  check(
+    (await state(screen)) === 'LOBBY' && left >= 25,
+    `host back: the lobby counts again from 30 s (${left} s left)`,
+  );
+  await shot(back, 'console-host-back-countdown');
+
+  // ── 9. Everyone ready starts it; then on to the question with a sound, which the
+  // projection plays (the room's one click was made at the start).
+  await phoneCtx.close(); // the bots alone: they answer at once, every reveal comes early
+  await players.ready();
+  await screen.waitForFunction(
+    () => document.querySelector('[data-state]')?.getAttribute('data-state') !== 'LOBBY',
+    null,
+    { timeout: 15_000 },
+  );
+  check(true, 'everyone ready: the next quiz starts before its countdown');
+  const drive = socket({ localUser: HOST });
+  await new Promise((r) => drive.on('connect', r));
+  await drive.emitWithAck('host:attach', { pin });
+  let played = false;
+  const soundBy = Date.now() + 180_000;
+  while (Date.now() < soundBy) {
+    const now = await state(screen);
+    const prompt = (await screen.locator('main, body').first().innerText()).includes(
+      'Which anthem is this?',
+    );
+    if (prompt && (now === 'ANSWERING' || now === 'QUESTION_SHOW')) {
+      await screen
+        .waitForFunction(
+          () => [...(window.__media ?? [])].some((m) => !m.paused && m.currentTime > 0),
+          null,
+          { timeout: 15_000 },
+        )
+        .then(() => (played = true))
+        .catch(() => undefined);
+      await shot(screen, 'projection-question-with-sound');
+      await shot(back, 'console-question-with-sound');
+      break;
+    }
+    if (now === 'SLIDE_SHOW' || now === 'REVEAL' || now === 'LEADERBOARD') {
+      drive.emit('host:next', { pin });
+      await sleep(900);
+    } else {
+      await sleep(400);
+    }
+  }
+  check(played, "projection: the question's sound plays");
+  drive.disconnect();
 
   players.close();
   await api('POST', `/games/${pin}/end`).catch(() => undefined);

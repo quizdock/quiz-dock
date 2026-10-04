@@ -325,7 +325,10 @@ export function ScreenSurface({
   if (view.status === 'error') {
     stage = <p className="text-muted-foreground">{view.error ?? t('screen.sessionUnavailable')}</p>;
   } else if (view.state === 'HOST_DISCONNECTED') {
-    top = band('top', where(t('screen.stepQuestion', { n: qNumber, total })), null, joinChip);
+    // Gone in a lobby: no question yet to say.
+    const step =
+      qNumber > 0 ? t('screen.stepQuestion', { n: qNumber, total }) : t('screen.phaseLobby');
+    top = band('top', where(step), null, joinChip);
     stage = (
       <div className="flex flex-col items-center gap-[0.8em] opacity-80">
         <Loader2 aria-hidden className="text-muted-foreground size-[2.5em] animate-spin" />
