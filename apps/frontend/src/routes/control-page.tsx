@@ -48,7 +48,6 @@ import {
   Users,
   Wifi,
   Trash2,
-  Keyboard,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
@@ -162,33 +161,6 @@ function HostConsole({
   const [side, setSide] = useState<SideTab | null>(null);
   // The step the game is live on, kept while the host looks back at another one.
   const liveStep = useRef<number | null>(null);
-  // Tab can cycle the three views (Shift+Tab backwards), from the page itself only,
-  // once the host turns it on: off, Tab is the keyboard's way through the page (a11y).
-  // On a control, Tab keeps moving the focus, so the keyboard reaches every button.
-  const [tabViews, setTabViews] = useState(() => {
-    try {
-      return localStorage.getItem(TAB_VIEWS_KEY) === 'on';
-    } catch {
-      return false;
-    }
-  });
-  const toggleTabViews = (on: boolean) => {
-    setTabViews(on);
-    try {
-      localStorage.setItem(TAB_VIEWS_KEY, on ? 'on' : 'off');
-    } catch {
-      /* storage unavailable: the choice lasts for this page */
-    }
-  };
-  useHotkeys(
-    ['tab', 'shift+tab'],
-    (e) =>
-      setTab((current) => {
-        const i = HOST_TABS.indexOf(current);
-        return HOST_TABS[(i + (e.shiftKey ? -1 : 1) + HOST_TABS.length) % HOST_TABS.length];
-      }),
-    { enabled: tabViews, preventDefault: true, ignoreEventWhen: onControl },
-  );
   // Looking back over played steps (no replay): the server tells what is reachable.
   const review = (step: GameStep) => socket?.emit('host:review', { pin, ...step });
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
@@ -374,23 +346,30 @@ function HostConsole({
         view={view}
         onRename={inLobby ? (name) => socket?.emit('host:room-name', { pin, name }) : undefined}
       />
-      <Popover
-        trigger={({ toggle, open }) => (
-          <button
-            type="button"
-            onClick={toggle}
-            aria-expanded={open}
-            aria-label={t('control.invite')}
-            className="bg-muted hover:bg-accent flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm"
-          >
-            <span className="font-mono font-semibold tracking-widest">{pin}</span>
-            <ChevronDown className="size-3.5" />
-          </button>
-        )}
-        className="w-80"
-      >
-        {invite}
-      </Popover>
+      {/* In the lobby the invitation fills the centre: the PIN alone; later, it opens it. */}
+      {phase === 'lobby' ? (
+        <span className="bg-muted rounded-full px-2.5 py-1 font-mono text-sm font-semibold tracking-widest">
+          {pin}
+        </span>
+      ) : (
+        <Popover
+          trigger={({ toggle, open }) => (
+            <button
+              type="button"
+              onClick={toggle}
+              aria-expanded={open}
+              aria-label={t('control.invite')}
+              className="bg-muted hover:bg-accent flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm"
+            >
+              <span className="font-mono font-semibold tracking-widest">{pin}</span>
+              <ChevronDown className="size-3.5" />
+            </button>
+          )}
+          className="w-80"
+        >
+          {invite}
+        </Popover>
+      )}
       <button
         type="button"
         onClick={() => setSide('players')}
@@ -408,7 +387,6 @@ function HostConsole({
       >
         {t(`control.phase.${phase}`)}
       </span>
-      <TabViewsSwitch on={tabViews} onToggle={toggleTabViews} />
       <ViewSwitch tab={tab} onTab={setTab} />
     </div>
   );
@@ -425,7 +403,8 @@ function HostConsole({
         on={view.motion ?? appConfig.liveMotion !== false}
         onToggle={(on) => socket?.emit('host:motion', { pin, on })}
       />
-      {screenButton}
+      {/* The projection window, apart from the room's settings: at the row's end. */}
+      <div className="ml-auto">{screenButton}</div>
     </div>
   );
 
@@ -892,7 +871,10 @@ function HostConsole({
     // window as it is now (the host may have lengthened it).
     const timePct =
       clock && clock.totalS > 0 ? Math.min(1, clock.remaining / clock.totalS) * 100 : 0;
-    const tone = timeTone(timePct / 100, view.paused);
+    // Before the answers open, as on the screens: stripes that run, red.
+    const tone = clock?.reading
+      ? 'qd-reading bg-destructive'
+      : timeTone(timePct / 100, view.paused);
     const answeredPct = totalPlayers > 0 ? (answered / totalPlayers) * 100 : 0;
     // The answer key, for the host only (the outline carries it; never sent to players).
     const correctIds = view.outline.find((q) => q.index === view.questionIndex)?.correctOptionIds;
@@ -997,13 +979,13 @@ function HostConsole({
           {rowTwo}
         </div>
         {/* The transport, in the header's right corner, above the outline. */}
-        <div className="w-full lg:w-[20rem]">{transport}</div>
+        <div className="w-full lg:w-[22rem]">{transport}</div>
         <div className="w-full empty:hidden">
           <ChromiumNotice />
         </div>
       </header>
       {/* Whatever the view, the participants and the quiz's outline stay beside it. */}
-      <div className="grid flex-1 items-start gap-5 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-stretch">
+      <div className="grid flex-1 items-start gap-5 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-stretch">
         <div className="min-w-0 lg:min-h-0 lg:overflow-y-auto">
           {tab === 'screen' ? (
             // The projection's 16:9, scaled to the column. The console's own session: a
@@ -1320,7 +1302,9 @@ function RecapHeader({ view, onRename }: { view: GameView; onRename?: (name: str
   };
   const steps = view.outline.length;
   return (
-    <div className="flex min-w-0 flex-col">
+    // It takes the room the row leaves and no more: a long name or title is cut, the row's
+    // chips and views stay on its line.
+    <div className="flex min-w-0 flex-1 basis-48 flex-col">
       {editing ? (
         <form
           onSubmit={(e) => {
@@ -1364,9 +1348,13 @@ function RecapHeader({ view, onRename }: { view: GameView; onRename?: (name: str
         </div>
       )}
       {view.quizTitle ? (
-        <span className="text-muted-foreground truncate text-sm">
-          {view.quizTitle}
-          {steps > 0 ? ` · ${t('control.outlineQuestionCount', { count: steps })}` : null}
+        <span className="text-muted-foreground flex min-w-0 gap-1 text-sm" title={view.quizTitle}>
+          <span className="truncate">{view.quizTitle}</span>
+          {steps > 0 ? (
+            <span className="shrink-0">
+              · {t('control.outlineQuestionCount', { count: steps })}
+            </span>
+          ) : null}
         </span>
       ) : null}
     </div>
@@ -1795,6 +1783,7 @@ function ChronoControls({
         className={cn(
           'min-w-14 text-center text-2xl font-bold tabular-nums',
           clock?.paused && 'opacity-60',
+          clock?.reading && 'text-destructive',
         )}
         aria-label={clock?.listening ? t('screen.listening') : t('control.timeRemaining')}
       >
@@ -1813,7 +1802,6 @@ function ChronoControls({
 const NEXT_DEBOUNCE_MS = 800;
 
 type HostTab = 'control' | 'screen' | 'player';
-const HOST_TABS: HostTab[] = ['control', 'screen', 'player'];
 
 /** Where a key belongs to the element that has the focus, not to the console's shortcuts. */
 const INTERACTIVE =
@@ -1822,27 +1810,7 @@ const INTERACTIVE =
 const onControl = (e: KeyboardEvent) =>
   e.target instanceof Element && !!e.target.closest(INTERACTIVE);
 
-/** Remembered per browser: a keyboard habit, not a setting of the room. */
-const TAB_VIEWS_KEY = 'console.tabViews';
-
-/**
- * Whether Tab, from the page, cycles the views. Off by default: Tab belongs to
- * moving through the page. Shown where a keyboard is likely, never on a phone.
- */
-function TabViewsSwitch({ on, onToggle }: { on: boolean; onToggle: (on: boolean) => void }) {
-  const { t } = useTranslation('live');
-  return (
-    <Tooltip label={on ? t('control.tabViewsOnTooltip') : t('control.tabViewsOffTooltip')}>
-      <label className="ml-auto hidden items-center gap-2 text-sm font-medium sm:flex">
-        <Switch checked={on} onCheckedChange={onToggle} aria-label={t('control.tabViewsLabel')} />
-        <Keyboard aria-hidden className="text-muted-foreground size-4" />
-        {t('control.tabViews')}
-      </label>
-    </Tooltip>
-  );
-}
-
-/** The three views of the session, a switch of the first row (Tab can cycle them). */
+/** The three views of the session, a switch of the first row. */
 function ViewSwitch({ tab, onTab }: { tab: HostTab; onTab: (t: HostTab) => void }) {
   const { t } = useTranslation('live');
   const tabs: { id: HostTab; label: string; icon: React.ReactNode }[] = [
@@ -1854,7 +1822,7 @@ function ViewSwitch({ tab, onTab }: { tab: HostTab; onTab: (t: HostTab) => void 
     <div
       role="tablist"
       aria-label={t('control.viewSwitch')}
-      className="bg-muted ml-auto flex rounded-lg p-0.5 text-sm sm:ml-0"
+      className="bg-muted ml-auto flex rounded-lg p-0.5 text-sm"
     >
       {tabs.map((x) => (
         <button

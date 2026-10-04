@@ -31,6 +31,11 @@ export function useCountdown(endsAt: number | null): number | null {
 export interface QuestionClock {
   /** Listen first, before the answers open: the count is to their opening. */
   listening: boolean;
+  /**
+   * The reading window, before the answers open (no listening): the clock stands at
+   * the answers' whole time, which only starts once they open.
+   */
+  reading: boolean;
   /** Stood still by the server (the game paused). */
   paused: boolean;
   /** Seconds left, rounded up. */
@@ -62,29 +67,36 @@ export function useQuestionClock(view: {
   const q = view.question;
   const live = view.state === 'ANSWERING' && !view.paused && !view.still && q !== null;
   const toEnd = useCountdown(live ? q.endsAt : null);
-  const toOpen = useCountdown(live && q.listenFirst ? q.startedAt : null);
+  const toOpen = useCountdown(live ? q.startedAt : null);
   const frozen = view.paused && view.pausedRemainingMs != null;
   const still = !!view.still && (view.state === 'QUESTION_SHOW' || view.state === 'ANSWERING');
   if (!q || (!live && !frozen && !still)) return null;
   const windowS = (q.endsAt - q.startedAt) / 1000;
   // A preview: the whole time, standing, neither counting nor paused.
-  if (still) return { listening: false, paused: false, remaining: windowS, totalS: windowS };
+  if (still)
+    return { listening: false, reading: false, paused: false, remaining: windowS, totalS: windowS };
   const listenS = (q.startedAt - (q.mediaStartAt ?? q.startedAt)) / 1000;
   if (frozen) {
     const leftS = (view.pausedRemainingMs ?? 0) / 1000;
-    const listening = !!q.listenFirst && leftS > windowS;
+    const before = leftS > windowS;
+    const listening = !!q.listenFirst && before;
+    const reading = !q.listenFirst && before;
     return {
       listening,
+      reading,
       paused: true,
-      remaining: Math.ceil(listening ? leftS - windowS : leftS),
+      remaining: Math.ceil(listening ? leftS - windowS : reading ? windowS : leftS),
       totalS: listening ? listenS : windowS,
     };
   }
-  const listening = (toOpen ?? 0) > 0;
+  const before = (toOpen ?? 0) > 0;
+  const listening = !!q.listenFirst && before;
+  const reading = !q.listenFirst && before;
   return {
     listening,
+    reading,
     paused: false,
-    remaining: (listening ? toOpen : toEnd) ?? 0,
+    remaining: (listening ? toOpen : reading ? Math.ceil(windowS) : toEnd) ?? 0,
     totalS: listening ? listenS : windowS,
   };
 }

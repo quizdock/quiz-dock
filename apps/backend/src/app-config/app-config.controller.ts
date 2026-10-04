@@ -40,7 +40,16 @@ export class AppConfigController {
     // JSON is valid JavaScript, whatever the values hold (quotes, backslashes, line breaks).
     // A new room's screens move between steps unless the instance says `off` (UI system §1.8).
     const liveMotion = liveMotionDefault();
-    const config = JSON.stringify({ appName, lang, logoUrl, feedbackUrl, liveMotion });
+    // A reveal's time in auto mode when its question sets none: the editor shows it.
+    const autoAdvanceS = Math.round(settings.get(SETTINGS.GAME_AUTO_ADVANCE_MS) / 1000);
+    const config = JSON.stringify({
+      appName,
+      lang,
+      logoUrl,
+      feedbackUrl,
+      liveMotion,
+      autoAdvanceS,
+    });
     return `window.__APP_CONFIG__ = ${config};\n`;
   }
 

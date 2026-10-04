@@ -213,10 +213,6 @@
       "players": "Jugadores"
     },
     "viewSwitch": "Vista",
-    "tabViews": "Tab",
-    "tabViewsLabel": "Cambiar de vista con Tab",
-    "tabViewsOnTooltip": "Tab cambia de vista desde la página (Mayús+Tab hacia atrás); en un control sigue moviendo el foco. Clic para devolver Tab al recorrido de la página.",
-    "tabViewsOffTooltip": "Tab recorre la página. Clic para que, desde la propia página, también cambie de vista.",
     "lookBackPrev": "Volver al paso anterior",
     "lookBackNext": "Ver el siguiente paso jugado",
     "playedHint": "Un paso jugado se vuelve a abrir para todos, solo lectura: no se repite nada.",
@@ -418,6 +414,7 @@
     "sendFailed": "No se pudo enviar. Comprueba tu conexión e inténtalo de nuevo.",
     "rejected": "Opinión rechazada: puede que el quiz aún no haya terminado.",
     "title": "Tu opinión sobre este quiz",
+    "titlePrevious": "Tu opinión sobre el quiz anterior",
     "starLabel_one": "{{count}} estrella",
     "starLabel_other": "{{count}} estrellas",
     "commentPlaceholder": "¿Un comentario? (opcional)",

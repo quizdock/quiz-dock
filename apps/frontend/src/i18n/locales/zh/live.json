@@ -213,10 +213,6 @@
       "players": "玩家"
     },
     "viewSwitch": "视图",
-    "tabViews": "Tab",
-    "tabViewsLabel": "用 Tab 切换视图",
-    "tabViewsOnTooltip": "在页面上按 Tab 切换视图（Shift+Tab 反向）；在控件上仍移动焦点。点击让 Tab 恢复在页面中移动。",
-    "tabViewsOffTooltip": "Tab 在页面中移动焦点。点击让它在页面本身上也能切换视图。",
     "lookBackPrev": "回看上一步",
     "lookBackNext": "查看下一个已进行的步骤",
     "playedHint": "已进行的步骤会对所有人重新显示，仅供查看：不会重玩。",
@@ -418,6 +414,7 @@
     "sendFailed": "发送失败。请检查网络后重试。",
     "rejected": "评价被拒绝：测验可能尚未结束。",
     "title": "你对这个测验的评价",
+    "titlePrevious": "你对上一个测验的评价",
     "starLabel_one": "{{count}} 星",
     "starLabel_other": "{{count}} 星",
     "commentPlaceholder": "想说点什么？（可选）",

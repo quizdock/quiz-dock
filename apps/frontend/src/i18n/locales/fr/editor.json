@@ -44,7 +44,7 @@
       "projection_remote": "Projection et participants à distance",
       "everyone": "Tous les appareils"
     },
-    "sharingLegend": "Partage",
+    "sharingLegend": "Langue et partage",
     "sharingSummary_one": "{{license}} · {{count}} tag",
     "sharingSummary_other": "{{license}} · {{count}} tags",
     "noLicense": "Aucune licence",
@@ -237,12 +237,12 @@
     "playbackLegend": "Lecture",
     "timingLegend": "Temps",
     "pointsLegend": "Points",
-    "answerExplanationLabel": "Explication de la réponse (affichée après la révélation)",
+    "answerExplanationLabel": "Explication (montrée avec la bonne réponse)",
     "answerExplanationPlaceholder": "Pourquoi cette réponse est la bonne… (facultatif)",
     "timeLimitLabel": "Temps (s)",
-    "revealDelayLabel": "Délai de révélation (s)",
+    "revealDelayLabel": "Affichage de la réponse (s)",
     "revealDelayPlaceholder": "auto",
-    "revealDelayHint": "En mode automatique : temps laissé sur la réponse avant la question suivante. Vide = réglage par défaut.",
+    "revealDelayHint": "En mode auto : combien de temps la bonne réponse reste à l’écran avant la suite. Vide = réglage de l’instance.",
     "audioTargetLabel": "Qui entend ce son",
     "audioTargetHint": "Quels appareils jouent le son ou la vidéo de cette question. « Tous les appareils » inclut les téléphones dans la salle, qui font écho s’ils la partagent.",
     "audioTargetDefault": "Réglage du quiz dans le salon",
@@ -262,14 +262,14 @@
       "double": "Double",
       "fixed": "Fixe (sans bonus vitesse)"
     },
-    "optionsLegend": "Options",
-    "optionAriaLabel": "option {{index}}",
-    "dragOption": "Glisser pour réordonner l’option",
-    "optionPlaceholder": "Option {{index}}",
+    "optionsLegend": "Choix de réponse",
+    "optionAriaLabel": "choix {{index}}",
+    "dragOption": "Glisser pour réordonner le choix",
+    "optionPlaceholder": "Choix {{index}}",
     "orderAriaLabel": "Place de la réponse {{index}} dans le bon ordre",
     "correct": "Correcte",
-    "removeOption": "Retirer l’option {{index}}",
-    "addOption": "Ajouter une option",
+    "removeOption": "Retirer le choix {{index}}",
+    "addOption": "Ajouter un choix",
     "acceptedAnswersLegend": "Réponses acceptées",
     "answerAriaLabel": "réponse {{index}}",
     "removeAnswer": "Retirer la réponse {{index}}",
@@ -325,8 +325,8 @@
       }
     },
     "removeOptionConfirm": {
-      "title": "Supprimer cette option ?",
-      "description": "« {{label}} » sera retirée de la question.",
+      "title": "Supprimer ce choix ?",
+      "description": "« {{label}} » sera retiré de la question.",
       "confirmLabel": "Supprimer"
     },
     "titleEdit": "Modifier la question",
@@ -365,7 +365,7 @@
       "confirmLabel": "Passer en brouillon et enregistrer",
       "cancelLabel": "Continuer à modifier"
     },
-    "optionActions": "Actions de l’option {{index}}",
+    "optionActions": "Actions du choix {{index}}",
     "removeOptionShort": "Retirer",
     "ticksCleared": "Le type a changé : les bonnes réponses ont été décochées. Cochez-les à nouveau selon les nouvelles règles.",
     "explanationWritten": "Rédigée",
@@ -374,8 +374,8 @@
     "decimalsAllowed": "Les décimales sont acceptées : 3,14, 0,5…",
     "timingSummary": "{{time}} s",
     "timingSummaryStretched": "{{time}} s ({{total}} s avec le média)",
-    "revealDelayAuto": "délai de révélation auto",
-    "revealDelaySummary": "révélation après {{seconds}} s",
+    "revealDelayAuto": "réponse affichée en auto",
+    "revealDelaySummary": "réponse affichée {{seconds}} s",
     "place_ordinal_one": "{{count}}er",
     "place_ordinal_two": "{{count}}e",
     "place_ordinal_few": "{{count}}e",
@@ -387,7 +387,9 @@
       "top": "Au-dessus du texte",
       "left": "À gauche du texte",
       "right": "À droite du texte"
-    }
+    },
+    "revealDelayAutoValue": "auto ({{seconds}} s)",
+    "revealDelaySummaryAuto": "réponse affichée {{seconds}} s (auto)"
   },
   "preview": {
     "view": "Aperçu (vue participant)",
@@ -398,7 +400,7 @@
     "next": "Suivant",
     "questionPosition": "{{index}} / {{total}}",
     "correctAnswer": "bonne réponse",
-    "optionFallback": "Option {{index}}",
+    "optionFallback": "Choix {{index}}",
     "acceptedAnswers": "Réponses acceptées : {{answers}}",
     "numericTarget": "Cible : {{value}} (± {{tolerance}})",
     "credits": "Crédits",
@@ -410,7 +412,9 @@
     "projection": "Projection",
     "phone": "Téléphone",
     "showAnswer": "Montrer la réponse",
-    "title": "Aperçu"
+    "title": "Aperçu",
+    "pin": "Épingler en haut",
+    "unpin": "Désépingler"
   },
   "media": {
     "alt": "média de la question",
@@ -502,12 +506,12 @@
     "confirmLabel": "Supprimer"
   },
   "questionTypeHelp": {
-    "single_choice": "Une seule bonne réponse parmi 2 à 8 options. Points selon la rapidité, bonus de série.",
+    "single_choice": "Une seule bonne réponse parmi 2 à 8 choix. Points selon la rapidité, bonus de série.",
     "multiple_choice": "Plusieurs bonnes réponses ; le participant coche puis valide. Tout ou rien : l’ensemble coché doit être exactement le bon.",
-    "true_false": "Deux options fixes, une seule bonne. Le plus rapide à jouer.",
+    "true_false": "Deux choix fixes, un seul bon. Le plus rapide à jouer.",
     "text_input": "Le participant tape sa réponse. Comparée aux réponses acceptées sans tenir compte de la casse, des accents ni des espaces en trop.",
     "numeric": "Le participant saisit un nombre ; bon s’il est à ± tolérance de la valeur cible.",
-    "ordering": "Le participant remet les options dans l’ordre défini par les positions (#). Tout ou rien.",
+    "ordering": "Le participant remet les choix dans l’ordre défini par les positions (#). Tout ou rien.",
     "poll": "Recueil d’opinion : aucune bonne réponse, aucun point ; la répartition est affichée à la révélation.",
     "image_choice": "Les réponses sont des images, 2 ou 4, chacune avec sa couleur et sa forme. Une seule bonne image, ou plusieurs si réglé ; noté comme un QCM à réponse unique ou multiple."
   },

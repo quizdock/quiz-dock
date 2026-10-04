@@ -44,7 +44,7 @@
       "projection_remote": "投影和远程参与者",
       "everyone": "所有设备"
     },
-    "sharingLegend": "共享",
+    "sharingLegend": "语言与共享",
     "sharingSummary_one": "{{license}} · {{count}} 个标签",
     "sharingSummary_other": "{{license}} · {{count}} 个标签",
     "noLicense": "无许可协议",
@@ -237,12 +237,12 @@
     "playbackLegend": "播放",
     "timingLegend": "时间",
     "pointsLegend": "计分",
-    "answerExplanationLabel": "答案解析（揭晓后显示）",
+    "answerExplanationLabel": "答案解析（与正确答案一起显示）",
     "answerExplanationPlaceholder": "为什么这是正确答案…（可选）",
     "timeLimitLabel": "时间（秒）",
-    "revealDelayLabel": "揭晓停留（秒）",
+    "revealDelayLabel": "答案显示时长（秒）",
     "revealDelayPlaceholder": "自动",
-    "revealDelayHint": "自动模式下：进入下一题前在答案上停留的时间。留空 = 默认设置。",
+    "revealDelayHint": "自动模式下：正确答案在屏幕上停留多久再继续。留空 = 实例的设置。",
     "audioTargetLabel": "谁能听到这个声音",
     "audioTargetHint": "哪些设备播放本题的声音或视频。“所有设备”包括现场的手机，若共处一室会产生回声。",
     "audioTargetDefault": "房间中本测验的设置",
@@ -262,7 +262,7 @@
       "double": "双倍",
       "fixed": "固定（无速度加分）"
     },
-    "optionsLegend": "选项",
+    "optionsLegend": "答案选项",
     "optionAriaLabel": "选项 {{index}}",
     "dragOption": "拖动以排序选项",
     "optionPlaceholder": "选项 {{index}}",
@@ -374,8 +374,8 @@
     "decimalsAllowed": "可以使用小数：3.14、0.5…",
     "timingSummary": "{{time}} 秒",
     "timingSummaryStretched": "{{time}} 秒（含媒体 {{total}} 秒）",
-    "revealDelayAuto": "揭晓延迟自动",
-    "revealDelaySummary": "{{seconds}} 秒后揭晓",
+    "revealDelayAuto": "答案显示时长自动",
+    "revealDelaySummary": "答案显示 {{seconds}} 秒",
     "place_ordinal_one": "第{{count}}",
     "place_ordinal_two": "第{{count}}",
     "place_ordinal_few": "第{{count}}",
@@ -387,7 +387,9 @@
       "top": "文字上方",
       "left": "文字左侧",
       "right": "文字右侧"
-    }
+    },
+    "revealDelayAutoValue": "自动（{{seconds}} 秒）",
+    "revealDelaySummaryAuto": "答案显示 {{seconds}} 秒（自动）"
   },
   "preview": {
     "view": "预览（玩家视图）",
@@ -410,7 +412,9 @@
     "projection": "投影",
     "phone": "手机",
     "showAnswer": "显示答案",
-    "title": "预览"
+    "title": "预览",
+    "pin": "固定在顶部",
+    "unpin": "取消固定"
   },
   "media": {
     "alt": "题目媒体",
