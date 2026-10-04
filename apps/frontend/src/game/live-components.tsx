@@ -633,6 +633,7 @@ export function TimerBar({
   icon,
   label,
   paused = false,
+  reading = false,
   className,
 }: {
   remaining: number;
@@ -641,6 +642,8 @@ export function TimerBar({
   icon: string;
   label: string;
   paused?: boolean;
+  /** Before the answers open: the bar runs stripes, red, the count stands still. */
+  reading?: boolean;
   className?: string;
 }) {
   const total = Math.max(totalS, remaining);
@@ -649,23 +652,26 @@ export function TimerBar({
     <div
       role="timer"
       aria-label={label}
-      data-tone={toneOf(share, paused)}
-      className={cn(
-        'qd-timer flex w-full items-center gap-[0.6em]',
-        paused && 'opacity-60',
-        className,
-      )}
+      data-tone={reading ? 'reading' : toneOf(share, paused)}
+      // Paused, it says so by its grey and its sign, never by fading: a weak projector or
+      // a bright room would lose it.
+      className={cn('qd-timer flex w-full items-center gap-[0.6em]', className)}
     >
       <div className={cn('bg-muted h-[0.5em] flex-1 overflow-hidden rounded-full', BACKDROP_EDGE)}>
         <div
           className={cn(
             'h-full rounded-full transition-[width,background-color] duration-1000 ease-linear',
-            timeTone(share, paused),
+            reading ? 'qd-reading bg-destructive' : timeTone(share, paused),
           )}
-          style={{ width: `${share * 100}%` }}
+          style={{ width: reading ? '100%' : `${share * 100}%` }}
         />
       </div>
-      <span className="shrink-0 font-bold whitespace-nowrap tabular-nums">
+      <span
+        className={cn(
+          'shrink-0 font-bold whitespace-nowrap tabular-nums',
+          reading && 'text-destructive',
+        )}
+      >
         <span aria-hidden>{icon}</span> {remaining}
       </span>
     </div>
@@ -688,6 +694,7 @@ export function QuestionClockBar({
       icon={clock.listening ? '🎧' : clock.paused ? '⏸' : '⏱'}
       label={clock.listening ? t('screen.listening') : t('screen.timeRemaining')}
       paused={clock.paused}
+      reading={clock.reading}
       className={className}
     />
   );

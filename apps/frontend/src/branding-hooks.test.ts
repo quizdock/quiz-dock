@@ -19,6 +19,7 @@ describe('branding hooks', () => {
         '.qd-mark-stroke',
         '.qd-mark-stroke-2',
         '.qd-pop',
+        '.qd-reading',
       ].sort(),
     );
   });

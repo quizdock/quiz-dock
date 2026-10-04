@@ -314,7 +314,23 @@
     box-shadow: 0 0 0 0.6rem transparent;
   }
 }
+/* The reading window, before the answers open: stripes that run, the time not yet counted. */
+.qd-reading {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in oklab, white 30%, transparent) 0 0.5rem,
+    transparent 0.5rem 1rem
+  );
+  background-size: 1.414rem 100%;
+  animation: qd-reading 0.6s linear infinite;
+}
+@keyframes qd-reading {
+  to {
+    background-position: 1.414rem 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
+  .qd-reading,
   .qd-breathe,
   .qd-pop,
   .qd-mark,

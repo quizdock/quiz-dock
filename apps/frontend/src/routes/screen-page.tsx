@@ -821,7 +821,6 @@ export function ScreenSurface({
                 'justify-center px-[3.5em] text-center',
                 compact ? 'gap-[1em] py-[0.8em]' : 'gap-[1.5em] py-[1.5em]',
               ),
-          view.paused && !slide && 'opacity-60',
         )}
       >
         {stage}

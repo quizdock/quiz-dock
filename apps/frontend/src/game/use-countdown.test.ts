@@ -62,7 +62,7 @@ describe('useQuestionClock: one clock for the screen, the phones and the console
         pausedRemainingMs: null,
         question: question(-15_000, 30),
       }),
-    ).toEqual({ listening: false, paused: false, remaining: 15, totalS: 30 });
+    ).toEqual({ listening: false, reading: false, paused: false, remaining: 15, totalS: 30 });
   });
 
   it('listen first: the listening’s time until the answers open, out of the media’s', () => {
@@ -73,7 +73,7 @@ describe('useQuestionClock: one clock for the screen, the phones and the console
         pausedRemainingMs: null,
         question: question(4_000, 20, true),
       }),
-    ).toEqual({ listening: true, paused: false, remaining: 4, totalS: 30 });
+    ).toEqual({ listening: true, reading: false, paused: false, remaining: 4, totalS: 30 });
   });
 
   it('paused, what the server froze: in the answers, or still in the listening', () => {
@@ -84,7 +84,7 @@ describe('useQuestionClock: one clock for the screen, the phones and the console
         pausedRemainingMs: 7_000,
         question: question(-13_000, 20),
       }),
-    ).toEqual({ listening: false, paused: true, remaining: 7, totalS: 20 });
+    ).toEqual({ listening: false, reading: false, paused: true, remaining: 7, totalS: 20 });
     expect(
       clock({
         state: 'ANSWERING',
@@ -92,6 +92,25 @@ describe('useQuestionClock: one clock for the screen, the phones and the console
         pausedRemainingMs: 24_000,
         question: question(10_000, 20, true),
       }),
-    ).toEqual({ listening: true, paused: true, remaining: 4, totalS: 30 });
+    ).toEqual({ listening: true, reading: false, paused: true, remaining: 4, totalS: 30 });
+  });
+
+  it('the reading window: the answers’ whole time, standing until they open', () => {
+    expect(
+      clock({
+        state: 'ANSWERING',
+        paused: false,
+        pausedRemainingMs: null,
+        question: question(2_000, 20),
+      }),
+    ).toEqual({ listening: false, reading: true, paused: false, remaining: 20, totalS: 20 });
+    expect(
+      clock({
+        state: 'ANSWERING',
+        paused: true,
+        pausedRemainingMs: 22_000,
+        question: question(2_000, 20),
+      }),
+    ).toEqual({ listening: false, reading: true, paused: true, remaining: 20, totalS: 20 });
   });
 });
