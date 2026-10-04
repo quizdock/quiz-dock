@@ -257,7 +257,10 @@
     "columnStatus": "État",
     "columnQuiz": "Quiz",
     "columnTotal": "Total",
-    "columnActions": "Actions"
+    "columnActions": "Actions",
+    "audienceLanguageLabel": "Langue des écrans",
+    "audienceLanguageQuiz": "La langue de chaque quiz",
+    "audienceLanguageHint": "La projection et les écrans des participants, pour tout le salon : un cours de langue joue un quiz en anglais avec l’interface dans la sienne."
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",

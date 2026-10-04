@@ -257,7 +257,10 @@
     "columnStatus": "Status",
     "columnQuiz": "Quiz",
     "columnTotal": "Total",
-    "columnActions": "Actions"
+    "columnActions": "Actions",
+    "audienceLanguageLabel": "Language of the screens",
+    "audienceLanguageQuiz": "Each quiz's language",
+    "audienceLanguageHint": "The projection and the participants' screens, for the whole room: a language class plays an English quiz with the interface in its own."
   },
   "screen": {
     "sessionUnavailable": "Room unavailable.",

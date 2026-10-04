@@ -2838,6 +2838,11 @@
               "account",
               "open"
             ]
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 10,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$"
           }
         }
       },
@@ -2851,6 +2856,12 @@
               "open",
               null
             ],
+            "nullable": true
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 10,
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
             "nullable": true
           }
         },

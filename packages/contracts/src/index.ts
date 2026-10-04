@@ -629,6 +629,8 @@ export interface ClientToServerEvents {
     pickOwnName?: boolean;
     /** Replaces the quiz's default audio target for this game (questions with their own keep it). */
     audioTarget?: AudioTarget;
+    /** The language of the audience's screens for the whole room (#209); '' = each quiz's. */
+    audienceLanguage?: string;
   }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
@@ -835,6 +837,13 @@ export interface ServerToClientEvents {
     hasMedia: boolean;
     /** The game's default audio target: the host's lobby choice, else the quiz's. */
     audioTarget: AudioTarget;
+    /**
+     * The language of the audience's screens (#209), a BCP 47 tag: the host's choice for
+     * the room, else the quiz's.
+     */
+    language: string;
+    /** The host's choice for the room (#209); '' = each quiz's. Read by the console. */
+    roomLanguage: string;
   }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine

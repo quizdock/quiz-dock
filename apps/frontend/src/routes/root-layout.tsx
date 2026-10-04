@@ -3,7 +3,9 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppNav } from '@/components/app-nav';
 import { BrandLogo } from '@/components/brand-logo';
+import { useMeControllerGetPreferences } from '../api/generated/me/me';
 import { useAuth } from '../auth/auth-context';
+import { useInterfaceLanguage } from '../i18n/interface-language';
 import { APP_NAME, getDemo } from '../config';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +58,11 @@ export function RootLayout() {
       : routeId.startsWith('/join')
         ? 'participant'
         : 'app';
+  // The interface's language (#209): a host's own screens follow their preference; the
+  // game screens ask for the audience's themselves.
+  const hostScreens = shell === 'app' && !!user;
+  const preferences = useMeControllerGetPreferences({ query: { enabled: hostScreens } });
+  useInterfaceLanguage(hostScreens ? (preferences.data?.data.language ?? null) : null);
 
   if (shell === 'bare') {
     return (

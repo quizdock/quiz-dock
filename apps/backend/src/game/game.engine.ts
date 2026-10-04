@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import {
   AUDIO_TARGETS,
+  LANGUAGE_RE,
   type AnswerAck,
   type AnswerRefusal,
   GameState,
@@ -322,11 +323,19 @@ export class GameEngine {
   async setOptions(
     pin: string,
     hostUserId: string,
-    opts: { personalTracking?: boolean; pickOwnName?: boolean; audioTarget?: AudioTarget },
+    opts: {
+      personalTracking?: boolean;
+      pickOwnName?: boolean;
+      audioTarget?: AudioTarget;
+      audienceLanguage?: string;
+    },
   ): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) {
       throw new BadRequestException('session.options_locked');
+    }
+    if (opts.audienceLanguage !== undefined) {
+      await this.setAudienceLanguage(refOf(pin, meta), opts.audienceLanguage);
     }
     if (opts.audioTarget !== undefined) {
       await this.setAudioTarget(refOf(pin, meta), opts.audioTarget);
@@ -367,6 +376,40 @@ export class GameEngine {
   }
 
   /**
+   * The language of the audience's screens for the whole room (#209): a BCP 47 tag, or
+   * '' for each quiz's own. Every screen is told; a tag that is not one is ignored.
+   */
+  private async setAudienceLanguage(ref: GameRef, language: string): Promise<void> {
+    if (language !== '' && !(LANGUAGE_RE.test(language) && language.length <= 10)) return;
+    await this.redis.hset(gameKeys.room(ref.pin), roomHash({ audienceLanguage: language }));
+    const [snapshot, meta] = await Promise.all([
+      this.game.getSnapshot(ref.id),
+      this.game.getMeta(ref.pin),
+    ]);
+    if (!snapshot || !meta) return;
+    this.server
+      .to(ref.pin)
+      .emit('game:media', await this.mediaPayload(ref.pin, snapshot, meta.audioTarget ?? ''));
+  }
+
+  /** What every device is told of the quiz it plays: its media, sound, and language. */
+  private async mediaPayload(
+    pin: string,
+    snapshot: QuizSnapshot,
+    audioTarget: AudioTarget | '',
+  ): Promise<Parameters<ServerToClientEvents['game:media']>[0]> {
+    const roomLanguage = (await this.game.getRoom(pin))?.audienceLanguage ?? '';
+    return {
+      title: snapshot.title,
+      hasSound: snapshotHasSound(snapshot),
+      hasMedia: snapshotHasMedia(snapshot),
+      audioTarget: gameAudioTarget(snapshot, audioTarget),
+      language: roomLanguage || snapshot.language,
+      roomLanguage,
+    };
+  }
+
+  /**
    * The host replaces the quiz's default audio target for this game; the
    * screens that are not players hear of it (the console shows the choice).
    */
@@ -376,14 +419,8 @@ export class GameEngine {
     await this.redis.hset(gameKeys.game(ref.id), gameHash({ audioTarget: target }));
     const snapshot = await this.game.getSnapshot(ref.id);
     if (!snapshot) return;
-    const payload = {
-      title: snapshot.title,
-      hasSound: snapshotHasSound(snapshot),
-      hasMedia: snapshotHasMedia(snapshot),
-      audioTarget: gameAudioTarget(snapshot, target),
-    };
     // Every device: a phone that never enabled sound asks for it when the quiz has some.
-    this.server.to(pin).emit('game:media', payload);
+    this.server.to(pin).emit('game:media', await this.mediaPayload(pin, snapshot, target));
     // Who needs what may have changed (the phones in the room, for every device).
     await this.emitPreload(ref, snapshot, firstStepOf(snapshot, 0));
     await this.broadcastReadiness(pin);
@@ -1254,12 +1291,7 @@ export class GameEngine {
     if (snapshot) {
       // Every device asks for sound at once when the quiz will need it (a phone too:
       // the next quiz of a room may play sound where the first did not).
-      socket.emit('game:media', {
-        title: snapshot.title,
-        hasSound: snapshotHasSound(snapshot),
-        hasMedia: snapshotHasMedia(snapshot),
-        audioTarget: gameAudioTarget(snapshot, meta.audioTarget),
-      });
+      socket.emit('game:media', await this.mediaPayload(pin, snapshot, meta.audioTarget ?? ''));
     }
     // A participant back in a lobby: whether they already said they are ready (#104),
     // sent after the state (a new lobby clears the last quiz's on the phone).

@@ -1,4 +1,5 @@
 import { RoomSoundsButton } from '../game/game-sounds-panel';
+import { languageName, supportedLngs } from '../i18n/languages';
 import { appConfig } from '../config';
 import { ImageChoiceGrid, optionLabel } from '../game/image-choice';
 import {
@@ -131,7 +132,7 @@ function HostConsole({
   pin: string;
   session: ReturnType<typeof useGameSession>;
 }) {
-  const { t } = useTranslation(['live', 'common']);
+  const { t, i18n } = useTranslation(['live', 'common']);
   // Same explanation as in the editor before switching full capture on (GDPR, archive size).
   const [confirmCapture, setConfirmCapture] = useState(false);
   const { view, socket } = session;
@@ -184,6 +185,7 @@ function HostConsole({
     personalTracking?: boolean;
     pickOwnName?: boolean;
     audioTarget?: AudioTarget;
+    audienceLanguage?: string;
   }) => socket?.emit('host:options', { pin, ...opts });
   // Le nom affiché ne peut venir d'un compte qu'en mode OIDC (RG-15).
   const authMode = getAuthMode();
@@ -609,6 +611,24 @@ function HostConsole({
                 <span className="text-muted-foreground">{t('control.audioTargetHint')}</span>
               </label>
             ) : null}
+            {/* The audience's screens (#209): the quiz's language, or one for the whole room. */}
+            <label className="flex flex-col gap-2 rounded-lg border p-3 text-[1em]">
+              <span className="font-medium">{t('control.audienceLanguageLabel')}</span>
+              <Select
+                className="h-8 w-auto"
+                value={view.roomLanguage}
+                aria-label={t('control.audienceLanguageLabel')}
+                onChange={(e) => setOptions({ audienceLanguage: e.target.value })}
+              >
+                <option value="">{t('control.audienceLanguageQuiz')}</option>
+                {supportedLngs.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {languageName(lang, i18n.language)}
+                  </option>
+                ))}
+              </Select>
+              <span className="text-muted-foreground">{t('control.audienceLanguageHint')}</span>
+            </label>
           </div>
           {/* How participants get in (#57), and the media sent ahead (media brief §5.3). */}
           {authMode === 'oidc' ? (

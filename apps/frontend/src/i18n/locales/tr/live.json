@@ -257,7 +257,10 @@
     "columnStatus": "Durum",
     "columnQuiz": "Quiz",
     "columnTotal": "Toplam",
-    "columnActions": "İşlemler"
+    "columnActions": "İşlemler",
+    "audienceLanguageLabel": "Ekranların dili",
+    "audienceLanguageQuiz": "Her quizin kendi dili",
+    "audienceLanguageHint": "Yansıtma ekranı ve katılımcı ekranları, tüm oda için: bir dil dersi İngilizce bir quizi kendi dilindeki arayüzle oynar."
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",

@@ -60,6 +60,7 @@ export function deserializeRoom(raw: Record<string, string>): RoomMeta {
       : DEFAULT_ROOM_SOUNDS,
     // A room opened before the setting existed follows the instance.
     motion: raw.motion === undefined ? liveMotionDefault() : raw.motion === '1',
+    audienceLanguage: raw.audienceLanguage ?? '',
   };
 }
 

@@ -155,7 +155,8 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
   quizzes, shown live and kept in *History* with the results.
 - **Self-hosted and private** — one Docker image (`amd64` / `arm64`), no SaaS, no
   telemetry, no ads; interface in English, French, Spanish, Simplified and Traditional
-  Chinese, and Turkish; rebrand name, logo and CSS without a rebuild.
+  Chinese, and Turkish — each host picks theirs, the big screen and the phones speak the
+  quiz's language or the room's; rebrand name, logo and CSS without a rebuild.
 - **An administration in the browser** — what is played right now and the last twelve
   months of use; every setting with its value, where it comes from and its help, changed
   from the page once the operator allows it; health checks, accounts and roles, every

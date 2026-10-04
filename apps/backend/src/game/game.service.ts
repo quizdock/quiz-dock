@@ -212,6 +212,7 @@ export class GameService {
       name: '',
       sounds: DEFAULT_ROOM_SOUNDS,
       motion: liveMotionDefault(),
+      audienceLanguage: '',
       hostName:
         (
           await this.prisma.user.findUnique({

@@ -15,7 +15,7 @@ export function contentLang(tag: string): AppLang | null {
 }
 
 /** Loads one namespace of a language other than the instance's. */
-async function loadNamespace(lang: AppLang, ns: Namespace): Promise<void> {
+export async function loadNamespace(lang: AppLang, ns: Namespace): Promise<void> {
   if (i18next.hasResourceBundle(lang, ns)) return;
   const { default: bundle } = await files[`./locales/${lang}/${ns}.json`]();
   i18next.addResourceBundle(lang, ns, bundle, true, true);

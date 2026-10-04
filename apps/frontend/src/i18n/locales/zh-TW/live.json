@@ -257,7 +257,10 @@
     "columnStatus": "狀態",
     "columnQuiz": "測驗",
     "columnTotal": "總分",
-    "columnActions": "操作"
+    "columnActions": "操作",
+    "audienceLanguageLabel": "畫面語言",
+    "audienceLanguageQuiz": "每個測驗的語言",
+    "audienceLanguageHint": "投影和參與者的畫面，適用於整個房間：語言課可以用英文測驗，而介面使用自己的語言。"
   },
   "screen": {
     "sessionUnavailable": "房間無法使用。",

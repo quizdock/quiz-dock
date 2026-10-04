@@ -33,6 +33,8 @@ export function mediaTests(ctx: GameContext): void {
       hasSound: false,
       hasMedia: false,
       audioTarget: 'projection_remote',
+      language: expect.any(String), // the quiz's (#209)
+      roomLanguage: '',
     }); // the seeded quiz is silent
     // A phone too: the room's next quiz may play sound where this one does not (#89).
     const player = connect();
