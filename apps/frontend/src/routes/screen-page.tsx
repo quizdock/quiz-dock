@@ -723,15 +723,23 @@ export function ScreenSurface({
     stage = nextInRoom ? (
       <div
         className={cn(
-          'grid w-full items-start gap-[3em]',
+          'grid w-full gap-[3em]',
           // A preview draws on a 1280-wide stage; a real projection splits when it is wide.
+          // Split, the columns take the screen's height: the standings from its top, the
+          // invitation in its middle.
           boxed
-            ? 'grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
-            : 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]',
+            ? 'flex-1 grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
+            : 'items-start lg:flex-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-stretch',
         )}
       >
-        {lobby}
-        <RoomStandingsPanel standings={nextInRoom} max={6} className="text-[1.1em]" />
+        <div className={cn('flex flex-col', boxed ? 'justify-center' : 'lg:justify-center')}>
+          {lobby}
+        </div>
+        <RoomStandingsPanel
+          standings={nextInRoom}
+          max={6}
+          className={cn('text-[1.1em]', boxed ? 'self-start' : 'lg:self-start')}
+        />
       </div>
     ) : (
       lobby
