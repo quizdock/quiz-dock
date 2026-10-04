@@ -254,7 +254,7 @@ export function BackToLobbyButton({
       <ConfirmDialog
         open={open}
         destructive={stop}
-        title={label}
+        title={label.replace(/…$/, '')}
         description={t(stop ? 'control.closeQuizDescription' : 'control.backToLobbyDescription')}
         confirmLabel={sending ? t('common:loading') : label.replace(/…$/, '')}
         cancelLabel={t('common:cancel')}

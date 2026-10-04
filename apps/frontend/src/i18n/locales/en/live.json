@@ -489,7 +489,8 @@
     "startsIn_one": "Starts in {{count}} s",
     "startsIn_other": "Starts in {{count}} s",
     "stopCountdown": "Stop the countdown: the quiz waits for Start",
-    "noQuizYet": "Lobby — the next quiz is being picked"
+    "noQuizYet": "Lobby — the next quiz is being picked",
+    "pickingNextQuiz": "The next quiz is being picked"
   },
   "sound": {
     "mute": "Mute",

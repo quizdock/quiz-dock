@@ -489,7 +489,8 @@
     "startsIn_one": "{{count}} 秒后开始",
     "startsIn_other": "{{count}} 秒后开始",
     "stopCountdown": "停止倒计时：测验等待“开始”",
-    "noQuizYet": "大厅——正在选择下一个测验"
+    "noQuizYet": "大厅——正在选择下一个测验",
+    "pickingNextQuiz": "正在选择下一个测验"
   },
   "sound": {
     "mute": "静音",

@@ -489,7 +489,8 @@
     "startsIn_one": "{{count}} sn sonra başlıyor",
     "startsIn_other": "{{count}} sn sonra başlıyor",
     "stopCountdown": "Geri sayımı durdur: quiz Başlat'ı bekler",
-    "noQuizYet": "Lobi — sıradaki quiz seçiliyor"
+    "noQuizYet": "Lobi — sıradaki quiz seçiliyor",
+    "pickingNextQuiz": "Sıradaki quiz seçiliyor"
   },
   "sound": {
     "mute": "Sessiz",

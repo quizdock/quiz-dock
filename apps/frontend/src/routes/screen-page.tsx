@@ -661,15 +661,25 @@ export function ScreenSurface({
         </span>
       ) : view.state === 'LOBBY' && view.totalQuestions === 0 ? (
         // Back from a quiz: the host picks the next.
-        <span className="text-muted-foreground text-[1.2em]">{t('live:room.noQuizYet')}</span>
+        <span className="text-muted-foreground text-[1.2em]">{t('live:room.pickingNextQuiz')}</span>
       ) : null,
       null,
     );
+    // Beside the room's standings, the invitation keeps its QR code and PIN side by side.
     const lobby = (
       <div className="qd-lobby flex w-full flex-col items-center gap-[1.5em]">
-        <div className="flex flex-wrap items-center justify-center gap-[3em]">
-          <div className="qd-join-qr rounded-xl bg-white p-4 shadow">
-            <QRCodeSVG value={joinUrl} size={260} aria-label={t('screen.qrLabel')} />
+        <div
+          className={cn(
+            'flex items-center justify-center',
+            nextInRoom ? 'flex-nowrap gap-[2em]' : 'flex-wrap gap-[3em]',
+          )}
+        >
+          <div className="qd-join-qr shrink-0 rounded-xl bg-white p-4 shadow">
+            <QRCodeSVG
+              value={joinUrl}
+              size={nextInRoom ? 180 : 260}
+              aria-label={t('screen.qrLabel')}
+            />
           </div>
           <div className="flex flex-col items-start gap-[0.3em] text-left">
             <span className="text-[1.4em]">{t('screen.joinAt')}</span>

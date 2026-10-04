@@ -87,6 +87,7 @@ import { type QuestionClock, useQuestionClock } from '../game/use-countdown';
 import { ChromiumNotice } from '@/components/chromium-notice';
 import { QuestionMediaStage } from '../game/media/question-media-stage';
 import { ParticipantPreview } from '../game/participant-preview';
+import { ScaledStage } from '../game/slide-stage';
 import { joinBase, joinHostLabel, joinUrlFor } from '../game/join-url';
 import { JoinAddressPicker } from '../game/join-address-picker';
 import { type GameView, type RosterPlayer, useGameSession } from '../game/use-game-session';
@@ -723,8 +724,8 @@ function HostConsole({
     centre = (
       <>
         {reviewing ? <ReviewBanner step={t('control.stepSlide')} /> : null}
-        {/* Reduced base: the slide is a preview in a card, not the projection. */}
-        <div className="flex rounded-xl border p-5 text-[0.8rem] sm:p-6">
+        {/* The slide as the projection draws it: its 16:9 canvas, scaled to the card. */}
+        <ScaledStage className="rounded-xl border">
           <SlidePlaybackContext.Provider
             value={{
               mode: 'still',
@@ -739,7 +740,7 @@ function HostConsole({
               <SlideView key={slide.slideIndex} slide={slide} />
             </RoomVariables>
           </SlidePlaybackContext.Provider>
-        </div>
+        </ScaledStage>
         {soundMedia ? (
           <ConsoleTransport
             key={`s${slide.slideIndex}`}
@@ -972,21 +973,21 @@ function HostConsole({
         {rowTwo}
         <ChromiumNotice />
       </header>
-      {tab !== 'control' ? (
-        tab === 'screen' ? (
-          <div className="overflow-hidden rounded-xl border">
-            {/* The console's own session: a second one would re-join the room on the host's socket. */}
-            <ScreenSurface pin={pin} view={view} socket={socket} role="preview" />
-          </div>
-        ) : (
+      {/* Whatever the view, the participants and the quiz's outline stay beside it. */}
+      <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        {tab === 'screen' ? (
+          // The projection's 16:9, scaled to the column. The console's own session: a
+          // second one would re-join the room on the host's socket.
+          <ScaledStage className="rounded-xl border">
+            <ScreenSurface pin={pin} view={view} socket={socket} role="preview" fit="box" />
+          </ScaledStage>
+        ) : tab === 'player' ? (
           <ParticipantPreview view={view} pin={pin} />
-        )
-      ) : (
-        <div className="grid flex-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        ) : (
           <div className="flex min-w-0 flex-col gap-5">{centre}</div>
-          {sideColumn}
-        </div>
-      )}
+        )}
+        {sideColumn}
+      </div>
       <ActionBar status={status} primary={primary} />
     </section>
   );
@@ -1422,8 +1423,20 @@ function ParticipantsList({
     return <p className="text-muted-foreground text-sm">{t('control.noParticipants')}</p>;
   }
   const byId = new Map(scores?.map((row) => [row.playerId, row]));
-  const scored = scores?.some((row) => row.quizScore > 0 || row.roomScore > 0) ?? false;
-  const order = sort ?? (scored ? { key: 'rank', desc: false } : null);
+  const quizScored = scores?.some((row) => row.quizScore > 0) ?? false;
+  const roomScored = scores?.some((row) => row.roomScore > 0) ?? false;
+  // Ranked by the quiz once it scored, else by the room (a lobby after a quiz), else arrival.
+  const order: StandingsSort | null =
+    sort ??
+    (quizScored
+      ? { key: 'rank', desc: false }
+      : roomScored
+        ? { key: 'roomScore', desc: true }
+        : null);
+  // The rank shown is the room's when the list follows it, else the quiz's.
+  const byRoom = order?.key === 'roomScore' || (!quizScored && roomScored);
+  const rankOf = (row: HostScoreRow | undefined) =>
+    !row ? '' : byRoom ? (roomScored ? row.roomRank : '') : quizScored ? row.quizRank : '';
   const rows = players.map((player, arrival) => ({
     player,
     arrival,
@@ -1439,7 +1452,14 @@ function ParticipantsList({
     rows.sort((a, b) => {
       const [x, y] = [value(a), value(b)];
       const cmp = typeof x === 'string' ? x.localeCompare(String(y)) : x - (y as number);
-      return (order.desc ? -cmp : cmp) || a.arrival - b.arrival;
+      // Equal scores: the server's own order (its rank), then arrival.
+      const tie =
+        order.key === 'roomScore'
+          ? (a.score?.roomRank ?? 0) - (b.score?.roomRank ?? 0)
+          : order.key === 'quizScore'
+            ? (a.score?.quizRank ?? 0) - (b.score?.quizRank ?? 0)
+            : 0;
+      return (order.desc ? -cmp : cmp) || tie || a.arrival - b.arrival;
     });
   }
   /** A header that sorts: ascending first for the rank and the name, descending for a score. */
@@ -1491,9 +1511,7 @@ function ParticipantsList({
       <tbody>
         {rows.map(({ player: p, score }) => (
           <tr key={p.playerId} className="hover:bg-accent/50">
-            <td className="text-muted-foreground px-1 py-1 tabular-nums">
-              {score && scored ? score.quizRank : ''}
-            </td>
+            <td className="text-muted-foreground px-1 py-1 tabular-nums">{rankOf(score)}</td>
             <td className="px-1 py-1">
               <span className="flex min-w-0 items-center gap-1.5">
                 <Avatar name={p.avatar || p.nickname} size={24} />

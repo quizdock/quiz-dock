@@ -489,7 +489,8 @@
     "startsIn_one": "{{count}} 秒後開始",
     "startsIn_other": "{{count}} 秒後開始",
     "stopCountdown": "停止倒數：測驗等待「開始」",
-    "noQuizYet": "大廳——正在選擇下一個測驗"
+    "noQuizYet": "大廳——正在選擇下一個測驗",
+    "pickingNextQuiz": "正在選擇下一個測驗"
   },
   "sound": {
     "mute": "靜音",

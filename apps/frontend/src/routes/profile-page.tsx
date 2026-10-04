@@ -86,9 +86,10 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* The only preference so far only exists when a host may open a game to all. */}
-          {mode === 'oidc' && allowsAnonymousParticipants() && me.roles.includes('host') ? (
-            <PreferencesCard />
+          {/* A host's preferences: their interface language (#209), and the participant
+              access only where a host may open a game to all. */}
+          {me.roles.includes('host') ? (
+            <PreferencesCard participantAccess={mode === 'oidc' && allowsAnonymousParticipants()} />
           ) : null}
 
           {/* Le siège n'existe qu'en mode local, et seul son titulaire le voit ; sur
@@ -118,7 +119,7 @@ const ASK = 'ask';
  * launch uses without asking (#57), or asking each time; the language of the host's own
  * screens (#209), or the instance's.
  */
-function PreferencesCard() {
+function PreferencesCard({ participantAccess }: { participantAccess: boolean }) {
   const { t, i18n } = useTranslation('auth');
   const queryClient = useQueryClient();
   const { data } = useMeControllerGetPreferences();
@@ -141,21 +142,25 @@ function PreferencesCard() {
         <CardTitle>{t('profile.preferences')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-[1em]">
-        <label className="flex flex-col gap-1">
-          <span className="font-medium">{t('profile.participantAccess')}</span>
-          <Select
-            value={current}
-            disabled={!data || update.isPending}
-            onChange={(e) => void onChange(e.target.value)}
-            className="max-w-xs"
-          >
-            <option value={ASK}>{t('profile.participantAccessAsk')}</option>
-            <option value="account">{t('profile.participantAccessAccount')}</option>
-            <option value="open">{t('profile.participantAccessOpen')}</option>
-          </Select>
-        </label>
-        <p className="text-muted-foreground text-xs">{t('profile.participantAccessHelp')}</p>
-        <label className="mt-2 flex flex-col gap-1">
+        {participantAccess ? (
+          <>
+            <label className="flex flex-col gap-1">
+              <span className="font-medium">{t('profile.participantAccess')}</span>
+              <Select
+                value={current}
+                disabled={!data || update.isPending}
+                onChange={(e) => void onChange(e.target.value)}
+                className="max-w-xs"
+              >
+                <option value={ASK}>{t('profile.participantAccessAsk')}</option>
+                <option value="account">{t('profile.participantAccessAccount')}</option>
+                <option value="open">{t('profile.participantAccessOpen')}</option>
+              </Select>
+            </label>
+            <p className="text-muted-foreground text-xs">{t('profile.participantAccessHelp')}</p>
+          </>
+        ) : null}
+        <label className="mt-2 flex flex-col gap-1 first:mt-0">
           <span className="font-medium">{t('profile.language')}</span>
           <Select
             value={data?.data.language ?? ''}

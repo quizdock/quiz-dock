@@ -1,0 +1,18 @@
+#!/bin/sh
+# A live room checked for real on the demo stack (tools/screenshots/compose.yml: the
+# dev images and sources, a database of its own, http://localhost:${DEMO_PORT:-15183}).
+# check.mjs drives the console, the projection and a phone in Playwright, prints each
+# check and writes its pictures to LIVE_CHECK_OUT (a temporary folder by default).
+#   tools/live-check/run.sh
+set -eu
+here=$(cd "$(dirname "$0")" && pwd)
+root=$(cd "$here/../.." && pwd)
+out=${LIVE_CHECK_OUT:-$(mktemp -d)}
+"$root/tools/screenshots/run.sh" --up
+docker run --rm --network container:quizdock-demo-frontend-1 --ipc host \
+  -v "$here:/check:ro" -v quizdock-demo-playwright:/work -v "$out:/out" \
+  mcr.microsoft.com/playwright:v1.61.1-noble sh -c "cd /work \
+    && { [ -d node_modules/playwright ] || npm install --no-audit --no-fund \
+         playwright@1.61.1 socket.io-client@4 >/dev/null; } \
+    && cp /check/check.mjs . && node check.mjs"
+echo "pictures: $out"

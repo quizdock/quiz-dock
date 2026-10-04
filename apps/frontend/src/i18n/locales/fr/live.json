@@ -489,7 +489,8 @@
     "startsIn_one": "Départ dans {{count}} s",
     "startsIn_other": "Départ dans {{count}} s",
     "stopCountdown": "Arrêter le compte à rebours : le quiz attend « Démarrer »",
-    "noQuizYet": "Lobby — le quiz suivant est en cours de choix"
+    "noQuizYet": "Lobby — le quiz suivant est en cours de choix",
+    "pickingNextQuiz": "Le quiz suivant est en cours de choix"
   },
   "sound": {
     "mute": "Couper le son",

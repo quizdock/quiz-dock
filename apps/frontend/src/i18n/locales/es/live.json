@@ -489,7 +489,8 @@
     "startsIn_one": "Empieza en {{count}} s",
     "startsIn_other": "Empieza en {{count}} s",
     "stopCountdown": "Detener la cuenta atrás: el quiz espera a «Empezar»",
-    "noQuizYet": "Lobby — se está eligiendo el siguiente quiz"
+    "noQuizYet": "Lobby — se está eligiendo el siguiente quiz",
+    "pickingNextQuiz": "Se está eligiendo el siguiente quiz"
   },
   "sound": {
     "mute": "Silenciar",
