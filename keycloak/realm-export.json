@@ -29,15 +29,17 @@
       "directAccessGrantsEnabled": false,
       "redirectUris": [
         "${KEYCLOAK_APP_URL:http://localhost:18081}/auth/callback",
-        "${KEYCLOAK_DEV_URL:http://localhost:15173}/auth/callback"
+        "${KEYCLOAK_DEV_URL:http://localhost:15173}/auth/callback",
+        "http://localhost:15173/auth/callback"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "${KEYCLOAK_APP_URL:http://localhost:18081}##${KEYCLOAK_DEV_URL:http://localhost:15173}"
+        "post.logout.redirect.uris": "${KEYCLOAK_APP_URL:http://localhost:18081}##${KEYCLOAK_DEV_URL:http://localhost:15173}##http://localhost:15173"
       },
       "webOrigins": [
         "${KEYCLOAK_APP_URL:http://localhost:18081}",
-        "${KEYCLOAK_DEV_URL:http://localhost:15173}"
+        "${KEYCLOAK_DEV_URL:http://localhost:15173}",
+        "http://localhost:15173"
       ]
     }
   ],
