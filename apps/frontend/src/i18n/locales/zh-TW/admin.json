@@ -54,7 +54,7 @@
     "none": "沒有符合的設定。",
     "list": "設定",
     "problem": "有問題",
-    "rules": "互相矛盾的設定：",
+    "rules": "需要檢查的設定：",
     "envValue": "取代 .env：",
     "access": {
       "read": "網頁會顯示所有設定，但不變更任何設定（ADMIN_WEB_SCOPE=read）。",

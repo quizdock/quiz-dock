@@ -54,7 +54,7 @@
     "none": "Aucun réglage ne correspond.",
     "list": "Réglages",
     "problem": "Un problème",
-    "rules": "Réglages qui se contredisent :",
+    "rules": "Réglages à revoir :",
     "envValue": "remplace .env :",
     "access": {
       "read": "Le web affiche tous les réglages et n’en modifie aucun (ADMIN_WEB_SCOPE=read).",

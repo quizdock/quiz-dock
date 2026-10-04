@@ -54,7 +54,7 @@
     "none": "No setting matches.",
     "list": "Settings",
     "problem": "A problem",
-    "rules": "Settings that contradict each other:",
+    "rules": "Settings to review:",
     "envValue": "replaces .env:",
     "access": {
       "read": "The web shows every setting and changes none (ADMIN_WEB_SCOPE=read).",

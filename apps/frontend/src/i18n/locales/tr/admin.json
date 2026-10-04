@@ -54,7 +54,7 @@
     "none": "Eşleşen ayar yok.",
     "list": "Ayarlar",
     "problem": "Bir sorun var",
-    "rules": "Birbiriyle çelişen ayarlar:",
+    "rules": "Gözden geçirilecek ayarlar:",
     "envValue": ".env değerinin yerine geçer:",
     "access": {
       "read": "Web tüm ayarları gösterir ve hiçbirini değiştirmez (ADMIN_WEB_SCOPE=read).",

@@ -54,7 +54,7 @@
     "none": "没有匹配的设置。",
     "list": "设置",
     "problem": "有问题",
-    "rules": "相互矛盾的设置：",
+    "rules": "需要检查的设置：",
     "envValue": "取代 .env：",
     "access": {
       "read": "网页显示所有设置，但不更改任何设置（ADMIN_WEB_SCOPE=read）。",
