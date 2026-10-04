@@ -714,6 +714,33 @@ describe('GameEngine (characterization)', () => {
       expect(ann.of('slide:show')).toHaveLength(1); // the live slide, sent again
     });
 
+    it('in a paused question: a played step shown, answers refused, the resume comes back', async () => {
+      const t0 = await startedAt(snapshotOf([question(), question()]), { p1: player('Ann') });
+      await engine.submit(pin, 'p1', 0, await rightOption(), t0 + 1);
+      await revealed();
+      while ((await meta()).state !== 'ANSWERING') await engine.next(pin, HOST);
+      await expect(engine.review(pin, HOST, { questionIndex: 0 })).rejects.toThrow(
+        'session.review_unavailable',
+      );
+      await engine.setPaused(pin, HOST, true);
+      const ann = join('p1');
+      await engine.review(pin, HOST, { questionIndex: 0 });
+      expect((await meta()).reviewStep).toBe('q0');
+      expect(ann.of('question:reveal')).toHaveLength(1);
+      const now = (await meta()).questionStartedAt + 1;
+      expect((await engine.submit(pin, 'p1', 1, 'x', now)).reason).toBe('closed');
+
+      await engine.setPaused(pin, HOST, false);
+      const m = await meta();
+      expect([m.reviewStep, m.state, m.currentIndex, m.clockFrozen]).toEqual([
+        '',
+        'ANSWERING',
+        1,
+        false,
+      ]);
+      expect(ann.of<{ questionIndex: number }>('question:start').at(-1)?.questionIndex).toBe(1);
+    });
+
     it('reviewing a slide shows it; reviewing the live step resumes', async () => {
       await onSecondSlide();
       await engine.next(pin, HOST); // question 1
