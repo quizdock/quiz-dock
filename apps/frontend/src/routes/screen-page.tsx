@@ -57,6 +57,9 @@ const QUESTION_STATES = new Set<string>(['QUESTION_SHOW', 'ANSWERING', 'REVEAL',
  * Se reconnecte seul au rechargement (le PIN est dans l'URL). Plein écran pour la
  * vidéoprojection.
  */
+/** The participants' names a lobby shows before it says how many more (the screen's room). */
+const ROSTER_MAX = 18;
+
 export function ScreenPage() {
   const { pin } = useParams({ from: '/session/$pin/projection' });
   return <ScreenView pin={pin} playMedia />;
@@ -411,7 +414,8 @@ export function ScreenSurface({
         )
       : null;
   } else if (view.state === 'LEADERBOARD' && view.leaderboard && !reviewing) {
-    // A real leaderboard moment: the top ten, large, bars as long as the scores.
+    // A real leaderboard moment: the top eight, large, bars as long as the scores — as
+    // many as the 16:9 screen holds between its bands.
     onBackground = !!view.question?.background;
     top = band(
       'top',
@@ -421,7 +425,7 @@ export function ScreenSurface({
     );
     stage = (
       <div className="w-full max-w-[48em] text-[1.25em]">
-        <LeaderboardList rows={view.leaderboard.top} max={10} />
+        <LeaderboardList rows={view.leaderboard.top} max={8} />
       </div>
     );
     bottom =
@@ -693,17 +697,26 @@ export function ScreenSurface({
         {view.readiness?.questionIndex === 0 ? (
           <ReadinessMeter readiness={view.readiness} className="text-[1em]" />
         ) : null}
-        <ul className="qd-roster flex max-w-[56em] flex-wrap justify-center gap-[0.5em]">
-          {view.players.map((p) => (
-            <li
-              key={p.playerId}
-              className="flex items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
-            >
-              <Avatar name={p.avatar || p.nickname} size="2em" />
-              {p.nickname}
-            </li>
-          ))}
-        </ul>
+        {/* Beside the room's standings, who is here is already said: no list again. */}
+        {nextInRoom ? null : (
+          <ul className="qd-roster flex max-w-[56em] flex-wrap justify-center gap-[0.5em]">
+            {/* A crowded room: the first ones, then how many more (the count is below). */}
+            {view.players.slice(0, ROSTER_MAX).map((p) => (
+              <li
+                key={p.playerId}
+                className="flex items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
+              >
+                <Avatar name={p.avatar || p.nickname} size="2em" />
+                {p.nickname}
+              </li>
+            ))}
+            {view.players.length > ROSTER_MAX ? (
+              <li className="text-muted-foreground flex items-center rounded-full border px-[0.75em] py-[0.25em] text-[1.1em]">
+                +{view.players.length - ROSTER_MAX}
+              </li>
+            ) : null}
+          </ul>
+        )}
       </div>
     );
     // A room's next quiz (#198): the lobby on the left, the room's standings on the right.
@@ -718,7 +731,7 @@ export function ScreenSurface({
         )}
       >
         {lobby}
-        <RoomStandingsPanel standings={nextInRoom} max={10} className="text-[1.1em]" />
+        <RoomStandingsPanel standings={nextInRoom} max={6} className="text-[1.1em]" />
       </div>
     ) : (
       lobby
