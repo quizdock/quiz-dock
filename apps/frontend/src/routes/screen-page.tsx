@@ -264,7 +264,11 @@ export function ScreenSurface({
         'qd-band grid w-full shrink-0 items-center px-[3.5em] py-[0.6em]',
         stretch
           ? 'grid-cols-[auto_minmax(0,1fr)_auto] gap-[3em]'
-          : 'grid-cols-[1fr_minmax(0,1.5fr)_1fr] gap-[1em]',
+          : boxed
+            ? 'grid-cols-[1fr_minmax(0,1.5fr)_1fr] gap-[1em]'
+            : // A narrow window (a portrait screen): one line still, the left side kept to a
+              // third, the right one to its own size, the centre in the rest, cut if long.
+              'grid-cols-[fit-content(35%)_minmax(0,1fr)_auto] gap-[1em] lg:grid-cols-[1fr_minmax(0,1.5fr)_1fr]',
         side === 'top' ? 'border-b' : 'border-t',
         tone === 'warning'
           ? 'bg-warning/25'
@@ -273,7 +277,9 @@ export function ScreenSurface({
       data-band={side}
     >
       <div className="min-w-0">{left}</div>
-      <div className="text-center">{centre}</div>
+      <div className={cn('min-w-0 text-center', !stretch && !boxed && 'max-lg:truncate')}>
+        {centre}
+      </div>
       <div className="min-w-0">{right}</div>
     </div>
   );
@@ -735,10 +741,15 @@ export function ScreenSurface({
         <div className={cn('flex flex-col', boxed ? 'justify-center' : 'lg:justify-center')}>
           {lobby}
         </div>
+        {/* Beside the lobby, the standings run down to the bottom band (eight); stacked
+            under it on a portrait screen, six. */}
         <RoomStandingsPanel
           standings={nextInRoom}
-          max={6}
-          className={cn('text-[1.1em]', boxed ? 'self-start' : 'lg:self-start')}
+          max={8}
+          className={cn(
+            'text-[1.1em]',
+            boxed ? 'self-start' : 'lg:self-start max-lg:[&_li:nth-child(n+7)]:hidden',
+          )}
         />
       </div>
     ) : (
