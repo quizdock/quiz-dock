@@ -17,7 +17,11 @@ import { io } from 'socket.io-client';
 const URL = process.env.URL ?? 'http://localhost:5173';
 const OUT = process.env.OUT ?? '/out';
 const HOST = 'Mei';
-const BOTS = ['Ana', 'Ben', 'Chloé', 'Dev'];
+/** The simulated players: LIVE_CHECK_PLAYERS of them (4 by default), named in turn. */
+const NAMES = ['Ana', 'Ben', 'Chloé', 'Dev', 'Emre', 'Farah', 'Gus', 'Hana', 'Ivo', 'Jade'];
+const BOTS = Array.from({ length: Number(process.env.PLAYERS ?? 4) }, (_, i) =>
+  i < NAMES.length ? NAMES[i] : `${NAMES[i % NAMES.length]} ${Math.floor(i / NAMES.length) + 1}`,
+);
 const DESKTOP = { width: 1400, height: 900 };
 const SCREEN = { width: 1400, height: 788 };
 const PHONE = { width: 390, height: 780 };
@@ -191,6 +195,9 @@ async function main() {
   );
   check((await consolePage.getByRole('timer').count()) === 0, 'first lobby: no countdown');
   await shot(screen, 'projection-lobby-first');
+
+  await screen.mouse.click(SCREEN.width / 2, SCREEN.height / 2); // the room's one click for sound
+  await shot(screen, 'projection-lobby-first-sound-on');
 
   // ── 2. A question, its reveal, then the quiz's standings.
   await consolePage.getByRole('button', { name: /Start the quiz/ }).click();
