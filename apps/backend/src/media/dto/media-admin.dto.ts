@@ -49,6 +49,11 @@ export const mediaFilesQuerySchema = z.object({
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .optional(),
+  /** Used by no quiz and in no archived result. */
+  unused: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .optional(),
   q: z.string().max(100).optional(),
   sort: z.enum(['size', 'usage', 'recent']).optional(),
   offset: z.coerce.number().int().min(0).optional(),
