@@ -843,10 +843,13 @@ export class GameEngine {
       }),
     );
 
+    // The played steps behind it, for the host to look back once the question is paused.
+    const live = await this.currentMeta(ref);
     this.server.to(pin).emit('game:state', {
       state: GameState.Answering,
       questionIndex: index,
       totalQuestions: snapshot.questions.length,
+      nav: live ? navFor(live, snapshot) : undefined,
     });
     this.server
       .to(pin)
@@ -1015,6 +1018,9 @@ export class GameEngine {
   /** `host:reveal` : force le passage en REVEAL (idempotent via le verrou). */
   async reveal(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
+    // Looking back from a paused question: the reveal is the live one, on every screen.
+    if (meta.reviewStep)
+      await this.redis.hset(gameKeys.game(meta.id), gameHash({ reviewStep: '' }));
     await this.advanceToReveal(pin, meta.currentIndex, 'host', meta.id);
   }
 
@@ -1109,7 +1115,10 @@ export class GameEngine {
    */
   async review(pin: string, hostUserId: string, step: GameStep): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
+    // Between steps, or in a question the host paused (its clock stands still meanwhile).
+    const pausedQuestion = meta.state === GameState.Answering && meta.paused && meta.clockFrozen;
     if (
+      !pausedQuestion &&
       ![GameState.Reveal, GameState.Leaderboard, GameState.SlideShow, GameState.Podium].includes(
         meta.state as GameState,
       )
@@ -2057,6 +2066,11 @@ export class GameEngine {
       if (show) this.server.to(pin).emit('slide:show', show);
       await this.scheduleAutoNextIfNeeded(refOf(pin, meta), meta);
     } else {
+      // Back on the question before its clock runs again: the screens looked at another step.
+      if (meta.state === GameState.Answering && meta.reviewStep) {
+        await this.resume(refOf(pin, meta));
+        meta.reviewStep = '';
+      }
       if (meta.state === GameState.Answering && meta.clockFrozen) {
         const t = await this.thawClock(pin, meta);
         if (t) {
@@ -2295,6 +2309,9 @@ export class GameEngine {
     };
     if (!meta || meta.state !== GameState.Answering || meta.currentIndex !== questionIndex) {
       return reject('closed'); // mauvaise question / fenêtre fermée
+    }
+    if (meta.reviewStep) {
+      return reject('closed'); // the host shows another step: the question is not on screen
     }
     if (receivedAt < meta.questionStartedAt) {
       return reject('early'); // trop tôt : fenêtre de lecture (§6)

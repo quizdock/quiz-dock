@@ -161,6 +161,8 @@ function HostConsole({
   const [side, setSide] = useState<SideTab | null>(null);
   // The step the game is live on, kept while the host looks back at another one.
   const liveStep = useRef<number | null>(null);
+  // Whether the live position is a question being answered, kept the same way.
+  const liveAnswering = useRef(false);
   // Looking back over played steps (no replay): the server tells what is reachable.
   const review = (step: GameStep) => socket?.emit('host:review', { pin, ...step });
   const endGame = (archive: boolean) => socket?.emit('host:end', { pin, archive });
@@ -271,6 +273,7 @@ function HostConsole({
   const here = stepPosition(steps, view);
   // Where the game really is: while looking back, the view shows the step looked at.
   if (!reviewing && here !== null) liveStep.current = here;
+  if (!reviewing) liveAnswering.current = state === 'ANSWERING';
   const live = reviewing ? liveStep.current : here;
   const phase: PhaseKey = reviewing
     ? 'review'
@@ -288,11 +291,17 @@ function HostConsole({
                 ? 'podium'
                 : 'question';
   const sideTab: SideTab = side ?? (phase === 'lobby' || phase === 'media' ? 'players' : 'outline');
-  // Looking back is offered between questions only (the server refuses it otherwise).
-  const canLookBack = ['slide', 'reveal', 'leaderboard', 'podium', 'review'].includes(phase);
+  // A question the host paused, its clock standing still: they may look back meanwhile.
+  const pausedQuestion = liveAnswering.current && view.paused;
+  // Looking back is offered between questions, or in a paused one (the server refuses it otherwise).
+  const canLookBack =
+    ['slide', 'reveal', 'leaderboard', 'podium', 'review'].includes(phase) ||
+    (phase === 'question' && pausedQuestion);
+  // Looking back from a paused question, Resume stays: it brings the question back and runs it.
   const pausable =
-    (view.mode === 'auto' || state === 'ANSWERING') &&
-    !['lobby', 'media', 'podium', 'review'].includes(phase);
+    (phase === 'review' && pausedQuestion) ||
+    ((view.mode === 'auto' || state === 'ANSWERING') &&
+      !['lobby', 'media', 'podium', 'review'].includes(phase));
 
   const invite = (
     <div className="flex flex-col gap-3">
