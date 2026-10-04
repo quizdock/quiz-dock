@@ -251,7 +251,13 @@
     "pickerPlayedAll": "Tüm quizler",
     "pickerPlayedFresh": "Henüz oynanmamış",
     "pickerPlayedDone": "Oynanmış",
-    "pickerPlayedMark": "oynandı"
+    "pickerPlayedMark": "oynandı",
+    "showStandings": "Sıralamayı göster",
+    "columnParticipant": "Katılımcı",
+    "columnStatus": "Durum",
+    "columnQuiz": "Quiz",
+    "columnTotal": "Toplam",
+    "columnActions": "İşlemler"
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",
@@ -472,7 +478,10 @@
     "afterQuizzes_one": "{{count}} quizden sonra",
     "afterQuizzes_other": "{{count}} quizden sonra",
     "defaultName": "{{host}} tarafından açılan oda",
-    "fallbackName": "Oda"
+    "fallbackName": "Oda",
+    "startsIn_one": "{{count}} sn sonra başlıyor",
+    "startsIn_other": "{{count}} sn sonra başlıyor",
+    "stopCountdown": "Geri sayımı durdur: quiz Başlat'ı bekler"
   },
   "sound": {
     "mute": "Sessiz",

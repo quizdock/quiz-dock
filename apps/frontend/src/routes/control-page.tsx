@@ -1,12 +1,18 @@
 import { RoomSoundsButton } from '../game/game-sounds-panel';
 import { appConfig } from '../config';
 import { ImageChoiceGrid, optionLabel } from '../game/image-choice';
-import { NextQuizButton, RoomStandingsPanel, roomLabel } from '../game/room-components';
+import {
+  LobbyCountdown,
+  NextQuizButton,
+  RoomStandingsPanel,
+  roomLabel,
+} from '../game/room-components';
 import {
   AUDIO_TARGETS,
   type AudioTarget,
   type GameMode,
   type GameStep,
+  type HostScoreRow,
   type MediaReadinessPayload,
   type OutlineQuestion,
   type OutlineSlide,
@@ -18,6 +24,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Info,
   LayoutTemplate,
   Loader2,
@@ -502,8 +509,8 @@ function HostConsole({
           />
         ) : (
           <ParticipantsList
-            layout="rows"
             players={view.players}
+            scores={view.scores}
             readiness={view.readiness}
             onBan={banPlayer}
           />
@@ -625,18 +632,28 @@ function HostConsole({
     );
     status = <ReadinessLine readiness={view.readiness} fallbackCount={view.players.length} />;
     primary = (
-      <Tooltip label={t('control.startTooltip')}>
-        <Button
-          type="button"
-          variant="main-action"
-          size="lg"
-          disabled={view.players.length === 0}
-          onClick={() => emit('host:start')}
-        >
-          <Play className="size-4" />
-          {t('control.start')}
-        </Button>
-      </Tooltip>
+      <span className="flex items-center gap-3">
+        {/* The next quiz starts on its own (#198); the host may stop it to take the floor. */}
+        {view.lobbyStartAt ? (
+          <LobbyCountdown
+            startAt={view.lobbyStartAt}
+            onStop={() => socket?.emit('host:lobby-countdown-stop', { pin })}
+            className="text-muted-foreground text-sm"
+          />
+        ) : null}
+        <Tooltip label={t('control.startTooltip')}>
+          <Button
+            type="button"
+            variant="main-action"
+            size="lg"
+            disabled={view.players.length === 0}
+            onClick={() => emit('host:start')}
+          >
+            <Play className="size-4" />
+            {t('control.start')}
+          </Button>
+        </Tooltip>
+      </span>
     );
   } else if (phase === 'media') {
     const late = view.players.filter((p) =>
@@ -737,6 +754,23 @@ function HostConsole({
         playedQuizIds={view.standings?.playedQuizIds}
       />
     );
+  } else if (state === 'LEADERBOARD' && !reviewing) {
+    // The quiz's standings after a reveal (#198): what the projection shows.
+    centre = (
+      <div className="flex flex-col gap-2">
+        <SectionTitle className="text-2xl">{t('control.leaderboard')}</SectionTitle>
+        {view.leaderboard ? (
+          <LeaderboardList rows={view.leaderboard.top} max={10} track="console" />
+        ) : null}
+      </div>
+    );
+    status = autoStatus;
+    primary = (
+      <Button type="button" size="lg" onClick={() => emit('host:next')}>
+        <SkipForward className="size-4" />
+        {nextLabel}
+      </Button>
+    );
   } else if ((state === 'REVEAL' || state === 'LEADERBOARD') && view.question) {
     const question = view.question;
     const reveal = view.reveal;
@@ -784,12 +818,18 @@ function HostConsole({
         (correct.length && answeredTotal
           ? t('control.statusFound', { count: found, total: answeredTotal })
           : null));
+    // The quiz's standings come next (#198), as the server has it: not after the last
+    // question nor after a poll.
+    const standingsNext =
+      state === 'REVEAL' &&
+      question.type !== 'poll' &&
+      question.questionIndex + 1 < view.totalQuestions;
     primary = reviewing ? (
       backToLive
     ) : (
       <Button type="button" size="lg" onClick={() => emit('host:next')}>
         <SkipForward className="size-4" />
-        {nextLabel}
+        {standingsNext ? t('control.showStandings') : nextLabel}
       </Button>
     );
   } else {
@@ -1323,15 +1363,22 @@ function ReadinessLine({
   );
 }
 
+type StandingsSort = { key: 'rank' | 'nickname' | 'quizScore' | 'roomScore'; desc: boolean };
+
+/**
+ * The participants as live standings (#198): rank, avatar and nickname, the indicators
+ * each in its own fixed slot, the quiz's score and the room's. Ranked by the quiz once a
+ * score exists, in arrival order before; a column's header sorts by it, again to reverse.
+ */
 function ParticipantsList({
   players,
+  scores = null,
   readiness = null,
   onBan,
-  layout = 'chips',
 }: {
-  /** `rows`: one player per line (the console's column); `chips`: wrapped pills. */
-  layout?: 'chips' | 'rows';
   players: RosterPlayer[];
+  /** Every player's scores, from the server (#198); null until told. */
+  scores?: HostScoreRow[] | null;
   /** Marks the participants whose device is waited for: loaded, or still loading. */
   readiness?: MediaReadinessPayload | null;
   onBan: (playerId: string, minutes: number) => void;
@@ -1342,53 +1389,140 @@ function ParticipantsList({
     readiness?.lobby ? readiness.players.map((p) => [p.playerId, p.pressed]) : [],
   );
   const { t } = useTranslation('live');
+  const [sort, setSort] = useState<StandingsSort | null>(null);
   if (players.length === 0) {
     return <p className="text-muted-foreground text-sm">{t('control.noParticipants')}</p>;
   }
-  return (
-    <ul className={cn('flex gap-2', layout === 'rows' ? 'flex-col gap-0.5' : 'flex-wrap')}>
-      {players.map((p) => (
-        <li
-          key={p.playerId}
+  const byId = new Map(scores?.map((row) => [row.playerId, row]));
+  const scored = scores?.some((row) => row.quizScore > 0 || row.roomScore > 0) ?? false;
+  const order = sort ?? (scored ? { key: 'rank', desc: false } : null);
+  const rows = players.map((player, arrival) => ({
+    player,
+    arrival,
+    score: byId.get(player.playerId),
+  }));
+  if (order) {
+    const value = (row: (typeof rows)[number]): number | string =>
+      order.key === 'nickname'
+        ? row.player.nickname.toLocaleLowerCase()
+        : order.key === 'rank'
+          ? (row.score?.quizRank ?? players.length + row.arrival)
+          : (row.score?.[order.key] ?? 0);
+    rows.sort((a, b) => {
+      const [x, y] = [value(a), value(b)];
+      const cmp = typeof x === 'string' ? x.localeCompare(String(y)) : x - (y as number);
+      return (order.desc ? -cmp : cmp) || a.arrival - b.arrival;
+    });
+  }
+  /** A header that sorts: ascending first for the rank and the name, descending for a score. */
+  const header = (key: StandingsSort['key'], label: string, className: string) => {
+    const active = order?.key === key;
+    const descFirst = key === 'quizScore' || key === 'roomScore';
+    return (
+      <th
+        scope="col"
+        aria-sort={active ? (order.desc ? 'descending' : 'ascending') : 'none'}
+        className={cn('px-1 py-1 font-medium', className)}
+      >
+        <button
+          type="button"
+          onClick={() => setSort(active ? { key, desc: !order.desc } : { key, desc: descFirst })}
           className={cn(
-            'flex items-center gap-1.5 text-sm',
-            layout === 'rows'
-              ? 'hover:bg-accent/50 rounded-md px-1.5 py-1'
-              : 'rounded-full border py-0.5 pl-1 pr-1',
+            'hover:text-foreground inline-flex items-center gap-0.5',
+            active && 'text-foreground',
           )}
         >
-          <Avatar name={p.avatar || p.nickname} size={24} />
-          <span className={cn('truncate', layout === 'rows' ? 'flex-1' : 'max-w-[8rem]')}>
-            {p.nickname}
-          </span>
-          {readiness?.lobby ? (
-            waited.get(p.playerId) ? (
-              <Check className="size-3.5 text-success" aria-label={t('control.participantReady')} />
-            ) : said.get(p.playerId) ? (
-              <Loader2
-                className="text-muted-foreground size-3.5 animate-spin"
-                aria-label={t('control.participantLoading')}
-              />
-            ) : null
-          ) : waited.has(p.playerId) ? (
-            waited.get(p.playerId) ? (
-              <Check className="size-3.5 text-success" aria-label={t('control.mediaReady')} />
+          {label}
+          {active ? (
+            order.desc ? (
+              <ChevronDown className="size-3" />
             ) : (
-              <Loader2
-                className="text-muted-foreground size-3.5 animate-spin"
-                aria-label={t('control.mediaLoading')}
-              />
+              <ChevronUp className="size-3" />
             )
           ) : null}
-          {p.presence === 'remote' ? (
-            <Tooltip label={t('control.remote')}>
-              <Wifi className="text-muted-foreground size-3.5" aria-label={t('control.remote')} />
-            </Tooltip>
-          ) : null}
-          <BanButton nickname={p.nickname} onBan={(m) => onBan(p.playerId, m)} />
-        </li>
-      ))}
-    </ul>
+        </button>
+      </th>
+    );
+  };
+  return (
+    <table className="w-full table-fixed border-collapse text-sm">
+      <thead className="text-muted-foreground text-xs">
+        <tr>
+          {header('rank', '#', 'w-7 text-left')}
+          {header('nickname', t('control.columnParticipant'), 'text-left')}
+          <th scope="col" className="w-9">
+            <span className="sr-only">{t('control.columnStatus')}</span>
+          </th>
+          {header('quizScore', t('control.columnQuiz'), 'w-14 text-right')}
+          {header('roomScore', t('control.columnTotal'), 'w-14 text-right')}
+          <th scope="col" className="w-7">
+            <span className="sr-only">{t('control.columnActions')}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(({ player: p, score }) => (
+          <tr key={p.playerId} className="hover:bg-accent/50">
+            <td className="text-muted-foreground px-1 py-1 tabular-nums">
+              {score && scored ? score.quizRank : ''}
+            </td>
+            <td className="px-1 py-1">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <Avatar name={p.avatar || p.nickname} size={24} />
+                <span className="truncate">{p.nickname}</span>
+              </span>
+            </td>
+            <td className="py-1">
+              {/* One slot per indicator, always in the same place. */}
+              <span className="grid grid-cols-2 items-center justify-items-center">
+                <span className="size-3.5">
+                  {readiness?.lobby ? (
+                    waited.get(p.playerId) ? (
+                      <Check
+                        className="size-3.5 text-success"
+                        aria-label={t('control.participantReady')}
+                      />
+                    ) : said.get(p.playerId) ? (
+                      <Loader2
+                        className="text-muted-foreground size-3.5 animate-spin"
+                        aria-label={t('control.participantLoading')}
+                      />
+                    ) : null
+                  ) : waited.has(p.playerId) ? (
+                    waited.get(p.playerId) ? (
+                      <Check
+                        className="size-3.5 text-success"
+                        aria-label={t('control.mediaReady')}
+                      />
+                    ) : (
+                      <Loader2
+                        className="text-muted-foreground size-3.5 animate-spin"
+                        aria-label={t('control.mediaLoading')}
+                      />
+                    )
+                  ) : null}
+                </span>
+                <span className="size-3.5">
+                  {p.presence === 'remote' ? (
+                    <Tooltip label={t('control.remote')}>
+                      <Wifi
+                        className="text-muted-foreground size-3.5"
+                        aria-label={t('control.remote')}
+                      />
+                    </Tooltip>
+                  ) : null}
+                </span>
+              </span>
+            </td>
+            <td className="px-1 py-1 text-right tabular-nums">{score?.quizScore ?? 0}</td>
+            <td className="px-1 py-1 text-right tabular-nums">{score?.roomScore ?? 0}</td>
+            <td className="py-1 text-right">
+              <BanButton nickname={p.nickname} onBan={(m) => onBan(p.playerId, m)} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

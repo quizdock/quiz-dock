@@ -395,8 +395,49 @@ describe('GameEngine (characterization)', () => {
 
       await engine.reveal(pin, HOST);
       await Promise.all([engine.next(pin, HOST), engine.next(pin, HOST)]);
+      expect(await state()).toBe('LEADERBOARD'); // the quiz's standings (#198)
+      await Promise.all([engine.next(pin, HOST), engine.next(pin, HOST)]);
       const m = await meta();
       expect([m.state, m.currentIndex]).toEqual(['ANSWERING', 1]);
+    });
+
+    it("the quiz's standings follow a reveal, not the last one nor a poll's (#198)", async () => {
+      const ann = join('p1');
+      await startedAt(
+        snapshotOf([question(), question({ type: QuestionType.Poll, basePoints: 0 }), question()]),
+        { p1: player('Ann') },
+      );
+      await engine.reveal(pin, HOST);
+      const [atRoom, atAnn] = [room.length, ann.sent.length];
+      await engine.next(pin, HOST);
+      expect(await state()).toBe('LEADERBOARD');
+      expect(room.slice(atRoom).map(([e]) => e)).toEqual(['game:state', 'game:mode']);
+      expect(ann.sent.slice(atAnn).map(([e]) => e)).toEqual(['leaderboard']);
+      await engine.next(pin, HOST);
+      await engine.reveal(pin, HOST); // the poll
+      await engine.next(pin, HOST);
+      expect([(await meta()).state, (await meta()).currentIndex]).toEqual(['ANSWERING', 2]);
+      await engine.reveal(pin, HOST); // the last question
+      await engine.next(pin, HOST);
+      expect(await state()).toBe('PODIUM');
+    });
+
+    it("the host's console gets every player's quiz and room scores (#198)", async () => {
+      const desk = new FakeSocket({ isHostControl: true });
+      const ann = join('p1');
+      sockets.push(desk);
+      const t0 = await startedAt(snapshotOf([question(), question()]), {
+        p1: player('Ann'),
+        p2: player('Bob'),
+      });
+      await engine.submit(pin, 'p2', 0, await rightOption(), t0 + 100);
+      await engine.reveal(pin, HOST);
+      const rows = desk.of<{ rows: { playerId: string; quizRank: number }[] }>('game:scores');
+      expect(rows.at(-1)!.rows.find((r) => r.playerId === 'p2')).toMatchObject({
+        quizRank: 1,
+        roomRank: 1,
+      });
+      expect(ann.of('game:scores')).toEqual([]); // the host's only
     });
 
     it('after the last question, the podium: top 3 and each player’s own rank', async () => {
@@ -623,7 +664,7 @@ describe('GameEngine (characterization)', () => {
       });
       await engine.setMode(pin, HOST, 'auto');
       await engine.reveal(pin, HOST);
-      await eventually(async () => (await meta()).currentIndex === 1);
+      await eventually(async () => (await meta()).state === 'LEADERBOARD');
     });
 
     it('a slide with a zero delay waits for the host even in auto mode', async () => {
@@ -641,6 +682,7 @@ describe('GameEngine (characterization)', () => {
       });
       await engine.submit(pin, 'p1', 0, await rightOption(), t0 + 1);
       await revealed();
+      await engine.next(pin, HOST); // the quiz's standings
       await engine.next(pin, HOST);
     }
 
@@ -838,6 +880,44 @@ describe('GameEngine (characterization)', () => {
       expect([m.id, m.state]).toEqual([gameId, 'ANSWERING']);
     });
 
+    it('from a podium, the next lobby starts on its own; everyone ready starts it (#198)', async () => {
+      const ann = join('p1');
+      await seed(
+        snapshotOf([question()]),
+        { state: 'PODIUM', currentIndex: 0 },
+        {
+          p1: player('Ann'),
+        },
+      );
+      jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
+      const previous = gameId;
+      await engine.nextQuiz(pin, HOST, 'quiz-2');
+      const m = await meta();
+      gameId = m.id;
+      await redis.del(...(await redis.keys(`*${previous}*`)));
+      expect(m.lobbyStartAt).toBeGreaterThan(Date.now());
+      expect(ann.of<{ startAt: number | null }>('lobby:countdown').at(-1)!.startAt).toBe(
+        m.lobbyStartAt,
+      );
+      await engine.setReady(pin, 'p1', true);
+      expect(await state()).toBe('ANSWERING');
+      expect((await meta()).lobbyStartAt).toBe(0);
+    });
+
+    it('the host can stop the countdown; the quiz then waits for Start (#198)', async () => {
+      await seed(
+        snapshotOf([question()]),
+        { lobbyStartAt: Date.now() + 30_000 },
+        {
+          p1: player('Ann'),
+        },
+      );
+      await engine.stopLobbyCountdown(pin, HOST);
+      expect((await meta()).lobbyStartAt).toBe(0);
+      await engine.setReady(pin, 'p1', true);
+      expect(await state()).toBe('LOBBY');
+    });
+
     it('is refused once the room has ended', async () => {
       await seed(snapshotOf([question()]), { state: 'ENDED' });
       await expect(engine.nextQuiz(pin, HOST, 'quiz-2')).rejects.toThrow(
@@ -984,6 +1064,7 @@ describe('GameEngine (characterization)', () => {
           p1: player('Ann'),
         });
         await engine.reveal(pin, HOST);
+        await engine.next(pin, HOST); // the quiz's standings
         await engine.next(pin, HOST);
         await new Promise((r) => setTimeout(r, 700)); // past the first question's end
         const m = await meta();
@@ -1022,7 +1103,7 @@ describe('GameEngine (characterization)', () => {
         await engine.next(pin, HOST); // the host moves on before the auto pace
         await new Promise((r) => setTimeout(r, 500));
         const m = await meta();
-        expect([m.state, m.currentIndex]).toEqual(['ANSWERING', 1]);
+        expect([m.state, m.currentIndex]).toEqual(['LEADERBOARD', 0]);
       });
     });
 

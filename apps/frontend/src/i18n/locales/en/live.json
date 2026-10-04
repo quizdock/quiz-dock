@@ -251,7 +251,13 @@
     "pickerPlayedAll": "All quizzes",
     "pickerPlayedFresh": "Not played yet",
     "pickerPlayedDone": "Already played",
-    "pickerPlayedMark": "played"
+    "pickerPlayedMark": "played",
+    "showStandings": "Show the standings",
+    "columnParticipant": "Participant",
+    "columnStatus": "Status",
+    "columnQuiz": "Quiz",
+    "columnTotal": "Total",
+    "columnActions": "Actions"
   },
   "screen": {
     "sessionUnavailable": "Room unavailable.",
@@ -472,7 +478,10 @@
     "afterQuizzes_one": "after {{count}} quiz",
     "afterQuizzes_other": "after {{count}} quizzes",
     "defaultName": "{{host}}'s room",
-    "fallbackName": "Room"
+    "fallbackName": "Room",
+    "startsIn_one": "Starts in {{count}} s",
+    "startsIn_other": "Starts in {{count}} s",
+    "stopCountdown": "Stop the countdown: the quiz waits for Start"
   },
   "sound": {
     "mute": "Mute",

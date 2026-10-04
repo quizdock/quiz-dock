@@ -72,6 +72,8 @@ const view = (partial: Partial<GameView>): GameView => ({
   roomName: null,
   hostName: null,
   standings: null,
+  scores: null,
+  lobbyStartAt: null,
   rateable: null,
   ...partial,
 });
@@ -286,6 +288,44 @@ describe('ControlPage (console hôte)', () => {
 
     act(() => screen.getByRole('button', { name: /Démarrer/ }).click());
     expect(fakeSocket.emit).toHaveBeenCalledWith('host:start', { pin: '482913' });
+  });
+
+  it('the participants are live standings: ranked by the quiz, a header sorts (#198)', async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      players: [
+        { playerId: 'p1', nickname: 'Alice' },
+        { playerId: 'p2', nickname: 'Bob' },
+      ],
+      scores: [
+        { playerId: 'p1', quizScore: 300, quizRank: 2, roomScore: 1300, roomRank: 1 },
+        { playerId: 'p2', quizScore: 500, quizRank: 1, roomScore: 500, roomRank: 2 },
+      ],
+    });
+    renderApp('/session/482913/console'); // the lobby shows the participants' tab
+    const names = () =>
+      screen
+        .getAllByRole('row')
+        .slice(1)
+        .map((row) => within(row).getAllByRole('cell')[1].textContent);
+    expect(await screen.findByRole('table')).toBeInTheDocument();
+    expect(names()).toEqual(['Bob', 'Alice']); // the quiz's ranking
+    act(() => screen.getByRole('button', { name: 'Total' }).click());
+    expect(names()).toEqual(['Alice', 'Bob']); // the room's, highest first
+    act(() => screen.getByRole('button', { name: 'Total' }).click());
+    expect(names()).toEqual(['Bob', 'Alice']); // again: reversed
+  });
+
+  it("LOBBY: the next quiz's countdown, and the host's stop (#198)", async () => {
+    localStorage.setItem('live.localUser', 'Animateur');
+    hookState.value = view({
+      players: [{ playerId: 'p1', nickname: 'Alice' }],
+      lobbyStartAt: Date.now() + 20_000,
+    });
+    renderApp('/session/482913/console');
+    expect(await screen.findByRole('timer')).toHaveTextContent('Départ dans 20 s');
+    act(() => screen.getByRole('button', { name: /Arrêter le compte à rebours/ }).click());
+    expect(fakeSocket.emit).toHaveBeenCalledWith('host:lobby-countdown-stop', { pin: '482913' });
   });
 
   it('LOBBY: who hears the sound, only for a quiz with sound, sent as a session option', async () => {

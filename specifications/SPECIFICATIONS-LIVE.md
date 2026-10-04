@@ -305,11 +305,12 @@ points already awarded count: showing the standings never reveals a question's a
 ### 11.1 The presenter's list
 
 The console's participant list becomes the live standings: one row per player, in
-**fixed columns** — rank, avatar and nickname, one column per indicator (ready, media
-loading, remote; always in the same place, empty when it does not apply), the score
-right-aligned. Sorted by score once a score exists; in arrival order before. The backend
-sends the host every player's score and rank after each reveal (today the console only
-gets the top five).
+**fixed columns** — rank, avatar and nickname, one slot per indicator (ready, media
+loading, remote; always in the same place, empty when it does not apply), the score in
+the quiz and the room's total (the quizzes played plus this one so far), right-aligned.
+Ranked by the quiz once a score exists, in arrival order before; a click on a column's
+header sorts by it, a second click reverses. The backend sends the host every player's
+scores and ranks (`game:scores`) after each reveal and as the console (re)attaches.
 
 ### 11.2 The quiz's standings after each reveal
 

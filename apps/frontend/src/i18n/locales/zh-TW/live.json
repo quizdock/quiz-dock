@@ -251,7 +251,13 @@
     "pickerPlayedAll": "全部測驗",
     "pickerPlayedFresh": "尚未玩過",
     "pickerPlayedDone": "已玩過",
-    "pickerPlayedMark": "已玩過"
+    "pickerPlayedMark": "已玩過",
+    "showStandings": "顯示排行榜",
+    "columnParticipant": "參與者",
+    "columnStatus": "狀態",
+    "columnQuiz": "測驗",
+    "columnTotal": "總分",
+    "columnActions": "操作"
   },
   "screen": {
     "sessionUnavailable": "房間無法使用。",
@@ -472,7 +478,10 @@
     "afterQuizzes_one": "共 {{count}} 個測驗後",
     "afterQuizzes_other": "共 {{count}} 個測驗後",
     "defaultName": "{{host}} 的房間",
-    "fallbackName": "房間"
+    "fallbackName": "房間",
+    "startsIn_one": "{{count}} 秒後開始",
+    "startsIn_other": "{{count}} 秒後開始",
+    "stopCountdown": "停止倒數：測驗等待「開始」"
   },
   "sound": {
     "mute": "靜音",
