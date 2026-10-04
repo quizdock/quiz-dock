@@ -6,6 +6,7 @@ import {
   personalReveal,
   rankPlayers,
   rankingOf,
+  scoreTable,
   topRows,
 } from './results';
 
@@ -105,5 +106,36 @@ describe('results', () => {
       feedbackEnabled: true,
       you: undefined,
     });
+  });
+});
+
+describe('scoreTable (#198)', () => {
+  const quiz = rankPlayers(
+    { a: record('Ann', 1), b: record('Bob', 2) },
+    {
+      a: JSON.stringify({ score: 300, streak: 1 }),
+      b: JSON.stringify({ score: 500, streak: 1 }),
+    },
+  );
+  // The room's standings so far: Ann won the first quiz; Cid joined after it, waits.
+  const room = [
+    { id: 'a', score: 1000, joinedAt: 1 },
+    { id: 'c', score: 0, joinedAt: 3 },
+  ];
+
+  it("adds the quiz in progress to the room's total, each with its rank", () => {
+    expect(scoreTable(quiz, room, false)).toEqual([
+      { playerId: 'a', quizScore: 300, quizRank: 2, roomScore: 1300, roomRank: 1 },
+      { playerId: 'c', quizScore: 0, quizRank: 3, roomScore: 0, roomRank: 3 },
+      { playerId: 'b', quizScore: 500, quizRank: 1, roomScore: 500, roomRank: 2 },
+    ]);
+  });
+
+  it('counts a quiz once its podium has recorded it in the room', () => {
+    const folded = [
+      { id: 'a', score: 1300, joinedAt: 1 },
+      { id: 'b', score: 500, joinedAt: 2 },
+    ];
+    expect(scoreTable(quiz, folded, true).map((r) => r.roomScore)).toEqual([1300, 500]);
   });
 });

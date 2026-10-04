@@ -74,6 +74,7 @@ export function deserializeGame(raw: Record<string, string>): GameFields {
       ? (raw.audioTarget as AudioTarget)
       : '',
     mediaWaitUntil: raw.mediaWaitUntil ? Number(raw.mediaWaitUntil) : 0,
+    lobbyStartAt: raw.lobbyStartAt ? Number(raw.lobbyStartAt) : 0,
     mediaLeadMs: raw.mediaLeadMs ? Number(raw.mediaLeadMs) : null,
     title: raw.title,
     language: raw.language,

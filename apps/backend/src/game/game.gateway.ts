@@ -316,6 +316,15 @@ export class GameGateway implements OnGatewayInit, OnGatewayDisconnect {
     await this.engine.start(payload.pin, this.requireHostId(socket));
   }
 
+  /** `host:lobby-countdown-stop`: the next quiz waits for **Start** (#198). */
+  @SubscribeMessage('host:lobby-countdown-stop')
+  async hostLobbyCountdownStop(
+    @ConnectedSocket() socket: GameSocket,
+    @MessageBody() payload: { pin: string },
+  ): Promise<void> {
+    await this.engine.stopLobbyCountdown(payload.pin, this.requireHostId(socket));
+  }
+
   /**
    * `player:submit` : soumet une réponse. Le serveur réhorodate à la réception
    * (§6) ; l'accusé `answer:ack` est renvoyé au seul socket émetteur.

@@ -601,6 +601,11 @@ export class GameService {
       .exec();
   }
 
+  /** Whether a game is recorded in its room's standings already (from its podium on). */
+  async isFolded(pin: string, gameId: GameId): Promise<boolean> {
+    return (await this.redis.hexists(gameKeys.played(pin), gameId)) === 1;
+  }
+
   /**
    * The room's standings over the games recorded so far: the players still in
    * the room (one who left stays, one banned does not), by total score, then

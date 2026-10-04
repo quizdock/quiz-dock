@@ -1,4 +1,9 @@
-import { GameState, type GameStatePayload, type GameStep } from '@quiz-dock/contracts';
+import {
+  GameState,
+  QuestionType,
+  type GameStatePayload,
+  type GameStep,
+} from '@quiz-dock/contracts';
 import type { GameMeta, QuizSnapshot } from './game.types';
 import type { PreloadStep } from './preload';
 
@@ -43,10 +48,29 @@ export function slideStep(meta: GameMeta): PreloadStep {
   return { questionIndex: meta.currentIndex, slideIndex: meta.slideIndex ?? 0 };
 }
 
+/** A question that is over: its reveal, or the quiz's standings that follow it (#198). */
+export function isSettled(state: string): boolean {
+  return state === GameState.Reveal || state === GameState.Leaderboard;
+}
+
+/**
+ * Whether the quiz's standings get a step of their own after question `index` (#198):
+ * not after the last question (the podium follows), nor after one that scores nothing.
+ */
+export function standingsFollow(snapshot: QuizSnapshot, index: number): boolean {
+  const question = snapshot.questions[index];
+  return (
+    index + 1 < snapshot.questions.length &&
+    question !== undefined &&
+    question.type !== QuestionType.Poll &&
+    question.basePoints > 0
+  );
+}
+
 /** The step the live position sits on (`q<i>` / `s<i>`), '' in the lobby or at the podium. */
 export function liveStepKey(meta: GameMeta): string {
   if (meta.state === GameState.SlideShow) return `s${meta.slideIndex ?? 0}`;
-  if (meta.state === GameState.Reveal || meta.state === GameState.Answering) {
+  if (isSettled(meta.state) || meta.state === GameState.Answering) {
     return `q${meta.currentIndex}`;
   }
   return '';
@@ -69,10 +93,7 @@ export function playedSteps(meta: GameMeta, snapshot: QuizSnapshot): string[] {
   const at = steps.indexOf(liveKey);
   if (at < 0) return [];
   // A question counts as played once revealed; mid-question it is not a target.
-  return steps.slice(
-    0,
-    meta.state === GameState.Reveal ? at + 1 : at + (liveKey.startsWith('s') ? 1 : 0),
-  );
+  return steps.slice(0, isSettled(meta.state) ? at + 1 : at + (liveKey.startsWith('s') ? 1 : 0));
 }
 
 /** Previous / next targets for the host, around the reviewed step or the live position. */

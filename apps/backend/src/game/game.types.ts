@@ -281,6 +281,8 @@ export interface GameMeta {
   mediaLeadMs?: number | null;
   /** End of the media wait (ms epoch) while in `MEDIA_LOADING`, 0 otherwise. */
   mediaWaitUntil?: number;
+  /** When the next quiz's lobby starts on its own (ms epoch, #198); 0 = no countdown. */
+  lobbyStartAt?: number;
   /** The host's lobby choice replacing the quiz's default audio target; empty = the quiz's. */
   audioTarget?: AudioTarget | '';
   title: string;

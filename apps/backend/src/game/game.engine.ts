@@ -75,6 +75,7 @@ import {
   personalPodium,
   personalReveal,
   rankingOf,
+  scoreTable,
   topRows,
 } from './results';
 import { RoomTimers } from './room-timers';
@@ -86,12 +87,14 @@ import {
   snapshotHasSound,
 } from './snapshot';
 import {
+  isSettled,
   liveStepKey,
   mediaStepKey,
   navFor,
   parseStepKey,
   playedSteps,
   slideStep,
+  standingsFollow,
   stepKey,
   stepRef,
   waitedStep,
@@ -111,6 +114,8 @@ return redis.call('HSETNX', KEYS[1], ARGV[1], ARGV[2])
 
 /** Auto-mode delay on a REVEAL when the question sets none (#6): env override, else constant. */
 const defaultAutoAdvanceMs = () => settings.get(SETTINGS.GAME_AUTO_ADVANCE_MS);
+/** How long the next quiz's lobby waits before it starts on its own (#198). */
+const NEXT_QUIZ_COUNTDOWN_MS = 30_000;
 
 /** The media's start derived from `startedAt`, as a payload fragment (empty when silent). */
 function mediaStartOf(
@@ -221,7 +226,12 @@ export class GameEngine {
       } else if (meta.state === GameState.MediaLoading) {
         this.armMediaWait(ref, waitedStep(meta), (meta.mediaWaitUntil ?? 0) - Date.now());
         armed++;
-      } else if (meta.state === GameState.Reveal || meta.state === GameState.SlideShow) {
+      } else if (meta.state === GameState.Lobby && meta.lobbyStartAt) {
+        this.timers.arm('lobbyStart', pin, meta.lobbyStartAt - Date.now(), () =>
+          this.startOnItsOwn(ref),
+        );
+        armed++;
+      } else if (isSettled(meta.state) || meta.state === GameState.SlideShow) {
         if (meta.mode === 'auto' && !meta.paused && !meta.reviewStep) {
           await this.scheduleAutoNextIfNeeded(ref, meta);
           armed++;
@@ -249,8 +259,44 @@ export class GameEngine {
     if (meta.state !== GameState.Lobby) {
       throw new BadRequestException('session.already_started');
     }
-    const snapshot = await this.requireSnapshot(meta.id, true);
-    await this.enterStep(refOf(pin, meta), snapshot, 0);
+    await this.startQuiz(refOf(pin, meta), Boolean(meta.lobbyStartAt));
+  }
+
+  /**
+   * The quiz's first step, once: the host's **Start**, the next quiz's countdown and
+   * everyone being ready may all come at the same moment (#198).
+   */
+  private async startQuiz(ref: GameRef, counting: boolean): Promise<void> {
+    if (!(await this.firstThrough(gameKeys.advanceLock(ref.id, 'start')))) return;
+    if (counting) await this.clearLobbyCountdown(ref);
+    const snapshot = await this.requireSnapshot(ref.id, true);
+    await this.enterStep(ref, snapshot, 0);
+  }
+
+  /** The next quiz's lobby starts on its own (#198), in `NEXT_QUIZ_COUNTDOWN_MS`. */
+  private async armLobbyCountdown(ref: GameRef, startAt: number): Promise<void> {
+    await this.redis.hset(gameKeys.game(ref.id), gameHash({ lobbyStartAt: startAt }));
+    this.timers.arm('lobbyStart', ref.pin, startAt - Date.now(), () => this.startOnItsOwn(ref));
+  }
+
+  private async clearLobbyCountdown(ref: GameRef): Promise<void> {
+    this.timers.cancel('lobbyStart', ref.pin);
+    await this.redis.hset(gameKeys.game(ref.id), gameHash({ lobbyStartAt: 0 }));
+    this.server.to(ref.pin).emit('lobby:countdown', { startAt: null });
+  }
+
+  /** The countdown is over, or everyone is ready: the quiz starts if its lobby still waits. */
+  private async startOnItsOwn(ref: GameRef): Promise<void> {
+    const meta = await this.currentMeta(ref);
+    if (!meta || meta.state !== GameState.Lobby || !meta.lobbyStartAt) return;
+    await this.startQuiz(ref, true);
+  }
+
+  /** `host:lobby-countdown-stop` (#198): the host takes the floor; **Start** launches the quiz. */
+  async stopLobbyCountdown(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Lobby || !meta.lobbyStartAt) return;
+    await this.clearLobbyCountdown(refOf(pin, meta));
   }
 
   /**
@@ -843,6 +889,7 @@ export class GameEngine {
       socket.emit('question:reveal', personalReveal(common, records, ranking, playerId));
       socket.emit('leaderboard', personalLeaderboard(ranking, playerId));
     }
+    await this.emitHostScores(ref, sockets);
     // What comes next, fetched by every device while the leaderboard is up.
     await this.emitPreload(ref, snapshot, firstStepOf(snapshot, index + 1));
     await this.broadcastReadiness(pin);
@@ -915,8 +962,9 @@ export class GameEngine {
   }
 
   /**
-   * `host:next` : depuis REVEAL, passe à la question suivante ou au PODIUM (dernière).
-   * Verrou atomique `advance-lock:{index}` → un double-clic ne saute pas de question.
+   * `host:next` : depuis REVEAL, passe au classement du quiz (#198) quand il suit, sinon
+   * à la question suivante ou au PODIUM (dernière) ; depuis LEADERBOARD, à la suite.
+   * Verrou atomique `advance-lock:{step}` → un double-clic ne saute pas d'étape.
    */
   async next(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
@@ -931,13 +979,18 @@ export class GameEngine {
       await this.endMediaWait(ref, waitedStep(meta));
       return;
     }
-    if (meta.state !== GameState.Reveal && meta.state !== GameState.SlideShow) {
+    if (!isSettled(meta.state) && meta.state !== GameState.SlideShow) {
       throw new BadRequestException('session.reveal_required');
     }
     this.timers.cancel('autoNext', pin); // un enchaînement (auto/manuel) annule l'autre
-    // A slide gets its own lock key: it shares `currentIndex` with the question it precedes.
+    // A slide gets its own lock key: it shares `currentIndex` with the question it precedes;
+    // so do the standings that follow a reveal.
     const lockStep =
-      meta.state === GameState.SlideShow ? `s${meta.slideIndex ?? 0}` : String(meta.currentIndex);
+      meta.state === GameState.SlideShow
+        ? `s${meta.slideIndex ?? 0}`
+        : meta.state === GameState.Leaderboard
+          ? `l${meta.currentIndex}`
+          : String(meta.currentIndex);
     if (!(await this.firstThrough(gameKeys.advanceLock(meta.id, lockStep)))) {
       return; // suivant déjà déclenché (double-clic)
     }
@@ -955,7 +1008,37 @@ export class GameEngine {
       }
       return;
     }
+    if (meta.state === GameState.Reveal && standingsFollow(snapshot, meta.currentIndex)) {
+      await this.toStandings(ref, meta, snapshot);
+      return;
+    }
     await this.enterStep(ref, snapshot, meta.currentIndex + 1);
+  }
+
+  /**
+   * The quiz's standings after a reveal (#198), a step of their own: every screen is
+   * told the state, and gets the leaderboard again (a screen may have missed it).
+   */
+  private async toStandings(ref: GameRef, meta: GameMeta, snapshot: QuizSnapshot): Promise<void> {
+    const { pin } = ref;
+    const fresh = { ...meta, state: GameState.Leaderboard, autoNextAt: 0 };
+    await this.redis.hset(
+      gameKeys.game(ref.id),
+      gameHash({ state: GameState.Leaderboard, autoNextAt: 0 }),
+    );
+    this.server.to(pin).emit('game:state', {
+      state: GameState.Leaderboard,
+      questionIndex: meta.currentIndex,
+      totalQuestions: meta.totalQuestions,
+      nav: navFor(fresh, snapshot),
+    });
+    const ranking = await this.ranking(ref);
+    const sockets = await this.server.in(pin).fetchSockets();
+    for (const socket of sockets) {
+      socket.emit('leaderboard', personalLeaderboard(ranking, socket.data.playerId));
+    }
+    await this.scheduleAutoNextIfNeeded(ref);
+    this.server.to(pin).emit('game:mode', await this.readMode(pin));
   }
 
   // ── Looking back (host navigation) ──────────────────────────────────────────
@@ -970,7 +1053,9 @@ export class GameEngine {
   async review(pin: string, hostUserId: string, step: GameStep): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (
-      ![GameState.Reveal, GameState.SlideShow, GameState.Podium].includes(meta.state as GameState)
+      ![GameState.Reveal, GameState.Leaderboard, GameState.SlideShow, GameState.Podium].includes(
+        meta.state as GameState,
+      )
     ) {
       throw new BadRequestException('session.review_unavailable');
     }
@@ -1081,6 +1166,25 @@ export class GameEngine {
       socket.emit('leaderboard', personalLeaderboard(ranking, playerId));
     }
     await this.emitStandings(pin);
+    await this.emitHostScores(ref, sockets);
+  }
+
+  /**
+   * Every player's quiz and room scores (#198), to the host's consoles among `sockets`
+   * (every socket of the room when omitted).
+   */
+  private async emitHostScores(ref: GameRef, sockets?: Emitter[]): Promise<void> {
+    const targets = (sockets ?? (await this.server.in(ref.pin).fetchSockets())).filter(
+      (socket) => socket.data.isHostControl,
+    );
+    if (targets.length === 0) return;
+    const [quiz, { ranked: room }, folded] = await Promise.all([
+      this.game.rankedPlayers(ref.pin, ref.id),
+      this.game.standings(ref.pin),
+      this.game.isFolded(ref.pin, ref.id),
+    ]);
+    const payload = { rows: scoreTable(quiz, room, folded) };
+    for (const socket of targets) socket.emit('game:scores', payload);
   }
 
   /**
@@ -1170,9 +1274,13 @@ export class GameEngine {
       nav: snapshot && !meta.reviewStep ? navFor(meta, snapshot) : undefined,
     });
     if (saidReady !== null) socket.emit('lobby:you', { ready: saidReady });
+    if (meta.state === GameState.Lobby) {
+      socket.emit('lobby:countdown', { startAt: meta.lobbyStartAt || null });
+    }
     // Instantané du lobby : sans lui, un host/projeté qui (re)charge verrait une
     // liste de joueurs vide (les `player:joined` passés sont perdus). §6/§9.
     socket.emit('game:roster', { players: await this.connectedRoster(pin) });
+    if (socket.data.isHostControl) await this.emitHostScores(ref, [socket]);
     // Mode/pause courants : un (ré)attache doit refléter auto/pause immédiatement.
     socket.emit('game:mode', this.buildModePayload(meta));
     if (meta.joinBaseUrl) socket.emit('game:join-url', { baseUrl: meta.joinBaseUrl });
@@ -1238,6 +1346,8 @@ export class GameEngine {
         questionStartOf(meta, snapshot, index, meta.questionStartedAt, meta.questionEndsAt),
       );
       await this.emitRevealTo(socket, ref, snapshot, index);
+    } else if (meta.state === GameState.Leaderboard) {
+      socket.emit('leaderboard', personalLeaderboard(await this.ranking(ref), playerId));
     } else if (meta.state === GameState.Podium) {
       const ranking = await this.ranking(ref);
       socket.emit('game:podium', personalPodium(ranking, playerId, snapshot));
@@ -1545,6 +1655,12 @@ export class GameEngine {
       this.timers.cancelAll(pin);
       this.answerCounts.delete(pin);
       await this.game.openGameWith(pin, snapshot);
+      // A quiz that follows another starts on its own (#198); so does one replacing it.
+      const follows = meta.state !== GameState.Lobby || Boolean(meta.lobbyStartAt);
+      const opened = await this.game.getMeta(pin);
+      if (follows && opened) {
+        await this.armLobbyCountdown(refOf(pin, opened), Date.now() + NEXT_QUIZ_COUNTDOWN_MS);
+      }
     } catch (err) {
       await this.redis.del(lock); // nothing moved: the host can try again
       throw err;
@@ -1596,6 +1712,14 @@ export class GameEngine {
     if (isReady) await this.redis.multi().sadd(key, playerId).expire(key, GAME_TTL_S).exec();
     else await this.redis.srem(key, playerId);
     await this.broadcastReadiness(pin);
+    // The next quiz goes as soon as everyone in its lobby is ready (#198).
+    if (isReady && meta.lobbyStartAt) {
+      const pressed = new Set(await this.redis.smembers(key));
+      const players = await this.connectedPlayers(pin);
+      if (players.length > 0 && players.every(([id]) => pressed.has(id))) {
+        await this.startOnItsOwn(refOf(pin, meta));
+      }
+    }
     return true;
   }
 
@@ -1906,8 +2030,7 @@ export class GameEngine {
   private buildModePayload(meta: GameMeta): GameModePayload {
     // Countdown shown on a reveal in auto mode, or on a timed slide in any mode (#7).
     const onTimedStep =
-      meta.mode === 'auto' &&
-      (meta.state === GameState.Reveal || meta.state === GameState.SlideShow);
+      meta.mode === 'auto' && (isSettled(meta.state) || meta.state === GameState.SlideShow);
     const autoNextActive = onTimedStep && !meta.paused && (meta.autoNextAt ?? 0) > 0;
     return {
       mode: meta.mode,
@@ -2002,6 +2125,8 @@ export class GameEngine {
       // Per-question override (#6), else the engine default.
       const perQuestion = snapshot?.questions[m.currentIndex]?.revealDelayS;
       delay = perQuestion ? perQuestion * 1000 : defaultAutoAdvanceMs();
+    } else if (m.state === GameState.Leaderboard) {
+      delay = defaultAutoAdvanceMs();
     } else {
       return;
     }
@@ -2013,7 +2138,12 @@ export class GameEngine {
     await this.redis.hset(gameKeys.game(ref.id), gameHash({ autoNextAt, autoNextMs: delay }));
     const hostUserId = m.hostUserId;
     // The timer only fires for the exact step it was armed on (question or slide).
-    const step = m.state === GameState.SlideShow ? `s${m.slideIndex ?? 0}` : m.currentIndex;
+    const step =
+      m.state === GameState.SlideShow
+        ? `s${m.slideIndex ?? 0}`
+        : m.state === GameState.Leaderboard
+          ? `l${m.currentIndex}`
+          : m.currentIndex;
     this.timers.arm('autoNext', pin, delay, () => this.autoAdvance(ref, hostUserId, step));
   }
 
@@ -2029,7 +2159,8 @@ export class GameEngine {
     if (meta.mode !== 'auto') return;
     const onSlide = meta.state === GameState.SlideShow && step === `s${meta.slideIndex ?? 0}`;
     const onReveal = meta.state === GameState.Reveal && step === meta.currentIndex;
-    if (!onSlide && !onReveal) return;
+    const onStandings = meta.state === GameState.Leaderboard && step === `l${meta.currentIndex}`;
+    if (!onSlide && !onReveal && !onStandings) return;
     await this.next(pin, hostUserId);
   }
 

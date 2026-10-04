@@ -521,6 +521,22 @@ export interface RoomStandingsPayload {
   };
 }
 
+/** One player's line in the host's standings (#198): their score in this quiz and in the room. */
+export interface HostScoreRow {
+  playerId: string;
+  /** Points in the quiz being played; 0 before any. */
+  quizScore: number;
+  quizRank: number;
+  /** The room's total: the quizzes already played, and this one so far. */
+  roomScore: number;
+  roomRank: number;
+}
+
+/** Every player's scores, to the host's console only (#198). */
+export interface HostScoresPayload {
+  rows: HostScoreRow[];
+}
+
 export interface PodiumPayload {
   podium: LeaderboardRow[];
   /** The quiz of this podium: a rating goes to it (several quizzes share a room's PIN). */
@@ -558,6 +574,8 @@ export interface ClientToServerEvents {
   /** Rebinde un hôte authentifié propriétaire à sa partie (reconnexion / 2ᵉ fenêtre de contrôle). */
   'host:attach': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'host:start': (p: { pin: string }) => void;
+  /** Stops the next quiz's countdown (#198): the quiz then waits for **Start**. */
+  'host:lobby-countdown-stop': (p: { pin: string }) => void;
   'host:next': (p: { pin: string }) => void;
   /** Show a played step again (no replay, no rescoring); `host:next` resumes. */
   'host:review': (p: { pin: string } & GameStep) => void;
@@ -775,6 +793,10 @@ export interface ServerToClientEvents {
   'lobby:count': (p: { ready: number; total: number }) => void;
   /** The room's standings: at a podium, in the lobby of the next quiz, and when the room closes. */
   'room:standings': (p: RoomStandingsPayload) => void;
+  /** Every player's quiz and room scores (#198), to the host's console only. */
+  'game:scores': (p: HostScoresPayload) => void;
+  /** The next quiz's lobby starts on its own at `startAt` (ms epoch, #198); null = no countdown. */
+  'lobby:countdown': (p: { startAt: number | null }) => void;
   /** `quizId`: the quiz that ended, which a rating goes to (several share a room's PIN). */
   'game:ended': (p: { feedbackEnabled?: boolean; quizId?: string }) => void;
   /** Mode/pause courants (à chaque changement et au (ré)attache). */
