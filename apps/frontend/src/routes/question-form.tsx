@@ -7,6 +7,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
+import { appConfig } from '../config';
 import {
   SortableContext,
   arrayMove,
@@ -64,6 +65,8 @@ import {
   PanelLeft,
   PanelRight,
   PanelTop,
+  Pin,
+  PinOff,
   Smartphone,
   Plus,
   Trash2,
@@ -83,6 +86,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { COLOR_BG, OPTION_BG_FALLBACK } from '@/lib/option-style';
 import { cn } from '@/lib/utils';
+import { useSessionState } from '@/lib/use-session-state';
 import { FieldMessage } from '@/components/ui/field-message';
 import {
   type FieldIssue,
@@ -1013,7 +1017,9 @@ export function QuestionForm({
               ? t('questionForm.timingSummaryStretched', { time: timeLimitS, total: stretchedS })
               : t('questionForm.timingSummary', { time: timeLimitS }),
             revealDelayS == null
-              ? t('questionForm.revealDelayAuto')
+              ? appConfig.autoAdvanceS
+                ? t('questionForm.revealDelaySummaryAuto', { seconds: appConfig.autoAdvanceS })
+                : t('questionForm.revealDelayAuto')
               : t('questionForm.revealDelaySummary', { seconds: revealDelayS }),
           ].join(' · ')}
         >
@@ -1046,7 +1052,13 @@ export function QuestionForm({
                     type="number"
                     min={REVEAL_DELAY_S.min}
                     max={REVEAL_DELAY_S.max}
-                    placeholder={t('questionForm.revealDelayPlaceholder')}
+                    placeholder={
+                      appConfig.autoAdvanceS
+                        ? t('questionForm.revealDelayAutoValue', {
+                            seconds: appConfig.autoAdvanceS,
+                          })
+                        : t('questionForm.revealDelayPlaceholder')
+                    }
                     value={field.state.value ?? ''}
                     onChange={(e) =>
                       field.handleChange(e.target.value === '' ? null : Number(e.target.value))
@@ -1463,6 +1475,12 @@ function LivePreview({
   const url = useMediaUrl();
   const [device, setDevice] = useState<'projection' | 'phone'>('projection');
   const [answer, setAnswer] = useState(false);
+  // Pinned, it stays at the top while the form scrolls, from one question to the next.
+  const [pinned, setPinned] = useSessionState(
+    'editor:preview-pinned',
+    false,
+    (v): v is boolean => typeof v === 'boolean',
+  );
   const view = useMemo(() => {
     const question = previewQuestion(values);
     const view = stepView([{ kind: 'question', id: question.id, question }], 0, NO_QUIZ, url, {
@@ -1477,7 +1495,12 @@ function LivePreview({
     };
   }, [values, url, answer, position.index, position.total]);
   return (
-    <Disclosure title={t('preview.title')} value={t(`preview.${device}`)}>
+    <Disclosure
+      title={t('preview.title')}
+      value={t(`preview.${device}`)}
+      rememberAs="question-preview"
+      className={cn(pinned && 'bg-background sticky top-0 z-20 shadow-md')}
+    >
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Segmented
@@ -1498,8 +1521,22 @@ function LivePreview({
             />
             {t('preview.showAnswer')}
           </label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            aria-pressed={pinned}
+            onClick={() => setPinned(!pinned)}
+          >
+            {pinned ? <PinOff /> : <Pin />}
+            {pinned ? t('preview.unpin') : t('preview.pin')}
+          </Button>
         </div>
-        <RoomScreen view={view} device={device} />
+        {/* Pinned, it leaves the form most of the screen. */}
+        <div className={cn(pinned && 'mx-auto w-full max-w-[calc(40dvh*16/9)]')}>
+          <RoomScreen view={view} device={device} />
+        </div>
       </div>
     </Disclosure>
   );

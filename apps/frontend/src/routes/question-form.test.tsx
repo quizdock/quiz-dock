@@ -41,8 +41,8 @@ describe('QuestionForm', () => {
     const { onClose } = renderForm();
 
     setMarkdownField('Énoncé', 'Capitale ?');
-    expect(screen.getByLabelText('option 1')).toBeInTheDocument();
-    expect(screen.getByLabelText('option 2')).toBeInTheDocument();
+    expect(screen.getByLabelText('choix 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('choix 2')).toBeInTheDocument();
     // marque la 1re option correcte (radio pour single_choice)
     fireEvent.click(screen.getAllByRole('radio')[0]);
     fireEvent.click(screen.getByText('Ajouter'));
@@ -148,7 +148,7 @@ describe('QuestionForm', () => {
 
   it("no text field offers an image to add: a question's picture goes in its Media section", () => {
     renderForm();
-    for (const label of ['Énoncé', 'Explication de la réponse (affichée après la révélation)']) {
+    for (const label of ['Énoncé', 'Explication (montrée avec la bonne réponse)']) {
       const editor = screen.getByLabelText(label).closest('[data-markdown-editor]') as HTMLElement;
       expect(within(editor).queryByRole('button', { name: /image/i })).toBeNull();
       expect(editor.querySelector('input[type="file"]')).toBeNull();
@@ -198,7 +198,9 @@ describe('QuestionForm', () => {
     const { onClose } = renderForm();
 
     setMarkdownField('Énoncé', 'Q ?');
-    fireEvent.change(screen.getByLabelText('Délai de révélation (s)'), { target: { value: '12' } });
+    fireEvent.change(screen.getByLabelText('Affichage de la réponse (s)'), {
+      target: { value: '12' },
+    });
     fireEvent.click(screen.getAllByRole('radio')[0]);
     fireEvent.click(screen.getByText('Ajouter'));
 
@@ -506,7 +508,7 @@ describe('QuestionForm — image choice', () => {
     renderForm();
     fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'image_choice' } });
     expect(screen.getAllByLabelText(/Texte alternatif de l’image/)).toHaveLength(2);
-    expect(screen.queryByLabelText('option 1')).toBeNull();
+    expect(screen.queryByLabelText('choix 1')).toBeNull();
     // The media section keeps the sound only.
     expect(screen.queryByText('Ajouter une vidéo')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '4' }));
@@ -770,7 +772,7 @@ describe('QuestionForm — image choice', () => {
         <Fresh quizId="q1" onClose={vi.fn()} />
       </QueryClientProvider>,
     );
-    fireEvent.click(await screen.findByRole('button', { name: /Ajouter une option/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Ajouter un choix/ }));
     const duplicate = errors.mock.calls.some((c) => String(c[0]).includes('same key'));
     errors.mockRestore();
     expect(duplicate).toBe(false);

@@ -1,4 +1,5 @@
 import { TILE_RATIO } from '@quiz-dock/contracts';
+import { appConfig } from '../config';
 import { Check } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -137,7 +138,11 @@ export function QuestionProperties({ question: q }: { question: QuizDetailDtoQue
         ) : null}
         <span className="text-muted-foreground block text-xs">
           {t('questionForm.revealDelayLabel')} :{' '}
-          {q.revealDelayS ? `${q.revealDelayS} s` : t('questionForm.revealDelayPlaceholder')}
+          {q.revealDelayS
+            ? `${q.revealDelayS} s`
+            : appConfig.autoAdvanceS
+              ? t('questionForm.revealDelayAutoValue', { seconds: appConfig.autoAdvanceS })
+              : t('questionForm.revealDelayPlaceholder')}
         </span>
       </Row>
 

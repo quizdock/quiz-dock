@@ -30,6 +30,8 @@ export interface AppConfig {
    * the host switches it for their room.
    */
   liveMotion?: boolean;
+  /** A reveal's time in auto mode when its question sets none (`GAME_AUTO_ADVANCE_MS`), s. */
+  autoAdvanceS?: number;
 }
 
 const DEFAULTS: AppConfig = {

@@ -34,7 +34,7 @@ reference, the others follow its sense, not its words.
 | ------------------------ | ------------------------------ | ------------------------------------- | -------------------------------- | -------------------- | -------------------- |
 | question                 | Question                       | Question                              | Pregunta                         | 题目                 | 題目                 |
 | slide                    | Slide                          | Slide                                 | Diapositiva                      | 幻灯片               | 簡報                 |
-| option (answer choice)   | Option                         | Option                                | Opción                           | 选项                 | 選項                 |
+| answer choice            | Answer choice                  | Choix de réponse                      | Opción de respuesta              | 选项                 | 選項                 |
 | image choice             | Image choice                   | Choix en images                       | Elección con imágenes            | 图片选择             | 圖片選擇             |
 | alternative text         | Alternative text               | Texte alternatif                      | Texto alternativo                | 替代文字             | 替代文字             |
 | explanation              | Explanation                    | Explication                           | Explicación                      | 解析                 | 解析                 |
@@ -135,6 +135,12 @@ needs distinct forms. The locale checker enforces key and placeholder parity.
 - **reveal**: the moment answers are shown; a verb in the console (_Reveal
   now_) and a state everywhere else. fr _révéler / révélation_, never
   _correction_.
+- **answer choice, not option**: what the author writes for a participant to pick
+  (fr _choix de réponse_, a _choix_ for short); _option_ only survives in code. Not
+  _answers_ either: those are what participants send (_Answers received_).
+- **answer shown for**: in auto mode, how long the right answer stays on screen
+  before moving on (fr _affichage de la réponse_); never _reveal delay_, which reads
+  like a wait before the reveal.
 - **explanation**: the note shown at the reveal; not _solution_ (there may be
   none, e.g. a poll) nor _feedback_ (reserved for reviews).
 - **reviews** (participants rating a quiz) vs **feedback** (the API/DB word):
