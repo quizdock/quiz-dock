@@ -67,8 +67,18 @@ enforced by commitlint). The type/scope drive the changelog grouping:
 
 ## Before tagging
 
-The release does not wait for CI: check that CI is green on the commit you tag. Locally:
+1. **What the release carries is merged into `dev`**, CI green.
+2. **The scripts of [`tools/`](../tools) the changes call for have run**, their output
+   committed to `dev`. Each runs in a container (the host needs Docker only); its header
+   says how:
 
-```bash
-pnpm -r test && pnpm lint && pnpm typecheck
-```
+   | Script | When |
+   |---|---|
+   | `tools/generate-api/run.sh` | the API changed: the OpenAPI file and the client it generates |
+   | `tools/live-check/run.sh` | a live screen changed: a room played for real, its pictures kept |
+   | `tools/screenshots/run.sh` | a screen changed: the screenshots the README, the site and Docker Hub show |
+   | `tools/sample-media/run.sh` | a sample quiz's media list changed: its files fetched and prepared |
+3. **`dev` goes into `main` with a merge commit**, never a squash, so that `main` keeps
+   `dev` in its history. If `main` has commits `dev` lacks, merge it into `dev` first.
+4. **CI is green on `main`**: the release does not wait for it.
+5. **Tag** (above), then write the **Upgrading** section when the release needs one.
