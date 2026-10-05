@@ -32,6 +32,8 @@ export interface AppConfig {
   liveMotion?: boolean;
   /** A reveal's time in auto mode when its question sets none (`GAME_AUTO_ADVANCE_MS`), s. */
   autoAdvanceS?: number;
+  /** The public demo counting its audience: where its pages send their time on page. */
+  demoDurationUrl?: string;
 }
 
 const DEFAULTS: AppConfig = {

@@ -1,0 +1,9 @@
+{
+  "name": "quizdock-demo-stats",
+  "private": true,
+  "type": "module",
+  "description": "The public demo's audience counter: a Cloudflare Worker and its D1 database.",
+  "scripts": {
+    "test": "node --test src/index.test.mjs"
+  }
+}

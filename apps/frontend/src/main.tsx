@@ -16,12 +16,14 @@ import {
 } from './auth/auth-context';
 import {
   APP_NAME,
+  appConfig,
   configureAnonymousParticipants,
   configureDemo,
   configureCommunityStore,
   configureStandalone,
 } from './config';
 import { MotionRoot } from './game/motion/motion-root';
+import { trackTimeOnPage } from './lib/demo-duration';
 import { router } from './router';
 import { loadLanguages } from './i18n';
 import './index.css';
@@ -52,6 +54,8 @@ async function bootstrap(): Promise<void> {
     const { data } = await authConfigControllerConfig();
     mode = data.mode;
     configureDemo(data.demo ?? null);
+    // The public demo's time on page, when the instance counts it (never elsewhere).
+    if (data.demo && appConfig.demoDurationUrl) trackTimeOnPage(appConfig.demoDurationUrl);
     configureCommunityStore(data.communityStore === true);
     configureStandalone(data.standalone === true);
     configureAnonymousParticipants(data.anonymousParticipants === true);

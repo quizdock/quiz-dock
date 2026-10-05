@@ -17,6 +17,7 @@ import { SETTINGS } from '@quiz-dock/contracts';
 import { settings } from './admin/settings/settings.service';
 import { SetupService } from './admin/setup/setup.service';
 import { MediaJanitor } from './media/media-janitor.service';
+import { demoStatsMiddleware, reportDemoStart } from './demo/demo-stats';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -35,6 +36,8 @@ async function bootstrap(): Promise<void> {
   // The pages say where their scripts, styles, frames and requests may come from.
   app.use(cspMiddleware());
   app.use(baseHeadersMiddleware());
+  // The public demo's audience, when it is set up to count (nothing elsewhere).
+  app.use(demoStatsMiddleware());
   // Nothing tells which server answers.
   app.disable('x-powered-by');
   // The browser session is a cookie: what changes something comes from our own pages.
@@ -62,6 +65,7 @@ async function bootstrap(): Promise<void> {
 
   const port = settings.get(SETTINGS.PORT);
   await app.listen(port, '0.0.0.0');
+  reportDemoStart();
   Logger.log(`QuizDock API démarrée sur le port ${port}`, 'Bootstrap');
 }
 
