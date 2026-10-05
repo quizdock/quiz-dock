@@ -678,7 +678,7 @@
     "anyRole": "Any role",
     "roles": {
       "admin": "Administrator",
-      "host": "Host",
+      "host": "Quiz host",
       "player": "Participant"
     },
     "none": "No account matches.",
