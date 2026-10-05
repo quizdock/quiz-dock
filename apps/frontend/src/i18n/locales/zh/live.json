@@ -261,7 +261,8 @@
     "backToLobbyTooltip": "房间返回大厅，您在那里选择下一个测验",
     "backToLobbyDescription": "参与者留在房间内，在大厅重新会合，您在那里选择下一个测验；无需再次输入 PIN。",
     "noQuizYetHint": "房间已返回大厅：请选择接下来进行的测验。",
-    "columnRank": "排名"
+    "columnRank": "排名",
+    "seeResults": "查看结果"
   },
   "screen": {
     "sessionUnavailable": "房间不可用。",

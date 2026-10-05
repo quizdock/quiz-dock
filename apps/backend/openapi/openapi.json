@@ -3174,6 +3174,11 @@
           "ownerName": {
             "type": "string"
           },
+          "sessionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "createdAt": {
             "type": "string"
           },
@@ -3346,6 +3351,11 @@
           },
           "ownerName": {
             "type": "string"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "createdAt": {
             "type": "string"
@@ -3670,6 +3680,11 @@
           },
           "ownerName": {
             "type": "string"
+          },
+          "sessionCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "createdAt": {
             "type": "string"

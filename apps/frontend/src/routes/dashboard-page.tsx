@@ -9,6 +9,7 @@ import {
   History,
   LayoutGrid,
   List as ListIcon,
+  ChartColumn,
   ListChecks,
   Lock,
   Play,
@@ -466,6 +467,20 @@ export function DashboardPage() {
             // Above the card's link, so they stay their own buttons.
             <span className="relative z-10 flex items-center gap-2">
               {main}
+              {/* Its results, once played: part of a teacher's way, not hidden in the menu. */}
+              {quiz.sessionCount ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    void navigate({ to: '/quizzes/$quizId/history', params: { quizId: quiz.id } })
+                  }
+                >
+                  <ChartColumn className="size-4" />
+                  {t('results')}
+                </Button>
+              ) : null}
               <QuizMenu
                 quiz={quiz}
                 own={!readOnly && !managerOnly}

@@ -49,16 +49,21 @@ export class QuizzesService {
   async list(user: {
     id: string;
     roles: RoleSet;
-  }): Promise<(Quiz & { ownerName?: string; editable: boolean })[]> {
+  }): Promise<(Quiz & { ownerName?: string; editable: boolean; sessionCount: number })[]> {
     const manager = isManager(user.roles);
     const rows = await this.prisma.quiz.findMany({
       where: manager ? {} : readableBy(user.id),
       orderBy: { createdAt: 'desc' },
-      include: { owner: { select: { displayName: true } } },
+      include: {
+        owner: { select: { displayName: true } },
+        // Its sessions kept: the library leads to their results.
+        _count: { select: { sessionLogs: true } },
+      },
     });
     // Le nom du propriétaire n'a de sens que pour le quiz d'un autre : un hôte qui
     // lit sa banque n'a pas besoin qu'on lui rappelle que tout est à lui.
-    return rows.map(({ owner, ...quiz }) => {
+    return rows.map(({ owner, _count, ...row }) => {
+      const quiz = { ...row, sessionCount: _count.sessionLogs };
       const editable = quiz.ownerId === user.id;
       return manager || !editable
         ? { ...quiz, editable, ownerName: owner.displayName }

@@ -208,5 +208,6 @@
   "statusCount_one": "{{count}} statut",
   "statusCount_other": "{{count}} statuts",
   "publishToPresent": "Publier pour présenter",
-  "quizActions": "Actions pour « {{title}} »"
+  "quizActions": "Actions pour « {{title}} »",
+  "results": "Résultats"
 }

@@ -261,7 +261,8 @@
     "backToLobbyTooltip": "Oda lobisine döner; sıradaki quizi orada seçersiniz",
     "backToLobbyDescription": "Katılımcılar odada kalır ve lobisinde tekrar buluşur; sıradaki quizi orada seçersiniz, kimse PIN'i yeniden yazmaz.",
     "noQuizYetHint": "Oda lobisine döndü: sıradaki quizi seçin.",
-    "columnRank": "Sıra"
+    "columnRank": "Sıra",
+    "seeResults": "Sonuçları gör"
   },
   "screen": {
     "sessionUnavailable": "Oda kullanılamıyor.",
