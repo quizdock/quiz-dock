@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { SETTINGS } from '@quiz-dock/contracts';
 import { settings, type SettingsService } from '../admin/settings/settings.service';
+import { demoStatsTarget } from '../demo/demo-stats';
 
 /** The origin of a configured URL, or nothing when it is empty or unreadable. */
 function originOf(url: string | undefined): string | null {
@@ -25,6 +26,8 @@ function originOf(url: string | undefined): string | null {
  */
 export function contentSecurityPolicy(from: SettingsService = settings): string {
   const logo = originOf(from.get(SETTINGS.APP_LOGO_URL));
+  // The public demo's pages send their time on page to its statistics Worker.
+  const stats = originOf(demoStatsTarget(from)?.url);
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
     'script-src': ["'self'", "'wasm-unsafe-eval'"],
@@ -32,7 +35,7 @@ export function contentSecurityPolicy(from: SettingsService = settings): string 
     'img-src': ["'self'", 'data:', 'blob:', 'https:', ...(logo ? [logo] : [])],
     'media-src': ["'self'", 'blob:'],
     'font-src': ["'self'", 'data:'],
-    'connect-src': ["'self'"],
+    'connect-src': ["'self'", ...(stats ? [stats] : [])],
     'frame-src': ["'none'"],
     'worker-src': ["'self'", 'blob:'],
     'object-src': ["'none'"],

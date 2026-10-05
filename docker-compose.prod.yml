@@ -193,6 +193,9 @@ services:
       AUTH_MODE: ${AUTH_MODE:-none}
       # Démo publique (garde-fous, indépendant de AUTH_MODE) — cf. https://quizdock.github.io/docs/operator/configuration/
       DEMO_MODE: ${DEMO_MODE:-false}
+      # The public demo's audience counter (tools/demo-stats); empty: nothing counted.
+      DEMO_STATS_URL: ${DEMO_STATS_URL:-}
+      DEMO_STATS_TOKEN: ${DEMO_STATS_TOKEN:-}
       DATABASE_URL: postgres://${QUIZDOCK_DB_USER:-${POSTGRES_USER:-live}}:${QUIZDOCK_DB_PASSWORD:-${POSTGRES_PASSWORD:-live}}@postgres:5432/${POSTGRES_DB:-quizdock}
       REDIS_URL: redis://redis:6379
       MEDIA_DIR: /data/media

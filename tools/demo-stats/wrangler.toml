@@ -1,0 +1,16 @@
+name = "quizdock-demo-stats"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# The demo's origin: the only one whose pages may send their time on page.
+ALLOWED_ORIGIN = "https://quizdock-standalone.onrender.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "quizdock-demo-stats"
+database_id = "TO-FILL-AFTER-D1-CREATE"
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["5 0 * * *"]
