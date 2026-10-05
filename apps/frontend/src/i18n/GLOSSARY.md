@@ -16,7 +16,7 @@ reference, the others follow its sense, not its words.
 | quiz        | quiz            | quiz                 | quiz                 | 测验          | 測驗          | everywhere                                                                     |
 | my quizzes  | My quizzes      | Mes quiz             | Mis quizzes          | 我的测验      | 我的測驗      | topbar, `/quizzes`                                                             |
 | editor      | Editor          | Éditeur              | Editor               | 编辑器        | 編輯器        | `/quizzes/:id`                                                                 |
-| host        | Host            | Animateur            | Anfitrión            | 主持人        | 主持人        | live                                                                           |
+| host        | Quiz host (role) / host | Animateur            | Anfitrión            | 主持人        | 主持人        | live                                                                           |
 | host seat   | Host seat       | Siège hôte           | Asiento de anfitrión | 主持席位      | 主持席位      | local auth mode                                                                |
 | participant | Participant     | Participant          | Participante         | 参与者        | 參與者        | live, console tab                                                              |
 | nickname    | Nickname        | Pseudo               | Apodo                | 昵称          | 匿稱          | join                                                                           |

@@ -205,7 +205,8 @@
     "conflict": "Şu anda mümkün değil: {{message}}",
     "timeout": "İşlem çok uzun sürdü.",
     "failed": "İşlem başarısız oldu: {{message}}",
-    "too_many_requests": "Çok fazla deneme: biraz bekleyin."
+    "too_many_requests": "Çok fazla deneme: biraz bekleyin.",
+    "demo_read_only": "Bu herkese açık bir demo: yönetim salt okunur gösterilir."
   },
   "setup": {
     "token_invalid": "Bu kurulum belirteci geçerli değil (yanlış, kullanılmış veya süresi dolmuş): `qd setup.token` yenisini verir.",

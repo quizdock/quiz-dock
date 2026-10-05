@@ -1,5 +1,6 @@
 import { access, readFile } from 'node:fs/promises';
 import { liveMotionDefault } from '../game/live-motion';
+import { demoStatsTarget } from '../demo/demo-stats';
 import { join } from 'node:path';
 import { Controller, Get, Header, NotFoundException, Req, Res } from '@nestjs/common';
 import { ApiExcludeEndpoint } from '@nestjs/swagger';
@@ -42,7 +43,10 @@ export class AppConfigController {
     const liveMotion = liveMotionDefault();
     // A reveal's time in auto mode when its question sets none: the editor shows it.
     const autoAdvanceS = Math.round(settings.get(SETTINGS.GAME_AUTO_ADVANCE_MS) / 1000);
+    // The public demo counting its audience: where its pages send their time on page.
+    const stats = demoStatsTarget();
     const config = JSON.stringify({
+      ...(stats ? { demoDurationUrl: `${stats.url}/duration` } : {}),
       appName,
       lang,
       logoUrl,

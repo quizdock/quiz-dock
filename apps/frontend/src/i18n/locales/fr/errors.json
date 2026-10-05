@@ -205,7 +205,8 @@
     "conflict": "Impossible pour le moment : {{message}}",
     "timeout": "L’opération a pris trop de temps.",
     "failed": "L’opération a échoué : {{message}}",
-    "too_many_requests": "Trop de tentatives : patientez un instant."
+    "too_many_requests": "Trop de tentatives : patientez un instant.",
+    "demo_read_only": "C’est une démo publique : l’administration est visible en lecture seule."
   },
   "setup": {
     "token_invalid": "Ce jeton de mise en service n’est pas valide (erroné, utilisé ou expiré) : `qd setup.token` en donne un nouveau.",

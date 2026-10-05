@@ -210,7 +210,7 @@ what is left in the idea box are in [SPECIFICATIONS-MEDIA.md](./SPECIFICATIONS-M
 | P7-FRONT-1 | The **editor** folds what is set once and read rarely; each fold says what it is set to (UI §2.2) |
 
 **Exit criterion**: a question plays its video or sound on the projection and on remote devices, started together,
-at a steady level; tested in Chromium browsers (iPhone still to test, hence *experimental*).
+at a steady level.
 
 ---
 

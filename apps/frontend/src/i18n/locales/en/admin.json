@@ -116,7 +116,8 @@
     "critical": "Critical: never from the web",
     "locked": "Locked by ADMIN_LOCK",
     "scope": "Read only (ADMIN_WEB_SCOPE=read)",
-    "safe-mode": "Safe mode"
+    "safe-mode": "Safe mode",
+    "demo": "Public demo: read only"
   },
   "value": {
     "empty": "—",
@@ -359,7 +360,8 @@
     "not_found": "Not found.",
     "conflict": "Conflict.",
     "timeout": "Took too long.",
-    "failed": "Failed."
+    "failed": "Failed.",
+    "demo_read_only": "Public demo: read only."
   },
   "quizzes": {
     "search": "Search a quiz",
@@ -676,7 +678,7 @@
     "anyRole": "Any role",
     "roles": {
       "admin": "Administrator",
-      "host": "Host",
+      "host": "Quiz host",
       "player": "Participant"
     },
     "none": "No account matches.",
@@ -777,5 +779,6 @@
     "jwks_ok_one": "Signing keys reachable ({{count}} key)",
     "jwks_ok_other": "Signing keys reachable ({{count}} keys)",
     "jwks_failed": "Signing keys {{url}}: {{error}}"
-  }
+  },
+  "demoReadOnly": "Public demo: the administration is shown as it is, and nothing can be changed from it. On your own instance, it is yours."
 }

@@ -208,5 +208,6 @@
   "statusCount_one": "{{count}} estado",
   "statusCount_other": "{{count}} estados",
   "publishToPresent": "Publicar para presentar",
-  "quizActions": "Acciones de «{{title}}»"
+  "quizActions": "Acciones de «{{title}}»",
+  "results": "Resultados"
 }

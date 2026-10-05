@@ -261,7 +261,8 @@
     "backToLobbyTooltip": "Le salon revient à sa salle d’attente, où vous choisissez le quiz suivant",
     "backToLobbyDescription": "Les participants restent dans le salon et se retrouvent dans sa salle d’attente, où vous choisissez le quiz suivant ; personne ne ressaisit le PIN.",
     "noQuizYetHint": "Le salon est revenu à sa salle d’attente : choisissez le quiz qu’il joue ensuite.",
-    "columnRank": "Rang"
+    "columnRank": "Rang",
+    "seeResults": "Voir les résultats"
   },
   "screen": {
     "sessionUnavailable": "Salon indisponible.",

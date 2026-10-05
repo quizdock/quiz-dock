@@ -430,11 +430,13 @@ export class StoreService implements OnModuleInit {
       files[`media/${name}`] = new Uint8Array(await readFile(join(folder, 'media', name)));
     }
     const zip = Buffer.from(zipSync(files, { level: 6 }));
-    return this.portable.importBundle(ownerId, {
-      buffer: zip,
-      mimetype: 'application/zip',
-      originalname: `${id}.quizdock.zip`,
-    });
+    // A demo refuses media uploads, but its catalogue holds only the application's own
+    // templates (sharing is refused there): their media come with the copy.
+    return this.portable.importBundle(
+      ownerId,
+      { buffer: zip, mimetype: 'application/zip', originalname: `${id}.quizdock.zip` },
+      { seeding: isDemoMode() },
+    );
   }
 
   /**

@@ -45,7 +45,9 @@
     "template": "Template",
     "instanceMedia": "Instance media",
     "admin": "Administration",
-    "setup": "Setup"
+    "setup": "Setup",
+    "history": "Sessions",
+    "historyRoom": "Room"
   },
   "demo": {
     "banner": "Public demo — one host account shared by all visitors; everything is wiped every hour."

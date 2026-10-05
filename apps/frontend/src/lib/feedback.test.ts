@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeBrowser, feedbackLinks, starLink } from './feedback';
+import { describeBrowser, docsLink, feedbackLinks, starLink } from './feedback';
 
 const CHROME =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36';
@@ -56,5 +56,16 @@ describe('starLink', () => {
   it('says nothing when the operator points the feedback elsewhere or hides it', () => {
     expect(starLink('https://github.com/acme/quiz')).toBeNull();
     expect(starLink('none')).toBeNull();
+  });
+});
+
+describe('docsLink', () => {
+  it('points to QuizDock’s documentation on the same terms as the star', () => {
+    expect(docsLink(undefined)).toBe('https://quizdock.github.io/docs/');
+    expect(docsLink('https://github.com/quizdock/quiz-dock/')).toBe(
+      'https://quizdock.github.io/docs/',
+    );
+    expect(docsLink('https://github.com/acme/quiz')).toBeNull();
+    expect(docsLink('none')).toBeNull();
   });
 });

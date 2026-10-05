@@ -116,7 +116,8 @@
     "critical": "Critique : jamais depuis le web",
     "locked": "Verrouillé par ADMIN_LOCK",
     "scope": "Lecture seule (ADMIN_WEB_SCOPE=read)",
-    "safe-mode": "Mode sans échec"
+    "safe-mode": "Mode sans échec",
+    "demo": "Démo publique : lecture seule"
   },
   "value": {
     "empty": "—",
@@ -359,7 +360,8 @@
     "not_found": "Introuvable.",
     "conflict": "Conflit.",
     "timeout": "Trop long.",
-    "failed": "Échec."
+    "failed": "Échec.",
+    "demo_read_only": "Démo publique : lecture seule."
   },
   "quizzes": {
     "search": "Chercher un quiz",
@@ -777,5 +779,6 @@
     "jwks_ok_one": "Clés de signature joignables ({{count}} clé)",
     "jwks_ok_other": "Clés de signature joignables ({{count}} clés)",
     "jwks_failed": "Clés de signature {{url}} : {{error}}"
-  }
+  },
+  "demoReadOnly": "Démo publique : l’administration est montrée telle quelle, et rien ne peut y être modifié. Sur votre propre instance, elle est à vous."
 }

@@ -208,5 +208,6 @@
   "statusCount_one": "{{count}} 個狀態",
   "statusCount_other": "{{count}} 個狀態",
   "publishToPresent": "發布後演示",
-  "quizActions": "「{{title}}」的操作"
+  "quizActions": "「{{title}}」的操作",
+  "results": "結果"
 }

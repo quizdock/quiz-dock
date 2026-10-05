@@ -313,7 +313,7 @@ export const SETTINGS = {
   DEMO_MODE: define({
     key: 'DEMO_MODE',
     description:
-      '`true` = public demo guards: every visitor shares one host account (`demo_user`), which holds the host seat without expiry; media uploads are refused, and everything is wiped every hour — a reset waits, at most 3 hours, while a game is played.',
+      '`true` = public demo guards: every visitor shares one host account (`demo_user`), a host and an administrator by grant; the administration is shown read-only, media uploads are refused, and everything is wiped every hour — a reset waits, at most 3 hours, while a game is played.',
     category: 'access',
     criticality: 'C1',
     schema: flag(),
@@ -321,6 +321,32 @@ export const SETTINGS = {
     default: false,
     applies: 'restart',
     overridable: false,
+  }),
+  DEMO_STATS_URL: define({
+    key: 'DEMO_STATS_URL',
+    description:
+      'With `DEMO_MODE=true` and `DEMO_STATS_TOKEN`: where the public demo counts its page views, starts and time on page (the Cloudflare Worker of `tools/demo-stats`), with no cookie and no personal data — a day-salted hash and a country only. Unset, or outside a demo: nothing is counted, nothing leaves.',
+    category: 'access',
+    criticality: 'C1',
+    schema: z.string().transform((raw) => raw.trim().replace(/\/+$/, '')),
+    bounds: z.string().refine((v) => v === '' || isUrl(v, ['https']), 'not an https:// URL'),
+    accepts: 'an https:// URL, no trailing slash',
+    default: '',
+    applies: 'restart',
+    overridable: false,
+  }),
+  DEMO_STATS_TOKEN: define({
+    key: 'DEMO_STATS_TOKEN',
+    description:
+      'The token the demo gives the statistics Worker (`DEMO_STATS_URL`), the same as its `STATS_TOKEN` secret. At least 32 characters.',
+    category: 'access',
+    criticality: 'C1',
+    schema: z.string().min(32, 'shorter than 32 characters'),
+    accepts: 'text, 32 characters or more',
+    default: '',
+    applies: 'restart',
+    overridable: false,
+    secret: true,
   }),
   ALLOW_ANONYMOUS_PARTICIPANTS: define({
     key: 'ALLOW_ANONYMOUS_PARTICIPANTS',

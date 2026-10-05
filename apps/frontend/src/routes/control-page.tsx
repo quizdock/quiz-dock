@@ -47,6 +47,7 @@ import {
   Users,
   Wifi,
   Trash2,
+  ChartColumn,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
@@ -56,7 +57,7 @@ import { Input } from '@/components/ui/input';
 import { Notice } from '@/components/ui/notice';
 import { PageTitle, SectionTitle } from '@/components/ui/page-title';
 import { Popover } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { ReadinessMeter } from '../game/media/readiness-meter';
 import { ConsoleTransport } from '../game/media/console-transport';
@@ -259,7 +260,7 @@ function HostConsole({
     );
   }
   if (view.state === 'ENDED') {
-    return <SessionOver message={t('control.sessionEnded')} />;
+    return <SessionOver message={t('control.sessionEnded')} quizId={view.quizId} />;
   }
 
   // ── The frame (UI system §2.1): the same in every phase ─────────────────────
@@ -347,7 +348,7 @@ function HostConsole({
     </div>
   );
 
-  // Row 1 — where I am, in what state, what I look at.
+  // Row 1 — where I am, in what state; the projection window.
   const rowOne = (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <RecapHeader
@@ -395,11 +396,12 @@ function HostConsole({
       >
         {t(`control.phase.${phase}`)}
       </span>
-      <ViewSwitch tab={tab} onTab={setTab} />
+      {/* The projection window, at the first row's end. */}
+      <div className="ml-auto">{screenButton}</div>
     </div>
   );
 
-  // Row 2 — what I set and how I stop.
+  // Row 2 — what I set; what I look at.
   const rowTwo = (
     <div className="flex flex-wrap items-center gap-2">
       <LockButton locked={view.joinLocked} onToggle={setJoinLocked} />
@@ -411,8 +413,8 @@ function HostConsole({
         on={view.motion ?? appConfig.liveMotion !== false}
         onToggle={(on) => socket?.emit('host:motion', { pin, on })}
       />
-      {/* The projection window, apart from the room's settings: at the row's end. */}
-      <div className="ml-auto">{screenButton}</div>
+      {/* What I look at, at the second row's end. */}
+      <ViewSwitch tab={tab} onTab={setTab} />
     </div>
   );
 
@@ -1256,11 +1258,30 @@ function AutoAdvanceCountdown({ deadline, totalMs }: { deadline: number; totalMs
 
 /** Barre de progression générique (piste neutre + remplissage coloré animé). */
 /** Where the console has nothing left to run: why, and the way back to the quizzes. */
-function SessionOver({ message, muted = false }: { message: string; muted?: boolean }) {
+function SessionOver({
+  message,
+  muted = false,
+  quizId,
+}: {
+  message: string;
+  muted?: boolean;
+  /** The quiz just played: its results come first once the room is closed. */
+  quizId?: string | null;
+}) {
   const { t } = useTranslation('live');
   return (
     <section className="flex flex-col items-center gap-4 py-16 text-center">
       <p className={muted ? 'text-muted-foreground' : 'text-xl font-semibold'}>{message}</p>
+      {quizId ? (
+        <Link
+          to="/quizzes/$quizId/history"
+          params={{ quizId }}
+          className={cn(buttonVariants({ variant: 'default' }))}
+        >
+          <ChartColumn className="size-4" />
+          {t('control.seeResults')}
+        </Link>
+      ) : null}
       <Link to="/quizzes" className="underline">
         {t('control.backToQuizzes')}
       </Link>

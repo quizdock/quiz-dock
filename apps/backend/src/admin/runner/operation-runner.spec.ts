@@ -190,6 +190,19 @@ describe('OperationRunner', () => {
       });
     });
 
+    it('a public demo: the web reads everything and changes nothing, media included', async () => {
+      const { run } = setup({ ...WRITE_ENV, DEMO_MODE: 'true' });
+      expect(await run({ id: 'thing.read' })).toMatchObject({ kind: 'result' });
+      expect(await run({ id: 'thing.write', raw: { key: 'APP_NAME' } })).toMatchObject({
+        code: 'demo_read_only',
+      });
+      expect(await run({ id: 'media.write' })).toMatchObject({ code: 'demo_read_only' });
+      // The CLI stays the operator's.
+      expect(await run({ id: 'thing.write', raw: { key: 'APP_NAME' }, actor: CLI })).toMatchObject({
+        kind: 'result',
+      });
+    });
+
     it('ADMIN_LOCK freezes the variables it names, for the web', async () => {
       const { run } = setup({ ...WRITE_ENV, ADMIN_LOCK: 'app_name, LIVE_MOTION' });
       expect(await run({ id: 'thing.write', raw: { key: 'APP_NAME' } })).toMatchObject({

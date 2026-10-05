@@ -66,7 +66,12 @@
       "exportCsv": "Exporter le classement (CSV)",
       "csvFilename": "salon",
       "defaultName": "Salon de {{host}}"
-    }
+    },
+    "notPlayed": "Non jouée",
+    "statQuestionsPlayed_one": "{{count}} question jouée sur {{total}}",
+    "statQuestionsPlayed_other": "{{count}} questions jouées sur {{total}}",
+    "statSuccessOf_one": "{{count}} bonne réponse sur {{total}}",
+    "statSuccessOf_other": "{{count}} bonnes réponses sur {{total}}"
   },
   "player": {
     "notFound": "Participant introuvable.",
@@ -95,5 +100,14 @@
       "no": "non",
       "filenameLabel": "participant"
     }
+  },
+  "gatherings": {
+    "title": "Séances",
+    "intro": "Ce que vous avez joué, salon par salon : un salon qui a enchaîné plusieurs quiz tient sur une ligne, son classement sur une page ; un quiz joué seul mène à son bilan.",
+    "none": "Rien de joué pour l’instant : présentez un quiz, ses résultats arrivent ici.",
+    "thRoom": "Salon",
+    "thQuizzes": "Quiz",
+    "alone": "Un quiz seul",
+    "back": "Séances"
   }
 }

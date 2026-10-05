@@ -14,6 +14,7 @@ export type SessionDetailDtoQuestionsItem = {
   orderIndex: number;
   prompt: string;
   type: string;
+  played: boolean;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
@@ -24,7 +25,8 @@ export type SessionDetailDtoQuestionsItem = {
      * @maximum 9007199254740991
      */
   correctCount: number;
-  successRate: number;
+  /** @nullable */
+  successRate: number | null;
   /** @nullable */
   avgResponseMs: number | null;
 };

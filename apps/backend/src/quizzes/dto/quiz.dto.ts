@@ -29,6 +29,8 @@ export const quizSchema = z.object({
   editable: z.boolean().optional(),
   /** Nom du propriétaire — un quiz d'un autre (partagé, ou la vue d'un gestionnaire, RG-14). */
   ownerName: z.string().optional(),
+  /** Its sessions kept (their results): on the library's list only. */
+  sessionCount: z.number().int().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
   archivedAt: z.string().nullable(),

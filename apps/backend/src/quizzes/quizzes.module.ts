@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MediaModule } from '../media/media.module';
+import { HistoryController } from './history.controller';
 import { QuizzesController } from './quizzes.controller';
 import { QuizPortableService } from './portable/quiz-portable.service';
 import { QuizPublicationService } from './portable/quiz-publication.service';
@@ -10,7 +11,7 @@ import { QuizValidationController } from './quiz-validation.controller';
 
 @Module({
   imports: [MediaModule],
-  controllers: [QuizValidationController, QuizzesController],
+  controllers: [QuizValidationController, QuizzesController, HistoryController],
   providers: [QuizzesService, SampleQuizzesService, QuizPortableService, QuizPublicationService],
   exports: [SampleQuizzesService, QuizPortableService, QuizzesService],
 })

@@ -205,7 +205,8 @@
     "conflict": "目前無法執行：{{message}}",
     "timeout": "操作耗時過長。",
     "failed": "操作失敗：{{message}}",
-    "too_many_requests": "嘗試次數過多：請稍候。"
+    "too_many_requests": "嘗試次數過多：請稍候。",
+    "demo_read_only": "這是公開示範：管理介面僅供檢視。"
   },
   "setup": {
     "token_invalid": "此初始設定權杖無效（錯誤、已使用或已逾期）：執行 `qd setup.token` 取得新權杖。",

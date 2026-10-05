@@ -287,6 +287,46 @@ describe('SessionArchiveService', () => {
     expect(answerCreateMany).not.toHaveBeenCalled();
   });
 
+  it('a quiz stopped after its first question archives that question only', async () => {
+    const players = {
+      p1: JSON.stringify({
+        nickname: 'Alice',
+        userId: null,
+        score: 1000,
+        streak: 1,
+        connected: true,
+        joinedAt: 1,
+        latencyMs: 0,
+      }),
+    };
+    const answers = {
+      p1: JSON.stringify({
+        answer: 'optA',
+        isCorrect: true,
+        pointsAwarded: 1000,
+        tMs: 1200,
+        receivedAt: 1000,
+      }),
+    };
+    const first = snapshot.questions[0];
+    snapshot.questions.push(
+      { ...first, id: 'qst2', orderIndex: 1 },
+      { ...first, id: 'qst3', orderIndex: 2 },
+    );
+    try {
+      const { prisma, questionCreateMany } = buildPrisma();
+      await archiveWith(prisma, buildRedis(players, answers)).archive(
+        PIN,
+        { ...meta, currentIndex: 0, totalQuestions: 3 },
+        { interrupted: true },
+      );
+      const rows = questionCreateMany.mock.calls[0][0].data as { orderIndex: number }[];
+      expect(rows.map((r) => r.orderIndex)).toEqual([0]);
+    } finally {
+      snapshot.questions.splice(1);
+    }
+  });
+
   it('personalised tracking off (RG-16): aggregates and summary only', async () => {
     const players = {
       p1: JSON.stringify({
