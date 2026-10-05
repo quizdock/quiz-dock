@@ -66,7 +66,12 @@
       "exportCsv": "Export standings (CSV)",
       "csvFilename": "room",
       "defaultName": "{{host}}'s room"
-    }
+    },
+    "notPlayed": "Not played",
+    "statQuestionsPlayed_one": "{{count}} question played of {{total}}",
+    "statQuestionsPlayed_other": "{{count}} questions played of {{total}}",
+    "statSuccessOf_one": "{{count}} right answer of {{total}}",
+    "statSuccessOf_other": "{{count}} right answers of {{total}}"
   },
   "player": {
     "notFound": "Player not found.",
@@ -95,5 +100,14 @@
       "no": "no",
       "filenameLabel": "player"
     }
+  },
+  "gatherings": {
+    "title": "Sessions",
+    "intro": "What you played, room by room: a room that played several quizzes is one line, its standings one page; a quiz played alone leads to its report.",
+    "none": "Nothing played yet: present a quiz, its results come here.",
+    "thRoom": "Room",
+    "thQuizzes": "Quizzes",
+    "alone": "A quiz alone",
+    "back": "Sessions"
   }
 }

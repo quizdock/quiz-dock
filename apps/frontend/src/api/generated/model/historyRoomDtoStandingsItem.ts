@@ -6,27 +6,38 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type SessionDetailDtoQuestionsItem = {
+export type HistoryRoomDtoStandingsItem = {
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
-  orderIndex: number;
-  prompt: string;
-  type: string;
-  played: boolean;
+  rank: number;
+  nickname: string;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
-  answerCount: number;
+  score: number;
   /**
      * @minimum -9007199254740991
      * @maximum 9007199254740991
      */
   correctCount: number;
-  /** @nullable */
-  successRate: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  answeredCount: number;
   /** @nullable */
   avgResponseMs: number | null;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  maxStreak: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  quizzes: number;
 };

@@ -173,6 +173,21 @@ export const sessionDetailRoute = createRoute({
   component: lazyRouteComponent(() => import('./routes/sessions-page'), 'SessionDetailPage'),
 });
 
+// The history by gathering: one line per room (several quizzes), or per quiz played alone.
+export const historyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/history',
+  beforeLoad: requireAuth,
+  component: lazyRouteComponent(() => import('./routes/history-page'), 'HistoryPage'),
+});
+
+export const historyRoomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/history/$roomId',
+  beforeLoad: requireAuth,
+  component: lazyRouteComponent(() => import('./routes/history-page'), 'HistoryRoomPage'),
+});
+
 // « Le quiz vu par un participant » (§2.10) : réponses question par question.
 export const sessionPlayerRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -357,6 +372,8 @@ export const adminMediaRoute = createRoute({
 });
 
 export const routeTree = rootRoute.addChildren([
+  historyRoute,
+  historyRoomRoute,
   indexRoute,
   loginRoute,
   callbackRoute,

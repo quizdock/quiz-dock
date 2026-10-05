@@ -208,5 +208,6 @@
   "statusCount_one": "{{count}} durum",
   "statusCount_other": "{{count}} durum",
   "publishToPresent": "Sunmak için yayımla",
-  "quizActions": "“{{title}}” için işlemler"
+  "quizActions": "“{{title}}” için işlemler",
+  "results": "Sonuçlar"
 }

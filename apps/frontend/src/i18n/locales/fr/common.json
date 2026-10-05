@@ -45,7 +45,9 @@
     "template": "Modèle",
     "instanceMedia": "Médias de l’instance",
     "admin": "Administration",
-    "setup": "Mise en service"
+    "setup": "Mise en service",
+    "history": "Séances",
+    "historyRoom": "Salon"
   },
   "demo": {
     "banner": "Démo publique — un seul compte animateur partagé par tous les visiteurs ; tout est effacé chaque heure."

@@ -37,6 +37,22 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('Histoire')).toBeInTheDocument();
   });
 
+  it('a quiz played: its results one click away on its card; not played, no button', async () => {
+    mockApi([
+      {
+        method: 'GET',
+        path: '/quizzes',
+        body: [
+          quiz({ id: 'q1', title: 'Histoire', status: 'ready', sessionCount: 2 }),
+          quiz({ id: 'q2', title: 'Géo', status: 'ready', sessionCount: 0 }),
+        ],
+      },
+    ]);
+    renderApp('/quizzes');
+    await screen.findByText('Histoire');
+    expect(screen.getAllByRole('button', { name: 'Résultats' })).toHaveLength(1);
+  });
+
   it('a quiz another host shares: a lock, read-only, and « Créer un quiz à partir de ceci »', async () => {
     const fetchMock = mockApi([
       {

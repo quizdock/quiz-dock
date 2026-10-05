@@ -72,7 +72,13 @@ export class SessionArchiveService {
         answersByIndex,
         now,
       );
-      const questionStats = this.buildQuestionStats(snapshot, answersByIndex);
+      // A quiz stopped mid-way: only the questions shown so far, not the ones never reached.
+      const lastShown = opts.interrupted
+        ? Math.max(meta.currentIndex, 0)
+        : snapshot.questions.length - 1;
+      const questionStats = this.buildQuestionStats(snapshot, answersByIndex).filter(
+        (s) => s.orderIndex <= lastShown,
+      );
       const playerAgg = this.aggregatePlayers(ranked, snapshot, answersByIndex);
 
       await this.prisma.$transaction(async (tx) => {

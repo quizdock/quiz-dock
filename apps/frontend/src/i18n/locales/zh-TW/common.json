@@ -45,7 +45,9 @@
     "template": "範本",
     "instanceMedia": "實例媒體",
     "admin": "管理",
-    "setup": "初始設定"
+    "setup": "初始設定",
+    "history": "場次",
+    "historyRoom": "房間"
   },
   "demo": {
     "banner": "公開示範——所有訪客共用一個主持人帳號；每小時清空一次。"

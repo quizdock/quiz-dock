@@ -37,9 +37,12 @@ export const sessionQuestionStatSchema = z.object({
   orderIndex: z.number().int(),
   prompt: z.string(),
   type: z.string(),
+  /** Shown in the session; false for the questions a stopped quiz never reached. */
+  played: z.boolean(),
   answerCount: z.number().int(),
   correctCount: z.number().int(),
-  successRate: z.number(),
+  /** 0..1 over its answers; null when not played. */
+  successRate: z.number().nullable(),
   avgResponseMs: z.number().nullable(),
 });
 
@@ -92,11 +95,34 @@ export const sessionRoomSchema = z.object({
   standings: z.array(roomStandingSchema).nullable(),
 });
 
+/** A gathering in the history: one room and the quizzes played in it, or one quiz played alone. */
+export const historyRoomSchema = z.object({
+  /** The room, when it kept two quizzes or more (its own page); null = one quiz alone. */
+  roomId: z.string().nullable(),
+  /** The room's own name; null = the default ("<host>'s room"). */
+  name: z.string().nullable(),
+  hostName: z.string(),
+  startedAt: z.string(),
+  endedAt: z.string(),
+  /** The most participants any of its quizzes had. */
+  playerCount: z.number().int(),
+  /** Its quizzes, in the order they were played. */
+  sessions: z.array(
+    z.object({ id: z.string(), quizId: z.string(), quizTitle: z.string(), startedAt: z.string() }),
+  ),
+});
+
+export const historyListSchema = z.object({ rooms: z.array(historyRoomSchema) });
+export class HistoryListDto extends createZodDto(historyListSchema) {}
+export class HistoryRoomDto extends createZodDto(sessionRoomSchema) {}
+
 /** Détail d'une session : résumé + agrégats par question + résultats par participant. */
 export const sessionDetailSchema = sessionSummarySchema.extend({
   quizTitle: z.string(),
   language: z.string(),
   totalQuestions: z.number().int(),
+  /** The questions shown, out of `totalQuestions`. */
+  playedQuestions: z.number().int(),
   questions: z.array(sessionQuestionStatSchema),
   players: z.array(sessionPlayerResultSchema),
   /** Null when the session was played alone (or its room kept only it). */

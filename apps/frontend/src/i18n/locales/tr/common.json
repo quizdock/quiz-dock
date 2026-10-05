@@ -45,7 +45,9 @@
     "template": "Şablon",
     "instanceMedia": "Kurulum medyası",
     "admin": "Yönetim",
-    "setup": "İlk ayarlar"
+    "setup": "İlk ayarlar",
+    "history": "Oturumlar",
+    "historyRoom": "Oda"
   },
   "demo": {
     "banner": "Herkese açık demo — tüm ziyaretçiler aynı sunucu hesabını paylaşır; veriler her saat silinir."

@@ -45,7 +45,9 @@
     "template": "Plantilla",
     "instanceMedia": "Medios de la instancia",
     "admin": "Administración",
-    "setup": "Puesta en marcha"
+    "setup": "Puesta en marcha",
+    "history": "Sesiones",
+    "historyRoom": "Sala"
   },
   "demo": {
     "banner": "Demo pública — una sola cuenta de anfitrión compartida por todos los visitantes; todo se borra cada hora."

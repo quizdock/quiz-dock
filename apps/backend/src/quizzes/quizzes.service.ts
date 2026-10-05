@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
+import { Prisma, type Quiz, QuizStatus, SessionStatus } from '@prisma/client';
 import { isManager, type RoleSet } from '../auth/roles';
 import { livePinOf } from '../game/game.keys';
 import { MediaService } from '../media/media.service';
@@ -49,16 +49,21 @@ export class QuizzesService {
   async list(user: {
     id: string;
     roles: RoleSet;
-  }): Promise<(Quiz & { ownerName?: string; editable: boolean })[]> {
+  }): Promise<(Quiz & { ownerName?: string; editable: boolean; sessionCount: number })[]> {
     const manager = isManager(user.roles);
     const rows = await this.prisma.quiz.findMany({
       where: manager ? {} : readableBy(user.id),
       orderBy: { createdAt: 'desc' },
-      include: { owner: { select: { displayName: true } } },
+      include: {
+        owner: { select: { displayName: true } },
+        // Its sessions kept: the library leads to their results.
+        _count: { select: { sessionLogs: true } },
+      },
     });
     // Le nom du propriétaire n'a de sens que pour le quiz d'un autre : un hôte qui
     // lit sa banque n'a pas besoin qu'on lui rappelle que tout est à lui.
-    return rows.map(({ owner, ...quiz }) => {
+    return rows.map(({ owner, _count, ...row }) => {
+      const quiz = { ...row, sessionCount: _count.sessionLogs };
       const editable = quiz.ownerId === user.id;
       return manager || !editable
         ? { ...quiz, editable, ownerName: owner.displayName }
@@ -197,6 +202,58 @@ export class QuizzesService {
    * every one of them tracked its participants (RG-16). Null for a session
    * played alone, or whose room kept only it.
    */
+  /**
+   * The history by gathering: the archived sessions grouped by the room they were
+   * played in, the latest first; a session played alone is a gathering of its own.
+   */
+  async history(user: { id: string; roles: RoleSet }) {
+    const rows = await this.prisma.gameSessionLog.findMany({
+      where: { quiz: { ownerId: this.scopeOf(user) } },
+      orderBy: { startedAt: 'asc' },
+      select: {
+        id: true,
+        quizId: true,
+        roomId: true,
+        roomName: true,
+        startedAt: true,
+        endedAt: true,
+        playerCount: true,
+        quizSnapshot: true,
+        host: { select: { displayName: true } },
+      },
+    });
+    const groups = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const key = row.roomId ?? `alone:${row.id}`;
+      groups.set(key, [...(groups.get(key) ?? []), row]);
+    }
+    const rooms = [...groups.values()].map((sessions) => {
+      const last = sessions[sessions.length - 1];
+      return {
+        roomId: sessions.length > 1 ? last.roomId : null,
+        name: last.roomName,
+        hostName: sessions[0].host.displayName,
+        startedAt: sessions[0].startedAt.toISOString(),
+        endedAt: new Date(Math.max(...sessions.map((s) => s.endedAt.getTime()))).toISOString(),
+        playerCount: Math.max(...sessions.map((s) => s.playerCount)),
+        sessions: sessions.map((s) => ({
+          id: s.id,
+          quizId: s.quizId,
+          quizTitle: ((s.quizSnapshot ?? {}) as { title?: string }).title ?? '',
+          startedAt: s.startedAt.toISOString(),
+        })),
+      };
+    });
+    return { rooms: rooms.sort((a, b) => b.startedAt.localeCompare(a.startedAt)) };
+  }
+
+  /** A room of the history: its quizzes and its standings (404 when not the caller's). */
+  async historyRoom(user: { id: string; roles: RoleSet }, roomId: string) {
+    const room = await this.roomOf(roomId, this.scopeOf(user), '');
+    if (!room) throw new NotFoundException('session.not_found');
+    return room;
+  }
+
   private async roomOf(roomId: string | null, ownerId: string | undefined, current: string) {
     if (!roomId) return null;
     const sessions = await this.prisma.gameSessionLog.findMany({
@@ -264,21 +321,24 @@ export class QuizzesService {
     };
     const byIndex = new Map((snap.questions ?? []).map((q) => [q.orderIndex, q]));
     const room = await this.roomOf(row.roomId, ownerId, row.id);
+    const questions = playedQuestions(row, snap.questions ?? []).map(({ orderIndex, stat }) => ({
+      orderIndex,
+      prompt: byIndex.get(orderIndex)?.prompt ?? `Question ${orderIndex + 1}`,
+      type: byIndex.get(orderIndex)?.type ?? 'unknown',
+      played: stat !== null,
+      answerCount: stat?.answerCount ?? 0,
+      correctCount: stat?.correctCount ?? 0,
+      successRate: stat ? Number(stat.successRate) : null,
+      avgResponseMs: stat?.avgResponseMs ?? null,
+    }));
     return {
       ...toSessionSummary(row, room?.sessions.length ?? null),
       room,
       quizTitle: snap.title ?? '',
       language: row.language,
-      totalQuestions: row.questionStats.length,
-      questions: row.questionStats.map((s) => ({
-        orderIndex: s.orderIndex,
-        prompt: byIndex.get(s.orderIndex)?.prompt ?? `Question ${s.orderIndex + 1}`,
-        type: byIndex.get(s.orderIndex)?.type ?? 'unknown',
-        answerCount: s.answerCount,
-        correctCount: s.correctCount,
-        successRate: Number(s.successRate),
-        avgResponseMs: s.avgResponseMs,
-      })),
+      totalQuestions: questions.length,
+      playedQuestions: questions.filter((q) => q.played).length,
+      questions,
       players: row.playerResults.map((p) => ({
         id: p.id,
         nickname: p.nickname,
@@ -676,4 +736,43 @@ function copySuffix(language: string): string {
   const base = language.split('-')[0];
   if (language === 'zh-TW' || base === 'zh') return '（副本）';
   return { fr: '(copie)', es: '(copia)' }[base] ?? '(copy)';
+}
+
+type QuestionStatRow = {
+  orderIndex: number;
+  answerCount: number;
+  correctCount: number;
+  successRate: Prisma.Decimal;
+  avgResponseMs: number | null;
+};
+
+/**
+ * Every question of the session's quiz, with its statistics when it was shown. A quiz
+ * stopped mid-way archives only the questions shown; an archive made before that kept
+ * one row per question, so in a stopped session the rows with no answer past the last
+ * answered question are the questions never shown.
+ */
+export function playedQuestions(
+  row: { status: SessionStatus; questionStats: QuestionStatRow[] },
+  snapshot: Array<{ orderIndex: number }>,
+): { orderIndex: number; stat: QuestionStatRow | null }[] {
+  const byIndex = new Map(row.questionStats.map((s) => [s.orderIndex, s]));
+  const lastAnswered = Math.max(
+    -1,
+    ...row.questionStats.filter((s) => s.answerCount > 0).map((s) => s.orderIndex),
+  );
+  const indexes = snapshot.length
+    ? snapshot.map((q) => q.orderIndex)
+    : row.questionStats.map((s) => s.orderIndex);
+  return [...indexes]
+    .sort((a, b) => a - b)
+    .map((orderIndex) => {
+      const stat = byIndex.get(orderIndex) ?? null;
+      const neverShown =
+        row.status === SessionStatus.interrupted &&
+        stat !== null &&
+        stat.answerCount === 0 &&
+        orderIndex > lastAnswered;
+      return { orderIndex, stat: neverShown ? null : stat };
+    });
 }

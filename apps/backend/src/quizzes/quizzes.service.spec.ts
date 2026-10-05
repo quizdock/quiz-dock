@@ -1,10 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { type Quiz, QuizStatus, UserRole } from '@prisma/client';
+import { Prisma, type Quiz, QuizStatus, SessionStatus, UserRole } from '@prisma/client';
 import type { MediaService } from '../media/media.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { updateQuizSchema } from './dto/update-quiz.dto';
-import { QuizzesService } from './quizzes.service';
+import { playedQuestions, QuizzesService } from './quizzes.service';
 
 /** L'appelant, côté hôte : un id et un rôle (RG-14). */
 const HOST = { id: 'owner-1', roles: [UserRole.host] };
@@ -108,12 +108,20 @@ describe('QuizzesService', () => {
 
     it("a quiz another host shares: listed read-only, with its owner, copied to make it one's own", async () => {
       prisma.quiz.findMany.mockResolvedValue([
-        { id: 'mine', ownerId: OWNER, owner: { displayName: 'Me' } },
-        { id: 'theirs', ownerId: 'other', shared: true, owner: { displayName: 'Alice' } },
+        { id: 'mine', ownerId: OWNER, owner: { displayName: 'Me' }, _count: { sessionLogs: 0 } },
+        {
+          id: 'theirs',
+          ownerId: 'other',
+          shared: true,
+          owner: { displayName: 'Alice' },
+          _count: { sessionLogs: 0 },
+        },
       ]);
       const rows = await service.list(HOST);
       expect(rows[0]).toMatchObject({ editable: true });
       expect(rows[0]).not.toHaveProperty('ownerName');
+      // Its sessions kept, for the library to lead to their results.
+      expect(rows[0]).toMatchObject({ sessionCount: 0 });
       expect(rows[1]).toMatchObject({ editable: false, ownerName: 'Alice' });
       // Its copy: looked for among what the host reads.
       prisma.quiz.findFirst.mockResolvedValue(null);
@@ -139,8 +147,8 @@ describe('QuizzesService', () => {
 
     it('un gestionnaire voit toute l’instance, avec le propriétaire de chaque quiz', async () => {
       prisma.quiz.findMany.mockResolvedValue([
-        { id: 'q1', title: 'A', owner: { displayName: 'Alice' } },
-        { id: 'q2', title: 'B', owner: { displayName: 'Bob' } },
+        { id: 'q1', title: 'A', owner: { displayName: 'Alice' }, _count: { sessionLogs: 0 } },
+        { id: 'q2', title: 'B', owner: { displayName: 'Bob' }, _count: { sessionLogs: 0 } },
       ]);
       const rows = await service.list({ id: 'admin-1', roles: [UserRole.admin] });
       // Aucun filtre de propriétaire : c'est la vue d'ensemble (RG-14).
@@ -150,7 +158,7 @@ describe('QuizzesService', () => {
 
     it('un hôte ne se voit pas rappeler que ses quiz sont à lui', async () => {
       prisma.quiz.findMany.mockResolvedValue([
-        { id: 'q1', ownerId: HOST.id, owner: { displayName: 'Alice' } },
+        { id: 'q1', ownerId: HOST.id, owner: { displayName: 'Alice' }, _count: { sessionLogs: 0 } },
       ]);
       const rows = await service.list(HOST);
       expect(rows[0]).not.toHaveProperty('ownerName');
@@ -721,5 +729,77 @@ describe('QuizzesService', () => {
     await service.remove(OWNER, 'q1');
     expect(prisma.quiz.delete).toHaveBeenCalled();
     expect(released()).toEqual(['B', 'C', 'I', 'P', 'S', 'V'].map(m));
+  });
+});
+
+describe('playedQuestions', () => {
+  const stat = (orderIndex: number, answerCount: number) => ({
+    orderIndex,
+    answerCount,
+    correctCount: answerCount,
+    successRate: new Prisma.Decimal(answerCount ? 1 : 0),
+    avgResponseMs: answerCount ? 1000 : null,
+  });
+  const quiz = [0, 1, 2].map((orderIndex) => ({ orderIndex }));
+
+  it('a stopped quiz archived now: the questions with no row were never shown', () => {
+    const out = playedQuestions(
+      { status: SessionStatus.interrupted, questionStats: [stat(0, 3)] },
+      quiz,
+    );
+    expect(out.map((q) => q.stat !== null)).toEqual([true, false, false]);
+  });
+
+  it('an older archive of a stopped quiz: the rows past the last answered one were never shown', () => {
+    const out = playedQuestions(
+      { status: SessionStatus.interrupted, questionStats: [stat(0, 3), stat(1, 0), stat(2, 0)] },
+      quiz,
+    );
+    expect(out.map((q) => q.stat !== null)).toEqual([true, false, false]);
+  });
+
+  it('a quiz played to its end: a question nobody answered was still shown', () => {
+    const out = playedQuestions(
+      { status: SessionStatus.ended, questionStats: [stat(0, 3), stat(1, 0), stat(2, 2)] },
+      quiz,
+    );
+    expect(out.map((q) => q.stat !== null)).toEqual([true, true, true]);
+  });
+});
+
+describe('history by gathering', () => {
+  const session = (id: string, roomId: string | null, startedAt: string, playerCount = 3) => ({
+    id,
+    quizId: `quiz-${id}`,
+    roomId,
+    roomName: null,
+    startedAt: new Date(startedAt),
+    endedAt: new Date(new Date(startedAt).getTime() + 600_000),
+    playerCount,
+    quizSnapshot: { title: `Quiz ${id}` },
+    host: { displayName: 'Marc' },
+  });
+
+  it('groups the sessions by room, the latest gathering first; a quiz alone is its own line', async () => {
+    const prisma = {
+      gameSessionLog: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            session('a', 'room-1', '2026-10-01T09:00:00Z', 20),
+            session('b', 'room-1', '2026-10-01T09:20:00Z', 22),
+            session('c', null, '2026-10-02T10:00:00Z'),
+            session('d', 'room-2', '2026-10-03T08:00:00Z'),
+          ]),
+      },
+    } as unknown as PrismaService;
+    const service = new QuizzesService(prisma, {} as RedisService, {} as MediaService);
+    const { rooms } = await service.history({ id: 'u1', roles: [UserRole.host] });
+    expect(rooms.map((r) => [r.roomId, r.sessions.map((s) => s.id)])).toEqual([
+      [null, ['d']],
+      [null, ['c']],
+      ['room-1', ['a', 'b']],
+    ]);
+    expect(rooms[2]).toMatchObject({ playerCount: 22, hostName: 'Marc' });
   });
 });

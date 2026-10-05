@@ -42,6 +42,11 @@ export interface QuizImportDto {
   shared: boolean;
   editable?: boolean;
   ownerName?: string;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  sessionCount?: number;
   createdAt: string;
   updatedAt: string;
   /** @nullable */

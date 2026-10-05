@@ -138,7 +138,7 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
   the devices of **remote participants** (who hears what is set per quiz, per question and
   per session), started on the same instant everywhere, fetched ahead from the lobby, and
   the room waits a moment for a device still loading. *Listen first* questions open the
-  answers only once the media has played. Tested in Chromium browsers, not yet on iPhone:
+  answers only once the media has played:
   [media](https://quizdock.github.io/docs/host/media/).
 - **A media library** — drop any image, video or sound your browser reads: it is
   converted **in the browser** to one format per kind (WebP, MP4 H.264/AAC, M4A) and

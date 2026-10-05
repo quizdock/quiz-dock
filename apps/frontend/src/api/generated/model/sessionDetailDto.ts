@@ -38,6 +38,11 @@ export interface SessionDetailDto {
      * @maximum 9007199254740991
      */
   totalQuestions: number;
+  /**
+     * @minimum -9007199254740991
+     * @maximum 9007199254740991
+     */
+  playedQuestions: number;
   questions: SessionDetailDtoQuestionsItem[];
   players: SessionDetailDtoPlayersItem[];
   /** @nullable */

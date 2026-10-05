@@ -261,7 +261,8 @@
     "backToLobbyTooltip": "La sala vuelve a su lobby, donde eliges el siguiente quiz",
     "backToLobbyDescription": "Los participantes se quedan en la sala y se reencuentran en su lobby, donde eliges el siguiente quiz; nadie vuelve a escribir el PIN.",
     "noQuizYetHint": "La sala ha vuelto a su lobby: elige el quiz que juega a continuación.",
-    "columnRank": "Posición"
+    "columnRank": "Posición",
+    "seeResults": "Ver los resultados"
   },
   "screen": {
     "sessionUnavailable": "Sala no disponible.",
