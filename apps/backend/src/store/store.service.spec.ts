@@ -120,9 +120,24 @@ describe('StoreService', () => {
     const copy = await service.take(bob.id, entry.id);
 
     expect(copy).toMatchObject({ id: 'copy-1' });
-    const [ownerId, file] = (portable.importBundle as jest.Mock).mock.calls[0];
+    const [ownerId, file, options] = (portable.importBundle as jest.Mock).mock.calls[0];
     expect(ownerId).toBe('u2');
     expect(file.buffer.length).toBeGreaterThan(0);
+    expect(options).toEqual({ seeding: false });
+  });
+
+  it("on a demo, a template is copied with its media (the application's own)", async () => {
+    const { service, portable } = makeService();
+    const entry = await service.share(alice, 'q1');
+    const before = process.env.DEMO_MODE;
+    process.env.DEMO_MODE = 'true';
+    try {
+      await service.take(bob.id, entry.id);
+    } finally {
+      if (before === undefined) delete process.env.DEMO_MODE;
+      else process.env.DEMO_MODE = before;
+    }
+    expect((portable.importBundle as jest.Mock).mock.calls[0][2]).toEqual({ seeding: true });
   });
 
   it('withdrawing: the author or an admin, and the copies are never touched', async () => {
