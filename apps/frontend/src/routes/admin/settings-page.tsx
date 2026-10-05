@@ -28,6 +28,7 @@ import {
   WEB_CHANGES_DOC,
 } from './settings-model';
 import { useStoredChoice } from '@/lib/use-stored-choice';
+import { getDemo } from '../../config';
 
 export type SettingsView = 'cards' | 'split' | 'table';
 const VIEWS: SettingsView[] = ['cards', 'split', 'table'];
@@ -84,7 +85,8 @@ export function SettingsPage({
   return (
     <div className="flex flex-col gap-4">
       {list.isError ? <StaleNotice onRetry={() => void list.refetch()} /> : null}
-      <AccessBanner access={data.access} />
+      {/* A public demo says so once, above: no scope or token to explain. */}
+      {getDemo() ? null : <AccessBanner access={data.access} />}
       {data.rules.length ? (
         <Notice role="status">
           <p className="font-medium">{t('settings.rules')}</p>

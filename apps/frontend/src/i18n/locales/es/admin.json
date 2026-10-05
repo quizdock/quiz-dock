@@ -116,7 +116,8 @@
     "critical": "Crítico: nunca desde la web",
     "locked": "Bloqueado por ADMIN_LOCK",
     "scope": "Solo lectura (ADMIN_WEB_SCOPE=read)",
-    "safe-mode": "Modo seguro"
+    "safe-mode": "Modo seguro",
+    "demo": "Demo pública: solo lectura"
   },
   "value": {
     "empty": "—",
@@ -359,7 +360,8 @@
     "not_found": "No encontrado.",
     "conflict": "Conflicto.",
     "timeout": "Tardó demasiado.",
-    "failed": "Error."
+    "failed": "Error.",
+    "demo_read_only": "Demo pública: solo lectura."
   },
   "quizzes": {
     "search": "Buscar un quiz",
@@ -777,5 +779,6 @@
     "jwks_ok_one": "Claves de firma accesibles ({{count}} clave)",
     "jwks_ok_other": "Claves de firma accesibles ({{count}} claves)",
     "jwks_failed": "Claves de firma {{url}}: {{error}}"
-  }
+  },
+  "demoReadOnly": "Demo pública: la administración se muestra tal cual y no se puede cambiar nada desde ella. En tu propia instancia, es tuya."
 }

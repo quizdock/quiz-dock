@@ -5,6 +5,7 @@ import { RedisService } from '../../redis/redis.service';
 import { AUDIT_REPOSITORY } from '../admin.tokens';
 import type { AuditRepository } from '../audit/audit.repository';
 import { OverridesService } from '../settings/overrides.service';
+import { isDemoMode } from '../../demo/demo.config';
 
 /** How long a setup token stays valid, unused (§3.10). */
 export const SETUP_TOKEN_TTL_MS = 24 * 60 * 60_000;
@@ -54,6 +55,8 @@ export class SetupService {
   ) {}
 
   async completed(): Promise<boolean> {
+    // A public demo is set up by its configuration: no wizard, no token in the logs.
+    if (isDemoMode()) return true;
     return (await this.overrides.flag('completed')) !== null;
   }
 

@@ -10,6 +10,7 @@ const STATUS: Record<RefusalCode, number> = {
   forbidden: HttpStatus.FORBIDDEN,
   scope_read: HttpStatus.FORBIDDEN,
   local_mode_token: HttpStatus.FORBIDDEN,
+  demo_read_only: HttpStatus.FORBIDDEN,
   locked: HttpStatus.FORBIDDEN,
   critical: HttpStatus.FORBIDDEN,
   invalid_params: HttpStatus.BAD_REQUEST,

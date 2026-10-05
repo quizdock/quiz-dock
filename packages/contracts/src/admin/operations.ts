@@ -57,6 +57,8 @@ export type RefusalCode =
   | 'forbidden'
   | 'scope_read'
   | 'local_mode_token'
+  /** A public demo (`DEMO_MODE`): the administration is shown, never changed from the web. */
+  | 'demo_read_only'
   | 'locked'
   | 'critical'
   | 'invalid_params'

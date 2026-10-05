@@ -313,7 +313,7 @@ export const SETTINGS = {
   DEMO_MODE: define({
     key: 'DEMO_MODE',
     description:
-      '`true` = public demo guards: every visitor shares one host account (`demo_user`), which holds the host seat without expiry; media uploads are refused, and everything is wiped every hour — a reset waits, at most 3 hours, while a game is played.',
+      '`true` = public demo guards: every visitor shares one host account (`demo_user`), a host and an administrator by grant; the administration is shown read-only, media uploads are refused, and everything is wiped every hour — a reset waits, at most 3 hours, while a game is played.',
     category: 'access',
     criticality: 'C1',
     schema: flag(),

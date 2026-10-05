@@ -116,7 +116,8 @@
     "critical": "關鍵：永遠不能從網頁變更",
     "locked": "被 ADMIN_LOCK 鎖定",
     "scope": "唯讀（ADMIN_WEB_SCOPE=read）",
-    "safe-mode": "安全模式"
+    "safe-mode": "安全模式",
+    "demo": "公開示範：唯讀"
   },
   "value": {
     "empty": "—",
@@ -359,7 +360,8 @@
     "not_found": "找不到。",
     "conflict": "衝突。",
     "timeout": "耗時過長。",
-    "failed": "失敗。"
+    "failed": "失敗。",
+    "demo_read_only": "公開示範：唯讀。"
   },
   "quizzes": {
     "search": "搜尋測驗",
@@ -777,5 +779,6 @@
     "jwks_ok_one": "簽章金鑰可連線（{{count}} 個金鑰）",
     "jwks_ok_other": "簽章金鑰可連線（{{count}} 個金鑰）",
     "jwks_failed": "簽章金鑰 {{url}}：{{error}}"
-  }
+  },
+  "demoReadOnly": "公開示範：管理介面依原樣展示，無法在此修改任何內容。在你自己的執行個體上，它完全由你掌控。"
 }
