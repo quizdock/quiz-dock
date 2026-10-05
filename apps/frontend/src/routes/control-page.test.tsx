@@ -131,7 +131,10 @@ describe('ControlPage: who is ready in the lobby (#104)', () => {
     });
     renderApp('/session/482913/console');
     expect(await screen.findByTestId('readiness')).toHaveTextContent('Prêts : 1 / 3 participants');
-    expect(screen.getByLabelText('Prêt')).toBeInTheDocument(); // Ada
+    // In Ada's row (the column's head says Prêt too).
+    expect(
+      within(screen.getByRole('row', { name: /Ada/ })).getByLabelText('Prêt'),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Prêt, médias en chargement')).toBeInTheDocument(); // Bob
   });
 });
@@ -206,9 +209,9 @@ describe('ControlPage: the room’s next quiz (#89)', () => {
       podium: { podium: [{ nickname: 'Ada', score: 900, rank: 1 }] },
     });
     renderApp('/session/482913/console');
-    fireEvent.click(await screen.findByRole('button', { name: /Retour au lobby/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /Retour à la salle d’attente/ }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Retour au lobby' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Retour à la salle d’attente' }));
     expect(fakeSocket.emit).toHaveBeenCalledWith(
       'host:back-to-lobby',
       { pin: '482913', archive: true },
@@ -396,7 +399,8 @@ describe('ControlPage (console hôte)', () => {
 
     const select = await screen.findByLabelText('Qui entend le son dans ce quiz');
     expect(select).toHaveValue('projection_remote');
-    expect(screen.getByLabelText('Participe à distance')).toBeInTheDocument();
+    // The column's head, then the participant's row: the cell's sign and the avatar's badge.
+    expect(screen.getAllByLabelText('Participe à distance').length).toBeGreaterThan(1);
     // Who is still loading the first question's sound: Alice, the projection is ready.
     expect(screen.getByTestId('readiness')).toHaveTextContent('1 / 2');
     expect(screen.getByTestId('readiness')).toHaveTextContent('projection prête');

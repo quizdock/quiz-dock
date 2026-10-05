@@ -9,13 +9,15 @@ import {
   Plus,
   RefreshCw,
   Trash2,
+  Upload,
   X,
   ImagePlus,
+  Search,
   SearchX,
   MousePointerClick,
 } from 'lucide-react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
@@ -36,8 +38,11 @@ import { type MediaKind, MediaCheckError } from '@/lib/media-prepare';
 import { errorText } from '../api/error-text';
 import { apiErrorText } from '../api/http';
 import {
+  getMediaAdminControllerUsagesQueryOptions,
   mediaAdminControllerAddFile,
   mediaAdminControllerAddUpload,
+  mediaAdminControllerDeleteFile,
+  mediaAdminControllerRemove,
   useMediaAdminControllerAddFile,
   useMediaAdminControllerDeleteFile,
   useMediaAdminControllerFiles,
@@ -55,10 +60,19 @@ import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { Drawer } from '@/components/ui/drawer';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
+import { useSessionState } from '@/lib/use-session-state';
 
-const PAGE_SIZE = 25;
+/**
+ * A page's length, typed by the administrator within what the server serves (100).
+ * 24 by default: a multiple of 2, 3 and 4, so a grid's last line is never left short.
+ */
+const PAGE_SIZE = { min: 1, max: 100, default: 24 };
+const validPageSize = (v: unknown): v is number =>
+  Number.isInteger(v) && (v as number) >= PAGE_SIZE.min && (v as number) <= PAGE_SIZE.max;
 /** The owner key of the instance's own media (#62). */
 const GLOBAL = 'global';
+/** The files filter's "every owner but global". */
+const HOSTS = 'hosts';
 
 /**
  * After anything that changes the volume (a clean-up pass, the catalogue): every
@@ -233,11 +247,23 @@ function Files() {
   const [view, setView] = useStoredView('quizdock.adminMedia.view');
   const [kind, setKind] = useState('');
   const [ownerId, setOwnerId] = useState('');
-  const [legacy, setLegacy] = useState(false);
+  // One menu for the files to look at closely: those nothing uses, or in an older format.
+  const [show, setShow] = useState<'' | 'unused' | 'legacy'>('');
   const [sort, setSort] = useState<'size' | 'usage' | 'recent'>('size');
   const [search, setSearch] = useState('');
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useSessionState(
+    'quizdock.adminMedia.pageSize',
+    PAGE_SIZE.default,
+    validPageSize,
+  );
+  // What is being typed; the page follows once it is a length the server serves.
+  const [pageSizeText, setPageSizeText] = useState(String(pageSize));
+  // The files ticked for an action on all of them at once, on the page shown.
+  const [checked, setChecked] = useState<Set<string>>(() => new Set());
+  const [bulk, setBulk] = useState<'delete' | 'withdraw' | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [toDelete, setToDelete] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [toWithdraw, setToWithdraw] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -251,44 +277,98 @@ function Files() {
     const timer = setTimeout(() => setQ(search.trim()), 250);
     return () => clearTimeout(timer);
   }, [search]);
-  useEffect(() => setPage(1), [scope, kind, ownerId, legacy, sort, q]);
+  useEffect(() => setPage(1), [scope, kind, ownerId, show, sort, q, pageSize]);
+  useEffect(() => setChecked(new Set()), [scope, kind, ownerId, show, sort, q, page, pageSize]);
 
   const params: MediaAdminControllerFilesParams = {
     sort,
-    offset: (page - 1) * PAGE_SIZE,
-    limit: PAGE_SIZE,
+    offset: (page - 1) * pageSize,
+    limit: pageSize,
     ...(kind ? { kind: kind as MediaAdminControllerFilesParams['kind'] } : {}),
     ...(scope === 'global' ? { ownerId: GLOBAL } : ownerId ? { ownerId } : {}),
-    ...(legacy ? { legacy: 'true' as const } : {}),
+    ...(show === 'legacy' ? { legacy: 'true' as const } : {}),
+    ...(show === 'unused' ? { unused: 'true' as const } : {}),
     ...(q ? { q } : {}),
   };
   const files = useMediaAdminControllerFiles(params);
   const list = files.data?.data;
-  const pages = Math.max(1, Math.ceil((list?.total ?? 0) / PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil((list?.total ?? 0) / pageSize));
+  const chosen = (list?.items ?? []).filter((f) => checked.has(f.id));
+  const toggle = (id: string) =>
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const allChecked = !!list?.items.length && chosen.length === list.items.length;
 
-  const upload = async (uploadKind: MediaKind, file: File | undefined) => {
-    if (!file) return;
+  // One action on every file ticked, one after the other (each its own audit line);
+  // those that fail are named after, the others done.
+  const runBulk = async (
+    targets: MediaFilesPageDtoItemsItem[],
+    act: (file: MediaFilesPageDtoItemsItem) => Promise<unknown>,
+    failedText: string,
+  ) => {
+    if (!targets.length) return;
     setError(null);
     setBusy(true);
+    const failed: string[] = [];
     try {
-      const ready = await readyForUpload(file, uploadKind);
-      // An original already among the admin's or the global media is added, not uploaded again.
-      if ('reuse' in ready) await mediaAdminControllerAddFile(ready.reuse.id);
-      else
-        await mediaAdminControllerAddUpload({
-          file: ready.file,
-          ...ready.prepared.fields,
-          sourceSha256: ready.sourceSha256,
-        });
+      for (const [i, file] of targets.entries()) {
+        setProgress({ done: i, total: targets.length });
+        try {
+          await act(file);
+        } catch (err) {
+          failed.push(`${file.name ?? file.mime} — ${apiErrorText(err, failedText)}`);
+        }
+      }
+      setChecked(new Set());
       await refreshAll();
-    } catch (err) {
-      setError(
-        err instanceof MediaCheckError
-          ? errorText(err.code, err.params)
-          : apiErrorText(err, t('mediaAdmin.instance.addFailed')),
-      );
     } finally {
+      setProgress(null);
       setBusy(false);
+      if (failed.length) setError(failed.join('\n'));
+    }
+  };
+
+  // Several files at once (dropped or chosen), one after the other: each its kind from its
+  // type, converted in the browser like any; the list refreshed once, at the end.
+  const uploadAll = async (files: File[]) => {
+    if (!files.length) return;
+    setError(null);
+    setBusy(true);
+    const failed: string[] = [];
+    try {
+      for (const [i, file] of files.entries()) {
+        setProgress({ done: i, total: files.length });
+        const uploadKind = kindOfFile(file);
+        try {
+          if (!uploadKind) throw new Error(t('mediaAdmin.instance.unsupported'));
+          const ready = await readyForUpload(file, uploadKind);
+          // An original already among the admin's or the global media is added, not uploaded again.
+          if ('reuse' in ready) await mediaAdminControllerAddFile(ready.reuse.id);
+          else
+            await mediaAdminControllerAddUpload({
+              file: ready.file,
+              ...ready.prepared.fields,
+              sourceSha256: ready.sourceSha256,
+            });
+        } catch (err) {
+          const why =
+            err instanceof MediaCheckError
+              ? errorText(err.code, err.params)
+              : err instanceof Error && !uploadKind
+                ? err.message
+                : apiErrorText(err, t('mediaAdmin.instance.addFailed'));
+          failed.push(`${file.name} — ${why}`);
+        }
+      }
+      await refreshAll();
+    } finally {
+      setProgress(null);
+      setBusy(false);
+      if (failed.length) setError(failed.join('\n'));
     }
   };
 
@@ -322,11 +402,6 @@ function Files() {
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {scope === 'global'
-            ? (['image', 'video', 'audio'] as const).map((k) => (
-                <AddButton key={k} kind={k} disabled={busy} onFile={(f) => void upload(k, f)} />
-              ))
-            : null}
           <Segmented
             label={t('mediaAdmin.files.view')}
             value={view}
@@ -339,65 +414,171 @@ function Files() {
         </div>
       </div>
       {scope === 'global' ? (
-        <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.help')}</p>
+        <>
+          <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.help')}</p>
+          <DropZone disabled={busy} progress={progress} onFiles={(f) => void uploadAll(f)} />
+        </>
       ) : null}
 
-      <div className="flex flex-wrap items-end gap-2">
-        <FilterField label={t('mediaAdmin.files.kind')}>
-          <Select className="w-full sm:w-36" value={kind} onChange={(e) => setKind(e.target.value)}>
-            <option value="">{t('mediaAdmin.files.allKinds')}</option>
-            {(['image', 'video', 'audio'] as const).map((k) => (
-              <option key={k} value={k}>
-                {t(`mediaAdmin.kind.${k}`)}
-              </option>
-            ))}
-          </Select>
-        </FilterField>
-        {scope === 'all' ? (
-          <FilterField label={t('mediaAdmin.files.owner')}>
+      {/* The filters and the actions stay in reach while the files scroll. */}
+      <div className="bg-background sticky top-0 z-20 flex flex-col gap-2 border-b py-2">
+        <div className="flex flex-wrap items-end gap-2">
+          <FilterField label={t('mediaAdmin.files.kind')}>
             <Select
-              className="w-full sm:w-44"
-              value={ownerId}
-              onChange={(e) => setOwnerId(e.target.value)}
+              className="w-full sm:w-36"
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
             >
-              <option value="">{t('mediaAdmin.files.allOwners')}</option>
-              {owners.map((o) => (
-                <option key={o.ownerId} value={o.ownerId}>
-                  {o.displayName}
+              <option value="">{t('mediaAdmin.files.allKinds')}</option>
+              {(['image', 'video', 'audio'] as const).map((k) => (
+                <option key={k} value={k}>
+                  {t(`mediaAdmin.kind.${k}`)}
                 </option>
               ))}
             </Select>
           </FilterField>
-        ) : null}
-        <FilterField label={t('mediaAdmin.files.sort')}>
-          <Select
-            className="w-full sm:w-44"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as typeof sort)}
-          >
-            <option value="size">{t('mediaAdmin.files.bySize')}</option>
-            <option value="usage">{t('mediaAdmin.files.byUsage')}</option>
-            <option value="recent">{t('mediaAdmin.files.byDate')}</option>
-          </Select>
-        </FilterField>
-        <label className="flex items-center gap-1.5 text-sm">
-          <input type="checkbox" checked={legacy} onChange={(e) => setLegacy(e.target.checked)} />
-          {t('mediaAdmin.files.legacyOnly')}
-        </label>
-        <Input
-          className="w-56"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('mediaAdmin.files.search')}
-          aria-label={t('mediaAdmin.files.search')}
-        />
+          <FilterField label={t('mediaAdmin.files.show')}>
+            <Select
+              className="w-full sm:w-40"
+              value={show}
+              onChange={(e) => setShow(e.target.value as typeof show)}
+            >
+              <option value="">{t('mediaAdmin.files.showAll')}</option>
+              <option value="unused">{t('mediaAdmin.files.showUnused')}</option>
+              <option value="legacy">{t('mediaAdmin.files.legacyOnly')}</option>
+            </Select>
+          </FilterField>
+          {scope === 'all' ? (
+            <FilterField label={t('mediaAdmin.files.owner')}>
+              <Select
+                className="w-full sm:w-44"
+                value={ownerId}
+                onChange={(e) => setOwnerId(e.target.value)}
+              >
+                <option value="">{t('mediaAdmin.files.allOwners')}</option>
+                {/* The hosts' files only: those the instance alone provides left out. */}
+                <option value={HOSTS}>{t('mediaAdmin.files.allHosts')}</option>
+                {owners.map((o) => (
+                  <option key={o.ownerId} value={o.ownerId}>
+                    {o.displayName}
+                  </option>
+                ))}
+              </Select>
+            </FilterField>
+          ) : null}
+          <FilterField label={t('mediaAdmin.files.sort')}>
+            <Select
+              className="w-full sm:w-44"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
+            >
+              <option value="size">{t('mediaAdmin.files.bySize')}</option>
+              <option value="usage">{t('mediaAdmin.files.byUsage')}</option>
+              <option value="recent">{t('mediaAdmin.files.byDate')}</option>
+            </Select>
+          </FilterField>
+          {/* A search field, as on the other administration lists: its icon, its clear button. */}
+          <label className="relative min-w-56 flex-1">
+            <span className="sr-only">{t('mediaAdmin.files.search')}</span>
+            <Search
+              aria-hidden
+              className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2"
+            />
+            <Input
+              type="search"
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('mediaAdmin.files.search')}
+            />
+          </label>
+          <FilterField label={t('mediaAdmin.files.perPage')}>
+            <Input
+              type="number"
+              inputMode="numeric"
+              className="w-full sm:w-20"
+              min={PAGE_SIZE.min}
+              max={PAGE_SIZE.max}
+              value={pageSizeText}
+              onChange={(e) => {
+                setPageSizeText(e.target.value);
+                const n = Number(e.target.value);
+                if (validPageSize(n)) setPageSize(n);
+              }}
+              // Out of bounds or empty: back to the length in use.
+              onBlur={() => setPageSizeText(String(pageSize))}
+            />
+          </FilterField>
+        </div>
+        <div className="flex min-h-8 flex-wrap items-center gap-2 text-sm">
+          <label className="flex items-center gap-1.5">
+            <input
+              type="checkbox"
+              checked={allChecked}
+              ref={(el) => {
+                if (el) el.indeterminate = chosen.length > 0 && !allChecked;
+              }}
+              disabled={!list?.items.length || busy}
+              onChange={() =>
+                setChecked(allChecked ? new Set() : new Set(list?.items.map((f) => f.id)))
+              }
+            />
+            {chosen.length
+              ? t('mediaAdmin.bulk.selected', { count: chosen.length })
+              : t('mediaAdmin.bulk.selectPage')}
+          </label>
+          {chosen.length && scope === 'all' ? (
+            <>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={busy || chosen.every((f) => f.inCatalog)}
+                onClick={() =>
+                  void runBulk(
+                    chosen.filter((f) => !f.inCatalog),
+                    (f) => mediaAdminControllerAddFile(f.id),
+                    t('mediaAdmin.bulk.promoteFailed'),
+                  )
+                }
+              >
+                <Library className="size-4" />
+                {t('mediaAdmin.bulk.promote')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive-outline"
+                disabled={busy}
+                onClick={() => setBulk('delete')}
+              >
+                <Trash2 className="size-4" />
+                {t('mediaAdmin.bulk.delete')}
+              </Button>
+            </>
+          ) : null}
+          {chosen.length && scope === 'global' ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive-outline"
+              disabled={busy}
+              onClick={() => setBulk('withdraw')}
+            >
+              <X className="size-4" />
+              {t('mediaAdmin.bulk.withdraw')}
+            </Button>
+          ) : null}
+          {progress && scope === 'all' ? (
+            <span aria-live="polite" className="text-muted-foreground">
+              {t('mediaAdmin.bulk.progress', { done: progress.done + 1, total: progress.total })}
+            </span>
+          ) : null}
+        </div>
       </div>
 
-      {busy ? (
-        <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.adding')}</p>
-      ) : null}
       {error ? (
-        <p role="alert" className="text-destructive text-sm">
+        <p role="alert" className="text-destructive text-sm whitespace-pre-line">
           {error}
         </p>
       ) : null}
@@ -418,7 +599,8 @@ function Files() {
           {view === 'list' ? (
             <ul className="divide-y rounded-lg border">
               {list.items.map((file) => (
-                <li key={file.id}>
+                <li key={file.id} className="flex items-center pl-2">
+                  <TickBox file={file} checked={checked.has(file.id)} onToggle={toggle} />
                   <FileRow selected={isSelected(file)} onSelect={() => setSelectedId(file.id)}>
                     <Thumb file={file} className="size-14" />
                     <div className="flex min-w-0 flex-1 flex-col">
@@ -433,7 +615,13 @@ function Files() {
           ) : (
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {list.items.map((file) => (
-                <li key={file.id}>
+                <li key={file.id} className="relative">
+                  <TickBox
+                    file={file}
+                    checked={checked.has(file.id)}
+                    onToggle={toggle}
+                    className="bg-background/90 absolute top-2 left-2 z-10 rounded p-1"
+                  />
                   <FileRow
                     selected={isSelected(file)}
                     onSelect={() => setSelectedId(file.id)}
@@ -500,7 +688,146 @@ function Files() {
             );
         }}
       />
+      {bulk === 'delete' ? (
+        <BulkDeleteDialog
+          files={chosen}
+          onClose={() => setBulk(null)}
+          onConfirm={(deletable) => {
+            setBulk(null);
+            void runBulk(
+              deletable,
+              (f) => mediaAdminControllerDeleteFile(f.id),
+              t('mediaAdmin.delete.failed'),
+            );
+          }}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={bulk === 'withdraw'}
+        destructive
+        title={t('mediaAdmin.bulk.withdrawTitle', { count: chosen.length })}
+        description={t('mediaAdmin.instance.removeDescription')}
+        confirmLabel={t('mediaAdmin.instance.remove')}
+        onCancel={() => setBulk(null)}
+        onConfirm={() => {
+          setBulk(null);
+          void runBulk(
+            chosen.filter((f) => f.instanceId),
+            (f) => mediaAdminControllerRemove(f.instanceId as string),
+            t('mediaAdmin.instance.removeFailed'),
+          );
+        }}
+      />
     </section>
+  );
+}
+
+/** A file ticked for an action on several at once; named after it. */
+function TickBox({
+  file,
+  checked,
+  onToggle,
+  className,
+}: {
+  file: MediaFilesPageDtoItemsItem;
+  checked: boolean;
+  onToggle: (id: string) => void;
+  className?: string;
+}) {
+  const { t } = useTranslation('dashboard');
+  return (
+    <label className={cn('flex shrink-0 cursor-pointer items-center', className)}>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={() => onToggle(file.id)}
+        aria-label={t('mediaAdmin.bulk.tick', { name: file.name ?? file.mime })}
+      />
+    </label>
+  );
+}
+
+/**
+ * Deleting the files ticked: what it breaks, all of them together, before doing it.
+ * A file a room is playing is left out, said so; the others go.
+ */
+function BulkDeleteDialog({
+  files,
+  onClose,
+  onConfirm,
+}: {
+  files: MediaFilesPageDtoItemsItem[];
+  onClose: () => void;
+  onConfirm: (deletable: MediaFilesPageDtoItemsItem[]) => void;
+}) {
+  const { t, i18n } = useTranslation('dashboard');
+  const usages = useQueries({
+    queries: files.map((f) => getMediaAdminControllerUsagesQueryOptions(f.id)),
+  });
+  const ready = usages.every((u) => u.data);
+  const infos = usages.map((u) => u.data?.data);
+  const playing = files.filter((_, i) => infos[i]?.playing);
+  const deletable = files.filter((_, i) => infos[i] && !infos[i].playing);
+  const quizzes = new Map<string, { title: string; owner: string }>();
+  let sessions = 0;
+  infos.forEach((info) => {
+    info?.quizzes.forEach((q) => quizzes.set(q.id, { title: q.title, owner: q.owner }));
+    sessions += info?.archivedSessions ?? 0;
+  });
+  const bytes = deletable.reduce((sum, f) => sum + f.sizeBytes, 0);
+  return (
+    <ConfirmDialog
+      open
+      destructive
+      title={t('mediaAdmin.bulk.deleteTitle', { count: deletable.length })}
+      description={formatBytes(bytes, i18n.language)}
+      confirmLabel={t('mediaAdmin.delete.confirm')}
+      onCancel={onClose}
+      confirmDisabled={!ready || deletable.length === 0}
+      onConfirm={() => onConfirm(deletable)}
+    >
+      {!ready ? (
+        <Spinner label={t('mediaAdmin.loading')} showLabel className="text-sm" />
+      ) : (
+        <div className="flex flex-col gap-2 text-sm">
+          {playing.length ? (
+            <p className="text-destructive">
+              {t('mediaAdmin.bulk.playing', {
+                count: playing.length,
+                names: playing.map((f) => f.name ?? f.mime).join(', '),
+              })}
+            </p>
+          ) : null}
+          {deletable.some((f) => f.inCatalog) ? (
+            <p className="text-warning-text">{t('mediaAdmin.delete.inCatalog')}</p>
+          ) : null}
+          {quizzes.size > 0 || sessions > 0 ? (
+            <>
+              <p>{t('mediaAdmin.delete.usedBy')}</p>
+              <ul className="text-muted-foreground max-h-40 list-disc overflow-y-auto pl-5">
+                {[...quizzes.entries()].map(([id, quiz]) => (
+                  <li key={id}>{t('mediaAdmin.delete.quiz', quiz)}</li>
+                ))}
+                {sessions > 0 ? (
+                  <li>{t('mediaAdmin.delete.sessions', { count: sessions })}</li>
+                ) : null}
+              </ul>
+              <p className="text-muted-foreground">
+                {[
+                  quizzes.size > 0 ? t('mediaAdmin.delete.quizzesLose') : null,
+                  sessions > 0 ? t('mediaAdmin.delete.resultsLose') : null,
+                  t('mediaAdmin.delete.everyCopy'),
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              </p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">{t('mediaAdmin.bulk.unused')}</p>
+          )}
+        </div>
+      )}
+    </ConfirmDialog>
   );
 }
 
@@ -896,41 +1223,80 @@ function DeleteFileDialog({
   );
 }
 
-function AddButton({
-  kind,
+/** What a file is, from its type (or a video container the browser may not name). */
+function kindOfFile(file: File): MediaKind | null {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('audio/')) return 'audio';
+  if (file.type.startsWith('video/') || /\.(mkv|mov)$/i.test(file.name)) return 'video';
+  return null;
+}
+
+/**
+ * Where the global media come in: files dropped on it, or chosen with a click (several
+ * at once, images, videos and sounds mixed). While they go, how far they are.
+ */
+function DropZone({
   disabled,
-  onFile,
+  progress,
+  onFiles,
 }: {
-  kind: MediaKind;
   disabled: boolean;
-  onFile: (file: File | undefined) => void;
+  progress: { done: number; total: number } | null;
+  onFiles: (files: File[]) => void;
 }) {
   const { t } = useTranslation('dashboard');
   const input = useRef<HTMLInputElement>(null);
-  const ACCEPT = { image: 'image/*', video: 'video/*,.mkv,.mov', audio: 'audio/*' };
+  const [over, setOver] = useState(false);
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="outline"
-        disabled={disabled}
-        onClick={() => input.current?.click()}
-      >
-        <Plus className="size-4" />
-        {t(`mediaAdmin.instance.add.${kind}`)}
-      </Button>
+    <div
+      onDragOver={(e) => {
+        if (disabled) return;
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        if (!disabled) onFiles([...e.dataTransfer.files]);
+      }}
+      className={cn(
+        'flex flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-6 text-center text-sm',
+        over ? 'border-primary bg-primary/5' : 'border-border',
+      )}
+    >
+      <Upload className="text-muted-foreground size-6" aria-hidden />
+      {progress ? (
+        <p aria-live="polite">
+          {t('mediaAdmin.instance.sending', { done: progress.done + 1, total: progress.total })}
+        </p>
+      ) : (
+        <>
+          <p>{t('mediaAdmin.instance.drop')}</p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={disabled}
+            onClick={() => input.current?.click()}
+          >
+            <Plus className="size-4" />
+            {t('mediaAdmin.instance.choose')}
+          </Button>
+        </>
+      )}
       <input
         ref={input}
         type="file"
         hidden
-        accept={ACCEPT[kind]}
-        aria-label={t(`mediaAdmin.instance.add.${kind}`)}
+        multiple
+        accept="image/*,video/*,.mkv,.mov,audio/*"
+        aria-label={t('mediaAdmin.instance.choose')}
         onChange={(e) => {
-          onFile(e.target.files?.[0]);
+          onFiles([...(e.target.files ?? [])]);
           e.target.value = '';
         }}
       />
-    </>
+    </div>
   );
 }

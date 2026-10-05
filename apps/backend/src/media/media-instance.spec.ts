@@ -148,6 +148,10 @@ describe('Instance media and dimensions (integration)', () => {
         instanceCredit: 'In-house',
       }),
     ]);
+    // Every owner but global: the host's file, not the instance's own.
+    const hostsFiles = await admin.files({ ownerId: 'hosts' });
+    expect(hostsFiles.items.length).toBeGreaterThan(0);
+    expect(hostsFiles.items.every((f) => f.owners.length > 0)).toBe(true);
     const overview = await admin.overview([adminId, hostId]);
     expect(overview.byOwner.map((o) => o.ownerId)).toContain('global');
   });

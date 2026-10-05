@@ -52,12 +52,17 @@ export function rankingOf(ranked: RankedPlayer[]): Ranking {
 
 /** The first `limit` rows of a ranking, as shown publicly (no personal rank). */
 export function topRows(
-  ranked: Pick<RankedPlayer, 'nickname' | 'score' | 'avatar'>[],
+  ranked: (Pick<RankedPlayer, 'nickname' | 'score' | 'avatar'> &
+    Partial<Pick<RankedPlayer, 'presence'>>)[],
   limit = 10,
 ): LeaderboardRow[] {
-  return ranked
-    .slice(0, limit)
-    .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1, avatar: p.avatar }));
+  return ranked.slice(0, limit).map((p, i) => ({
+    nickname: p.nickname,
+    score: p.score,
+    rank: i + 1,
+    avatar: p.avatar,
+    ...(p.presence === 'remote' ? { remote: true as const } : {}),
+  }));
 }
 
 /** The socket's own score and rank, when it is a player of the game. */

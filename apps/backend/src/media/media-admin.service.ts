@@ -15,6 +15,8 @@ const FILE_KEY = Prisma.sql`COALESCE(m.blob_sha256, m.id)`;
 
 /** Who a media counts for: its author, or `global` for the instance's own (#62). */
 export const GLOBAL_OWNER = 'global';
+/** The files filter's "every owner but global": the files at least one host owns. */
+export const HOSTS_OWNER = 'hosts';
 const OWNER_KEY = Prisma.sql`CASE WHEN m.instance THEN ${GLOBAL_OWNER} ELSE m.owner_id END`;
 
 /**
@@ -94,6 +96,8 @@ export interface MediaFileFilter {
   kind?: MediaKind;
   ownerId?: string;
   legacy?: boolean;
+  /** Used by no quiz and in no archived result. */
+  unused?: boolean;
   q?: string;
   sort?: 'size' | 'usage' | 'recent';
   offset?: number;
@@ -191,8 +195,10 @@ export class MediaAdminService {
     const where: Prisma.Sql[] = [];
     if (filter.kind) where.push(Prisma.sql`f.kind = ${filter.kind}`);
     if (filter.ownerId === GLOBAL_OWNER) where.push(Prisma.sql`f."inCatalog"`);
+    else if (filter.ownerId === HOSTS_OWNER) where.push(Prisma.sql`cardinality(f.owner_ids) > 0`);
     else if (filter.ownerId) where.push(Prisma.sql`${filter.ownerId} = ANY (f.owner_ids)`);
     if (filter.legacy) where.push(Prisma.sql`f.legacy`);
+    if (filter.unused) where.push(Prisma.sql`used.n IS NULL AND shown.k IS NULL`);
     if (filter.q?.trim()) {
       const q = `%${filter.q.trim().replace(/[\\%_]/g, '\\$&')}%`;
       where.push(Prisma.sql`f.name ILIKE ${q}`);

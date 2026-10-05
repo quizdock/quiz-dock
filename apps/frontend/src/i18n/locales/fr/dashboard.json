@@ -103,11 +103,12 @@
       "allKinds": "Tous les types",
       "owner": "Propriétaire",
       "allOwners": "Tous les propriétaires",
+      "allHosts": "Tous sauf Global",
       "sort": "Tri",
       "bySize": "Les plus lourds",
       "byUsage": "Les plus utilisés",
       "byDate": "Les plus récents",
-      "legacyOnly": "Anciens formats seulement",
+      "legacyOnly": "Anciens formats",
       "search": "Chercher par nom de fichier",
       "none": "Aucun fichier ne correspond.",
       "legacy": "ancien format",
@@ -122,7 +123,11 @@
       "scopeAll": "Tous",
       "view": "Affichage",
       "viewList": "Liste",
-      "viewGrid": "Grille"
+      "viewGrid": "Grille",
+      "perPage": "Par page",
+      "show": "Afficher",
+      "showAll": "Tous",
+      "showUnused": "Inutilisés"
     },
     "delete": {
       "title": "Supprimer ce fichier ?",
@@ -141,20 +146,18 @@
     },
     "instance": {
       "help": "Fournis à tous les hôtes, qui les trouvent sous « Médias globaux » dans leur bibliothèque. Jamais nettoyés ; en retirer un ne casse aucun quiz. Pas de texte alternatif ici : l’hôte l’écrit pour son quiz, dans sa langue.",
-      "add": {
-        "image": "Ajouter une image",
-        "video": "Ajouter une vidéo",
-        "audio": "Ajouter un son"
-      },
-      "adding": "Conversion et envoi…",
       "addFailed": "Le média n’a pas pu être ajouté.",
-      "empty": "Aucun média global pour l’instant : ajoutez-en avec les boutons ci-dessus, ou depuis la vue Tous.",
+      "empty": "Aucun média global pour l’instant : déposez-en ci-dessus, ou ajoutez-en depuis la vue Tous.",
       "credit": "Crédit (auteur, licence, source)",
       "remove": "Retirer",
       "removeTitle": "Retirer ce média global ?",
       "removeDescription": "Les hôtes ne le trouvent plus dans leur bibliothèque. Les quiz qui l’utilisent gardent leur copie.",
       "removeFailed": "Le média n’a pas pu être retiré.",
-      "saveFailed": "La modification n’a pas pu être enregistrée."
+      "saveFailed": "La modification n’a pas pu être enregistrée.",
+      "drop": "Déposez ici des images, vidéos ou sons, plusieurs à la fois.",
+      "choose": "Choisir des fichiers",
+      "sending": "Envoi {{done}} sur {{total}}…",
+      "unsupported": "Ni une image, ni une vidéo, ni un son."
     },
     "global": "Global",
     "preview": {
@@ -171,6 +174,24 @@
     },
     "detail": {
       "empty": "Choisissez un fichier pour le voir en entier, savoir où il sert et agir dessus."
+    },
+    "bulk": {
+      "selectPage": "Tout sélectionner",
+      "selected_one": "{{count}} sélectionné",
+      "selected_other": "{{count}} sélectionnés",
+      "tick": "Sélectionner {{name}}",
+      "promote": "Ajouter aux médias globaux",
+      "promoteFailed": "Ajout aux médias globaux impossible.",
+      "delete": "Supprimer",
+      "deleteTitle_one": "Supprimer {{count}} fichier ?",
+      "deleteTitle_other": "Supprimer {{count}} fichiers ?",
+      "withdraw": "Retirer des médias globaux",
+      "withdrawTitle_one": "Retirer {{count}} média global ?",
+      "withdrawTitle_other": "Retirer {{count}} médias globaux ?",
+      "playing_one": "Écarté, un salon le joue : {{names}}.",
+      "playing_other": "Écartés, des salons les jouent : {{names}}.",
+      "unused": "Aucun n’est utilisé : rien ne casse.",
+      "progress": "{{done}} sur {{total}}…"
     }
   },
   "starter": {

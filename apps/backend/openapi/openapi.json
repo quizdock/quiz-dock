@@ -2518,6 +2518,18 @@
             }
           },
           {
+            "name": "unused",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
             "name": "q",
             "required": false,
             "in": "query",

@@ -103,11 +103,12 @@
       "allKinds": "Tüm türler",
       "owner": "Sahip",
       "allOwners": "Tüm sahipler",
+      "allHosts": "Genel hariç tümü",
       "sort": "Sırala",
       "bySize": "Önce en büyüğü",
       "byUsage": "İlk önce en çok kullanılan",
       "byDate": "Önce en yeni",
-      "legacyOnly": "Yalnızca eski formatlar",
+      "legacyOnly": "Eski biçimler",
       "search": "Dosya adına göre ara",
       "none": "Dosya eşleşmesi yok.",
       "legacy": "eski format",
@@ -122,7 +123,11 @@
       "scopeAll": "Hepsi",
       "view": "Görünüm",
       "viewList": "Liste",
-      "viewGrid": "Izgara"
+      "viewGrid": "Izgara",
+      "perPage": "Sayfa başına",
+      "show": "Göster",
+      "showAll": "Tümü",
+      "showUnused": "Kullanılmayanlar"
     },
     "delete": {
       "title": "Bu dosya silinsin mi?",
@@ -141,20 +146,18 @@
     },
     "instance": {
       "help": "Ortak medya, tüm sunucuların kitaplığında görünür. Kullanılmasa da otomatik silinmez. Katalogdan geri çekmek mevcut quizleri bozmaz. Alternatif metni her sunucu kendi quizinin dilinde yazar.",
-      "add": {
-        "image": "Resim ekle",
-        "video": "Video ekle",
-        "audio": "Ses ekle"
-      },
-      "adding": "Dönüştürülüyor ve gönderiliyor…",
       "addFailed": "Medya eklenemedi.",
-      "empty": "Henüz ortak medya yok. Yukarıdaki düğmelerle veya Tümü görünümünden ekleyin.",
+      "empty": "Henüz ortak medya yok. Yukarıya bırakın veya Tümü görünümünden ekleyin.",
       "credit": "Kaynak bilgisi (yazar, lisans, bağlantı)",
       "remove": "Geri çek",
       "removeTitle": "Bu medya katalogdan geri çekilsin mi?",
       "removeDescription": "Sunucular artık bunu kütüphanelerinde bulamıyor. Bunu kullanan quizler kopyalarını saklar.",
       "removeFailed": "Medya geri çekilemedi.",
-      "saveFailed": "Değişiklik kaydedilemedi."
+      "saveFailed": "Değişiklik kaydedilemedi.",
+      "drop": "Görselleri, videoları veya sesleri buraya bırakın, birkaçı birden olabilir.",
+      "choose": "Dosya seç",
+      "sending": "{{total}} dosyadan {{done}}. gönderiliyor…",
+      "unsupported": "Görsel, video veya ses değil."
     },
     "global": "Genel",
     "preview": {
@@ -171,6 +174,24 @@
     },
     "detail": {
       "empty": "Tamamını görmek, nerede kullanıldığını öğrenmek ve üzerinde işlem yapmak için bir dosya seçin."
+    },
+    "bulk": {
+      "selectPage": "Tümünü seç",
+      "selected_one": "{{count}} seçildi",
+      "selected_other": "{{count}} seçildi",
+      "tick": "{{name}} seç",
+      "promote": "Genel medyaya ekle",
+      "promoteFailed": "Genel medyaya eklenemedi.",
+      "delete": "Sil",
+      "deleteTitle_one": "{{count}} dosya silinsin mi?",
+      "deleteTitle_other": "{{count}} dosya silinsin mi?",
+      "withdraw": "Genel medyadan kaldır",
+      "withdrawTitle_one": "{{count}} genel medya kaldırılsın mı?",
+      "withdrawTitle_other": "{{count}} genel medya kaldırılsın mı?",
+      "playing_one": "Atlandı, bir oda oynatıyor: {{names}}.",
+      "playing_other": "Atlandı, odalar oynatıyor: {{names}}.",
+      "unused": "Hiçbiri kullanılmıyor: hiçbir şey bozulmaz.",
+      "progress": "{{done}} / {{total}}…"
     }
   },
   "starter": {
