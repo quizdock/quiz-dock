@@ -23,11 +23,12 @@ engine defaults `GAME_AUTO_ADVANCE_MS` / `GAME_READ_DELAY_MS`), and can pause.
 
 ## Looking back
 
-From a reveal, a slide or the podium, the host can show any **played step**
-again (`host:review`): a question comes back with its archived reveal and each
-participant's own result, a slide as it was. Nothing is replayed or rescored;
-answers are refused; `host:next` (*Back to live*) returns every screen to the
-live position. `game:state.nav` carries what is reachable.
+From a reveal, a slide, the podium or a question they paused, the host can show
+any **played step** again (`host:review`): a question comes back with its archived
+reveal and each participant's own result, a slide as it was. Nothing is replayed
+or rescored; answers are refused; `host:next` (*Back to live*) returns every screen
+to the live position. From a paused question, *Resume* does too, then runs its
+clock again. `game:state.nav` carries what is reachable.
 
 ## Restarts and reconnections
 

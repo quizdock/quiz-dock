@@ -435,6 +435,8 @@ export interface LeaderboardRow {
   rank: number;
   /** Graine d'avatar (multiavatar) — cosmétique ; défaut = pseudo si absent. */
   avatar?: string;
+  /** Playing from elsewhere (the avatar's badge); absent in the room. */
+  remote?: true;
 }
 
 export interface LeaderboardPayload {
@@ -521,6 +523,22 @@ export interface RoomStandingsPayload {
   };
 }
 
+/** One player's line in the host's standings (#198): their score in this quiz and in the room. */
+export interface HostScoreRow {
+  playerId: string;
+  /** Points in the quiz being played; 0 before any. */
+  quizScore: number;
+  quizRank: number;
+  /** The room's total: the quizzes already played, and this one so far. */
+  roomScore: number;
+  roomRank: number;
+}
+
+/** Every player's scores, to the host's console only (#198). */
+export interface HostScoresPayload {
+  rows: HostScoreRow[];
+}
+
 export interface PodiumPayload {
   podium: LeaderboardRow[];
   /** The quiz of this podium: a rating goes to it (several quizzes share a room's PIN). */
@@ -558,6 +576,8 @@ export interface ClientToServerEvents {
   /** Rebinde un hôte authentifié propriétaire à sa partie (reconnexion / 2ᵉ fenêtre de contrôle). */
   'host:attach': (p: { pin: string }, ack: (res: { ok: boolean }) => void) => void;
   'host:start': (p: { pin: string }) => void;
+  /** Stops the next quiz's countdown (#198): the quiz then waits for **Start**. */
+  'host:lobby-countdown-stop': (p: { pin: string }) => void;
   'host:next': (p: { pin: string }) => void;
   /** Show a played step again (no replay, no rescoring); `host:next` resumes. */
   'host:review': (p: { pin: string } & GameStep) => void;
@@ -585,8 +605,17 @@ export interface ClientToServerEvents {
   'player:ready': (p: { pin: string; ready: boolean }, ack: (res: { ok: boolean }) => void) => void;
   /** The room's own name (≤ 60 characters), from its lobby; blank = the default. */
   'host:room-name': (p: { pin: string; name: string }) => void;
+  /** Picks the quiz of the room's lobby, or replaces it (nothing of it was played). */
   'host:next-quiz': (
-    p: { pin: string; quizId: string; archive?: boolean },
+    p: { pin: string; quizId: string },
+    ack: (res: { ok: boolean }) => void,
+  ) => void;
+  /**
+   * Back to the room's lobby, with no quiz chosen: from the podium, or stopping the quiz
+   * in progress. `archive` keeps what was played (archived, counted in the room's standings).
+   */
+  'host:back-to-lobby': (
+    p: { pin: string; archive?: boolean },
     ack: (res: { ok: boolean }) => void,
   ) => void;
   /**
@@ -611,6 +640,8 @@ export interface ClientToServerEvents {
     pickOwnName?: boolean;
     /** Replaces the quiz's default audio target for this game (questions with their own keep it). */
     audioTarget?: AudioTarget;
+    /** The language of the audience's screens for the whole room (#209); '' = each quiz's. */
+    audienceLanguage?: string;
   }) => void;
   /** Bascule le rythme manuel/auto en cours de partie (§8). */
   'host:mode': (p: { pin: string; mode: GameMode }) => void;
@@ -775,6 +806,10 @@ export interface ServerToClientEvents {
   'lobby:count': (p: { ready: number; total: number }) => void;
   /** The room's standings: at a podium, in the lobby of the next quiz, and when the room closes. */
   'room:standings': (p: RoomStandingsPayload) => void;
+  /** Every player's quiz and room scores (#198), to the host's console only. */
+  'game:scores': (p: HostScoresPayload) => void;
+  /** The next quiz's lobby starts on its own at `startAt` (ms epoch, #198); null = no countdown. */
+  'lobby:countdown': (p: { startAt: number | null }) => void;
   /** `quizId`: the quiz that ended, which a rating goes to (several share a room's PIN). */
   'game:ended': (p: { feedbackEnabled?: boolean; quizId?: string }) => void;
   /** Mode/pause courants (à chaque changement et au (ré)attache). */
@@ -813,6 +848,13 @@ export interface ServerToClientEvents {
     hasMedia: boolean;
     /** The game's default audio target: the host's lobby choice, else the quiz's. */
     audioTarget: AudioTarget;
+    /**
+     * The language of the audience's screens (#209), a BCP 47 tag: the host's choice for
+     * the room, else the quiz's.
+     */
+    language: string;
+    /** The host's choice for the room (#209); '' = each quiz's. Read by the console. */
+    roomLanguage: string;
   }) => void;
   /**
    * Erreur typée. **Token uniquement** : le backend n'émet qu'un `code` domaine

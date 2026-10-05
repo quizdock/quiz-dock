@@ -44,7 +44,7 @@
       "projection_remote": "Projeksiyon ve uzak katılımcılar",
       "everyone": "Her cihaz"
     },
-    "sharingLegend": "Paylaşım",
+    "sharingLegend": "Dil ve paylaşım",
     "sharingSummary_one": "{{license}} · {{count}} etiket",
     "sharingSummary_other": "{{license}} · {{count}} etiket",
     "noLicense": "Lisans yok",
@@ -237,12 +237,12 @@
     "playbackLegend": "Oynatma",
     "timingLegend": "Zamanlama",
     "pointsLegend": "Puanlar",
-    "answerExplanationLabel": "Yanıt açıklaması (yanıtlar gösterildiğinde görünür)",
+    "answerExplanationLabel": "Yanıt açıklaması (doğru yanıtla birlikte görünür)",
     "answerExplanationPlaceholder": "Bu yanıt neden doğru? (isteğe bağlı)",
     "timeLimitLabel": "Süre (sn)",
-    "revealDelayLabel": "Yanıt gösterme süresi",
+    "revealDelayLabel": "Yanıtın gösterim süresi (sn)",
     "revealDelayPlaceholder": "oto",
-    "revealDelayHint": "Otomatik modda, yanıtlar gösterildikten sonra sonraki soruya geçmeden önce beklenecek süre. Boş bırakılırsa varsayılan süre kullanılır.",
+    "revealDelayHint": "Otomatik modda: doğru yanıtın sonraki adıma geçmeden önce ekranda kalma süresi. Boş = sunucunun ayarı.",
     "audioTargetLabel": "Bu sesi kim duyar",
     "audioTargetHint": "Bu sorunun sesini veya videosunu hangi cihazlarda oynatıyor? \"Her cihaz\", odadaki telefonları içerir ve paylaştıkları takdirde yankılanır.",
     "audioTargetDefault": "Quizin odadaki ayarı",
@@ -262,7 +262,7 @@
       "double": "İki kat puan",
       "fixed": "Sabit (hız bonusu yok)"
     },
-    "optionsLegend": "Seçenekler",
+    "optionsLegend": "Yanıt seçenekleri",
     "optionAriaLabel": "seçenek {{index}}",
     "dragOption": "Seçeneği yeniden sıralamak için sürükleyin",
     "optionPlaceholder": "Seçenek {{index}}",
@@ -374,8 +374,8 @@
     "decimalsAllowed": "Ondalık sayılar kullanılabilir: 3.14, 0.5…",
     "timingSummary": "{{time}} sn",
     "timingSummaryStretched": "{{time}} sn (medyayla birlikte {{total}} sn)",
-    "revealDelayAuto": "yanıt gösterme gecikmesi otomatik",
-    "revealDelaySummary": "yanıt {{seconds}} sn sonra gösterilir",
+    "revealDelayAuto": "yanıt gösterimi otomatik",
+    "revealDelaySummary": "yanıt {{seconds}} sn gösterilir",
     "place_ordinal_one": "{{count}}.",
     "place_ordinal_two": "{{count}}.",
     "place_ordinal_few": "{{count}}.",
@@ -387,7 +387,9 @@
       "top": "Metnin üstünde",
       "left": "Metnin solunda",
       "right": "Metnin sağında"
-    }
+    },
+    "revealDelayAutoValue": "oto ({{seconds}} sn)",
+    "revealDelaySummaryAuto": "yanıt {{seconds}} sn gösterilir (otomatik)"
   },
   "preview": {
     "view": "Önizleme (katılımcı görünümü)",
@@ -410,7 +412,9 @@
     "projection": "Projeksiyon",
     "phone": "Telefon",
     "showAnswer": "Yanıtı göster",
-    "title": "Önizleme"
+    "title": "Önizleme",
+    "pin": "Sabitle",
+    "unpin": "Sabitlemeyi kaldır"
   },
   "media": {
     "alt": "soru medyası",

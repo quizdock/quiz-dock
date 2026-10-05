@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils';
  * A secondary group of settings, folded behind its title. The summary line says
  * what the group is set to, so folding never hides a choice that differs from
  * the norm. Every panel starts folded; its fields stay mounted (native `<details>`).
+ * With `rememberAs`, opened or folded it stays so from one form to the next (this tab).
  */
 export function Disclosure({
   title,
   value,
   flush = false,
+  rememberAs,
   className,
   children,
 }: {
@@ -19,10 +21,31 @@ export function Disclosure({
   value?: ReactNode;
   /** Inside a card that already draws the frame: no border, no side padding. */
   flush?: boolean;
+  /** A key: the panel is opened or folded as it was last, in this tab. */
+  rememberAs?: string;
   className?: string;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !rememberAs) return;
+    const key = `disclosure:${rememberAs}`;
+    try {
+      el.open = sessionStorage.getItem(key) === 'open';
+    } catch {
+      // No storage (a private window): it starts folded, as any other.
+    }
+    const save = () => {
+      try {
+        sessionStorage.setItem(key, el.open ? 'open' : 'folded');
+      } catch {
+        // Nothing to keep it in.
+      }
+    };
+    el.addEventListener('toggle', save);
+    return () => el.removeEventListener('toggle', save);
+  }, [rememberAs]);
   // A field that refuses the submit must be seen: the browser cannot focus it
   // in a closed panel and would drop the submit without a word.
   useEffect(() => {

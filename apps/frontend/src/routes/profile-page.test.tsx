@@ -81,11 +81,14 @@ describe('ProfilePage', () => {
       );
     });
 
-    it('shows no preference when open access is not offered', async () => {
-      mockApi([{ method: 'GET', path: '/me', body: me() }]);
+    it('without open access, only the interface language (#209)', async () => {
+      mockApi([
+        { method: 'GET', path: '/me', body: me() },
+        { method: 'GET', path: '/me/preferences', body: {} },
+      ]);
       renderApp('/profile');
-      expect(await screen.findByText('Animateur')).toBeInTheDocument();
-      expect(screen.queryByText('Préférences')).toBeNull();
+      expect(await screen.findByText('Langue de l’interface')).toBeInTheDocument();
+      expect(screen.queryByText('Accès des participants')).toBeNull();
     });
   });
 });

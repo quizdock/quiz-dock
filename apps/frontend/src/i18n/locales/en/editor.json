@@ -44,7 +44,7 @@
       "projection_remote": "Projection and remote participants",
       "everyone": "Every device"
     },
-    "sharingLegend": "Sharing",
+    "sharingLegend": "Language & sharing",
     "sharingSummary_one": "{{license}} · {{count}} tag",
     "sharingSummary_other": "{{license}} · {{count}} tags",
     "noLicense": "No licence",
@@ -237,12 +237,12 @@
     "playbackLegend": "Playback",
     "timingLegend": "Timing",
     "pointsLegend": "Points",
-    "answerExplanationLabel": "Answer explanation (shown after the reveal)",
+    "answerExplanationLabel": "Answer explanation (shown with the right answer)",
     "answerExplanationPlaceholder": "Why this is the right answer… (optional)",
     "timeLimitLabel": "Time (s)",
-    "revealDelayLabel": "Reveal delay (s)",
+    "revealDelayLabel": "Answer shown for (s)",
     "revealDelayPlaceholder": "auto",
-    "revealDelayHint": "In automatic mode: time spent on the answer before the next question. Empty = default setting.",
+    "revealDelayHint": "In auto mode: how long the right answer stays on screen before moving on. Empty = the instance’s setting.",
     "audioTargetLabel": "Who hears this sound",
     "audioTargetHint": "Which devices play this question's sound or video. \"Every device\" includes the phones in the room, which echo if they share it.",
     "audioTargetDefault": "The quiz's setting in the room",
@@ -262,14 +262,14 @@
       "double": "Double",
       "fixed": "Fixed (no speed bonus)"
     },
-    "optionsLegend": "Options",
-    "optionAriaLabel": "option {{index}}",
-    "dragOption": "Drag to reorder the option",
-    "optionPlaceholder": "Option {{index}}",
+    "optionsLegend": "Answer choices",
+    "optionAriaLabel": "choice {{index}}",
+    "dragOption": "Drag to reorder the choice",
+    "optionPlaceholder": "Choice {{index}}",
     "orderAriaLabel": "Place of answer {{index}} in the right order",
     "correct": "Correct",
-    "removeOption": "Remove option {{index}}",
-    "addOption": "Add an option",
+    "removeOption": "Remove choice {{index}}",
+    "addOption": "Add a choice",
     "acceptedAnswersLegend": "Accepted answers",
     "answerAriaLabel": "answer {{index}}",
     "removeAnswer": "Remove answer {{index}}",
@@ -325,7 +325,7 @@
       }
     },
     "removeOptionConfirm": {
-      "title": "Remove this option?",
+      "title": "Remove this choice?",
       "description": "“{{label}}” will be removed from the question.",
       "confirmLabel": "Remove"
     },
@@ -365,7 +365,7 @@
       "confirmLabel": "Move to draft and save",
       "cancelLabel": "Keep editing"
     },
-    "optionActions": "Actions for option {{index}}",
+    "optionActions": "Actions for choice {{index}}",
     "removeOptionShort": "Remove",
     "ticksCleared": "The type changed: the right answers were cleared. Tick them again under the new rules.",
     "explanationWritten": "Written",
@@ -374,8 +374,8 @@
     "decimalsAllowed": "Decimals are fine: 3.14, 0.5…",
     "timingSummary": "{{time}} s",
     "timingSummaryStretched": "{{time}} s ({{total}} s with the media)",
-    "revealDelayAuto": "reveal delay auto",
-    "revealDelaySummary": "reveal after {{seconds}} s",
+    "revealDelayAuto": "answer shown auto",
+    "revealDelaySummary": "answer shown {{seconds}} s",
     "place_ordinal_one": "{{count}}st",
     "place_ordinal_two": "{{count}}nd",
     "place_ordinal_few": "{{count}}rd",
@@ -387,7 +387,9 @@
       "top": "Above the text",
       "left": "Left of the text",
       "right": "Right of the text"
-    }
+    },
+    "revealDelayAutoValue": "auto ({{seconds}} s)",
+    "revealDelaySummaryAuto": "answer shown {{seconds}} s (auto)"
   },
   "preview": {
     "view": "Preview (player view)",
@@ -398,7 +400,7 @@
     "next": "Next",
     "questionPosition": "{{index}} / {{total}}",
     "correctAnswer": "correct answer",
-    "optionFallback": "Option {{index}}",
+    "optionFallback": "Choice {{index}}",
     "acceptedAnswers": "Accepted answers: {{answers}}",
     "numericTarget": "Target: {{value}} (± {{tolerance}})",
     "credits": "Credits",
@@ -410,7 +412,9 @@
     "projection": "Projection",
     "phone": "Phone",
     "showAnswer": "Show the answer",
-    "title": "Preview"
+    "title": "Preview",
+    "pin": "Pin",
+    "unpin": "Unpin"
   },
   "media": {
     "alt": "question media",
@@ -502,12 +506,12 @@
     "confirmLabel": "Delete"
   },
   "questionTypeHelp": {
-    "single_choice": "One correct answer among 2 to 8 options. Points scale with speed, plus a streak bonus.",
+    "single_choice": "One correct answer among 2 to 8 choices. Points scale with speed, plus a streak bonus.",
     "multiple_choice": "Several correct answers; the participant ticks then submits. All or nothing: the ticked set must match exactly.",
-    "true_false": "Two fixed options, one correct. The fastest to play.",
+    "true_false": "Two fixed choices, one correct. The fastest to play.",
     "text_input": "The participant types the answer. Matched against the accepted answers ignoring case, accents and extra spaces.",
     "numeric": "The participant enters a number; correct when within ± tolerance of the target.",
-    "ordering": "The participant sorts the options into the order set by the positions (#). All or nothing.",
+    "ordering": "The participant sorts the choices into the order set by the positions (#). All or nothing.",
     "poll": "Opinion only: no correct answer, no points; the distribution is shown at the reveal.",
     "image_choice": "The answers are pictures, 2 or 4, each with its colour and shape. One right picture, or several when set; scored like a single or multiple choice."
   },

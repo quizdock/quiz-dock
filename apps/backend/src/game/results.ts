@@ -1,4 +1,5 @@
 import type {
+  HostScoreRow,
   LeaderboardPayload,
   LeaderboardRow,
   PodiumPayload,
@@ -51,12 +52,17 @@ export function rankingOf(ranked: RankedPlayer[]): Ranking {
 
 /** The first `limit` rows of a ranking, as shown publicly (no personal rank). */
 export function topRows(
-  ranked: Pick<RankedPlayer, 'nickname' | 'score' | 'avatar'>[],
+  ranked: (Pick<RankedPlayer, 'nickname' | 'score' | 'avatar'> &
+    Partial<Pick<RankedPlayer, 'presence'>>)[],
   limit = 10,
 ): LeaderboardRow[] {
-  return ranked
-    .slice(0, limit)
-    .map((p, i) => ({ nickname: p.nickname, score: p.score, rank: i + 1, avatar: p.avatar }));
+  return ranked.slice(0, limit).map((p, i) => ({
+    nickname: p.nickname,
+    score: p.score,
+    rank: i + 1,
+    avatar: p.avatar,
+    ...(p.presence === 'remote' ? { remote: true as const } : {}),
+  }));
 }
 
 /** The socket's own score and rank, when it is a player of the game. */
@@ -113,4 +119,44 @@ export function personalPodium(
     ...(snapshot?.credits?.length ? { credits: snapshot.credits } : {}),
     you: yourLine(ranking, playerId),
   };
+}
+
+/**
+ * The host's standings (#198): every player of the game or the room, with their score in
+ * the quiz and in the room. `room` is the room's standings over the games recorded so far;
+ * `folded` says whether this game is one of them already (at its podium), so that it is
+ * not counted twice.
+ */
+export function scoreTable(
+  quiz: RankedPlayer[],
+  room: Pick<RankedPlayer, 'id' | 'score' | 'joinedAt'>[],
+  folded: boolean,
+): HostScoreRow[] {
+  const inQuiz = new Map(quiz.map((p, i) => [p.id, { score: p.score, rank: i + 1 }]));
+  const joinedAt = new Map<string, number>();
+  const roomScore = new Map<string, number>();
+  for (const p of room) {
+    joinedAt.set(p.id, p.joinedAt);
+    roomScore.set(p.id, p.score);
+  }
+  for (const p of quiz) {
+    joinedAt.set(p.id, p.joinedAt);
+    if (!folded) roomScore.set(p.id, (roomScore.get(p.id) ?? 0) + p.score);
+  }
+  const ids = [...joinedAt.keys()];
+  const byRoom = [...ids].sort(
+    (a, b) =>
+      (roomScore.get(b) ?? 0) - (roomScore.get(a) ?? 0) ||
+      (joinedAt.get(a) ?? 0) - (joinedAt.get(b) ?? 0),
+  );
+  const roomRank = new Map(byRoom.map((id, i) => [id, i + 1]));
+  // Someone in the room who does not play this game comes after those who do.
+  const notPlaying = ids.filter((id) => !inQuiz.has(id));
+  return ids.map((playerId) => ({
+    playerId,
+    quizScore: inQuiz.get(playerId)?.score ?? 0,
+    quizRank: inQuiz.get(playerId)?.rank ?? quiz.length + notPlaying.indexOf(playerId) + 1,
+    roomScore: roomScore.get(playerId) ?? 0,
+    roomRank: roomRank.get(playerId) ?? ids.length,
+  }));
 }

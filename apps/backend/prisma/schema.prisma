@@ -162,7 +162,8 @@ model User {
   /// What the operator granted through the CLI. Sticky: provisioning never takes
   /// it away, and the host seat never clears it.
   assignedRoles UserRole[] @map("assigned_roles")
-  locale        String     @default("fr")
+  /// The interface language of the host's own screens (#209); null = the instance's.
+  locale        String?
   /// What the account remembers wherever it signs in (`UserPreferences` in the
   /// contracts). Read key by key: an unknown or stale key falls back to its default.
   preferences   Json       @default("{}")

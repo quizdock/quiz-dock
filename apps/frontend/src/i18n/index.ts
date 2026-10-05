@@ -1,15 +1,15 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { appConfig } from '../config';
+import { type AppLang, namespaces, resolveLang, supportedLngs } from './languages';
 /**
  * i18n — dictionnaire 100 % côté front (le backend n'émet que des codes, cf.
  * ADR 0001).
  *
- * **Une seule langue par déploiement**, fixée via `APP_LANG` (.env → `config.js`
- * → `window.__APP_CONFIG__.lang`, comme `APP_NAME`). Pas de détection navigateur
- * ni de bascule par utilisateur : l'instance est self-hosted et le contenu des
- * quiz n'est pas multilingue, on évite donc toute incohérence langue UI / contenu.
- * Langues fournies : `en` (défaut), `fr`, `es`, `zh` (chinois simplifié),
+ * **La langue de l'instance par défaut**, fixée via `APP_LANG` (.env → `config.js`
+ * → `window.__APP_CONFIG__.lang`, comme `APP_NAME`). Pas de détection navigateur.
+ * Un animateur peut choisir la sienne pour ses écrans, et les écrans du public
+ * parlent la langue du quiz ou celle choisie pour le salon (#209,
+ * `interface-language.ts`). Langues fournies : `en` (défaut), `fr`, `es`, `zh` (chinois simplifié),
  * `zh-TW` (chinois traditionnel), `tr` (turc). Vocabulaire et arbitrages : `GLOSSARY.md`.
  *
  * Chaque langue est un fichier à part, chargé à la demande (audit E16) : le
@@ -19,39 +19,10 @@ import { appConfig } from '../config';
  */
 const files = import.meta.glob<{ default: Record<string, unknown> }>('./locales/*/*.json');
 
-/** The namespaces, one file each per language. */
-export const namespaces = [
-  'common',
-  'dashboard',
-  'editor',
-  'live',
-  'join',
-  'sessions',
-  'store',
-  'auth',
-  'errors',
-  'validation',
-  'admin',
-] as const;
-
-export const supportedLngs = ['en', 'fr', 'es', 'zh', 'zh-TW', 'tr'] as const;
-export type AppLang = (typeof supportedLngs)[number];
+export { namespaces, resolveLang, supportedLngs, type AppLang, type Namespace } from './languages';
 
 const DEFAULT_LANG: AppLang = 'en';
 export const defaultNS = 'common';
-
-/**
- * Langue de l'instance : valeur d'`APP_LANG` (via `appConfig.lang`) si supportée,
- * sinon repli `en`. **En test, on épingle `fr`** (les assertions existantes sont
- * rédigées en français) pour rester déterministe.
- */
-function resolveLang(): AppLang {
-  if (import.meta.env.MODE === 'test') return 'fr';
-  const configured = appConfig.lang;
-  return (supportedLngs as readonly string[]).includes(configured)
-    ? (configured as AppLang)
-    : DEFAULT_LANG;
-}
 
 void i18next.use(initReactI18next).init({
   // Filled by `loadLanguages`, before the first render.

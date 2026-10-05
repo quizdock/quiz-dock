@@ -85,7 +85,8 @@ export function RatingPanel({
   return (
     <Card className={cn('w-full [text-shadow:none] on-backdrop:backdrop-blur-md', BACKDROP_EDGE)}>
       <CardHeader>
-        <CardTitle>{t('rating.title')}</CardTitle>
+        {/* In the next quiz's lobby, the one rated is the quiz before. */}
+        <CardTitle>{t(hideWhenDone ? 'rating.titlePrevious' : 'rating.title')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <div className="flex justify-center gap-1" onMouseLeave={() => setHover(0)}>

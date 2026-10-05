@@ -167,7 +167,9 @@ export function LivePage() {
               </span>
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate font-semibold">{session.title}</span>
+              <span className="block truncate font-semibold">
+                {session.title || t('live:room.noQuizYet')}
+              </span>
               <span className="text-muted-foreground text-xs">
                 <span className="font-mono tracking-widest">{session.pin}</span>
                 {session.host ? ` · ${t('hostedBy', { name: session.host })}` : null}

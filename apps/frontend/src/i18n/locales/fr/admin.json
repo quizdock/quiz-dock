@@ -54,7 +54,7 @@
     "none": "Aucun réglage ne correspond.",
     "list": "Réglages",
     "problem": "Un problème",
-    "rules": "Réglages qui se contredisent :",
+    "rules": "Réglages à revoir :",
     "envValue": "remplace .env :",
     "access": {
       "read": "Le web affiche tous les réglages et n’en modifie aucun (ADMIN_WEB_SCOPE=read).",
@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "Mise en service de cette instance",
-    "invite": "Cette instance n’est pas encore mise en service.",
+    "invite": "Cette instance n’est pas encore entièrement configurée.",
     "inviteLink": "La mettre en service",
     "closed": "Cette instance est en service : l’assistant est fermé (`qd setup.reopen` le rouvre, depuis un shell).",
     "home": "Accueil",

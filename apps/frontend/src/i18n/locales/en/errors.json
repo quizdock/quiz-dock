@@ -31,6 +31,7 @@
     "join_required": "Join the room before answering.",
     "already_joined": "You are already in this room.",
     "already_started": "The quiz has already started.",
+    "quiz_required": "Pick the quiz first.",
     "reveal_required": "Action only possible after the reveal.",
     "timer_not_adjustable": "The timer can only be adjusted during a question.",
     "snapshot_not_found": "Session snapshot not found.",
@@ -42,6 +43,7 @@
     "open_access_forbidden": "Open access is not allowed on this server.",
     "open_access_guests_only": "In open access participants have no account: no personal tracking, no name taken from an account.",
     "next_quiz_unavailable": "This quiz cannot be played next in this room.",
+    "next_quiz_from_lobby": "The next quiz is picked in the room's lobby.",
     "review_unavailable": "You can only look back at a step between two questions.",
     "step_not_played": "This step has not been played yet."
   },

@@ -379,14 +379,17 @@ async function live(browser, quizzes) {
     }
   };
 
-  // Step by step: the intro slide, then each question to its reveal.
+  // Step by step: the intro slide, then each question to its reveal. The steps between
+  // (the quiz's standings after a reveal, a slide, a media wait) are passed through.
+  const PASSED = new Set(['LEADERBOARD', 'SLIDE_SHOW', 'MEDIA_LOADING']);
   const next = async (test) => {
-    host.emit('host:next');
-    const s = await host.until(test).catch(async () => {
-      host.emit('host:next'); // a media wait the host may skip
-      return host.until(test);
-    });
-    return s;
+    for (let presses = 0; presses < 6; presses++) {
+      const from = host.state();
+      host.emit('host:next');
+      const s = await host.until((st) => test(st) || (st !== from && PASSED.has(st.state)), 30_000);
+      if (test(s)) return s;
+    }
+    throw new Error(`step not reached (now ${JSON.stringify(host.state())})`);
   };
   host.emit('host:start');
   await host.until((s) => s.state === 'SLIDE_SHOW');

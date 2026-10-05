@@ -28,13 +28,6 @@ entry in the PR that pays it back.
 - **Way out**: nonces for styles; for images, the editor's image node limited to the
   application's media, then `https:` dropped and the logo's origin read per request.
 
-## `user.locale`, a column nobody reads
-
-- **Where**: `prisma/schema.prisma` (`User.locale`, default `fr`).
-- **What**: the interface language is the instance's (`APP_LANG`), by decision; quizzes are
-  monolingual. The column is a leftover, and its default is wrong on an English instance.
-- **Way out**: drop it in a migration when one is due anyway.
-
 ## A dark theme nothing turns on
 
 - **Where**: `apps/frontend/src/index.css` (`.dark` and its `@custom-variant`), and a few
@@ -62,3 +55,24 @@ entry in the PR that pays it back.
   regenerated on its branch.
 - **Way out**: weigh a lighter generator (types from the OpenAPI plus a thin fetch
   client) against what the TanStack Query hooks save.
+
+## Small gaps in the live game (audit 2026-10)
+
+Four known gaps left by the review of the changes after v0.13.2, each rare or harmless.
+
+- **Picking a quiz twice** — `nextQuiz` in `apps/backend/src/game/game.engine.ts`: its
+  double-click lock is per game, and the game changes with the pick, so a second click
+  that arrives after it opens the same quiz again. Cost: the participants' *Ready!* is
+  cleared and the 30 s countdown starts over. Way out: a lock per room for the pick.
+- **Auto pace against a click at a reveal** — `next` / `autoAdvance` in the same file: in
+  auto mode, the reveal's timer and the host's Next landing together can move past the
+  quiz's standings (the console drops a double click, not this). Way out: one lock for
+  the reveal and the standings that follow it.
+- **Two writes for the preferences** — `apps/backend/src/users/preferences.service.ts`:
+  the language goes to `user.locale`, the rest to the JSON column, in two statements. A
+  failure between them returns an error with the language already saved. Way out: one
+  transaction.
+- **A test that fails in a crowd** — `apps/backend/src/game/game.engine.spec.ts`, *an
+  unknown game is not found (audit G7)*: it passes alone, and now and then fails when
+  every suite runs in parallel on the test Redis. Way out: find what it shares with
+  another suite (a PIN, a key) and give it its own.

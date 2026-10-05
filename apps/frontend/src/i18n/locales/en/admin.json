@@ -54,7 +54,7 @@
     "none": "No setting matches.",
     "list": "Settings",
     "problem": "A problem",
-    "rules": "Settings that contradict each other:",
+    "rules": "Settings to review:",
     "envValue": "replaces .env:",
     "access": {
       "read": "The web shows every setting and changes none (ADMIN_WEB_SCOPE=read).",
@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "Setting up this instance",
-    "invite": "This instance is not set up yet.",
+    "invite": "This instance is not fully set up yet.",
     "inviteLink": "Set it up",
     "closed": "This instance is set up: the wizard is closed (`qd setup.reopen` opens it again, from a shell).",
     "home": "Home",

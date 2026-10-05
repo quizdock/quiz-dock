@@ -31,6 +31,7 @@
     "join_required": "Rejoignez le salon avant de répondre.",
     "already_joined": "Vous êtes déjà dans ce salon.",
     "already_started": "Le quiz a déjà commencé.",
+    "quiz_required": "Choisissez d’abord le quiz.",
     "reveal_required": "Action possible seulement après le reveal.",
     "timer_not_adjustable": "Le chrono ne peut être ajusté que pendant une question.",
     "snapshot_not_found": "Snapshot de session introuvable.",
@@ -42,6 +43,7 @@
     "open_access_forbidden": "L’accès libre n’est pas autorisé sur ce serveur.",
     "open_access_guests_only": "En accès libre, les participants n’ont pas de compte : ni suivi individuel, ni nom tiré d’un compte.",
     "next_quiz_unavailable": "Ce quiz ne peut pas être joué ensuite dans cette salle.",
+    "next_quiz_from_lobby": "Le quiz suivant se choisit dans la salle d’attente du salon.",
     "review_unavailable": "On ne peut revenir sur une étape qu’entre deux questions.",
     "step_not_played": "Cette étape n’a pas encore été jouée."
   },

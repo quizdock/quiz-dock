@@ -60,6 +60,7 @@ export function deserializeRoom(raw: Record<string, string>): RoomMeta {
       : DEFAULT_ROOM_SOUNDS,
     // A room opened before the setting existed follows the instance.
     motion: raw.motion === undefined ? liveMotionDefault() : raw.motion === '1',
+    audienceLanguage: raw.audienceLanguage ?? '',
   };
 }
 
@@ -74,6 +75,7 @@ export function deserializeGame(raw: Record<string, string>): GameFields {
       ? (raw.audioTarget as AudioTarget)
       : '',
     mediaWaitUntil: raw.mediaWaitUntil ? Number(raw.mediaWaitUntil) : 0,
+    lobbyStartAt: raw.lobbyStartAt ? Number(raw.lobbyStartAt) : 0,
     mediaLeadMs: raw.mediaLeadMs ? Number(raw.mediaLeadMs) : null,
     title: raw.title,
     language: raw.language,

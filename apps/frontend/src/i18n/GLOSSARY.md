@@ -21,6 +21,7 @@ reference, the others follow its sense, not its words.
 | participant | Participant     | Participant          | Participante         | 参与者        | 參與者        | live, console tab                                                              |
 | nickname    | Nickname        | Pseudo               | Apodo                | 昵称          | 匿稱          | join                                                                           |
 | room        | Room            | Salon                | Sala                 | 房间          | 房間          | live: what one joins with the PIN and stays in, several quizzes in a row (#89) |
+| lobby       | Lobby           | Salle d’attente      | Sala de espera       | 等候室        | 等候室        | live: the room before a quiz starts; never _lobby_ in French                   |
 | session     | Session         | Session              | Sesión               | 会话          | 會話          | afterwards: one quiz played in a room, as _History_ keeps it                   |
 | console     | Console         | Console              | Consola              | 控制台        | 控制台        | `/session/:pin/console`                                                        |
 | projection  | Projection      | Projection           | Proyección           | 投影          | 投影          | `/session/:pin/projection`                                                     |
@@ -34,7 +35,7 @@ reference, the others follow its sense, not its words.
 | ------------------------ | ------------------------------ | ------------------------------------- | -------------------------------- | -------------------- | -------------------- |
 | question                 | Question                       | Question                              | Pregunta                         | 题目                 | 題目                 |
 | slide                    | Slide                          | Slide                                 | Diapositiva                      | 幻灯片               | 簡報                 |
-| option (answer choice)   | Option                         | Option                                | Opción                           | 选项                 | 選項                 |
+| answer choice            | Answer choice                  | Choix de réponse                      | Opción de respuesta              | 选项                 | 選項                 |
 | image choice             | Image choice                   | Choix en images                       | Elección con imágenes            | 图片选择             | 圖片選擇             |
 | alternative text         | Alternative text               | Texte alternatif                      | Texto alternativo                | 替代文字             | 替代文字             |
 | explanation              | Explanation                    | Explication                           | Explicación                      | 解析                 | 解析                 |
@@ -53,6 +54,8 @@ reference, the others follow its sense, not its words.
 | leaderboard         | Leaderboard         | Classement                     | Clasificación                  | 排行榜       | 排行榜       |
 | podium              | Podium              | Podium                         | Podio                          | 领奖台       | 領獎台       |
 | leave               | Leave               | Quitter                        | Salir                          | 退出         | 離開         |
+| stop (a quiz)       | Stop the quiz       | Arrêter le quiz                | Detener el quiz                | 停止测验     | 停止測驗     |
+| close (the room)    | Close the room      | Fermer le salon                | Cerrar la sala                 | 关闭房间     | 關閉房間     |
 | looking back        | Looking back        | Retour en arrière              | Mirando atrás                  | 回顾         | 回顧         |
 | back to live        | Back to live        | Revenir au direct              | Volver al directo              | 回到当前     | 回到目前     |
 | full answer capture | Full answer capture | Capture intégrale des réponses | Captura completa de respuestas | 完整记录回答 | 完整記錄回答 |
@@ -91,6 +94,7 @@ reference, the others follow its sense, not its words.
 | history | geçmiş | Archived sessions and results. |
 | question / slide / option | soru / slayt / seçenek | Quiz content. |
 | scoring / partial credit | puanlama / kısmi puan | How points are awarded. |
+| leave / stop / close | ayrıl / durdur / kapat | A participant leaves the room; the host stops a quiz, closes the room. |
 
 Turkish strings use natural sentence order around `{{placeholders}}`, retain PIN
 and established product names, and use Turkish plural forms only where the UI
@@ -110,6 +114,15 @@ needs distinct forms. The locale checker enforces key and placeholder parity.
   Never _partie_ / _game_ in the interface; `session` stays in code
   identifiers and routes.
 
+- **leave, stop, close**: one verb per thing ended, never swapped.
+  - **leave** (fr _quitter_): a participant going out of the room (_Leave the
+    room?_); never said of the host or of a quiz;
+  - **stop** (fr _arrêter_): the host giving up the quiz in progress, the room
+    staying open (_Stop the quiz…_); never _end_ / _terminer_, which reads like
+    the normal end at the podium;
+  - **close** (fr _fermer_): the room — ending it (_Close the room_) or shutting
+    it to newcomers (_Close the room to new participants_).
+
 - **host / animateur**: the person presenting. fr uses _animateur_
   (presenter/facilitator) — _hôte_ is kept only in _siège hôte_, where the
   seat is a technical lock, not a person.
@@ -123,6 +136,12 @@ needs distinct forms. The locale checker enforces key and placeholder parity.
 - **reveal**: the moment answers are shown; a verb in the console (_Reveal
   now_) and a state everywhere else. fr _révéler / révélation_, never
   _correction_.
+- **answer choice, not option**: what the author writes for a participant to pick
+  (fr _choix de réponse_, a _choix_ for short); _option_ only survives in code. Not
+  _answers_ either: those are what participants send (_Answers received_).
+- **answer shown for**: in auto mode, how long the right answer stays on screen
+  before moving on (fr _affichage de la réponse_); never _reveal delay_, which reads
+  like a wait before the reveal.
 - **explanation**: the note shown at the reveal; not _solution_ (there may be
   none, e.g. a poll) nor _feedback_ (reserved for reviews).
 - **reviews** (participants rating a quiz) vs **feedback** (the API/DB word):

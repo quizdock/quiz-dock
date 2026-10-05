@@ -7,7 +7,8 @@ import type { Logger } from '@nestjs/common';
  * - `hostWindow` — the host's reconnection window before the game ends (§7.3);
  * - `autoNext` — the next step in auto mode (§8);
  * - `mediaWait` — the cap of a wait for media, after which the step starts anyway;
- * - `answerCount` — the end of a window in which answers came in, their count then sent.
+ * - `answerCount` — the end of a window in which answers came in, their count then sent;
+ * - `lobbyStart` — the next quiz's lobby starting on its own (#198).
  */
 export type RoomTimerKind =
   | 'reveal'
@@ -15,7 +16,8 @@ export type RoomTimerKind =
   | 'hostWindow'
   | 'autoNext'
   | 'mediaWait'
-  | 'answerCount';
+  | 'answerCount'
+  | 'lobbyStart';
 
 const KINDS: RoomTimerKind[] = [
   'reveal',
@@ -24,6 +26,7 @@ const KINDS: RoomTimerKind[] = [
   'autoNext',
   'mediaWait',
   'answerCount',
+  'lobbyStart',
 ];
 
 /**

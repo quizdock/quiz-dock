@@ -169,6 +169,8 @@ export interface RoomMeta {
   sounds: RoomSounds;
   /** Whether the room's screens move between steps (UI system §1.8); the host switches it. */
   motion: boolean;
+  /** The language of the audience's screens chosen by the host (#209); '' = each quiz's. */
+  audienceLanguage: string;
 }
 
 /** The room's game sounds as kept: the host's choices (media ids) and their URLs. */
@@ -242,6 +244,7 @@ export const ROOM_FIELDS = [
   'hostName',
   'sounds',
   'motion',
+  'audienceLanguage',
 ] as const;
 
 /**
@@ -281,6 +284,8 @@ export interface GameMeta {
   mediaLeadMs?: number | null;
   /** End of the media wait (ms epoch) while in `MEDIA_LOADING`, 0 otherwise. */
   mediaWaitUntil?: number;
+  /** When the next quiz's lobby starts on its own (ms epoch, #198); 0 = no countdown. */
+  lobbyStartAt?: number;
   /** The host's lobby choice replacing the quiz's default audio target; empty = the quiz's. */
   audioTarget?: AudioTarget | '';
   title: string;

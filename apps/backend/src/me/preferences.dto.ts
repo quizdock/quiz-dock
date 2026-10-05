@@ -1,5 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
-import { PARTICIPANT_ACCESS, userPreferencesSchema } from '@quiz-dock/contracts';
+import { LANGUAGE_RE, PARTICIPANT_ACCESS, userPreferencesSchema } from '@quiz-dock/contracts';
 import { z } from 'zod';
 
 /** What the account remembers (`GET /me/preferences`); an absent key is the default. */
@@ -12,6 +12,7 @@ export class UserPreferencesDto extends createZodDto(userPreferencesSchema) {}
 export const updatePreferencesSchema = z
   .object({
     participantAccess: z.enum(PARTICIPANT_ACCESS).nullable().optional(),
+    language: z.string().regex(LANGUAGE_RE).max(10).nullable().optional(),
   })
   .strict();
 

@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import {
   AUDIO_TARGETS,
+  LANGUAGE_RE,
+  resolveAudioTarget,
   type AnswerAck,
   type AnswerRefusal,
   GameState,
@@ -75,6 +77,7 @@ import {
   personalPodium,
   personalReveal,
   rankingOf,
+  scoreTable,
   topRows,
 } from './results';
 import { RoomTimers } from './room-timers';
@@ -86,12 +89,14 @@ import {
   snapshotHasSound,
 } from './snapshot';
 import {
+  isSettled,
   liveStepKey,
   mediaStepKey,
   navFor,
   parseStepKey,
   playedSteps,
   slideStep,
+  standingsFollow,
   stepKey,
   stepRef,
   waitedStep,
@@ -111,6 +116,8 @@ return redis.call('HSETNX', KEYS[1], ARGV[1], ARGV[2])
 
 /** Auto-mode delay on a REVEAL when the question sets none (#6): env override, else constant. */
 const defaultAutoAdvanceMs = () => settings.get(SETTINGS.GAME_AUTO_ADVANCE_MS);
+/** How long the next quiz's lobby waits before it starts on its own (#198). */
+const NEXT_QUIZ_COUNTDOWN_MS = 30_000;
 
 /** The media's start derived from `startedAt`, as a payload fragment (empty when silent). */
 function mediaStartOf(
@@ -221,7 +228,12 @@ export class GameEngine {
       } else if (meta.state === GameState.MediaLoading) {
         this.armMediaWait(ref, waitedStep(meta), (meta.mediaWaitUntil ?? 0) - Date.now());
         armed++;
-      } else if (meta.state === GameState.Reveal || meta.state === GameState.SlideShow) {
+      } else if (meta.state === GameState.Lobby && meta.lobbyStartAt) {
+        this.timers.arm('lobbyStart', pin, meta.lobbyStartAt - Date.now(), () =>
+          this.startOnItsOwn(ref),
+        );
+        armed++;
+      } else if (isSettled(meta.state) || meta.state === GameState.SlideShow) {
         if (meta.mode === 'auto' && !meta.paused && !meta.reviewStep) {
           await this.scheduleAutoNextIfNeeded(ref, meta);
           armed++;
@@ -249,8 +261,59 @@ export class GameEngine {
     if (meta.state !== GameState.Lobby) {
       throw new BadRequestException('session.already_started');
     }
-    const snapshot = await this.requireSnapshot(meta.id, true);
-    await this.enterStep(refOf(pin, meta), snapshot, 0);
+    // A lobby a quiz went back to: the host picks the next first.
+    if (!meta.quizId) throw new BadRequestException('session.quiz_required');
+    await this.startQuiz(refOf(pin, meta), Boolean(meta.lobbyStartAt));
+  }
+
+  /**
+   * The quiz's first step, once: the host's **Start**, the next quiz's countdown and
+   * everyone being ready may all come at the same moment (#198).
+   */
+  private async startQuiz(ref: GameRef, counting: boolean): Promise<void> {
+    const lock = gameKeys.advanceLock(ref.id, 'start');
+    if (!(await this.firstThrough(lock))) return;
+    try {
+      // Still this game's lobby: the host may have replaced the quiz meanwhile.
+      const meta = await this.currentMeta(ref);
+      if (!meta || meta.state !== GameState.Lobby) {
+        // The host gone meanwhile: the lobby comes back with them, and must start then.
+        if (meta?.state === GameState.HostDisconnected) await this.redis.del(lock);
+        return;
+      }
+      if (counting) await this.clearLobbyCountdown(ref);
+      const snapshot = await this.requireSnapshot(ref.id, true);
+      await this.enterStep(ref, snapshot, 0);
+    } catch (err) {
+      await this.redis.del(lock); // nothing started: Start can be tried again
+      throw err;
+    }
+  }
+
+  /** The next quiz's lobby starts on its own (#198), in `NEXT_QUIZ_COUNTDOWN_MS`. */
+  private async armLobbyCountdown(ref: GameRef, startAt: number): Promise<void> {
+    await this.redis.hset(gameKeys.game(ref.id), gameHash({ lobbyStartAt: startAt }));
+    this.timers.arm('lobbyStart', ref.pin, startAt - Date.now(), () => this.startOnItsOwn(ref));
+  }
+
+  private async clearLobbyCountdown(ref: GameRef): Promise<void> {
+    this.timers.cancel('lobbyStart', ref.pin);
+    await this.redis.hset(gameKeys.game(ref.id), gameHash({ lobbyStartAt: 0 }));
+    this.server.to(ref.pin).emit('lobby:countdown', { startAt: null });
+  }
+
+  /** The countdown is over, or everyone is ready: the quiz starts if its lobby still waits. */
+  private async startOnItsOwn(ref: GameRef): Promise<void> {
+    const meta = await this.currentMeta(ref);
+    if (!meta || meta.state !== GameState.Lobby || !meta.lobbyStartAt) return;
+    await this.startQuiz(ref, true);
+  }
+
+  /** `host:lobby-countdown-stop` (#198): the host takes the floor; **Start** launches the quiz. */
+  async stopLobbyCountdown(pin: string, hostUserId: string): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state !== GameState.Lobby || !meta.lobbyStartAt) return;
+    await this.clearLobbyCountdown(refOf(pin, meta));
   }
 
   /**
@@ -276,11 +339,19 @@ export class GameEngine {
   async setOptions(
     pin: string,
     hostUserId: string,
-    opts: { personalTracking?: boolean; pickOwnName?: boolean; audioTarget?: AudioTarget },
+    opts: {
+      personalTracking?: boolean;
+      pickOwnName?: boolean;
+      audioTarget?: AudioTarget;
+      audienceLanguage?: string;
+    },
   ): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state !== GameState.Lobby) {
       throw new BadRequestException('session.options_locked');
+    }
+    if (opts.audienceLanguage !== undefined) {
+      await this.setAudienceLanguage(refOf(pin, meta), opts.audienceLanguage);
     }
     if (opts.audioTarget !== undefined) {
       await this.setAudioTarget(refOf(pin, meta), opts.audioTarget);
@@ -321,6 +392,44 @@ export class GameEngine {
   }
 
   /**
+   * The language of the audience's screens for the whole room (#209): a BCP 47 tag, or
+   * '' for each quiz's own. Every screen is told; a tag that is not one is ignored.
+   */
+  private async setAudienceLanguage(ref: GameRef, language: string): Promise<void> {
+    if (typeof language !== 'string') return;
+    if (language !== '' && !(LANGUAGE_RE.test(language) && language.length <= 10)) return;
+    await this.redis.hset(gameKeys.room(ref.pin), roomHash({ audienceLanguage: language }));
+    const [snapshot, meta] = await Promise.all([
+      this.game.getSnapshot(ref.id),
+      this.game.getMeta(ref.pin),
+    ]);
+    if (!meta) return;
+    this.server
+      .to(ref.pin)
+      .emit('game:media', await this.mediaPayload(ref.pin, snapshot, meta.audioTarget ?? ''));
+  }
+
+  /** What every device is told of the quiz it plays: its media, sound, and language. */
+  private async mediaPayload(
+    pin: string,
+    snapshot: QuizSnapshot | null,
+    audioTarget: AudioTarget | '',
+  ): Promise<Parameters<ServerToClientEvents['game:media']>[0]> {
+    const roomLanguage = (await this.game.getRoom(pin))?.audienceLanguage ?? '';
+    // A lobby with no quiz yet: nothing to play, the room's language if it has one.
+    return {
+      title: snapshot?.title ?? '',
+      hasSound: !!snapshot && snapshotHasSound(snapshot),
+      hasMedia: !!snapshot && snapshotHasMedia(snapshot),
+      audioTarget: snapshot
+        ? gameAudioTarget(snapshot, audioTarget)
+        : resolveAudioTarget(null, audioTarget || null, null),
+      language: roomLanguage || snapshot?.language || '',
+      roomLanguage,
+    };
+  }
+
+  /**
    * The host replaces the quiz's default audio target for this game; the
    * screens that are not players hear of it (the console shows the choice).
    */
@@ -330,14 +439,8 @@ export class GameEngine {
     await this.redis.hset(gameKeys.game(ref.id), gameHash({ audioTarget: target }));
     const snapshot = await this.game.getSnapshot(ref.id);
     if (!snapshot) return;
-    const payload = {
-      title: snapshot.title,
-      hasSound: snapshotHasSound(snapshot),
-      hasMedia: snapshotHasMedia(snapshot),
-      audioTarget: gameAudioTarget(snapshot, target),
-    };
     // Every device: a phone that never enabled sound asks for it when the quiz has some.
-    this.server.to(pin).emit('game:media', payload);
+    this.server.to(pin).emit('game:media', await this.mediaPayload(pin, snapshot, target));
     // Who needs what may have changed (the phones in the room, for every device).
     await this.emitPreload(ref, snapshot, firstStepOf(snapshot, 0));
     await this.broadcastReadiness(pin);
@@ -441,7 +544,12 @@ export class GameEngine {
   ): Promise<MediaReadinessPayload | null> {
     const { pin } = ref;
     const snapshot = await this.game.getSnapshot(ref.id);
-    if (!snapshot || !step || !stepMediaForDevice(snapshot, step, 'projection', 'screen')) {
+    // The lobby counts who said they are ready, media or not; the media wait only media.
+    if (
+      !snapshot ||
+      !step ||
+      (!lobby && !stepMediaForDevice(snapshot, step, 'projection', 'screen'))
+    ) {
       return null;
     }
     const gameTarget = await this.gameTarget(ref.id, snapshot);
@@ -740,10 +848,13 @@ export class GameEngine {
       }),
     );
 
+    // The played steps behind it, for the host to look back once the question is paused.
+    const live = await this.currentMeta(ref);
     this.server.to(pin).emit('game:state', {
       state: GameState.Answering,
       questionIndex: index,
       totalQuestions: snapshot.questions.length,
+      nav: live ? navFor(live, snapshot) : undefined,
     });
     this.server
       .to(pin)
@@ -843,6 +954,7 @@ export class GameEngine {
       socket.emit('question:reveal', personalReveal(common, records, ranking, playerId));
       socket.emit('leaderboard', personalLeaderboard(ranking, playerId));
     }
+    await this.emitHostScores(ref, sockets);
     // What comes next, fetched by every device while the leaderboard is up.
     await this.emitPreload(ref, snapshot, firstStepOf(snapshot, index + 1));
     await this.broadcastReadiness(pin);
@@ -911,12 +1023,16 @@ export class GameEngine {
   /** `host:reveal` : force le passage en REVEAL (idempotent via le verrou). */
   async reveal(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
+    // Looking back from a paused question: the reveal is the live one, on every screen.
+    if (meta.reviewStep)
+      await this.redis.hset(gameKeys.game(meta.id), gameHash({ reviewStep: '' }));
     await this.advanceToReveal(pin, meta.currentIndex, 'host', meta.id);
   }
 
   /**
-   * `host:next` : depuis REVEAL, passe à la question suivante ou au PODIUM (dernière).
-   * Verrou atomique `advance-lock:{index}` → un double-clic ne saute pas de question.
+   * `host:next` : depuis REVEAL, passe au classement du quiz (#198) quand il suit, sinon
+   * à la question suivante ou au PODIUM (dernière) ; depuis LEADERBOARD, à la suite.
+   * Verrou atomique `advance-lock:{step}` → un double-clic ne saute pas d'étape.
    */
   async next(pin: string, hostUserId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
@@ -931,13 +1047,18 @@ export class GameEngine {
       await this.endMediaWait(ref, waitedStep(meta));
       return;
     }
-    if (meta.state !== GameState.Reveal && meta.state !== GameState.SlideShow) {
+    if (!isSettled(meta.state) && meta.state !== GameState.SlideShow) {
       throw new BadRequestException('session.reveal_required');
     }
     this.timers.cancel('autoNext', pin); // un enchaînement (auto/manuel) annule l'autre
-    // A slide gets its own lock key: it shares `currentIndex` with the question it precedes.
+    // A slide gets its own lock key: it shares `currentIndex` with the question it precedes;
+    // so do the standings that follow a reveal.
     const lockStep =
-      meta.state === GameState.SlideShow ? `s${meta.slideIndex ?? 0}` : String(meta.currentIndex);
+      meta.state === GameState.SlideShow
+        ? `s${meta.slideIndex ?? 0}`
+        : meta.state === GameState.Leaderboard
+          ? `l${meta.currentIndex}`
+          : String(meta.currentIndex);
     if (!(await this.firstThrough(gameKeys.advanceLock(meta.id, lockStep)))) {
       return; // suivant déjà déclenché (double-clic)
     }
@@ -955,7 +1076,37 @@ export class GameEngine {
       }
       return;
     }
+    if (meta.state === GameState.Reveal && standingsFollow(snapshot, meta.currentIndex)) {
+      await this.toStandings(ref, meta, snapshot);
+      return;
+    }
     await this.enterStep(ref, snapshot, meta.currentIndex + 1);
+  }
+
+  /**
+   * The quiz's standings after a reveal (#198), a step of their own: every screen is
+   * told the state, and gets the leaderboard again (a screen may have missed it).
+   */
+  private async toStandings(ref: GameRef, meta: GameMeta, snapshot: QuizSnapshot): Promise<void> {
+    const { pin } = ref;
+    const fresh = { ...meta, state: GameState.Leaderboard, autoNextAt: 0 };
+    await this.redis.hset(
+      gameKeys.game(ref.id),
+      gameHash({ state: GameState.Leaderboard, autoNextAt: 0 }),
+    );
+    this.server.to(pin).emit('game:state', {
+      state: GameState.Leaderboard,
+      questionIndex: meta.currentIndex,
+      totalQuestions: meta.totalQuestions,
+      nav: navFor(fresh, snapshot),
+    });
+    const ranking = await this.ranking(ref);
+    const sockets = await this.server.in(pin).fetchSockets();
+    for (const socket of sockets) {
+      socket.emit('leaderboard', personalLeaderboard(ranking, socket.data.playerId));
+    }
+    await this.scheduleAutoNextIfNeeded(ref);
+    this.server.to(pin).emit('game:mode', await this.readMode(pin));
   }
 
   // ── Looking back (host navigation) ──────────────────────────────────────────
@@ -969,8 +1120,13 @@ export class GameEngine {
    */
   async review(pin: string, hostUserId: string, step: GameStep): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
+    // Between steps, or in a question the host paused (its clock stands still meanwhile).
+    const pausedQuestion = meta.state === GameState.Answering && meta.paused && meta.clockFrozen;
     if (
-      ![GameState.Reveal, GameState.SlideShow, GameState.Podium].includes(meta.state as GameState)
+      !pausedQuestion &&
+      ![GameState.Reveal, GameState.Leaderboard, GameState.SlideShow, GameState.Podium].includes(
+        meta.state as GameState,
+      )
     ) {
       throw new BadRequestException('session.review_unavailable');
     }
@@ -1081,6 +1237,25 @@ export class GameEngine {
       socket.emit('leaderboard', personalLeaderboard(ranking, playerId));
     }
     await this.emitStandings(pin);
+    await this.emitHostScores(ref, sockets);
+  }
+
+  /**
+   * Every player's quiz and room scores (#198), to the host's consoles among `sockets`
+   * (every socket of the room when omitted).
+   */
+  private async emitHostScores(ref: GameRef, sockets?: Emitter[]): Promise<void> {
+    const targets = (sockets ?? (await this.server.in(ref.pin).fetchSockets())).filter(
+      (socket) => socket.data.isHostControl,
+    );
+    if (targets.length === 0) return;
+    const [quiz, { ranked: room }, folded] = await Promise.all([
+      this.game.rankedPlayers(ref.pin, ref.id),
+      this.game.standings(ref.pin),
+      this.game.isFolded(ref.pin, ref.id),
+    ]);
+    const payload = { rows: scoreTable(quiz, room, folded) };
+    for (const socket of targets) socket.emit('game:scores', payload);
   }
 
   /**
@@ -1147,16 +1322,10 @@ export class GameEngine {
     if (room) socket.emit('room:sounds', soundsPayload(room.sounds));
     if (room) socket.emit('room:motion', { on: room.motion });
     const snapshot = await this.game.getSnapshot(meta.id);
-    if (snapshot) {
-      // Every device asks for sound at once when the quiz will need it (a phone too:
-      // the next quiz of a room may play sound where the first did not).
-      socket.emit('game:media', {
-        title: snapshot.title,
-        hasSound: snapshotHasSound(snapshot),
-        hasMedia: snapshotHasMedia(snapshot),
-        audioTarget: gameAudioTarget(snapshot, meta.audioTarget),
-      });
-    }
+    // Every device asks for sound at once when the quiz will need it (a phone too: the
+    // next quiz of a room may play sound where the first did not). Sent with no quiz
+    // too: a lobby the room went back to clears the last one's.
+    socket.emit('game:media', await this.mediaPayload(pin, snapshot, meta.audioTarget ?? ''));
     // A participant back in a lobby: whether they already said they are ready (#104),
     // sent after the state (a new lobby clears the last quiz's on the phone).
     const saidReady =
@@ -1170,9 +1339,13 @@ export class GameEngine {
       nav: snapshot && !meta.reviewStep ? navFor(meta, snapshot) : undefined,
     });
     if (saidReady !== null) socket.emit('lobby:you', { ready: saidReady });
+    if (meta.state === GameState.Lobby) {
+      socket.emit('lobby:countdown', { startAt: meta.lobbyStartAt || null });
+    }
     // Instantané du lobby : sans lui, un host/projeté qui (re)charge verrait une
     // liste de joueurs vide (les `player:joined` passés sont perdus). §6/§9.
     socket.emit('game:roster', { players: await this.connectedRoster(pin) });
+    if (socket.data.isHostControl) await this.emitHostScores(ref, [socket]);
     // Mode/pause courants : un (ré)attache doit refléter auto/pause immédiatement.
     socket.emit('game:mode', this.buildModePayload(meta));
     if (meta.joinBaseUrl) socket.emit('game:join-url', { baseUrl: meta.joinBaseUrl });
@@ -1238,6 +1411,8 @@ export class GameEngine {
         questionStartOf(meta, snapshot, index, meta.questionStartedAt, meta.questionEndsAt),
       );
       await this.emitRevealTo(socket, ref, snapshot, index);
+    } else if (meta.state === GameState.Leaderboard) {
+      socket.emit('leaderboard', personalLeaderboard(await this.ranking(ref), playerId));
     } else if (meta.state === GameState.Podium) {
       const ranking = await this.ranking(ref);
       socket.emit('game:podium', personalPodium(ranking, playerId, snapshot));
@@ -1452,7 +1627,12 @@ export class GameEngine {
       totalQuestions: meta.totalQuestions,
     });
 
-    if (prev === GameState.MediaLoading) {
+    if (prev === GameState.Lobby && meta.lobbyStartAt) {
+      // Back in a lobby that was counting (#198): the countdown starts over, for everyone.
+      const startAt = Date.now() + NEXT_QUIZ_COUNTDOWN_MS;
+      await this.armLobbyCountdown(ref, startAt);
+      this.server.to(pin).emit('lobby:countdown', { startAt });
+    } else if (prev === GameState.MediaLoading) {
       // Back after a wait for media: no more waiting, the step starts.
       await this.endMediaWait(ref, waitedStep(meta));
     } else if (prev === GameState.Answering) {
@@ -1498,7 +1678,8 @@ export class GameEngine {
   async end(pin: string, hostUserId: string, archive = false): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
     if (meta.state === GameState.Ended) return; // déjà terminée (ré-entrée / double-clic) → pas de double archive
-    if (archive) await this.archiveAsked(pin, meta);
+    // A lobby with no quiz has nothing to archive.
+    if (archive && meta.quizId) await this.archiveAsked(pin, meta);
     this.timers.cancelAll(pin);
     this.answerCounts.delete(pin);
     await this.redis.hset(gameKeys.game(meta.id), gameHash({ state: GameState.Ended }));
@@ -1514,28 +1695,61 @@ export class GameEngine {
   }
 
   /**
-   * `host:next-quiz`: the room plays `quizId` next, from its lobby. In the lobby
-   * the quiz picked is replaced (nothing was played); at the podium `archive`
-   * keeps the results of the quiz just played, as `host:end` does. During a quiz
-   * the host closes it: `archive` keeps what was played so far (archived as
-   * interrupted, counted in the room's standings), otherwise nothing of it stays.
-   * The players stay in, at 0; every screen is sent the new lobby.
+   * `host:next-quiz`: the quiz the room's lobby plays — picked, or replacing the one
+   * picked (nothing of it was played). Only from the lobby: a quiz over or in progress
+   * goes back to the lobby first (`host:back-to-lobby`). The players stay in, at 0;
+   * every screen is sent the lobby. A quiz picked after another starts on its own (#198).
    */
-  async nextQuiz(pin: string, hostUserId: string, quizId: string, archive = false): Promise<void> {
+  async nextQuiz(pin: string, hostUserId: string, quizId: string): Promise<void> {
     const meta = await this.requireHost(pin, hostUserId);
-    if (meta.state === GameState.Ended) {
-      throw new BadRequestException('session.next_quiz_unavailable');
+    if (meta.state !== GameState.Lobby) {
+      throw new BadRequestException(
+        meta.state === GameState.Ended
+          ? 'session.next_quiz_unavailable'
+          : 'session.next_quiz_from_lobby',
+      );
     }
-    const midQuiz = meta.state !== GameState.Lobby && meta.state !== GameState.Podium;
-    // Checked before anything is archived: a quiz that cannot be played changes nothing.
     const snapshot = await this.game.snapshotFor(pin, quizId);
     const lock = gameKeys.advanceLock(meta.id, 'next-quiz');
     if (!(await this.firstThrough(lock))) return; // double click
     try {
-      if (archive && meta.state === GameState.Podium) await this.archiveAsked(pin, meta);
-      if (midQuiz) {
-        // Closed before its end. Archived first: a failed write throws with nothing moved
-        // (the quiz goes on, the host can retry); then no answer is scored any more.
+      this.timers.cancelAll(pin);
+      this.answerCounts.delete(pin);
+      await this.game.openGameWith(pin, snapshot);
+      // A lobby with no quiz is one a quiz went back to; so is one already counting.
+      const follows = !meta.quizId || Boolean(meta.lobbyStartAt);
+      const opened = await this.game.getMeta(pin);
+      if (follows && opened) {
+        await this.armLobbyCountdown(refOf(pin, opened), Date.now() + NEXT_QUIZ_COUNTDOWN_MS);
+      }
+    } catch (err) {
+      await this.redis.del(lock); // nothing moved: the host can try again
+      throw err;
+    }
+    await this.sendLobby(pin);
+  }
+
+  /**
+   * `host:back-to-lobby`: the room goes back to its lobby with no quiz chosen, where the
+   * host picks the next. From the podium `archive` keeps the results, as `host:end`
+   * does; during a quiz the host stops it, and `archive` keeps what was played so far
+   * (archived as interrupted, counted in the room's standings) — otherwise nothing of
+   * it stays.
+   */
+  async backToLobby(pin: string, hostUserId: string, archive = false): Promise<void> {
+    const meta = await this.requireHost(pin, hostUserId);
+    if (meta.state === GameState.Ended) {
+      throw new BadRequestException('session.next_quiz_unavailable');
+    }
+    if (meta.state === GameState.Lobby) return; // there already
+    const lock = gameKeys.advanceLock(meta.id, 'back-to-lobby');
+    if (!(await this.firstThrough(lock))) return; // double click
+    try {
+      if (meta.state === GameState.Podium) {
+        if (archive) await this.archiveAsked(pin, meta);
+      } else {
+        // Stopped before its end. Archived first: a failed write throws with nothing
+        // moved (the quiz goes on, the host can retry); then no answer is scored any more.
         if (archive) await this.archiveAsked(pin, meta, true);
         this.timers.cancelAll(pin);
         this.answerCounts.delete(pin);
@@ -1544,11 +1758,16 @@ export class GameEngine {
       }
       this.timers.cancelAll(pin);
       this.answerCounts.delete(pin);
-      await this.game.openGameWith(pin, snapshot);
+      await this.game.openGameWith(pin, null);
     } catch (err) {
-      await this.redis.del(lock); // nothing moved: the host can try again
+      await this.redis.del(lock);
       throw err;
     }
+    await this.sendLobby(pin);
+  }
+
+  /** The room's new lobby, to every screen. */
+  private async sendLobby(pin: string): Promise<void> {
     for (const socket of await this.server.in(pin).fetchSockets()) {
       await this.sendStateTo(socket, pin);
     }
@@ -1596,6 +1815,14 @@ export class GameEngine {
     if (isReady) await this.redis.multi().sadd(key, playerId).expire(key, GAME_TTL_S).exec();
     else await this.redis.srem(key, playerId);
     await this.broadcastReadiness(pin);
+    // The next quiz goes as soon as everyone in its lobby is ready (#198).
+    if (isReady && meta.lobbyStartAt) {
+      const pressed = new Set(await this.redis.smembers(key));
+      const players = await this.connectedPlayers(pin);
+      if (players.length > 0 && players.every(([id]) => pressed.has(id))) {
+        await this.startOnItsOwn(refOf(pin, meta));
+      }
+    }
     return true;
   }
 
@@ -1844,6 +2071,11 @@ export class GameEngine {
       if (show) this.server.to(pin).emit('slide:show', show);
       await this.scheduleAutoNextIfNeeded(refOf(pin, meta), meta);
     } else {
+      // Back on the question before its clock runs again: the screens looked at another step.
+      if (meta.state === GameState.Answering && meta.reviewStep) {
+        await this.resume(refOf(pin, meta));
+        meta.reviewStep = '';
+      }
       if (meta.state === GameState.Answering && meta.clockFrozen) {
         const t = await this.thawClock(pin, meta);
         if (t) {
@@ -1906,8 +2138,7 @@ export class GameEngine {
   private buildModePayload(meta: GameMeta): GameModePayload {
     // Countdown shown on a reveal in auto mode, or on a timed slide in any mode (#7).
     const onTimedStep =
-      meta.mode === 'auto' &&
-      (meta.state === GameState.Reveal || meta.state === GameState.SlideShow);
+      meta.mode === 'auto' && (isSettled(meta.state) || meta.state === GameState.SlideShow);
     const autoNextActive = onTimedStep && !meta.paused && (meta.autoNextAt ?? 0) > 0;
     return {
       mode: meta.mode,
@@ -2002,6 +2233,8 @@ export class GameEngine {
       // Per-question override (#6), else the engine default.
       const perQuestion = snapshot?.questions[m.currentIndex]?.revealDelayS;
       delay = perQuestion ? perQuestion * 1000 : defaultAutoAdvanceMs();
+    } else if (m.state === GameState.Leaderboard) {
+      delay = defaultAutoAdvanceMs();
     } else {
       return;
     }
@@ -2013,7 +2246,12 @@ export class GameEngine {
     await this.redis.hset(gameKeys.game(ref.id), gameHash({ autoNextAt, autoNextMs: delay }));
     const hostUserId = m.hostUserId;
     // The timer only fires for the exact step it was armed on (question or slide).
-    const step = m.state === GameState.SlideShow ? `s${m.slideIndex ?? 0}` : m.currentIndex;
+    const step =
+      m.state === GameState.SlideShow
+        ? `s${m.slideIndex ?? 0}`
+        : m.state === GameState.Leaderboard
+          ? `l${m.currentIndex}`
+          : m.currentIndex;
     this.timers.arm('autoNext', pin, delay, () => this.autoAdvance(ref, hostUserId, step));
   }
 
@@ -2029,7 +2267,8 @@ export class GameEngine {
     if (meta.mode !== 'auto') return;
     const onSlide = meta.state === GameState.SlideShow && step === `s${meta.slideIndex ?? 0}`;
     const onReveal = meta.state === GameState.Reveal && step === meta.currentIndex;
-    if (!onSlide && !onReveal) return;
+    const onStandings = meta.state === GameState.Leaderboard && step === `l${meta.currentIndex}`;
+    if (!onSlide && !onReveal && !onStandings) return;
     await this.next(pin, hostUserId);
   }
 
@@ -2075,6 +2314,9 @@ export class GameEngine {
     };
     if (!meta || meta.state !== GameState.Answering || meta.currentIndex !== questionIndex) {
       return reject('closed'); // mauvaise question / fenêtre fermée
+    }
+    if (meta.reviewStep) {
+      return reject('closed'); // the host shows another step: the question is not on screen
     }
     if (receivedAt < meta.questionStartedAt) {
       return reject('early'); // trop tôt : fenêtre de lecture (§6)

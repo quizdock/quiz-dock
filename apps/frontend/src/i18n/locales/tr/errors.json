@@ -31,6 +31,7 @@
     "join_required": "Cevap vermeden önce odaya katılın.",
     "already_joined": "Zaten bu odadasınız.",
     "already_started": "Quiz çoktan başladı.",
+    "quiz_required": "Önce quizi seçin.",
     "reveal_required": "Bu işlem ancak yanıtlar gösterildikten sonra yapılabilir.",
     "timer_not_adjustable": "Zamanlayıcı yalnızca bir soru sırasında ayarlanabilir.",
     "snapshot_not_found": "Oturumun anlık görüntüsü bulunamadı.",
@@ -42,6 +43,7 @@
     "open_access_forbidden": "Bu sunucuda açık erişime izin verilmiyor.",
     "open_access_guests_only": "Açık erişimde katılımcı hesabı bulunmaz; bireysel takip veya hesaptan alınan ad kullanılamaz.",
     "next_quiz_unavailable": "Bu quiz bu odada sıradaki quiz olarak oynatılamaz.",
+    "next_quiz_from_lobby": "Sonraki quiz odanın lobisinde seçilir.",
     "review_unavailable": "Bir adımı yalnızca iki soru arasında yeniden gösterebilirsiniz.",
     "step_not_played": "Bu adım henüz oynanmadı."
   },

@@ -486,7 +486,9 @@ export function ClosestList({ rows }: { rows: ClosestRow[] }) {
           >
             <span className="text-muted-foreground w-[1.5em] tabular-nums">{r.rank}.</span>
             <Avatar name={r.avatar || r.nickname} size="1.6em" />
-            <span className="min-w-0 flex-1 truncate text-left">{r.nickname}</span>
+            <span className="min-w-0 flex-1 truncate text-left" title={r.nickname}>
+              {r.nickname}
+            </span>
             <span className="tabular-nums">{r.value}</span>
             <span className="text-muted-foreground w-[4.5em] text-right text-[0.85em] tabular-nums">
               {t('reveal.closestDistance', { distance: +r.distance.toFixed(2) })}
@@ -633,6 +635,7 @@ export function TimerBar({
   icon,
   label,
   paused = false,
+  reading = false,
   className,
 }: {
   remaining: number;
@@ -641,6 +644,8 @@ export function TimerBar({
   icon: string;
   label: string;
   paused?: boolean;
+  /** Before the answers open: the bar runs stripes, red, the count stands still. */
+  reading?: boolean;
   className?: string;
 }) {
   const total = Math.max(totalS, remaining);
@@ -649,23 +654,26 @@ export function TimerBar({
     <div
       role="timer"
       aria-label={label}
-      data-tone={toneOf(share, paused)}
-      className={cn(
-        'qd-timer flex w-full items-center gap-[0.6em]',
-        paused && 'opacity-60',
-        className,
-      )}
+      data-tone={reading ? 'reading' : toneOf(share, paused)}
+      // Paused, it says so by its grey and its sign, never by fading: a weak projector or
+      // a bright room would lose it.
+      className={cn('qd-timer flex w-full items-center gap-[0.6em]', className)}
     >
       <div className={cn('bg-muted h-[0.5em] flex-1 overflow-hidden rounded-full', BACKDROP_EDGE)}>
         <div
           className={cn(
             'h-full rounded-full transition-[width,background-color] duration-1000 ease-linear',
-            timeTone(share, paused),
+            reading ? 'qd-reading bg-destructive' : timeTone(share, paused),
           )}
-          style={{ width: `${share * 100}%` }}
+          style={{ width: reading ? '100%' : `${share * 100}%` }}
         />
       </div>
-      <span className="shrink-0 font-bold whitespace-nowrap tabular-nums">
+      <span
+        className={cn(
+          'shrink-0 font-bold whitespace-nowrap tabular-nums',
+          reading && 'text-destructive',
+        )}
+      >
         <span aria-hidden>{icon}</span> {remaining}
       </span>
     </div>
@@ -688,6 +696,7 @@ export function QuestionClockBar({
       icon={clock.listening ? '🎧' : clock.paused ? '⏸' : '⏱'}
       label={clock.listening ? t('screen.listening') : t('screen.timeRemaining')}
       paused={clock.paused}
+      reading={clock.reading}
       className={className}
     />
   );
@@ -907,6 +916,7 @@ export function LeaderboardList({
   /** Which standings these are, for the rows to slide from their previous place. */
   track?: string;
 }) {
+  const { t } = useTranslation('live');
   const shown = rows.slice(0, max);
   const topScore = Math.max(0, ...shown.map((r) => r.score));
   const ref = useRef<HTMLOListElement>(null);
@@ -939,8 +949,14 @@ export function LeaderboardList({
               aria-hidden
             />
             <span className="text-muted-foreground relative tabular-nums">{r.rank}.</span>
-            <Avatar name={r.avatar || r.nickname} size="1.75em" />
-            <span className="relative min-w-0 flex-1 truncate text-left">{r.nickname}</span>
+            <Avatar
+              name={r.avatar || r.nickname}
+              size="1.75em"
+              remote={r.remote ? t('control.remote') : undefined}
+            />
+            <span className="relative min-w-0 flex-1 truncate text-left" title={r.nickname}>
+              {r.nickname}
+            </span>
             <span data-score className="relative tabular-nums">
               {r.score}
             </span>
@@ -953,6 +969,7 @@ export function LeaderboardList({
 
 /** Podium top 3 (participant + projeté, §5.5). */
 export function Podium({ rows }: { rows: LeaderboardRow[] }) {
+  const { t } = useTranslation('live');
   const order = [rows[1], rows[0], rows[2]]; // 2 · 1 · 3
   const heights = ['h-[6em]', 'h-[8em]', 'h-[5em]'];
   const ref = useRef<HTMLDivElement>(null);
@@ -972,9 +989,13 @@ export function Podium({ rows }: { rows: LeaderboardRow[] }) {
             className="qd-podium-step flex w-[6em] flex-col items-center gap-[0.25em]"
           >
             <span data-podium-who>
-              <Avatar name={r.avatar || r.nickname} size="3em" />
+              <Avatar
+                name={r.avatar || r.nickname}
+                size="3em"
+                remote={r.remote ? t('control.remote') : undefined}
+              />
             </span>
-            <span data-podium-who className="max-w-full truncate font-semibold">
+            <span data-podium-who className="max-w-full truncate font-semibold" title={r.nickname}>
               {r.nickname}
             </span>
             <span data-podium-who className="text-muted-foreground text-[0.875em] tabular-nums">

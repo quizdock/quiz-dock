@@ -361,10 +361,18 @@ describe('GameEngine (characterization)', () => {
 
     it('player:ready is kept per game, in the lobby, for its players only', async () => {
       const ann = join('p1');
+      const console = join();
       await seed(snapshotOf([question()]), {}, { p1: player('Ann'), p2: player('Bob') });
       expect(await engine.setReady(pin, 'ghost', true)).toBe(false);
       expect(await engine.setReady(pin, 'p1', true)).toBe(true);
       expect(ann.of('lobby:count').at(-1)).toEqual({ ready: 1, total: 2 });
+      // A first question without media: the console still sees who said ready.
+      expect(console.of('media:readiness').at(-1)).toMatchObject({
+        lobby: true,
+        ready: 1,
+        total: 2,
+        players: expect.arrayContaining([{ playerId: 'p1', ready: true, pressed: true }]),
+      });
       expect(await engine.setReady(pin, 'p1', false)).toBe(true);
       expect(ann.of('lobby:count').at(-1)).toEqual({ ready: 0, total: 2 });
       await engine.start(pin, HOST);
@@ -395,8 +403,49 @@ describe('GameEngine (characterization)', () => {
 
       await engine.reveal(pin, HOST);
       await Promise.all([engine.next(pin, HOST), engine.next(pin, HOST)]);
+      expect(await state()).toBe('LEADERBOARD'); // the quiz's standings (#198)
+      await Promise.all([engine.next(pin, HOST), engine.next(pin, HOST)]);
       const m = await meta();
       expect([m.state, m.currentIndex]).toEqual(['ANSWERING', 1]);
+    });
+
+    it("the quiz's standings follow a reveal, not the last one nor a poll's (#198)", async () => {
+      const ann = join('p1');
+      await startedAt(
+        snapshotOf([question(), question({ type: QuestionType.Poll, basePoints: 0 }), question()]),
+        { p1: player('Ann') },
+      );
+      await engine.reveal(pin, HOST);
+      const [atRoom, atAnn] = [room.length, ann.sent.length];
+      await engine.next(pin, HOST);
+      expect(await state()).toBe('LEADERBOARD');
+      expect(room.slice(atRoom).map(([e]) => e)).toEqual(['game:state', 'game:mode']);
+      expect(ann.sent.slice(atAnn).map(([e]) => e)).toEqual(['leaderboard']);
+      await engine.next(pin, HOST);
+      await engine.reveal(pin, HOST); // the poll
+      await engine.next(pin, HOST);
+      expect([(await meta()).state, (await meta()).currentIndex]).toEqual(['ANSWERING', 2]);
+      await engine.reveal(pin, HOST); // the last question
+      await engine.next(pin, HOST);
+      expect(await state()).toBe('PODIUM');
+    });
+
+    it("the host's console gets every player's quiz and room scores (#198)", async () => {
+      const desk = new FakeSocket({ isHostControl: true });
+      const ann = join('p1');
+      sockets.push(desk);
+      const t0 = await startedAt(snapshotOf([question(), question()]), {
+        p1: player('Ann'),
+        p2: player('Bob'),
+      });
+      await engine.submit(pin, 'p2', 0, await rightOption(), t0 + 100);
+      await engine.reveal(pin, HOST);
+      const rows = desk.of<{ rows: { playerId: string; quizRank: number }[] }>('game:scores');
+      expect(rows.at(-1)!.rows.find((r) => r.playerId === 'p2')).toMatchObject({
+        quizRank: 1,
+        roomRank: 1,
+      });
+      expect(ann.of('game:scores')).toEqual([]); // the host's only
     });
 
     it('after the last question, the podium: top 3 and each player’s own rank', async () => {
@@ -623,7 +672,7 @@ describe('GameEngine (characterization)', () => {
       });
       await engine.setMode(pin, HOST, 'auto');
       await engine.reveal(pin, HOST);
-      await eventually(async () => (await meta()).currentIndex === 1);
+      await eventually(async () => (await meta()).state === 'LEADERBOARD');
     });
 
     it('a slide with a zero delay waits for the host even in auto mode', async () => {
@@ -641,6 +690,7 @@ describe('GameEngine (characterization)', () => {
       });
       await engine.submit(pin, 'p1', 0, await rightOption(), t0 + 1);
       await revealed();
+      await engine.next(pin, HOST); // the quiz's standings
       await engine.next(pin, HOST);
     }
 
@@ -670,6 +720,33 @@ describe('GameEngine (characterization)', () => {
       const m = await meta();
       expect([m.reviewStep, m.state]).toEqual(['', 'SLIDE_SHOW']);
       expect(ann.of('slide:show')).toHaveLength(1); // the live slide, sent again
+    });
+
+    it('in a paused question: a played step shown, answers refused, the resume comes back', async () => {
+      const t0 = await startedAt(snapshotOf([question(), question()]), { p1: player('Ann') });
+      await engine.submit(pin, 'p1', 0, await rightOption(), t0 + 1);
+      await revealed();
+      while ((await meta()).state !== 'ANSWERING') await engine.next(pin, HOST);
+      await expect(engine.review(pin, HOST, { questionIndex: 0 })).rejects.toThrow(
+        'session.review_unavailable',
+      );
+      await engine.setPaused(pin, HOST, true);
+      const ann = join('p1');
+      await engine.review(pin, HOST, { questionIndex: 0 });
+      expect((await meta()).reviewStep).toBe('q0');
+      expect(ann.of('question:reveal')).toHaveLength(1);
+      const now = (await meta()).questionStartedAt + 1;
+      expect((await engine.submit(pin, 'p1', 1, 'x', now)).reason).toBe('closed');
+
+      await engine.setPaused(pin, HOST, false);
+      const m = await meta();
+      expect([m.reviewStep, m.state, m.currentIndex, m.clockFrozen]).toEqual([
+        '',
+        'ANSWERING',
+        1,
+        false,
+      ]);
+      expect(ann.of<{ questionIndex: number }>('question:start').at(-1)?.questionIndex).toBe(1);
     });
 
     it('reviewing a slide shows it; reviewing the live step resumes', async () => {
@@ -813,29 +890,109 @@ describe('GameEngine (characterization)', () => {
   describe('next quiz in the room', () => {
     const nextQuiz = () => snapshotOf([question({ prompt: 'Next ?' })]);
 
-    it('mid-quiz without archive: the quiz is closed, the players start the next at 0', async () => {
+    it('stopped mid-quiz without archive: back to a lobby with no quiz, the players at 0', async () => {
       const t0 = await startedAt(snapshotOf([question()]), { p1: player('Ann') });
       await engine.submit(pin, 'p1', 0, await rightOption(), t0 + 1);
-      jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
       const previous = gameId;
 
-      await engine.nextQuiz(pin, HOST, 'quiz-2');
+      await engine.backToLobby(pin, HOST);
       const m = await meta();
-      expect(m.id).not.toBe(previous);
-      expect(m.state).toBe('LOBBY');
-      expect(await game.getScore(m.id, 'p1')).toEqual({ score: 0, streak: 0 });
-      expect(archive.archive).not.toHaveBeenCalled();
       gameId = m.id; // cleaned up with the rest
       await redis.del(...(await redis.keys(`*${previous}*`)));
+      expect(m.id).not.toBe(previous);
+      expect([m.state, m.quizId, m.totalQuestions]).toEqual(['LOBBY', '', 0]);
+      expect(await game.getScore(m.id, 'p1')).toEqual({ score: 0, streak: 0 });
+      expect(archive.archive).not.toHaveBeenCalled();
+      expect((await game.standings(pin)).quizzesPlayed).toBe(0); // nothing of it kept
+      // Nothing to start until a quiz is picked; the next quiz is picked there only.
+      await expect(engine.start(pin, HOST)).rejects.toThrow('session.quiz_required');
+    });
+
+    it('picks the next quiz in the lobby only', async () => {
+      await startedAt(snapshotOf([question()]), { p1: player('Ann') });
+      jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
+      await expect(engine.nextQuiz(pin, HOST, 'quiz-2')).rejects.toThrow(
+        'session.next_quiz_from_lobby',
+      );
     });
 
     it('keeps the quiz as it was when archiving it fails', async () => {
       await startedAt(snapshotOf([question()]), { p1: player('Ann') });
       jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
       archive.archive.mockRejectedValueOnce(new Error('db down'));
-      await expect(engine.nextQuiz(pin, HOST, 'quiz-2', true)).rejects.toThrow('db down');
+      await expect(engine.backToLobby(pin, HOST, true)).rejects.toThrow('db down');
       const m = await meta();
       expect([m.id, m.state]).toEqual([gameId, 'ANSWERING']);
+    });
+
+    it('from a podium, the quiz picked in the lobby starts on its own; everyone ready starts it (#198)', async () => {
+      const ann = join('p1');
+      await seed(
+        snapshotOf([question()]),
+        { state: 'PODIUM', currentIndex: 0 },
+        {
+          p1: player('Ann'),
+        },
+      );
+      jest.spyOn(game, 'snapshotFor').mockResolvedValue(nextQuiz());
+      const previous = gameId;
+      await engine.backToLobby(pin, HOST);
+      const empty = (await meta()).id;
+      expect((await meta()).lobbyStartAt).toBe(0); // no quiz yet: no countdown
+      await engine.nextQuiz(pin, HOST, 'quiz-2');
+      const m = await meta();
+      gameId = m.id;
+      await redis.del(...(await redis.keys(`*${previous}*`)), ...(await redis.keys(`*${empty}*`)));
+      expect(m.lobbyStartAt).toBeGreaterThan(Date.now());
+      expect(ann.of<{ startAt: number | null }>('lobby:countdown').at(-1)!.startAt).toBe(
+        m.lobbyStartAt,
+      );
+      await engine.setReady(pin, 'p1', true);
+      expect(await state()).toBe('ANSWERING');
+      expect((await meta()).lobbyStartAt).toBe(0);
+    });
+
+    it('a start that finds the host gone leaves Start free for their return', async () => {
+      await seed(snapshotOf([question()]), { state: 'HOST_DISCONNECTED', prevState: 'LOBBY' });
+      // What the countdown or the last Ready! runs, the host lost meanwhile.
+      const internal = engine as unknown as {
+        startQuiz(ref: { pin: string; id: GameId }, counting: boolean): Promise<void>;
+      };
+      await internal.startQuiz({ pin, id: gameId }, true);
+      expect(await redis.exists(gameKeys.advanceLock(gameId, 'start'))).toBe(0);
+      await engine.onHostAttached(pin);
+      await engine.start(pin, HOST);
+      expect(await state()).toBe('ANSWERING');
+    });
+
+    it('the host can stop the countdown; the quiz then waits for Start (#198)', async () => {
+      await seed(
+        snapshotOf([question()]),
+        { lobbyStartAt: Date.now() + 30_000 },
+        {
+          p1: player('Ann'),
+        },
+      );
+      await engine.stopLobbyCountdown(pin, HOST);
+      expect((await meta()).lobbyStartAt).toBe(0);
+      await engine.setReady(pin, 'p1', true);
+      expect(await state()).toBe('LOBBY');
+    });
+
+    it("the room's language for the audience's screens, else the quiz's (#209)", async () => {
+      const screen = join();
+      await seed(snapshotOf([question()]));
+      await engine.sendStateTo(screen, pin);
+      expect(screen.of<{ language: string }>('game:media').at(-1)!.language).toBe('en');
+      await engine.setOptions(pin, HOST, { audienceLanguage: 'tr' });
+      expect(roomOf<{ language: string; roomLanguage: string }>('game:media').at(-1)).toMatchObject(
+        {
+          language: 'tr',
+          roomLanguage: 'tr',
+        },
+      );
+      await engine.setOptions(pin, HOST, { audienceLanguage: 'not a tag!' }); // ignored
+      expect((await game.getRoom(pin))!.audienceLanguage).toBe('tr');
     });
 
     it('is refused once the room has ended', async () => {
@@ -984,6 +1141,7 @@ describe('GameEngine (characterization)', () => {
           p1: player('Ann'),
         });
         await engine.reveal(pin, HOST);
+        await engine.next(pin, HOST); // the quiz's standings
         await engine.next(pin, HOST);
         await new Promise((r) => setTimeout(r, 700)); // past the first question's end
         const m = await meta();
@@ -1022,7 +1180,7 @@ describe('GameEngine (characterization)', () => {
         await engine.next(pin, HOST); // the host moves on before the auto pace
         await new Promise((r) => setTimeout(r, 500));
         const m = await meta();
-        expect([m.state, m.currentIndex]).toEqual(['ANSWERING', 1]);
+        expect([m.state, m.currentIndex]).toEqual(['LEADERBOARD', 0]);
       });
     });
 

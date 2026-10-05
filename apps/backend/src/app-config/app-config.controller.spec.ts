@@ -37,6 +37,11 @@ describe('AppConfigController — config.js', () => {
     expect(served().liveMotion).toBe(false);
   });
 
+  it("carries the auto pace's reveal time, in seconds (GAME_AUTO_ADVANCE_MS)", () => {
+    process.env = { ...env, GAME_AUTO_ADVANCE_MS: '8000' };
+    expect(served().autoAdvanceS).toBe(8);
+  });
+
   it('keeps a valid script when a value holds a line break (audit B15)', () => {
     process.env = { ...env, APP_NAME: 'Quiz\nNight' };
     expect(served().appName).toBe('Quiz\nNight');

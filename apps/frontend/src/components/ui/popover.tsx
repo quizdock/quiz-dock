@@ -12,7 +12,7 @@ const MARGIN = 8;
  * may take `close` (a list whose items lead somewhere).
  *
  * The panel lives in a portal, fixed to the window: a container that scrolls
- * or clips (a table's horizontal scroll) never cuts it.
+ * or clips (a table's horizontal scroll) never cuts it, and it stays inside the window.
  */
 export function Popover({
   trigger,
@@ -87,10 +87,14 @@ export function Popover({
       below + height > window.innerHeight - MARGIN && at.top - 4 - height > MARGIN
         ? at.top - 4 - height
         : below;
+    // Within the window sideways too: a trigger near the edge of a phone's screen
+    // would push the panel past it.
+    const width = panel.current?.offsetWidth ?? 0;
+    const room = Math.max(MARGIN, window.innerWidth - width - MARGIN);
     setPlace(
       align === 'end'
-        ? { top, right: Math.max(MARGIN, window.innerWidth - at.right) }
-        : { top, left: Math.max(MARGIN, at.left) },
+        ? { top, right: Math.min(room, Math.max(MARGIN, window.innerWidth - at.right)) }
+        : { top, left: Math.min(room, Math.max(MARGIN, at.left)) },
     );
   }, [open, align]);
 

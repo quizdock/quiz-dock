@@ -44,7 +44,7 @@
       "projection_remote": "Proyección y participantes a distancia",
       "everyone": "Todos los dispositivos"
     },
-    "sharingLegend": "Compartir",
+    "sharingLegend": "Idioma y uso compartido",
     "sharingSummary_one": "{{license}} · {{count}} etiqueta",
     "sharingSummary_other": "{{license}} · {{count}} etiquetas",
     "noLicense": "Sin licencia",
@@ -237,12 +237,12 @@
     "playbackLegend": "Reproducción",
     "timingLegend": "Tiempo",
     "pointsLegend": "Puntos",
-    "answerExplanationLabel": "Explicación de la respuesta (se muestra tras la revelación)",
+    "answerExplanationLabel": "Explicación (se muestra con la respuesta correcta)",
     "answerExplanationPlaceholder": "Por qué esta es la respuesta correcta… (opcional)",
     "timeLimitLabel": "Tiempo (s)",
-    "revealDelayLabel": "Retraso de revelación (s)",
+    "revealDelayLabel": "Respuesta visible durante (s)",
     "revealDelayPlaceholder": "auto",
-    "revealDelayHint": "En modo automático: tiempo en la respuesta antes de la siguiente pregunta. Vacío = ajuste por defecto.",
+    "revealDelayHint": "En modo automático: cuánto tiempo queda la respuesta correcta en pantalla antes de seguir. Vacío = ajuste de la instancia.",
     "audioTargetLabel": "Quién oye este sonido",
     "audioTargetHint": "Qué dispositivos reproducen el sonido o el vídeo de esta pregunta. «Todos los dispositivos» incluye los móviles de la sala, que producen eco si la comparten.",
     "audioTargetDefault": "Ajuste del quiz en la sala",
@@ -262,7 +262,7 @@
       "double": "Doble",
       "fixed": "Fijo (sin bonus de velocidad)"
     },
-    "optionsLegend": "Opciones",
+    "optionsLegend": "Opciones de respuesta",
     "optionAriaLabel": "opción {{index}}",
     "dragOption": "Arrastrar para reordenar la opción",
     "optionPlaceholder": "Opción {{index}}",
@@ -374,8 +374,8 @@
     "decimalsAllowed": "Se admiten decimales: 3,14, 0,5…",
     "timingSummary": "{{time}} s",
     "timingSummaryStretched": "{{time}} s ({{total}} s con el medio)",
-    "revealDelayAuto": "retardo de revelación auto",
-    "revealDelaySummary": "revelación tras {{seconds}} s",
+    "revealDelayAuto": "respuesta visible en auto",
+    "revealDelaySummary": "respuesta visible {{seconds}} s",
     "place_ordinal_one": "{{count}}.º",
     "place_ordinal_two": "{{count}}.º",
     "place_ordinal_few": "{{count}}.º",
@@ -387,7 +387,9 @@
       "top": "Sobre el texto",
       "left": "A la izquierda del texto",
       "right": "A la derecha del texto"
-    }
+    },
+    "revealDelayAutoValue": "auto ({{seconds}} s)",
+    "revealDelaySummaryAuto": "respuesta visible {{seconds}} s (auto)"
   },
   "preview": {
     "view": "Vista previa (vista del jugador)",
@@ -410,7 +412,9 @@
     "projection": "Proyección",
     "phone": "Teléfono",
     "showAnswer": "Mostrar la respuesta",
-    "title": "Vista previa"
+    "title": "Vista previa",
+    "pin": "Fijar",
+    "unpin": "Desfijar"
   },
   "media": {
     "alt": "medio de la pregunta",

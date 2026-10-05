@@ -9,4 +9,9 @@ import type { UserPreferencesDtoParticipantAccess } from './userPreferencesDtoPa
 
 export interface UserPreferencesDto {
   participantAccess?: UserPreferencesDtoParticipantAccess;
+  /**
+     * @maxLength 10
+     * @pattern ^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$
+     */
+  language?: string;
 }

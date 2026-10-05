@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { useAudienceLanguage } from '../i18n/interface-language';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { LiveMotion } from '../game/motion/level';
 import { BackdropFade, StepEnter } from '../game/motion/step-transition';
@@ -111,6 +112,8 @@ function trackingNotice(
 export function PlayerPage() {
   const { pin } = useParams({ from: '/join/$pin' });
   const session = useGameSession(pin, 'player');
+  // Once in the game, the interface speaks the audience's language (#209).
+  useAudienceLanguage(session.view.language);
   // The phone stays on between two questions, from the lobby to the end.
   useWakeLock(session.view.status === 'ready' && session.view.state !== 'ENDED');
   return (
@@ -486,7 +489,10 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
             </Button>
             {/* This device's sound: when it plays something (the question here, or the game's). */}
             {hears || gameSoundsHere || remote ? <SoundButton onUnmute={claimSound} /> : null}
-            <span className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline">
+            <span
+              className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline"
+              title={nickname}
+            >
               {nickname}
             </span>
             <Avatar name={avatarName} size={32} />

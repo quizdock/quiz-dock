@@ -207,6 +207,78 @@ describe('AdminMediaPage', () => {
     expect(screen.getByRole('button', { name: 'Retirer' })).toBeInTheDocument();
   });
 
+  it('deletes the files ticked at once, leaving out one a room plays', async () => {
+    const m2 = { ...files.body.items[0], id: 'm2', name: 'anthem.mp3', kind: 'audio' };
+    const fetchMock = mockApi([
+      me(['admin']),
+      overview,
+      { ...files, body: { total: 2, items: [files.body.items[0], m2] } },
+      {
+        method: 'GET',
+        path: '/admin/media/files/m1/usages',
+        body: {
+          quizzes: [{ id: 'q1', title: 'Discover Taiwan', owner: 'Billy' }],
+          archivedSessions: 0,
+          playing: false,
+        },
+      },
+      {
+        method: 'GET',
+        path: '/admin/media/files/m2/usages',
+        body: { quizzes: [], archivedSessions: 0, playing: true },
+      },
+      { method: 'DELETE', path: '/admin/media/files/m1', status: 204 },
+    ]);
+    renderPage();
+    await screen.findByText('anthem.mp3');
+    fireEvent.click(screen.getByLabelText('Tout sélectionner'));
+    expect(screen.getByText('2 sélectionnés')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Supprimer 1 fichier ?' });
+    expect(await within(dialog).findByText(/anthem\.mp3/)).toBeInTheDocument();
+    expect(within(dialog).getByText('« Discover Taiwan » (Billy)')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some(
+          ([url, opts]) =>
+            String(url).endsWith('/admin/media/files/m1') &&
+            (opts as RequestInit | undefined)?.method === 'DELETE',
+        ),
+      ).toBe(true),
+    );
+    expect(
+      fetchMock.mock.calls.some(
+        ([url, opts]) =>
+          String(url).endsWith('/admin/media/files/m2') &&
+          (opts as RequestInit | undefined)?.method === 'DELETE',
+      ),
+    ).toBe(false);
+  });
+
+  it('the global media take files dropped on their zone, and say which ones they refuse', async () => {
+    mockApi([
+      me(['admin']),
+      overview,
+      {
+        method: 'GET',
+        path: /\/admin\/media\/files\?.*ownerId=global/,
+        body: { total: 0, items: [] },
+      },
+      files,
+    ]);
+    renderPage();
+    await screen.findByText(/1920 × 1080/);
+    fireEvent.click(screen.getByRole('button', { name: 'Global', pressed: false }));
+    const zone = (await screen.findByText(/Déposez ici des images/)).parentElement!;
+    expect(screen.getByLabelText('Choisir des fichiers')).toHaveAttribute('multiple');
+    const notes = new File(['x'], 'notes.txt', { type: 'text/plain' });
+    fireEvent.drop(zone, { dataTransfer: { files: [notes] } });
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'notes.txt — Ni une image, ni une vidéo, ni un son.',
+    );
+  });
+
   it('switches between a list and a grid', async () => {
     mockApi([me(['admin']), overview, files]);
     renderPage();

@@ -103,11 +103,12 @@
       "allKinds": "All kinds",
       "owner": "Owner",
       "allOwners": "All owners",
+      "allHosts": "All but Global",
       "sort": "Sort",
       "bySize": "Largest first",
       "byUsage": "Most used first",
       "byDate": "Newest first",
-      "legacyOnly": "Older formats only",
+      "legacyOnly": "Older formats",
       "search": "Search by file name",
       "none": "No file matches.",
       "legacy": "older format",
@@ -122,7 +123,11 @@
       "scopeAll": "All",
       "view": "Display",
       "viewList": "List",
-      "viewGrid": "Grid"
+      "viewGrid": "Grid",
+      "perPage": "Per page",
+      "show": "Show",
+      "showAll": "All",
+      "showUnused": "Unused"
     },
     "delete": {
       "title": "Delete this file?",
@@ -141,20 +146,18 @@
     },
     "instance": {
       "help": "Provided to every host, who find them under Global media in their library. Never cleaned up; withdrawing one never breaks a quiz. No alt text here: hosts write it for their quiz, in its language.",
-      "add": {
-        "image": "Add an image",
-        "video": "Add a video",
-        "audio": "Add a sound"
-      },
-      "adding": "Converting and sending…",
       "addFailed": "The media could not be added.",
-      "empty": "No global media yet: add some with the buttons above, or from the All view.",
+      "empty": "No global media yet: drop some above, or add them from the All view.",
       "credit": "Credit (author, licence, source)",
       "remove": "Withdraw",
       "removeTitle": "Withdraw this global media?",
       "removeDescription": "Hosts no longer find it in their library. The quizzes that use it keep their copy.",
       "removeFailed": "The media could not be withdrawn.",
-      "saveFailed": "The change could not be saved."
+      "saveFailed": "The change could not be saved.",
+      "drop": "Drop images, videos or sounds here, several at once.",
+      "choose": "Choose files",
+      "sending": "Sending {{done}} of {{total}}…",
+      "unsupported": "Not an image, a video or a sound."
     },
     "global": "Global",
     "preview": {
@@ -171,6 +174,24 @@
     },
     "detail": {
       "empty": "Choose a file to see it in full, where it is used and what can be done to it."
+    },
+    "bulk": {
+      "selectPage": "Select all",
+      "selected_one": "{{count}} selected",
+      "selected_other": "{{count}} selected",
+      "tick": "Select {{name}}",
+      "promote": "Add to global media",
+      "promoteFailed": "Could not be added to the global media.",
+      "delete": "Delete",
+      "deleteTitle_one": "Delete {{count}} file?",
+      "deleteTitle_other": "Delete {{count}} files?",
+      "withdraw": "Withdraw from global media",
+      "withdrawTitle_one": "Withdraw {{count}} global media?",
+      "withdrawTitle_other": "Withdraw {{count}} global media?",
+      "playing_one": "Left out, a room is playing it: {{names}}.",
+      "playing_other": "Left out, rooms are playing them: {{names}}.",
+      "unused": "None of them is used: nothing breaks.",
+      "progress": "{{done}} of {{total}}…"
     }
   },
   "starter": {

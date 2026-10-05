@@ -13,6 +13,7 @@ import {
   useMeControllerUpdatePreferences,
 } from '../api/generated/me/me';
 import { useAuth } from '../auth/auth-context';
+import { languageName, resolveLang, supportedLngs } from '../i18n/languages';
 import { APP_NAME, allowsAnonymousParticipants, getDemo } from '../config';
 import { LoadFailed, PageLoading } from '@/components/ui/loading';
 import { UserRound } from 'lucide-react';
@@ -85,9 +86,10 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* The only preference so far only exists when a host may open a game to all. */}
-          {mode === 'oidc' && allowsAnonymousParticipants() && me.roles.includes('host') ? (
-            <PreferencesCard />
+          {/* A host's preferences: their interface language (#209), and the participant
+              access only where a host may open a game to all. */}
+          {me.roles.includes('host') ? (
+            <PreferencesCard participantAccess={mode === 'oidc' && allowsAnonymousParticipants()} />
           ) : null}
 
           {/* Le siège n'existe qu'en mode local, et seul son titulaire le voit ; sur
@@ -114,20 +116,25 @@ const ASK = 'ask';
 
 /**
  * What the account remembers wherever it signs in (#69): the participant access a
- * launch uses without asking (#57), or asking each time.
+ * launch uses without asking (#57), or asking each time; the language of the host's own
+ * screens (#209), or the instance's.
  */
-function PreferencesCard() {
-  const { t } = useTranslation('auth');
+function PreferencesCard({ participantAccess }: { participantAccess: boolean }) {
+  const { t, i18n } = useTranslation('auth');
   const queryClient = useQueryClient();
   const { data } = useMeControllerGetPreferences();
   const update = useMeControllerUpdatePreferences();
   const current = data?.data.participantAccess ?? ASK;
 
-  const onChange = async (value: string) => {
-    const participantAccess = value === ASK ? null : (value as ParticipantAccess);
-    await update.mutateAsync({ data: { participantAccess } });
+  const save = async (change: {
+    participantAccess?: ParticipantAccess | null;
+    language?: string | null;
+  }) => {
+    await update.mutateAsync({ data: change });
     await queryClient.invalidateQueries({ queryKey: getMeControllerGetPreferencesQueryKey() });
   };
+  const onChange = (value: string) =>
+    save({ participantAccess: value === ASK ? null : (value as ParticipantAccess) });
 
   return (
     <Card>
@@ -135,20 +142,43 @@ function PreferencesCard() {
         <CardTitle>{t('profile.preferences')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 text-[1em]">
-        <label className="flex flex-col gap-1">
-          <span className="font-medium">{t('profile.participantAccess')}</span>
+        {participantAccess ? (
+          <>
+            <label className="flex flex-col gap-1">
+              <span className="font-medium">{t('profile.participantAccess')}</span>
+              <Select
+                value={current}
+                disabled={!data || update.isPending}
+                onChange={(e) => void onChange(e.target.value)}
+                className="max-w-xs"
+              >
+                <option value={ASK}>{t('profile.participantAccessAsk')}</option>
+                <option value="account">{t('profile.participantAccessAccount')}</option>
+                <option value="open">{t('profile.participantAccessOpen')}</option>
+              </Select>
+            </label>
+            <p className="text-muted-foreground text-xs">{t('profile.participantAccessHelp')}</p>
+          </>
+        ) : null}
+        <label className="mt-2 flex flex-col gap-1 first:mt-0">
+          <span className="font-medium">{t('profile.language')}</span>
           <Select
-            value={current}
+            value={data?.data.language ?? ''}
             disabled={!data || update.isPending}
-            onChange={(e) => void onChange(e.target.value)}
+            onChange={(e) => void save({ language: e.target.value || null })}
             className="max-w-xs"
           >
-            <option value={ASK}>{t('profile.participantAccessAsk')}</option>
-            <option value="account">{t('profile.participantAccessAccount')}</option>
-            <option value="open">{t('profile.participantAccessOpen')}</option>
+            <option value="">
+              {t('profile.languageInstance', { name: languageName(resolveLang(), i18n.language) })}
+            </option>
+            {supportedLngs.map((lang) => (
+              <option key={lang} value={lang}>
+                {languageName(lang, i18n.language)}
+              </option>
+            ))}
           </Select>
         </label>
-        <p className="text-muted-foreground text-xs">{t('profile.participantAccessHelp')}</p>
+        <p className="text-muted-foreground text-xs">{t('profile.languageHelp')}</p>
       </CardContent>
     </Card>
   );

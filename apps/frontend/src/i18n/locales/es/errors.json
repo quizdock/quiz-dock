@@ -31,6 +31,7 @@
     "join_required": "Únete a la sala antes de responder.",
     "already_joined": "Ya estás en esta sala.",
     "already_started": "El quiz ya ha empezado.",
+    "quiz_required": "Elige primero el quiz.",
     "reveal_required": "Acción solo posible tras la revelación.",
     "timer_not_adjustable": "El temporizador solo se puede ajustar durante una pregunta.",
     "snapshot_not_found": "Instantánea de sesión no encontrada.",
@@ -42,6 +43,7 @@
     "open_access_forbidden": "El acceso libre no está permitido en este servidor.",
     "open_access_guests_only": "En acceso libre los participantes no tienen cuenta: ni seguimiento individual ni nombre tomado de una cuenta.",
     "next_quiz_unavailable": "Este quiz no se puede jugar a continuación en esta sala.",
+    "next_quiz_from_lobby": "El siguiente quiz se elige en el lobby de la sala.",
     "review_unavailable": "Solo se puede volver a un paso entre dos preguntas.",
     "step_not_played": "Este paso aún no se ha jugado."
   },

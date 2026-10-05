@@ -103,11 +103,12 @@
       "allKinds": "所有類型",
       "owner": "擁有者",
       "allOwners": "所有擁有者",
+      "allHosts": "除全域外的所有",
       "sort": "排序",
       "bySize": "最大優先",
       "byUsage": "最常用優先",
       "byDate": "最新優先",
-      "legacyOnly": "僅舊格式",
+      "legacyOnly": "舊格式",
       "search": "依檔名搜尋",
       "none": "沒有符合的檔案。",
       "legacy": "舊格式",
@@ -122,7 +123,11 @@
       "scopeAll": "全部",
       "view": "顯示",
       "viewList": "清單",
-      "viewGrid": "格狀"
+      "viewGrid": "格狀",
+      "perPage": "每頁",
+      "show": "顯示",
+      "showAll": "全部",
+      "showUnused": "未使用"
     },
     "delete": {
       "title": "刪除這個檔案？",
@@ -141,20 +146,18 @@
     },
     "instance": {
       "help": "提供給所有主持人，他們可在媒體庫的「全域媒體」中找到。不會被清理；撤下某個媒體不會破壞任何測驗。此處不設替代文字：主持人會為自己的測驗以其語言撰寫。",
-      "add": {
-        "image": "新增圖片",
-        "video": "新增影片",
-        "audio": "新增聲音"
-      },
-      "adding": "轉換並上傳中…",
       "addFailed": "無法新增這個媒體。",
-      "empty": "目前沒有全域媒體：可用上方按鈕新增，或從「全部」檢視新增。",
+      "empty": "目前沒有全域媒體：可拖放到上方，或從「全部」檢視新增。",
       "credit": "出處（作者、授權、來源）",
       "remove": "撤下",
       "removeTitle": "撤下這個全域媒體？",
       "removeDescription": "主持人將無法在媒體庫中找到它。使用它的測驗保留各自的副本。",
       "removeFailed": "無法撤下這個媒體。",
-      "saveFailed": "無法儲存變更。"
+      "saveFailed": "無法儲存變更。",
+      "drop": "將圖片、影片或聲音拖放到此處，可一次多個。",
+      "choose": "選擇檔案",
+      "sending": "正在傳送 {{done}} / {{total}}…",
+      "unsupported": "不是圖片、影片或聲音。"
     },
     "global": "全域",
     "preview": {
@@ -171,6 +174,24 @@
     },
     "detail": {
       "empty": "選擇一個檔案，查看完整內容、使用位置以及可執行的操作。"
+    },
+    "bulk": {
+      "selectPage": "全選",
+      "selected_other": "已選 {{count}} 個",
+      "tick": "選擇 {{name}}",
+      "promote": "加入全域媒體",
+      "promoteFailed": "無法加入全域媒體。",
+      "delete": "刪除",
+      "deleteTitle_other": "刪除 {{count}} 個檔案？",
+      "withdraw": "從全域媒體移除",
+      "withdrawTitle_other": "移除 {{count}} 個全域媒體？",
+      "playing_other": "已略過，房間正在播放：{{names}}。",
+      "unused": "皆未被使用：不會破壞任何內容。",
+      "progress": "{{done}} / {{total}}…",
+      "selected_one": "已選 {{count}} 個",
+      "deleteTitle_one": "刪除 {{count}} 個檔案？",
+      "withdrawTitle_one": "移除 {{count}} 個全域媒體？",
+      "playing_one": "已略過，房間正在播放：{{names}}。"
     }
   },
   "starter": {

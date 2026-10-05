@@ -54,7 +54,7 @@
     "none": "沒有符合的設定。",
     "list": "設定",
     "problem": "有問題",
-    "rules": "互相矛盾的設定：",
+    "rules": "需要檢查的設定：",
     "envValue": "取代 .env：",
     "access": {
       "read": "網頁會顯示所有設定，但不變更任何設定（ADMIN_WEB_SCOPE=read）。",
@@ -461,7 +461,7 @@
   },
   "setup": {
     "title": "初始設定此執行個體",
-    "invite": "此執行個體尚未完成初始設定。",
+    "invite": "此執行個體尚未完成全部設定。",
     "inviteLink": "開始設定",
     "closed": "此執行個體已完成初始設定：精靈已關閉（在 shell 中執行 `qd setup.reopen` 可重新開啟）。",
     "home": "首頁",

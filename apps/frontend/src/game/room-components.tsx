@@ -1,6 +1,6 @@
 import type { RoomStandingsPayload } from '@quiz-dock/contracts';
-import { CircleCheck, ListChecks, ListPlus } from 'lucide-react';
-import { useState } from 'react';
+import { CircleCheck, ListChecks, ListPlus, Square } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TagFilter, tagsOf } from '@/components/tag-filter';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,61 @@ import { useMeControllerMe } from '../api/generated/me/me';
 import type { QuizDto } from '../api/generated/model';
 import { useQuizzesControllerList } from '../api/generated/quizzes/quizzes';
 import { type GameSocket, emitWithAckOrError } from './game-client';
+import { serverNow } from './clock';
 import { LeaderboardList } from './live-components';
 import { mediaUrl } from '@/lib/media-url';
 import { CheckboxField } from '@/components/ui/checkbox-field';
+
+/** Whole seconds left until `at` (server ms epoch), ticking; 0 once it has passed. */
+function useSecondsLeft(at: number): number {
+  const left = () => Math.max(0, Math.ceil((at - serverNow()) / 1000));
+  const [seconds, setSeconds] = useState(left);
+  useEffect(() => {
+    setSeconds(left());
+    const id = setInterval(() => setSeconds(left()), 250);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `left` reads `at` only
+  }, [at]);
+  return seconds;
+}
+
+/**
+ * The next quiz starts on its own (#198): the seconds left, and for the host a stop —
+ * the quiz then waits for **Start**.
+ */
+export function LobbyCountdown({
+  startAt,
+  onStop,
+  className,
+}: {
+  startAt: number;
+  onStop?: () => void;
+  className?: string;
+}) {
+  const { t } = useTranslation('live');
+  const seconds = useSecondsLeft(startAt);
+  return (
+    <span className={cn('inline-flex items-center gap-2', className)}>
+      <span role="timer" className="tabular-nums">
+        {t('room.startsIn', { count: seconds })}
+      </span>
+      {onStop ? (
+        <Tooltip label={t('room.stopCountdown')}>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label={t('room.stopCountdown')}
+            onClick={onStop}
+            className="size-8"
+          >
+            <Square className="size-3.5" />
+          </Button>
+        </Tooltip>
+      ) : null}
+    </span>
+  );
+}
 
 /** The room's name as the screens show it: its own, else "<host>'s room". */
 export function roomLabel(
@@ -60,77 +112,45 @@ export function RoomStandingsPanel({
 }
 
 /**
- * The host picks the room's next quiz (`host:next-quiz`): from the podium (the
- * results of the quiz just played kept or not, as when ending), from the lobby
- * (the quiz picked is replaced), or during a quiz to close it (what was played
- * so far kept or not). Only the host's own quizzes that can be played —
- * `ready`, with a question — are offered: the server refuses the rest.
+ * The quiz the room's lobby plays (`host:next-quiz`): picked there — a room goes back to
+ * its lobby with none after a quiz — or replacing the one picked, nothing of it played.
+ * Only the host's own quizzes that can be played — `ready`, with a question — are
+ * offered: the server refuses the rest.
  */
-export function NextQuizButton({
+export function QuizPickButton({
   pin,
   socket,
-  mode,
   currentQuizId,
   playedQuizIds = [],
 }: {
   pin: string;
   socket: GameSocket | null;
-  mode: 'lobby' | 'podium' | 'close';
+  /** The quiz picked already, if any: it is then replaced. */
   currentQuizId: string | null;
   /** The quizzes the room already played to their end. */
   playedQuizIds?: string[];
 }) {
-  const fromPodium = mode === 'podium';
-  // Something was played: its results may be kept.
-  const offersArchive = mode !== 'lobby';
+  const replacing = Boolean(currentQuizId);
   const { t } = useTranslation(['live', 'common']);
   const [open, setOpen] = useState(false);
   const [quizId, setQuizId] = useState('');
-  const [archive, setArchive] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const me = useMeControllerMe({ query: { staleTime: 60_000, retry: false } }).data?.data;
   const quizzes = useQuizzesControllerList({ query: { enabled: open } }).data?.data ?? [];
   const playable = quizzes.filter(
     (q) =>
-      q.ownerId === me?.id &&
-      q.status === 'ready' &&
-      q.questionCount > 0 &&
-      (fromPodium || q.id !== currentQuizId),
+      q.ownerId === me?.id && q.status === 'ready' && q.questionCount > 0 && q.id !== currentQuizId,
   );
   const picked = playable.some((q) => q.id === quizId) ? quizId : '';
-  const label = t(
-    mode === 'podium'
-      ? 'control.nextQuiz'
-      : mode === 'close'
-        ? 'control.closeQuiz'
-        : 'control.changeQuiz',
-  );
-  const tooltip = t(
-    mode === 'podium'
-      ? 'control.nextQuizTooltip'
-      : mode === 'close'
-        ? 'control.closeQuizTooltip'
-        : 'control.changeQuizTooltip',
-  );
-  const description = t(
-    mode === 'podium'
-      ? 'control.nextQuizDescription'
-      : mode === 'close'
-        ? 'control.closeQuizDescription'
-        : 'control.changeQuizDescription',
-  );
+  const label = t(replacing ? 'control.changeQuiz' : 'control.chooseQuiz');
 
   const confirm = async () => {
     if (!socket || !picked) return;
     setSending(true);
     setError(null);
     try {
-      await emitWithAckOrError(socket, 'host:next-quiz', {
-        pin,
-        quizId: picked,
-        archive: offersArchive && archive,
-      });
+      await emitWithAckOrError(socket, 'host:next-quiz', { pin, quizId: picked });
       setOpen(false);
       setQuizId('');
     } catch (err) {
@@ -142,10 +162,10 @@ export function NextQuizButton({
 
   return (
     <>
-      <Tooltip label={tooltip}>
+      <Tooltip label={t(replacing ? 'control.changeQuizTooltip' : 'control.chooseQuizTooltip')}>
         <Button
           type="button"
-          variant={fromPodium ? 'main-action' : 'outline'}
+          variant={replacing ? 'outline' : 'main-action'}
           onClick={() => setOpen(true)}
         >
           <ListPlus className="size-4" />
@@ -156,7 +176,9 @@ export function NextQuizButton({
         open={open}
         wide
         title={label}
-        description={description}
+        description={t(
+          replacing ? 'control.changeQuizDescription' : 'control.chooseQuizDescription',
+        )}
         confirmLabel={sending ? t('common:loading') : t('control.openQuiz')}
         cancelLabel={t('common:cancel')}
         confirmDisabled={!picked || sending}
@@ -173,19 +195,86 @@ export function NextQuizButton({
             quizzes={playable}
             value={picked}
             onChange={setQuizId}
-            playingId={fromPodium ? currentQuizId : null}
+            playingId={null}
             playedIds={playedQuizIds}
           />
         )}
-        {offersArchive ? (
-          <CheckboxField
-            className="rounded-md border p-3"
-            checked={archive}
-            onChange={setArchive}
-            label={t(mode === 'close' ? 'control.archiveSoFarLabel' : 'control.archiveLabel')}
-            hint={t(mode === 'close' ? 'control.archiveSoFarHint' : 'control.archiveHint')}
-          />
-        ) : null}
+        {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      </ConfirmDialog>
+    </>
+  );
+}
+
+/**
+ * Back to the room's lobby (`host:back-to-lobby`), where the next quiz is picked: from
+ * the podium (its results kept or not, as when ending), or stopping the quiz in progress
+ * (what was played so far kept or not — archived as interrupted, counted in the room's
+ * standings).
+ */
+export function BackToLobbyButton({
+  pin,
+  socket,
+  mode,
+}: {
+  pin: string;
+  socket: GameSocket | null;
+  mode: 'podium' | 'stop';
+}) {
+  const stop = mode === 'stop';
+  const { t } = useTranslation(['live', 'common']);
+  const [open, setOpen] = useState(false);
+  const [archive, setArchive] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const label = t(stop ? 'control.closeQuiz' : 'control.backToLobby');
+
+  const confirm = async () => {
+    if (!socket) return;
+    setSending(true);
+    setError(null);
+    try {
+      await emitWithAckOrError(socket, 'host:back-to-lobby', { pin, archive });
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <>
+      <Tooltip label={t(stop ? 'control.closeQuizTooltip' : 'control.backToLobbyTooltip')}>
+        <Button
+          type="button"
+          variant={stop ? 'outline' : 'main-action'}
+          onClick={() => setOpen(true)}
+        >
+          <ListPlus className="size-4" />
+          {label}
+        </Button>
+      </Tooltip>
+      <ConfirmDialog
+        open={open}
+        destructive={stop}
+        title={label.replace(/…$/, '')}
+        description={t(stop ? 'control.closeQuizDescription' : 'control.backToLobbyDescription')}
+        confirmLabel={sending ? t('common:loading') : label.replace(/…$/, '')}
+        cancelLabel={t('common:cancel')}
+        confirmDisabled={sending}
+        onConfirm={() => void confirm()}
+        onCancel={() => {
+          setOpen(false);
+          setError(null);
+        }}
+      >
+        <CheckboxField
+          className="rounded-md border p-3"
+          checked={archive}
+          onChange={setArchive}
+          label={t(stop ? 'control.archiveSoFarLabel' : 'control.archiveLabel')}
+          hint={t(stop ? 'control.archiveSoFarHint' : 'control.archiveHint')}
+        />
         {error ? <p className="text-destructive text-sm">{error}</p> : null}
       </ConfirmDialog>
     </>

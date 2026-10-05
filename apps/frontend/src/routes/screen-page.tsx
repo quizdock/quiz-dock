@@ -1,4 +1,5 @@
-import { RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { LobbyCountdown, RoomStandingsPanel, roomLabel } from '../game/room-components';
+import { useAudienceLanguage } from '../i18n/interface-language';
 import { useWakeLock } from '@/lib/use-wake-lock';
 import { LiveMotion } from '../game/motion/level';
 import { Pulse } from '../game/motion/primitives';
@@ -56,6 +57,9 @@ const QUESTION_STATES = new Set<string>(['QUESTION_SHOW', 'ANSWERING', 'REVEAL',
  * Se reconnecte seul au rechargement (le PIN est dans l'URL). Plein écran pour la
  * vidéoprojection.
  */
+/** The participants' names a lobby shows before it says how many more (the screen's room). */
+const ROSTER_MAX = 18;
+
 export function ScreenPage() {
   const { pin } = useParams({ from: '/session/$pin/projection' });
   return <ScreenView pin={pin} playMedia />;
@@ -99,6 +103,8 @@ export function ScreenView({
   follow?: { sound: boolean };
 }) {
   const session = useGameSession(pin, 'spectator', { follow: !!follow });
+  // The audience's language (#209): the room's choice, else the quiz's.
+  useAudienceLanguage(session.view.language);
   // A projector, or a participant's copy of it, never dims during the session.
   useWakeLock(session.view.status === 'ready' && session.view.state !== 'ENDED');
   return (
@@ -218,21 +224,33 @@ export function ScreenSurface({
   const total = view.totalQuestions || view.outline.length;
   const qNumber = (view.question?.questionIndex ?? view.questionIndex) + 1;
   const reviewing = !!view.nav?.review;
-  const where = (step: string) => (
+  const where = (step: string, withQuiz = true) => (
     <div className="flex min-w-0 flex-col text-left leading-tight">
-      <span className="font-semibold">{step}</span>
+      <span className="truncate font-semibold">{step}</span>
       {/* The room is the page's title: the heading a screen reader lands on. */}
       <div className="text-muted-foreground truncate text-[0.7em]">
         <h1 className="inline">{roomLabel(t, view.roomName, view.hostName)}</h1>
-        {view.quizTitle ? ` · ${view.quizTitle}` : null}
+        {withQuiz && view.quizTitle ? ` · ${view.quizTitle}` : null}
       </div>
+    </div>
+  );
+  /**
+   * The centre of a band, the same on every screen: a title on one line (cut with an
+   * ellipsis when it does not fit), a small label above it when there is one.
+   */
+  const bandTitle = (title: React.ReactNode, label?: React.ReactNode, muted?: boolean) => (
+    <div className="flex min-w-0 flex-col leading-tight">
+      {label ? <span className="text-muted-foreground truncate text-[0.7em]">{label}</span> : null}
+      <span className={cn('truncate font-semibold', muted && 'text-muted-foreground font-normal')}>
+        {title}
+      </span>
     </div>
   );
   // The way in for latecomers, while the room takes newcomers (the lobby shows it in full).
   const joinChip = view.joinLocked ? null : (
-    <div className="qd-join flex items-center justify-end gap-[0.6em]">
-      <div className="text-right leading-tight">
-        <span className="text-muted-foreground block text-[0.7em]">
+    <div className="qd-join flex min-w-0 items-center justify-end gap-[0.6em]">
+      <div className="min-w-0 text-right leading-tight">
+        <span className="text-muted-foreground block truncate text-[0.7em]">
           {t('screen.joinAt')} {joinHost}
         </span>
         <span className="qd-join-pin font-mono text-[1.3em] font-bold tracking-[0.15em]">
@@ -258,8 +276,14 @@ export function ScreenSurface({
         'qd-band grid w-full shrink-0 items-center px-[3.5em] py-[0.6em]',
         stretch
           ? 'grid-cols-[auto_minmax(0,1fr)_auto] gap-[3em]'
-          : 'grid-cols-[1fr_minmax(0,1.5fr)_1fr] gap-[1em]',
+          : boxed
+            ? 'grid-cols-[1fr_minmax(0,1.5fr)_1fr] gap-[1em]'
+            : // A narrow window (a portrait screen): one line still, the left side kept to a
+              // third, the right one to its own size, the centre in the rest, cut if long.
+              'grid-cols-[fit-content(35%)_minmax(0,1fr)_auto] gap-[1em] lg:grid-cols-[1fr_minmax(0,1.5fr)_1fr]',
         side === 'top' ? 'border-b' : 'border-t',
+        // On a narrow screen the top band is secondary: smaller, the stage keeps the room.
+        side === 'top' && !boxed && 'max-lg:text-[0.8em]',
         tone === 'warning'
           ? 'bg-warning/25'
           : 'bg-background/85 on-backdrop:bg-card backdrop-blur [text-shadow:none]',
@@ -267,8 +291,22 @@ export function ScreenSurface({
       data-band={side}
     >
       <div className="min-w-0">{left}</div>
-      <div className="text-center">{centre}</div>
-      <div className="min-w-0">{right}</div>
+      {/* With nothing on its right, the top band's centre takes that side too: a long title
+          stays on one line as long as it can, two at most, then an ellipsis. The bottom
+          band's centre stays in the middle of the screen. */}
+      <div
+        className={cn(
+          'min-w-0 text-center',
+          !stretch && 'line-clamp-2',
+          !stretch && right == null && side === 'top' && 'col-span-2',
+        )}
+      >
+        {centre}
+      </div>
+      {!stretch && right == null && side === 'top' ? null : (
+        // At the band's end: the right side reads from the screen's edge.
+        <div className="flex min-w-0 justify-end text-right">{right}</div>
+      )}
     </div>
   );
   const bigStatus = (text: React.ReactNode, small?: React.ReactNode, warn?: boolean) => (
@@ -291,7 +329,10 @@ export function ScreenSurface({
   if (view.status === 'error') {
     stage = <p className="text-muted-foreground">{view.error ?? t('screen.sessionUnavailable')}</p>;
   } else if (view.state === 'HOST_DISCONNECTED') {
-    top = band('top', where(t('screen.stepQuestion', { n: qNumber, total })), null, joinChip);
+    // Gone in a lobby: no question yet to say.
+    const step =
+      qNumber > 0 ? t('screen.stepQuestion', { n: qNumber, total }) : t('screen.phaseLobby');
+    top = band('top', where(step), null, joinChip);
     stage = (
       <div className="flex flex-col items-center gap-[0.8em] opacity-80">
         <Loader2 aria-hidden className="text-muted-foreground size-[2.5em] animate-spin" />
@@ -408,17 +449,18 @@ export function ScreenSurface({
         )
       : null;
   } else if (view.state === 'LEADERBOARD' && view.leaderboard && !reviewing) {
-    // A real leaderboard moment: the top ten, large, bars as long as the scores.
+    // A real leaderboard moment: the top eight, large, bars as long as the scores — as
+    // many as the 16:9 screen holds between its bands.
     onBackground = !!view.question?.background;
     top = band(
       'top',
       where(t('screen.stepAfter', { n: qNumber, total })),
-      <span className="text-[1.3em] font-bold">{t('screen.leaderboard')}</span>,
+      bandTitle(t('screen.leaderboard')),
       joinChip,
     );
     stage = (
       <div className="w-full max-w-[48em] text-[1.25em]">
-        <LeaderboardList rows={view.leaderboard.top} max={10} />
+        <LeaderboardList rows={view.leaderboard.top} max={8} />
       </div>
     );
     bottom =
@@ -437,11 +479,9 @@ export function ScreenSurface({
     top = band(
       'top',
       where(t('screen.stepQuestion', { n: qNumber, total })),
-      reviewing ? (
-        <span className="text-[1.2em] font-bold">{t('screen.lookingBackAt', { n: qNumber })}</span>
-      ) : (
-        <span className="text-muted-foreground">{t('screen.answerLabel')}</span>
-      ),
+      reviewing
+        ? bandTitle(t('screen.lookingBackAt', { n: qNumber }))
+        : bandTitle(t('screen.answerLabel'), undefined, true),
       joinChip,
       reviewing ? 'warning' : undefined,
     );
@@ -646,28 +686,57 @@ export function ScreenSurface({
     // LOBBY (et état initial) : invitation à rejoindre + liste des joueurs (§4.1).
     // The room's next quiz (#89): what comes, and where the room stands.
     const nextInRoom = view.standings ? view.standings : null;
+    // Who said they are ready and has loaded what they play (the lobby's count, #104).
+    const readyIds = new Set(
+      view.readiness?.lobby
+        ? view.readiness.players.filter((p) => p.ready).map((p) => p.playerId)
+        : [],
+    );
     top = band(
       'top',
-      where(t('screen.phaseLobby')),
-      view.quizTitle ? (
-        <span className="text-[1.2em]">
-          <span className="text-muted-foreground">
-            {nextInRoom ? t('screen.nextQuiz') : t('screen.quizLabel')}
-          </span>{' '}
-          <b>{view.quizTitle}</b>
-        </span>
-      ) : null,
+      where(t('screen.phaseLobby'), false),
+      view.quizTitle
+        ? bandTitle(
+            view.quizTitle,
+            (nextInRoom ? t('screen.nextQuiz') : t('screen.quizLabel')).replace(/\s*[:：]\s*$/, ''),
+          )
+        : view.state === 'LOBBY' && view.totalQuestions === 0
+          ? // Back from a quiz: the host picks the next.
+            bandTitle(t('live:room.pickingNextQuiz'), undefined, true)
+          : null,
       null,
     );
-    stage = (
+    // Beside the room's standings, the invitation keeps its QR code and PIN side by side.
+    const lobby = (
       <div className="qd-lobby flex w-full flex-col items-center gap-[1.5em]">
-        <div className="flex flex-wrap items-center justify-center gap-[3em]">
-          <div className="qd-join-qr rounded-xl bg-white p-4 shadow">
-            <QRCodeSVG value={joinUrl} size={260} aria-label={t('screen.qrLabel')} />
+        <div
+          className={cn(
+            'flex items-center justify-center',
+            nextInRoom ? 'flex-nowrap gap-[2em]' : 'flex-wrap gap-[3em]',
+          )}
+        >
+          <div className="qd-join-qr shrink-0 rounded-xl bg-white p-4 shadow">
+            <QRCodeSVG
+              value={joinUrl}
+              size={nextInRoom ? 180 : 260}
+              aria-label={t('screen.qrLabel')}
+            />
           </div>
-          <div className="flex flex-col items-start gap-[0.3em] text-left">
+          <div className="flex min-w-0 flex-col items-start gap-[0.3em] text-left">
             <span className="text-[1.4em]">{t('screen.joinAt')}</span>
-            <span className="text-[2em] font-bold">{joinHost}</span>
+            {/* A long address gets smaller rather than spill: it stays on one or two lines. */}
+            <span
+              className={cn(
+                'max-w-full font-bold [overflow-wrap:anywhere]',
+                joinHost.length <= 24
+                  ? 'text-[2em]'
+                  : joinHost.length <= 36
+                    ? 'text-[1.5em]'
+                    : 'text-[1.1em]',
+              )}
+            >
+              {joinHost}
+            </span>
             <span className="qd-join-pin font-mono text-[4.5em] leading-none font-bold tracking-[0.12em]">
               {pin}
             </span>
@@ -677,25 +746,65 @@ export function ScreenSurface({
         {view.readiness?.questionIndex === 0 ? (
           <ReadinessMeter readiness={view.readiness} className="text-[1em]" />
         ) : null}
-        <ul className="qd-roster flex max-w-[56em] flex-wrap justify-center gap-[0.5em]">
-          {view.players.map((p) => (
-            <li
-              key={p.playerId}
-              className="flex items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
-            >
-              <Avatar name={p.avatar || p.nickname} size="2em" />
-              {p.nickname}
-            </li>
-          ))}
-        </ul>
-        {nextInRoom ? (
-          <RoomStandingsPanel
-            standings={nextInRoom}
-            max={5}
-            className="max-w-[28em] text-[1.1em]"
-          />
-        ) : null}
+        {/* Beside the room's standings, who is here is already said: no list again. */}
+        {nextInRoom ? null : (
+          <ul className="qd-roster flex max-w-[56em] flex-wrap justify-center gap-[0.5em]">
+            {/* A crowded room: the first ones, then how many more (the count is below). */}
+            {view.players.slice(0, ROSTER_MAX).map((p) => (
+              <li
+                key={p.playerId}
+                className="flex max-w-[14em] items-center gap-[0.5em] rounded-full border py-[0.25em] pr-[0.75em] pl-[0.25em] text-[1.1em]"
+              >
+                {/* Ready, ringed green; from elsewhere, a badge. */}
+                <Avatar
+                  name={p.avatar || p.nickname}
+                  size="2em"
+                  ready={readyIds.has(p.playerId)}
+                  remote={p.presence === 'remote' ? t('control.remote') : undefined}
+                />
+                <span className="truncate" title={p.nickname}>
+                  {p.nickname}
+                </span>
+              </li>
+            ))}
+            {view.players.length > ROSTER_MAX ? (
+              <li className="text-muted-foreground flex items-center rounded-full border px-[0.75em] py-[0.25em] text-[1.1em]">
+                +{view.players.length - ROSTER_MAX}
+              </li>
+            ) : null}
+          </ul>
+        )}
       </div>
+    );
+    // A room's next quiz (#198): the lobby on the left, the room's standings on the right.
+    stage = nextInRoom ? (
+      <div
+        className={cn(
+          'grid w-full gap-[3em]',
+          // A preview draws on a 1280-wide stage; a real projection splits when it is wide.
+          // Split, the columns take the screen's height: the standings from its top, the
+          // invitation in its middle.
+          boxed
+            ? 'flex-1 grid-cols-[minmax(0,3fr)_minmax(0,2fr)]'
+            : 'items-start lg:flex-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-stretch',
+        )}
+      >
+        <div className={cn('flex flex-col', boxed ? 'justify-center' : 'lg:justify-center')}>
+          {lobby}
+        </div>
+        {/* Beside the lobby, the standings run down to the bottom band (eight); stacked
+            under it on a portrait screen, six. */}
+        <RoomStandingsPanel
+          standings={nextInRoom}
+          max={8}
+          className={cn(
+            'text-[1.1em]',
+            boxed ? 'self-start' : 'lg:self-start max-lg:[&_li:nth-child(n+7)]:hidden',
+          )}
+        />
+      </div>
+    ) : (
+      lobby
     );
     bottom = band(
       'bottom',
@@ -708,7 +817,9 @@ export function ScreenSurface({
         </>,
         view.readiness?.lobby ? t('screen.readyOf', { ready: view.readiness.ready }) : null,
       ),
-      null,
+      view.lobbyStartAt ? (
+        <LobbyCountdown startAt={view.lobbyStartAt} className="text-[1.3em] font-semibold" />
+      ) : null,
     );
   }
 
@@ -728,7 +839,6 @@ export function ScreenSurface({
                 'justify-center px-[3.5em] text-center',
                 compact ? 'gap-[1em] py-[0.8em]' : 'gap-[1.5em] py-[1.5em]',
               ),
-          view.paused && !slide && 'opacity-60',
         )}
       >
         {stage}
