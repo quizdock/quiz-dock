@@ -4,6 +4,65 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [0.14.0] - 2026-10-05
+
+### Bug Fixes
+
+- Checks sign in whatever the language; screenshots pass the standings step *(tools)*
+- The preview's button says Pin, not Pin to the top *(editor)*
+- The console sees who is ready in a lobby whose first step has no media *(live)*
+- Patched brace-expansion, form-data, browserslist and esbuild in the dev tooling *(deps)*
+- In the next quiz's lobby, the feedback is on the previous quiz *(player)*
+- A long quiz title is cut, the PIN alone in the lobby, menus stay in the window *(console)*
+- The settings' warnings are settings to review, not ones that contradict each other *(i18n)*
+- The home says the instance is not fully set up yet *(i18n)*
+- The dev Keycloak takes localhost:15173 back too, beside the device address *(dev)*
+- The transport in the header; the window holds the console, the side column scrolls *(console)*
+- One layout for every band, guards for long names, titles and addresses *(projection)*
+- Standings down to the bottom band; one-line bands on a narrow screen *(projection)*
+- The room's standings from the top, the invitation centred beside them *(projection)*
+- A crowded room fits the screen; no participants' list beside the standings *(projection)*
+- A portrait projection stacks its lobby; a start that finds the host gone frees Start *(live)*
+- The console's transport above the outline; fixes from the audit since v0.13.2 *(live)*
+- Previews at the projection's 16:9, the side column kept in every view *(console)*
+- Stop a quiz, leave or close the room — one verb each, set in the glossary *(i18n)*
+- A true or false question starts with True and False in the quiz's language (#197) *(editor)*
+- Orval 8.39 and vitest 3.2, out of their critical advisories; API client regenerated in a container (#205) *(deps)*
+
+### Build
+
+- Bump the actions group across 1 directory with 12 updates (#203) *(deps)*
+- Bump markdown-it from 14.2.0 to 14.3.2 (#202) *(deps)*
+- Bump baseline-browser-mapping from 2.10.34 to 2.11.27 (#201) *(deps)*
+
+### Documentation
+
+- Taken again for the release *(screenshots)*
+- What to check before tagging, the tools' scripts included *(release)*
+- Four small gaps of the live game recorded as technical debt *(dev)*
+- The standings during a live game, for the presenter and the projection (#198) *(spec)*
+
+### Features
+
+- Global media dropped in, bulk actions, unused files, a sticky filter bar *(admin)*
+- The navigation as tabs, no group labels; the quiz's pace first in the settings *(admin)*
+- Ready and remote on the avatars, status columns, salle d'attente in French *(live)*
+- The host looks back from a paused question; Resume brings it back *(live)*
+- The reading window runs red stripes, the clock still; no fading in a pause *(live)*
+- No Tab to switch views, a wider side column, the projection window at the row's end *(console)*
+- The answer shown for, its auto value, answer choices, and a preview that stays *(editor)*
+- The next quiz is always picked in the room's lobby (#198) *(live)*
+- The host's interface language, the quiz's or the room's for the audience (#209) *(i18n)*
+- Live standings on the console, the next quiz's countdown, standings by the lobby (#198) *(live)*
+- Standings after each reveal, every score for the host, next quiz on its own (#198) *(live)*
+
+### Contributors
+
+- Francois Chaussin
+- dependabot[bot]
+- lutfullahkabalak
+- François CHAUSSIN
+
 ## [0.13.2] - 2026-10-03
 
 ### ⚠️ Breaking changes
