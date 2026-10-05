@@ -15,6 +15,15 @@ here=$(cd "$(dirname "$0")" && pwd)
 if [ "${1:-}" = test ]; then
   exec docker run --rm -v "$here:/w:ro" -w /w node:24 node --test src/index.test.mjs
 fi
-exec docker run --rm -it -v "$here:/w" -w /w -v quizdock-wrangler:/root/.npm \
+# The token from the environment, else from .cloudflare-token beside this script
+# (never committed): copy it in Cloudflare, then `pbpaste > tools/demo-stats/.cloudflare-token`.
+if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] && [ -f "$here/.cloudflare-token" ]; then
+  CLOUDFLARE_API_TOKEN=$(tr -d '[:space:]' < "$here/.cloudflare-token")
+  export CLOUDFLARE_API_TOKEN
+fi
+# A terminal when there is one; a pipe otherwise (`… | run.sh secret put STATS_TOKEN`).
+tty=-i
+[ -t 0 ] && tty=-it
+exec docker run --rm $tty -v "$here:/w" -w /w -v quizdock-wrangler:/root/.npm \
   -e CLOUDFLARE_API_TOKEN -e CLOUDFLARE_ACCOUNT_ID \
   node:24 npx --yes wrangler@4 "$@"
