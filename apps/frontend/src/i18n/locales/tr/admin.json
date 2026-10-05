@@ -116,7 +116,8 @@
     "critical": "Kritik: web üzerinden asla",
     "locked": "ADMIN_LOCK ile kilitli",
     "scope": "Salt okunur (ADMIN_WEB_SCOPE=read)",
-    "safe-mode": "Güvenli mod"
+    "safe-mode": "Güvenli mod",
+    "demo": "Herkese açık demo: salt okunur"
   },
   "value": {
     "empty": "—",
@@ -359,7 +360,8 @@
     "not_found": "Bulunamadı.",
     "conflict": "Çakışma.",
     "timeout": "Çok uzun sürdü.",
-    "failed": "Başarısız."
+    "failed": "Başarısız.",
+    "demo_read_only": "Herkese açık demo: salt okunur."
   },
   "quizzes": {
     "search": "Quiz arayın",
@@ -777,5 +779,6 @@
     "jwks_ok_one": "İmza anahtarları erişilebilir ({{count}} anahtar)",
     "jwks_ok_other": "İmza anahtarları erişilebilir ({{count}} anahtar)",
     "jwks_failed": "İmza anahtarları {{url}}: {{error}}"
-  }
+  },
+  "demoReadOnly": "Herkese açık demo: yönetim olduğu gibi gösterilir ve buradan hiçbir şey değiştirilemez. Kendi kurulumunuzda tamamen sizindir."
 }

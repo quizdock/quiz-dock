@@ -60,6 +60,7 @@ import { LoadFailed, Spinner } from '@/components/ui/loading';
 import { Drawer } from '@/components/ui/drawer';
 import { useMediaQuery } from '@/lib/use-media-query';
 import { cn } from '@/lib/utils';
+import { getDemo } from '../config';
 import { useSessionState } from '@/lib/use-session-state';
 
 /**
@@ -264,6 +265,8 @@ function Files() {
   const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const [bulk, setBulk] = useState<'delete' | 'withdraw' | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  // A public demo: the files are shown, nothing is added, ticked or deleted here.
+  const readOnly = !!getDemo();
   const [toDelete, setToDelete] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [toWithdraw, setToWithdraw] = useState<MediaFilesPageDtoItemsItem | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -416,7 +419,9 @@ function Files() {
       {scope === 'global' ? (
         <>
           <p className="text-muted-foreground text-sm">{t('mediaAdmin.instance.help')}</p>
-          <DropZone disabled={busy} progress={progress} onFiles={(f) => void uploadAll(f)} />
+          {readOnly ? null : (
+            <DropZone disabled={busy} progress={progress} onFiles={(f) => void uploadAll(f)} />
+          )}
         </>
       ) : null}
 
@@ -510,71 +515,73 @@ function Files() {
             />
           </FilterField>
         </div>
-        <div className="flex min-h-8 flex-wrap items-center gap-2 text-sm">
-          <label className="flex items-center gap-1.5">
-            <input
-              type="checkbox"
-              checked={allChecked}
-              ref={(el) => {
-                if (el) el.indeterminate = chosen.length > 0 && !allChecked;
-              }}
-              disabled={!list?.items.length || busy}
-              onChange={() =>
-                setChecked(allChecked ? new Set() : new Set(list?.items.map((f) => f.id)))
-              }
-            />
-            {chosen.length
-              ? t('mediaAdmin.bulk.selected', { count: chosen.length })
-              : t('mediaAdmin.bulk.selectPage')}
-          </label>
-          {chosen.length && scope === 'all' ? (
-            <>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={busy || chosen.every((f) => f.inCatalog)}
-                onClick={() =>
-                  void runBulk(
-                    chosen.filter((f) => !f.inCatalog),
-                    (f) => mediaAdminControllerAddFile(f.id),
-                    t('mediaAdmin.bulk.promoteFailed'),
-                  )
+        {readOnly ? null : (
+          <div className="flex min-h-8 flex-wrap items-center gap-2 text-sm">
+            <label className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={allChecked}
+                ref={(el) => {
+                  if (el) el.indeterminate = chosen.length > 0 && !allChecked;
+                }}
+                disabled={!list?.items.length || busy}
+                onChange={() =>
+                  setChecked(allChecked ? new Set() : new Set(list?.items.map((f) => f.id)))
                 }
-              >
-                <Library className="size-4" />
-                {t('mediaAdmin.bulk.promote')}
-              </Button>
+              />
+              {chosen.length
+                ? t('mediaAdmin.bulk.selected', { count: chosen.length })
+                : t('mediaAdmin.bulk.selectPage')}
+            </label>
+            {chosen.length && scope === 'all' ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={busy || chosen.every((f) => f.inCatalog)}
+                  onClick={() =>
+                    void runBulk(
+                      chosen.filter((f) => !f.inCatalog),
+                      (f) => mediaAdminControllerAddFile(f.id),
+                      t('mediaAdmin.bulk.promoteFailed'),
+                    )
+                  }
+                >
+                  <Library className="size-4" />
+                  {t('mediaAdmin.bulk.promote')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive-outline"
+                  disabled={busy}
+                  onClick={() => setBulk('delete')}
+                >
+                  <Trash2 className="size-4" />
+                  {t('mediaAdmin.bulk.delete')}
+                </Button>
+              </>
+            ) : null}
+            {chosen.length && scope === 'global' ? (
               <Button
                 type="button"
                 size="sm"
                 variant="destructive-outline"
                 disabled={busy}
-                onClick={() => setBulk('delete')}
+                onClick={() => setBulk('withdraw')}
               >
-                <Trash2 className="size-4" />
-                {t('mediaAdmin.bulk.delete')}
+                <X className="size-4" />
+                {t('mediaAdmin.bulk.withdraw')}
               </Button>
-            </>
-          ) : null}
-          {chosen.length && scope === 'global' ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive-outline"
-              disabled={busy}
-              onClick={() => setBulk('withdraw')}
-            >
-              <X className="size-4" />
-              {t('mediaAdmin.bulk.withdraw')}
-            </Button>
-          ) : null}
-          {progress && scope === 'all' ? (
-            <span aria-live="polite" className="text-muted-foreground">
-              {t('mediaAdmin.bulk.progress', { done: progress.done + 1, total: progress.total })}
-            </span>
-          ) : null}
-        </div>
+            ) : null}
+            {progress && scope === 'all' ? (
+              <span aria-live="polite" className="text-muted-foreground">
+                {t('mediaAdmin.bulk.progress', { done: progress.done + 1, total: progress.total })}
+              </span>
+            ) : null}
+          </div>
+        )}
       </div>
 
       {error ? (
@@ -600,7 +607,9 @@ function Files() {
             <ul className="divide-y rounded-lg border">
               {list.items.map((file) => (
                 <li key={file.id} className="flex items-center pl-2">
-                  <TickBox file={file} checked={checked.has(file.id)} onToggle={toggle} />
+                  {readOnly ? null : (
+                    <TickBox file={file} checked={checked.has(file.id)} onToggle={toggle} />
+                  )}
                   <FileRow selected={isSelected(file)} onSelect={() => setSelectedId(file.id)}>
                     <Thumb file={file} className="size-14" />
                     <div className="flex min-w-0 flex-1 flex-col">
@@ -616,12 +625,14 @@ function Files() {
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {list.items.map((file) => (
                 <li key={file.id} className="relative">
-                  <TickBox
-                    file={file}
-                    checked={checked.has(file.id)}
-                    onToggle={toggle}
-                    className="bg-background/90 absolute top-2 left-2 z-10 rounded p-1"
-                  />
+                  {readOnly ? null : (
+                    <TickBox
+                      file={file}
+                      checked={checked.has(file.id)}
+                      onToggle={toggle}
+                      className="bg-background/90 absolute top-2 left-2 z-10 rounded p-1"
+                    />
+                  )}
                   <FileRow
                     selected={isSelected(file)}
                     onSelect={() => setSelectedId(file.id)}

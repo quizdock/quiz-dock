@@ -1,3 +1,4 @@
+import { getDemo } from '../../config';
 import {
   SETTINGS,
   type SettingDefinition,
@@ -54,7 +55,9 @@ export type SettingFilter = 'changed' | 'overridden' | 'problem' | 'editable';
 
 /** Whether the web could change it (lot 4 makes it so): never a C1, a locked one, nor with the scope `read`. */
 export function editable(row: SettingRow, access: SettingsAccess): boolean {
-  return row.overridable && !row.locked && access.scope === 'write' && !access.safeMode;
+  return (
+    !getDemo() && row.overridable && !row.locked && access.scope === 'write' && !access.safeMode
+  );
 }
 
 /** Why it is read-only, when it is. */
@@ -63,7 +66,9 @@ export function readOnlyReason(
   access: SettingsAccess,
   /** The setup wizard sets C2–C4 whatever the scope (§3.8). */
   wizard = false,
-): 'critical' | 'locked' | 'scope' | 'safe-mode' | null {
+): 'critical' | 'locked' | 'scope' | 'safe-mode' | 'demo' | null {
+  // A public demo shows every setting and changes none.
+  if (getDemo()) return 'demo';
   if (!row.overridable) return 'critical';
   if (row.locked) return 'locked';
   if (access.safeMode) return 'safe-mode';

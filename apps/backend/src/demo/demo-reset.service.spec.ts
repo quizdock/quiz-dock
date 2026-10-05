@@ -8,6 +8,7 @@ import { DemoResetService } from './demo-reset.service';
 
 /** Redis with a few game hashes: `games` maps key → state. */
 function makeService(games: Record<string, string>, quizzesOfDemoUser = 0) {
+  const demoUser = { id: 'u1', displayName: 'demo_user', assignedRoles: [], roles: [] };
   const deleteMany = jest.fn().mockReturnValue('op');
   const prisma = {
     $transaction: jest.fn().mockResolvedValue([]),
@@ -16,7 +17,10 @@ function makeService(games: Record<string, string>, quizzesOfDemoUser = 0) {
     mediaAsset: { deleteMany },
     mediaBlob: { deleteMany },
     hostSeat: { deleteMany },
-    user: { deleteMany },
+    user: {
+      deleteMany,
+      update: jest.fn(async ({ data }: { data: object }) => ({ ...demoUser, ...data })),
+    },
   } as unknown as PrismaService;
   const redis = {
     scan: jest.fn().mockResolvedValue(['0', Object.keys(games)]),
@@ -26,7 +30,6 @@ function makeService(games: Record<string, string>, quizzesOfDemoUser = 0) {
   const media = {
     removeAllFiles: jest.fn().mockResolvedValue(undefined),
   } as unknown as MediaService;
-  const demoUser = { id: 'u1', displayName: 'demo_user' };
   const seat = {
     provision: jest.fn().mockResolvedValue(demoUser),
     claim: jest.fn().mockResolvedValue({}),
@@ -57,7 +60,13 @@ describe('DemoResetService', () => {
     expect(seat.provision).toHaveBeenCalledWith(
       expect.objectContaining({ sub: 'local:demo-user', displayName: 'demo_user' }),
     );
-    expect(seat.claim).toHaveBeenCalledWith(demoUser, null);
+    // A host and an administrator by grant: no seat to take, the administration shown.
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ assignedRoles: expect.arrayContaining(['admin', 'host']) }),
+      }),
+    );
+    expect(seat.claim).not.toHaveBeenCalled();
     // A blank install, but not an empty bank: the samples, to present straight away.
     expect(samples.createFor).toHaveBeenCalledWith(demoUser.id);
   });

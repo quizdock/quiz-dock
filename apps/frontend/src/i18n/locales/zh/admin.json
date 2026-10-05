@@ -116,7 +116,8 @@
     "critical": "关键：永远不能通过网页更改",
     "locked": "被 ADMIN_LOCK 锁定",
     "scope": "只读（ADMIN_WEB_SCOPE=read）",
-    "safe-mode": "安全模式"
+    "safe-mode": "安全模式",
+    "demo": "公开演示：只读"
   },
   "value": {
     "empty": "—",
@@ -359,7 +360,8 @@
     "not_found": "未找到。",
     "conflict": "冲突。",
     "timeout": "耗时过长。",
-    "failed": "失败。"
+    "failed": "失败。",
+    "demo_read_only": "公开演示：只读。"
   },
   "quizzes": {
     "search": "搜索测验",
@@ -777,5 +779,6 @@
     "jwks_ok_one": "签名密钥可访问（{{count}} 个密钥）",
     "jwks_ok_other": "签名密钥可访问（{{count}} 个密钥）",
     "jwks_failed": "签名密钥 {{url}}：{{error}}"
-  }
+  },
+  "demoReadOnly": "公开演示：管理界面按原样展示，无法在此修改任何内容。在你自己的实例上，它完全由你掌控。"
 }

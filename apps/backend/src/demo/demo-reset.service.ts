@@ -1,10 +1,12 @@
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
 import { GameState } from '@quiz-dock/contracts';
 import { MediaService } from '../media/media.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { GAME_HASH_KEY } from '../game/game.keys';
 import { RedisService } from '../redis/redis.service';
 import { localPrincipal } from '../auth/no-auth.provider';
+import { canonical } from '../auth/roles';
 import { SampleQuizzesService } from '../quizzes/samples/sample-quizzes.service';
 import { HostSeatService } from '../users/host-seat.service';
 import {
@@ -17,7 +19,7 @@ import {
 /**
  * Demo instance hygiene: every hour, back to a blank install — users, quizzes,
  * media, sessions, seat, live state — then the shared host account is set up
- * again, seat included. Whatever a visitor typed is gone within the hour.
+ * again, host and administrator by grant. Whatever a visitor typed is gone within the hour.
  * A reset waits while a session is being played (a visitor mid-game should not
  * lose it), but not forever: past `DEMO_RESET_MAX_DEFER_MS` it runs
  * regardless.
@@ -97,12 +99,22 @@ export class DemoResetService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * The shared account, holding the host seat without expiry, with the sample
-   * quizzes in its bank: a visitor has something to present straight away.
+   * The shared account, a host and an administrator by grant — the administration is
+   * there to be seen, read-only —, with the sample quizzes in its bank: a visitor has
+   * something to present straight away. Granted host, it needs no seat (RG-14).
    */
   async seatDemoHost(): Promise<void> {
-    const user = await this.seat.provision(localPrincipal(DEMO_USER));
-    await this.seat.claim(user, null);
+    let user = await this.seat.provision(localPrincipal(DEMO_USER));
+    const granted = [UserRole.host, UserRole.admin];
+    if (!granted.every((role) => user.assignedRoles.includes(role))) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          assignedRoles: canonical([...user.assignedRoles, ...granted]),
+          roles: canonical([...user.roles, ...granted]),
+        },
+      });
+    }
     if ((await this.prisma.quiz.count({ where: { ownerId: user.id } })) > 0) return;
     await this.samples
       .createFor(user.id)

@@ -205,7 +205,8 @@
     "conflict": "Not possible right now: {{message}}",
     "timeout": "The operation took too long.",
     "failed": "The operation failed: {{message}}",
-    "too_many_requests": "Too many attempts: wait a moment."
+    "too_many_requests": "Too many attempts: wait a moment.",
+    "demo_read_only": "This is a public demo: the administration is shown read-only."
   },
   "setup": {
     "token_invalid": "This setup token is not valid (wrong, used or expired): `qd setup.token` gives a new one.",

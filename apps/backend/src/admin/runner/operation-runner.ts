@@ -373,6 +373,10 @@ export class OperationRunner {
   /** What the web may change (§3.7, §3.10): the scope, local mode's token. */
   private scope(op: AdminOperation, actor: CallActor, verify = true): Refusal | null {
     if (actor.via === 'cli' || op.effect === 'read' || actor.setup) return null;
+    // A public demo shows its administration and changes nothing through it.
+    if (this.settings.get(SETTINGS.DEMO_MODE)) {
+      return refused('demo_read_only', 'Public demo: the administration is read-only.');
+    }
     if (this.settings.get(SETTINGS.AUTH_MODE) === 'none' && op.domain !== 'media') {
       const token = this.settings.get(SETTINGS.ADMIN_TOKEN);
       const given = !!actor.adminToken && (!verify || sameSecret(token, actor.adminToken));

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Notice } from '@/components/ui/notice';
 import { PageTitle } from '@/components/ui/page-title';
 import { useRole } from '../../auth/use-role';
+import { getDemo } from '../../config';
 import { setAdminToken, useAdminToken, useReadOperation } from './admin-api';
 import { UpdateNotice } from './update-notice';
 
@@ -63,7 +64,8 @@ export function AdminLayout() {
           </div>
         ))}
       </nav>
-      <TokenPrompt />
+      {/* A public demo shows its administration and changes nothing: no token to ask for. */}
+      {getDemo() ? <Notice role="status">{t('demoReadOnly')}</Notice> : <TokenPrompt />}
       <UpdateNotice />
       <Outlet />
     </div>
