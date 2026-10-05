@@ -100,5 +100,14 @@
       "no": "no",
       "filenameLabel": "jugador"
     }
+  },
+  "gatherings": {
+    "title": "Sesiones",
+    "intro": "Lo que has jugado, sala por sala: una sala que encadenó varios quizzes ocupa una línea, su clasificación una página; un quiz jugado solo lleva a su informe.",
+    "none": "Aún no has jugado nada: presenta un quiz y sus resultados llegarán aquí.",
+    "thRoom": "Sala",
+    "thQuizzes": "Quizzes",
+    "alone": "Un quiz solo",
+    "back": "Sesiones"
   }
 }

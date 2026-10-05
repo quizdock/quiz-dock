@@ -23,6 +23,8 @@ const TITLE_KEYS: Record<string, string> = {
   '/quizzes/$quizId/preview': 'preview',
   '/quizzes/$quizId/reviews': 'feedback',
   '/quizzes/$quizId/history': 'sessions',
+  '/history': 'history',
+  '/history/$roomId': 'historyRoom',
   '/quizzes/$quizId/history/$sessionId': 'session',
   '/quizzes/$quizId/history/$sessionId/players/$playerResultId': 'player',
   '/session/$pin/console': 'control',

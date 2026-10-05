@@ -96,6 +96,10 @@ function NavLinks({ stacked = false, onNavigate }: { stacked?: boolean; onNaviga
       <Link to="/templates" className={className} onClick={onNavigate}>
         {t('nav.templates')}
       </Link>
+      {/* What was played, room by room: a teacher's way back to the results. */}
+      <Link to="/history" className={className} onClick={onNavigate}>
+        {t('nav.history')}
+      </Link>
       {/* The administration beside the app's own pages, not tucked in the account menu. */}
       {isManager ? (
         <Link to="/admin" className={className} onClick={onNavigate}>

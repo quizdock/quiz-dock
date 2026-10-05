@@ -766,3 +766,40 @@ describe('playedQuestions', () => {
     expect(out.map((q) => q.stat !== null)).toEqual([true, true, true]);
   });
 });
+
+describe('history by gathering', () => {
+  const session = (id: string, roomId: string | null, startedAt: string, playerCount = 3) => ({
+    id,
+    quizId: `quiz-${id}`,
+    roomId,
+    roomName: null,
+    startedAt: new Date(startedAt),
+    endedAt: new Date(new Date(startedAt).getTime() + 600_000),
+    playerCount,
+    quizSnapshot: { title: `Quiz ${id}` },
+    host: { displayName: 'Marc' },
+  });
+
+  it('groups the sessions by room, the latest gathering first; a quiz alone is its own line', async () => {
+    const prisma = {
+      gameSessionLog: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([
+            session('a', 'room-1', '2026-10-01T09:00:00Z', 20),
+            session('b', 'room-1', '2026-10-01T09:20:00Z', 22),
+            session('c', null, '2026-10-02T10:00:00Z'),
+            session('d', 'room-2', '2026-10-03T08:00:00Z'),
+          ]),
+      },
+    } as unknown as PrismaService;
+    const service = new QuizzesService(prisma, {} as RedisService, {} as MediaService);
+    const { rooms } = await service.history({ id: 'u1', roles: [UserRole.host] });
+    expect(rooms.map((r) => [r.roomId, r.sessions.map((s) => s.id)])).toEqual([
+      [null, ['d']],
+      [null, ['c']],
+      ['room-1', ['a', 'b']],
+    ]);
+    expect(rooms[2]).toMatchObject({ playerCount: 22, hostName: 'Marc' });
+  });
+});

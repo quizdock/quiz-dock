@@ -3,6 +3,7 @@ export * from './auth/auth';
 export * from './community-store/community-store';
 export * from './games/games';
 export * from './health/health';
+export * from './history/history';
 export * from './me/me';
 export * from './media/media';
 export * from './questions/questions';

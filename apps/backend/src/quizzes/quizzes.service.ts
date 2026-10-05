@@ -202,6 +202,58 @@ export class QuizzesService {
    * every one of them tracked its participants (RG-16). Null for a session
    * played alone, or whose room kept only it.
    */
+  /**
+   * The history by gathering: the archived sessions grouped by the room they were
+   * played in, the latest first; a session played alone is a gathering of its own.
+   */
+  async history(user: { id: string; roles: RoleSet }) {
+    const rows = await this.prisma.gameSessionLog.findMany({
+      where: { quiz: { ownerId: this.scopeOf(user) } },
+      orderBy: { startedAt: 'asc' },
+      select: {
+        id: true,
+        quizId: true,
+        roomId: true,
+        roomName: true,
+        startedAt: true,
+        endedAt: true,
+        playerCount: true,
+        quizSnapshot: true,
+        host: { select: { displayName: true } },
+      },
+    });
+    const groups = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const key = row.roomId ?? `alone:${row.id}`;
+      groups.set(key, [...(groups.get(key) ?? []), row]);
+    }
+    const rooms = [...groups.values()].map((sessions) => {
+      const last = sessions[sessions.length - 1];
+      return {
+        roomId: sessions.length > 1 ? last.roomId : null,
+        name: last.roomName,
+        hostName: sessions[0].host.displayName,
+        startedAt: sessions[0].startedAt.toISOString(),
+        endedAt: new Date(Math.max(...sessions.map((s) => s.endedAt.getTime()))).toISOString(),
+        playerCount: Math.max(...sessions.map((s) => s.playerCount)),
+        sessions: sessions.map((s) => ({
+          id: s.id,
+          quizId: s.quizId,
+          quizTitle: ((s.quizSnapshot ?? {}) as { title?: string }).title ?? '',
+          startedAt: s.startedAt.toISOString(),
+        })),
+      };
+    });
+    return { rooms: rooms.sort((a, b) => b.startedAt.localeCompare(a.startedAt)) };
+  }
+
+  /** A room of the history: its quizzes and its standings (404 when not the caller's). */
+  async historyRoom(user: { id: string; roles: RoleSet }, roomId: string) {
+    const room = await this.roomOf(roomId, this.scopeOf(user), '');
+    if (!room) throw new NotFoundException('session.not_found');
+    return room;
+  }
+
   private async roomOf(roomId: string | null, ownerId: string | undefined, current: string) {
     if (!roomId) return null;
     const sessions = await this.prisma.gameSessionLog.findMany({

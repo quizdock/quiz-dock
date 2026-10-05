@@ -953,6 +953,67 @@
         ]
       }
     },
+    "/api/v1/history": {
+      "get": {
+        "operationId": "HistoryController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v1/history/rooms/{roomId}": {
+      "get": {
+        "operationId": "HistoryController_room",
+        "parameters": [
+          {
+            "name": "roomId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryRoomDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "history"
+        ]
+      }
+    },
     "/api/v1/media": {
       "get": {
         "operationId": "MediaController_list",
@@ -5224,6 +5285,183 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "HistoryListDto": {
+        "type": "object",
+        "properties": {
+          "rooms": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "roomId": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "name": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "hostName": {
+                  "type": "string"
+                },
+                "startedAt": {
+                  "type": "string"
+                },
+                "endedAt": {
+                  "type": "string"
+                },
+                "playerCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "sessions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "quizId": {
+                        "type": "string"
+                      },
+                      "quizTitle": {
+                        "type": "string"
+                      },
+                      "startedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "quizId",
+                      "quizTitle",
+                      "startedAt"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "roomId",
+                "name",
+                "hostName",
+                "startedAt",
+                "endedAt",
+                "playerCount",
+                "sessions"
+              ]
+            }
+          }
+        },
+        "required": [
+          "rooms"
+        ]
+      },
+      "HistoryRoomDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "hostName": {
+            "type": "string"
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "quizId": {
+                  "type": "string"
+                },
+                "quizTitle": {
+                  "type": "string"
+                },
+                "startedAt": {
+                  "type": "string"
+                },
+                "current": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "id",
+                "quizId",
+                "quizTitle",
+                "startedAt",
+                "current"
+              ]
+            }
+          },
+          "standings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rank": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "nickname": {
+                  "type": "string"
+                },
+                "score": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "correctCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "answeredCount": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "avgResponseMs": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "maxStreak": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "quizzes": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "rank",
+                "nickname",
+                "score",
+                "correctCount",
+                "answeredCount",
+                "avgResponseMs",
+                "maxStreak",
+                "quizzes"
+              ]
+            },
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "hostName",
+          "sessions",
+          "standings"
         ]
       },
       "MediaLibraryItemDto": {

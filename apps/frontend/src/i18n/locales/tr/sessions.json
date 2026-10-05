@@ -100,5 +100,14 @@
       "no": "hayır",
       "filenameLabel": "katılımcı"
     }
+  },
+  "gatherings": {
+    "title": "Oturumlar",
+    "intro": "Oynadıklarınız, oda oda: birkaç quiz oynayan bir oda tek satırda, sıralaması tek sayfada; tek başına oynanan bir quiz raporuna götürür.",
+    "none": "Henüz bir şey oynanmadı: bir quiz sunun, sonuçları buraya gelir.",
+    "thRoom": "Oda",
+    "thQuizzes": "Quizler",
+    "alone": "Tek bir quiz",
+    "back": "Oturumlar"
   }
 }

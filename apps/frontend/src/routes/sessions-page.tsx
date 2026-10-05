@@ -34,7 +34,7 @@ function statusVariant(status: string): 'success' | 'muted' | 'default' {
 }
 
 /** Date + heure courtes, in the interface's language. */
-function fmtDate(iso: string, language: string): string {
+export function fmtDate(iso: string, language: string): string {
   return new Date(iso).toLocaleString(language, {
     day: '2-digit',
     month: '2-digit',
@@ -45,7 +45,7 @@ function fmtDate(iso: string, language: string): string {
 }
 
 /** Durée d'une session « Xm Ys » à partir des deux bornes ISO. */
-function fmtDuration(t: TFunction, startISO: string, endISO: string): string {
+export function fmtDuration(t: TFunction, startISO: string, endISO: string): string {
   const s = Math.max(
     0,
     Math.round((new Date(endISO).getTime() - new Date(startISO).getTime()) / 1000),
@@ -450,7 +450,14 @@ export function SessionDetailPage() {
  * The room this session was played in (#89): its other archived quizzes, and
  * the standings summed over them — read from those sessions, nothing kept twice.
  */
-function RoomCard({ room, pin }: { room: NonNullable<SessionDetailDtoRoom>; pin: string }) {
+export function RoomCard({
+  room,
+  pin,
+}: {
+  room: NonNullable<SessionDetailDtoRoom>;
+  /** What tells its export apart: the PIN, or the gathering's date. */
+  pin: string;
+}) {
   const { t, i18n } = useTranslation(['sessions', 'common']);
   const standings = room.standings;
   const exportStandings = () => {
