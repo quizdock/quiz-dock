@@ -26,9 +26,11 @@ describe('LandingPage — demo limitations', () => {
     renderApp('/');
     expect(await screen.findByText(/Ce que cette démo ne fait pas/i)).toBeInTheDocument();
     expect(screen.getByText(/chaque visiteur est demo_user/i)).toBeInTheDocument();
-    expect(screen.getByText(/modèles France et Taïwan/i)).toBeInTheDocument();
+    // The three samples the backend puts back in the shared bank at each reset.
+    expect(screen.getByText(/quiz d’exemple France, Taïwan et Türkiye/i)).toBeInTheDocument();
     expect(screen.getByText(/Aucun envoi de média/i)).toBeInTheDocument();
-    expect(screen.getByText(/effacé chaque heure : quiz/i)).toBeInTheDocument();
+    // The reset waits for an open room, but not past DEMO_RESET_MAX_DEFER_MS.
+    expect(screen.getByText(/effacé chaque heure : quiz.*3 heures au plus/i)).toBeInTheDocument();
     // Not the all-in-one image: that limitation is not this instance's.
     expect(screen.queryByText(/Image tout-en-un/i)).not.toBeInTheDocument();
     // And the point of the whole block: self-hosting has none of these.
@@ -91,5 +93,27 @@ describe('LandingPage — feedback', () => {
       'href',
       'https://github.com/quizdock/quiz-dock',
     );
+  });
+
+  it('links to the documentation, in a new tab', async () => {
+    mockApi([]);
+    renderApp('/');
+    const docs = await screen.findByRole('link', { name: 'Documentation' });
+    expect(docs).toHaveAttribute('href', 'https://quizdock.github.io/docs/');
+    expect(docs).toHaveAttribute('target', '_blank');
+  });
+
+  it('links to the documentation on a demo too', async () => {
+    configureDemo({ user: 'demo_user' });
+    try {
+      mockApi([]);
+      renderApp('/');
+      expect(await screen.findByRole('link', { name: 'Documentation' })).toHaveAttribute(
+        'href',
+        'https://quizdock.github.io/docs/',
+      );
+    } finally {
+      configureDemo(null);
+    }
   });
 });

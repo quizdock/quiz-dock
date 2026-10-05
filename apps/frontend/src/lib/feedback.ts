@@ -82,6 +82,22 @@ export function feedbackLinks(
  * them, gets no invitation either.
  */
 export function starLink(configured: string | undefined): string | null {
+  return pointsToQuizDock(configured) ? QUIZDOCK_REPOSITORY : null;
+}
+
+/** The project's documentation. */
+export const QUIZDOCK_DOCS = 'https://quizdock.github.io/docs/';
+
+/**
+ * Where QuizDock's documentation lives: on the same terms as the star — an
+ * operator who points the feedback elsewhere, or hides it, is not sent to
+ * QuizDock's pages either.
+ */
+export function docsLink(configured: string | undefined): string | null {
+  return pointsToQuizDock(configured) ? QUIZDOCK_DOCS : null;
+}
+
+function pointsToQuizDock(configured: string | undefined): boolean {
   const url = configured?.trim() || QUIZDOCK_REPOSITORY;
-  return url.replace(/\/+$/, '') === QUIZDOCK_REPOSITORY ? QUIZDOCK_REPOSITORY : null;
+  return url.replace(/\/+$/, '') === QUIZDOCK_REPOSITORY;
 }
