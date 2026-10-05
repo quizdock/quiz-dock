@@ -4,6 +4,31 @@ All notable changes to QuizDock are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com); versions follow
 [Semantic Versioning](https://semver.org). Generated from conventional commits.
 
+## [0.14.1] - 2026-10-05
+
+### Bug Fixes
+
+- The projection window on the first row, the views on the second *(console)*
+- A stopped quiz's report says which questions were played *(history)*
+- A template is copied with its media on the public demo *(demo)*
+- The home page says what the demo does now, and links to the documentation *(demo)*
+- The host role reads Quiz host in English, never a hosting server *(i18n)*
+
+### Documentation
+
+- Media wording
+
+### Features
+
+- Sessions, the history by gathering: one line per room, its standings one page *(history)*
+- The results one click away, from the library and when the room closes *(history)*
+- The public demo counts its audience, with no cookie and no personal data *(demo)*
+- The public demo shows its administration, read-only *(demo)*
+
+### Contributors
+
+- Francois Chaussin
+
 ## [0.14.0] - 2026-10-05
 
 ### Bug Fixes
