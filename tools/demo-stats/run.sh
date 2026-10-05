@@ -3,8 +3,7 @@
 # in a container: the host needs Docker only. The Cloudflare token is read from
 # CLOUDFLARE_API_TOKEN (and CLOUDFLARE_ACCOUNT_ID); nothing is kept in the image.
 #   tools/demo-stats/run.sh test                      the Worker against SQLite
-#   tools/demo-stats/run.sh d1 create quizdock-demo-stats   once, then set its id
-#                                                     in wrangler.toml
+#   (the D1 database quizdock-demo-stats exists; its id is in wrangler.toml)
 #   tools/demo-stats/run.sh d1 migrations apply quizdock-demo-stats --remote
 #   tools/demo-stats/run.sh secret put STATS_TOKEN    the same as DEMO_STATS_TOKEN
 #   tools/demo-stats/run.sh deploy

@@ -9,7 +9,7 @@ ALLOWED_ORIGIN = "https://quizdock-standalone.onrender.com"
 [[d1_databases]]
 binding = "DB"
 database_name = "quizdock-demo-stats"
-database_id = "TO-FILL-AFTER-D1-CREATE"
+database_id = "ddf86868-78f1-41f3-9956-5e015a796ff0"
 migrations_dir = "migrations"
 
 [triggers]
