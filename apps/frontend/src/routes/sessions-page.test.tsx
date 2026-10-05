@@ -21,6 +21,7 @@ const detail = (room: unknown) => ({
   quizTitle: 'Manche A',
   language: 'fr',
   totalQuestions: 0,
+  playedQuestions: 0,
   questions: [],
   players: [],
   room,
@@ -111,6 +112,37 @@ describe('Session history: the room (#89)', () => {
     renderApp('/quizzes/q1/history/s1');
     expect(await screen.findByText('Manche A')).toBeInTheDocument();
     expect(screen.queryByText('Salon')).toBeNull();
+  });
+
+  it('a quiz stopped after one question: played out of all, the others not played, the rate out of its answers', async () => {
+    const question = (orderIndex: number, played: boolean) => ({
+      orderIndex,
+      prompt: `Question ${orderIndex + 1}`,
+      type: 'single_choice',
+      played,
+      answerCount: played ? 2 : 0,
+      correctCount: played ? 2 : 0,
+      successRate: played ? 1 : null,
+      avgResponseMs: played ? 1500 : null,
+    });
+    mockApi([
+      {
+        method: 'GET',
+        path: '/quizzes/q1/sessions/s1',
+        body: {
+          ...detail(null),
+          status: 'interrupted',
+          successRate: 1,
+          totalQuestions: 12,
+          playedQuestions: 1,
+          questions: Array.from({ length: 12 }, (_, i) => question(i, i === 0)),
+        },
+      },
+    ]);
+    renderApp('/quizzes/q1/history/s1');
+    expect(await screen.findByText('1 question jouée sur 12')).toBeInTheDocument();
+    expect(screen.getAllByText('Non jouée')).toHaveLength(11);
+    expect(screen.getByText('2 bonnes réponses sur 2')).toBeInTheDocument();
   });
 });
 

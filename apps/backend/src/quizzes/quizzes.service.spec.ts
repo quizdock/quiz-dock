@@ -1,10 +1,10 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { type Quiz, QuizStatus, UserRole } from '@prisma/client';
+import { Prisma, type Quiz, QuizStatus, SessionStatus, UserRole } from '@prisma/client';
 import type { MediaService } from '../media/media.service';
 import type { PrismaService } from '../prisma/prisma.service';
 import type { RedisService } from '../redis/redis.service';
 import { updateQuizSchema } from './dto/update-quiz.dto';
-import { QuizzesService } from './quizzes.service';
+import { playedQuestions, QuizzesService } from './quizzes.service';
 
 /** L'appelant, côté hôte : un id et un rôle (RG-14). */
 const HOST = { id: 'owner-1', roles: [UserRole.host] };
@@ -721,5 +721,40 @@ describe('QuizzesService', () => {
     await service.remove(OWNER, 'q1');
     expect(prisma.quiz.delete).toHaveBeenCalled();
     expect(released()).toEqual(['B', 'C', 'I', 'P', 'S', 'V'].map(m));
+  });
+});
+
+describe('playedQuestions', () => {
+  const stat = (orderIndex: number, answerCount: number) => ({
+    orderIndex,
+    answerCount,
+    correctCount: answerCount,
+    successRate: new Prisma.Decimal(answerCount ? 1 : 0),
+    avgResponseMs: answerCount ? 1000 : null,
+  });
+  const quiz = [0, 1, 2].map((orderIndex) => ({ orderIndex }));
+
+  it('a stopped quiz archived now: the questions with no row were never shown', () => {
+    const out = playedQuestions(
+      { status: SessionStatus.interrupted, questionStats: [stat(0, 3)] },
+      quiz,
+    );
+    expect(out.map((q) => q.stat !== null)).toEqual([true, false, false]);
+  });
+
+  it('an older archive of a stopped quiz: the rows past the last answered one were never shown', () => {
+    const out = playedQuestions(
+      { status: SessionStatus.interrupted, questionStats: [stat(0, 3), stat(1, 0), stat(2, 0)] },
+      quiz,
+    );
+    expect(out.map((q) => q.stat !== null)).toEqual([true, false, false]);
+  });
+
+  it('a quiz played to its end: a question nobody answered was still shown', () => {
+    const out = playedQuestions(
+      { status: SessionStatus.ended, questionStats: [stat(0, 3), stat(1, 0), stat(2, 2)] },
+      quiz,
+    );
+    expect(out.map((q) => q.stat !== null)).toEqual([true, true, true]);
   });
 });

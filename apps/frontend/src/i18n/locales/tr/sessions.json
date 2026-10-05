@@ -66,7 +66,12 @@
       "exportCsv": "Sıralamayı dışa aktar (CSV)",
       "csvFilename": "oda",
       "defaultName": "{{host}} tarafından açılan oda"
-    }
+    },
+    "notPlayed": "Oynanmadı",
+    "statQuestionsPlayed_one": "{{total}} sorudan {{count}} soru oynandı",
+    "statQuestionsPlayed_other": "{{total}} sorudan {{count}} soru oynandı",
+    "statSuccessOf_one": "{{total}} yanıttan {{count}} doğru",
+    "statSuccessOf_other": "{{total}} yanıttan {{count}} doğru"
   },
   "player": {
     "notFound": "Katılımcı bulunamadı.",

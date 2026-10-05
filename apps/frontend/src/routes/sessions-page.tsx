@@ -256,6 +256,9 @@ export function SessionDetailPage() {
     );
   };
 
+  // Every answer given, and the right ones: what the overall rate is out of.
+  const answersGiven = s.questions.reduce((sum, q) => sum + q.answerCount, 0);
+  const answersRight = s.questions.reduce((sum, q) => sum + q.correctCount, 0);
   type QuestionRow = (typeof s.questions)[number];
   type PlayerRow = (typeof s.players)[number];
   const questionColumns: DataColumn<QuestionRow>[] = [
@@ -274,16 +277,23 @@ export function SessionDetailPage() {
     },
     {
       id: 'answers',
-      accessorFn: (q) => q.answerCount,
+      accessorFn: (q) => (q.played ? q.answerCount : -1),
       header: t('detail.thAnswers'),
       meta: { align: 'right' },
+      cell: ({ row }) => (row.original.played ? row.original.answerCount : '—'),
     },
     {
       id: 'success',
       accessorFn: (q) => q.successRate ?? -1,
       header: t('detail.thSuccessRate'),
       meta: { align: 'right' },
-      cell: ({ row }) => <ShareBar value={row.original.successRate} />,
+      // A question the stopped quiz never reached is no 0 %: it says so.
+      cell: ({ row }) =>
+        row.original.played ? (
+          <ShareBar value={row.original.successRate} />
+        ) : (
+          <span className="text-muted-foreground text-sm">{t('detail.notPlayed')}</span>
+        ),
     },
     {
       id: 'time',
@@ -373,8 +383,27 @@ export function SessionDetailPage() {
 
       <div className="grid gap-3 sm:grid-cols-3">
         <Stat label={t('detail.statParticipants')} value={String(s.playerCount)} />
-        <Stat label={t('detail.statSuccessRate')} value={pct(s.successRate)} />
-        <Stat label={t('detail.statQuestions')} value={String(s.totalQuestions)} />
+        <Stat
+          label={t('detail.statSuccessRate')}
+          value={pct(s.successRate)}
+          // What the rate is out of: the right answers among every answer given.
+          note={
+            answersGiven > 0
+              ? t('detail.statSuccessOf', { count: answersRight, total: answersGiven })
+              : undefined
+          }
+        />
+        <Stat
+          label={t('detail.statQuestions')}
+          value={
+            s.playedQuestions < s.totalQuestions
+              ? t('detail.statQuestionsPlayed', {
+                  count: s.playedQuestions,
+                  total: s.totalQuestions,
+                })
+              : String(s.totalQuestions)
+          }
+        />
       </div>
 
       <Card>
@@ -688,12 +717,13 @@ export function SessionPlayerPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-1 py-4">
         <span className="text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
         <span className="text-2xl font-bold tabular-nums">{value}</span>
+        {note ? <span className="text-muted-foreground text-xs">{note}</span> : null}
       </CardContent>
     </Card>
   );

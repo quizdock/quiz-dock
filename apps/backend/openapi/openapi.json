@@ -4776,6 +4776,11 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "playedQuestions": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "questions": {
             "type": "array",
             "items": {
@@ -4792,6 +4797,9 @@
                 "type": {
                   "type": "string"
                 },
+                "played": {
+                  "type": "boolean"
+                },
                 "answerCount": {
                   "type": "integer",
                   "minimum": -9007199254740991,
@@ -4803,7 +4811,8 @@
                   "maximum": 9007199254740991
                 },
                 "successRate": {
-                  "type": "number"
+                  "type": "number",
+                  "nullable": true
                 },
                 "avgResponseMs": {
                   "type": "number",
@@ -4814,6 +4823,7 @@
                 "orderIndex",
                 "prompt",
                 "type",
+                "played",
                 "answerCount",
                 "correctCount",
                 "successRate",
@@ -4994,6 +5004,7 @@
           "quizTitle",
           "language",
           "totalQuestions",
+          "playedQuestions",
           "questions",
           "players",
           "room"

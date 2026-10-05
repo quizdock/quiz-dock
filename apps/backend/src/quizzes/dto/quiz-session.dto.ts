@@ -37,9 +37,12 @@ export const sessionQuestionStatSchema = z.object({
   orderIndex: z.number().int(),
   prompt: z.string(),
   type: z.string(),
+  /** Shown in the session; false for the questions a stopped quiz never reached. */
+  played: z.boolean(),
   answerCount: z.number().int(),
   correctCount: z.number().int(),
-  successRate: z.number(),
+  /** 0..1 over its answers; null when not played. */
+  successRate: z.number().nullable(),
   avgResponseMs: z.number().nullable(),
 });
 
@@ -97,6 +100,8 @@ export const sessionDetailSchema = sessionSummarySchema.extend({
   quizTitle: z.string(),
   language: z.string(),
   totalQuestions: z.number().int(),
+  /** The questions shown, out of `totalQuestions`. */
+  playedQuestions: z.number().int(),
   questions: z.array(sessionQuestionStatSchema),
   players: z.array(sessionPlayerResultSchema),
   /** Null when the session was played alone (or its room kept only it). */

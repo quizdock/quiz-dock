@@ -66,7 +66,12 @@
       "exportCsv": "导出排名（CSV）",
       "csvFilename": "room",
       "defaultName": "{{host}} 的房间"
-    }
+    },
+    "notPlayed": "未进行",
+    "statQuestionsPlayed_one": "已进行 {{count}} / {{total}} 题",
+    "statQuestionsPlayed_other": "已进行 {{count}} / {{total}} 题",
+    "statSuccessOf_one": "{{total}} 个回答中 {{count}} 个正确",
+    "statSuccessOf_other": "{{total}} 个回答中 {{count}} 个正确"
   },
   "player": {
     "notFound": "未找到玩家。",

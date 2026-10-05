@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, type Quiz, QuizStatus } from '@prisma/client';
+import { Prisma, type Quiz, QuizStatus, SessionStatus } from '@prisma/client';
 import { isManager, type RoleSet } from '../auth/roles';
 import { livePinOf } from '../game/game.keys';
 import { MediaService } from '../media/media.service';
@@ -264,21 +264,24 @@ export class QuizzesService {
     };
     const byIndex = new Map((snap.questions ?? []).map((q) => [q.orderIndex, q]));
     const room = await this.roomOf(row.roomId, ownerId, row.id);
+    const questions = playedQuestions(row, snap.questions ?? []).map(({ orderIndex, stat }) => ({
+      orderIndex,
+      prompt: byIndex.get(orderIndex)?.prompt ?? `Question ${orderIndex + 1}`,
+      type: byIndex.get(orderIndex)?.type ?? 'unknown',
+      played: stat !== null,
+      answerCount: stat?.answerCount ?? 0,
+      correctCount: stat?.correctCount ?? 0,
+      successRate: stat ? Number(stat.successRate) : null,
+      avgResponseMs: stat?.avgResponseMs ?? null,
+    }));
     return {
       ...toSessionSummary(row, room?.sessions.length ?? null),
       room,
       quizTitle: snap.title ?? '',
       language: row.language,
-      totalQuestions: row.questionStats.length,
-      questions: row.questionStats.map((s) => ({
-        orderIndex: s.orderIndex,
-        prompt: byIndex.get(s.orderIndex)?.prompt ?? `Question ${s.orderIndex + 1}`,
-        type: byIndex.get(s.orderIndex)?.type ?? 'unknown',
-        answerCount: s.answerCount,
-        correctCount: s.correctCount,
-        successRate: Number(s.successRate),
-        avgResponseMs: s.avgResponseMs,
-      })),
+      totalQuestions: questions.length,
+      playedQuestions: questions.filter((q) => q.played).length,
+      questions,
       players: row.playerResults.map((p) => ({
         id: p.id,
         nickname: p.nickname,
@@ -676,4 +679,43 @@ function copySuffix(language: string): string {
   const base = language.split('-')[0];
   if (language === 'zh-TW' || base === 'zh') return '（副本）';
   return { fr: '(copie)', es: '(copia)' }[base] ?? '(copy)';
+}
+
+type QuestionStatRow = {
+  orderIndex: number;
+  answerCount: number;
+  correctCount: number;
+  successRate: Prisma.Decimal;
+  avgResponseMs: number | null;
+};
+
+/**
+ * Every question of the session's quiz, with its statistics when it was shown. A quiz
+ * stopped mid-way archives only the questions shown; an archive made before that kept
+ * one row per question, so in a stopped session the rows with no answer past the last
+ * answered question are the questions never shown.
+ */
+export function playedQuestions(
+  row: { status: SessionStatus; questionStats: QuestionStatRow[] },
+  snapshot: Array<{ orderIndex: number }>,
+): { orderIndex: number; stat: QuestionStatRow | null }[] {
+  const byIndex = new Map(row.questionStats.map((s) => [s.orderIndex, s]));
+  const lastAnswered = Math.max(
+    -1,
+    ...row.questionStats.filter((s) => s.answerCount > 0).map((s) => s.orderIndex),
+  );
+  const indexes = snapshot.length
+    ? snapshot.map((q) => q.orderIndex)
+    : row.questionStats.map((s) => s.orderIndex);
+  return [...indexes]
+    .sort((a, b) => a - b)
+    .map((orderIndex) => {
+      const stat = byIndex.get(orderIndex) ?? null;
+      const neverShown =
+        row.status === SessionStatus.interrupted &&
+        stat !== null &&
+        stat.answerCount === 0 &&
+        orderIndex > lastAnswered;
+      return { orderIndex, stat: neverShown ? null : stat };
+    });
 }

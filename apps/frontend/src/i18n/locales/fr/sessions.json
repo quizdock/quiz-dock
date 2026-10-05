@@ -66,7 +66,12 @@
       "exportCsv": "Exporter le classement (CSV)",
       "csvFilename": "salon",
       "defaultName": "Salon de {{host}}"
-    }
+    },
+    "notPlayed": "Non jouée",
+    "statQuestionsPlayed_one": "{{count}} question jouée sur {{total}}",
+    "statQuestionsPlayed_other": "{{count}} questions jouées sur {{total}}",
+    "statSuccessOf_one": "{{count}} bonne réponse sur {{total}}",
+    "statSuccessOf_other": "{{count}} bonnes réponses sur {{total}}"
   },
   "player": {
     "notFound": "Participant introuvable.",

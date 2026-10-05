@@ -66,7 +66,12 @@
       "exportCsv": "Exportar clasificación (CSV)",
       "csvFilename": "sala",
       "defaultName": "Sala de {{host}}"
-    }
+    },
+    "notPlayed": "No jugada",
+    "statQuestionsPlayed_one": "{{count}} pregunta jugada de {{total}}",
+    "statQuestionsPlayed_other": "{{count}} preguntas jugadas de {{total}}",
+    "statSuccessOf_one": "{{count}} respuesta correcta de {{total}}",
+    "statSuccessOf_other": "{{count}} respuestas correctas de {{total}}"
   },
   "player": {
     "notFound": "Jugador no encontrado.",
