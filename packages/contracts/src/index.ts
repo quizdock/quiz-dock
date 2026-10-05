@@ -435,6 +435,8 @@ export interface LeaderboardRow {
   rank: number;
   /** Graine d'avatar (multiavatar) — cosmétique ; défaut = pseudo si absent. */
   avatar?: string;
+  /** Playing from elsewhere (the avatar's badge); absent in the room. */
+  remote?: true;
 }
 
 export interface LeaderboardPayload {

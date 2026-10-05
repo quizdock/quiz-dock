@@ -26,7 +26,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   Info,
   LayoutTemplate,
   Loader2,
@@ -988,13 +987,13 @@ function HostConsole({
           {rowTwo}
         </div>
         {/* The transport, in the header's right corner, above the outline. */}
-        <div className="w-full lg:w-[22rem]">{transport}</div>
+        <div className="w-full lg:w-[24rem]">{transport}</div>
         <div className="w-full empty:hidden">
           <ChromiumNotice />
         </div>
       </header>
       {/* Whatever the view, the participants and the quiz's outline stay beside it. */}
-      <div className="grid flex-1 items-start gap-5 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-stretch">
+      <div className="grid flex-1 items-start gap-5 lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-stretch">
         <div className="min-w-0 lg:min-h-0 lg:overflow-y-auto">
           {tab === 'screen' ? (
             // The projection's 16:9, scaled to the column. The console's own session: a
@@ -1505,18 +1504,12 @@ function ParticipantsList({
           aria-label={name}
           onClick={() => setSort(active ? { key, desc: !order.desc } : { key, desc: descFirst })}
           className={cn(
-            'hover:text-foreground inline-flex items-center gap-0.5',
+            'hover:text-foreground inline-flex cursor-pointer items-center gap-0.5',
             active && 'text-foreground',
           )}
         >
+          {/* The order is said by the header's colour and aria-sort: no arrow to make room for. */}
           {label}
-          {active ? (
-            order.desc ? (
-              <ChevronDown className="size-3" />
-            ) : (
-              <ChevronUp className="size-3" />
-            )
-          ) : null}
         </button>
       </th>
     );
@@ -1527,8 +1520,12 @@ function ParticipantsList({
         <tr>
           {header('rank', '#', 'w-7 text-left', t('control.columnRank'))}
           {header('nickname', t('control.columnParticipant'), 'text-left')}
-          <th scope="col" className="w-9">
-            <span className="sr-only">{t('control.columnStatus')}</span>
+          {/* Two status columns, headed by their sign alone: the room is the scores'. */}
+          <th scope="col" className="w-5" title={t('control.columnReady')}>
+            <Check className="mx-auto size-3.5" aria-label={t('control.columnReady')} />
+          </th>
+          <th scope="col" className="w-5" title={t('control.remote')}>
+            <Wifi className="mx-auto size-3.5" aria-label={t('control.remote')} />
           </th>
           {header('quizScore', t('control.columnQuiz'), 'w-14 text-right')}
           {header('roomScore', t('control.columnTotal'), 'w-14 text-right')}
@@ -1543,50 +1540,53 @@ function ParticipantsList({
             <td className="text-muted-foreground px-1 py-1 tabular-nums">{rankOf(score)}</td>
             <td className="px-1 py-1">
               <span className="flex min-w-0 items-center gap-1.5">
-                <Avatar name={p.avatar || p.nickname} size={24} />
-                <span className="truncate">{p.nickname}</span>
+                <Avatar
+                  name={p.avatar || p.nickname}
+                  size={24}
+                  ready={!!readiness?.lobby && !!waited.get(p.playerId)}
+                  remote={p.presence === 'remote' ? t('control.remote') : undefined}
+                />
+                <span className="truncate" title={p.nickname}>
+                  {p.nickname}
+                </span>
               </span>
             </td>
-            <td className="py-1">
-              {/* One slot per indicator, always in the same place. */}
-              <span className="grid grid-cols-2 items-center justify-items-center">
-                <span className="size-3.5">
-                  {readiness?.lobby ? (
-                    waited.get(p.playerId) ? (
-                      <Check
-                        className="size-3.5 text-success"
-                        aria-label={t('control.participantReady')}
-                      />
-                    ) : said.get(p.playerId) ? (
-                      <Loader2
-                        className="text-muted-foreground size-3.5 animate-spin"
-                        aria-label={t('control.participantLoading')}
-                      />
-                    ) : null
-                  ) : waited.has(p.playerId) ? (
-                    waited.get(p.playerId) ? (
-                      <Check
-                        className="size-3.5 text-success"
-                        aria-label={t('control.mediaReady')}
-                      />
-                    ) : (
-                      <Loader2
-                        className="text-muted-foreground size-3.5 animate-spin"
-                        aria-label={t('control.mediaLoading')}
-                      />
-                    )
-                  ) : null}
-                </span>
-                <span className="size-3.5">
-                  {p.presence === 'remote' ? (
-                    <Tooltip label={t('control.remote')}>
-                      <Wifi
-                        className="text-muted-foreground size-3.5"
-                        aria-label={t('control.remote')}
-                      />
-                    </Tooltip>
-                  ) : null}
-                </span>
+            <td className="py-1 text-center">
+              <span className="inline-flex size-3.5 align-middle">
+                {readiness?.lobby ? (
+                  waited.get(p.playerId) ? (
+                    <Check
+                      className="size-3.5 text-success"
+                      aria-label={t('control.participantReady')}
+                    />
+                  ) : said.get(p.playerId) ? (
+                    <Loader2
+                      className="text-muted-foreground size-3.5 animate-spin"
+                      aria-label={t('control.participantLoading')}
+                    />
+                  ) : null
+                ) : waited.has(p.playerId) ? (
+                  waited.get(p.playerId) ? (
+                    <Check className="size-3.5 text-success" aria-label={t('control.mediaReady')} />
+                  ) : (
+                    <Loader2
+                      className="text-muted-foreground size-3.5 animate-spin"
+                      aria-label={t('control.mediaLoading')}
+                    />
+                  )
+                ) : null}
+              </span>
+            </td>
+            <td className="py-1 text-center">
+              <span className="inline-flex size-3.5 align-middle">
+                {p.presence === 'remote' ? (
+                  <Tooltip label={t('control.remote')}>
+                    <Wifi
+                      className="text-muted-foreground size-3.5"
+                      aria-label={t('control.remote')}
+                    />
+                  </Tooltip>
+                ) : null}
               </span>
             </td>
             <td className="px-1 py-1 text-right tabular-nums">{score?.quizScore ?? 0}</td>

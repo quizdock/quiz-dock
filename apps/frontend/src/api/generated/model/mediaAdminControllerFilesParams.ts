@@ -8,6 +8,7 @@
 import type { MediaAdminControllerFilesKind } from './mediaAdminControllerFilesKind';
 import type { MediaAdminControllerFilesLegacy } from './mediaAdminControllerFilesLegacy';
 import type { MediaAdminControllerFilesSort } from './mediaAdminControllerFilesSort';
+import type { MediaAdminControllerFilesUnused } from './mediaAdminControllerFilesUnused';
 
 export type MediaAdminControllerFilesParams = {
 kind?: MediaAdminControllerFilesKind;
@@ -16,6 +17,7 @@ kind?: MediaAdminControllerFilesKind;
  */
 ownerId?: string;
 legacy?: MediaAdminControllerFilesLegacy;
+unused?: MediaAdminControllerFilesUnused;
 /**
  * @maxLength 100
  */

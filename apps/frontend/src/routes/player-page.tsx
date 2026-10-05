@@ -489,7 +489,10 @@ function PlayerView({ pin, session }: { pin: string; session: ReturnType<typeof 
             </Button>
             {/* This device's sound: when it plays something (the question here, or the game's). */}
             {hears || gameSoundsHere || remote ? <SoundButton onUnmute={claimSound} /> : null}
-            <span className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline">
+            <span
+              className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline"
+              title={nickname}
+            >
               {nickname}
             </span>
             <Avatar name={avatarName} size={32} />

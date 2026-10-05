@@ -103,11 +103,12 @@
       "allKinds": "所有类型",
       "owner": "所有者",
       "allOwners": "所有所有者",
+      "allHosts": "除全局外的所有",
       "sort": "排序",
       "bySize": "最大优先",
       "byUsage": "最常用优先",
       "byDate": "最新优先",
-      "legacyOnly": "仅旧格式",
+      "legacyOnly": "旧格式",
       "search": "按文件名搜索",
       "none": "没有匹配的文件。",
       "legacy": "旧格式",
@@ -122,7 +123,11 @@
       "scopeAll": "全部",
       "view": "显示",
       "viewList": "列表",
-      "viewGrid": "网格"
+      "viewGrid": "网格",
+      "perPage": "每页",
+      "show": "显示",
+      "showAll": "全部",
+      "showUnused": "未使用"
     },
     "delete": {
       "title": "删除此文件？",
@@ -141,20 +146,18 @@
     },
     "instance": {
       "help": "提供给所有主持人，他们可在媒体库的「全局媒体」中找到。不会被清理；撤下某个媒体不会破坏任何测验。此处不设替代文本：主持人会为自己的测验以其语言撰写。",
-      "add": {
-        "image": "添加图片",
-        "video": "添加视频",
-        "audio": "添加声音"
-      },
-      "adding": "转换并上传中…",
       "addFailed": "无法添加该媒体。",
-      "empty": "尚无全局媒体：可用上方按钮添加，或从「全部」视图添加。",
+      "empty": "尚无全局媒体：可拖放到上方，或从「全部」视图添加。",
       "credit": "署名（作者、许可、来源）",
       "remove": "撤下",
       "removeTitle": "撤下此全局媒体？",
       "removeDescription": "主持人将无法在媒体库中找到它。使用它的测验保留各自的副本。",
       "removeFailed": "无法撤下该媒体。",
-      "saveFailed": "无法保存更改。"
+      "saveFailed": "无法保存更改。",
+      "drop": "将图片、视频或声音拖放到此处，可一次多个。",
+      "choose": "选择文件",
+      "sending": "正在发送 {{done}} / {{total}}…",
+      "unsupported": "不是图片、视频或声音。"
     },
     "global": "全局",
     "preview": {
@@ -171,6 +174,24 @@
     },
     "detail": {
       "empty": "选择一个文件，查看完整内容、使用位置以及可执行的操作。"
+    },
+    "bulk": {
+      "selectPage": "全选",
+      "selected_other": "已选 {{count}} 个",
+      "tick": "选择 {{name}}",
+      "promote": "添加到全局媒体",
+      "promoteFailed": "无法添加到全局媒体。",
+      "delete": "删除",
+      "deleteTitle_other": "删除 {{count}} 个文件？",
+      "withdraw": "从全局媒体移除",
+      "withdrawTitle_other": "移除 {{count}} 个全局媒体？",
+      "playing_other": "已跳过，房间正在播放：{{names}}。",
+      "unused": "均未被使用：不会破坏任何内容。",
+      "progress": "{{done}} / {{total}}…",
+      "selected_one": "已选 {{count}} 个",
+      "deleteTitle_one": "删除 {{count}} 个文件？",
+      "withdrawTitle_one": "移除 {{count}} 个全局媒体？",
+      "playing_one": "已跳过，房间正在播放：{{names}}。"
     }
   },
   "starter": {

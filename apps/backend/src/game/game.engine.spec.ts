@@ -361,10 +361,18 @@ describe('GameEngine (characterization)', () => {
 
     it('player:ready is kept per game, in the lobby, for its players only', async () => {
       const ann = join('p1');
+      const console = join();
       await seed(snapshotOf([question()]), {}, { p1: player('Ann'), p2: player('Bob') });
       expect(await engine.setReady(pin, 'ghost', true)).toBe(false);
       expect(await engine.setReady(pin, 'p1', true)).toBe(true);
       expect(ann.of('lobby:count').at(-1)).toEqual({ ready: 1, total: 2 });
+      // A first question without media: the console still sees who said ready.
+      expect(console.of('media:readiness').at(-1)).toMatchObject({
+        lobby: true,
+        ready: 1,
+        total: 2,
+        players: expect.arrayContaining([{ playerId: 'p1', ready: true, pressed: true }]),
+      });
       expect(await engine.setReady(pin, 'p1', false)).toBe(true);
       expect(ann.of('lobby:count').at(-1)).toEqual({ ready: 0, total: 2 });
       await engine.start(pin, HOST);

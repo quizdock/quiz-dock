@@ -131,6 +131,9 @@ describe('MediaAdminService (integration)', () => {
       legacy: true, // a PNG: stored before the converter would have made it WebP
     });
     expect((await admin.files({ ownerId: bob, q: 'big' })).total).toBe(0);
+    // Unused: in no quiz and no archived result.
+    const unused = await admin.files({ ownerId: alice, unused: true });
+    expect(unused.items.map((f) => f.name)).toEqual(['big.webp']);
   });
 
   it('gives the same total past the last page, whatever the filter', async () => {

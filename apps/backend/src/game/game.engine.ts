@@ -544,7 +544,12 @@ export class GameEngine {
   ): Promise<MediaReadinessPayload | null> {
     const { pin } = ref;
     const snapshot = await this.game.getSnapshot(ref.id);
-    if (!snapshot || !step || !stepMediaForDevice(snapshot, step, 'projection', 'screen')) {
+    // The lobby counts who said they are ready, media or not; the media wait only media.
+    if (
+      !snapshot ||
+      !step ||
+      (!lobby && !stepMediaForDevice(snapshot, step, 'projection', 'screen'))
+    ) {
       return null;
     }
     const gameTarget = await this.gameTarget(ref.id, snapshot);

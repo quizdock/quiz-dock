@@ -21,6 +21,7 @@ reference, the others follow its sense, not its words.
 | participant | Participant     | Participant          | Participante         | 参与者        | 參與者        | live, console tab                                                              |
 | nickname    | Nickname        | Pseudo               | Apodo                | 昵称          | 匿稱          | join                                                                           |
 | room        | Room            | Salon                | Sala                 | 房间          | 房間          | live: what one joins with the PIN and stays in, several quizzes in a row (#89) |
+| lobby       | Lobby           | Salle d’attente      | Sala de espera       | 等候室        | 等候室        | live: the room before a quiz starts; never _lobby_ in French                   |
 | session     | Session         | Session              | Sesión               | 会话          | 會話          | afterwards: one quiz played in a room, as _History_ keeps it                   |
 | console     | Console         | Console              | Consola              | 控制台        | 控制台        | `/session/:pin/console`                                                        |
 | projection  | Projection      | Projection           | Proyección           | 投影          | 投影          | `/session/:pin/projection`                                                     |
