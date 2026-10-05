@@ -54,6 +54,9 @@ let seatTaken = false;
 const created = [];
 /** OIDC: the account's participant access before the run, put back after it. */
 let previousAccess = null;
+// The host's interface language before the run, put back after: the run reads English.
+let previousLanguage = null;
+const RUN_LANGUAGE = 'en';
 /** The room this run opened (OIDC: the only one it ends). */
 let lastPin = '';
 const check = (ok, what) => {
@@ -85,7 +88,11 @@ async function api(method, path, body) {
 /** OIDC: the host signs in at the provider, as a person would. */
 async function signIn(page) {
   await page.goto(`${URL}/login`);
-  await page.getByRole('button', { name: 'Sign in' }).first().click();
+  // The sign-in page speaks the instance's language, whichever it is.
+  await page
+    .getByRole('button', { name: /^(Sign in|Se connecter|Iniciar sesión|登录|登入|Giriş yap)$/ })
+    .first()
+    .click();
   await page.waitForURL(/\/realms\//, { timeout: 30_000 });
   await page.fill('#username', OIDC_USER);
   await page.fill('#password', OIDC_PASSWORD);
@@ -172,7 +179,9 @@ async function main() {
     session = desk.request;
     cookie = (await desk.cookies()).map((c) => `${c.name}=${c.value}`).join('; ');
     // Participants without an account: the bots join so. Put back at the end.
-    previousAccess = (await api('GET', '/me/preferences')).participantAccess ?? null;
+    const before = await api('GET', '/me/preferences');
+    previousAccess = before.participantAccess ?? null;
+    previousLanguage = before.language ?? null;
     await api('PATCH', '/me/preferences', { participantAccess: 'open' });
   } else {
     // The host's seat and a fresh bank.
@@ -215,7 +224,7 @@ async function main() {
     ] = { id: quiz.id, language: quiz.language, title: quiz.title };
   }
   log('quizzes', JSON.stringify(quizzes));
-  await api('PATCH', '/me/preferences', { language: null });
+  await api('PATCH', '/me/preferences', { language: RUN_LANGUAGE });
 
   await consolePage.goto(`${URL}/quizzes/${quizzes.france.id}`);
   await consolePage.getByRole('button', { name: 'Present' }).first().click();
@@ -446,7 +455,7 @@ async function main() {
   await dash.goto(`${URL}/profile`);
   await shot(dash, 'profile-language');
   check(await dash.getByText('Langue de l’interface').isVisible(), 'profile: the language choice');
-  await api('PATCH', '/me/preferences', { language: null });
+  await api('PATCH', '/me/preferences', { language: RUN_LANGUAGE });
   await dash.close();
 
   // ── 7. Auto mode: the reveal, the quiz's standings, the next question, no click.
@@ -559,7 +568,7 @@ async function main() {
 
 /** The stack as found: the seat let go if this run took it, the host's language reset. */
 async function cleanUp() {
-  await api('PATCH', '/me/preferences', { language: null }).catch(() => undefined);
+  await api('PATCH', '/me/preferences', { language: previousLanguage }).catch(() => undefined);
   if (seatTaken) await api('POST', '/auth/host-seat/release').catch(() => undefined);
   if (OIDC && session) {
     for (const game of await api('GET', '/games/mine').catch(() => [])) {
