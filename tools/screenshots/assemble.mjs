@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * After shoot.mjs: the phones side by side on a light band, and the demo GIF from
- * the projection's frames. Reads /out/.work/assemble.json, writes into /out, then
- * removes .work. Runs where ffmpeg is (run.sh: the sample-media image).
+ * the big screen's and the phone's frames. Reads /out/.work/assemble.json, writes
+ * into /out, then removes .work. Runs where ffmpeg is (run.sh: the sample-media image).
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, rmSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const OUT = process.env.OUT ?? '/out';
 const WORK = `${OUT}/.work`;
@@ -24,19 +24,36 @@ for (const { name, parts } of composites) {
   console.log('composite', name);
 }
 
-if (frames > 0) {
+// The GIF on the logo's purple: the host's console above the big screen, the phone
+// beside them; each frame for as long as it lasted.
+if (frames?.length) {
+  const list = (page) =>
+    frames.map(({ n, d }) => `file '${WORK}/film/${page}-${n}.png'\nduration ${d}\n`).join('') +
+    `file '${WORK}/film/${page}-${frames.at(-1).n}.png'\n`;
+  writeFileSync(`${WORK}/screen.txt`, list('screen'));
+  writeFileSync(`${WORK}/phone.txt`, list('phone'));
+  writeFileSync(`${WORK}/console.txt`, list('console'));
   ffmpeg(
-    '-framerate',
-    '2.5',
-    '-i',
-    `${WORK}/frames/%04d.png`,
-    '-vf',
-    'scale=800:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer:bayer_scale=4',
+    ...['-f', 'concat', '-safe', '0', '-i', `${WORK}/screen.txt`],
+    ...['-f', 'concat', '-safe', '0', '-i', `${WORK}/phone.txt`],
+    ...['-f', 'concat', '-safe', '0', '-i', `${WORK}/console.txt`],
+    '-filter_complex',
+    [
+      '[0:v]scale=960:540:flags=lanczos[s]',
+      '[1:v]scale=575:1150:flags=lanczos[p]',
+      '[2:v]scale=960:590:flags=lanczos[c]',
+      'color=c=0x2a1a4f:s=1655x1230[bg]',
+      '[bg][c]overlay=40:40:shortest=1[a]',
+      '[a][s]overlay=40:650:shortest=1[b]',
+      '[b][p]overlay=1040:40:shortest=1,fps=10,scale=1000:-1:flags=lanczos,split[x][y]',
+      '[x]palettegen=max_colors=160:stats_mode=diff[c]',
+      '[y][c]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle',
+    ].join(';'),
     '-loop',
     '0',
     `${OUT}/demo.gif`,
   );
-  console.log('gif', frames, 'frames');
+  console.log('gif', frames.length, 'frames');
 }
 
 rmSync(WORK, { recursive: true, force: true });

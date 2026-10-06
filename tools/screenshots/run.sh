@@ -8,6 +8,7 @@
 #   tools/screenshots/run.sh           screenshots into docs/screenshots
 #   tools/screenshots/run.sh --reset   from a fresh demo database first
 #   tools/screenshots/run.sh --up      only start the demo stack
+#   tools/screenshots/run.sh --film    only the demo GIF
 #   SHOTS_OUT=/some/dir tools/screenshots/run.sh
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
@@ -36,6 +37,6 @@ until docker run --rm --network "$net" curlimages/curl -sf \
 browser setup
 stack exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -qc \
   "update \"user\" set assigned_roles = '"'"'{host,admin}'"'"' where oidc_subject = '"'"'local:mei'"'"'"'
-browser shoot
+browser "$([ "${1:-}" = "--film" ] && echo film || echo shoot)"
 docker run --rm -v "$here:/shots:ro" -v "$out:/out" --entrypoint node \
   quizdock-sample-media /shots/assemble.mjs

@@ -6,6 +6,7 @@
  *
  *   node shoot.mjs setup   the host takes the seat (the account exists after it)
  *   node shoot.mjs shoot   the rest: an administrator host by then (run.sh grants it)
+ *   node shoot.mjs film    only the GIF's frames
  *
  * The content is the shipped sample quizzes, taken from the template catalogue into
  * the bank of a host of its own (Mei), emptied first; the seat is let go at the end.
@@ -32,7 +33,6 @@ const PHONE = { width: 390, height: 780 };
 const ADMIN_TOKEN = 'demo-stack-admin-token-not-a-secret';
 /** Pieces for assemble.mjs: the phones to put side by side, the GIF's frames. */
 const WORK = `${OUT}/.work`;
-const FRAMES = `${WORK}/frames`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -190,7 +190,8 @@ async function takeSamples() {
   for (const game of await api('GET', '/games/mine')) {
     await api('POST', `/games/${game.pin}/end`).catch(() => undefined);
   }
-  for (const quiz of await api('GET', '/quizzes')) {
+  // An administrator lists every host's quizzes: only Mei's own are emptied.
+  for (const quiz of (await api('GET', '/quizzes')).filter((q) => q.editable)) {
     if (quiz.status === 'ready')
       await api('PATCH', `/quizzes/${quiz.id}/status`, { status: 'draft' }).catch(() => undefined);
     await api('DELETE', `/quizzes/${quiz.id}`);
@@ -367,18 +368,6 @@ async function live(browser, quizzes) {
   await shot(consolePage, 'console-lobby-access');
   host.emitWith('host:lock', { locked: false });
 
-  // The GIF: the projection, a frame every 400 ms while it records.
-  let recording = false;
-  let frame = 0;
-  const record = async () => {
-    while (recording) {
-      await screen
-        .screenshot({ path: `${FRAMES}/${String(frame++).padStart(4, '0')}.png` })
-        .catch(() => undefined);
-      await sleep(400);
-    }
-  };
-
   // Step by step: the intro slide, then each question to its reveal. The steps between
   // (the quiz's standings after a reveal, a slide, a media wait) are passed through.
   const PASSED = new Set(['LEADERBOARD', 'SLIDE_SHOW', 'MEDIA_LOADING']);
@@ -393,8 +382,6 @@ async function live(browser, quizzes) {
   };
   host.emit('host:start');
   await host.until((s) => s.state === 'SLIDE_SHOW');
-  recording = true;
-  const recorder = record();
   await sleep(2500);
   await shot(screen, 'projection-slide');
   await shot(consolePage, 'console-slide');
@@ -462,10 +449,6 @@ async function live(browser, quizzes) {
       await host.until(reveal(i));
       await sleep(1500);
       beside('player-image-choice', pick, await shot(lea, 'player-image-reveal', { piece: true }));
-      // The GIF ends on this reveal.
-      await sleep(1500);
-      recording = false;
-      await recorder;
       continue;
     }
     await sleep(READ_DELAY_MS + 2500); // a few answers come in first
@@ -507,7 +490,182 @@ async function live(browser, quizzes) {
   stopBots();
   await desk.close();
   await screenContext.close();
-  return frame;
+}
+
+// ── The film ────────────────────────────────────────────────────────────────
+
+/**
+ * The demo GIF: a room of its own, filmed on the big screen, the host's console and
+ * Léa's phone at once. Players arrive in the lobby, Léa joins from her phone, answers first and
+ * right, the reveal, the standings, then her podium. The rest of the quiz is played
+ * off camera, nobody answering: Léa keeps her lead. The pages are photographed
+ * together, tick by tick, while the camera rolls (a recorded video drifts from one
+ * page to the other); assemble.mjs puts them together.
+ */
+async function film(browser, quizzes) {
+  const desk = await browser.newContext({ viewport: DESKTOP, locale: 'en-US' });
+  await desk.addInitScript((user) => localStorage.setItem('live.localUser', user), HOST);
+  const consolePage = await desk.newPage();
+  await consolePage.goto(`${URL}/quizzes/${quizzes.france}`);
+  await consolePage.getByRole('button', { name: 'Present' }).first().click();
+  const open = consolePage.getByRole('radio', { name: /Open access/ });
+  if (await open.count()) {
+    await open.click();
+    await consolePage.getByRole('button', { name: 'Start' }).click();
+  }
+  await consolePage.waitForURL(/\/session\/\d{6}\/console/);
+  const pin = consolePage.url().match(/session\/(\d{6})/)[1];
+  const host = hostControl(pin);
+  log('film room', pin);
+
+  const filmed = async (options, user) => {
+    const ctx = await browser.newContext({ ...options, locale: 'en-US' });
+    if (user) await ctx.addInitScript((u) => localStorage.setItem('live.localUser', u), user);
+    return { ctx, page: await ctx.newPage() };
+  };
+  const screen = await filmed({ viewport: SCREEN }, HOST);
+  const phone = await filmed({
+    viewport: PHONE,
+    deviceScaleFactor: 2,
+    isMobile: true,
+    hasTouch: true,
+  });
+  await screen.page.goto(`${URL}/session/${pin}/projection`);
+  await settle(screen.page);
+  await screen.page.mouse.click(SCREEN.width / 2, SCREEN.height / 2);
+  await phone.page.goto(`${URL}/join/${pin}`);
+  await settle(phone.page);
+
+  // The camera: every page at each tick while it rolls; a cut starts a new shot.
+  mkdirSync(`${WORK}/film`, { recursive: true });
+  const frames = [];
+  let rolling = false;
+  let shooting = true;
+  let shotNo = 0;
+  const camera = (async () => {
+    while (shooting) {
+      if (!rolling) {
+        await sleep(30);
+        continue;
+      }
+      const n = String(frames.length).padStart(4, '0');
+      const t = Date.now();
+      await Promise.all([
+        screen.page.screenshot({ path: `${WORK}/film/screen-${n}.png` }),
+        phone.page.screenshot({ path: `${WORK}/film/phone-${n}.png`, scale: 'css' }),
+        consolePage.screenshot({ path: `${WORK}/film/console-${n}.png` }),
+      ]).catch(() => undefined);
+      frames.push({ n, t, shot: shotNo });
+    }
+  })();
+  const cut = {
+    in: () => (rolling = true),
+    out: async () => {
+      rolling = false;
+      shotNo++;
+      await sleep(250); // the tick under way ends
+    },
+  };
+
+  // The players arrive, one by one; Léa joins from her phone among them.
+  let quiet = false;
+  const players = [];
+  const arrive = async (i) => {
+    const s = socket({});
+    await new Promise((r) => s.on('connect', r));
+    await s.emitWithAck('player:join', { pin, nickname: BOTS[i], presence: 'room' });
+    await s.emitWithAck('player:ready', { pin, ready: true });
+    s.on('question:start', (q) => {
+      if (quiet) return;
+      const delay = Math.max(0, q.startedAt - Date.now()) + 2600 + i * 550;
+      setTimeout(
+        () =>
+          s.emit('player:submit', { pin, questionIndex: q.questionIndex, answer: answerTo(q, i) }),
+        delay,
+      );
+    });
+    players.push(s);
+  };
+  cut.in();
+  await sleep(500);
+  for (const i of [0, 1, 2]) {
+    await arrive(i);
+    await sleep(400);
+  }
+  await phone.page.getByLabel('Nickname').pressSequentially('Léa', { delay: 140 });
+  await phone.page
+    .getByRole('radio', { name: /In the room/ })
+    .click()
+    .catch(() => undefined);
+  await sleep(300);
+  await phone.page.getByRole('button', { name: 'Join the room' }).click();
+  await sleep(900);
+  await phone.page.getByRole('button', { name: "I'm ready" }).click();
+  for (const i of [3, 4, 5]) {
+    await arrive(i);
+    await sleep(400);
+  }
+  await sleep(800);
+  await cut.out();
+
+  // Q1: the question, its options, Léa taps Paris first; everyone in, the reveal.
+  host.emit('host:start');
+  await host.until((s) => s.state === 'SLIDE_SHOW');
+  host.emit('host:next');
+  await host.until((s) => s.questionIndex === 0 && s.state === 'ANSWERING');
+  await sleep(900); // past the slide's fade
+  cut.in();
+  await sleep(1600);
+  await cut.out();
+  const tiles = phone.page.locator('.qd-answer');
+  await tiles.first().waitFor({ timeout: 15_000 });
+  cut.in();
+  await sleep(1500); // the room reads the options
+  await tiles.nth(1).tap();
+  await host.until((s) => s.state === 'REVEAL', 20_000).catch(() => host.emit('host:reveal'));
+  await host.until((s) => s.state === 'REVEAL');
+  await sleep(3500);
+  await cut.out();
+
+  // The standings, then the rest played off camera, to the podium.
+  quiet = true;
+  host.emit('host:next');
+  await host
+    .until((s) => s.state === 'LEADERBOARD', 10_000)
+    .then(async () => {
+      await sleep(400);
+      cut.in();
+      await sleep(3000);
+      await cut.out();
+    })
+    .catch(() => undefined);
+  for (let presses = 0; presses < 80 && host.state()?.state !== 'PODIUM'; presses++) {
+    const st = host.state();
+    host.emit(st.state === 'ANSWERING' ? 'host:reveal' : 'host:next');
+    await host.until((s) => s !== st, 10_000).catch(() => undefined);
+  }
+  await sleep(200);
+  cut.in();
+  await sleep(5000);
+  await cut.out();
+
+  host.emit('host:end');
+  await sleep(500);
+  host.close();
+  players.forEach((s) => s.disconnect());
+  shooting = false;
+  await camera;
+  await screen.ctx.close();
+  await phone.ctx.close();
+  await desk.close();
+  // Each frame lasts until the next of its shot; a shot's last one, a tick.
+  const film = frames.map((f, i) => {
+    const next = frames[i + 1];
+    const d = next && next.shot === f.shot ? next.t - f.t : 250;
+    return { n: f.n, d: Math.min(d, 1000) / 1000 };
+  });
+  log('film', film.length, 'frames', shotNo, 'shots');
+  return film;
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -515,15 +673,18 @@ async function live(browser, quizzes) {
 const mode = process.argv[2];
 if (mode === 'setup') {
   await setup();
-} else if (mode === 'shoot') {
+} else if (mode === 'shoot' || mode === 'film') {
   mkdirSync(`${OUT}/types`, { recursive: true });
   rmSync(WORK, { recursive: true, force: true });
-  mkdirSync(FRAMES, { recursive: true });
+  mkdirSync(WORK, { recursive: true });
   const quizzes = await takeSamples();
   const browser = await chromium.launch();
   try {
-    await authoring(browser, quizzes);
-    const frames = await live(browser, quizzes);
+    if (mode === 'shoot') {
+      await authoring(browser, quizzes);
+      await live(browser, quizzes);
+    }
+    const frames = await film(browser, quizzes);
     writeFileSync(`${WORK}/assemble.json`, JSON.stringify({ composites, frames }, null, 2));
   } finally {
     await browser.close();
@@ -534,6 +695,6 @@ if (mode === 'setup') {
     process.exitCode = 1;
   }
 } else {
-  console.error('usage: shoot.mjs setup|shoot');
+  console.error('usage: shoot.mjs setup|shoot|film');
   process.exitCode = 2;
 }

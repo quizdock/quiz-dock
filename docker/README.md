@@ -1,27 +1,29 @@
-<p align="center">
-  <img src="https://quizdock.github.io/logo.svg" width="200" alt="QuizDock" />
-</p>
+<img src="https://quizdock.github.io/logo.svg" width="120" alt="QuizDock" />
 
-<h1 align="center">QuizDock</h1>
+# QuizDock
 
-<p align="center">
-  <strong>Open-source live quiz platform you run on your own infrastructure.</strong>
-</p>
+**Open-source live quiz platform you run on your own infrastructure.**
 
-<p align="center">
-  <a href="https://quizdock.github.io">Website</a> ·
-  <a href="https://quizdock.github.io/docs/">Documentation</a> ·
-  <a href="https://quizdock-standalone.onrender.com">Live demo</a> ·
-  <a href="https://github.com/quizdock/quiz-dock">Source code</a>
-</p>
+<table>
+  <tr>
+    <td><a href="https://github.com/quizdock/quiz-dock/releases"><img alt="Release" src="https://img.shields.io/github/v/release/quizdock/quiz-dock?color=6f42c1" /></a></td>
+    <td><a href="https://hub.docker.com/r/fchaussin/quizdock"><img alt="Docker pulls" src="https://img.shields.io/docker/pulls/fchaussin/quizdock?logo=docker&logoColor=white" /></a></td>
+    <td><a href="https://hub.docker.com/r/fchaussin/quizdock/tags"><img alt="Image size" src="https://img.shields.io/docker/image-size/fchaussin/quizdock/latest?logo=docker&logoColor=white&label=size" /></a></td>
+    <td><a href="https://github.com/quizdock/quiz-dock/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/quizdock/quiz-dock?color=blue" /></a></td>
+    <td><a href="https://github.com/quizdock/quiz-dock"><img alt="GitHub stars" src="https://img.shields.io/github/stars/quizdock/quiz-dock?logo=github" /></a></td>
+  </tr>
+</table>
+
+[Website](https://quizdock.github.io) ·
+[Documentation](https://quizdock.github.io/docs/) ·
+[Live demo](https://quizdock-standalone.onrender.com) ·
+[Source code](https://github.com/quizdock/quiz-dock)
 
 QuizDock is an open-source (MIT) live quiz platform for classrooms, teams and events: a
 big screen for the room, a phone for each player, every result in your own database.
 These images are the quickest reproducible way to run it on your own infrastructure.
 
-<p align="center">
-  <img src="https://quizdock.github.io/demo.gif" width="800" alt="A session on the big screen: the intro slide, questions with their timers and answers coming in, the reveals" />
-</p>
+<img src="https://quizdock.github.io/demo.gif" width="800" alt="The host's console, the big screen and a player's phone: players join by PIN, Léa answers first and right, the reveal, the standings, her podium" />
 
 ## Quick start
 
