@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/demo.gif" width="800" alt="A session on the big screen: the intro slide, questions with their timers and answers coming in, the reveals" />
+  <img src="https://raw.githubusercontent.com/quizdock/quiz-dock/main/docs/screenshots/demo.gif" width="800" alt="The host's console, the big screen and a player's phone: players join by PIN, Léa answers first and right, the reveal, the standings, her podium" />
 </p>
 
 QuizDock is a live quiz you run yourself: a host presents a quiz on the big screen, players

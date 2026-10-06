@@ -11,6 +11,10 @@ How QuizDock is scanned, hardened and audited.
   - **`image`** — Trivy scan of the published `:latest` and `:standalone` images
     (**reports** to the Security tab, non-blocking for unfixable base-OS CVEs).
 - Findings land in the repository **Security → Code scanning** tab (SARIF).
+- [`.github/workflows/standalone-refresh.yml`](../../.github/workflows/standalone-refresh.yml)
+  builds `:standalone` of the latest release again every Monday, before the scan, with
+  no cache: the Debian fixes of the day reach PostgreSQL, Redis and their dependencies,
+  and the alerts they fix close at the scan. The public demo is redeployed on it.
 
 ## Point-in-time audits
 
