@@ -9,6 +9,7 @@
 #   tools/demo-stats/run.sh deploy
 #   tools/demo-stats/run.sh d1 execute quizdock-demo-stats --remote \
 #     --command "SELECT * FROM stats_daily ORDER BY day DESC LIMIT 30"
+# Anyone reads the aggregates: GET <Worker URL>/stats (?days=1..400, 30 by default).
 # The demo then needs DEMO_STATS_URL (the Worker's URL) and DEMO_STATS_TOKEN.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)

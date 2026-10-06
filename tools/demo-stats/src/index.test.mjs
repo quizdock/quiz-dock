@@ -19,6 +19,14 @@ function d1() {
         const { changes } = db.prepare(sql).run(...args);
         return { meta: { changes } };
       },
+      async all() {
+        return {
+          results: db
+            .prepare(sql)
+            .all(...args)
+            .map((row) => ({ ...row })),
+        };
+      },
     };
   };
   return {
@@ -116,4 +124,38 @@ test("the night's purge: yesterday's hashes go, today's stay", async () => {
     [day],
   );
   assert.equal(DB.db.prepare('SELECT COUNT(*) AS n FROM stats_daily').get().n, 0);
+});
+
+test('GET /stats: the aggregates by day for anyone, never a hash', async () => {
+  const { DB, env } = setup();
+  DB.db.exec(`
+    INSERT INTO stats_daily VALUES ('${day}', 'FR', 3, 2), ('${day}', 'UA', 1, 1),
+                                   (date('now', '-1 day'), 'FR', 2, 1),
+                                   (date('now', '-40 days'), 'FR', 9, 9);
+    INSERT INTO durations_daily VALUES ('${day}', 120, 2);
+    INSERT INTO render_starts VALUES ('${day}', 1);
+    INSERT INTO visitors_today VALUES ('${day}', 'FR', '${hash}');
+  `);
+  const res = await worker.fetch(new Request('https://stats.example/stats'), env);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('access-control-allow-origin'), '*');
+  assert.match(res.headers.get('cache-control'), /max-age=300/);
+  const body = await res.json();
+  assert.equal(body.days, 30);
+  assert.deepEqual(body.totals, { hits: 6, visitor_days: 4, mean_seconds: 60, render_starts: 1 });
+  assert.equal(body.by_day.length, 2);
+  assert.deepEqual(body.by_day[0], {
+    day,
+    hits: 4,
+    uniques: 3,
+    countries: { FR: 2, UA: 1 },
+    mean_seconds: 60,
+    duration_samples: 2,
+    render_starts: 1,
+  });
+  assert.ok(!JSON.stringify(body).includes(hash));
+  const all = await (
+    await worker.fetch(new Request('https://stats.example/stats?days=60'), env)
+  ).json();
+  assert.equal(all.by_day.length, 3);
 });
