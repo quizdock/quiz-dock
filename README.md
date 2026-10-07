@@ -245,12 +245,6 @@ the **Security** tab). Point-in-time audits live in
 [`docs/security/`](https://github.com/quizdock/quiz-dock/tree/main/docs/security); report a
 vulnerability via [`SECURITY.md`](https://github.com/quizdock/quiz-dock/blob/main/SECURITY.md).
 
-## Acknowledgements
-
-Thanks to [Anthropic](https://www.anthropic.com) ([@anthropics](https://github.com/anthropics)) for the
-[Claude Code](https://github.com/anthropics/claude-code) cloud credits that made the optimisation,
-clean-up and testing work of 0.10.0 much easier.
-
 ## License
 
 [MIT](https://github.com/quizdock/quiz-dock/blob/main/LICENSE) — free to use, modify and
