@@ -90,17 +90,19 @@ async function duration(request, env) {
 /**
  * The public figures, per UTC day, newest first: page views, unique visitors of the
  * day (one visitor two days running counts twice: `visitor_days` in the totals),
- * by country, the mean time on page and the demo's starts.
+ * by country, the mean time on page, the demo's starts and the Docker Hub pull
+ * counter as read that night (a total: the day's pulls are the difference).
  */
 async function stats(request, env) {
   const asked = Number(new URL(request.url).searchParams.get('days'));
   const days = Number.isInteger(asked) && asked > 0 ? Math.min(asked, STATS_MAX_DAYS) : STATS_DAYS;
   const since = `-${days - 1} days`;
-  const [views, durations, starts] = await Promise.all(
+  const [views, durations, starts, pulls] = await Promise.all(
     [
       "SELECT day, country, hits, uniques FROM stats_daily WHERE day >= date('now', ?)",
       "SELECT day, total_seconds, samples FROM durations_daily WHERE day >= date('now', ?)",
       "SELECT day, count FROM render_starts WHERE day >= date('now', ?)",
+      "SELECT day, pull_count FROM docker_pulls WHERE day >= date('now', ?)",
     ].map((sql) =>
       env.DB.prepare(sql)
         .bind(since)
@@ -119,6 +121,7 @@ async function stats(request, env) {
         mean_seconds: null,
         duration_samples: 0,
         render_starts: 0,
+        docker_pulls: null,
       });
     return byDay.get(day);
   };
@@ -138,6 +141,7 @@ async function stats(request, env) {
     samples += v.samples;
   }
   for (const v of starts) at(v.day).render_starts = v.count;
+  for (const v of pulls) at(v.day).docker_pulls = v.pull_count;
   const list = [...byDay.values()].sort((a, b) => b.day.localeCompare(a.day));
   const sum = (key) => list.reduce((n, d) => n + d[key], 0);
   return Response.json(
@@ -170,6 +174,23 @@ async function cachedStats(request, env, ctx) {
   const res = await stats(request, env);
   ctx?.waitUntil(cache.put(request, res.clone()));
   return res;
+}
+
+/** Every night: the Docker Hub repository's pull counter, as it reads that day. */
+export async function readPulls(env, fetcher = fetch) {
+  if (!env.DOCKER_REPO) return;
+  const res = await fetcher(`https://hub.docker.com/v2/repositories/${env.DOCKER_REPO}/`, {
+    headers: { 'user-agent': 'quizdock-demo-stats' },
+  });
+  if (!res.ok) return;
+  const count = (await res.json())?.pull_count;
+  if (!Number.isInteger(count)) return;
+  await env.DB.prepare(
+    `INSERT INTO docker_pulls (day, pull_count) VALUES (?, ?)
+     ON CONFLICT(day) DO UPDATE SET pull_count = excluded.pull_count`,
+  )
+    .bind(today(), count)
+    .run();
 }
 
 /** Every night: yesterday's hashes go, aggregates past 13 months go. */
@@ -207,5 +228,6 @@ export default {
   },
   async scheduled(_controller, env) {
     await purge(env);
+    await readPulls(env).catch(() => undefined);
   },
 };
