@@ -216,7 +216,8 @@ auto-generated OpenAPI client (Orval) and a shared TypeScript WebSocket contract
 QuizDock speaks English, French, Spanish, Turkish and Chinese (simplified and traditional).
 Missing your language, or spotted an awkward word? Translate it on
 [Weblate](https://hosted.weblate.org/engage/quizdock/), right in the browser, no setup needed;
-new languages are welcome. Changes come back as pull requests to `dev`.
+new languages are welcome. Changes come back as pull requests to `dev`. Questions about a
+term? Ask in the [translation discussion](https://github.com/orgs/quizdock/discussions/243).
 
 <a href="https://hosted.weblate.org/engage/quizdock/"><img alt="Translation status" src="https://hosted.weblate.org/widget/quizdock/horizontal-auto.svg" /></a>
 
