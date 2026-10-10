@@ -13,6 +13,7 @@
   <a href="https://github.com/quizdock/quiz-dock/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/quizdock/quiz-dock/ci.yml?branch=main&logo=github&label=CI" /></a>
   <a href="https://github.com/quizdock/quiz-dock/actions/workflows/security.yml"><img alt="Security" src="https://img.shields.io/github/actions/workflow/status/quizdock/quiz-dock/security.yml?branch=main&logo=github&label=security" /></a>
   <a href="https://hub.docker.com/r/fchaussin/quizdock"><img alt="Docker pulls" src="https://img.shields.io/docker/pulls/fchaussin/quizdock?logo=docker&logoColor=white&label=pulls" /></a>
+  <a href="https://hosted.weblate.org/engage/quizdock/"><img alt="Translation status" src="https://hosted.weblate.org/widget/quizdock/svg-badge.svg" /></a>
   <a href="https://github.com/quizdock/quiz-dock/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/quizdock/quiz-dock?color=blue" /></a>
 </p>
 
@@ -209,6 +210,15 @@ administration. [Administration](https://quizdock.github.io/docs/admin/overview/
 **Frontend** React + Vite + shadcn/ui + TanStack · i18next ·
 **Packaging** single distroless image · Docker Compose. Front/back are kept in sync via an
 auto-generated OpenAPI client (Orval) and a shared TypeScript WebSocket contract.
+
+## Translations
+
+QuizDock speaks English, French, Spanish, Turkish and Chinese (simplified and traditional).
+Missing your language, or spotted an awkward word? Translate it on
+[Weblate](https://hosted.weblate.org/engage/quizdock/), right in the browser, no setup needed;
+new languages are welcome. Changes come back as pull requests to `dev`.
+
+<a href="https://hosted.weblate.org/engage/quizdock/"><img alt="Translation status" src="https://hosted.weblate.org/widget/quizdock/horizontal-auto.svg" /></a>
 
 ## Development
 

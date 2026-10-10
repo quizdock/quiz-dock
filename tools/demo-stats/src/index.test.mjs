@@ -3,11 +3,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import worker, { purge } from './index.js';
+import worker, { purge, readPulls } from './index.js';
 
 function d1() {
   const db = new DatabaseSync(':memory:');
-  db.exec(readFileSync(new URL('../migrations/0001_init.sql', import.meta.url), 'utf8'));
+  for (const m of ['0001_init.sql', '0002_docker_pulls.sql'])
+    db.exec(readFileSync(new URL(`../migrations/${m}`, import.meta.url), 'utf8'));
   const statement = (sql) => {
     let args = [];
     return {
@@ -152,10 +153,34 @@ test('GET /stats: the aggregates by day for anyone, never a hash', async () => {
     mean_seconds: 60,
     duration_samples: 2,
     render_starts: 1,
+    docker_pulls: null,
   });
   assert.ok(!JSON.stringify(body).includes(hash));
   const all = await (
     await worker.fetch(new Request('https://stats.example/stats?days=60'), env)
   ).json();
   assert.equal(all.by_day.length, 3);
+});
+
+test("the night's Docker Hub reading: the repository's counter, once a day", async () => {
+  const { DB, env } = setup();
+  env.DOCKER_REPO = 'someone/app';
+  const asked = [];
+  const hub = (count) => async (url) => {
+    asked.push(url);
+    return Response.json({ pull_count: count });
+  };
+  await readPulls(env, hub(7800));
+  await readPulls(env, hub(7812));
+  assert.equal(asked[0], 'https://hub.docker.com/v2/repositories/someone/app/');
+  assert.deepEqual(
+    DB.db
+      .prepare('SELECT day, pull_count FROM docker_pulls')
+      .all()
+      .map((r) => ({ ...r })),
+    [{ day, pull_count: 7812 }],
+  );
+  await readPulls(env, async () => new Response(null, { status: 503 }));
+  const body = await (await worker.fetch(new Request('https://stats.example/stats'), env)).json();
+  assert.equal(body.by_day[0].docker_pulls, 7812);
 });
